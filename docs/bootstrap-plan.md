@@ -35,13 +35,20 @@ first builds. The detailed evidence is in:
    version 1.2.6.0`. The next blocker is a wrong vtable slot (Hashtable,
    slot 37 of 34) on the first real compile. The root cause is still open,
    most likely LLP64 again.
-4. **The earliest point where the Guix chain fails on MSYS2** is therefore
-   the first Mono (1.2.6). In 2007 its Windows support meant 32-bit x86
+4. **First milestone reached on the i686 track (MSYS2 MINGW32).** The same
+   stage 0 (no extra patches), a private bdwgc 8.2.12 and Mono 1.2.6 (13
+   patches; only 7 of them matter on i686) build entirely from source.
+   `make install` succeeds, and the installed `mcs` and `gmcs` compile
+   programs, including generics, that the new `mono` runs. That gives
+   pnet → **mono-1.2.6 with mcs/gmcs and the 1.0/2.0 profiles**, with no
+   binary seed.
+5. **The earliest point where the Guix chain fails on MSYS2 UCRT64** is the
+   first Mono (1.2.6). In 2007 its Windows support meant 32-bit x86
    built with Cygwin `gcc -mno-cygwin`. The Win64 JIT port had only "begun"
    (ChangeLog 2007-03/2007-10). Its stack-argument and unwind-info parts
    arrived in 2008 (svn r101545/r101861; `RtlInstallFunctionTableCallback`
    from 2.4.x on).
-5. **Recommended first package:** `mingw-w64-pnet-bootstrap` (stage 0),
+6. **Recommended first package:** `mingw-w64-pnet-bootstrap` (stage 0),
    written as `bootstrap/mingw-w64-pnet-bootstrap/PKGBUILD`. The result of
    running it is in §6.
 
@@ -53,8 +60,10 @@ first builds. The detailed evidence is in:
 | pnet git 3baf947 | **SOLVED** | Built; cscc/ilrun work on x86_64. 4 Guix patches + `ucrt-timezone-macro` + `win64-findfirst-intptr`. A2 |
 | pnetlib git c3c12b8 | **SOLVED** | 48 assemblies built; hello world compiles and runs. 1 patch. A3 |
 | mono 1.2.6, x86_64 | **REQUIRES PATCHING** | C runtime builds; cscc-built mcs runs on the JIT (`--version` OK). 12 patches so far (2 Guix, 10 new). The next blocker is a vtable-slot mismatch in `Location.AddFile` → `Hashtable.Contains`. Further expected work: LLP64 audit, Win64 SEH/unwind info, xmm6–15 callee-saved, Win64 "stdcall" pop assumption, GC thread registration. A4 |
-| mono 1.2.6, i686 (MINGW32) | **UNKNOWN** (experiment running, see §6) | This was the historically supported Windows target. MSYS2 mingw32 has no `gc`; built bdwgc 8.2.12 from source (`00-bdwgc.sh`). MSYS2's mingw32 repo has 230 packages versus 3909 in ucrt64, which is a long-term risk |
-| mono 1.9.1 | **REQUIRES PATCHING** | Same configure (`-mno-cygwin`) and same Win64 state as 1.2.6 (no 2008-04 Win64 fixes in its ChangeLog). Most 1.2.6 patches should carry over. Guix needs `MONO_CREATE_IMAGE_VERSION` here |
+| bdwgc 8.2.12 (MINGW32, private) | **SOLVED** | `00-bdwgc.sh`, win32 threads + DllMain; MSYS2 mingw32 has no `gc` package |
+| treecc/pnet/pnetlib, i686 (MINGW32) | **SOLVED** | Same scripts and patches as UCRT64; hello world runs |
+| mono 1.2.6, i686 (MINGW32) | **SOLVED** | Builds and installs; `mcs`/`gmcs` compile and `mono` runs hello world and generics (A5). Patches 0001–0006, 0008, 0013 plus `MSYS2_ARG_CONV_EXCL` for gacutil. Risk: MSYS2's mingw32 repo has 230 packages versus 3909 in ucrt64 |
+| mono 1.9.1 | **PROBABLY SOLVABLE** on i686 / **REQUIRES PATCHING** on x86_64 | Same configure (`-mno-cygwin`) and same Win64 state as 1.2.6 (no 2008-04 Win64 fixes in its ChangeLog). The 6 i686-relevant MinGW patches rebase cleanly (`patches/mono-1.9.1/0004–0009`); the build was started at the end of the session (A6, §7) |
 | mono 2.4.2.3, 2.6.4 | **PROBABLY SOLVABLE** | Win64 unwind registration (`RtlInstallFunctionTableCallback`) present; eglib optional (`--with-glib`); still `-mno-cygwin` in configure (same 1-line patch) |
 | mono 2.11.4, 3.0.12 | **REQUIRES PATCHING** | configure refuses a user `CC` ("mono can only be compiled with gcc-3 from the 'gcc-core' package") unless cross compiling; needs a configure patch |
 | mono 3.12.1, 4.9.0 | **PROBABLY SOLVABLE** | configure treats `*-mingw*` natively (no forced CC, `with_tls=pthread`) |
@@ -120,9 +129,15 @@ Rules the scripts enforce:
   Status: UNKNOWN; it depends on how much C# 2/3 cscc handles in newer mcs
   sources.
 
-Recommendation: keep A and B running in parallel for one more session, since
-B is cheap now that the scripts are environment-aware, and evaluate C as the
-long-term way to shorten the chain.
+**Recommendation.** Use B as the main line now; it has been demonstrated
+up to an installed, working mono-1.2.6 with gmcs. Climb the Guix chain on
+MINGW32 (1.9.1 has already started) until a release whose Win64 JIT is
+mature. At that point, build the same version for UCRT64 with the i686 Mono
+as `EXTERNAL_MCS`/runtime, and continue x86_64-only. The x86_64 handoff is
+plausible from 2.4.x (Win64 unwind info) and well supported from 3.12/4.x
+(native `*-mingw*` configure). Keep A as the long-term goal, so that the
+packaged chain no longer depends on the shrinking mingw32 environment, and
+evaluate C as a way to shorten the chain.
 
 ## 6. First PKGBUILD to implement
 
@@ -154,11 +169,22 @@ long-term way to shorten the chain.
     handle);
   - pnetlib 0001 (double `.exe`).
 - **check():** compile a hello world with cscc and run it with ilrun.
-- **Test status on win11:** see §7 / the commit log of this repository.
+- **Test status on win11 (2026-10-08):** `MINGW_ARCH=ucrt64
+  makepkg-mingw -f` ran prepare/build/check/package successfully and
+  produced `mingw-w64-ucrt-x86_64-pnet-bootstrap-0.8.0.r0.3baf947-1-any.pkg.tar.zst`
+  (33 MB). `check()` compiles and runs a hello world. makepkg warns
+  "Package contains reference to $srcdir"; these are DWARF build paths in
+  the unstripped `*.exe` (`options=('!strip')`). Add
+  `-ffile-prefix-map` or allow stripping before publishing.
 
-The next package would be `mingw-w64-mono-bootstrap-1.2.6`
-(`bootstrap/04-mono-1.2.6.sh` turned into a PKGBUILD), once the JIT blocker
-in §2 is fixed.
+**Next packages:**
+
+- `mingw-w64-mono-bootstrap-1.2.6` for `mingw_arch=('mingw32')`:
+  `bootstrap/04-mono-1.2.6.sh` turned into a PKGBUILD. It depends on
+  pnet-bootstrap and a private bdwgc, and installs into
+  `${MINGW_PREFIX}/lib/dotnet-bootstrap/mono-1.2.6`.
+- For ucrt64, once the x86_64 JIT blocker in §2 is fixed, or as the
+  handoff target described in §5.
 
 ## 7. Status of the long-running experiments at the time of writing
 

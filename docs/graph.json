@@ -10,7 +10,8 @@
    "guix_commit": "f2098a776afff1deb23c5cbcd2c2d80278b9a208",
    "patches": [],
    "kind": "guix",
-   "lang": "C"
+   "lang": "C",
+   "msys2_status": "SOLVED (UCRT64 x86_64 and MINGW32 i686; 1 patch)"
   },
   {
    "id": "pnet-git",
@@ -32,7 +33,8 @@
     "ilasm",
     "resgen",
     "csant"
-   ]
+   ],
+   "msys2_status": "SOLVED (UCRT64 and MINGW32; 4 Guix + 2 new patches)"
   },
   {
    "id": "pnetlib-git",
@@ -41,7 +43,8 @@
    "guix_commit": "d65ac39c9130284692a0c856b2fc71241a2f8913",
    "patches": [],
    "kind": "guix",
-   "lang": "C#"
+   "lang": "C#",
+   "msys2_status": "SOLVED (UCRT64 and MINGW32; 1 new patch)"
   },
   {
    "id": "mono-1.2.6",
@@ -54,7 +57,8 @@
    ],
    "gc": "boehm(system)",
    "kind": "guix",
-   "lang": "C+C#"
+   "lang": "C+C#",
+   "msys2_status": "MINGW32 i686: SOLVED (built, installed, mcs/gmcs work). UCRT64 x86_64: REQUIRES PATCHING (runtime builds, mcs --version runs; vtable-slot bug next)"
   },
   {
    "id": "mono-1.9.1",
@@ -69,7 +73,8 @@
    "gc": "boehm(system)",
    "notes": "MONO_CREATE_IMAGE_VERSION=v1.1.4322",
    "kind": "guix",
-   "lang": "C+C#"
+   "lang": "C+C#",
+   "msys2_status": "MINGW32: PROBABLY SOLVABLE (build started; patches rebased). UCRT64: REQUIRES PATCHING (same Win64 JIT state as 1.2.6)"
   },
   {
    "id": "mono-2.4.2",
@@ -83,7 +88,8 @@
    ],
    "gc": "boehm(system)",
    "kind": "guix",
-   "lang": "C+C#"
+   "lang": "C+C#",
+   "msys2_status": "PROBABLY SOLVABLE (Win64 unwind info present; -mno-cygwin configure patch)"
   },
   {
    "id": "mono-2.6.4",
@@ -96,7 +102,8 @@
    ],
    "gc": "boehm(system)",
    "kind": "guix",
-   "lang": "C+C#"
+   "lang": "C+C#",
+   "msys2_status": "PROBABLY SOLVABLE (as 2.4.2.3)"
   },
   {
    "id": "mono-2.11.4",
@@ -109,7 +116,8 @@
    "gc": "boehm(system)",
    "notes": "first version with git submodules",
    "kind": "guix",
-   "lang": "C+C#"
+   "lang": "C+C#",
+   "msys2_status": "REQUIRES PATCHING (configure refuses CC unless gcc-3/cygwin or cross)"
   },
   {
    "id": "mono-3.0",
@@ -119,7 +127,8 @@
    "patches": [],
    "gc": "boehm(system)",
    "kind": "guix",
-   "lang": "C+C#"
+   "lang": "C+C#",
+   "msys2_status": "REQUIRES PATCHING (as 2.11.4)"
   },
   {
    "id": "mono-3.12.1",
@@ -129,7 +138,8 @@
    "patches": [],
    "gc": "boehm(system)",
    "kind": "guix",
-   "lang": "C+C#"
+   "lang": "C+C#",
+   "msys2_status": "PROBABLY SOLVABLE (native *-mingw* configure)"
   },
   {
    "id": "mono-4.9.0",
@@ -142,7 +152,8 @@
    "gc": "sgen",
    "notes": "--with-csc=mcs; reference assemblies copied from previous mono",
    "kind": "guix",
-   "lang": "C+C#"
+   "lang": "C+C#",
+   "msys2_status": "PROBABLY SOLVABLE"
   },
   {
    "id": "mono-5.0.1",
@@ -153,7 +164,8 @@
    "gc": "sgen",
    "notes": "binary-reference-assemblies rebuilt from source; roslyn install disabled",
    "kind": "guix",
-   "lang": "C+C#"
+   "lang": "C+C#",
+   "msys2_status": "PROBABLY SOLVABLE"
   },
   {
    "id": "mono-5.1.0",
@@ -164,7 +176,8 @@
    "gc": "sgen",
    "notes": "resx2sr installed",
    "kind": "guix",
-   "lang": "C+C#"
+   "lang": "C+C#",
+   "msys2_status": "PROBABLY SOLVABLE"
   },
   {
    "id": "mono-5.2.0",
@@ -174,7 +187,8 @@
    "patches": [],
    "gc": "sgen",
    "kind": "guix",
-   "lang": "C+C#"
+   "lang": "C+C#",
+   "msys2_status": "PROBABLY SOLVABLE"
   },
   {
    "id": "mono-5.4.0",
@@ -187,7 +201,8 @@
    ],
    "gc": "sgen",
    "kind": "guix",
-   "lang": "C+C#"
+   "lang": "C+C#",
+   "msys2_status": "PROBABLY SOLVABLE"
   },
   {
    "id": "mono-pre-5.8.0",
@@ -200,7 +215,8 @@
    ],
    "gc": "sgen",
    "kind": "guix",
-   "lang": "C+C#"
+   "lang": "C+C#",
+   "msys2_status": "PROBABLY SOLVABLE"
   },
   {
    "id": "mono-5.8.0",
@@ -212,7 +228,8 @@
    ],
    "gc": "sgen",
    "kind": "guix",
-   "lang": "C+C#"
+   "lang": "C+C#",
+   "msys2_status": "PROBABLY SOLVABLE"
   },
   {
    "id": "mono-pre-5.10.0",
@@ -225,7 +242,8 @@
    "gc": "sgen",
    "notes": "mcs cherry-picks from 5.10",
    "kind": "guix",
-   "lang": "C+C#"
+   "lang": "C+C#",
+   "msys2_status": "PROBABLY SOLVABLE"
   },
   {
    "id": "mono-5.10.0",
@@ -238,7 +256,8 @@
    "gc": "sgen",
    "notes": "mcs cherry-picks up to 6.12",
    "kind": "guix",
-   "lang": "C+C#"
+   "lang": "C+C#",
+   "msys2_status": "PROBABLY SOLVABLE"
   },
   {
    "id": "mono-bootstrap",
@@ -254,7 +273,8 @@
    "gc": "sgen",
    "notes": "renamed from mono by ba2e09c171a317c3e84cbf2f5149c1132b9e341f",
    "kind": "guix",
-   "lang": "C+C#"
+   "lang": "C+C#",
+   "msys2_status": "PROBABLY SOLVABLE (MSYS2 builds 6.12.0.199 for ucrt64, though monolite-seeded)"
   },
   {
    "id": "libgdiplus",
@@ -263,7 +283,8 @@
    "guix_commit": "a46816dcd155e0544e745deb7256362574fe3154",
    "patches": [],
    "kind": "guix",
-   "lang": "C"
+   "lang": "C",
+   "msys2_status": "UNKNOWN (not needed on Windows)"
   },
   {
    "id": "mono-system-collections-immutable-bootstrap",
@@ -272,7 +293,8 @@
    "guix_commit": "e365fc68f3f48167dcb1b63d6acbc1d857d1ed15",
    "patches": [],
    "kind": "guix",
-   "lang": "C#"
+   "lang": "C#",
+   "msys2_status": "PROBABLY SOLVABLE (managed; not tried)"
   },
   {
    "id": "mono-system-reflection-metadata-bootstrap",
@@ -281,7 +303,8 @@
    "guix_commit": "15a43c743102b5026eccb82be94af30de799f79f",
    "patches": [],
    "kind": "guix",
-   "lang": "C#"
+   "lang": "C#",
+   "msys2_status": "PROBABLY SOLVABLE (managed; not tried)"
   },
   {
    "id": "msbuild",
@@ -293,7 +316,8 @@
     "mono-msbuild-15.7.179-fix-resources"
    ],
    "kind": "guix",
-   "lang": "C#"
+   "lang": "C#",
+   "msys2_status": "PROBABLY SOLVABLE (managed; not tried)"
   },
   {
    "id": "roslyn-2.0",
@@ -304,7 +328,8 @@
     "roslyn-2.0.0-bootstrap-with-mono"
    ],
    "kind": "guix",
-   "lang": "C#"
+   "lang": "C#",
+   "msys2_status": "PROBABLY SOLVABLE (managed; not tried)"
   },
   {
    "id": "roslyn-2.3",
@@ -315,7 +340,8 @@
     "roslyn-2.3.0-default-literal-for-csc-2.0"
    ],
    "kind": "guix",
-   "lang": "C#"
+   "lang": "C#",
+   "msys2_status": "PROBABLY SOLVABLE (managed; not tried)"
   },
   {
    "id": "roslyn-2.8",
@@ -326,7 +352,8 @@
     "roslyn-2.8.2-csharp-7.2-for-csc-2.3"
    ],
    "kind": "guix",
-   "lang": "C#"
+   "lang": "C#",
+   "msys2_status": "PROBABLY SOLVABLE (managed; not tried)"
   },
   {
    "id": "roslyn-3.0",
@@ -337,7 +364,8 @@
     "roslyn-3.0.0-bootstrap-with-csc-2.8"
    ],
    "kind": "guix",
-   "lang": "C#"
+   "lang": "C#",
+   "msys2_status": "PROBABLY SOLVABLE (managed; not tried)"
   },
   {
    "id": "roslyn-3.2",
@@ -348,7 +376,8 @@
     "roslyn-3.2.0-bootstrap-with-csc-3.0"
    ],
    "kind": "guix",
-   "lang": "C#"
+   "lang": "C#",
+   "msys2_status": "PROBABLY SOLVABLE (managed; not tried)"
   },
   {
    "id": "roslyn-3.8",
@@ -359,7 +388,8 @@
     "roslyn-3.8.0-bootstrap-with-csc-3.2"
    ],
    "kind": "guix",
-   "lang": "C#"
+   "lang": "C#",
+   "msys2_status": "PROBABLY SOLVABLE (managed; not tried)"
   },
   {
    "id": "roslyn-3.9",
@@ -370,7 +400,8 @@
     "roslyn-3.9.0-bootstrap-with-csc-3.8"
    ],
    "kind": "guix",
-   "lang": "C#"
+   "lang": "C#",
+   "msys2_status": "PROBABLY SOLVABLE (managed; not tried)"
   },
   {
    "id": "mono",
@@ -379,7 +410,8 @@
    "guix_commit": "c143f00ce73ee0603f50f70aa0846c7e1f381ed0",
    "patches": [],
    "kind": "guix",
-   "lang": "-"
+   "lang": "-",
+   "msys2_status": "PROBABLY SOLVABLE (managed; not tried)"
   }
  ],
  "edges": [
@@ -604,5 +636,18 @@
    "from": "roslyn-3.9"
   }
  ],
- "msys2_status_see": "docs/bootstrap-plan.md"
+ "msys2_status_see": "docs/bootstrap-plan.md",
+ "msys2_extra_nodes": [
+  {
+   "id": "bdwgc-8.2.12-private",
+   "version": "8.2.12",
+   "source": "https://github.com/bdwgc/bdwgc/releases/download/v8.2.12/gc-8.2.12.tar.gz sha256 42e5194ad06ab6ffb806c83eb99c03462b495d979cda782f3c72c08af833cd4e",
+   "msys2_status": "SOLVED (MINGW32 only; win32 threads + DllMain)",
+   "used_by": [
+    "pnet-git",
+    "mono-1.2.6",
+    "mono-1.9.1"
+   ]
+  }
+ ]
 }

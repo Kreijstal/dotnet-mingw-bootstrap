@@ -37,8 +37,9 @@ unset _mp _here
 # spawns a native .exe, so csc-style options such as /nologo, /optimize or
 # /debug+ reach cscc.exe/mono.exe as "E:/msys64/nologo" (seen building
 # mono-1.2.6's mcs).  Exclude the option prefixes used by mono's mcs/build
-# makefiles; real paths (/home, /ucrt64, /usr, /tmp) are still converted.
-export MSYS2_ARG_CONV_EXCL="/nologo;/optimize;/debug;/unsafe;/nowarn:;/warn:;/warnaserror;/r:;/reference:;/d:;/define:;/out:;/target:;/t:;/codepage:;/resource:;/res:;/linkres;/noconfig;/nostdlib;/lib:;/exclude:;/xml:;/include:;/gacdir;/package;/root;/output:;/labels;/main:;/doc:;/delaysign;/keyfile:;/keycontainer:;/checked;/langversion:;/platform:;/pkg:;/win32res:;/win32icon:;/addmodule:;/runtimemetadataversion:;/recurse:;/fullpaths;/clscheck;/sdk:;/compile;/test"
+# makefiles and gacutil (/i /f /l /root /package); real paths (/home,
+# /ucrt64, /mingw32, /usr, /tmp) are still converted.
+export MSYS2_ARG_CONV_EXCL="/nologo;/optimize;/debug;/unsafe;/nowarn:;/warn:;/warnaserror;/r:;/reference:;/d:;/define:;/out:;/target:;/t:;/codepage:;/resource:;/res:;/linkres;/noconfig;/nostdlib;/lib:;/exclude:;/xml:;/include:;/gacdir;/package;/root;/output:;/labels;/main:;/doc:;/delaysign;/keyfile:;/keycontainer:;/checked;/langversion:;/platform:;/pkg:;/win32res:;/win32icon:;/addmodule:;/runtimemetadataversion:;/recurse:;/fullpaths;/clscheck;/sdk:;/compile;/test;/i;/f;/l;/check_refs"
 # libraries built into the stage-0 prefix (e.g. a private bdwgc) come first
 export CPPFLAGS="-I$STAGE0/include${CPPFLAGS:+ $CPPFLAGS}"
 export LDFLAGS="-L$STAGE0/lib${LDFLAGS:+ $LDFLAGS}"

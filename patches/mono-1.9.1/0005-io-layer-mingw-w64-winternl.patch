@@ -1,0 +1,24 @@
+Why: Same change as 
+patches/mono-1.2.6/0004-io-layer-mingw-w64-winternl.patch, rebased onto 
+mono-1.9.1.1. io-layer.h falls back to the mingw.org w32api headers  
+<ddk/ntddk.h>/<ddk/ntapi.h> (for NtQueryInformationProcess) when  
+HAVE_GETPROCESSID is not defined.  Several mono/metadata/*.c files include  
+io-layer.h without config.h first, so the fallback is taken even though  
+configure found GetProcessId.  mingw-w64's <ddk/ntddk.h> needs the WDK  
+header wdm.h, which MSYS2 does not ship ('fatal error: wdm.h: No such file  
+or directory' in mono-mlist.c).  mingw-w64 provides <winternl.h> like MSVC, 
+ so use the MSVC branch there.  New patch (not in Guix).  
+
+diff --git a/mono/io-layer/io-layer.h b/mono/io-layer/io-layer.h
+index f035b82e..66d1be2d 100644
+--- a/mono/io-layer/io-layer.h
++++ b/mono/io-layer/io-layer.h
+@@ -23,7 +23,7 @@
+ #include <shlobj.h>
+ #include <mswsock.h>
+ #ifndef HAVE_GETPROCESSID
+-#ifdef _MSC_VER
++#if defined(_MSC_VER) || defined(__MINGW64_VERSION_MAJOR)
+ #include <winternl.h>
+ #ifndef NT_SUCCESS
+ #define NT_SUCCESS (status) ((NTSTATUS) (status) >= 0)

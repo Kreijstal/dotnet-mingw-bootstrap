@@ -188,17 +188,57 @@ result · first error · root cause · patch/workaround · next blocker.
   build used libgc with win32 threads and DllMain registration;
   `bootstrap/00-bdwgc.sh` builds that variant.
 
-### A5 – i686 alternative (MINGW32) – **in progress**
+### A5 – i686 track (MINGW32): stage 0 and mono 1.2.6 – **SOLVED**
 - **Rationale:** in 2007 the only supported Windows target of Mono was
-  32-bit x86, and its JIT/SEH code was used in production there.
-  Managed assemblies are architecture-neutral, so a 32-bit chain can later
-  hand a compiler and class libraries to an x86_64 build of a newer Mono.
-- **Concern:** the MSYS2 `mingw32` repository is being run down. It has
-  230 packages versus 3909 in `ucrt64`, and there is no `gc` or
-  `libatomic_ops`. So `bootstrap/00-bdwgc.sh` builds bdwgc 8.2.12 from
-  source (`--enable-threads=win32 --enable-win32-dllmain`).
-- **Status:** the result of the i686 stage-0 run is recorded in
-  `docs/bootstrap-plan.md`.
+  32-bit x86, and its JIT/SEH code was used in production there. Managed
+  assemblies are architecture-neutral, so a 32-bit chain can later hand a
+  compiler and class libraries to an x86_64 build of a newer Mono (the
+  WoW64 i686 runtime runs on the same machine).
+- **Concern:** the MSYS2 `mingw32` repository is being run down. It has 230
+  packages versus 3909 in `ucrt64`, and there is no `gc` or `libatomic_ops`.
+  Installed from the repo: `mingw-w64-i686-gcc` 16.2.0, `-glib2` 2.90.0,
+  `-pkgconf`, `-libffi`.
+- **Stage 0- (bdwgc 8.2.12):** `bootstrap/00-bdwgc.sh`, from the release
+  tarball (sha256 = MSYS2's `mingw-w64-gc`), built with
+  `--enable-threads=win32 --enable-win32-dllmain --with-libatomic-ops=none`
+  into `stage0-MINGW32`. This is the threads model Mono's 2007 Windows build
+  used. Result: OK.
+- **Stage 0 (treecc, pnet, pnetlib):** `MSYSTEM=MINGW32 bootstrap/stage0-all.sh`
+  with the **same patches** as UCRT64 and no new ones. `cscc`/`ilrun`
+  (PE32 i386) print `hello from cscc, sum=6`.
+- **mono 1.2.6:** `MSYSTEM=MINGW32 bootstrap/04-mono-1.2.6.sh`
+  (`--build/--host i686-w64-mingw32 --with-gc=boehm` against the private
+  bdwgc), with these patches:
+  - **Error 1:** `process.c: 'GetProcessId' redeclared as different kind of
+    symbol`. configure's probe cannot link the stdcall-decorated
+    `_GetProcessId@4`. Fix: `0013-process-getprocessid-mingw-w64`.
+  - **Error 2:** `make install` failed with `gacutil.exe` printing its usage.
+    The MSYS2 arg conversion rewrote gacutil's `/i /f`. Fix: added to
+    `MSYS2_ARG_CONV_EXCL` in `env.sh`.
+  - **Not needed on i686:** the amd64-only patches (0007, 0009–0012). They
+    are no-ops there.
+  - **Result:** `make` and `make install` succeed (117 MB in
+    `~/dotnetboot/stage1-MINGW32`). All profiles are built: basic,
+    net_1_1_bootstrap, default (1.1), net_2_0_bootstrap, net_2_0 (154 and
+    162 assemblies), signed with the in-tree `sn.exe`. The installed `mcs`
+    compiles and `mono` runs a hello world. The installed `gmcs` compiles a
+    generic `List<int>` program, which prints `gmcs generics ok, sum=30 on
+    Microsoft Windows NT 10.0.26200.0`.
+- **This is the first usable Mono bootstrap stage built on MSYS2 entirely
+  from source.** It contains only GCC-built C code (pnet, mono runtime) and
+  managed code compiled by cscc → mcs. No .NET/Mono binary was used.
+
+### A6 – mono 1.9.1 (MINGW32) – in progress at the end of the session
+- **Source:** `github.com/mono/mono/archive/refs/tags/mono-1.9.1.1.tar.gz`
+  (sha256 `7cc4d6a2…de1461`). I extracted it, ran `git add -A && git
+  write-tree`, and got `b6fe3b24959762bdac992d09ecbf0c7f845c83e5`, which is
+  exactly the tree of tag `mono-1.9.1.1`, the commit Guix uses.
+- **Patches:** the 3 Guix patches, plus 6 MinGW patches rebased from 1.2.6
+  (`patches/mono-1.9.1/0004–0009`). All applied cleanly.
+- **Build:** `bootstrap/05-mono-1.9.1.sh` uses the Guix phases
+  (`MONO_CREATE_IMAGE_VERSION=v1.1.4322`, `NO_SIGN_ASSEMBLY=yes`,
+  disable-signing, delete-mdb). Compiler: stage-1 mono-1.2.6 on PATH.
+  The result is recorded in bootstrap-plan.md §7.
 
 ## Generic MSYS2 lessons (apply to every later stage)
 
