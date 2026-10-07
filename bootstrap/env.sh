@@ -10,8 +10,10 @@
 # the bootstrap may ever pick it up.  The poison wrappers make any accidental
 # use fail loudly instead.
 export DNB="${DNB:-$HOME/dotnetboot}"
-export STAGE0="${STAGE0:-$DNB/stage0}"
 export MSYSTEM="${MSYSTEM:-UCRT64}"
+# per-environment suffix for prefixes/build dirs (UCRT64 = primary, no suffix)
+if [ "$MSYSTEM" = UCRT64 ]; then export BOOT_SFX=""; else export BOOT_SFX="-$MSYSTEM"; fi
+export STAGE0="${STAGE0:-$DNB/stage0$BOOT_SFX}"
 case "$MSYSTEM" in
   UCRT64)  _mp=/ucrt64 ;;
   MINGW32) _mp=/mingw32 ;;
@@ -31,3 +33,12 @@ export ACLOCAL_PATH="$_mp/share/aclocal:/usr/share/aclocal"
 # All of this 2007-2011 code is C89/C99; pin gnu17 like Guix' GCC 14 era.
 export BOOT_CFLAGS="-O2 -g -std=gnu17 -Wno-error=implicit-function-declaration -Wno-error=incompatible-pointer-types -Wno-error=int-conversion -Wno-error=implicit-int -Wno-error=return-mismatch"
 unset _mp _here
+# The MSYS2 runtime rewrites arguments that look like POSIX paths when it
+# spawns a native .exe, so csc-style options such as /nologo, /optimize or
+# /debug+ reach cscc.exe/mono.exe as "E:/msys64/nologo" (seen building
+# mono-1.2.6's mcs).  Exclude the option prefixes used by mono's mcs/build
+# makefiles; real paths (/home, /ucrt64, /usr, /tmp) are still converted.
+export MSYS2_ARG_CONV_EXCL="/nologo;/optimize;/debug;/unsafe;/nowarn:;/warn:;/warnaserror;/r:;/reference:;/d:;/define:;/out:;/target:;/t:;/codepage:;/resource:;/res:;/linkres;/noconfig;/nostdlib;/lib:;/exclude:;/xml:;/include:;/gacdir;/package;/root;/output:;/labels;/main:;/doc:;/delaysign;/keyfile:;/keycontainer:;/checked;/langversion:;/platform:;/pkg:;/win32res:;/win32icon:;/addmodule:;/runtimemetadataversion:;/recurse:;/fullpaths;/clscheck;/sdk:;/compile;/test"
+# libraries built into the stage-0 prefix (e.g. a private bdwgc) come first
+export CPPFLAGS="-I$STAGE0/include${CPPFLAGS:+ $CPPFLAGS}"
+export LDFLAGS="-L$STAGE0/lib${LDFLAGS:+ $LDFLAGS}"

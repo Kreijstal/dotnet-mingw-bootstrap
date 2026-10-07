@@ -6,7 +6,7 @@
 set -euo pipefail
 . "$(dirname "$0")/env.sh"; . "$(dirname "$0")/lib.sh"
 R=$(cd "$(dirname "$0")/.." && pwd)
-W=$DNB/build/pnet; S=$W/pnet
+W=$DNB/build/pnet$BOOT_SFX; S=$W/pnet
 if [ ! -f "$W/.prepared" ]; then
   rm -rf "${W:?}"; mkdir -p "$W"; cp -a "$DNB/src/pnet" "$S"
   (cd "$S" && bash "$R/bootstrap/prep-pnet.sh")

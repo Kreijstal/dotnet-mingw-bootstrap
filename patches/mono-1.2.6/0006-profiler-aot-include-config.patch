@@ -1,0 +1,14 @@
+Why: mono-profiler-aot.c tests PLATFORM_WIN32 to choose the one-argument 
+Windows mkdir(), but never includes <config.h>, so the POSIX mkdir(path, 
+0777) branch is compiled and mingw-w64 GCC errors 'too many arguments to 
+function mkdir'.  Include config.h.  New patch (not in Guix).
+
+diff --git a/mono/profiler/mono-profiler-aot.c b/mono/profiler/mono-profiler-aot.c
+index 72c603ca..5babb7a5 100644
+--- a/mono/profiler/mono-profiler-aot.c
++++ b/mono/profiler/mono-profiler-aot.c
+@@ -1,3 +1,4 @@
++#include <config.h>
+ #include <mono/metadata/profiler.h>
+ #include <mono/metadata/tokentype.h>
+ #include <mono/metadata/tabledefs.h>

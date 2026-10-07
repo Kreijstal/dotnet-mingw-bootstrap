@@ -8,7 +8,7 @@ R=$(cd "$(dirname "$0")/.." && pwd)
 TAR=$DNB/src/treecc-0.3.10.tar.gz
 echo "5e9d20a6938e0c6fedfed0cabc7e9e984024e4881b748d076e8c75f1aeb6efe7  $TAR" | sha256sum -c -
 [ -f "$STAGE0/bin/treecc.exe" ] && { log "treecc already installed"; exit 0; }
-W=$DNB/build/treecc; S=$W/treecc-0.3.10
+W=$DNB/build/treecc$BOOT_SFX; S=$W/treecc-0.3.10
 if [ ! -d "$S" ]; then
   mkdir -p "$W"; tar -C "$W" -xzf "$TAR"
   apply_patches "$S" "$R/patches/treecc"

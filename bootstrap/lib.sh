@@ -2,15 +2,17 @@
 log() { printf '\n==> %s\n' "$*"; }
 die() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 apply_patches() { # apply_patches <srcdir> <patchdir>
-  local src=$1 pd=$2 p
+  # Idempotent: applied patches are recorded in <srcdir>/.applied-patches, so a
+  # failed build can be continued after adding a new patch (no rebuild).
+  local src=$1 pd=$2 p stamp
   [ -d "$pd" ] || return 0
+  stamp="$src/.applied-patches"; touch "$stamp"
   for p in "$pd"/[0-9][0-9][0-9][0-9]-*.patch; do
     [ -e "$p" ] || continue
-    if patch -d "$src" -p1 -N --dry-run -s -i "$p" >/dev/null 2>&1; then
-      log "patch $(basename "$p")"; patch -d "$src" -p1 -N -s -i "$p" || die "patch $p"
-    elif patch -d "$src" -p1 -R --dry-run -s -i "$p" >/dev/null 2>&1; then
-      log "already applied: $(basename "$p")"
-    else die "patch does not apply: $p"; fi
+    grep -qxF "$(basename "$p")" "$stamp" && continue
+    log "patch $(basename "$p")"
+    patch -d "$src" -p1 -N -s -i "$(cd "$(dirname "$p")" && pwd)/$(basename "$p")" || die "patch does not apply: $p"
+    basename "$p" >> "$stamp"
   done
 }
 # list managed/native binaries in a tree (provenance check)

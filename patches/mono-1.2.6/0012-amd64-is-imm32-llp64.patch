@@ -1,0 +1,22 @@
+Why: LLP64.  amd64_is_imm32() casts its argument to glong (= C long), which 
+is 32 bits on Win64, so every 'does this fit in a signed 32-bit 
+immediate/displacement' test in the amd64 JIT returns TRUE: 64-bit 
+constants, offsets and call displacements are silently truncated (the 2007 
+'replace long with gsize' Win64 cleanup missed this macro).  First visible 
+on MSYS2 UCRT64 as the jump-table load of a C# switch staying in 
+'[reg+disp32]' form and jumping to 0x410000000001cf62 (#GP on 'jmp *%rax'). 
+ Cast to gint64.  New patch (not in Guix).
+
+diff --git a/mono/arch/amd64/amd64-codegen.h b/mono/arch/amd64/amd64-codegen.h
+index e0127f12..5d108f96 100644
+--- a/mono/arch/amd64/amd64-codegen.h
++++ b/mono/arch/amd64/amd64-codegen.h
+@@ -129,7 +129,7 @@ typedef union {
+ #define amd64_rex_x(rex) ((((rex) >> 1) & 0x1) << 3)
+ #define amd64_rex_b(rex) ((((rex) >> 0) & 0x1) << 3)
+ 
+-#define amd64_is_imm32(val) ((glong)val >= -((glong)1<<31) && (glong)val <= (((glong)1<<31)-1))
++#define amd64_is_imm32(val) ((gint64)(val) >= -((gint64)1<<31) && (gint64)(val) <= (((gint64)1<<31)-1))
+ 
+ #define x86_imm_emit64(inst,imm)     \
+ 	do {	\

@@ -1,0 +1,49 @@
+Why: Win64 ABI home space.  mono-1.2.6's Win64 port (begun 2007, 
+MSVC-oriented; the matching stack-argument fixes only landed upstream in 
+2008-04) reserves the 32-byte home space for managed calls only.  Calls to 
+C helpers emitted by emit_call() run with %rsp at the frame bottom, and 
+GCC-compiled callees spill rcx/rdx/r8/r9 there, smashing the JIT frame's 
+saved %rbp/return address.  Seen on MSYS2 UCRT64: 'mono mcs.exe --version' 
+returns into heap garbage right after System.Object:.ctor (gdb: 
+[rsp-16]=0x10079a0 popped as rbp, [rsp-8]=0x853980 as rip).  Reserve 32 
+bytes at the bottom of every frame and disable omit_fp on Win32 so locals 
+stay rbp-relative.  New patch (not in Guix).
+
+diff --git a/mono/mini/mini-amd64.c b/mono/mini/mini-amd64.c
+index 22d6c9d0..364bb234 100644
+--- a/mono/mini/mini-amd64.c
++++ b/mono/mini/mini-amd64.c
+@@ -891,6 +891,12 @@ mono_arch_compute_omit_fp (MonoCompile *cfg)
+ 
+ 	if (!debug_omit_fp ())
+ 		cfg->arch.omit_fp = FALSE;
++#ifdef PLATFORM_WIN32
++	/* The Win64 home-space reservation in the prolog (see
++	 * mono_arch_emit_prolog) sits below the locals; keep every frame
++	 * rbp-based so no rsp-relative offset has to account for it. */
++	cfg->arch.omit_fp = FALSE;
++#endif
+ 	/*
+ 	if (cfg->method->save_lmf)
+ 		cfg->arch.omit_fp = FALSE;
+@@ -4412,6 +4418,20 @@ mono_arch_emit_prolog (MonoCompile *cfg)
+ 
+ 	alloc_size -= pos;
+ 
++#ifdef PLATFORM_WIN32
++	/*
++	 * Win64 ABI: a callee may spill its four register arguments into 32
++	 * bytes of "home space" directly above its return address, which the
++	 * caller must have reserved.  Managed calls get it from get_call_info,
++	 * but helper/icall calls (emit_call with MONO_PATCH_INFO_INTERNAL_METHOD
++	 * or ABS) are emitted with %rsp at the bottom of the frame, so GCC-built
++	 * runtime functions overwrote the caller's locals, saved %rbp and return
++	 * address.  Always keep 32 bytes free at the bottom of the frame
++	 * (16-byte alignment is preserved).
++	 */
++	alloc_size += 32;
++#endif
++
+ 	if (cfg->arch.omit_fp)
+ 		/* 
+ 		 * On enter, the stack is misaligned by the the pushing of the return

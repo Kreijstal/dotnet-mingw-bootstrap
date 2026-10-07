@@ -1,0 +1,28 @@
+Why: on Linux/amd64, mono-1.2.6 allocates JIT code with MAP_32BIT and emits 
+'call rel32' to other JIT code and to icalls whose address is below 4GB.  
+On Win64 mono_valloc (VirtualAlloc) ignores MONO_MMAP_32BIT and, with 
+high-entropy ASLR, DLLs, heap and JIT code are above 4GB.  First failure 
+under MSYS2 UCRT64, while the freshly built x86_64 mono.exe runs the 
+cscc-built mcs.exe to compile System.Xml (basic profile): 
+'ERROR:tramp-amd64.c:79:mono_arch_patch_callsite: assertion failed: 
+((((guint64)(addr)) >> 32) == 0)'.  Mono already has the switch for 
+platforms without MAP_32BIT (MONO_ARCH_NOMAP32BIT: FreeBSD, Solaris, later 
+NetBSD): always call through %r11 with a 64-bit immediate.  Enable it for 
+PLATFORM_WIN32.  New patch (not in Guix).
+
+diff --git a/mono/mini/mini-amd64.h b/mono/mini/mini-amd64.h
+index 30376032..1b2bb1d9 100644
+--- a/mono/mini/mini-amd64.h
++++ b/mono/mini/mini-amd64.h
+@@ -43,6 +43,11 @@ void win32_seh_set_handler(int type, MonoW32ExceptionHandler handler);
+ 
+ LONG CALLBACK seh_handler(EXCEPTION_POINTERS* ep);
+ 
++/* VirtualAlloc (mono_valloc on Win32) ignores MONO_MMAP_32BIT and Win64
++ * images/heaps live above 4GB: JIT code is not within rel32 reach of its
++ * callees, so never emit near calls (same as FreeBSD/Solaris). */
++#define MONO_ARCH_NOMAP32BIT
++
+ #endif /* PLATFORM_WIN32 */
+ 
+ #ifdef sun    // Solaris x86

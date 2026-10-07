@@ -1,0 +1,90 @@
+Why: backport (adapted to 1.2.6's singly linked out_args list) of upstream 
+mono commits a90eff17bc09 (svn r101545, 2008-04-23) and 3a36e7b52026 (svn 
+r101861, 2008-04-25) by Jonathan Chambers, 'Always reserve 32 bytes of 
+stack space on Win64'.  In 1.2.6 get_call_info only bumps stack_usage to 32 
+but nothing subtracts it, so every managed call is followed by 'add 
+$0x20,%rsp' without a matching 'sub' (seen in the -v disassembly of 
+System.Text.Encoding:.cctor on MSYS2 UCRT64), %rsp climbs into the caller's 
+frame and later calls smash it (crash with %rbp = 'ves_arra' string bytes). 
+ Changes: stack_usage = stack args + 32; emit 
+OP_AMD64_OUTARG_ALIGN_STACK(32) after the argument pushes; the brg rule 
+takes its size from inst_c0; incoming stack args at ARGS_OFFSET 48.  
+Upstream fix, not in Guix (Guix builds no Win64).
+
+diff --git a/mono/mini/inssel-amd64.brg b/mono/mini/inssel-amd64.brg
+index 5a361105..e0596920 100644
+--- a/mono/mini/inssel-amd64.brg
++++ b/mono/mini/inssel-amd64.brg
+@@ -361,7 +361,7 @@ stmt: OP_OUTARG_VT (reg) {
+ }
+ 
+ stmt: OP_AMD64_OUTARG_ALIGN_STACK {
+-	MONO_EMIT_NEW_BIALU_IMM (s, OP_SUB_IMM, X86_ESP, X86_ESP, 8);
++	MONO_EMIT_NEW_BIALU_IMM (s, OP_SUB_IMM, X86_ESP, X86_ESP, tree->inst_c0);
+ }	
+ 
+ base: OP_INARG_VT (base) {
+diff --git a/mono/mini/mini-amd64.c b/mono/mini/mini-amd64.c
+index 364bb234..c9efccc8 100644
+--- a/mono/mini/mini-amd64.c
++++ b/mono/mini/mini-amd64.c
+@@ -63,7 +63,13 @@ static CRITICAL_SECTION mini_arch_mutex;
+ MonoBreakpointInfo
+ mono_breakpoint_info [MONO_BREAKPOINT_ARRAY_SIZE];
+ 
++#ifdef PLATFORM_WIN32
++/* Win64: incoming stack arguments start after the return address, the saved
++ * %rbp and the caller's 32 byte home space (upstream svn r101861, 2008-04-25). */
++#define ARGS_OFFSET 48
++#else
+ #define ARGS_OFFSET 16
++#endif
+ #define GP_SCRATCH_REG AMD64_R11
+ 
+ /*
+@@ -696,10 +702,10 @@ get_call_info (MonoCompile *cfg, MonoMemPool *mp, MonoMethodSignature *sig, gboo
+ 	}
+ 
+ #ifdef PLATFORM_WIN32
+-	if (stack_size < 32) {
+-		/* The Win64 ABI requires 32 bits  */
+-		stack_size = 32;
+-	}
++	/* The Win64 ABI requires the caller to reserve 32 bytes of home space
++	 * below the stack arguments; mono_arch_call_opcode emits the matching
++	 * 'sub $32, %rsp' after pushing them, the call site pops stack_usage. */
++	stack_size += 32;
+ #endif
+ 
+ 	if (stack_size & 0x8) {
+@@ -1432,11 +1438,30 @@ mono_arch_call_opcode (MonoCompile *cfg, MonoBasicBlock* bb, MonoCallInst *call,
+ 
+ 	if (cinfo->need_stack_align) {
+ 		MONO_INST_NEW (cfg, arg, OP_AMD64_OUTARG_ALIGN_STACK);
++		arg->inst_c0 = 8;
+ 		/* prepend, so they get reversed */
+ 		arg->next = call->out_args;
+ 		call->out_args = arg;
+ 	}
+ 
++#ifdef PLATFORM_WIN32
++	/* Reserve the 32 byte Win64 home space last, i.e. directly below the
++	 * pushed stack arguments (backport of upstream svn r101861, 2008-04-25). */
++	{
++		MonoInst *last;
++		MONO_INST_NEW (cfg, arg, OP_AMD64_OUTARG_ALIGN_STACK);
++		arg->inst_c0 = 32;
++		arg->next = NULL;
++		if (!call->out_args) {
++			call->out_args = arg;
++		} else {
++			for (last = call->out_args; last->next; last = last->next)
++				;
++			last->next = arg;
++		}
++	}
++#endif
++
+ 	call->stack_usage = cinfo->stack_usage;
+ 	cfg->param_area = MAX (cfg->param_area, call->stack_usage);
+ 	cfg->flags |= MONO_CFG_HAS_CALLS;
