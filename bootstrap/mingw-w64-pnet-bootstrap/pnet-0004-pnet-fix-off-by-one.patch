@@ -1,0 +1,18 @@
+Origin: GNU Guix gnu/packages/patches/pnet-fix-off-by-one.patch, added in Guix commit 1b1e9917ad043ac279bd829cd8ac6a842667f648
+Applied by Guix to pnet-git (gnu/packages/dotnet.scm, origin patches).
+Kept verbatim; text above the first 'diff' line is ignored by patch(1).
+Why: cscc rejected the valid MarshalAs SizeParamIndex=0 (must be >= 0, check used <= 0); Guix fix.
+
+diff --git a/codegen/cg_genattr.c b/codegen/cg_genattr.c
+index 535852da..c3acc0dc 100644
+--- a/codegen/cg_genattr.c
++++ b/codegen/cg_genattr.c
+@@ -1532,7 +1532,7 @@ static int MarshalAsAttribute(ILGenInfo *info,
+ 			else
+ 			{
+ 				sizeParamIndex = attributeInfo->namedArgs[currentNamedArg].evalValue.un.i4Value;
+-				if(sizeParamIndex <= 0)
++				if(sizeParamIndex < 0)
+ 				{
+ 					CGErrorForNode(info, attributeInfo->namedArgs[currentNamedArg].node,
+ 						_("The size parameter index must be >= 0"));

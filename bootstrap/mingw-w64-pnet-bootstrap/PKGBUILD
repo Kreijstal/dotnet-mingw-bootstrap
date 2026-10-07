@@ -1,0 +1,177 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# Stage 0 of a source-only .NET bootstrap for MSYS2, after GNU Guix'
+# gnu/packages/dotnet.scm (treecc, pnet-git, pnetlib-git; Guix commits
+# f2098a776aff, 1b1e9917ad04, d65ac39c9130).
+#
+# DotGNU Portable.NET is a C# compiler (cscc) and CLI runtime (ilrun, the CVM
+# interpreter) written in C, so this package needs no .NET binary of any
+# kind.  It is the root that compiles mono-1.2.6 (EXTERNAL_MCS=cscc,
+# EXTERNAL_RUNTIME=ilrun) in the next stage.
+#
+# Everything is installed under ${MINGW_PREFIX}/lib/dotnet-bootstrap/pnet so
+# that pnet's ilasm/resgen/al/csant do not clash with Mono's tools.
+#
+# Patches: the 4 Guix pnet patches plus MSYS2/Win64 fixes, see the headers
+# of the *.patch files (maintained in ../../patches, copied here by
+# ./sync-patches.sh).
+
+_realname=pnet-bootstrap
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+_treeccver=0.3.10
+_pnetcommit=3baf94734d8dc3fdabba68a8891e67a43ed6c4bd
+_pnetlibcommit=c3c12b8b0c65f5482d03d6a4865f7670e98baf4c
+pkgver=0.8.0.r0.3baf947
+pkgrel=1
+pkgdesc="DotGNU Portable.NET (cscc C# compiler + ilrun) built from C sources, root of the source-only .NET bootstrap (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://www.gnu.org/software/dotgnu/'
+msys2_repository_url='https://git.savannah.gnu.org/cgit/dotgnu-pnet/pnet.git'
+license=('spdx:GPL-2.0-or-later')
+depends=("${MINGW_PACKAGE_PREFIX}-gc"
+         "${MINGW_PACKAGE_PREFIX}-libffi"
+         "${MINGW_PACKAGE_PREFIX}-libwinpthread")
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-autotools"
+             "${MINGW_PACKAGE_PREFIX}-python"
+             'bison' 'flex' 'texinfo' 'git')
+options=('!strip' '!lto' '!buildflags')
+source=("https://download.savannah.gnu.org/releases/dotgnu-pnet/treecc-${_treeccver}.tar.gz"
+        "pnet::git+https://git.savannah.gnu.org/git/dotgnu-pnet/pnet.git#commit=${_pnetcommit}"
+        "pnetlib::git+https://git.savannah.gnu.org/git/dotgnu-pnet/pnetlib.git#commit=${_pnetlibcommit}"
+        'treecc-0001-configure-drop-mno-cygwin-on-mingw.patch'
+        'pnet-0001-pnet-newer-libgc-fix.patch'
+        'pnet-0002-pnet-newer-texinfo-fix.patch'
+        'pnet-0003-pnet-fix-line-number-info.patch'
+        'pnet-0004-pnet-fix-off-by-one.patch'
+        'pnet-0005-ucrt-timezone-macro.patch'
+        'pnet-0006-win64-findfirst-intptr.patch'
+        'pnetlib-0001-csant-flags-no-double-exeext.patch'
+        'ln-s-rel')
+sha256sums=('5e9d20a6938e0c6fedfed0cabc7e9e984024e4881b748d076e8c75f1aeb6efe7'
+            'SKIP'
+            'SKIP'
+            '1f8d063379fde01c5eef2f786253aa6adb0b1fd6279634890a6e02abd006d6d5'
+            '5774c1932b59142f31435460ffb2c96800b10889334e9bd39488a590434c7c34'
+            'c7f710a094b75154812abaa63bbf208803cabeb96eae46f7b7428ff5f7b613eb'
+            'fae847118dace63bedd8ca569aff3d7e7b9a474203a9a3cac7bc2abe1fcebdf2'
+            '88eb0200d379d56206218d211367364bcff8854bb8871d866ef9154a1df66cfe'
+            '586ed6b4c37e426705d005a78f3d2a5b33d2a76d8ffd4eee8fa0356b4df74740'
+            'a754afdf63c4e18d2b4b1fde50f00600200b9dac7b62c109a6786e26fc01d71d'
+            '0723cf1bb645e47cfbc2a83f22a907d2e014324a45437d5780445864ab6370e8'
+            '0cf070bf4f90008e02b3952a6d030107d700ea60eba7900c9124626d72037ae8')
+
+_bprefix() { echo "${MINGW_PREFIX}/lib/dotnet-bootstrap/pnet"; }
+
+# GCC 16 defaults to C23; this is C89/C99 code (Guix' GCC 14 era flags).
+_cflags="-O2 -g -std=gnu17 -Wno-error=implicit-function-declaration -Wno-error=incompatible-pointer-types -Wno-error=int-conversion -Wno-error=implicit-int -Wno-error=return-mismatch -Wno-pointer-to-int-cast"
+
+_apply() { # _apply <dir> <prefix>
+  local p
+  for p in "${srcdir}"/$2-0*.patch; do
+    msg2 "Applying $(basename "$p")"
+    patch -d "$1" -Np1 -i "$p"
+  done
+}
+
+prepare() {
+  # --- treecc
+  _apply "${srcdir}/treecc-${_treeccver}" treecc
+  (cd "${srcdir}/treecc-${_treeccver}" && rm -f configure && autoreconf -fi)
+
+  # --- pnet: the Guix origin snippet of pnet-git, then the patches
+  cd "${srcdir}/pnet"
+  rm -rf libffi libgc
+  rm -f compile configure config.guess config.sub depcomp install-sh ltconfig ltcf-c.sh ltmain.sh
+  find . \( -name Makefile -o -name Makefile.in \) -type f -delete
+  find . -type f \( -name '*_grammar.[ch]' -o -name '*_scanner.[ch]' \) -delete
+  sed -i "s/GCLIBS='.*libgc.a'/GCLIBS='-lgc'/" configure.in
+  sed -i '/OPT_SUBDIRS += lib/d' Makefile.am
+  sed -i -e 's|#include .*/libgc/include/gc.h.|#include <gc.h>|' \
+         -e 's|#include .*/libgc/include/gc_typed.h.|#include <gc/gc_typed.h>|' support/hb_gc.c
+  sed -i '/^TREECC_OUTPUT =/d' codegen/Makefile.am cscc/bf/Makefile.am \
+    cscc/csharp/Makefile.am cscc/c/Makefile.am cscc/java/Makefile.am
+  sed -i 's/YYLEX/yylex()/g' cscc/csharp/cs_grammar.y
+  sed -i 's/^CCPreProc CCPreProcessorStream;/extern &/' cscc/common/cc_main.h
+  sed -i 's/^int\ttoken;/extern &/' csdoc/scanner.c
+  sed -i 's/python1\.5/python/' doc/cvmdoc.py
+  sed -i 's/IL_CONFIG_UNROLL=y/IL_CONFIG_UNROLL=n/' profiles/full
+  _apply "${srcdir}/pnet" pnet
+  autoreconf -vif
+
+  # --- pnetlib: the Guix origin snippet of pnetlib-git, then the patches
+  cd "${srcdir}/pnetlib"
+  rm -f configure config.guess config.sub install-sh ltmain.sh
+  find . \( -name Makefile -o -name Makefile.in \) -type f -delete
+  sed -i 's/System\.Windows\.Forms//' tests/Makefile.am
+  _apply "${srcdir}/pnetlib" pnetlib
+  autoreconf -vif
+
+  # no prebuilt binaries may be left in the trees
+  if find "${srcdir}/pnet" "${srcdir}/pnetlib" "${srcdir}/treecc-${_treeccver}" -path '*/.git' -prune -o \
+       -type f \( -iname '*.dll' -o -iname '*.exe' -o -iname '*.so' -o -iname '*.a' -o -iname '*.o' \) -print | grep -q .; then
+    error "prebuilt binaries found in the sources"; return 1
+  fi
+
+  # binary-seeded Mono tools (e.g. mingw-w64-mono) must never be used
+  mkdir -p "${srcdir}/poison"
+  local t
+  for t in mono mcs gmcs dmcs csc csi xbuild msbuild dotnet; do
+    printf '#!/bin/sh\necho "POISON: %s must not be used in the bootstrap" >&2\nexit 97\n' "$t" > "${srcdir}/poison/$t"
+    chmod +x "${srcdir}/poison/$t"
+  done
+}
+
+build() {
+  local _p=$(_bprefix) _stage="${srcdir}/stage"
+  export PATH="${_stage}${_p}/bin:${srcdir}/poison:${PATH}"
+  # cscc finds its plug-ins/libraries via compiled-in paths below ${_p};
+  # point it at the staged copy while building pnetlib.
+  export CSCC_PLUGINS_PATH="${_stage}${_p}/lib/cscc/plugins"
+  export CSCC_LIB_PATH="${_stage}${_p}/lib/cscc/lib"
+
+  msg2 "treecc"
+  cd "${srcdir}/treecc-${_treeccver}"
+  ./configure --build=${MINGW_CHOST} --host=${MINGW_CHOST} --prefix="${_p}" CFLAGS="${_cflags}"
+  make
+  make DESTDIR="${_stage}" install
+
+  msg2 "pnet"
+  cd "${srcdir}/pnet"
+  ./configure --build=${MINGW_CHOST} --host=${MINGW_CHOST} --prefix="${_p}" CFLAGS="${_cflags}"
+  make CFLAGS="${_cflags}"
+  make DESTDIR="${_stage}" LN_S="${srcdir}/ln-s-rel" install
+
+  msg2 "pnetlib"
+  cd "${srcdir}/pnetlib"
+  ./configure --build=${MINGW_CHOST} --host=${MINGW_CHOST} --prefix="${_p}" --without-x CFLAGS="${_cflags}"
+  make
+}
+
+check() {
+  local _p=$(_bprefix) _stage="${srcdir}/stage"
+  cd "${srcdir}"
+  printf 'class H { static void Main () { int s = 0; foreach (int x in new int [] {1, 2, 3}) s += x; System.Console.WriteLine ("sum=" + s); } }\n' > hello.cs
+  # pnetlib's mscorlib is only staged by package(); use the build tree
+  CSCC_PLUGINS_PATH="${_stage}${_p}/lib/cscc/plugins" CSCC_LIB_PATH="${srcdir}/pnetlib/runtime:${srcdir}/pnetlib/System" \
+    "${_stage}${_p}/bin/cscc.exe" -o hello.exe hello.cs
+  [ "$("${_stage}${_p}/bin/ilrun.exe" -L "${srcdir}/pnetlib/runtime" hello.exe | tr -d '\r')" = "sum=6" ]
+}
+
+package() {
+  local _p=$(_bprefix) _stage="${srcdir}/stage"
+  export PATH="${_stage}${_p}/bin:${srcdir}/poison:${PATH}"
+  cd "${srcdir}/treecc-${_treeccver}"
+  make DESTDIR="${pkgdir}" install
+  cd "${srcdir}/pnet"
+  make DESTDIR="${pkgdir}" LN_S="${srcdir}/ln-s-rel" install
+  cd "${srcdir}/pnetlib"
+  # csant installs into "$(DESTDIR)$(CYG_CACHE)"; CYG_CACHE is a Windows
+  # path (cygpath -w) that cannot be prefixed with DESTDIR, use the MSYS form
+  make DESTDIR="${pkgdir}" LN_S="${srcdir}/ln-s-rel" CYG_CACHE="${_p}/lib/cscc/lib" install
+  rm -f "${pkgdir}${_p}"/share/info/dir
+
+  install -Dm644 "${srcdir}/pnet/COPYING" "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/COPYING"
+}
