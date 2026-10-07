@@ -1,0 +1,46 @@
+Why: mingw-w64 <time.h> (UCRT and msvcrt) #defines 'timezone' to 
+'_timezone', itself a macro for (*__timezone()).  ILGetTimeZoneAdjust() 
+declares a local 'long timezone', which then expands to a function-call 
+lvalue and GCC fails with "function '__timezone' is initialized like a 
+variable".  Rename the local.  New patch (MinGW-only problem, not in Guix).
+
+diff --git a/support/time.c b/support/time.c
+index 354c53b..82eb1eb 100644
+--- a/support/time.c
++++ b/support/time.c
+@@ -166,7 +166,7 @@ ILInt32 ILGetTimeZoneAdjust(void)
+ {
+ #if !defined(__palmos__)
+ 	int isdst = 0;
+-	long timezone = 0;
++	long tzadjust = 0;
+ 
+ #ifdef IL_WIN32_PLATFORM
+ 	TIME_ZONE_INFORMATION temp;
+@@ -175,11 +175,11 @@ ILInt32 ILGetTimeZoneAdjust(void)
+ 	/* we expect the adjustment to be in seconds, not minutes */
+ 	if(isdst)
+ 	{
+-		timezone = (temp.Bias + temp.DaylightBias) * 60;
++		tzadjust = (temp.Bias + temp.DaylightBias) * 60;
+ 	}
+ 	else
+ 	{
+-		timezone = temp.Bias * 60;
++		tzadjust = temp.Bias * 60;
+ 	}
+ #else
+ #ifdef HAVE_TM_GMTOFF
+@@ -188,10 +188,10 @@ ILInt32 ILGetTimeZoneAdjust(void)
+ 	tzset(); /* call this to get timezone changes */
+ 	struct tm *tms = localtime(&temp);
+ 	isdst = tms->tm_isdst;
+-	timezone = -(tms->tm_gmtoff);
++	tzadjust = -(tms->tm_gmtoff);
+ #endif
+ #endif
+-	return (ILInt32)timezone;
++	return (ILInt32)tzadjust;
+ #else
+ 	/* TODO */
+ 	return 0;

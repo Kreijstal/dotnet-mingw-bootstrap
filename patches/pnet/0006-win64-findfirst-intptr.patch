@@ -1,0 +1,29 @@
+Why: Win64 is LLP64.  The native-Win32 directory walker (USE_WIN32_FIND) 
+stores the _findfirst() handle, an intptr_t, in a 'long', so it is 
+truncated to 32 bits and _findnext()/_findclose() get a bogus handle.  
+Effect on x86_64 MinGW: csant's <includes name="**/*.txt"/> filesets come 
+back empty ('resgen: no inputs specified') or csant segfaults while 
+building pnetlib.  Use intptr_t.  New patch (Win64 only; not in Guix).
+
+diff --git a/support/dir.c b/support/dir.c
+index 1285115..eb5c1b2 100644
+--- a/support/dir.c
++++ b/support/dir.c
+@@ -382,7 +382,7 @@ int ILDirEntType(ILDirEnt *entry)
+ int ILGetFileType(const char *path)
+ {
+ 	struct _finddata_t fileinfo;
+-	long handle;
++	intptr_t handle;
+ 	handle = _findfirst(path, &fileinfo);
+ 	if(handle >= 0)
+ 	{
+@@ -407,7 +407,7 @@ int ILGetFileType(const char *path)
+  */
+ struct _tagILDir
+ {
+-	long handle;
++	intptr_t handle;
+ 	struct _finddata_t fileinfo;
+ 	int havefirst;
+ };

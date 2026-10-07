@@ -1,0 +1,18 @@
+Origin: GNU Guix gnu/packages/patches/pnet-fix-line-number-info.patch, added in Guix commit 1b1e9917ad043ac279bd829cd8ac6a842667f648
+Applied by Guix to pnet-git (gnu/packages/dotnet.scm, origin patches).
+Kept verbatim; text above the first 'diff' line is ignored by patch(1).
+Why: implicit casts created by ILCoerce lacked file/line info (debug info correctness; Guix fix).
+
+diff --git a/codegen/cg_coerce.c b/codegen/cg_coerce.c
+index 92d2f59a..c90ad5e2 100644
+--- a/codegen/cg_coerce.c
++++ b/codegen/cg_coerce.c
+@@ -1203,6 +1203,8 @@ int ILCoerce(ILGenInfo *info, ILNode *node, ILNode **parent,
+ 					!= ILMachineType_Void)
+ 	{
+ 		*parent = ILNode_CastSimple_create(node, constType);
++                yysetfilename(*parent, yygetfilename(node));
++		yysetlinenum(*parent, yygetlinenum(node));
+ 		return 1;
+ 	}
+ 	else if(indirect && GetIndirectConvertRules(info,fromType,toType,0, 

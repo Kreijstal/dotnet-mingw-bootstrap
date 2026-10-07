@@ -1,0 +1,3 @@
+#!/bin/sh
+echo "POISON: refusing to run binary-seeded gmcs from the host ($0 $*)" >&2
+exit 97

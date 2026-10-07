@@ -1,0 +1,608 @@
+{
+ "description": "GNU Guix Mono/Roslyn/MSBuild bootstrap graph, extracted from Guix source. Edge from->to: 'from' is a build input of 'to'.",
+ "source": "https://codeberg.org/guix/guix (gnu/packages/dotnet.scm @ a473ec23efdd19074b2615ea478767a596e452e3)",
+ "generated": "2026-10-08",
+ "nodes": [
+  {
+   "id": "treecc",
+   "version": "0.3.10",
+   "source": "savannah tarball treecc-0.3.10.tar.gz sha256 5e9d20a6938e0c6fedfed0cabc7e9e984024e4881b748d076e8c75f1aeb6efe7",
+   "guix_commit": "f2098a776afff1deb23c5cbcd2c2d80278b9a208",
+   "patches": [],
+   "kind": "guix",
+   "lang": "C"
+  },
+  {
+   "id": "pnet-git",
+   "version": "0.8.0-0.3baf947",
+   "source": "git https://git.savannah.gnu.org/git/dotgnu-pnet/pnet.git 3baf94734d8dc3fdabba68a8891e67a43ed6c4bd",
+   "guix_commit": "1b1e9917ad043ac279bd829cd8ac6a842667f648",
+   "patches": [
+    "pnet-newer-libgc-fix",
+    "pnet-newer-texinfo-fix",
+    "pnet-fix-line-number-info",
+    "pnet-fix-off-by-one"
+   ],
+   "gc": "system libgc",
+   "kind": "guix",
+   "lang": "C",
+   "provides": [
+    "cscc",
+    "ilrun",
+    "ilasm",
+    "resgen",
+    "csant"
+   ]
+  },
+  {
+   "id": "pnetlib-git",
+   "version": "0.8.0-0.c3c12b8",
+   "source": "git https://git.savannah.gnu.org/git/dotgnu-pnet/pnetlib.git c3c12b8b0c65f5482d03d6a4865f7670e98baf4c",
+   "guix_commit": "d65ac39c9130284692a0c856b2fc71241a2f8913",
+   "patches": [],
+   "kind": "guix",
+   "lang": "C#"
+  },
+  {
+   "id": "mono-1.2.6",
+   "version": "1.2.6",
+   "source": "tarball download.mono-project.com mono-1.2.6.tar.bz2 sha256 24cc4f396cac3053c7ba3fe68bc1b80359d75dc4f54a85f39a73cabc3d3f560f",
+   "guix_commit": "7d96fa640a6b71af444493f745a93837a7ea3e70",
+   "patches": [
+    "mono-1.2.6-bootstrap",
+    "mono-1.2.6-callsite-bound"
+   ],
+   "gc": "boehm(system)",
+   "kind": "guix",
+   "lang": "C+C#"
+  },
+  {
+   "id": "mono-1.9.1",
+   "version": "1.9.1",
+   "source": "https://gitlab.winehq.org/mono/mono.git tag mono-1.9.1.1",
+   "guix_commit": "893bd4a8ef39f33ba5c2cf74a750370ee43c9735",
+   "patches": [
+    "mono-1.9.1-fixes",
+    "mono-1.9.1-add-MONO_CREATE_IMAGE_VERSION",
+    "mono-1.9.1-reproducibility"
+   ],
+   "gc": "boehm(system)",
+   "notes": "MONO_CREATE_IMAGE_VERSION=v1.1.4322",
+   "kind": "guix",
+   "lang": "C+C#"
+  },
+  {
+   "id": "mono-2.4.2",
+   "version": "2.4.2.3",
+   "source": "https://gitlab.winehq.org/mono/mono.git tag mono-2-4-2-3",
+   "guix_commit": "436648994eaed5092393da4d6bdab6f0958dc7f2",
+   "patches": [
+    "mono-2.4.2.3-reproducibility",
+    "mono-2.4.2.3-fixes",
+    "mono-2.4.2.3-fix-parallel-builds"
+   ],
+   "gc": "boehm(system)",
+   "kind": "guix",
+   "lang": "C+C#"
+  },
+  {
+   "id": "mono-2.6.4",
+   "version": "2.6.4",
+   "source": "https://gitlab.winehq.org/mono/mono.git tag mono-2.6.4",
+   "guix_commit": "ff9771114de0856c803cf777f0fe6338cae9acc3",
+   "patches": [
+    "mono-2.4.2.3-reproducibility",
+    "mono-2.6.4-fixes"
+   ],
+   "gc": "boehm(system)",
+   "kind": "guix",
+   "lang": "C+C#"
+  },
+  {
+   "id": "mono-2.11.4",
+   "version": "2.11.4",
+   "source": "https://gitlab.winehq.org/mono/mono.git tag mono-2.11.4 + 4 submodules",
+   "guix_commit": "60314dbf81638b86b3a4ad4872f9e938f8a957cd",
+   "patches": [
+    "mono-2.11.4-fixes"
+   ],
+   "gc": "boehm(system)",
+   "notes": "first version with git submodules",
+   "kind": "guix",
+   "lang": "C+C#"
+  },
+  {
+   "id": "mono-3.0",
+   "version": "3.0.12",
+   "source": "https://gitlab.winehq.org/mono/mono.git tag mono-3.0.12 + 7 submodules",
+   "guix_commit": "6e8c6cfafa0e8b9937098ce136a67e4ca4a2155a",
+   "patches": [],
+   "gc": "boehm(system)",
+   "kind": "guix",
+   "lang": "C+C#"
+  },
+  {
+   "id": "mono-3.12.1",
+   "version": "3.12.1",
+   "source": "https://gitlab.winehq.org/mono/mono.git tag mono-3.12.1 + 8 submodules",
+   "guix_commit": "5989da223e65ce2fcea1c5f46ad5256208beb0e4",
+   "patches": [],
+   "gc": "boehm(system)",
+   "kind": "guix",
+   "lang": "C+C#"
+  },
+  {
+   "id": "mono-4.9.0",
+   "version": "4.9.0",
+   "source": "https://gitlab.winehq.org/mono/mono.git commit 5a3736606e6243d2c84d4df2cf35c284214b8cc4 + 12 submodules",
+   "guix_commit": "011759c1cd2f52d6543d30561bc6815693918032",
+   "patches": [
+    "mono-4.9.0-fix-runtimemetadataversion"
+   ],
+   "gc": "sgen",
+   "notes": "--with-csc=mcs; reference assemblies copied from previous mono",
+   "kind": "guix",
+   "lang": "C+C#"
+  },
+  {
+   "id": "mono-5.0.1",
+   "version": "5.0.1",
+   "source": "https://gitlab.winehq.org/mono/mono.git tag mono-5.0.1.1 + 17 submodules",
+   "guix_commit": "5f65625a709f0a74bb852756971675f9032a8f43",
+   "patches": [],
+   "gc": "sgen",
+   "notes": "binary-reference-assemblies rebuilt from source; roslyn install disabled",
+   "kind": "guix",
+   "lang": "C+C#"
+  },
+  {
+   "id": "mono-5.1.0",
+   "version": "5.1.0",
+   "source": "https://gitlab.winehq.org/mono/mono.git commit 6fafd08b507c56f11a2eb6570703a39e5bdc0a81",
+   "guix_commit": "84fcfb9f4f7a69dc0ecd5871e5e36d978ecedce0",
+   "patches": [],
+   "gc": "sgen",
+   "notes": "resx2sr installed",
+   "kind": "guix",
+   "lang": "C+C#"
+  },
+  {
+   "id": "mono-5.2.0",
+   "version": "5.2.0.224",
+   "source": "https://gitlab.winehq.org/mono/mono.git tag mono-5.2.0.224",
+   "guix_commit": "959ab3571861989e5462125a4d4c81056f9d9582",
+   "patches": [],
+   "gc": "sgen",
+   "kind": "guix",
+   "lang": "C+C#"
+  },
+  {
+   "id": "mono-5.4.0",
+   "version": "5.4.0.212",
+   "source": "https://gitlab.winehq.org/mono/mono.git tag mono-5.4.0.212",
+   "guix_commit": "e87bd7473ad41049240ebe354f30e310363cb4db",
+   "patches": [
+    "mono-5.4.0-patches",
+    "corefx-mono-5.4.0-patches"
+   ],
+   "gc": "sgen",
+   "kind": "guix",
+   "lang": "C+C#"
+  },
+  {
+   "id": "mono-pre-5.8.0",
+   "version": "5.4.0.201-0.d0f51b4",
+   "source": "https://gitlab.winehq.org/mono/mono.git commit d0f51b4e834042cfa593748ada942033b458cc40",
+   "guix_commit": "b0ef15d7f41ace2d15cbef64b85d92fa20d154d3",
+   "patches": [
+    "mono-5.4.0-patches",
+    "corefx-mono-pre-5.8.0-patches"
+   ],
+   "gc": "sgen",
+   "kind": "guix",
+   "lang": "C+C#"
+  },
+  {
+   "id": "mono-5.8.0",
+   "version": "5.8.0.129",
+   "source": "https://gitlab.winehq.org/mono/mono.git tag mono-5.8.0.129",
+   "guix_commit": "27d7d879b79230143c81b114d98fd977325ea36b",
+   "patches": [
+    "mono-5.8.0-patches"
+   ],
+   "gc": "sgen",
+   "kind": "guix",
+   "lang": "C+C#"
+  },
+  {
+   "id": "mono-pre-5.10.0",
+   "version": "5.8.0.129-0.3e9d7d6",
+   "source": "https://gitlab.winehq.org/mono/mono.git commit 3e9d7d6e9cf8dc33eb29c497c350a1cd7df3a057",
+   "guix_commit": "bdfdd356bfd61a2fcdc869ab2792646ea190a80d",
+   "patches": [
+    "mono-mcs-patches-from-5.10.0"
+   ],
+   "gc": "sgen",
+   "notes": "mcs cherry-picks from 5.10",
+   "kind": "guix",
+   "lang": "C+C#"
+  },
+  {
+   "id": "mono-5.10.0",
+   "version": "5.10.0.179",
+   "source": "https://gitlab.winehq.org/mono/mono.git tag mono-5.10.0.179",
+   "guix_commit": "8e8653fcfb6081f1e96d7cf876faeeda8bd52e30",
+   "patches": [
+    "mono-5.10.0-later-mcs-changes"
+   ],
+   "gc": "sgen",
+   "notes": "mcs cherry-picks up to 6.12",
+   "kind": "guix",
+   "lang": "C+C#"
+  },
+  {
+   "id": "mono-bootstrap",
+   "version": "6.12.0.206",
+   "source": "https://gitlab.winehq.org/mono/mono.git tag mono-6.12.0.206 + 19 submodules",
+   "guix_commit": "84df0c4f396bcde7b0d0f5a6bb7455efa4a2f643",
+   "patches": [
+    "mono-6.12.0-fix-ConditionParser",
+    "mono-6.12.0-add-runpath",
+    "mono-6.12.0-emit-ref-readonly-return-modreq",
+    "mono-6.12.0-fix-AssemblyResolver"
+   ],
+   "gc": "sgen",
+   "notes": "renamed from mono by ba2e09c171a317c3e84cbf2f5149c1132b9e341f",
+   "kind": "guix",
+   "lang": "C+C#"
+  },
+  {
+   "id": "libgdiplus",
+   "version": "6.2",
+   "source": "https://gitlab.winehq.org/mono/libgdiplus.git tag 6.2",
+   "guix_commit": "a46816dcd155e0544e745deb7256362574fe3154",
+   "patches": [],
+   "kind": "guix",
+   "lang": "C"
+  },
+  {
+   "id": "mono-system-collections-immutable-bootstrap",
+   "version": "6.12.0.206",
+   "source": "mono-bootstrap source external/corefx",
+   "guix_commit": "e365fc68f3f48167dcb1b63d6acbc1d857d1ed15",
+   "patches": [],
+   "kind": "guix",
+   "lang": "C#"
+  },
+  {
+   "id": "mono-system-reflection-metadata-bootstrap",
+   "version": "6.12.0.206",
+   "source": "mono-bootstrap source external/corefx",
+   "guix_commit": "15a43c743102b5026eccb82be94af30de799f79f",
+   "patches": [],
+   "kind": "guix",
+   "lang": "C#"
+  },
+  {
+   "id": "msbuild",
+   "version": "15.7.179",
+   "source": "https://github.com/dotnet/msbuild tag v15.7.179",
+   "guix_commit": "5239ec21fda51687671c6667a3bffbcd32bbc9d5",
+   "patches": [
+    "mono-msbuild-15.7.179-fix-build",
+    "mono-msbuild-15.7.179-fix-resources"
+   ],
+   "kind": "guix",
+   "lang": "C#"
+  },
+  {
+   "id": "roslyn-2.0",
+   "version": "2.0.0",
+   "source": "https://github.com/dotnet/roslyn version-2.0.0",
+   "guix_commit": "0648b5020f856216e4ee9daf7bc35a89e8fc0f00",
+   "patches": [
+    "roslyn-2.0.0-bootstrap-with-mono"
+   ],
+   "kind": "guix",
+   "lang": "C#"
+  },
+  {
+   "id": "roslyn-2.3",
+   "version": "2.3.0",
+   "source": "https://github.com/dotnet/roslyn (see dotnet.scm)",
+   "guix_commit": "a0a9240d0aaaab6067fbe6464f20d3942c0657cc",
+   "patches": [
+    "roslyn-2.3.0-default-literal-for-csc-2.0"
+   ],
+   "kind": "guix",
+   "lang": "C#"
+  },
+  {
+   "id": "roslyn-2.8",
+   "version": "2.8.2",
+   "source": "https://github.com/dotnet/roslyn (see dotnet.scm)",
+   "guix_commit": "ce5aae4199f0cbd08b6460f568fcbcdef58d9160",
+   "patches": [
+    "roslyn-2.8.2-csharp-7.2-for-csc-2.3"
+   ],
+   "kind": "guix",
+   "lang": "C#"
+  },
+  {
+   "id": "roslyn-3.0",
+   "version": "3.0.0",
+   "source": "https://github.com/dotnet/roslyn (see dotnet.scm)",
+   "guix_commit": "d71affea0c59266b8fc75377c3e6d32878a29b56",
+   "patches": [
+    "roslyn-3.0.0-bootstrap-with-csc-2.8"
+   ],
+   "kind": "guix",
+   "lang": "C#"
+  },
+  {
+   "id": "roslyn-3.2",
+   "version": "3.2.0",
+   "source": "https://github.com/dotnet/roslyn (see dotnet.scm)",
+   "guix_commit": "a883d8d02b76983f15d1a3733b13b46c174bdd03",
+   "patches": [
+    "roslyn-3.2.0-bootstrap-with-csc-3.0"
+   ],
+   "kind": "guix",
+   "lang": "C#"
+  },
+  {
+   "id": "roslyn-3.8",
+   "version": "3.8.0",
+   "source": "https://github.com/dotnet/roslyn (see dotnet.scm)",
+   "guix_commit": "1e78c108e5e3bce2f53437baf1390545c11c184b",
+   "patches": [
+    "roslyn-3.8.0-bootstrap-with-csc-3.2"
+   ],
+   "kind": "guix",
+   "lang": "C#"
+  },
+  {
+   "id": "roslyn-3.9",
+   "version": "3.9.0",
+   "source": "https://github.com/dotnet/roslyn (see dotnet.scm)",
+   "guix_commit": "8bd02af8349e07a2b93db8451054bf4ab78f56d8",
+   "patches": [
+    "roslyn-3.9.0-bootstrap-with-csc-3.8"
+   ],
+   "kind": "guix",
+   "lang": "C#"
+  },
+  {
+   "id": "mono",
+   "version": "6.12.0.206",
+   "source": "trivial: mono-bootstrap symlink tree + roslyn-3.9 csc",
+   "guix_commit": "c143f00ce73ee0603f50f70aa0846c7e1f381ed0",
+   "patches": [],
+   "kind": "guix",
+   "lang": "-"
+  }
+ ],
+ "edges": [
+  {
+   "to": "pnet-git",
+   "role": "native-input",
+   "from": "treecc"
+  },
+  {
+   "to": "pnetlib-git",
+   "role": "native-input",
+   "from": "treecc"
+  },
+  {
+   "to": "pnetlib-git",
+   "role": "compiler+runtime",
+   "from": "pnet-git"
+  },
+  {
+   "to": "mono-1.2.6",
+   "role": "compiler+runtime (EXTERNAL_MCS=cscc, EXTERNAL_RUNTIME=ilrun)",
+   "from": "pnet-git"
+  },
+  {
+   "to": "mono-1.2.6",
+   "role": "native-input",
+   "from": "pnetlib-git"
+  },
+  {
+   "to": "mono-1.9.1",
+   "role": "compiler+runtime",
+   "from": "mono-1.2.6"
+  },
+  {
+   "to": "mono-2.4.2",
+   "role": "compiler+runtime",
+   "from": "mono-1.9.1"
+  },
+  {
+   "to": "mono-2.6.4",
+   "role": "compiler+runtime",
+   "from": "mono-2.4.2"
+  },
+  {
+   "to": "mono-2.11.4",
+   "role": "compiler+runtime",
+   "from": "mono-2.6.4"
+  },
+  {
+   "to": "mono-3.0",
+   "role": "compiler+runtime",
+   "from": "mono-2.11.4"
+  },
+  {
+   "to": "mono-3.12.1",
+   "role": "compiler+runtime",
+   "from": "mono-3.0"
+  },
+  {
+   "to": "mono-4.9.0",
+   "role": "compiler+runtime",
+   "from": "mono-3.12.1"
+  },
+  {
+   "to": "mono-5.0.1",
+   "role": "compiler+runtime",
+   "from": "mono-4.9.0"
+  },
+  {
+   "to": "mono-5.1.0",
+   "role": "compiler+runtime",
+   "from": "mono-5.0.1"
+  },
+  {
+   "to": "mono-5.2.0",
+   "role": "compiler+runtime",
+   "from": "mono-5.1.0"
+  },
+  {
+   "to": "mono-5.4.0",
+   "role": "compiler+runtime",
+   "from": "mono-5.2.0"
+  },
+  {
+   "to": "mono-pre-5.8.0",
+   "role": "compiler+runtime",
+   "from": "mono-5.4.0"
+  },
+  {
+   "to": "mono-5.8.0",
+   "role": "compiler+runtime",
+   "from": "mono-pre-5.8.0"
+  },
+  {
+   "to": "mono-pre-5.10.0",
+   "role": "compiler+runtime",
+   "from": "mono-5.8.0"
+  },
+  {
+   "to": "mono-5.10.0",
+   "role": "compiler+runtime",
+   "from": "mono-pre-5.10.0"
+  },
+  {
+   "to": "mono-bootstrap",
+   "role": "compiler+runtime",
+   "from": "mono-5.10.0"
+  },
+  {
+   "to": "mono-bootstrap",
+   "role": "input",
+   "from": "libgdiplus"
+  },
+  {
+   "to": "mono-system-collections-immutable-bootstrap",
+   "role": "compiler (mcs)",
+   "from": "mono-bootstrap"
+  },
+  {
+   "to": "mono-system-reflection-metadata-bootstrap",
+   "role": "compiler (mcs)",
+   "from": "mono-bootstrap"
+  },
+  {
+   "to": "mono-system-reflection-metadata-bootstrap",
+   "role": "input",
+   "from": "mono-system-collections-immutable-bootstrap"
+  },
+  {
+   "to": "msbuild",
+   "role": "compiler (mcs)",
+   "from": "mono-bootstrap"
+  },
+  {
+   "to": "msbuild",
+   "role": "input",
+   "from": "mono-system-reflection-metadata-bootstrap"
+  },
+  {
+   "to": "msbuild",
+   "role": "input",
+   "from": "mono-system-collections-immutable-bootstrap"
+  },
+  {
+   "to": "roslyn-2.0",
+   "role": "compiler (mcs -langversion:7.2) + runtime",
+   "from": "mono-bootstrap"
+  },
+  {
+   "to": "roslyn-2.0",
+   "role": "input",
+   "from": "mono-system-collections-immutable-bootstrap"
+  },
+  {
+   "to": "roslyn-2.3",
+   "role": "compiler (csc)",
+   "from": "roslyn-2.0"
+  },
+  {
+   "to": "roslyn-2.3",
+   "role": "runtime",
+   "from": "mono-bootstrap"
+  },
+  {
+   "to": "roslyn-2.8",
+   "role": "compiler (csc)",
+   "from": "roslyn-2.3"
+  },
+  {
+   "to": "roslyn-2.8",
+   "role": "runtime",
+   "from": "mono-bootstrap"
+  },
+  {
+   "to": "roslyn-3.0",
+   "role": "compiler (csc)",
+   "from": "roslyn-2.8"
+  },
+  {
+   "to": "roslyn-3.0",
+   "role": "runtime",
+   "from": "mono-bootstrap"
+  },
+  {
+   "to": "roslyn-3.2",
+   "role": "compiler (csc)",
+   "from": "roslyn-3.0"
+  },
+  {
+   "to": "roslyn-3.2",
+   "role": "runtime",
+   "from": "mono-bootstrap"
+  },
+  {
+   "to": "roslyn-3.8",
+   "role": "compiler (csc)",
+   "from": "roslyn-3.2"
+  },
+  {
+   "to": "roslyn-3.8",
+   "role": "runtime",
+   "from": "mono-bootstrap"
+  },
+  {
+   "to": "roslyn-3.9",
+   "role": "compiler (csc)",
+   "from": "roslyn-3.8"
+  },
+  {
+   "to": "roslyn-3.9",
+   "role": "runtime",
+   "from": "mono-bootstrap"
+  },
+  {
+   "to": "mono",
+   "role": "input",
+   "from": "mono-bootstrap"
+  },
+  {
+   "to": "mono",
+   "role": "input",
+   "from": "roslyn-3.9"
+  }
+ ],
+ "msys2_status_see": "docs/bootstrap-plan.md"
+}

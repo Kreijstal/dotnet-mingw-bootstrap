@@ -1,0 +1,13 @@
+#!/bin/sh
+# Replacement for $(LN_S) on MSYS2, where `ln -s`/`cp -pR` copy files and
+# resolve a relative TARGET against the *current* directory instead of the
+# link's directory (Unix symlink semantics, which pnet's install-*-local rules
+# assume, e.g. `$(LN_S) ilasm.1.gz $(man1dir)/al.1.gz`).
+# Copies TARGET (resolved relative to dirname LINK) to LINK; a missing target
+# (pnet references *.1.gz man pages that it installs uncompressed) is a
+# warning, not an error.
+[ "$1" = "-f" ] && shift
+t=$1 l=$2
+case $t in /*) src=$t ;; *) src=$(dirname "$l")/$t ;; esac
+if [ -e "$src" ]; then rm -f "$l"; cp -pR "$src" "$l"
+else echo "ln-s-rel: warning: $src does not exist, not creating $l" >&2; fi

@@ -1,0 +1,17 @@
+Why: GCC >= 4.7 removed -mno-cygwin.  treecc's configure.in forces
+CC="gcc -mno-cygwin" for *-*-mingw* hosts (a 2000s Cygwin-hosted MinGW idiom),
+so configure dies with 'C compiler cannot create executables'.  Restrict it to
+Cygwin hosts; a native MinGW host just uses $CC.  New patch (not in Guix: Guix
+never builds for Windows).  Requires autoreconf afterwards.
+
+--- a/configure.in	2007-03-02 20:09:09.000000000 +0100
++++ b/configure.in	2026-10-08 00:05:06.776627395 +0200
+@@ -8,7 +8,7 @@
+ dnl Turn off the cygwin library if building for Win32.
+ AC_MSG_CHECKING([if building for some Win32 platform])
+ case "$host" in
+-	*-*-mingw*|*-*-cygwin*)
++	*-*-cygwin*)
+ 		platform_win32=yes
+ 		CC="gcc -mno-cygwin"
+ 		;;

@@ -1,0 +1,21 @@
+Why: on Windows hosts configure.in appends $(EXEEXT) to the cscc, cscc-cs, 
+resgen and ilgac paths found by AC_PATH_PROG.  With autoconf >= 2.5x those 
+paths already end in .exe, so csant was told to run 'cscc.exe.exe' etc. and 
+the pnetlib build fails (seen on MSYS2 UCRT64).  Drop the extra $(EXEEXT); 
+a no-op where EXEEXT is empty.  New patch (not in Guix).
+
+diff --git a/configure.in b/configure.in
+index 9f7f223..b6b9fb8 100644
+--- a/configure.in
++++ b/configure.in
+@@ -224,7 +224,9 @@ if test "$MSTOOLS" = "no"; then
+ 				CYG_CACHE=`"$CYGPATH" -w "${prefix}/lib/cscc/lib"`
+ 			fi
+ 		fi
+-		CSANT_FLAGS='--compiler cscc -Dcscc="$(CSHARP_COMPILER)$(EXEEXT)" -Dcscc.plugins.cs="$(CSHARP_PLUGIN)$(EXEEXT)" --profile "$(top_srcdir)/profiles/$(PROFILE_NAME)" -Dresgen="$(CYG_RESGEN)$(EXEEXT)" -Dilgac="$(CYG_ILGAC)$(EXEEXT)" --assembly-cache "$(DESTDIR)$(CYG_CACHE)"'
++		dnl Modern autoconf's AC_PATH_PROG already returns the path with
++		dnl $EXEEXT (e.g. cscc.exe), so do not append it a second time.
++		CSANT_FLAGS='--compiler cscc -Dcscc="$(CSHARP_COMPILER)" -Dcscc.plugins.cs="$(CSHARP_PLUGIN)" --profile "$(top_srcdir)/profiles/$(PROFILE_NAME)" -Dresgen="$(CYG_RESGEN)" -Dilgac="$(CYG_ILGAC)" --assembly-cache "$(DESTDIR)$(CYG_CACHE)"'
+ 	fi
+ else
+ 	AC_PATH_PROG(CSHARP_COMPILER, csc)

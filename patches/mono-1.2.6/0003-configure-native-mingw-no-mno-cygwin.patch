@@ -1,0 +1,34 @@
+Why: mono-1.2.6 only knew Windows builds hosted on Cygwin with 'gcc 
+-mno-cygwin' (MinGW mode of Cygwin's gcc-3, msvcrt).  For any *-*-mingw* 
+host that is not cross compiling, configure.in forces CC="gcc -mno-cygwin 
+-g" and adds -mno-cygwin to libmono_cflags/ldflags (mono.pc).  GCC >= 4.7 
+removed that option, so configure fails at 'C compiler cannot create 
+executables' under MSYS2.  Keep that behaviour for *-*-cygwin* hosts only; 
+a native MinGW-w64 host uses $CC.  New patch (not in Guix).
+
+diff --git a/configure.in b/configure.in
+index a2363b3a..a88576e6 100644
+--- a/configure.in
++++ b/configure.in
+@@ -64,15 +64,19 @@ case "$host" in
+ 	*-*-mingw*|*-*-cygwin*)
+ 		platform_win32=yes
+ 		AC_DEFINE(PLATFORM_WIN32,1,[Platform is Win32])
++		case "$host" in
++		*-*-cygwin*)
+ 		if test "x$cross_compiling" = "xno"; then
+ 			CC="gcc -mno-cygwin -g"
+ 			# So libgc configure gets -mno-cygwin
+ 			export CC
+ 		fi
+-		HOST_CC="gcc"
+-		CPPFLAGS="$CPPFLAGS -DWIN32_THREADS -DFD_SETSIZE=1024 -DUNICODE -D_UNICODE"
+ 		libmono_cflags="-mno-cygwin"
+ 		libmono_ldflags="-mno-cygwin"
++		;;
++		esac
++		HOST_CC="gcc"
++		CPPFLAGS="$CPPFLAGS -DWIN32_THREADS -DFD_SETSIZE=1024 -DUNICODE -D_UNICODE"
+ 		libdl=
+ 		libgc_threads=win32
+ 		gc_default=included
