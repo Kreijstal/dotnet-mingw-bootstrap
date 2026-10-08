@@ -1,0 +1,31 @@
+Why: root cause of the i686 'libmono.dll' ERROR_DLL_INIT_FAILED (1114).  
+Mono's win32 DllMain (mini/driver.c) calls GC_DllMain, but with an external 
+bdwgc 8.x <gc.h> only declares it for GC_INSIDE_DLL, so GCC compiles an 
+implicit declaration (cdecl; only a warning because of 
+-Wno-error=implicit-function-declaration).  GC_DllMain is WINAPI/stdcall 
+and pops its 12 argument bytes; the cdecl caller does not expect that, so 
+DllMain's own stack frame is 12 bytes off and 'ret /bin/bashxc' jumps to 
+the 'reserved' argument (gdb: SIGSEGV at 0x005ffd24 == reserved, right 
+after GC_DllMain@12 returns into DllMain@12+31).  Declare the prototype.  
+(x86_64 has a single calling convention, so UCRT64 was not affected.)  
+Mono's bundled libgc declared it unconditionally.  New patch (not in Guix).
+
+diff --git a/mono/mini/driver.c b/mono/mini/driver.c
+index bb705c0d..fe666a66 100644
+--- a/mono/mini/driver.c
++++ b/mono/mini/driver.c
+@@ -1207,6 +1207,14 @@ static const char info[] =
+ #endif
+ 
+ #ifdef PLATFORM_WIN32
++#ifdef HAVE_BOEHM_GC
++/* An external libgc's <gc.h> declares GC_DllMain only when building the GC
++ * itself (GC_INSIDE_DLL); without a prototype the call is compiled as an
++ * implicitly declared cdecl function while GC_DllMain is WINAPI (stdcall).
++ * On i686 that leaves %esp 12 bytes off and libmono's DllMain returns into
++ * garbage (LoadLibrary fails with ERROR_DLL_INIT_FAILED). */
++BOOL WINAPI GC_DllMain (HINSTANCE inst, ULONG reason, LPVOID reserved);
++#endif
+ BOOL APIENTRY DllMain (HMODULE module_handle, DWORD reason, LPVOID reserved)
+ {
+ 	if (!GC_DllMain (module_handle, reason, reserved))

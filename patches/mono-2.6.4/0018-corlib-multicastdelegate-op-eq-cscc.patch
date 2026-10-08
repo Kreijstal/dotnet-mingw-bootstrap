@@ -1,0 +1,35 @@
+Why: after the DllMain fix, every program on the i686 mono-2.6.4 died of a 
+stack overflow in System.MulticastDelegate:op_Equality (gdb: the method 
+calls itself; -v: last method compiled).  Inside 'operator == 
+(MulticastDelegate d1, MulticastDelegate d2)', the test 'd1 == null' is a 
+reference comparison for mcs, but cscc resolves it to the user-defined 
+operator itself.  Cast to object, as Guix' mono-1.2.6-bootstrap.patch does 
+for 1.2.6.  Valid and equivalent for every compiler, so not guarded.
+
+diff --git a/mcs/class/corlib/System/MulticastDelegate.cs b/mcs/class/corlib/System/MulticastDelegate.cs
+index 28018e7b..90f0bc82 100644
+--- a/mcs/class/corlib/System/MulticastDelegate.cs
++++ b/mcs/class/corlib/System/MulticastDelegate.cs
+@@ -262,16 +262,18 @@ namespace System
+ 
+ 		public static bool operator == (MulticastDelegate d1, MulticastDelegate d2)
+ 		{
+-			if (d1 == null)
+-		    		return d2 == null;
++			// (object) casts: cscc applies this operator to "d1 == null",
++			// recursing forever (Guix mono-1.2.6-bootstrap.patch does the same)
++			if ((object)d1 == null)
++		    		return (object)d2 == null;
+ 		    		
+ 			return d1.Equals (d2);
+ 		}
+ 		
+ 		public static bool operator != (MulticastDelegate d1, MulticastDelegate d2)
+ 		{
+-			if (d1 == null)
+-				return d2 != null;
++			if ((object)d1 == null)
++				return (object)d2 != null;
+ 		    	
+ 			return !d1.Equals (d2);
+ 		}
