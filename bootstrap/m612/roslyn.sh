@@ -22,65 +22,26 @@ B=$M612/build/roslyn-$V
 OUT=$M612/roslyn-$V
 P=$here/../../patches/m612/roslyn-$V
 mkdir -p "$M612/src" "$M612/build"
-# csc <log-name> args... : compile via a response file (Windows' 32K command
-# line limit), keep the full log in obj/<log-name>.log, show errors, fail on error.
-csc() {
-  local name=$1; shift
-  mkdir -p "$B/obj"; local rsp="$B/obj/$name.rsp" a
-  : > "$rsp"; for a in "$@"; do printf '"%s"\n' "$a" >> "$rsp"; done
-  local rc=0
-  mono "$BCSC" -nologo -noconfig -langversion:preview -nowarn:1701,1702,8632,8669,1573,1591 @"$rsp" > "$B/obj/$name.log" 2>&1 || rc=$?
-  grep -E 'error CS' "$B/obj/$name.log" | head -${SHOW_ERRORS:-60} || true
-  echo "csc $name: rc=$rc, $(grep -c 'error CS' "$B/obj/$name.log" || true) errors"
-  return $rc
-}
-
-# References: the .NET Framework 4.7.2 reference assemblies shipped by the
-# MSYS2 mono package (lib/mono/4.7.2-api), like a real net472 build.  Mono's
-# runtime mscorlib (lib/mono/4.5) has a public Span<T> of its own, which
-# clashes with System.Memory's (CS0433/CS0012), so it is not used for
-# compiling.  The netstandard2.0 "package" assemblies (SCI/SRM 5.0,
-# System.Memory, Unsafe, ...) come from lib/mono/4.5 of the same package.
-ML=$(cygpath -m "$MONO_LIB"); RA=$(cygpath -m "$MONO_LIB/../4.7.2-api")
-REFS=(-r:"$RA/mscorlib.dll" -r:"$RA/System.dll" -r:"$RA/System.Core.dll"
-  -r:"$RA/System.Xml.dll" -r:"$RA/System.Xml.Linq.dll" -r:"$RA/System.Numerics.dll"
-  -r:"$RA/System.IO.Compression.dll" -r:"$RA/System.Runtime.Serialization.dll"
-  -r:"$RA/System.Security.dll" -r:"$RA/System.Configuration.dll"
-  -r:"$RA/Facades/netstandard.dll" -r:"$RA/Facades/System.Runtime.dll" -r:"$RA/Facades/System.ValueTuple.dll"
-  -r:"$RA/Facades/System.Threading.Tasks.dll" -r:"$RA/Facades/System.Collections.dll"
-  ${EXTRA_PKG_REFS:-
-  -r:"$ML/System.Collections.Immutable.dll" -r:"$ML/System.Reflection.Metadata.dll"}
-  -r:"$ML/System.Memory.dll" -r:"$ML/System.Runtime.CompilerServices.Unsafe.dll"
-  -r:"$ML/System.Threading.Tasks.Extensions.dll" -r:"$ML/System.Numerics.Vectors.dll"
-  -r:"$ML/Facades/System.Text.Encoding.CodePages.dll")
-# Build-time tools (syntax/bound-tree generators) target .NET Core upstream
-# and only ever run here on Mono: compile them against Mono's runtime
-# profile (lib/mono/4.5), which has Index/Range, string.Contains(char)...
-TOOLREFS=(-r:"$ML/mscorlib.dll" -r:"$ML/System.dll" -r:"$ML/System.Core.dll" -r:"$ML/System.Xml.dll"
-  -r:"$ML/System.Xml.Linq.dll" -r:"$ML/Facades/netstandard.dll" -r:"$ML/Facades/System.Runtime.dll"
-  -r:"$ML/System.Collections.Immutable.dll")
+. "$here/common.sh"
+REFS=("${NETFX_REFS[@]}" $(pkg_refs))
 COMMON=(-nostdlib -optimize+ -debug:portable -deterministic -d:TRACE -nullable:enable -unsafe)
+# public-sign with the upstream (public) key so the identities match the
+# Microsoft.CodeAnalysis packages analyzers are compiled against
+SIGN=(-publicsign -keyfile:"$(keyfile MSShared)")
 
 step_prep() {
-  [ -f "$SRC" ] || curl -sSL -o "$SRC" "https://github.com/dotnet/roslyn/archive/refs/tags/$TAG.tar.gz"
+  fetch_tarball "https://github.com/dotnet/roslyn/archive/refs/tags/$TAG.tar.gz" "$SRC"
   rm -rf "${B:?}"; mkdir -p "$B"
   tar -C "$B" --strip-components=1 -xzf "$SRC"
   # provenance: the tarball ships test-resource PE files (and nothing used by
   # the compiler build); delete every binary before building.
-  scan_binaries "$B" > "$B/.deleted-binaries.txt" || true
-  log "deleting $(wc -l < "$B/.deleted-binaries.txt") binary files from the source tree"
-  tr '\n' '\0' < "$B/.deleted-binaries.txt" | xargs -0 -r rm -f
-  [ -z "$(scan_binaries "$B")" ] || die "binaries left in $B"
+  delete_binaries "$B"
   apply_patches "$B" "$P"
   mkdir -p "$B/obj"
 }
 
-resxgen() { mono "$M612/tools/ResxGen.exe" "$@"; }
 step_res() {
   cd "$B"
-  mkdir -p "$M612/tools"
-  [ "$M612/tools/ResxGen.exe" -nt "$here/tools/ResxGen.cs" ] || \
-    mono "$SEED_CSC" -nologo -out:"$M612/tools/ResxGen.exe" -r:System.Xml.dll -r:System.Core.dll "$here/tools/ResxGen.cs"
   resgen src/Compilers/Core/Portable/CodeAnalysisResources.resx obj/Microsoft.CodeAnalysis.CodeAnalysisResources.resources
   resgen src/Compilers/CSharp/Portable/CSharpResources.resx obj/Microsoft.CodeAnalysis.CSharp.CSharpResources.resources
   resxgen src/Compilers/Core/Portable/CodeAnalysisResources.resx obj/CodeAnalysisResources.g.cs Microsoft.CodeAnalysis.CodeAnalysisResources
@@ -123,7 +84,8 @@ step_gen() {
   rm -rf "${GD:?}"/*.cs "${GD:?}"/CSharpSyntaxGenerator
 }
 
-ivt() { local f=$1; shift; : > "$f"; for a in "$@"; do echo "[assembly: System.Runtime.CompilerServices.InternalsVisibleTo(\"$a\")]" >> "$f"; done; }
+IVT_PK=$(tr -d '\n\r' < "$KEYS"/MSShared-*.pubkey.hex)
+ivt() { local f=$1; shift; : > "$f"; for a in "$@"; do echo "[assembly: System.Runtime.CompilerServices.InternalsVisibleTo(\"$a, PublicKey=$IVT_PK\")]" >> "$f"; done; }
 ver() { printf '[assembly: System.Reflection.AssemblyVersion("%s")]\n[assembly: System.Reflection.AssemblyFileVersion("%s")]\n[assembly: System.Reflection.AssemblyInformationalVersion("%s (m612 bootstrap)")]\n' "${V%.*}.0.0" "$V.0" "$V" > "$1"; }
 
 step_core() {
@@ -132,7 +94,7 @@ step_core() {
     Microsoft.CodeAnalysis.CSharp.Scripting csc csi vbc VBCSCompiler Microsoft.Build.Tasks.CodeAnalysis
   ver obj/core-ver.cs
   local extra=(); [ -f obj/CollectionsStrings.g.cs ] && extra+=(obj/CollectionsStrings.g.cs -resource:obj/Microsoft.CodeAnalysis.Collections.Internal.Strings.resources)
-  csc core "${COMMON[@]}" -target:library -out:obj/Microsoft.CodeAnalysis.dll -d:COMPILERCORE "${REFS[@]}" \
+  csc core "${COMMON[@]}" "${SIGN[@]}" -target:library -out:obj/Microsoft.CodeAnalysis.dll -d:COMPILERCORE "${REFS[@]}" \
     -resource:obj/Microsoft.CodeAnalysis.CodeAnalysisResources.resources \
     -resource:src/Compilers/Core/Portable/Resources/default.win32manifest,Microsoft.CodeAnalysis.Resources.default.win32manifest \
     obj/CodeAnalysisResources.g.cs obj/core-ivt.cs obj/core-ver.cs "${extra[@]}" \
@@ -145,7 +107,7 @@ step_csharp() {
   cd "$B"
   ivt obj/cs-ivt.cs csc csi Microsoft.CodeAnalysis.CSharp.Scripting VBCSCompiler
   ver obj/cs-ver.cs
-  csc csharp "${COMMON[@]}" -target:library -out:obj/Microsoft.CodeAnalysis.CSharp.dll "${REFS[@]}" -r:obj/Microsoft.CodeAnalysis.dll \
+  csc csharp "${COMMON[@]}" "${SIGN[@]}" -target:library -out:obj/Microsoft.CodeAnalysis.CSharp.dll "${REFS[@]}" -r:obj/Microsoft.CodeAnalysis.dll \
     -resource:obj/Microsoft.CodeAnalysis.CSharp.CSharpResources.resources \
     obj/CSharpResources.g.cs obj/cs-ivt.cs obj/cs-ver.cs \
     $(find src/Compilers/CSharp/Portable src/Compilers/CSharp/CSharpAnalyzerDriver -name '*.cs') \
@@ -155,7 +117,7 @@ step_csharp() {
 step_csc() {
   cd "$B"
   ver obj/csc-ver.cs
-  csc csc "${COMMON[@]}" -target:exe -out:obj/csc.exe -d:NET472 -d:NETFRAMEWORK "${REFS[@]}" -r:obj/Microsoft.CodeAnalysis.dll -r:obj/Microsoft.CodeAnalysis.CSharp.dll \
+  csc csc "${COMMON[@]}" "${SIGN[@]}" -target:exe -out:obj/csc.exe -d:NET472 -d:NETFRAMEWORK "${REFS[@]}" -r:obj/Microsoft.CodeAnalysis.dll -r:obj/Microsoft.CodeAnalysis.CSharp.dll \
     -main:Microsoft.CodeAnalysis.CSharp.CommandLine.Program obj/csc-ver.cs \
     src/Compilers/CSharp/csc/Program.cs src/Compilers/Shared/RuntimeHostInfo.cs src/Compilers/Shared/NamedPipeUtil.cs \
     src/Compilers/Shared/BuildClient.cs src/Compilers/Shared/BuildServerConnection.cs src/Compilers/Shared/ExitingTraceListener.cs \
@@ -167,12 +129,12 @@ step_install() {
   cp "$B"/obj/{Microsoft.CodeAnalysis.dll,Microsoft.CodeAnalysis.CSharp.dll,csc.exe} "$OUT/"
   cp "$B"/obj/*.pdb "$OUT/" 2>/dev/null || true
   cp "$B/src/Compilers/CSharp/csc/App.config" "$OUT/csc.exe.config"
-  # runtime dependencies next to csc.exe (they are not in Mono's GAC).
-  # Default: the netstandard "package" assemblies of the trusted Mono seed;
-  # RUNTIME_DEPS overrides with from-source builds (see sci-srm.sh).
-  local d; for d in ${RUNTIME_DEPS:-$MONO_LIB/System.Collections.Immutable.dll $MONO_LIB/System.Reflection.Metadata.dll} \
-    $MONO_LIB/System.Memory.dll $MONO_LIB/System.Runtime.CompilerServices.Unsafe.dll $MONO_LIB/System.Threading.Tasks.Extensions.dll \
-    $MONO_LIB/System.Numerics.Vectors.dll; do cp "$d" "$OUT/"; done
+  # runtime dependencies next to csc.exe (they are not in Mono's GAC):
+  # the package assemblies from PKGDIR (from source) or the Mono seed.
+  local d; for d in $(pkg_runtime_files System.Collections.Immutable System.Reflection.Metadata System.Memory \
+    System.Buffers System.Runtime.CompilerServices.Unsafe System.Threading.Tasks.Extensions System.Numerics.Vectors); do
+    cp "$d" "$OUT/"; done
+  [ -z "${PKGDIR:-}" ] || echo "$PKGDIR" > "$OUT/.pkgdir"
   # default response file without the .NET Framework facade list
   printf '%s\n' -r:System.dll -r:System.Core.dll -r:System.Xml.dll -r:System.Xml.Linq.dll -r:Microsoft.CSharp.dll \
     -r:System.Numerics.dll -r:System.Data.dll -r:System.Net.Http.dll > "$OUT/csc.rsp"

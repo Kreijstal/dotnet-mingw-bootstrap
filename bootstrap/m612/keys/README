@@ -1,0 +1,13 @@
+Public (not private) strong-name keys, as hex text, so that from-source
+assemblies can be *public-signed* (csc -publicsign) and keep the exact
+assembly identities (name, version, PublicKeyToken) of the upstream
+assemblies they replace.  These are data, not code: the 160-byte RSA public
+key blobs as embedded in any assembly signed with them.  They were read with
+monodis from assemblies of the trusted MSYS2 mono 6.12 package; the token in
+each file name is SHA-1(key)[last 8 bytes, reversed] and was verified.
+
+  Microsoft-b03f5f7f11d50a3a  System.Collections.Immutable, System.Reflection.Metadata, MSBuild ...
+  Open-cc7b13ffcd2ddd51       System.Memory, System.Buffers, most dotnet/runtime OOB packages
+  MSShared-31bf3856ad364e35   Microsoft.CodeAnalysis*, NuGet? (MSSharedLib1024)
+
+Convert: xxd -r -p NAME.pubkey.hex > NAME.snk
