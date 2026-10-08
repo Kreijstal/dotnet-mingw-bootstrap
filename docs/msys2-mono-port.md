@@ -269,6 +269,133 @@ result · first error · root cause · patch/workaround · next blocker.
   - regenerating `keyboard_table` from its C# source;
   - dropping Managed.Windows.Forms from the bootstrap-only stages.
 
+## cscc/ilrun shortcut (skipping the old Mono JITs)
+
+The question: can pnet's C-implemented `cscc` (with `ilrun`) produce a
+*newer* Mono C# compiler directly, so that the chain skips mono
+1.2.6/1.9.1/2.4.2.3 and the i686 detour? All experiments ran on UCRT64
+x86_64 with the existing stage 0, extended incrementally with the patches
+listed below.
+
+### S1 – What C# does cscc (pnet git 3baf947) accept?
+I probed it with small programs (`bootstrap/tools`; the matrix was run on
+win11):
+
+| Feature | cscc |
+|---|---|
+| C# 1 (classes, structs, delegates, events, unsafe, `fixed`, properties) | yes |
+| static classes, partial classes, different accessor accessibility | yes |
+| generic type *declarations* (`class G<T>`), fields of generic type | yes |
+| generic types in local declarations / `new G<int>()` / generic method calls | **no** (parse error at `<`) |
+| iterators (`yield`) | **no** ("not yet supported") |
+| anonymous methods | **no** ("not yet supported") |
+| nullable `T?`, `??`, `global::` | **no** |
+| lambdas, extension methods, auto-properties, object initializers (C# 3) | **no** |
+
+So cscc is C# 1 plus fragments of C# 2. That is enough for mcs sources up to
+Mono 2.6.x, which are written in C# 1 so that Mono's own 1.1 profile could
+build them. I counted occurrences in `mcs/mcs/*.cs`:
+
+| Mono | uses of `List<`/`Dictionary<`… | lambda/`var` | basic profile |
+|---|---|---|---|
+| 1.9.1, 2.4.2.3, 2.6.4 | 5–6 (comments/strings) | 7–15 | `-d:ONLY_1_1` (C# 1) |
+| 2.8, 2.8.2 | 484 | – | `-d:NET_2_0 -d:BOOTSTRAP_BASIC` |
+| 2.10.11 | 513 | – | NET_2_0 |
+| 2.11.4 / 3.0.12 | 563 / 583 | 1414 / 1477 | NET_2_0 |
+
+**Highest mcs that cscc can compile: Mono 2.6.4**, the last release whose
+`basic` profile is C# 1.0/ONLY_1_1. From 2.8 on, both the compiler sources
+and the basic profile need generics.
+
+### S2 – cscc compiling mono-2.6.4's mcs.exe and basic corlib
+`bootstrap/tools/m264-cscc-probe.sh` compiles the components outside
+Mono's build system. Results:
+
+- **mcs.exe:** compiles in about 1.9 s. It needed these cscc patches:
+  - `pnet/0008-csc-codepage-65001-is-utf8`: with `/codepage:65001`, the UTF-8
+    BOM made the parse fail;
+  - `pnet/0009-assembly-version-2-3-parts`: `[AssemblyVersion("2.6.4")]`
+    was rejected;
+  - `pnet/0010-using-value-type-dispose`: `using` with a struct produced
+    invalid IL, a cscc TODO;
+  - plus one mcs source patch, `mono-2.6.4/0003-mcs-tokenizer-cscc-fallthrough`
+    (cscc's reachability analysis).
+- **mscorlib (basic):** compiles in about 1.2 s.
+  - The build must pass `/noconfig`, as Mono's makefiles do; otherwise cscc
+    also references pnetlib's mscorlib and every override fails.
+  - Source patches: `0004-corlib-object-cscc-basic` (System.Object without
+    `[Serializable]`, explicit Finalize, like Guix' 1.2.6 patch) and
+    `0005-corlib-cscc-basic-misc` (explicit `IMethodMessage.Uri`, braces
+    around two `fixed` statements).
+- **System (basic):** cscc's missing anonymous methods, iterators and
+  `[return:]` support were worked around in `0015-system-basic-cscc`
+  (Guix-style rewrites, `#if BOOTSTRAP_WITH_OLDLIB` only).
+- **A failed idea:** I first relaxed cscc's "circularity detected in class
+  definition" check instead of patching System.Object. It broke the
+  semantic-analysis order, so I reverted it. It is not in `patches/`.
+- **Windows quirk:** running cscc under MSYS2's `/usr/bin/time` made it fail
+  randomly without a message. The scripts don't use it.
+
+### S3 – the cscc-built mcs running on ilrun
+- **mcs 1.2.6** (Guix-patched, built by cscc) on `ilrun -C 16384`: `--version`
+  works, and **hello world compiles and runs**.
+  - `-C` (method cache page) is needed because `CSharpParser::yyparse` is
+    bigger than the default 128 KB conversion buffer.
+  - Fixes needed: `pnetlib/0002-typebuilder-null-parent-is-object` (mcs
+    calls `DefineType(..., null)`, which pnet answered with OutOfMemory) and
+    `pnet/0007-win32-getfiletype-getfileattributes` (`Directory.Exists` of
+    `GetFullPath(".")` was false).
+- **mcs 2.6.4** on ilrun: **hello world compiles and runs** in about 0.1 s.
+  Self-hosting (mcs compiling itself on ilrun) gets further after
+  `pnetlib/0003-typebuilder-enum-underlying-unset` and
+  `pnetlib/0004-typebuilder-stable-hashcode`.
+  - **It then stops on pnetlib's incomplete Reflection.Emit:**
+    `ModuleBuilder.GetType(string)` is a `// TODO return null`, so mcs
+    cannot form array types of TypeBuilders ("Couldn't create computed type
+    TypeParameter[]"). There is no `SymbolType` equivalent. Generic
+    Reflection.Emit (`DefineGenericParameters`, `MakeGenericType`), which
+    gmcs needs, is likewise not there.
+  - iterators/anonymous methods compiled by the basic mcs fail too, because
+    that mcs wants generic corlib types for them.
+- **Conclusion:** cscc-built mcs on ilrun is a working small C# 1 compiler,
+  but it is **not** a usable route to compile big code (itself, or a 2.0
+  corlib) without implementing the missing parts of pnetlib's
+  Reflection.Emit.
+
+### S4 – what it buys: a native mono-2.6.4 directly from cscc
+`bootstrap/06-mono-2.6.4-cscc.sh`:
+- `EXTERNAL_MCS=cscc EXTERNAL_RUNTIME="ilrun -C 16384"`.
+- `SKIP_BASIC_PROFILE_CHECK=yes`, via `0012-basic-profile-check-skip-knob`.
+  The check needs a corlib *without* CompilerGeneratedAttribute, and
+  pnetlib is 2.0-flavoured.
+- ilrun runs nothing else in Mono's build: from the second profile on,
+  Mono's own freshly built runtime runs the cscc-built `basic/mcs.exe`. So
+  **the interpreter's speed does not matter**. cscc itself is native C and
+  compiles mcs or corlib in 1–2 s.
+
+**On UCRT64 (x86_64): REQUIRES PATCHING.**
+- The 2.6.4 runtime builds after the MinGW patches carried over from 1.2.6
+  (`0006`–`0011`) plus:
+  - `0013-coree-imagebase-mingw-w64` (`_image_base__` does not exist on
+    x86_64);
+  - `0014-mini-h-sys-types` (`pid_t`);
+  - a static win32-threads bdwgc with `GC_DllMain`. Mono 2.x's `DllMain`
+    calls `GC_DllMain`, and MSYS2's `gc` is built with pthreads. So
+    `00-bdwgc.sh` gets `GC_PREFIX=$DNB/gc-win32-UCRT64 GC_STATIC=1`, which
+    means `--disable-thread-local-alloc` and `-DGC_INSIDE_DLL`, the only
+    combination that compiles `GC_DllMain`.
+- The cscc-built basic profile (mcs.exe, mscorlib, System) is produced.
+- **First blocker:** Mono 2.6.4's Win64 JIT. Any program, even a cscc-built
+  "hello world" against the new basic mscorlib, exits with status 127
+  without output. Console initialisation fails to load I18N, and the
+  managed exception path then crashes in JIT code (`rcx=0`, no native frames
+  found on the stack). An explicit `throw`/`catch` test segfaults. Mono 2.6
+  did not support 64-bit Windows: Win64 was still MSVC-only work in
+  progress.
+
+**On MINGW32 (i686):** the same script was started at the end of the
+session; see bootstrap-plan.md §7 for the result.
+
 ## Generic MSYS2 lessons (apply to every later stage)
 
 1. GCC 16 defaults to C23: use `-std=gnu17` and the Guix `-Wno-error=…` set.

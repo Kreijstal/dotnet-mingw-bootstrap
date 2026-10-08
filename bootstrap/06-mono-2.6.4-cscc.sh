@@ -23,15 +23,24 @@ if [ ! -f "$W/.prepared" ]; then
 fi
 apply_patches "$S" "$R/patches/mono-2.6.4"
 CF="$BOOT_CFLAGS -DARG_MAX=500"
+# Mono's win32 DllMain calls GC_DllMain: link a static win32-threads bdwgc
+# (bootstrap/00-bdwgc.sh with GC_PREFIX=$DNB/gc-win32-$MSYSTEM GC_STATIC=1)
+GCW=$DNB/gc-win32-$MSYSTEM
+[ -f "$GCW/lib/libgc.a" ] || GC_PREFIX="$GCW" GC_STATIC=1 bash "$R/bootstrap/00-bdwgc.sh"
+export CPPFLAGS="-I$GCW/include $CPPFLAGS" LDFLAGS="-L$GCW/lib $LDFLAGS"
 export SOURCE_DATE_EPOCH=315532800
 MK=(EXTERNAL_MCS="$STAGE0/bin/cscc" EXTERNAL_RUNTIME="$STAGE0/bin/ilrun -C 16384"
     SKIP_BASIC_PROFILE_CHECK=yes CFLAGS="$CF" V=1)
 cd "$S"
-if [ ! -f Makefile ]; then
-  CFLAGS="$CF" ./configure $BOOT_TRIPLET --prefix="$PREFIX" --with-gc=boehm
-  # Guix phase disable-signing (inherited from mono-1.9.1)
-  perl -pi -e 's/^LIB_MCS_FLAGS =/LIB_MCS_FLAGS = \/delaysign+ /' mcs/class/IBM.Data.DB2/Makefile
-  perl -pi -e 's/AssemblyDelaySign\(false\)/AssemblyDelaySign(true)/' mcs/class/FirebirdSql.Data.Firebird/Assembly/AssemblyInfo.cs || true
+# a later patch may touch configure.in: regenerate before (re)configuring
+if [ configure.in -nt configure ]; then NOCONFIGURE=1 ./autogen.sh; rm -f Makefile; fi
+[ -f Makefile ] || CFLAGS="$CF" ./configure $BOOT_TRIPLET --prefix="$PREFIX" --with-gc=boehm
+if [ ! -f .disable-signing ]; then
+  # Guix phase disable-signing (inherited from mono-1.9.1).  /usr/bin/perl:
+  # a native /ucrt64 perl would get its s/// argument path-converted by MSYS2.
+  /usr/bin/perl -pi -e 's/^LIB_MCS_FLAGS =/LIB_MCS_FLAGS = \/delaysign+ /' mcs/class/IBM.Data.DB2/Makefile
+  [ ! -f mcs/class/FirebirdSql.Data.Firebird/Assembly/AssemblyInfo.cs ] || /usr/bin/perl -pi -e 's/AssemblyDelaySign\(false\)/AssemblyDelaySign(true)/' mcs/class/FirebirdSql.Data.Firebird/Assembly/AssemblyInfo.cs
+  touch .disable-signing
 fi
 if [ "${STEP:-}" = runtime ]; then make -C mono -j4 CFLAGS="$CF"; exit 0; fi
 make "${MK[@]}"

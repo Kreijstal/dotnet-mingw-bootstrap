@@ -1,0 +1,21 @@
+Why: coree.h maps __ImageBase to _image_base__ for every non-MSVC compiler 
+(a mingw.org/Cygwin-era linker symbol).  On x86_64 mingw-w64 the linker 
+only provides __ImageBase / __image_base__, so linking pedump.exe fails: 
+"undefined reference to _image_base__" (assembly.c, mono_set_rootdir).  Use 
+__ImageBase directly on mingw-w64.  New patch (not in Guix).
+
+diff --git a/mono/metadata/coree.h b/mono/metadata/coree.h
+index 63c4eb10..61f2d4db 100644
+--- a/mono/metadata/coree.h
++++ b/mono/metadata/coree.h
+@@ -23,7 +23,9 @@
+ STDAPI MonoFixupCorEE(HMODULE ModuleHandle);
+ 
+ /* Defined by the linker. */
+-#ifndef _MSC_VER
++/* mingw-w64's ld defines __ImageBase itself (on x86_64 there is no
++   _image_base__ alias with the C name used below) */
++#if !defined(_MSC_VER) && !defined(__MINGW64_VERSION_MAJOR)
+ #define __ImageBase _image_base__
+ #endif
+ extern IMAGE_DOS_HEADER __ImageBase MONO_INTERNAL;

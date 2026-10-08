@@ -1,0 +1,17 @@
+Why: mini.h declares 'pid_t mono_runtime_syscall_fork (void)' but relies on 
+<sys/types.h> arriving indirectly; with mingw-w64 it does not for 
+genmdesc.c ('unknown type name pid_t').  Include it.  New patch (not in 
+Guix).
+
+diff --git a/mono/mini/mini.h b/mono/mini/mini.h
+index 21b6449a..c4ed15b8 100644
+--- a/mono/mini/mini.h
++++ b/mono/mini/mini.h
+@@ -4,6 +4,7 @@
+ #include "config.h"
+ #include <glib.h>
+ #include <signal.h>
++#include <sys/types.h>	/* pid_t (mono_runtime_syscall_fork); not pulled in on mingw-w64 */
+ #include <mono/metadata/loader.h>
+ #include <mono/metadata/mempool.h>
+ #include <mono/utils/monobitset.h>

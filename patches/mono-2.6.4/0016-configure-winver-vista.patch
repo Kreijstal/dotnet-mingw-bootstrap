@@ -1,0 +1,21 @@
+Why: configure.in builds for WINVER/_WIN32_WINNT 0x0500 (Windows 2000).  
+With mingw-w64 headers that hides the prototypes of inet_pton (Vista+) and 
+GetProcessId (XP SP1+), which patches 0008/0010 make mono use.  On x86_64 
+the implicit declarations still link; on i686 the calls are then emitted as 
+cdecl 'inet_pton' instead of stdcall 'inet_pton@16' and pedump.exe fails to 
+link ('undefined reference to inet_pton / GetProcessId').  Target Vista 
+(0x0600), as Mono 4.x does.  New patch (not in Guix).
+
+diff --git a/configure.in b/configure.in
+index 5286553b..d3e57b38 100644
+--- a/configure.in
++++ b/configure.in
+@@ -95,7 +95,7 @@ case "$host" in
+ 		esac
+ 		HOST_CC="gcc"
+ 		# Windows 2000 is required that includes Internet Explorer 5.01
+-		CPPFLAGS="$CPPFLAGS -DWINVER=0x0500 -D_WIN32_WINNT=0x0500 -D_WIN32_IE=0x0501 -D_UNICODE -DUNICODE -DWIN32_THREADS -DFD_SETSIZE=1024"
++		CPPFLAGS="$CPPFLAGS -DWINVER=0x0600 -D_WIN32_WINNT=0x0600 -D_WIN32_IE=0x0501 -D_UNICODE -DUNICODE -DWIN32_THREADS -DFD_SETSIZE=1024"
+ 		LDFLAGS="$LDFLAGS -lmswsock"
+ 		case "$host" in
+ 		*-*-cygwin*)

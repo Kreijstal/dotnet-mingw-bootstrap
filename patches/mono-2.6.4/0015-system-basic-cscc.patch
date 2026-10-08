@@ -1,0 +1,113 @@
+Why: cscc/ilrun shortcut.  cscc (pnet) has no anonymous methods and no 
+iterators and rejects [return:] attributes on interface methods.  The 
+basic-profile System.dll that cscc compiles uses all three: 
+LocalFileEventLog.EnableNotification (anonymous FileSystemEventHandler), 
+InotifyWatcher.GetEnumerator (yield), ICollectData.CollectData ([return: 
+MarshalAs]).  Same kind of rewrite as the System part of Guix' 
+mono-1.2.6-bootstrap.patch, here guarded by BOOTSTRAP_WITH_OLDLIB so only 
+the cscc-built basic profile changes.
+
+diff --git a/mcs/class/System/System.Diagnostics/ICollectData.cs b/mcs/class/System/System.Diagnostics/ICollectData.cs
+index c52f9871..842f0235 100644
+--- a/mcs/class/System/System.Diagnostics/ICollectData.cs
++++ b/mcs/class/System/System.Diagnostics/ICollectData.cs
+@@ -41,7 +41,9 @@ namespace System.Diagnostics
+ #endif
+ 	public interface ICollectData {
+ 		void CloseData ();
++#if !BOOTSTRAP_WITH_OLDLIB	// cscc: 'return' attribute target (Guix mono-1.2.6-bootstrap.patch)
+ 		[return: MarshalAs(UnmanagedType.I4)]
++#endif
+ 		void CollectData (
+ 			[In] [MarshalAs(UnmanagedType.I4)] int id, 
+ 			[In] [MarshalAs(UnmanagedType.SysInt)] IntPtr valueName, 
+diff --git a/mcs/class/System/System.Diagnostics/LocalFileEventLog.cs b/mcs/class/System/System.Diagnostics/LocalFileEventLog.cs
+index 62563821..d9bcb67e 100644
+--- a/mcs/class/System/System.Diagnostics/LocalFileEventLog.cs
++++ b/mcs/class/System/System.Diagnostics/LocalFileEventLog.cs
+@@ -141,6 +141,35 @@ namespace System.Diagnostics
+ 			file_watcher.EnableRaisingEvents = false;
+ 		}
+ 
++#if BOOTSTRAP_WITH_OLDLIB
++		void FileCreationWatcher (object o, FileSystemEventArgs e)
++		{
++			lock (this) {
++				if (_notifying)
++					return;
++				_notifying = true;
++			}
++
++			// allow for file to be finished writing
++			Thread.Sleep (100);
++
++			// Process every new entry in one notification event.
++			try {
++				while (GetLatestIndex () > last_notification_index) {
++					try {
++						CoreEventLog.OnEntryWritten (GetEntry (last_notification_index++));
++					} catch (Exception ex) {
++						// FIXME: find some proper way to output this error
++						Debug.WriteLine (ex);
++					}
++				}
++			} finally {
++				lock (this)
++					_notifying = false;
++			}
++		}
++#endif
++
+ 		public override void EnableNotification ()
+ 		{
+ 			if (file_watcher == null) {
+@@ -150,6 +179,10 @@ namespace System.Diagnostics
+ 
+ 				file_watcher = new FileSystemWatcher ();
+ 				file_watcher.Path = logDir;
++#if BOOTSTRAP_WITH_OLDLIB
++				// cscc has no anonymous methods (cf. Guix mono-1.2.6-bootstrap.patch)
++				file_watcher.Created += new FileSystemEventHandler (FileCreationWatcher);
++#else
+ 				file_watcher.Created += delegate (object o, FileSystemEventArgs e) {
+ 					lock (this) {
+ 						if (_notifying)
+@@ -175,6 +208,7 @@ namespace System.Diagnostics
+ 							_notifying = false;
+ 					}
+ 				};
++#endif
+ 			}
+ 			last_notification_index = GetLatestIndex ();
+ 			file_watcher.EnableRaisingEvents = true;
+diff --git a/mcs/class/System/System.IO/InotifyWatcher.cs b/mcs/class/System/System.IO/InotifyWatcher.cs
+index 9dce03ee..4ee0770d 100644
+--- a/mcs/class/System/System.IO/InotifyWatcher.cs
++++ b/mcs/class/System/System.IO/InotifyWatcher.cs
+@@ -432,6 +432,18 @@ namespace System.IO {
+ 			return 16 + len;
+ 		}
+ 
++#if BOOTSTRAP_WITH_OLDLIB
++		// cscc has no iterators (cf. Guix mono-1.2.6-bootstrap.patch)
++		static IEnumerable GetEnumerator (object source)
++		{
++			ArrayList result = new ArrayList ();
++			if (source is InotifyData)
++				result.Add (source);
++			else if (source is ArrayList)
++				result.AddRange ((ArrayList) source);
++			return result;
++		}
++#else
+ 		static IEnumerable GetEnumerator (object source)
+ 		{
+ 			if (source == null)
+@@ -446,6 +458,7 @@ namespace System.IO {
+ 					yield return list [i];
+ 			}
+ 		}
++#endif
+ 
+ 		/* Interesting events:
+ 			* Modify
