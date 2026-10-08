@@ -482,19 +482,72 @@ repository (a source-built MSYS2 debugger).
   net_1_1 profile.
 
 **Follow-ups during the build.**
-1. `keyboards.resources` for Managed.Windows.Forms. Its `.resx` needs SWF's
-   own ResX reader, and the prebuilt fallback is deleted. The two-pass
-   solution in `06-mono-2.6.4-cscc.sh`:
-   - build everything with an empty placeholder made by pnet's C `resgen`;
-   - regenerate the file from `keyboards.resx` with the freshly built
-     SWF's `resgen`;
-   - let make rebuild SWF.
 
-   The `.resx` still carries the keyboard table as BinaryFormatter data;
-   that is source text in the tarball, and there is no generator for it in
-   2.6.4.
-2. MSYS2 argument conversion mangled `Apigen.exe /n:… /apiName:…`
-   (RabbitMQ.Client). Added to `MSYS2_ARG_CONV_EXCL`.
+1. **`keyboards.resources` (Managed.Windows.Forms).**
+   - Upstream's rule is `resgen keyboards.resx || cp
+     keyboards.resources.prebuilt`. The prebuilt is deleted here.
+   - **Real root cause:** the tarball's `keyboards.resx` is *malformed*.
+     Python's XML parser and Mono's ResX reader both stop at line 30, column
+     ~114812, where `...</root>` is followed by `4gAAAAs=</value></data></root>`.
+     The upstream generator (`resources/create-keyboards.cs`, driven by
+     `create-keyboards.sh`) overwrote an older, longer file without
+     truncating it. So upstream resgen *always* failed and every Mono build
+     silently used the prebuilt blob.
+   - The prebuilt is also **stale**: deserialised, `keyboard_table` equals
+     the source, but the third scan table has 49 entries where
+     `create-keyboards.cs` defines 50 (checked with a small C# program on
+     the new mono).
+   - **Fix: regenerate from source**, as upstream intended (Makefile knob
+     `GENERATE_RESOURCES=true` makes KeyboardLayout public). In
+     `06-mono-2.6.4-cscc.sh`:
+     - build once with an empty placeholder (pnet's C `resgen`);
+     - rebuild net_1_1 SWF with `GENERATE_RESOURCES=true`;
+     - compile and run `create-keyboards.cs` into a fresh `keyboards.resx`;
+     - `resgen` it into `keyboards.resources`;
+     - delete the SWF assemblies and run `make` again.
+
+     The resulting resource references
+     `System.Windows.Forms.KeyboardLayout[], System.Windows.Forms,
+     Version=1.0.5000.0, PublicKeyToken=b77a5c561934e089`, exactly like the
+     prebuilt.
+   - An earlier attempt that compiled `KeyboardLayouts.cs` into the
+     generator produced type references to a `create-keyboards` assembly.
+     That was wrong, so it was discarded.
+2. **Argument conversion.** MSYS2 argument conversion mangled
+   `Apigen.exe /n:… /apiName:…` (RabbitMQ.Client). The prefixes are now in
+   `MSYS2_ARG_CONV_EXCL`.
+3. **`mdoc assemble` hung.**
+   - It sat at 0 % CPU for over 13 min. Attaching i686 gdb showed the main
+     thread inside `MessageBoxA` from bdwgc's `GC_default_on_abort("Too many
+     heap sections")`: the GC abort is a modal dialog, so the build hangs
+     instead of failing.
+   - The private static bdwgc was built without `--enable-large-config`
+     (MSYS2's own `mingw-w64-gc` uses it).
+   - Fix: rebuilt the static GC with `--enable-large-config` (about 1 min),
+     forced a relink of libmono (`libmono.la` removed), killed the stuck
+     process by Windows PID with `taskkill`, and continued.
+
+**End state (2026-10-08).** `bootstrap/06-mono-2.6.4-cscc.sh` on MINGW32
+finishes `make` and `make install`.
+- `~/dotnetboot/stage-m264-MINGW32` is 150 MB with the profiles 1.0, 2.0,
+  3.5, compat-*, gac, xbuild and monodoc.
+- The installed `mono` 2.6.4 runs `mcs` output (hello world).
+- `gmcs` compiles and runs a **C# 3 program with LINQ, lambdas, extension
+  methods and collection initializers** against `System.Core`:
+  "C# 3/LINQ ok: 20 2 1".
+- So **pnet (C) → mono-2.6.4 works directly on MSYS2 MINGW32 from source**,
+  replacing Guix' mono-1.2.6 → 1.9.1 → 2.4.2.3 → 2.6.4.
+- No `*.prebuilt`, monolite, `*.dll` or `*.exe` from the tarball was used.
+  `prep-mono.sh` deletes them, and the only fallback (keyboards) is now
+  regenerated from source.
+- **Timings on win11 (4 cores, serial make):**
+  - cscc compiles the basic mcs.exe in about 1.9 s and the basic mscorlib
+    in about 1.2 s;
+  - the last incremental pass, which rebuilt Managed.Windows.Forms in all
+    profiles plus everything downstream and installed, took 7 min;
+  - a from-scratch run of the script is estimated at well under 1 h,
+    based on the per-stage logs (not measured in one go: no redundant
+    rebuild).
 
 ## Generic MSYS2 lessons (apply to every later stage)
 

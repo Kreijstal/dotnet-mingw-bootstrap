@@ -43,23 +43,35 @@ if [ ! -f .disable-signing ]; then
   touch .disable-signing
 fi
 if [ "${STEP:-}" = runtime ]; then make -C mono -j2 CFLAGS="$CF"; exit 0; fi
-# Managed.Windows.Forms needs resources/keyboards.resources, made by
-# "resgen keyboards.resx", which needs System.Windows.Forms itself for ResX
-# support; Mono's tarball falls back to a prebuilt blob (deleted here).  So:
-# build everything once with an empty placeholder (pnet's C resgen, text
-# input), then regenerate it from keyboards.resx with the freshly built SWF
-# and let make rebuild SWF in every profile.
+# Managed.Windows.Forms embeds resources/keyboards.resources.  Upstream makes
+# it with "resgen keyboards.resx || cp keyboards.resources.prebuilt": the
+# tarball's keyboards.resx is malformed (create-keyboards wrote it without
+# truncating an older, longer file: trailing "...</root>4gAAAAs=</value>...")
+# so resgen always fails and the build silently uses the prebuilt blob (which
+# is also stale: one scan table has 49 instead of 50 entries).  We regenerate
+# it from source, the way upstream intended (resources/create-keyboards.sh,
+# GENERATE_RESOURCES=true makes KeyboardLayout public in SWF):
+#   1. build everything once with an empty placeholder (pnet's C resgen);
+#   2. rebuild net_1_1 SWF with GENERATE_RESOURCES=true, compile and run
+#      create-keyboards.cs against it into a *fresh* keyboards.resx,
+#      resgen it into keyboards.resources;
+#   3. delete the SWF assemblies and let make rebuild them normally.
 KB=mcs/class/Managed.Windows.Forms/resources
-if [ ! -f $KB/keyboards.resources ]; then
+if [ ! -f $KB/keyboards.resources ] && [ ! -f $KB/.keyboards-placeholder ]; then
   : > $KB/empty.txt
   "$STAGE0/bin/resgen" $KB/empty.txt $KB/keyboards.resources
   touch $KB/.keyboards-placeholder
 fi
 make "${MK[@]}"
 if [ -f $KB/.keyboards-placeholder ]; then
-  L=mcs/class/lib
-  (cd $KB/.. && MONO_PATH="../lib/net_1_1" ../../../runtime/mono-wrapper ../lib/net_1_1_bootstrap/resgen.exe resources/keyboards.resx resources/keyboards.resources)
-  rm -f $KB/.keyboards-placeholder $KB/empty.txt
+  W=$S/runtime/mono-wrapper; L=../../lib
+  rm -f mcs/class/lib/net_1_1/System.Windows.Forms.dll
+  make -C mcs/class/Managed.Windows.Forms PROFILE=net_1_1 GENERATE_RESOURCES=true "${MK[@]}"
+  (cd $KB && rm -f keyboards.resx keyboards.resources create-keyboards.exe &&
+   MONO_PATH="$L/net_1_1" $W $L/net_1_1/mcs.exe /nologo create-keyboards.cs /r:System.Windows.Forms.dll /out:create-keyboards.exe &&
+   MONO_PATH="$L/net_1_1" $W ./create-keyboards.exe &&
+   MONO_PATH="$L/net_1_1" $W $L/net_1_1_bootstrap/resgen.exe keyboards.resx keyboards.resources)
+  rm -f $KB/.keyboards-placeholder $KB/empty.txt mcs/class/lib/*/System.Windows.Forms.dll
   make "${MK[@]}"
 fi
 make install "${MK[@]}"

@@ -73,7 +73,7 @@ first builds. The detailed evidence is in:
 | mono 1.9.1, x86_64 | **REQUIRES PATCHING** | Same Win64 JIT state as 1.2.6 (no 2008-04 Win64 fixes in its ChangeLog) |
 | cscc → mcs 2.6.4 (cscc/ilrun shortcut) | **SOLVED** (compile) | cscc compiles mono-2.6.4's mcs.exe (1.9 s), basic mscorlib (1.2 s) and basic System with 4 new cscc fixes and Guix-style `BOOTSTRAP_WITH_OLDLIB` source patches. The cscc-built mcs (1.2.6 and 2.6.4) compiles and runs hello world on ilrun. Self-hosting on ilrun stops at pnetlib's unimplemented `ModuleBuilder.GetType` (arrays of TypeBuilders); generic Reflection.Emit is missing (msys2-mono-port.md S1–S3) |
 | mono 2.6.4 built directly by cscc, UCRT64 | **REQUIRES PATCHING** | Runtime + cscc-built basic profile done (S4). The native x86_64 JIT crashes on the first managed exception (Console→I18N load failure), so it cannot run the basic mcs. Mono 2.6 did not support Win64 |
-| mono 2.6.4 built directly by cscc, MINGW32 | **REQUIRES PATCHING** | Runtime + basic profile done; `libmono.dll` fails DLL initialisation (ERROR_DLL_INIT_FAILED), not root-caused (S4) |
+| mono 2.6.4 built directly by cscc, MINGW32 | **SOLVED** | `libmono.dll` init failure root-caused: an implicit cdecl declaration of the stdcall `GC_DllMain` (patch 0017). After that: the cscc `op==` recursion (0018), keyboards regenerated from source, large-config GC. `make install` done; the installed gmcs runs C# 3/LINQ (msys2-mono-port.md "i686 libmono init failure") |
 | mono 2.4.2.3, 2.6.4 (Guix chain) | **PROBABLY SOLVABLE** | Win64 unwind registration (`RtlInstallFunctionTableCallback`) present; eglib optional (`--with-glib`); still `-mno-cygwin` in configure (same 1-line patch) |
 | mono 2.11.4, 3.0.12 | **REQUIRES PATCHING** | configure refuses a user `CC` ("mono can only be compiled with gcc-3 from the 'gcc-core' package") unless cross compiling; needs a configure patch |
 | mono 3.12.1, 4.9.0 | **PROBABLY SOLVABLE** | configure treats `*-mingw*` natively (no forced CC, `with_tls=pthread`) |
@@ -161,7 +161,17 @@ Rules the scripts enforce:
   pnet → 1.2.6 → 1.9.1 → 2.4.2.3 → 2.6.4 with pnet → 2.6.4. That is 3
   stages less, and it no longer needs the Guix 1.2.6 bootstrap patch.
 
-**Recommendation (updated).**
+**Recommendation (updated again, after the i686 fix).**
+- Stage 1 on MSYS2 is now **pnet → mono-2.6.4 on MINGW32**
+  (`bootstrap/06-mono-2.6.4-cscc.sh`). It replaces Guix' 1.2.6/1.9.1/2.4.2.3.
+- Continue the Guix chain from 2.6.4: 2.11.4 (needs the configure CC patch)
+  → 3.0.12 → 3.12.1 → 4.9.0 …
+- Retry x86_64 (UCRT64) with the i686 mono-2.6.4 as `EXTERNAL_MCS` at a
+  version with real Win64 support.
+- The first PKGBUILD stays `mingw-w64-pnet-bootstrap`. The next one is
+  `mingw-w64-mono-bootstrap-2.6.4` (mingw32), built from that script.
+
+**Recommendation (previous).**
 - Keep B, the Guix chain on MINGW32 that is proven up to 1.9.1, as the main
   line.
 - In parallel, finish the cheap part of C: the i686 libmono DLL-init

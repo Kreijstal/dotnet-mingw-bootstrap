@@ -77,8 +77,8 @@ digraph guix_mono_bootstrap {
  "mono-bootstrap" -> "roslyn-3.9" [label="runtime",fontsize=8];
  "mono-bootstrap" -> "mono" [label="input",fontsize=8];
  "roslyn-3.9" -> "mono" [label="input",fontsize=8];
- "mono-2.6.4-cscc" [label="mono-2.6.4-cscc\n(MSYS2 shortcut, WIP)",style=dashed];
+ "mono-2.6.4-cscc" [label="mono-2.6.4-cscc\n(MSYS2 stage 1, MINGW32)",style=bold];
  "pnet-git" -> "mono-2.6.4-cscc" [label="EXTERNAL_MCS=cscc (basic profile)",style=dashed,fontsize=8];
  "pnetlib-git" -> "mono-2.6.4-cscc" [style=dashed];
- "mono-2.6.4-cscc" -> "mono-2.11.4" [label="would replace 1.2.6..2.4.2 if runtime works",style=dotted,fontsize=8];
+ "mono-2.6.4-cscc" -> "mono-2.11.4" [label="replaces 1.2.6..2.4.2 (MINGW32)",style=bold,fontsize=8];
 }
