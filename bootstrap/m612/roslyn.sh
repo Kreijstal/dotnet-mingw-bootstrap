@@ -99,7 +99,8 @@ step_core() {
     -resource:src/Compilers/Core/Portable/Resources/default.win32manifest,Microsoft.CodeAnalysis.Resources.default.win32manifest \
     obj/CodeAnalysisResources.g.cs obj/core-ivt.cs obj/core-ver.cs "${extra[@]}" \
     $(find src/Compilers/Core/Portable src/Compilers/Core/AnalyzerDriver src/Dependencies/CodeAnalysis.Debugging \
-           src/Dependencies/PooledObjects src/Dependencies/Collections -name '*.cs' ! -path '*/obj/*' ! -name '*.Package.*') \
+           src/Dependencies/PooledObjects src/Dependencies/Collections $(ls -d src/Dependencies/Contracts 2>/dev/null) \
+           -name '*.cs' ! -path '*/obj/*' ! -name '*.Package.*') \
     || die "Microsoft.CodeAnalysis failed (obj/core.log)"
 }
 
@@ -117,11 +118,17 @@ step_csharp() {
 step_csc() {
   cd "$B"
   ver obj/csc-ver.cs
+  local files=()
+  if [ -f src/Compilers/CSharp/csc/CscCommandLine.projitems ]; then
+    # 4.14+: the command line sources moved around; read the shared project
+    mapfile -t files < <(CSPROJ_NO_FOLLOW=1 csproj_items -p TargetFramework=net472 src/Compilers/CSharp/csc/CscCommandLine.projitems 2>/dev/null)
+  else
+    files=(src/Compilers/CSharp/csc/Program.cs src/Compilers/Shared/RuntimeHostInfo.cs src/Compilers/Shared/NamedPipeUtil.cs
+      src/Compilers/Shared/BuildClient.cs src/Compilers/Shared/BuildServerConnection.cs src/Compilers/Shared/ExitingTraceListener.cs
+      src/Compilers/Shared/Csc.cs $(find src/Compilers/Core/CommandLine -name '*.cs'))
+  fi
   csc csc "${COMMON[@]}" "${SIGN[@]}" -target:exe -out:obj/csc.exe -d:NET472 -d:NETFRAMEWORK "${REFS[@]}" -r:obj/Microsoft.CodeAnalysis.dll -r:obj/Microsoft.CodeAnalysis.CSharp.dll \
-    -main:Microsoft.CodeAnalysis.CSharp.CommandLine.Program obj/csc-ver.cs \
-    src/Compilers/CSharp/csc/Program.cs src/Compilers/Shared/RuntimeHostInfo.cs src/Compilers/Shared/NamedPipeUtil.cs \
-    src/Compilers/Shared/BuildClient.cs src/Compilers/Shared/BuildServerConnection.cs src/Compilers/Shared/ExitingTraceListener.cs \
-    src/Compilers/Shared/Csc.cs $(find src/Compilers/Core/CommandLine -name '*.cs') || die "csc failed (obj/csc.log)"
+    -main:Microsoft.CodeAnalysis.CSharp.CommandLine.Program obj/csc-ver.cs "${files[@]}" || die "csc failed (obj/csc.log)"
 }
 
 step_install() {
