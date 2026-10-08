@@ -134,9 +134,11 @@ step_roslyntask() {
     || die "Microsoft.Build.Tasks.CodeAnalysis failed"
   printf '<Project>\n  <PropertyGroup>\n    <CompilerApiVersion>roslyn%s</CompilerApiVersion>\n  </PropertyGroup>\n</Project>\n' "${RV%.*}" > "$o/Microsoft.Managed.Core.CurrentVersions.targets"
 }
-# Layout like Visual Studio's: $OUT/MSBuild/Current/Bin/MSBuild.exe, Roslyn in Bin/Roslyn
+# Standalone layout: $OUT/tools/MSBuild.exe, Roslyn in tools/Roslyn.  (A
+# VS-like .../MSBuild/Current/Bin path would switch BuildEnvironmentHelper to
+# "VisualStudio" mode, which then looks for NuGet under Common7/IDE.)
 step_install() {
-  local root="$OUT/MSBuild" bin="$OUT/MSBuild/Current/Bin" f
+  local bin="$OUT/tools" f
   rm -rf "${OUT:?}"; mkdir -p "$bin/Roslyn"
   cp "$O"/*.dll "$O"/*.pdb "$O"/MSBuild.exe "$bin/"
   mv "$bin/Microsoft.Build.Tasks.CodeAnalysis.dll" "$bin/Microsoft.Build.Tasks.CodeAnalysis.pdb" "$bin/Roslyn/"
@@ -145,7 +147,7 @@ step_install() {
   cp "$B"/src/Tasks/*.targets "$B"/src/Tasks/*.props "$B"/src/Tasks/*.tasks "$B"/src/Tasks/*.overridetasks "$bin/"
   cp "$B/src/MSBuild/MSBuild.rsp" "$bin/" 2>/dev/null || true
   # Microsoft.Common.props is also looked up as $(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props
-  cp "$B/src/Tasks/Microsoft.Common.props" "$root/Current/"
+  mkdir -p "$bin/Current"; cp "$B/src/Tasks/Microsoft.Common.props" "$bin/Current/"
   # Roslyn: compiler + MSBuild integration
   local R=$M612/roslyn-$RV
   cp "$R"/*.dll "$R"/csc.exe "$R"/csc.exe.config "$R"/csc.rsp "$bin/Roslyn/"
@@ -172,7 +174,7 @@ step_test() {
   local T=$M612/test/msbuild-$V-oldstyle   # outside the msbuild tree (its Directory.Build.props)
   rm -rf "${T:?}"; mkdir -p "$T"; cp "$here"/tests/oldstyle/* "$T/"
   cd "$T"
-  mono "$OUT/MSBuild/Current/Bin/MSBuild.exe" -nologo -m:1 -nr:false -v:${TEST_VERBOSITY:-m} hello.csproj
+  mono "$OUT/tools/MSBuild.exe" -nologo -m:1 -nr:false -v:${TEST_VERBOSITY:-m} hello.csproj
   mono bin/Release/hello.exe
 }
 

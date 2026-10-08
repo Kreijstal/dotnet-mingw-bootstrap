@@ -24,6 +24,7 @@ PKGDIR=$OUTDIR   # libraries built here are referenced by later ones
 MP=$M612/src/maintenance-packages-$MP_TAG
 RT=$M612/src/runtime-$RT_VER
 NJ_VER=${NJ_VER:-13.0.3}
+DT_REV=${DT_REV:-5255d40e228ea1d4b624781b5b97ec16484a3b4b}   # dotnet/deployment-tools, as pinned by dotnet/sdk v8.0.131
 ROSLYN_DIR=${ROSLYN_DIR:-$(dirname "$BCSC")}   # analyzers are built against this Roslyn
 
 prep_sources() {
@@ -58,12 +59,13 @@ build_lib() {
   local o="$B/obj/$name"; rm -rf "${o:?}"; mkdir -p "$o"
   local common corelib items=() extra=() defs
   [ $flavor = nj ] && tfm=net45
+  [ $flavor = rtns ] && tfm=netstandard2.0   # a dotnet/runtime netstandard2.0-only project (SDK default items)
   if [ $flavor = mp ] || [ $flavor = nj ]; then common="$MP/src/Common/"; corelib="$MP/src/Common/src/CoreLib/"
   else common="$RT/src/libraries/Common/src/"; corelib="$RT/src/libraries/System.Private.CoreLib/src/"; fi
   local props=(-p TargetFramework=$tfm -p AssemblyName=$name -p CommonPath=$common -p CoreLibSharedDir=$corelib
     -p NetCoreAppCurrent=net${RT_VER%%.*}.0 -p NetCoreAppPrevious=net$(( ${RT_VER%%.*} - 1 )).0 -p NetCoreAppMinimum=net6.0
     -p NetFrameworkMinimum=net462 -p NetFrameworkCurrent=net481 -p MSBuildProjectExtension=.csproj -p Language=C#
-    -p LibrariesProjectRoot=$RT/src/libraries/ -p TargetOS=windows -p TargetsWindows=true)
+    -p LibrariesProjectRoot=$RT/src/libraries/ -p TargetOS=windows -p TargetsWindows=true -p CoreClrProjectRoot=$RT/src/coreclr/)
   local dflag=(); [ $flavor != rt ] && dflag=(--default-items)
   # dotnet/runtime turns default items off globally; some projects turn them back on
   [ $flavor = rt ] && [ "$(cd "$pdir" && csproj_items -p TargetFramework=$tfm --pre "$RT/src/libraries/Directory.Build.props" --prop EnableDefaultItems "$(basename "$proj")" 2>/dev/null | cut -d= -f2)" = true ] && dflag=(--default-items)
@@ -98,7 +100,7 @@ build_lib() {
   fi
   # dotnet/runtime libraries use [LibraryImport]: run our from-source
   # LibraryImportGenerator (eng/generators.targets adds these two downlevel)
-  if [ $flavor = rt ] && grep -qs LibraryImport "${items[@]}"; then
+  if { [ $flavor = rt ] || [ $flavor = rtns ]; } && grep -qs LibraryImport "${items[@]}"; then
     [ -f "$OUTDIR/analyzers/Microsoft.Interop.LibraryImportGenerator.dll" ] || recipe Microsoft.Interop.LibraryImportGenerator
     extra+=("$corelib/System/Runtime/InteropServices/LibraryImportAttribute.cs" "$corelib/System/Runtime/InteropServices/StringMarshalling.cs"
       -analyzer:"$OUTDIR/analyzers/Microsoft.Interop.SourceGeneration.dll" -analyzer:"$OUTDIR/analyzers/Microsoft.Interop.LibraryImportGenerator.dll"
@@ -182,6 +184,17 @@ recipe() {
       fi
       build_lib Newtonsoft.Json "$NJ/Src/Newtonsoft.Json/Newtonsoft.Json.csproj" Newtonsoft 13.0.0.0 nj -d:SIGNED \
         -r:"$RA/Microsoft.CSharp.dll" -r:"$RA/System.Data.dll" -r:"$RA/System.ComponentModel.DataAnnotations.dll" ;;
+    Microsoft.Deployment.DotNet.Releases)
+      local DT=$M612/src/deployment-tools-$DT_REV
+      if [ ! -d "$DT/src" ]; then
+        fetch_tarball "https://github.com/dotnet/deployment-tools/archive/$DT_REV.tar.gz" "$DT.tar.gz"
+        mkdir -p "$DT"; tar -C "$DT" --strip-components=1 -xzf "$DT.tar.gz"; delete_binaries "$DT"
+      fi
+      local d="$DT/src/Microsoft.Deployment.DotNet.Releases/src" r="$B/obj/Microsoft.Deployment.DotNet.Releases.ReleasesResources.resources"
+      mkdir -p "$B/obj"; resgen "$d/ReleasesResources.resx" "$r" > /dev/null
+      build_lib Microsoft.Deployment.DotNet.Releases "$d/Microsoft.Deployment.DotNet.Releases.csproj" Microsoft 2.0.0.0 rtns -resource:"$r" -r:"$RA/System.Net.Http.dll" ;;
+    Microsoft.NET.HostModel)
+      build_lib Microsoft.NET.HostModel "$RT/src/installer/managed/Microsoft.NET.HostModel/Microsoft.NET.HostModel.csproj" MicrosoftAspNetCore ${RT_VER%%.*}.0.0.0 rtns ;;
     Microsoft.IO.Redist) build_lib Microsoft.IO.Redist "$MP/src/Microsoft.IO.Redist/src/Microsoft.IO.Redist.csproj" Open 6.0.0.0 mp ;;
     System.Memory) build_lib System.Memory "$MP/src/System.Memory/src/System.Memory.csproj" Open auto mp ;;
     # source generators (Roslyn components), needed to compile runtime libraries

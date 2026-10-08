@@ -29,3 +29,11 @@ step 12 bash "$here/netfx-pkgs.sh" "$(R 4.12.0)" "$M612/pkgs" Microsoft.Bcl.Asyn
   System.Text.Json System.Threading.Tasks.Dataflow System.Reflection.MetadataLoadContext System.Resources.Extensions Microsoft.IO.Redist
 # 13: MSBuild 17.8.49 (net472) + Roslyn 4.12 Csc task; tests an SDK-less csproj
 step 13 bash "$here/msbuild.sh" 17.8.49 "$(R 4.12.0)" 4.12.0
+# 14-16: package deps for NuGet and the SDK tasks (built with C# 13)
+step 14 bash "$here/netfx-pkgs.sh" "$(R 4.12.0)" "$M612/pkgs" Newtonsoft.Json Microsoft.Extensions.Primitives \
+  Microsoft.Extensions.FileProviders.Abstractions Microsoft.Extensions.FileSystemGlobbing Microsoft.Extensions.DependencyModel \
+  Microsoft.NET.HostModel Microsoft.Deployment.DotNet.Releases
+# 15: NuGet.Client 6.8.2.3 (net472) into the MSBuild tools dir; tests PackageReference restore from a local feed
+step 15 bash "$here/nuget.sh" 6.8.2.3 "$(R 4.12.0)" 17.8.49
+# 16: dotnet/sdk 8.0.131 Microsoft.NET.Build.Tasks (net472) + Sdks layout; tests an SDK-style net472 project
+step 16 bash "$here/sdk.sh" 8.0.131 "$(R 4.12.0)" 17.8.49

@@ -16,7 +16,7 @@ XDT_VER=${XDT_VER:-3.2.12}
 SRC=$M612/src/nuget-$V.tar.gz
 B=$M612/build/nuget-$V
 PKGDIR=${PKGDIR:-$M612/pkgs}
-MSBOUT=$M612/msbuild-$MSB/MSBuild/Current/Bin
+MSBOUT=$M612/msbuild-$MSB/tools
 . "$here/common.sh"
 O=$B/obj/out
 P=$here/../../patches/m612/nuget-$V
@@ -114,9 +114,9 @@ step_install() {
   cp "$B/src/NuGet.Core/NuGet.Build.Tasks/NuGet.targets" "$B/src/NuGet.Core/NuGet.Build.Tasks/NuGet.props" \
      "$B/src/NuGet.Core/NuGet.Build.Tasks/NuGet.RestoreEx.targets" "$MSBOUT/" 2>/dev/null || true
   local f; for f in "$PKGDIR"/*.dll; do cp "$f" "$MSBOUT/"; done
-  # Our layout looks like VS (MSBuild/Current/Bin), so MSBuild would look for
-  # NuGet.targets under Common7/IDE; point it next to MSBuild.exe instead,
-  # and add binding redirects for the new package assemblies.
+  # NuGet.targets lives next to MSBuild.exe ($(MSBuildToolsPath)\NuGet.targets,
+  # the standalone default; stated explicitly), and binding redirects for the
+  # new package assemblies are added.
   : > "$B/obj/versions.txt"
   for f in "$MSBOUT"/*.dll; do
     echo "$(basename "$f" .dll) $(monodis --assembly "$f" | sed -n 's/^Version: *//p' | tr -d '\r')" >> "$B/obj/versions.txt"
