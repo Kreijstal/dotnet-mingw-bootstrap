@@ -1,0 +1,126 @@
+Why: Roslyn 4.0.1 source uses a handful of C# 10 features (parameterless struct constructor, extended property patterns, with on a tuple, mixed declaration/assignment deconstruction); the seed compiler is Roslyn 3.9 (C# 9) from the MSYS2 mono package. Rewrite them in C# 9 with identical semantics.
+
+--- a/src/Compilers/Core/Portable/SourceGeneration/GeneratorTimerExtensions.cs
++++ b/src/Compilers/Core/Portable/SourceGeneration/GeneratorTimerExtensions.cs
+@@ -23,7 +23,7 @@
+             }
+             else
+             {
+-                return new RunTimer();
++                return new RunTimer(null);
+             }
+         }
+ 
+@@ -38,7 +38,7 @@
+             }
+             else
+             {
+-                return new RunTimer();
++                return new RunTimer(null);
+             }
+         }
+ 
+@@ -49,17 +49,11 @@
+ 
+             public TimeSpan Elapsed => _timer.Elapsed;
+ 
+-            public RunTimer()
++            public RunTimer(Action<TimeSpan>? callback)
+             {
+                 // start twice to improve accuracy. See AnalyzerExecutor.ExecuteAndCatchIfThrows for more details 
+                 _ = SharedStopwatch.StartNew();
+                 _timer = SharedStopwatch.StartNew();
+-                _callback = null;
+-            }
+-
+-            public RunTimer(Action<TimeSpan> callback)
+-                : this()
+-            {
+                 _callback = callback;
+             }
+ 
+--- a/src/Compilers/CSharp/Portable/Binder/Binder_InterpolatedString.cs
++++ b/src/Compilers/CSharp/Portable/Binder/Binder_InterpolatedString.cs
+@@ -207,10 +207,10 @@
+ 
+         private static bool InterpolatedStringPartsAreValidInDefaultHandler(BoundUnconvertedInterpolatedString unconvertedInterpolatedString)
+             => !unconvertedInterpolatedString.Parts.ContainsAwaitExpression()
+-               && unconvertedInterpolatedString.Parts.All(p => p is not BoundStringInsert { Value.Type.TypeKind: TypeKind.Dynamic });
++               && unconvertedInterpolatedString.Parts.All(p => p is not BoundStringInsert { Value: { Type: { TypeKind: TypeKind.Dynamic } } });
+ 
+         private static bool AllInterpolatedStringPartsAreStrings(ImmutableArray<BoundExpression> parts)
+-            => parts.All(p => p is BoundLiteral or BoundStringInsert { Value.Type.SpecialType: SpecialType.System_String, Alignment: null, Format: null });
++            => parts.All(p => p is BoundLiteral or BoundStringInsert { Value: { Type: { SpecialType: SpecialType.System_String } }, Alignment: null, Format: null });
+ 
+         private bool TryBindUnconvertedBinaryOperatorToDefaultInterpolatedStringHandler(BoundBinaryOperator binaryOperator, BindingDiagnosticBag diagnostics, [NotNullWhen(true)] out BoundBinaryOperator? convertedBinaryOperator)
+         {
+@@ -779,7 +779,7 @@
+                                                      {
+                                                          IsParams: true,
+                                                          Type: ArrayTypeSymbol { ElementType: NamedTypeSymbol { IsInterpolatedStringHandlerType: true } },
+-                                                         InterpolatedStringHandlerArgumentIndexes.IsEmpty: true
++                                                         InterpolatedStringHandlerArgumentIndexes: { IsEmpty: true }
+                                                      });
+ #pragma warning restore format
+             Debug.Assert(!interpolatedStringParameter.IsParams || memberAnalysisResult.Kind == MemberResolutionKind.ApplicableInExpandedForm);
+--- a/src/Compilers/CSharp/Portable/Symbols/Source/SourceMemberContainerSymbol.cs
++++ b/src/Compilers/CSharp/Portable/Symbols/Source/SourceMemberContainerSymbol.cs
+@@ -3624,7 +3624,7 @@
+             memberNames.Free();
+ 
+             // Synthesizing non-readonly properties in struct would require changing readonly logic for PrintMembers method synthesis
+-            Debug.Assert(isRecordClass || !members.Any(m => m is PropertySymbol { GetMethod.IsEffectivelyReadOnly: false }));
++            Debug.Assert(isRecordClass || !members.Any(m => m is PropertySymbol { GetMethod: { IsEffectivelyReadOnly: false } }));
+ 
+             // We put synthesized record members first so that errors about conflicts show up on user-defined members rather than all
+             // going to the record declaration
+--- a/src/Compilers/CSharp/Portable/Symbols/Synthesized/Records/SynthesizedRecordCopyCtor.cs
++++ b/src/Compilers/CSharp/Portable/Symbols/Synthesized/Records/SynthesizedRecordCopyCtor.cs
+@@ -101,7 +101,7 @@
+ 
+         internal static bool IsCopyConstructor(Symbol member)
+         {
+-            if (member is MethodSymbol { ContainingType.IsRecordStruct: false, MethodKind: MethodKind.Constructor } method)
++            if (member is MethodSymbol { ContainingType: { IsRecordStruct: false }, MethodKind: MethodKind.Constructor } method)
+             {
+                 return HasCopyConstructorSignature(method);
+             }
+--- a/src/Compilers/CSharp/Portable/Binder/Semantics/OverloadResolution/MethodTypeInference.cs
++++ b/src/Compilers/CSharp/Portable/Binder/Semantics/OverloadResolution/MethodTypeInference.cs
+@@ -452,7 +452,7 @@
+                     {
+                         if (_conversions.IncludeNullability && _nullableAnnotationLowerBounds[i].IsAnnotated())
+                         {
+-                            _fixedResults[i] = _fixedResults[i] with { Type = fixedResultType.AsAnnotated() };
++                            _fixedResults[i] = (fixedResultType.AsAnnotated(), _fixedResults[i].FromFunctionType);
+                         }
+                         continue;
+                     }
+--- a/src/Compilers/CSharp/Portable/Binder/Binder_Attributes.cs
++++ b/src/Compilers/CSharp/Portable/Binder/Binder_Attributes.cs
+@@ -74,7 +74,7 @@
+                 var attribute = (SourceAttributeData?)attributeDataArray[i];
+                 if (attribute == null)
+                 {
+-                    (attributeDataArray[i], var boundAttribute) = binder.GetAttribute(attributeSyntax, boundAttributeType, diagnostics);
++                    var (attributeDataTmp, boundAttribute) = binder.GetAttribute(attributeSyntax, boundAttributeType, diagnostics); attributeDataArray[i] = attributeDataTmp;
+                     if (boundAttributeArray is not null)
+                     {
+                         boundAttributeArray[i] = boundAttribute;
+--- a/src/Compilers/CSharp/Portable/FlowAnalysis/NullableWalker.cs
++++ b/src/Compilers/CSharp/Portable/FlowAnalysis/NullableWalker.cs
+@@ -4655,12 +4655,12 @@
+                 return null;
+             }
+ 
+-            (var consequence, var consequenceConversion, consequenceRValue) = visitConditionalOperand(consequenceState, originalConsequence);
++            (var consequence, var consequenceConversion, var consequenceRValueTmp) = visitConditionalOperand(consequenceState, originalConsequence); consequenceRValue = consequenceRValueTmp;
+             var consequenceConditionalState = PossiblyConditionalState.Create(this);
+             consequenceState = CloneAndUnsplit(ref consequenceConditionalState);
+             var consequenceEndReachable = consequenceState.Reachable;
+ 
+-            (var alternative, var alternativeConversion, alternativeRValue) = visitConditionalOperand(alternativeState, originalAlternative);
++            (var alternative, var alternativeConversion, var alternativeRValueTmp) = visitConditionalOperand(alternativeState, originalAlternative); alternativeRValue = alternativeRValueTmp;
+             var alternativeConditionalState = PossiblyConditionalState.Create(this);
+             alternativeState = CloneAndUnsplit(ref alternativeConditionalState);
+             var alternativeEndReachable = alternativeState.Reachable;
