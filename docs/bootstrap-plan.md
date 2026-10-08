@@ -52,6 +52,11 @@ seed. Every phase 6 script takes the compiler and runtime as parameters.
   (net472) were built from source: SDK-style projects restore and build on
   Mono (net472 runs; net8.0 compiles against a from-source
   Microsoft.NETCore.App.Ref 8.0 targeting pack).
+- The .NET host (dotnet.exe, hostfxr, hostpolicy, apphost, nethost,
+  comhost) builds with CLANG64 clang/lld from dotnet/runtime 8.0.0
+  (`corehost.sh`, 3 small patches). The SDK now produces apphost `.exe`s for
+  net8.0 apps, and `dotnet --info` runs. There is still no runtime to run
+  them on.
 - The full stage chain toward the SDK, with statuses, is in
   `phase6-dotnet.md` §4. The hard part is the native runtime: CoreCLR has
   no MinGW port, and the Mono flavor of dotnet/runtime is the recommended

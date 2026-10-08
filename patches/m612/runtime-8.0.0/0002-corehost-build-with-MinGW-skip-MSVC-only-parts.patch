@@ -1,0 +1,57 @@
+From fdee73e952537687e5156ab8f160b12920ddc1ed Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Thu, 8 Oct 2026 15:23:59 +0200
+Subject: [PATCH 2/3] corehost: build with MinGW (skip MSVC-only parts)
+
+- ijwhost serves C++/CLI assemblies, which only MSVC produces, and needs
+  MASM; the host tests need C++/CLI and midl too: skip both with MinGW.
+- /MANIFEST:NO is an MSVC linker switch; lld (MinGW) embeds no manifest
+  anyway.
+---
+ src/native/corehost/CMakeLists.txt                    | 10 ++++++++--
+ src/native/corehost/apphost/standalone/CMakeLists.txt |  2 +-
+ 2 files changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/src/native/corehost/CMakeLists.txt b/src/native/corehost/CMakeLists.txt
+index 249e4d5..70715c4 100644
+--- a/src/native/corehost/CMakeLists.txt
++++ b/src/native/corehost/CMakeLists.txt
+@@ -28,7 +28,10 @@ add_subdirectory(hostpolicy)
+ add_subdirectory(apphost)
+ add_subdirectory(dotnet)
+ add_subdirectory(nethost)
+-add_subdirectory(test)
++# The host tests need MSVC-only bits (C++/CLI, midl); skip them with MinGW.
++if (NOT MINGW)
++    add_subdirectory(test)
++endif()
+ 
+ # If there's a dynamic ASAN runtime, then install it in the directories where we put our executables.
+ if (NOT "${ASAN_RUNTIME}" STREQUAL "")
+@@ -39,6 +42,9 @@ endif()
+ if (NOT RUNTIME_FLAVOR STREQUAL Mono)
+     if(CLR_CMAKE_TARGET_WIN32)
+         add_subdirectory(comhost)
+-        add_subdirectory(ijwhost)
++        # ijwhost serves C++/CLI assemblies, which only MSVC produces.
++        if (NOT MINGW)
++            add_subdirectory(ijwhost)
++        endif()
+     endif()
+ endif()
+diff --git a/src/native/corehost/apphost/standalone/CMakeLists.txt b/src/native/corehost/apphost/standalone/CMakeLists.txt
+index b682fd9..787f9b4 100644
+--- a/src/native/corehost/apphost/standalone/CMakeLists.txt
++++ b/src/native/corehost/apphost/standalone/CMakeLists.txt
+@@ -42,7 +42,7 @@ include(../../exe.cmake)
+ add_definitions(-DFEATURE_APPHOST=1)
+ 
+ # Disable manifest generation into the file .exe on Windows
+-if(CLR_CMAKE_TARGET_WIN32)
++if(CLR_CMAKE_TARGET_WIN32 AND MSVC)
+     set_property(TARGET ${PROJECT_NAME} PROPERTY
+             LINK_FLAGS "/MANIFEST:NO"
+         )
+-- 
+2.55.0
+

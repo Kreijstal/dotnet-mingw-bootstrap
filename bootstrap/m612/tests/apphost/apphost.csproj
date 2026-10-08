@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- A net8.0 console app with an apphost: the SDK's CreateAppHost task
+       (Microsoft.NET.HostModel, on Mono) patches the from-source apphost.exe
+       of the Microsoft.NETCore.App.Host.win-x64 pack into apphost-test.exe. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <AssemblyName>apphost-test</AssemblyName>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseAppHost>true</UseAppHost>
+    <!-- dotnet/roslyn-analyzers is not built yet -->
+    <EnableNETAnalyzers>false</EnableNETAnalyzers>
+    <RestoreSources>$(MSBuildThisFileDirectory)emptyfeed</RestoreSources>
+  </PropertyGroup>
+</Project>

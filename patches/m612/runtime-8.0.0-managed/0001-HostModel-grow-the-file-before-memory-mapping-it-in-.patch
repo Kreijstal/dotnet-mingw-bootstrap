@@ -1,0 +1,36 @@
+From 20ff1ab4a2419274c057df384d1966e331cf6c6c Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Thu, 8 Oct 2026 15:22:30 +0200
+Subject: [PATCH] HostModel: grow the file before memory-mapping it in
+ ResourceUpdater (Mono)
+
+Microsoft.NET.HostModel's ResourceUpdater.Update maps the apphost with a
+capacity larger than the file when the copied Win32 resources grow it.
+.NET extends the file to the capacity; Mono's MemoryMappedFile.CreateFromFile
+throws ArgumentException("capacity") instead (capacity > fileStream.Length),
+so the SDK's CreateAppHost task fails on MSBuild/Mono.  Set the length first;
+on .NET this is what CreateFromFile does anyway.
+---
+ .../managed/Microsoft.NET.HostModel/ResourceUpdater.cs      | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/src/installer/managed/Microsoft.NET.HostModel/ResourceUpdater.cs b/src/installer/managed/Microsoft.NET.HostModel/ResourceUpdater.cs
+index dfbbb52..ba38fe9 100644
+--- a/src/installer/managed/Microsoft.NET.HostModel/ResourceUpdater.cs
++++ b/src/installer/managed/Microsoft.NET.HostModel/ResourceUpdater.cs
+@@ -199,6 +199,12 @@ namespace Microsoft.NET.HostModel
+             bool needsMoveTrailingSections = !isRsrcIsLastSection && delta > 0;
+             long finalImageSize = trailingSectionStart + Math.Max(delta, 0) + trailingSectionLength;
+ 
++            // .NET grows the file to the requested capacity; Mono's
++            // MemoryMappedFile.CreateFromFile throws ArgumentException("capacity")
++            // instead, so grow it first.
++            if (stream.Length < finalImageSize)
++                stream.SetLength(finalImageSize);
++
+             using (var mmap = MemoryMappedFile.CreateFromFile(stream, null, finalImageSize, MemoryMappedFileAccess.ReadWrite, HandleInheritability.None, true))
+             using (MemoryMappedViewAccessor accessor = mmap.CreateViewAccessor(0, finalImageSize, MemoryMappedFileAccess.ReadWrite))
+             {
+-- 
+2.55.0
+

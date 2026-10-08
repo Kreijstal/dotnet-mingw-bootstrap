@@ -40,3 +40,7 @@ step 16 bash "$here/sdk.sh" 8.0.131 "$(R 4.12.0)" 17.8.49
 # 17: Microsoft.NETCore.App.Ref 8.0 (163 reference assemblies/facades + 20 stubs) from runtime sources,
 #     registered in the SDK; tests an SDK-style net8.0 library build
 step 17 bash "$here/refpack.sh" "$(R 4.12.0)"
+# 18: the native host (dotnet.exe, hostfxr, hostpolicy, apphost, nethost, comhost) with CLANG64 clang/lld,
+#     installed into the SDK (muxer layout + Microsoft.NETCore.App.Host.win-x64 pack); tests --info, a
+#     net8.0 UseAppHost=true console build, and hostfxr -> hostpolicy against a fake framework
+step 18 env MSYSTEM=CLANG64 bash "$here/corehost.sh"

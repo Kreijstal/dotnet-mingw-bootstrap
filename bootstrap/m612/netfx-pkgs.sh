@@ -42,6 +42,12 @@ prep_sources() {
       "runtime-$RT_VER/src/libraries" "runtime-$RT_VER/eng" "runtime-$RT_VER/Directory.Build.props" "runtime-$RT_VER/Directory.Build.targets"
     delete_binaries "$RT"
   fi
+  if [ ! -d "$RT/src/installer/managed" ]; then   # Microsoft.NET.HostModel
+    tar -C "$RT" --strip-components=1 -xzf "$M612/src/runtime-$RT_VER.tar.gz" "runtime-$RT_VER/src/installer/managed"
+    delete_binaries "$RT"
+  fi
+  # managed-only fixes (the native tree for corehost.sh is a separate copy)
+  apply_patches "$RT" "$here/../../patches/m612/runtime-$RT_VER-managed"
 }
 
 # build_lib <AssemblyName> <csproj> <key> <AssemblyVersion> <flavor: mp|rt|rtgen> [extra csc args...]

@@ -1,0 +1,84 @@
+From 9a40c1411c10b4dc44d25a3fcc155eff78772be4 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Thu, 8 Oct 2026 15:23:59 +0200
+Subject: [PATCH 1/3] eng/native: a GNU-driver (MinGW) branch for Windows hosts
+
+configureoptimization.cmake and configurecompiler.cmake key the MSVC
+options and tools on CLR_CMAKE_HOST_WIN32, so a MinGW toolchain (MSYS2
+CLANG64 clang/lld, x86_64-w64-mingw32) gets /Ox and has to provide MASM and
+mc.exe even for components that use neither (corehost).
+
+- configureoptimization: MSVC /O flags only with MSVC; MinGW gets the
+  -O flags of the Unix branch.
+- configurecompiler: with MINGW, do not require MASM/mc; link the C/C++
+  runtimes (libc++, libunwind, winpthreads) statically, like the MSVC build
+  links the static CRT, so the binaries are self-contained; no 'lib' prefix
+  on DLLs (hostfxr.dll, not libhostfxr.dll); -municode for the wmain()
+  executables.
+---
+ eng/native/configurecompiler.cmake     | 18 +++++++++++++++---
+ eng/native/configureoptimization.cmake |  4 ++--
+ 2 files changed, 17 insertions(+), 5 deletions(-)
+
+diff --git a/eng/native/configurecompiler.cmake b/eng/native/configurecompiler.cmake
+index 1838110..2901468 100644
+--- a/eng/native/configurecompiler.cmake
++++ b/eng/native/configurecompiler.cmake
+@@ -422,7 +422,7 @@ if (CLR_CMAKE_HOST_WIN32)
+   set(STATIC_MT_CRT_LIB  "libcmt$<$<OR:$<CONFIG:Debug>,$<CONFIG:Checked>>:d>.lib")
+   set(STATIC_MT_VCRT_LIB  "libvcruntime$<$<OR:$<CONFIG:Debug>,$<CONFIG:Checked>>:d>.lib")
+   set(STATIC_MT_CPP_LIB  "libcpmt$<$<OR:$<CONFIG:Debug>,$<CONFIG:Checked>>:d>.lib")
+-endif(CLR_CMAKE_HOST_WIN32)
++endif()
+ 
+ # Unconditionally define _FILE_OFFSET_BITS as 64 on all platforms.
+ add_definitions(-D_FILE_OFFSET_BITS=64)
+@@ -921,7 +921,19 @@ if (CMAKE_GENERATOR MATCHES "(Makefile|Ninja)")
+ endif()
+ 
+ # Ensure other tools are present
+-if (CLR_CMAKE_HOST_WIN32)
++if (CLR_CMAKE_HOST_WIN32 AND MINGW)
++    # GNU-driver toolchain targeting Windows (e.g. MSYS2 CLANG64/UCRT64):
++    # the components built this way (corehost) need neither MASM nor mc.
++    # Link the C/C++ runtimes (libc++/libstdc++, libunwind, winpthreads)
++    # statically, like the MSVC build links the static CRT, so the host
++    # binaries are self-contained.
++    add_link_options(-static)
++    # Windows names: hostfxr.dll, not libhostfxr.dll.
++    set(CMAKE_SHARED_LIBRARY_PREFIX "")
++    set(CMAKE_IMPORT_LIBRARY_PREFIX "")
++    # The executables have a wmain() entry point.
++    add_link_options($<$<STREQUAL:$<TARGET_PROPERTY:TYPE>,EXECUTABLE>:-municode>)
++elseif (CLR_CMAKE_HOST_WIN32)
+     if(CLR_CMAKE_HOST_ARCH_ARM)
+ 
+       # Explicitly specify the assembler to be used for Arm32 compile
+@@ -979,4 +991,4 @@ elseif (NOT CLR_CMAKE_HOST_BROWSER AND NOT CLR_CMAKE_HOST_WASI)
+ 
+     enable_language(ASM)
+ 
+-endif(CLR_CMAKE_HOST_WIN32)
++endif()
+diff --git a/eng/native/configureoptimization.cmake b/eng/native/configureoptimization.cmake
+index f6b5da6..4ecb6d7 100644
+--- a/eng/native/configureoptimization.cmake
++++ b/eng/native/configureoptimization.cmake
+@@ -1,4 +1,4 @@
+-if(CLR_CMAKE_HOST_WIN32)
++if(CLR_CMAKE_HOST_WIN32 AND MSVC)
+     add_compile_options($<$<AND:$<COMPILE_LANGUAGE:C,CXX>,$<CONFIG:Debug>>:/Od>)
+     if (CLR_CMAKE_HOST_ARCH_I386)
+         # The Windows x86 Checked CLR has some kind of problem with exception handling
+@@ -9,7 +9,7 @@ if(CLR_CMAKE_HOST_WIN32)
+     endif()
+     add_compile_options($<$<AND:$<COMPILE_LANGUAGE:C,CXX>,$<CONFIG:Release>>:/Ox>)
+     add_compile_options($<$<AND:$<COMPILE_LANGUAGE:C,CXX>,$<CONFIG:RelWithDebInfo>>:/O2>)
+-elseif(CLR_CMAKE_HOST_UNIX)
++elseif(CLR_CMAKE_HOST_UNIX OR MINGW)
+     add_compile_options($<$<CONFIG:Debug>:-O0>)
+     add_compile_options($<$<CONFIG:Checked>:-O2>)
+     if(CLR_CMAKE_TARGET_ANDROID)
+-- 
+2.55.0
+
