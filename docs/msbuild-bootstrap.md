@@ -1,6 +1,7 @@
 # MSBuild bootstrap (phase 5): findings so far
 
-Status: **not investigated on MSYS2 yet.** The facts below come from Guix
+Status: **MSBuild 17.8.49 (net472) built from source on Mono on MSYS2** (see
+`phase6-dotnet.md`, `bootstrap/m612/msbuild.sh`). The facts below come from Guix
 (`gnu/packages/dotnet.scm` at a473ec23efdd19074b2615ea478767a596e452e3).
 
 ## Guix `msbuild` 15.7.179 (commit 5239ec21fda51687671c6667a3bffbcd32bbc9d5, 2025-06)

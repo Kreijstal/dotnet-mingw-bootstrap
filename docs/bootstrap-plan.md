@@ -13,6 +13,46 @@ first builds. The detailed evidence is in:
 - `docs/roslyn-bootstrap.md`, `docs/msbuild-bootstrap.md` — what Guix
   already does for phases 4/5.
 
+## 0. Policy change (2026-10-08) and phase 6
+
+The user changed the trust boundary on 2026-10-08:
+
+- **Upstream MSYS2 packages are trusted.** That includes the official
+  `mingw-w64-ucrt-x86_64-mono 6.12.0.199`, which ships Roslyn 3.9 as
+  `csc.exe`, plus xbuild, but no msbuild. That Mono is the seed of
+  "phase 6", the bootstrap of a .NET SDK.
+- **Everything above the seed must come from source.**
+  - No Microsoft SDK or runtime zips, and no `dotnet-install`.
+  - No prebuilt Roslyn, MSBuild or NuGet IL.
+  - No monolite.
+  - Binary inputs are inventoried, and work stops on any that is not
+    covered by this policy.
+- **The pnet → Mono chain below is unchanged.** It remains the
+  zero-binary-seed track, with its own environment (`bootstrap/env.sh`,
+  which still poisons the host Mono).
+- **Phase 6 uses `bootstrap/env-m612.sh`.** That environment deliberately
+  allows `/ucrt64/bin/mono`.
+
+If the pnet chain later reaches Mono 6.12 on UCRT64, it can replace the
+seed. Every phase 6 script takes the compiler and runtime as parameters.
+
+**Phase 6 so far** (details in `docs/phase6-dotnet.md`):
+
+- Roslyn 4.0.1 → 4.4 → 4.6 → 4.8 → 4.10 → 4.11 → 4.12 → 4.13 were built
+  from source on Mono, starting from the seed csc 3.9. Each compiler builds
+  the next. Only one patch was needed, on the first step: C# 10 syntax
+  rewritten for csc 3.9.
+- The netfx package assemblies were built from dotnet/runtime 8.0.0 and
+  dotnet/maintenance-packages sources: SCI, SRM, System.Memory,
+  System.Text.Json and the rest.
+- MSBuild 17.8.49 (net472, MonoBuild) was built from source, with the
+  Roslyn Csc task. An SDK-less .NET Framework project builds and runs with
+  it on Mono.
+- The full stage chain toward the SDK, with statuses, is in
+  `phase6-dotnet.md` §4. The hard part is the native runtime: CoreCLR has
+  no MinGW port, and the Mono flavor of dotnet/runtime is the recommended
+  first target.
+
 ## 1. Executive summary
 
 1. **Guix's chain is real and fully source-based**, and since 2026 it goes
@@ -269,12 +309,14 @@ evaluate C as a way to shorten the chain.
 ## 8. Later phases (stubs)
 
 - **Phase 4 (Mono → Roslyn):** Guix already solves this, up to Roslyn 3.9
-  (C# 9) on mono-bootstrap 6.12. See `roslyn-bootstrap.md`. The beyond-3.9
-  steps (C# 10–12, needed by modern SDK sources) are UNKNOWN.
+  (C# 9) on mono-bootstrap 6.12. See `roslyn-bootstrap.md`. The steps
+  beyond 3.9 are **solved on MSYS2** from the Mono 6.12 seed, up to Roslyn
+  4.13 (C# 13); see `phase6-dotnet.md`.
 - **Phase 5 (MSBuild):** Guix builds MSBuild 15.7.179 with mcs. See
-  `msbuild-bootstrap.md`. Modern MSBuild/SDK/NuGet cycles are UNKNOWN.
-- **Phase 6 (modern .NET):** UNKNOWN; not investigated. Note that the Guix
-  blog author explicitly gave up here.
+  `msbuild-bootstrap.md`. **MSBuild 17.8.49 (net472) is built from source
+  on Mono on MSYS2**; see `phase6-dotnet.md`. NuGet and SDK tasks are next.
+- **Phase 6 (modern .NET):** in progress; see `phase6-dotnet.md` (stage
+  chain, CoreCLR/MinGW analysis, binary inventory).
 - **Phases 7–9 (WindowsDesktop, net48 targeting, Greenshot):** UNKNOWN; not
   investigated.
 
