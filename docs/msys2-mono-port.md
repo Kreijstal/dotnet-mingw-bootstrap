@@ -393,8 +393,43 @@ Mono's build system. Results:
   did not support 64-bit Windows: Win64 was still MSVC-only work in
   progress.
 
-**On MINGW32 (i686):** the same script was started at the end of the
-session; see bootstrap-plan.md §7 for the result.
+**On MINGW32 (i686): REQUIRES PATCHING.**
+- Stage 0 was rebuilt incrementally with the new pnet/pnetlib patches.
+- Extra fixes needed:
+  - `0016-configure-winver-vista`: with WINVER 0x0500 the inet_pton /
+    GetProcessId prototypes are hidden, so i686 calls them cdecl and the
+    link fails;
+  - `00-bdwgc.sh` now deletes the static copy's `.la` files: libtool
+    refused to link `libgc.la` into the libmono DLL and silently dropped
+    `-lgc` ("This system cannot link to static lib archive").
+- The runtime then builds, and cscc builds the basic mcs.exe, mscorlib and
+  System.
+- **First blocker:** the produced `libmono.dll` fails to initialise.
+  `mono.exe` exits with status 127 even for `--version`, and
+  `LoadLibrary("libmono.dll")` returns ERROR_DLL_INIT_FAILED (1114).
+  bdwgc's `GC_DllMain` always returns TRUE, so the failure is elsewhere in
+  the DLL start-up (CRT/TLS init of the C++-linked DLL, or the static GC
+  inside a DLL). Not root-caused yet; there is no i686 gdb on win11.
+  mono-1.2.6/1.9.1 on i686 are not affected: they are not built as a
+  libmono DLL calling `GC_DllMain`.
+
+### Result of the shortcut
+- **Proven:**
+  - the C-only root (cscc) can directly compile the *Mono 2.6.4* compiler
+    and its basic-profile corlib/System, skipping Mono 1.2.6, 1.9.1 and
+    2.4.2.3. That needs 9 small source/build patches on 2.6.4 and 4 cscc
+    fixes;
+  - the cscc-built mcs even runs on ilrun for small programs.
+- **Not yet proven:** that a native mono-2.6.4 can run that basic profile on
+  Windows.
+  - x86_64: Mono 2.6's Win64 JIT crashes on the first managed exception.
+  - i686: the libmono DLL does not initialise.
+
+  Fixing either one would make cscc → mono-2.6.4 a 3-stage shortcut.
+- **Timing:** cscc is native C and compiles mcs.exe in about 1.9 s and the
+  basic corlib in about 1.2 s. ilrun runs a hello-world compile in about
+  0.1–0.2 s. ilrun is not on the critical path of Mono's build, so
+  interpreter speed is irrelevant for this route.
 
 ## Generic MSYS2 lessons (apply to every later stage)
 

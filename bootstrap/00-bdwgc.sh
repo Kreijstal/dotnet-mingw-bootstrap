@@ -25,3 +25,7 @@ mkdir -p "$W/build"; cd "$W/build"
 # (DllMain thread discovery is compiled only without thread-local alloc)
 make -j4
 make install
+# libtool refuses ("cannot link to static lib archive libgc.la") to link the
+# static copy into Mono's libmono DLL and silently drops -lgc; without the .la
+# files it passes -lgc through to the linker.
+if [ -n "${GC_STATIC:-}" ]; then rm -f "$GC_PREFIX"/lib/libgc.la "$GC_PREFIX"/lib/libcord.la; fi

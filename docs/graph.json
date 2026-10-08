@@ -649,5 +649,43 @@
     "mono-1.9.1"
    ]
   }
- ]
+ ],
+ "msys2_shortcut": {
+  "description": "cscc/ilrun shortcut evaluated 2026-10-08 (docs/msys2-mono-port.md S1-S4)",
+  "nodes": [
+   {
+    "id": "mono-2.6.4-cscc",
+    "version": "2.6.4",
+    "source": "https://github.com/mono/mono/archive/refs/tags/mono-2.6.4.tar.gz sha256 281d9edef97eefd0075da38045cb1f951bc66d9b399f14dee6eabdcafdd80576 (tree = tag mono-2.6.4)",
+    "patches": "patches/mono-2.6.4/0001-0016",
+    "msys2_status": "basic profile compiled by cscc: SOLVED; native runtime runs it: UCRT64 REQUIRES PATCHING (Win64 JIT EH crash), MINGW32 REQUIRES PATCHING (libmono.dll DLL init failure)"
+   },
+   {
+    "id": "bdwgc-8.2.12-static-win32",
+    "msys2_status": "SOLVED (GC_DllMain variant: win32 threads, no thread-local alloc, GC_INSIDE_DLL)"
+   }
+  ],
+  "edges": [
+   {
+    "from": "pnet-git",
+    "to": "mono-2.6.4-cscc",
+    "role": "compiler (EXTERNAL_MCS=cscc) for mcs.exe, mscorlib, System (basic profile)"
+   },
+   {
+    "from": "pnetlib-git",
+    "to": "mono-2.6.4-cscc",
+    "role": "reference corlib for the basic mcs.exe"
+   },
+   {
+    "from": "bdwgc-8.2.12-static-win32",
+    "to": "mono-2.6.4-cscc",
+    "role": "GC (static, GC_DllMain)"
+   }
+  ],
+  "replaces_if_fixed": [
+   "mono-1.2.6",
+   "mono-1.9.1",
+   "mono-2.4.2"
+  ]
+ }
 }

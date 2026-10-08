@@ -71,7 +71,10 @@ first builds. The detailed evidence is in:
 | mono 1.2.6, i686 (MINGW32) | **SOLVED** (resources caveat, §4) | Builds and installs; `mcs`/`gmcs` compile and `mono` runs hello world and generics (A5). Patches 0001–0006, 0008, 0013 plus `MSYS2_ARG_CONV_EXCL` for gacutil. Risk: MSYS2's mingw32 repo has 230 packages versus 3909 in ucrt64 |
 | mono 1.9.1, i686 (MINGW32) | **SOLVED** (resources caveat) | Built and installed by stage-1 mono-1.2.6; mcs/gmcs work; 3 Guix + 6 rebased MinGW patches (A6) |
 | mono 1.9.1, x86_64 | **REQUIRES PATCHING** | Same Win64 JIT state as 1.2.6 (no 2008-04 Win64 fixes in its ChangeLog) |
-| mono 2.4.2.3, 2.6.4 | **PROBABLY SOLVABLE** | Win64 unwind registration (`RtlInstallFunctionTableCallback`) present; eglib optional (`--with-glib`); still `-mno-cygwin` in configure (same 1-line patch) |
+| cscc → mcs 2.6.4 (cscc/ilrun shortcut) | **SOLVED** (compile) | cscc compiles mono-2.6.4's mcs.exe (1.9 s), basic mscorlib (1.2 s) and basic System with 4 new cscc fixes and Guix-style `BOOTSTRAP_WITH_OLDLIB` source patches. The cscc-built mcs (1.2.6 and 2.6.4) compiles and runs hello world on ilrun. Self-hosting on ilrun stops at pnetlib's unimplemented `ModuleBuilder.GetType` (arrays of TypeBuilders); generic Reflection.Emit is missing (msys2-mono-port.md S1–S3) |
+| mono 2.6.4 built directly by cscc, UCRT64 | **REQUIRES PATCHING** | Runtime + cscc-built basic profile done (S4). The native x86_64 JIT crashes on the first managed exception (Console→I18N load failure), so it cannot run the basic mcs. Mono 2.6 did not support Win64 |
+| mono 2.6.4 built directly by cscc, MINGW32 | **REQUIRES PATCHING** | Runtime + basic profile done; `libmono.dll` fails DLL initialisation (ERROR_DLL_INIT_FAILED), not root-caused (S4) |
+| mono 2.4.2.3, 2.6.4 (Guix chain) | **PROBABLY SOLVABLE** | Win64 unwind registration (`RtlInstallFunctionTableCallback`) present; eglib optional (`--with-glib`); still `-mno-cygwin` in configure (same 1-line patch) |
 | mono 2.11.4, 3.0.12 | **REQUIRES PATCHING** | configure refuses a user `CC` ("mono can only be compiled with gcc-3 from the 'gcc-core' package") unless cross compiling; needs a configure patch |
 | mono 3.12.1, 4.9.0 | **PROBABLY SOLVABLE** | configure treats `*-mingw*` natively (no forced CC, `with_tls=pthread`) |
 | mono 5.0.1 … 6.12.0.206 | **PROBABLY SOLVABLE** | MSYS2 already builds 6.12.0.199 for ucrt64/clang64 with 5 small patches (`mingw-w64-mono`), but seeded with `make get-monolite-latest`. The Guix-specific parts (mcs-only `--with-csc=mcs`, reference assemblies rebuilt from `binary-reference-assemblies` sources, cherry-picked mcs) are platform-neutral |
@@ -138,7 +141,36 @@ Rules the scripts enforce:
   Status: UNKNOWN; it depends on how much C# 2/3 cscc handles in newer mcs
   sources.
 
-**Recommendation.** Use B as the main line now; it has been demonstrated
+**cscc/ilrun shortcut (strategy C), evaluated 2026-10-08.**
+- **cscc's level:** C# 1 plus fragments of C# 2. It has generic type
+  declarations, partial and static classes, but no generic uses in method
+  bodies, no iterators, anonymous methods, nullable or lambdas.
+- **What it reaches:** that is enough for every Mono compiler up to 2.6.x,
+  whose basic profile is C# 1, and nothing newer. From 2.8 on, the compiler
+  and the basic profile use generics.
+- **What works:** cscc → mono-2.6.4 basic profile (mcs, mscorlib, System).
+  The 2.6.4 runtime builds for both UCRT64 and MINGW32.
+- **What blocks:** neither runtime runs managed code yet. Win64 JIT exception
+  handling is broken on x86_64, and the libmono DLL does not initialise on
+  i686.
+- **mcs on ilrun:** only a small-program compiler, because of the
+  Reflection.Emit gaps in pnetlib. Interpreter speed doesn't matter for
+  this route, since ilrun is not used once Mono's own runtime exists.
+- **What it would buy:** fixing the i686 libmono DLL-init problem, which is
+  probably build-system-level rather than JIT-level, would replace
+  pnet → 1.2.6 → 1.9.1 → 2.4.2.3 → 2.6.4 with pnet → 2.6.4. That is 3
+  stages less, and it no longer needs the Guix 1.2.6 bootstrap patch.
+
+**Recommendation (updated).**
+- Keep B, the Guix chain on MINGW32 that is proven up to 1.9.1, as the main
+  line.
+- In parallel, finish the cheap part of C: the i686 libmono DLL-init
+  failure. If it works, 2.6.4 becomes stage 1 and saves three Mono builds.
+- Continue the x86_64 Win64-JIT work only at a version where upstream
+  supported Win64.
+- Original text of this recommendation, still valid:
+
+Use B as the main line now; it has been demonstrated
 up to an installed, working mono-1.2.6 with gmcs. Climb the Guix chain on
 MINGW32 (1.9.1 has already started) until a release whose Win64 JIT is
 mature. At that point, build the same version for UCRT64 with the i686 Mono
@@ -197,6 +229,15 @@ evaluate C as a way to shorten the chain.
 
 ## 7. State at the end of this session (2026-10-08)
 
+**cscc/ilrun shortcut follow-up (same day).**
+- **Builds on win11:**
+  - `~/dotnetboot/build/mono-2.6.4-UCRT64` and `…-MINGW32`: runtime +
+    cscc-built basic profile; blocked as described in §2;
+  - `~/dotnetboot/probe264`: standalone cscc/ilrun probes;
+  - private static win32-threads bdwgc in `~/dotnetboot/gc-win32-{UCRT64,MINGW32}`.
+- **Stage 0 was rebuilt incrementally** on both environments with pnet
+  0007–0010 and pnetlib 0002–0004.
+
 - **UCRT64:** stage 0 is installed in `~/dotnetboot/stage0`. The
   pnet-bootstrap package is built in `~/dotnetboot/pkg`. The mono-1.2.6
   x86_64 tree is at `~/dotnetboot/build/mono-1.2.6-UCRT64`, where
@@ -237,8 +278,10 @@ evaluate C as a way to shorten the chain.
 3. GC: MSYS2's `gc` is pthreads-based. Mono 1.2.6 Windows threads are
    CreateThread-based and relied on bdwgc's DllMain registration. Should the
    bootstrap always use the private win32-threads bdwgc (`00-bdwgc.sh`)?
-4. Can a newer mcs be compiled by cscc directly (strategy C), and which
-   version is the newest that works?
+4. *(answered)* cscc can compile mcs/basic up to Mono 2.6.4. Open: why
+   the i686 mono-2.6.4 `libmono.dll` fails DLL initialisation, and whether
+   pnetlib's Reflection.Emit gaps (`ModuleBuilder.GetType`, array/generic
+   TypeBuilders) are worth implementing so that mcs can self-host on ilrun.
 5. How should the Managed.Windows.Forms resource blobs (`*.resources.prebuilt`,
    BinaryFormatter data inside the `.resx`) be handled: regenerated, kept
    as data, or SWF dropped from the bootstrap stages?
