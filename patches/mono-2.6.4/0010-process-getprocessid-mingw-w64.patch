@@ -1,0 +1,31 @@
+Why: same change as 
+patches/mono-1.2.6/0013-process-getprocessid-mingw-w64.patch, rebased onto 
+mono-2.6.4 (still needed there). on i686 (MSYS2 MINGW32) configure's 
+AC_CHECK_FUNCS(GetProcessId)  fails, because the kernel32 export is 
+stdcall-decorated (_GetProcessId@4)  and the autoconf probe declares 'char 
+GetProcessId()'.  process.c then  compiles its run-time detection fallback, 
+which declares a static function  pointer named GetProcessId: "error: 
+'GetProcessId' redeclared as different  kind of symbol" against the 
+mingw-w64 <winbase.h> prototype.  mingw-w64  always provides GetProcessId; 
+define HAVE_GETPROCESSID there.  (On x86_64  the probe happens to link, so 
+this only bit the i686 build.)  New patch  (not in Guix).  
+
+diff --git a/mono/metadata/process.c b/mono/metadata/process.c
+index 0532b7a0..3d606523 100644
+--- a/mono/metadata/process.c
++++ b/mono/metadata/process.c
+@@ -516,6 +516,14 @@ complete_path (const gunichar2 *appname, gchar **completed)
+ 	return TRUE;
+ }
+ 
++/* mingw-w64 always declares GetProcessId (kernel32, XP SP1+).  configure's
++ * AC_CHECK_FUNCS cannot find it on i686 (stdcall-decorated _GetProcessId@4),
++ * and the run-time detection below then clashes with the <winbase.h>
++ * prototype. */
++#if defined(__MINGW64_VERSION_MAJOR) && !defined(HAVE_GETPROCESSID)
++#define HAVE_GETPROCESSID 1
++#endif
++
+ #ifndef HAVE_GETPROCESSID
+ /* Run-time GetProcessId detection for Windows */
+ #ifdef PLATFORM_WIN32

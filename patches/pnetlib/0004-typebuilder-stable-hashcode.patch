@@ -1,0 +1,30 @@
+Why: cscc/ilrun shortcut.  System.Type.GetHashCode() hashes 
+UnderlyingSystemType, which for an enum TypeBuilder changes when its 
+value__ field is defined (and for any TypeBuilder when it is created).  mcs 
+(mono-2.6.4 on ilrun) keys its TypeManager hashtables by TypeBuilder, so 
+lookups of enums defined earlier failed (LookupDeclSpace returned null, 
+then GetCustomAttributes on an uncreated TypeBuilder threw 
+NotSupportedException in AttributeTester.GetObsoleteAttribute).  Give 
+TypeBuilder a stable hash code (its engine handle).  New patch (not in 
+Guix).
+
+diff --git a/runtime/System/Reflection/Emit/TypeBuilder.cs b/runtime/System/Reflection/Emit/TypeBuilder.cs
+index 0203bd5..4bc9a3e 100644
+--- a/runtime/System/Reflection/Emit/TypeBuilder.cs
++++ b/runtime/System/Reflection/Emit/TypeBuilder.cs
+@@ -325,6 +325,15 @@ public sealed class TypeBuilder : Type, IClrProgramItem, IDetachItem
+ 				}
+ 			}
+ 
++	// Hash codes must not change while the type is being built: compilers
++	// (Mono's mcs) key Hashtables by TypeBuilder, but Type.GetHashCode()
++	// follows UnderlyingSystemType, which changes for enums once value__
++	// is defined and once the type is created.  Hash the builder's handle.
++	public override int GetHashCode()
++			{
++				return privateData.GetHashCode();
++			}
++
+ 	// Check that the type has not yet been created.
+ 	internal void CheckNotCreated()
+ 			{

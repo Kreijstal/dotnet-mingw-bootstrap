@@ -1,0 +1,23 @@
+Why: same change as 
+patches/mono-1.2.6/0005-socket-io-use-ws2-inet_pton.patch, rebased onto 
+mono-2.6.4 (still needed there). configure only probes inet_pton on 
+non-Win32 hosts, so on Windows  socket-io.c always compiles its private 
+'static int inet_pton()' fallback.   mingw-w64's <ws2tcpip.h> declares the 
+real (ws2_32, Vista+) inet_pton, and  GCC rejects 'static declaration of 
+inet_pton follows non-static  declaration'.  Use the Winsock function on 
+mingw-w64.  New patch (not in  Guix).  
+
+diff --git a/mono/metadata/socket-io.c b/mono/metadata/socket-io.c
+index b9bb5a7c..a432aecf 100644
+--- a/mono/metadata/socket-io.c
++++ b/mono/metadata/socket-io.c
+@@ -2863,7 +2863,8 @@ MonoBoolean ves_icall_System_Net_Dns_GetHostByName_internal(MonoString *host, Mo
+ }
+ #endif /* AF_INET6 */
+ 
+-#ifndef HAVE_INET_PTON
++/* mingw-w64 <ws2tcpip.h> declares inet_pton (ws2_32, Vista+) */
++#if !defined(HAVE_INET_PTON) && !defined(__MINGW64_VERSION_MAJOR)
+ static int
+ inet_pton (int family, const char *address, void *inaddrp)
+ {

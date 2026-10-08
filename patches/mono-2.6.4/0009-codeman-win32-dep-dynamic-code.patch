@@ -1,0 +1,32 @@
+Why: same change as 
+patches/mono-1.2.6/0008-codeman-win32-dep-dynamic-code.patch, rebased onto 
+mono-2.6.4 (still needed there). the code manager allocates code for 
+dynamic methods with malloc() and  only mprotect()s it executable on 
+non-Win32 hosts.  Win32 builds of 2007  ran as 32-bit processes where DEP 
+was opt-in; a 64-bit Windows process  always has DEP, so the first call 
+into a dynamic method jumps into a  non-executable heap page.  Seen on 
+MSYS2 UCRT64: the x86_64 mono.exe  segfaults at a heap address 
+(rip=0x804070) as soon as it runs the  cscc-built mcs.exe ('mono mcs.exe 
+--version').  On Win32, take the  VirtualAlloc (mono_valloc, 
+PAGE_EXECUTE_READWRITE) path for dynamic chunks  too.  New patch (not in 
+Guix).  
+
+diff --git a/mono/utils/mono-codeman.c b/mono/utils/mono-codeman.c
+index fcef18e0..6d4ed33b 100644
+--- a/mono/utils/mono-codeman.c
++++ b/mono/utils/mono-codeman.c
+@@ -249,7 +249,14 @@ new_codechunk (int dynamic, int size)
+ 
+ 	pagesize = mono_pagesize ();
+ 
++#ifdef PLATFORM_WIN32
++	/* malloc()ed memory is not executable under DEP, which is always on for
++	 * 64 bit processes, and the mprotect below is skipped on Win32: give
++	 * dynamic methods VirtualAlloc()ed RWX chunks as well. */
++	if (0) {
++#else
+ 	if (dynamic) {
++#endif
+ 		chunk_size = size;
+ 		flags = CODE_FLAG_MALLOC;
+ 	} else {

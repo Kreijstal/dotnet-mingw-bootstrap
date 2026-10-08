@@ -1,0 +1,41 @@
+Why: same as patches/mono-1.2.6/0003, rebased onto mono-2.6.4: GCC >= 4.7 
+has no -mno-cygwin, but configure.in forces CC="gcc -mno-cygwin -g" (and 
+puts -mno-cygwin into libmono_cflags/ldflags) for every non-cross Windows 
+host.  Keep that for *-*-cygwin* only.
+
+diff --git a/configure.in b/configure.in
+index 4e9ed9fd..5286553b 100644
+--- a/configure.in
++++ b/configure.in
+@@ -82,6 +82,8 @@ case "$host" in
+ 		AC_DEFINE(TARGET_WIN32,1,[Target OS is Win32])
+ 		AC_DEFINE(DISABLE_PORTABILITY,1,[Disable the io-portability layer])
+ 		AC_DEFINE(PLATFORM_NO_SYMLINKS,1,[This platform does not support symlinks])
++		case "$host" in
++		*-*-cygwin*)
+ 		if test "x$cross_compiling" = "xno"; then
+ 			CC="gcc -mno-cygwin -g"
+ 			CXX="g++ -mno-cygwin -g"
+@@ -89,12 +91,22 @@ case "$host" in
+ 			export CC
+ 			export CXX
+ 		fi
++		;;
++		esac
+ 		HOST_CC="gcc"
+ 		# Windows 2000 is required that includes Internet Explorer 5.01
+ 		CPPFLAGS="$CPPFLAGS -DWINVER=0x0500 -D_WIN32_WINNT=0x0500 -D_WIN32_IE=0x0501 -D_UNICODE -DUNICODE -DWIN32_THREADS -DFD_SETSIZE=1024"
+ 		LDFLAGS="$LDFLAGS -lmswsock"
++		case "$host" in
++		*-*-cygwin*)
+ 		libmono_cflags="-mno-cygwin -mms-bitfields -mwindows"
+ 		libmono_ldflags="-mno-cygwin -mms-bitfields -mwindows"
++		;;
++		*)
++		libmono_cflags="-mms-bitfields -mwindows"
++		libmono_ldflags="-mms-bitfields -mwindows"
++		;;
++		esac
+ 		libdl=
+ 		libgc_threads=win32
+ 		gc_default=included

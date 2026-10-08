@@ -1,0 +1,55 @@
+Why: cscc/ilrun shortcut.  cscc's 'using' statement code generation had a 
+'TODO: handle value types': for a struct resource it emitted 'ldloc; 
+brfalse' (a null check on a value type) and 'ldloc; callvirt 
+IDisposable::Dispose' without a box, which is invalid IL.  mono-2.6.4's mcs 
+uses 'using (rc.With (...))' with the FlagsHandle struct, so the cscc-built 
+mcs.exe was rejected by ilrun's verifier ('ToplevelBlock::Resolve - 
+brfalse.s at verify_branch.c:492', VerificationException) on its first 
+compile.  Box the value and call Dispose without a null check.  New patch 
+(not in Guix).
+
+diff --git a/cscc/csharp/cs_stmt.tc b/cscc/csharp/cs_stmt.tc
+index cfe4499..57cc4ca 100644
+--- a/cscc/csharp/cs_stmt.tc
++++ b/cscc/csharp/cs_stmt.tc
+@@ -1968,16 +1968,30 @@ ILNode_GenDiscard(ILNode_Using)
+ 	}
+ 
+ 	/* Generate the dispose code */
+-	/* TODO: handle value types */
+-	ILGenLoadLocal(info, node->localVar->index);
+-	ILGenAdjust(info, 1);
+-	ILGenJump(info, IL_OP_BRFALSE, &label1);
+-	ILGenAdjust(info,-1);
+-	ILGenLoadLocal(info, node->localVar->index);
+-	ILGenAdjust(info, 1);
+-	ILGenCallVirtual(info, 
+-				"void [.library]System.IDisposable::Dispose()");
+-	ILGenAdjust(info, -1);
++	if(node->type && ILTypeIsValue(node->type))
++	{
++		/* A value type cannot be null: box it (no null check, which
++		   would be unverifiable "brfalse" on a value type) and call
++		   Dispose through the interface */
++		ILGenLoadLocal(info, node->localVar->index);
++		ILGenAdjust(info, 1);
++		ILGenClassToken(info, IL_OP_BOX, ILTypeToClass(info, node->type));
++		ILGenCallVirtual(info,
++					"void [.library]System.IDisposable::Dispose()");
++		ILGenAdjust(info, -1);
++	}
++	else
++	{
++		ILGenLoadLocal(info, node->localVar->index);
++		ILGenAdjust(info, 1);
++		ILGenJump(info, IL_OP_BRFALSE, &label1);
++		ILGenAdjust(info,-1);
++		ILGenLoadLocal(info, node->localVar->index);
++		ILGenAdjust(info, 1);
++		ILGenCallVirtual(info, 
++					"void [.library]System.IDisposable::Dispose()");
++		ILGenAdjust(info, -1);
++	}
+ 
+ 	/* Leave the finally block */
+ 	ILGenLabel(info, &label1);

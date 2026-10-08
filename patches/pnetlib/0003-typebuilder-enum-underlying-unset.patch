@@ -1,0 +1,30 @@
+Why: cscc/ilrun shortcut.  mcs (mono-2.6.4, running on ilrun) puts every 
+TypeBuilder into a Hashtable right after DefineType.  
+System.Type.GetHashCode() uses UnderlyingSystemType, and pnetlib's 
+TypeBuilder throws InvalidOperationException ('The underlying type of an 
+"enum" has not been set') for an enum whose value__ field is not defined 
+yet, so mcs could not compile any source containing an enum (e.g. itself).  
+Return the TypeBuilder itself, as Mono's own TypeBuilder does in compiler 
+context.  New patch (not in Guix).
+
+diff --git a/runtime/System/Reflection/Emit/TypeBuilder.cs b/runtime/System/Reflection/Emit/TypeBuilder.cs
+index 12d5ac7..0203bd5 100644
+--- a/runtime/System/Reflection/Emit/TypeBuilder.cs
++++ b/runtime/System/Reflection/Emit/TypeBuilder.cs
+@@ -315,11 +315,11 @@ public sealed class TypeBuilder : Type, IClrProgramItem, IDetachItem
+ 						{
+ 							return underlyingSystemType;
+ 						}
+-						else
+-						{
+-							throw new InvalidOperationException
+-								(_("Emit_UnderlyingNotSet"));
+-						}
++						// Mono's TypeBuilder does the same in "compiler
++						// context": mcs hashes enum TypeBuilders (via
++						// Type.GetHashCode -> UnderlyingSystemType) before
++						// it defines their value__ field.
++						return this;
+ 					}
+ 					return this;
+ 				}

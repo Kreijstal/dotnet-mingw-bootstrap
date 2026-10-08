@@ -1,0 +1,28 @@
+Why: cscc/ilrun shortcut.  mono-2.6.4's basic profile verifies that 
+EXTERNAL_MCS is a C# 1.0 compiler by running a program that must NOT find 
+System.Runtime.CompilerServices.CompilerGeneratedAttribute in the external 
+runtime's corlib; otherwise it falls back to monolite (deleted here) and 
+stops.  pnetlib is a 2.0-flavoured corlib and has that type, but cscc never 
+emits compiler-generated members (no iterators/anonymous methods), which is 
+what the check protects against.  Add a SKIP_BASIC_PROFILE_CHECK make knob 
+(set by bootstrap/06-mono-2.6.4-cscc.sh).
+
+diff --git a/mcs/build/profiles/basic.make b/mcs/build/profiles/basic.make
+index e17c0e7b..f47e20a0 100644
+--- a/mcs/build/profiles/basic.make
++++ b/mcs/build/profiles/basic.make
+@@ -49,8 +49,13 @@ PROFILE_OUT = $(PROFILE_CS:.cs=.out)
+ 
+ MAKE_Q=$(if $(V),,-s)
+ 
++# SKIP_BASIC_PROFILE_CHECK=yes: the bootstrap compiler is pnet's cscc, whose
++# class library (pnetlib) is 2.0-flavoured and therefore fails the "C# 1.0
++# compiler" probe, although cscc never emits references to 2.0-only
++# compiler-generated types (it has no iterators or anonymous methods).
+ do-profile-check:
+-	@ok=:; \
++	@if test -n "$(SKIP_BASIC_PROFILE_CHECK)"; then exit 0; fi; \
++	ok=:; \
+ 	rm -f $(PROFILE_EXE) $(PROFILE_OUT); \
+ 	$(MAKE) $(MAKE_Q) $(PROFILE_OUT) || ok=false; \
+ 	rm -f $(PROFILE_EXE) $(PROFILE_OUT); \

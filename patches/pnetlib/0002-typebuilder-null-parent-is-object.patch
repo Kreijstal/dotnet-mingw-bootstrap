@@ -1,0 +1,33 @@
+Why: cscc/ilrun shortcut (mcs running on ilrun).  Mono's mcs creates every 
+class with ModuleBuilder.DefineType(name, attr, null) and sets the base 
+type later with SetParent.  pnetlib passes TypeToken(0) for a null parent 
+and the engine (lib_emit.c ClrTypeCreate) only accepts that for interfaces, 
+<Module> and System.Object, failing with System.OutOfMemoryException for 
+everything else, so 'ilrun mcs.exe hello.cs' died in TypeBuilder..ctor.  
+Treat a null parent as System.Object, like the reference runtime.  New 
+patch (not in Guix: Guix never runs mcs on ilrun).
+
+diff --git a/runtime/System/Reflection/Emit/TypeBuilder.cs b/runtime/System/Reflection/Emit/TypeBuilder.cs
+index 07a032f..12d5ac7 100644
+--- a/runtime/System/Reflection/Emit/TypeBuilder.cs
++++ b/runtime/System/Reflection/Emit/TypeBuilder.cs
+@@ -72,6 +72,19 @@ public sealed class TypeBuilder : Type, IClrProgramItem, IDetachItem
+ 					nspace = String.Empty;
+ 				}
+ 
++				// A null parent means System.Object, as on the reference
++				// runtime (mcs defines classes with a null parent and calls
++				// SetParent later); the engine's ClrTypeCreate rejects a
++				// null TypeToken for anything but interfaces, <Module> and
++				// System.Object itself.
++				if(parent == null &&
++				   (attr & TypeAttributes.Interface) == 0 &&
++				   !(name == "Object" && nspace == "System") &&
++				   !(name == "<Module>" && nspace == String.Empty))
++				{
++					parent = typeof(Object);
++				}
++
+ 				// Initialize the internal state.
+ 				this.module = module;
+ 				this.name = name;

@@ -1,0 +1,86 @@
+Why: cscc/ilrun shortcut; the remaining cscc errors in mono-2.6.4's 
+basic-profile corlib.  (1) MethodCall/MethodResponse/ReturnMessage: cscc 
+does not accept the public read/write Uri property as the implementation of 
+the get-only IMethodMessage.Uri; add the explicit implementation, as Guix' 
+mono-1.2.6-bootstrap.patch does (basic profile only).  (2) 
+String.Concat(string,string): two sibling 'fixed' statements declare 
+dest/src; cscc puts fixed variables into the enclosing scope ('dest is 
+already declared').  Brace each statement (valid C# for every compiler).
+
+diff --git a/mcs/class/corlib/System.Runtime.Remoting.Messaging/MethodCall.cs b/mcs/class/corlib/System.Runtime.Remoting.Messaging/MethodCall.cs
+index d925c7e9..b9f94e65 100644
+--- a/mcs/class/corlib/System.Runtime.Remoting.Messaging/MethodCall.cs
++++ b/mcs/class/corlib/System.Runtime.Remoting.Messaging/MethodCall.cs
+@@ -272,6 +272,14 @@ namespace System.Runtime.Remoting.Messaging {
+ 			set { _uri = value; }
+ 		}
+ 
++#if BOOTSTRAP_WITH_OLDLIB
++		// cscc does not match the public Uri {get;set;} property against
++		// the get-only IMethodMessage.Uri (Guix mono-1.2.6-bootstrap.patch)
++		string IMethodMessage.Uri {
++			get { return Uri; }
++		}
++#endif
++
+ 		string IInternalMessage.Uri {
+ 			get { return Uri; }
+ 			set { Uri = value; }
+diff --git a/mcs/class/corlib/System.Runtime.Remoting.Messaging/MethodResponse.cs b/mcs/class/corlib/System.Runtime.Remoting.Messaging/MethodResponse.cs
+index 77644177..7ed13dcf 100644
+--- a/mcs/class/corlib/System.Runtime.Remoting.Messaging/MethodResponse.cs
++++ b/mcs/class/corlib/System.Runtime.Remoting.Messaging/MethodResponse.cs
+@@ -272,6 +272,14 @@ namespace System.Runtime.Remoting.Messaging {
+ 			}
+ 		}
+ 
++#if BOOTSTRAP_WITH_OLDLIB
++		// cscc does not match the public Uri {get;set;} property against
++		// the get-only IMethodMessage.Uri (Guix mono-1.2.6-bootstrap.patch)
++		string IMethodMessage.Uri {
++			get { return Uri; }
++		}
++#endif
++
+ 		string IInternalMessage.Uri {
+ 			get { return Uri; }
+ 			set { Uri = value; }
+diff --git a/mcs/class/corlib/System.Runtime.Remoting.Messaging/ReturnMessage.cs b/mcs/class/corlib/System.Runtime.Remoting.Messaging/ReturnMessage.cs
+index 92e98da0..b9cf00f4 100644
+--- a/mcs/class/corlib/System.Runtime.Remoting.Messaging/ReturnMessage.cs
++++ b/mcs/class/corlib/System.Runtime.Remoting.Messaging/ReturnMessage.cs
+@@ -166,6 +166,14 @@ namespace System.Runtime.Remoting.Messaging
+ 			}
+ 		}
+ 
++#if BOOTSTRAP_WITH_OLDLIB
++		// cscc does not match the public Uri {get;set;} property against
++		// the get-only IMethodMessage.Uri (Guix mono-1.2.6-bootstrap.patch)
++		string IMethodMessage.Uri {
++			get { return Uri; }
++		}
++#endif
++
+ 		string IInternalMessage.Uri {
+ 			get { return Uri; }
+ 			set { Uri = value; }
+diff --git a/mcs/class/corlib/System/String.cs b/mcs/class/corlib/System/String.cs
+index d240b50a..0daf2cfc 100644
+--- a/mcs/class/corlib/System/String.cs
++++ b/mcs/class/corlib/System/String.cs
+@@ -2084,10 +2084,11 @@ namespace System
+ 
+ 			String tmp = InternalAllocateStr (str0.length + str1.length);
+ 
+-			fixed (char *dest = tmp, src = str0)
+-				CharCopy (dest, src, str0.length);
+-			fixed (char *dest = tmp, src = str1)
+-				CharCopy (dest + str0.Length, src, str1.length);
++			// braces: cscc leaks 'fixed' variables into the enclosing scope
++			{ fixed (char *dest = tmp, src = str0)
++				CharCopy (dest, src, str0.length); }
++			{ fixed (char *dest = tmp, src = str1)
++				CharCopy (dest + str0.Length, src, str1.length); }
+ 
+ 			return tmp;
+ 		}

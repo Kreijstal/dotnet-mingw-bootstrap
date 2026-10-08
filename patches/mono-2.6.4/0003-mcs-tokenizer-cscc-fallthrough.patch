@@ -1,0 +1,22 @@
+Why: cscc/ilrun shortcut (mono-2.6.4 basic profile compiled directly by 
+pnet's cscc).  In Tokenizer.parse_less_than a case section ends with an 
+inner switch whose every section, default included, ends in 'continue'.  
+That is legal C#, but cscc's reachability analysis does not see that the 
+inner switch cannot complete normally and reports "switch section falls 
+through" (cs-tokenizer.cs:777).  Add an unreachable 'break;' for the 
+BOOTSTRAP_WITH_OLDLIB (basic profile) build only.  New patch (not in Guix).
+
+diff --git a/mcs/mcs/cs-tokenizer.cs b/mcs/mcs/cs-tokenizer.cs
+index feff8405..0e24561c 100644
+--- a/mcs/mcs/cs-tokenizer.cs
++++ b/mcs/mcs/cs-tokenizer.cs
+@@ -773,6 +773,9 @@ namespace Mono.CSharp
+ 						can_be_type = is_type = false;
+ 						continue;
+ 					}
++#if BOOTSTRAP_WITH_OLDLIB
++					break;	// unreachable; cscc's flow analysis needs it
++#endif
+ 
+ 				case Token.OBJECT:
+ 				case Token.STRING:

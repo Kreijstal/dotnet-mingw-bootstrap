@@ -1,0 +1,29 @@
+Why: cscc/ilrun shortcut.  csc accepts [AssemblyVersion("2.6.4")] (missing 
+parts are 0), and mono-2.6.4's mcs uses [assembly: AssemblyVersion 
+(Consts.MonoVersion)] with MonoVersion = "2.6.4".  cscc required exactly 4 
+parts ('version must consist of 4 parts').  Accept 2 and 3 part versions.  
+New patch (not in Guix).
+
+diff --git a/codegen/cg_genattr.c b/codegen/cg_genattr.c
+index c3acc0d..7acd91c 100644
+--- a/codegen/cg_genattr.c
++++ b/codegen/cg_genattr.c
+@@ -2243,10 +2243,15 @@ static int ParseVersion(ILGenInfo *info, const char *versionString, int len,
+ 		}
+ 		++index;
+ 	}
+-	/* Handle the last part of the version */
+-	if(versionIndex == 3)
+-	{		
++	/* Handle the last part of the version.  Like csc, accept 2 or 3
++	   part versions ("2.6.4" means 2.6.4.0). */
++	if(versionIndex >= 1 && versionIndex <= 3)
++	{
+ 		version[versionIndex] = (ILUInt16)versionPart;
++		while(++versionIndex < 4)
++		{
++			version[versionIndex] = 0;
++		}
+ 		return 1;
+ 	}
+ 	CGErrorForNode(info, attr, _("version must consist of 4 parts"));

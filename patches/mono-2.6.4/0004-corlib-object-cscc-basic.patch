@@ -1,0 +1,42 @@
+Why: cscc/ilrun shortcut.  Port of the System.Object part of Guix' 
+mono-1.2.6-bootstrap.patch (Guix commit 7d96fa640a6b) to mono-2.6.4.  cscc 
+reports 'circularity detected in class definition' for [Serializable] on 
+System.Object, so every 'override' in corlib then fails with "override used 
+on a method with no corresponding virtual".  It also cannot compile the 
+~Object destructor.  For the basic profile only (BOOTSTRAP_WITH_OLDLIB, 
+which is what cscc compiles), drop [Serializable] and declare Finalize 
+explicitly; all later profiles, compiled by mcs, are unchanged.
+
+diff --git a/mcs/class/corlib/System/Object.cs b/mcs/class/corlib/System/Object.cs
+index 42e56f12..bf998382 100644
+--- a/mcs/class/corlib/System/Object.cs
++++ b/mcs/class/corlib/System/Object.cs
+@@ -40,7 +40,11 @@ using System.Runtime.ConstrainedExecution;
+ 
+ namespace System {
+ 
++#if !BOOTSTRAP_WITH_OLDLIB
++	// cscc (pnet) reports a circularity between Object and
++	// SerializableAttribute; the basic profile is only used to bootstrap
+ 	[Serializable]
++#endif
+ 	[ClassInterface (ClassInterfaceType.AutoDual)]
+ #if NET_2_0
+ 	[ComVisible (true)]
+@@ -86,9 +90,16 @@ namespace System {
+ #if NET_2_0
+ 		[ReliabilityContractAttribute (Consistency.WillNotCorruptState, Cer.Success)]
+ #endif
++#if BOOTSTRAP_WITH_OLDLIB
++		// cscc cannot compile a destructor in System.Object itself
++		protected virtual void Finalize ()
++		{
++		}
++#else
+ 		~Object ()
+ 		{
+ 		}
++#endif
+ 
+ 		// <summary>
+ 		//   Returns a hashcode for this object.  Each derived

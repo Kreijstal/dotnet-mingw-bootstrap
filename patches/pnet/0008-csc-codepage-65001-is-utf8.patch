@@ -1,0 +1,21 @@
+Why: cscc/ilrun shortcut.  Mono's build passes csc's /codepage:65001 (the 
+Windows code page number of UTF-8).  cscc's csc-compatibility mode defaults 
+to the Latin-1 charset and only recognised '/codepage:utf8' as UTF-8, so 
+with /codepage:65001 the UTF-8 BOM handling in the C# pre-processor is off 
+and every mcs source file that starts with a BOM fails ('parse error at or 
+near' the BOM byte; argument.cs, context.cs, dynamic.cs of mono-2.6.4).  
+Treat 65001 like utf8.  New patch (not in Guix).
+
+diff --git a/cscc/common/cc_compat.c b/cscc/common/cc_compat.c
+index b05421f..3141bb0 100644
+--- a/cscc/common/cc_compat.c
++++ b/cscc/common/cc_compat.c
+@@ -65,7 +65,7 @@ static void codepageOption(char *arg)
+ 	{
+ 		latin1_charset = 1;
+ 	}
+-	else if(!ILStrICmp(arg, "utf8"))
++	else if(!ILStrICmp(arg, "utf8") || !ILStrICmp(arg, "65001"))
+ 	{
+ 		latin1_charset = 0;
+ 	}
