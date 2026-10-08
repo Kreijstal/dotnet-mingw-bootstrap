@@ -7,6 +7,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <!-- no apphost pack yet (native, needs the MinGW host build) -->
     <UseAppHost>false</UseAppHost>
+    <!-- dotnet/roslyn-analyzers is not built yet -->
+    <EnableNETAnalyzers>false</EnableNETAnalyzers>
     <RestoreSources>$(MSBuildThisFileDirectory)emptyfeed</RestoreSources>
   </PropertyGroup>
 </Project>

@@ -37,3 +37,6 @@ step 14 bash "$here/netfx-pkgs.sh" "$(R 4.12.0)" "$M612/pkgs" Newtonsoft.Json Mi
 step 15 bash "$here/nuget.sh" 6.8.2.3 "$(R 4.12.0)" 17.8.49
 # 16: dotnet/sdk 8.0.131 Microsoft.NET.Build.Tasks (net472) + Sdks layout; tests an SDK-style net472 project
 step 16 bash "$here/sdk.sh" 8.0.131 "$(R 4.12.0)" 17.8.49
+# 17: Microsoft.NETCore.App.Ref 8.0 (163 reference assemblies/facades + 20 stubs) from runtime sources,
+#     registered in the SDK; tests an SDK-style net8.0 library build
+step 17 bash "$here/refpack.sh" "$(R 4.12.0)"

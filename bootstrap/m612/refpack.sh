@@ -160,14 +160,19 @@ step_pack() {
 import sys
 p, ver, tfm = sys.argv[1:4]
 s = open(p).read()
-if 'KnownFrameworkReference' not in s:
-    s = s.replace('</Project>', f"""  <ItemGroup>
-    <KnownFrameworkReference Include="Microsoft.NETCore.App" TargetFramework="{tfm}" RuntimeFrameworkName="Microsoft.NETCore.App"
+items = {
+ 'KnownFrameworkReference': f"""    <KnownFrameworkReference Include="Microsoft.NETCore.App" TargetFramework="{tfm}" RuntimeFrameworkName="Microsoft.NETCore.App"
       DefaultRuntimeFrameworkVersion="{ver}" LatestRuntimeFrameworkVersion="{ver}" TargetingPackName="Microsoft.NETCore.App.Ref"
-      TargetingPackVersion="{ver}" RuntimePackNamePatterns="Microsoft.NETCore.App.Runtime.**RID**" RuntimePackRuntimeIdentifiers="win-x64" IsTrimmable="true" />
-  </ItemGroup>
-</Project>""")
-    open(p, 'w', newline='\n').write(s)
+      TargetingPackVersion="{ver}" RuntimePackNamePatterns="Microsoft.NETCore.App.Runtime.**RID**" RuntimePackRuntimeIdentifiers="win-x64" IsTrimmable="true" />""",
+ # the apphost pack is native (MinGW host build, not done yet); listed so the SDK's
+ # ResolveAppHosts task gets its input; projects must set UseAppHost=false for now
+ 'KnownAppHostPack': f"""    <KnownAppHostPack Include="Microsoft.NETCore.App" TargetFramework="{tfm}" AppHostPackNamePattern="Microsoft.NETCore.App.Host.**RID**"
+      AppHostPackVersion="{ver}" AppHostRuntimeIdentifiers="win-x64" />""",
+}
+for k, v in items.items():
+    if '<' + k + ' ' not in s:
+        s = s.replace('</Project>', '  <ItemGroup>\n' + v + '\n  </ItemGroup>\n</Project>')
+open(p, 'w', newline='\n').write(s)
 EOPY
 }
 
