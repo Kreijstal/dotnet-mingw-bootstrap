@@ -79,6 +79,13 @@ build_lib() {
   if [ $flavor != mp ] && [ "$nullable" != disable ]; then
     extra+=("$corelib/System/Diagnostics/CodeAnalysis/NullableAttributes.cs"); nullable=enable
   fi
+  if [ $flavor = rt ]; then   # (maintenance-packages projects carry their own copies)
+    local ip; ip=$(cd "$pdir" && csproj_items "${props[@]}" --prop IncludeInternalObsoleteAttribute --prop IncludePlatformAttributes \
+      --prop IncludeIndexRangeTypes --prop SupportedOSPlatforms --prop UnsupportedOSPlatforms "$(basename "$proj")")
+    grep -qx 'IncludeInternalObsoleteAttribute=true' <<< "$ip" && extra+=("$corelib/System/ObsoleteAttribute.cs")
+    grep -qE '^(IncludePlatformAttributes=true|SupportedOSPlatforms=.+|UnsupportedOSPlatforms=.+)$' <<< "$ip" && extra+=("$corelib/System/Runtime/Versioning/PlatformAttributes.cs")
+    grep -qx 'IncludeIndexRangeTypes=true' <<< "$ip" && extra+=("$corelib/System/Index.cs" "$corelib/System/Range.cs" "$corelib/System/Numerics/Hashing.cs")
+  fi
   if [ "$aver" = auto ]; then
     aver=$(cd "$pdir" && csproj_items "${props[@]}" -p IsPackable=true --prop AssemblyVersion "$(basename "$proj")" | cut -d= -f2)
     [ -n "$aver" ] || die "$name: no AssemblyVersion"
@@ -102,7 +109,7 @@ build_lib() {
     -out:"$outfile" -publicsign -keyfile:"$(keyfile $key)" \
     -d:TRACE $(tfm_defines $tfm) \
     -nowarn:CS0436,CS8597,CS8625,CS8617,CS0169,CS0649,CS8618,CS8969,SYSLIB0011 \
-    "${dargs[@]}" "${NETFX_REFS[@]}" $(pkg_refs $(printf "%s\n" $PKG_NAMES | grep -vx "$name")) "$@" "${extra[@]}" "$o/AssemblyInfo.g.cs" "${items[@]}" \
+    "${dargs[@]}" "${NETFX_REFS[@]}" $(lib_refs "$name") "$@" "${extra[@]}" "$o/AssemblyInfo.g.cs" "${items[@]}" \
     || die "$name failed (see $B/obj/$name.log)"
 }
 
@@ -134,6 +141,18 @@ EOV
     || { cat "$o/ilasm.log"; die "ilasm Unsafe failed"; }
 }
 
+# references for a library: everything already built in OUTDIR (not itself),
+# plus the seed's package assemblies for names not (yet) built from source
+lib_refs() {
+  local self=$1 f n
+  for f in "$OUTDIR"/*.dll; do [ -e "$f" ] || continue; n=$(basename "$f" .dll); [ "$n" = "$self" ] || echo "-r:$(winpath "$f")"; done
+  for n in $PKG_NAMES; do [ "$n" = "$self" ] || [ -f "$OUTDIR/$n.dll" ] || pkg_refs "$n"; done
+}
+rt_key() { # StrongNameKeyId of a dotnet/runtime library (per-library Directory.Build.props, default Open)
+  local k; k=$(grep -ho '<StrongNameKeyId>[^<]*' "$RT/src/libraries/$1/Directory.Build.props" "$RT/src/libraries/$1/src/$1.csproj" 2>/dev/null | head -1 | cut -d'>' -f2)
+  echo "${k:-Open}"
+}
+
 tfm_defines() {
   case $1 in
     net462) echo -d:NETFRAMEWORK -d:NET462 -d:NET461_OR_GREATER -d:NET462_OR_GREATER -d:NET45_OR_GREATER -d:NET46_OR_GREATER ;;
@@ -147,16 +166,17 @@ recipe() {
     System.Buffers) build_lib System.Buffers "$MP/src/System.Buffers/src/System.Buffers.csproj" Open auto mp ;;
     System.Numerics.Vectors) build_lib System.Numerics.Vectors "$MP/src/System.Numerics.Vectors/src/System.Numerics.Vectors.csproj" Microsoft auto mp ;;
     System.Threading.Tasks.Extensions) build_lib System.Threading.Tasks.Extensions "$MP/src/System.Threading.Tasks.Extensions/src/System.Threading.Tasks.Extensions.csproj" Open auto mp ;;
+    Microsoft.IO.Redist) build_lib Microsoft.IO.Redist "$MP/src/Microsoft.IO.Redist/src/Microsoft.IO.Redist.csproj" Open 6.0.0.0 mp ;;
     System.Memory) build_lib System.Memory "$MP/src/System.Memory/src/System.Memory.csproj" Open auto mp ;;
-    System.Collections.Immutable) build_lib System.Collections.Immutable "$RT/src/libraries/System.Collections.Immutable/src/System.Collections.Immutable.csproj" Microsoft ${RT_VER%%.*}.0.0.0 rt ;;
-    System.Reflection.Metadata) build_lib System.Reflection.Metadata "$RT/src/libraries/System.Reflection.Metadata/src/System.Reflection.Metadata.csproj" Microsoft ${RT_VER%%.*}.0.0.0 rt ;;
     # source generators (Roslyn components), needed to compile runtime libraries
     Microsoft.Interop.SourceGeneration) build_lib Microsoft.Interop.SourceGeneration "$GEN/Microsoft.Interop.SourceGeneration/Microsoft.Interop.SourceGeneration.csproj" Open ${RT_VER%%.*}.0.0.0 rtgen ;;
     Microsoft.Interop.LibraryImportGenerator)
       [ -f "$OUTDIR/analyzers/Microsoft.Interop.SourceGeneration.dll" ] || recipe Microsoft.Interop.SourceGeneration
       build_lib Microsoft.Interop.LibraryImportGenerator "$GEN/LibraryImportGenerator/LibraryImportGenerator.csproj" Open ${RT_VER%%.*}.0.0.0 rtgen \
       -r:"$OUTDIR/analyzers/Microsoft.Interop.SourceGeneration.dll" ;;
-    *) die "no recipe for $1" ;;
+    *) if [ -f "$RT/src/libraries/$1/src/$1.csproj" ]; then
+         build_lib "$1" "$RT/src/libraries/$1/src/$1.csproj" "$(rt_key "$1")" ${RT_VER%%.*}.0.0.0 rt
+       else die "no recipe for $1"; fi ;;
   esac
 }
 

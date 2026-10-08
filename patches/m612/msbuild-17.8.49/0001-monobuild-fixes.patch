@@ -1,0 +1,88 @@
+Why: MSBuild 17.8 is the last release with MonoBuild support, but the Mono CI has been off since 2021 (dotnet/msbuild#6058) and the MONO code paths rotted: a syntax error in Toolset.cs, a missing using for SecurityCritical, a Memory-based ReadAsync that only exists on .NET Core, an mcs-only lambda workaround in FileMatcher.cs that no longer compiles with Roslyn, and two Tasks files that use ManifestUtilities/Microsoft.IO which MonoBuild excludes. Also: Mono keeps .NETFramework reference assemblies in lib/mono/4.7.2-api and points at them from xbuild-frameworks/.NETFramework/v4.7.2/RedistList/FrameworkList.xml (TargetFrameworkDirectory); only use $(TargetFrameworkRootPath)\.NETFramework\vX as FrameworkPathOverride when it really contains mscorlib.dll, so the GetPathToStandardLibraries fallback finds Mono's reference assemblies instead of the Windows .NET Framework runtime directory.
+
+--- a/src/Build/Definition/Toolset.cs
++++ b/src/Build/Definition/Toolset.cs
+@@ -916,7 +916,7 @@
+ #if RUNTIME_TYPE_NETCORE
+                     Traits.Instance.ForceEvaluateAsFullFramework ? "Full" : "Core",
+ #elif MONO
+-                    NativeMethodsShared.IsMono ? "Mono" : "Full");
++                    NativeMethodsShared.IsMono ? "Mono" : "Full",
+ #else
+                     "Full",
+ #endif
+--- a/src/Shared/CommunicationsUtilities.cs
++++ b/src/Shared/CommunicationsUtilities.cs
+@@ -547,7 +547,7 @@
+             int totalBytesRead = 0;
+             while (totalBytesRead < bytesToRead)
+             {
+-                int bytesRead = await stream.ReadAsync(buffer.AsMemory(totalBytesRead, bytesToRead - totalBytesRead), CancellationToken.None);
++                int bytesRead = await stream.ReadAsync(buffer, totalBytesRead, bytesToRead - totalBytesRead, CancellationToken.None);
+                 if (bytesRead == 0)
+                 {
+                     return totalBytesRead;
+--- a/src/Shared/FileMatcher.cs
++++ b/src/Shared/FileMatcher.cs
+@@ -1697,7 +1697,7 @@
+             // Store the information whether the tail was checked when a pattern "*?" occurred
+             bool tailChecked = false;
+ 
+-#if MONO    // MONO doesn't support local functions
++#if MONO_MCS    // MONO doesn't support local functions (mcs only; we compile with Roslyn)
+             Func<char, char, int, int, bool> CompareIgnoreCase = (inputChar, patternChar, iIndex, pIndex) =>
+ #else
+             // Function for comparing two characters, ignoring case
+@@ -1728,7 +1728,7 @@
+                 }
+                 return MemoryExtensions.Equals(input.Slice(iIndex, 1), pattern.AsSpan(pIndex, 1), StringComparison.OrdinalIgnoreCase);
+             }
+-#if MONO
++#if MONO_MCS
+             ; // The end of the CompareIgnoreCase anonymous function
+ #endif
+ 
+--- a/src/Tasks/Microsoft.Build.Tasks.csproj
++++ b/src/Tasks/Microsoft.Build.Tasks.csproj
+@@ -467,6 +467,8 @@
+     <Compile Include="MakeDir.cs">
+       <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
+     </Compile>
++    <!-- m612: RequiresFramework35SP1Assembly needs the constants on Mono too -->
++    <Compile Include="ManifestUtil\Constants.cs" Condition="'$(MonoBuild)' == 'true'" />
+     <Compile Include="ManifestUtil\*.cs" Exclude="ManifestUtil\CngLightup.cs" Condition="'$(MonoBuild)' != 'true'">
+       <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
+     </Compile>
+--- a/src/Tasks/Microsoft.Common.CurrentVersion.targets
++++ b/src/Tasks/Microsoft.Common.CurrentVersion.targets
+@@ -77,7 +77,7 @@
+     <TargetFrameworkMoniker Condition="'$(TargetFrameworkMoniker)' == ''">$(TargetFrameworkIdentifier),Version=$(TargetFrameworkVersion)</TargetFrameworkMoniker>
+ 
+     <!-- When working off a packaged reference assemblies, do not go to machine-global locations. This property is target-framework-specific, so it cannot be overridden in msbuild.exe.config once and for all. -->
+-    <FrameworkPathOverride Condition="'$(EnableFrameworkPathOverride)' != 'false' And '$(FrameworkPathOverride)' == '' And Exists('$(TargetFrameworkRootPath)$(TargetFrameworkIdentifier)\$(TargetFrameworkVersion)')">$(TargetFrameworkRootPath)$(TargetFrameworkIdentifier)\$(TargetFrameworkVersion)</FrameworkPathOverride>
++    <FrameworkPathOverride Condition="'$(EnableFrameworkPathOverride)' != 'false' And '$(FrameworkPathOverride)' == '' And Exists('$(TargetFrameworkRootPath)$(TargetFrameworkIdentifier)\$(TargetFrameworkVersion)\mscorlib.dll')">$(TargetFrameworkRootPath)$(TargetFrameworkIdentifier)\$(TargetFrameworkVersion)</FrameworkPathOverride>
+     <!-- The FrameworkPathOverride is required for the inproc visual basic compiler to initialize when targeting target frameworks less than 4.0. If .net 2.0 is not installed then the property value above will not provide the location
+              of mscorlib. This is also true if the build author overrides this property to some other directory which does not contain mscorlib.dll. In the case we cannot find mscorlib.dll at the correct location
+              we need to find a directory which does contain mscorlib to allow the inproc compiler to initialize and give us the chance to show certain dialogs in the IDE (which only happen after initialization).-->
+--- a/src/Tasks/XamlTaskFactory/RelationsParser.cs
++++ b/src/Tasks/XamlTaskFactory/RelationsParser.cs
+@@ -6,8 +6,6 @@
+ using System.IO;
+ using System.Xml;
+ using Microsoft.Build.Shared;
+-using Microsoft.Build.Tasks.Deployment.ManifestUtilities;
+-using Microsoft.IO;
+ using File = System.IO.File;
+ 
+ #nullable disable
+--- a/src/Utilities/TaskItem.cs
++++ b/src/Utilities/TaskItem.cs
+@@ -399,7 +399,7 @@
+         /// Overridden to give this class infinite lease time. Otherwise we end up with a limited
+         /// lease (5 minutes I think) and instances can expire if they take long time processing.
+         /// </summary>
+-        [SecurityCritical]
++        [System.Security.SecurityCritical]
+         public override object InitializeLifetimeService() => null; // null means infinite lease time
+ #endif
+ 

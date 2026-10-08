@@ -37,7 +37,7 @@ def tfm_info(tfm):
     m = re.match(r'^net(\d+)\.(\d+)$', tfm)
     if m: return '.NETCoreApp', (int(m.group(1)), int(m.group(2)))
     m = re.match(r'^net(\d)(\d)(\d?)$', tfm)
-    if m: return '.NETFramework', (int(m.group(1)), int(m.group(2) + (m.group(3) or '0')))
+    if m: return '.NETFramework', tuple(int(x) for x in m.groups() if x)
     return '', (0, 0)
 
 def tfm_compatible(target, candidate):
@@ -46,7 +46,7 @@ def tfm_compatible(target, candidate):
     if ti == ci: return tv >= cv
     if ci == '.NETStandard':
         if ti == '.NETCoreApp': return cv <= (2, 1)
-        if ti == '.NETFramework': return cv <= (2, 0) and tv >= (4, 61)
+        if ti == '.NETFramework': return cv <= (2, 0) and tv >= (4, 6, 1)
     return False
 
 class Evaluator:
@@ -77,13 +77,23 @@ class Evaluator:
             if name == 'IsTargetFrameworkCompatible': return str(tfm_compatible(args[0], args[1])).lower()
             if name == 'GetTargetFrameworkIdentifier': return tfm_info(args[0])[0]
             if name == 'GetTargetFrameworkVersion':
-                v = tfm_info(args[0])[1]; return f'{v[0]}.{v[1]}'
+                return '.'.join(str(x) for x in tfm_info(args[0])[1])
             if name == 'GetTargetPlatformIdentifier':
                 return args[0].split('-')[1] if '-' in args[0] else ''
             if name == 'NormalizeDirectory' or name == 'NormalizePath':
                 p = os.path.join(*args) if args else ''
                 return p.replace('\\', '/') + ('/' if name == 'NormalizeDirectory' else '')
+            if name == 'IsOSPlatform': return str(args[0].lower() == 'windows').lower()
+            if name == 'IsOsPlatform': return str(args[0].lower() == 'windows').lower()
             if name == 'ValueOrDefault': return args[0] if args[0] else args[1]
+            m2 = re.match(r'^Version(GreaterThanOrEquals|GreaterThan|LessThanOrEquals|LessThan|Equals|NotEquals)$', name)
+            if m2:
+                a, b = (tuple(int(x) for x in re.findall(r'\d+', v)) for v in args[:2])
+                n = max(len(a), len(b)); a += (0,) * (n - len(a)); b += (0,) * (n - len(b))
+                op = m2.group(1)
+                r = {'GreaterThanOrEquals': a >= b, 'GreaterThan': a > b, 'LessThanOrEquals': a <= b,
+                     'LessThan': a < b, 'Equals': a == b, 'NotEquals': a != b}[op]
+                return str(r).lower()
         m = re.match(r"^(\w[\w.]*)\.(\w+)\((.*)\)$", expr)
         if m and m.group(1) in self.props:
             v = self.props[m.group(1)]
@@ -150,7 +160,8 @@ class Evaluator:
         return t
 
     # ---- project walking ------------------------------------------------
-    def load(self, path, kinds):
+    def load(self, path, kinds, follow=False):
+        self.follow = follow
         base = os.path.dirname(os.path.abspath(path))
         self.props.setdefault('MSBuildProjectDirectory', base)
         saved = (self.props.get('MSBuildThisFileDirectory'), self.props.get('MSBuildThisFile'))
@@ -190,8 +201,13 @@ class Evaluator:
             elif tag == 'Import':
                 proj = self.expand(el.get('Project'), base).replace('\\', '/')
                 full = os.path.normpath(os.path.join(base, proj))
-                if proj.endswith('.projitems') or os.environ.get('CSPROJ_FOLLOW_IMPORTS'):
-                    if os.path.exists(full): self.load(full, kinds)
+                if el.get('Sdk'): continue
+                if proj.endswith('.projitems') or getattr(self, 'follow', False):
+                    if any(c in full for c in '*?'):
+                        for g in sorted(glob.glob(full, recursive=True)):
+                            fl = self.follow; self.load(g, kinds, fl); self.follow = fl
+                    elif os.path.exists(full):
+                        fl = self.follow; self.load(full, kinds, fl); self.follow = fl
                     else: self.warnings.append('missing import ' + full)
             elif tag in ('Choose',):
                 for w in el:
@@ -259,6 +275,8 @@ def num(v):
     except ValueError: return 0.0
 
 def main():
+    # native Windows python would print CRLF; consumers are bash scripts
+    sys.stdout.reconfigure(newline='\n')
     ap = argparse.ArgumentParser()
     ap.add_argument('project')
     ap.add_argument('-p', action='append', default=[])
@@ -266,6 +284,8 @@ def main():
     ap.add_argument('--define', action='store_true')
     ap.add_argument('--prop', action='append', default=[])
     ap.add_argument('--meta', default=None, help='print item metadata NAME after a tab')
+    ap.add_argument('--pre', action='append', default=[], help='props file evaluated before the project (imports followed)')
+    ap.add_argument('--post', action='append', default=[], help='targets file evaluated after the project (imports followed)')
     ap.add_argument('--default-items', action='store_true',
                     help='SDK default Compile glob (**/*.cs minus bin/obj) unless the project sets EnableDefaultCompileItems=false')
     a = ap.parse_args()
@@ -275,7 +295,7 @@ def main():
     if 'TargetFramework' in props:
         ident, ver = tfm_info(props['TargetFramework'])
         props.setdefault('TargetFrameworkIdentifier', ident)
-        props.setdefault('TargetFrameworkVersion', 'v%d.%d' % ver)
+        props.setdefault('TargetFrameworkVersion', 'v' + '.'.join(str(x) for x in (ver + (0,))[:max(2, len(ver))]))
     ev = Evaluator(props)
     if a.default_items:
         text = open(a.project, encoding='utf-8-sig').read()
@@ -285,7 +305,14 @@ def main():
                 r = os.path.relpath(f, base).replace('\\', '/')
                 if r.split('/')[0] in ('bin', 'obj'): continue
                 ev.items.setdefault('Compile', []).append((f, {}))
-    ev.load(a.project, {'Compile', 'EmbeddedResource', 'None', 'Content'})
+    kinds = {'Compile', 'EmbeddedResource', 'None', 'Content'}
+    ev.props.setdefault('MSBuildProjectDirectory', os.path.dirname(os.path.abspath(a.project)))
+    ev.props.setdefault('MSBuildProjectName', os.path.splitext(os.path.basename(a.project))[0])
+    ev.props.setdefault('MSBuildProjectFile', os.path.basename(a.project))
+    ev.props.setdefault('MSBuildProjectExtension', os.path.splitext(a.project)[1])
+    for f in a.pre: ev.load(f, kinds, True)
+    ev.load(a.project, kinds, not os.environ.get('CSPROJ_NO_FOLLOW'))
+    for f in a.post: ev.load(f, kinds, True)
     for w in ev.warnings: print('warning: ' + w, file=sys.stderr)
     if a.define:
         print(ev.props.get('DefineConstants', '')); return
