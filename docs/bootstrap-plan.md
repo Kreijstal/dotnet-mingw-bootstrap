@@ -41,7 +41,13 @@ first builds. The detailed evidence is in:
    `make install` succeeds, and the installed `mcs` and `gmcs` compile
    programs, including generics, that the new `mono` runs. That gives
    pnet → **mono-1.2.6 with mcs/gmcs and the 1.0/2.0 profiles**, with no
-   binary seed.
+   binary seed. **mono-1.9.1** (the next Guix stage) then built and
+   installed on the first try with it.
+
+   One caveat found while checking provenance: both builds silently fell
+   back to 4 prebuilt `System.Windows.Forms` `.resources` blobs shipped in
+   the Mono sources, which Guix does not delete either. The scripts now
+   delete them by default; see §4 and §7.
 5. **The earliest point where the Guix chain fails on MSYS2 UCRT64** is the
    first Mono (1.2.6). In 2007 its Windows support meant 32-bit x86
    built with Cygwin `gcc -mno-cygwin`. The Win64 JIT port had only "begun"
@@ -62,8 +68,9 @@ first builds. The detailed evidence is in:
 | mono 1.2.6, x86_64 | **REQUIRES PATCHING** | C runtime builds; cscc-built mcs runs on the JIT (`--version` OK). 12 patches so far (2 Guix, 10 new). The next blocker is a vtable-slot mismatch in `Location.AddFile` → `Hashtable.Contains`. Further expected work: LLP64 audit, Win64 SEH/unwind info, xmm6–15 callee-saved, Win64 "stdcall" pop assumption, GC thread registration. A4 |
 | bdwgc 8.2.12 (MINGW32, private) | **SOLVED** | `00-bdwgc.sh`, win32 threads + DllMain; MSYS2 mingw32 has no `gc` package |
 | treecc/pnet/pnetlib, i686 (MINGW32) | **SOLVED** | Same scripts and patches as UCRT64; hello world runs |
-| mono 1.2.6, i686 (MINGW32) | **SOLVED** | Builds and installs; `mcs`/`gmcs` compile and `mono` runs hello world and generics (A5). Patches 0001–0006, 0008, 0013 plus `MSYS2_ARG_CONV_EXCL` for gacutil. Risk: MSYS2's mingw32 repo has 230 packages versus 3909 in ucrt64 |
-| mono 1.9.1 | **PROBABLY SOLVABLE** on i686 / **REQUIRES PATCHING** on x86_64 | Same configure (`-mno-cygwin`) and same Win64 state as 1.2.6 (no 2008-04 Win64 fixes in its ChangeLog). The 6 i686-relevant MinGW patches rebase cleanly (`patches/mono-1.9.1/0004–0009`); the build was started at the end of the session (A6, §7) |
+| mono 1.2.6, i686 (MINGW32) | **SOLVED** (resources caveat, §4) | Builds and installs; `mcs`/`gmcs` compile and `mono` runs hello world and generics (A5). Patches 0001–0006, 0008, 0013 plus `MSYS2_ARG_CONV_EXCL` for gacutil. Risk: MSYS2's mingw32 repo has 230 packages versus 3909 in ucrt64 |
+| mono 1.9.1, i686 (MINGW32) | **SOLVED** (resources caveat) | Built and installed by stage-1 mono-1.2.6; mcs/gmcs work; 3 Guix + 6 rebased MinGW patches (A6) |
+| mono 1.9.1, x86_64 | **REQUIRES PATCHING** | Same Win64 JIT state as 1.2.6 (no 2008-04 Win64 fixes in its ChangeLog) |
 | mono 2.4.2.3, 2.6.4 | **PROBABLY SOLVABLE** | Win64 unwind registration (`RtlInstallFunctionTableCallback`) present; eglib optional (`--with-glib`); still `-mno-cygwin` in configure (same 1-line patch) |
 | mono 2.11.4, 3.0.12 | **REQUIRES PATCHING** | configure refuses a user `CC` ("mono can only be compiled with gcc-3 from the 'gcc-core' package") unless cross compiling; needs a configure patch |
 | mono 3.12.1, 4.9.0 | **PROBABLY SOLVABLE** | configure treats `*-mingw*` natively (no forced CC, `with_tls=pthread`) |
@@ -107,6 +114,8 @@ Rules the scripts enforce:
 | pnet git 3baf947 | none (only bundled `libgc/`, `libffi/` *sources*) | bundled libs deleted (Guix), MSYS2 `gc`/`libffi` used |
 | pnetlib git c3c12b8 | none | – |
 | mono-1.2.6.tar.bz2 | `mcs/class/lib/monolite/{mcs.exe,mscorlib.dll,System.dll,System.Xml.dll}` | deleted by `prep-mono.sh`; `docs/` dropped from SUBDIRS (AgilityPack.dll) |
+| mono-1.2.6 / 1.9.1 | `mcs/class/Managed.Windows.Forms/resources/*.resources.prebuilt` (4 files) used by a silent `resgen \|\| cp *.prebuilt` fallback; the `.resx` files embed BinaryFormatter blobs | **Found used** in the MINGW32 test builds (msys2-mono-port.md). Now deleted by `prep-mono.sh` by default; needs a SWF-free ResX compiler or SWF dropped from the bootstrap stages before packaging |
+| mono-1.9.1.1 (git tag tarball) | test DLL/EXEs (`mono/docscripts/AgilityPack.dll`, `mcs/tools/linker/Tests/**`, `System.Drawing/cdeclRedirector/cdeclCallback.dll`, `Mono.Data/test/test.exe`) | deleted by `prep-mono.sh` |
 | later Mono (from Guix spec lists) | `roslyn-binaries`, `xunit-binaries`, `helix-binaries`, `binary-reference-assemblies` DLLs, monolite downloads | not fetched (roslyn/xunit); fetched then blob-deleted (helix); rebuilt from source (reference assemblies, ≥5.0.1); `--with-csc=mcs`; never `get-monolite-latest` |
 
 ## 5. Strategy options for getting past Mono 1.2.6 on Windows
@@ -186,9 +195,25 @@ evaluate C as a way to shorten the chain.
 - For ucrt64, once the x86_64 JIT blocker in §2 is fixed, or as the
   handoff target described in §5.
 
-## 7. Status of the long-running experiments at the time of writing
+## 7. State at the end of this session (2026-10-08)
 
-See the bottom of this file, updated by the last commit of this session.
+- **UCRT64:** stage 0 is installed in `~/dotnetboot/stage0`. The
+  pnet-bootstrap package is built in `~/dotnetboot/pkg`. The mono-1.2.6
+  x86_64 tree is at `~/dotnetboot/build/mono-1.2.6-UCRT64`, where
+  `mcs --version` works and compiling fails on the vtable slot.
+- **MINGW32:**
+  - `stage0-MINGW32`: bdwgc + treecc + pnet + pnetlib;
+  - `stage1-MINGW32`: mono-1.2.6, installed, working;
+  - `stage2-MINGW32`: mono-1.9.1, installed, working;
+  - both Mono stages contain System.Windows.Forms built from prebuilt
+    resources (§4).
+- **Next steps:**
+  1. Fix the prebuilt-resources issue (ResX compiler, or drop SWF), then
+     rebuild stages 1–2 once.
+  2. Continue the Guix chain on MINGW32: 2.4.2.3 → 2.6.4 → 2.11.4 (needs the
+     CC configure patch) → …
+  3. Try the x86_64 handoff at 2.4/2.6 (Win64 unwind info), or later.
+  4. Keep the UCRT64 1.2.6 JIT investigation going (open question 1).
 
 ## 8. Later phases (stubs)
 
@@ -214,6 +239,9 @@ See the bottom of this file, updated by the last commit of this session.
    bootstrap always use the private win32-threads bdwgc (`00-bdwgc.sh`)?
 4. Can a newer mcs be compiled by cscc directly (strategy C), and which
    version is the newest that works?
-5. Is relying on MSYS2's shrinking mingw32 environment acceptable for an
+5. How should the Managed.Windows.Forms resource blobs (`*.resources.prebuilt`,
+   BinaryFormatter data inside the `.resx`) be handled: regenerated, kept
+   as data, or SWF dropped from the bootstrap stages?
+6. Is relying on MSYS2's shrinking mingw32 environment acceptable for an
    MSYS2 package, given that only the build host needs it and the artifacts
    are managed code?

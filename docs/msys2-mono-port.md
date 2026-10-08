@@ -228,7 +228,7 @@ result · first error · root cause · patch/workaround · next blocker.
   from source.** It contains only GCC-built C code (pnet, mono runtime) and
   managed code compiled by cscc → mcs. No .NET/Mono binary was used.
 
-### A6 – mono 1.9.1 (MINGW32) – in progress at the end of the session
+### A6 – mono 1.9.1 (MINGW32) – **SOLVED** (with the resources caveat below)
 - **Source:** `github.com/mono/mono/archive/refs/tags/mono-1.9.1.1.tar.gz`
   (sha256 `7cc4d6a2…de1461`). I extracted it, ran `git add -A && git
   write-tree`, and got `b6fe3b24959762bdac992d09ecbf0c7f845c83e5`, which is
@@ -238,7 +238,36 @@ result · first error · root cause · patch/workaround · next blocker.
 - **Build:** `bootstrap/05-mono-1.9.1.sh` uses the Guix phases
   (`MONO_CREATE_IMAGE_VERSION=v1.1.4322`, `NO_SIGN_ASSEMBLY=yes`,
   disable-signing, delete-mdb). Compiler: stage-1 mono-1.2.6 on PATH.
-  The result is recorded in bootstrap-plan.md §7.
+- **Result:** builds and installs on the first try into `stage2-MINGW32`
+  with profiles 1.0, 2.0, 2.1 and 3.5, and 140 successful compilations.
+  The installed `mcs` and `gmcs` compile, and `mono` runs hello world and
+  `List<int>` generics.
+
+### Binary-provenance finding: prebuilt `.resources` (must be fixed before packaging)
+- **Sources:** both mono-1.2.6 and 1.9.1 ship
+  `mcs/class/Managed.Windows.Forms/resources/{System.Windows.Forms,System.Windows.Forms.en,System.Windows.Forms.de,keyboards}.resources.prebuilt`.
+- **The fallback:** the Makefile rule is `$(RESGEN) $< || cp $@.prebuilt
+  $@`. On MSYS2, resgen cannot load `System.Windows.Forms, Version=1.0.5000.0`
+  for ResX support (`Error: Cannot load support for ResX format`), so **both
+  MINGW32 test builds silently used the 4 blobs**. I checked with `cmp`:
+  the built `.resources` files are identical to `.prebuilt`.
+- **Guix:** its snippet deletes only `*.dll|*.exe|*.so`, so Guix keeps these
+  files too. I did not verify whether its Linux builds fall back to them.
+- **The `.resx` sources are not clean either.** They embed opaque data:
+  base64 `BinaryFormatter` blobs such as `keyboard_table` (a serialized
+  `KeyboardLayout[]`) and serialized bitmaps/icons. These are data, not
+  code, but they still need a provenance decision.
+- **Action taken:** `prep-mono.sh` now deletes `*.prebuilt` by default.
+  `ALLOW_PREBUILT_RESOURCES=1` keeps them, for experiments only. The
+  current `stage1-MINGW32`/`stage2-MINGW32` installs contain a
+  System.Windows.Forms built from the blobs. That only affects SWF, which no
+  compiler stage uses, but those installs must not be packaged as they
+  are.
+- **Planned fix**, any of:
+  - a SWF-free ResX compiler (System.Xml + `ResourceWriter.AddResourceData`,
+    which exists in 1.2.6's corlib) that turns `.resx` into `.resources`;
+  - regenerating `keyboard_table` from its C# source;
+  - dropping Managed.Windows.Forms from the bootstrap-only stages.
 
 ## Generic MSYS2 lessons (apply to every later stage)
 

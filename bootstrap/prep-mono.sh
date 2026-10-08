@@ -10,6 +10,16 @@ rm -rf libgc
 # "just to be sure": every managed/native binary in the tree, including the
 # monolite seed (mcs/class/lib/monolite/*) and docs/AgilityPack.dll
 find . -type f -regextype posix-extended -regex '.*\.(dll|exe|DLL|EXE|so)$' -print -delete | sed 's/^/deleted blob: /'
+# Prebuilt .resources fallbacks (Managed.Windows.Forms: "$(RESGEN) $< || cp
+# $@.prebuilt $@").  Guix does not delete these; on MSYS2 resgen cannot load
+# System.Windows.Forms for ResX support, so the fallback silently used the 4
+# blobs in the mono-1.2.6 and 1.9.1 MINGW32 test builds (see
+# docs/msys2-mono-port.md "prebuilt resources").  Deleted by default so they
+# can never be used silently; ALLOW_PREBUILT_RESOURCES=1 keeps them for
+# experiments only (such outputs must not be packaged).
+if [ "${ALLOW_PREBUILT_RESOURCES:-}" != 1 ]; then
+  find . -type f -name '*.prebuilt' -print -delete | sed 's/^/deleted blob: /'
+fi
 # docs needs the deleted AgilityPack.dll; drop docs and libgc from SUBDIRS
 perl -pi -e 'if (/^(|DIST_|MOONLIGHT_|MONOTOUCH_)SUBDIRS =/) { s/ docs//; s/ \$\(libgc_dir\)//; s/ libgc//; }' Makefile.am
 [ "${1:-}" = --level0 ] && exit 0

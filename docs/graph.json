@@ -58,7 +58,7 @@
    "gc": "boehm(system)",
    "kind": "guix",
    "lang": "C+C#",
-   "msys2_status": "MINGW32 i686: SOLVED (built, installed, mcs/gmcs work). UCRT64 x86_64: REQUIRES PATCHING (runtime builds, mcs --version runs; vtable-slot bug next)"
+   "msys2_status": "MINGW32 i686: SOLVED (built, installed, mcs/gmcs work). UCRT64 x86_64: REQUIRES PATCHING (runtime builds, mcs --version runs; vtable-slot bug next); NOTE: SWF used 4 prebuilt .resources blobs (now deleted by default)"
   },
   {
    "id": "mono-1.9.1",
@@ -74,7 +74,7 @@
    "notes": "MONO_CREATE_IMAGE_VERSION=v1.1.4322",
    "kind": "guix",
    "lang": "C+C#",
-   "msys2_status": "MINGW32: PROBABLY SOLVABLE (build started; patches rebased). UCRT64: REQUIRES PATCHING (same Win64 JIT state as 1.2.6)"
+   "msys2_status": "MINGW32 i686: SOLVED (built+installed by mono-1.2.6; SWF used prebuilt .resources, now deleted by default). UCRT64: REQUIRES PATCHING"
   },
   {
    "id": "mono-2.4.2",
