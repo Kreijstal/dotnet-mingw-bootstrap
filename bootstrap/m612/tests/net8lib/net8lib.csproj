@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- An SDK-style net8.0 library compiled against the from-source
+       Microsoft.NETCore.App.Ref pack (no runtime is needed to compile). -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- no apphost pack yet (native, needs the MinGW host build) -->
+    <UseAppHost>false</UseAppHost>
+    <RestoreSources>$(MSBuildThisFileDirectory)emptyfeed</RestoreSources>
+  </PropertyGroup>
+</Project>

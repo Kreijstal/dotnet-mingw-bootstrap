@@ -17,3 +17,5 @@ Convert: xxd -r -p NAME.pubkey.hex > NAME.snk
   Newtonsoft-30ad4fe6b2a6aeed Newtonsoft.Json; from the PublicKey= text of an InternalsVisibleTo
                               attribute in Newtonsoft.Json 13.0.3's Properties/AssemblyInfo.cs
                               (the in-repo Dynamic.snk key pair is not used)
+  ECMA-b77a5c561934e089       the 16-byte "ECMA standard" pseudo key of mscorlib/System and
+                              friends (it is defined by ECMA-335, not a real RSA key)

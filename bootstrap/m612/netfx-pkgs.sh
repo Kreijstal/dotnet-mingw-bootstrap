@@ -158,6 +158,7 @@ lib_refs() {
 }
 rt_key() { # StrongNameKeyId of a dotnet/runtime library (per-library Directory.Build.props, default Open)
   local k; k=$(grep -ho '<StrongNameKeyId>[^<]*' "$RT/src/libraries/$1/Directory.Build.props" "$RT/src/libraries/$1/src/$1.csproj" 2>/dev/null | head -1 | cut -d'>' -f2)
+  [ "$k" = MicrosoftShared ] && k=MSShared
   case $1 in Microsoft.Extensions.*) echo "${k:-MicrosoftAspNetCore}" ;; *) echo "${k:-Open}" ;; esac
 }
 
