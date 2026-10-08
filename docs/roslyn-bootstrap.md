@@ -1,6 +1,6 @@
 # Roslyn bootstrap (phase 4): findings so far
 
-Status: **solved on MSYS2 from the Mono 6.12 seed up to Roslyn 4.13** (see
+Status: **solved on MSYS2 from the Mono 6.12 seed up to Roslyn 5.0 (C# 14)** (see
 `phase6-dotnet.md`, `bootstrap/m612/roslyn.sh`). Everything below comes from
 Guix's implementation (`gnu/packages/dotnet.scm` at
 a473ec23efdd19074b2615ea478767a596e452e3), which already solves the

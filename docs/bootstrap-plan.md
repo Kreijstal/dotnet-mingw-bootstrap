@@ -38,7 +38,7 @@ seed. Every phase 6 script takes the compiler and runtime as parameters.
 
 **Phase 6 so far** (details in `docs/phase6-dotnet.md`):
 
-- Roslyn 4.0.1 → 4.4 → 4.6 → 4.8 → 4.10 → 4.11 → 4.12 → 4.13 were built
+- Roslyn 4.0.1 → 4.4 → 4.6 → 4.8 → 4.10 → 4.11 → 4.12 → 4.13 → 5.0-preview → 5.0 (C# 14) were built
   from source on Mono, starting from the seed csc 3.9. Each compiler builds
   the next. Only one patch was needed, on the first step: C# 10 syntax
   rewritten for csc 3.9.
@@ -48,6 +48,10 @@ seed. Every phase 6 script takes the compiler and runtime as parameters.
 - MSBuild 17.8.49 (net472, MonoBuild) was built from source, with the
   Roslyn Csc task. An SDK-less .NET Framework project builds and runs with
   it on Mono.
+- NuGet.Client 6.8.2.3 and dotnet/sdk 8.0.131's `Microsoft.NET.Build.Tasks`
+  (net472) were built from source: SDK-style projects restore and build on
+  Mono (net472 runs; net8.0 compiles against a from-source
+  Microsoft.NETCore.App.Ref 8.0 targeting pack).
 - The full stage chain toward the SDK, with statuses, is in
   `phase6-dotnet.md` §4. The hard part is the native runtime: CoreCLR has
   no MinGW port, and the Mono flavor of dotnet/runtime is the recommended
@@ -311,10 +315,10 @@ evaluate C as a way to shorten the chain.
 - **Phase 4 (Mono → Roslyn):** Guix already solves this, up to Roslyn 3.9
   (C# 9) on mono-bootstrap 6.12. See `roslyn-bootstrap.md`. The steps
   beyond 3.9 are **solved on MSYS2** from the Mono 6.12 seed, up to Roslyn
-  4.13 (C# 13); see `phase6-dotnet.md`.
+  5.0 (C# 14); see `phase6-dotnet.md`.
 - **Phase 5 (MSBuild):** Guix builds MSBuild 15.7.179 with mcs. See
   `msbuild-bootstrap.md`. **MSBuild 17.8.49 (net472) is built from source
-  on Mono on MSYS2**; see `phase6-dotnet.md`. NuGet and SDK tasks are next.
+  on Mono on MSYS2**, plus NuGet 6.8 and the .NET SDK 8.0 tasks; see `phase6-dotnet.md`.
 - **Phase 6 (modern .NET):** in progress; see `phase6-dotnet.md` (stage
   chain, CoreCLR/MinGW analysis, binary inventory).
 - **Phases 7–9 (WindowsDesktop, net48 targeting, Greenshot):** UNKNOWN; not

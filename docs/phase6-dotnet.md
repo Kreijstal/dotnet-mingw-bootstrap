@@ -163,13 +163,13 @@ Statuses:
 | S2 | Roslyn 4.4.0 → 4.6.0 → 4.8.0 (C# 12) | previous stage | **SOLVED-HERE** | no patches. 4.8's primary constructors need 4.6, which has them as preview, so 4.4 → 4.8 does not work directly |
 | S3 | netfx package assemblies from source | Roslyn 4.8/4.12 | **SOLVED-HERE** | `netfx-pkgs.sh`. maintenance-packages 2025.03.19: Unsafe, Buffers, Vectors, Tasks.Extensions, Memory, Microsoft.IO.Redist. runtime v8.0.0: SCI, SRM, Bcl.AsyncInterfaces, Encodings.Web, System.Text.Json, Dataflow, MetadataLoadContext, Resources.Extensions, plus the LibraryImportGenerator source generator. All public-signed with the upstream public keys |
 | S4 | Roslyn 4.10.0 → 4.11.0 → 4.12.0 (C# 13) | previous + S3 | **SOLVED-HERE** | 4.10 needs SCI 8 / System.Buffers (S3); 4.12 needs 4.11 (ref struct interfaces); C# 13 test passes |
-| S4b | Roslyn 4.13.0, 5.0.0 (C# 14) | previous | see §6.3 | |
+| S4b | Roslyn 4.13.0 → 5.0.0-preview (tag NET-SDK-10.0.100-preview.4) → 5.0.0 (C# 14) | previous | **SOLVED-HERE** | no patches; 5.0 needs an intermediate with C# 14 extension blocks; csc sources from CscCommandLine.projitems; C# 14 test passes |
 | S5 | MSBuild 17.8.49, net472, MonoBuild | Roslyn 4.12 + S3 | **SOLVED-HERE** | 1 patch (7 files: rotten MONO code paths plus FrameworkPathOverride). An SDK-less net472 csproj builds with the Roslyn Csc task through `mono` and runs |
-| S6 | NuGet.Client 6.8 (net472: NuGet.Build.Tasks, NuGet.Commands, …) | S4 + S5 | PROBABLY | same pattern; NuGet builds net472 when not source-only (research §3). Needs Newtonsoft.Json from source (git submodule in SBRP) |
-| S7 | dotnet/sdk 8.0.1xx `Microsoft.NET.Build.Tasks` (net472) + `Sdks/*` targets on MSBuild/Mono | S4–S6 | PROBABLY | dotnet/sdk still builds net472 tasks for VS; Mono 6.12 shipped exactly MSBuild 16.10 + Sdk 3.1.400 + NuGet 5.11 (prebuilt there). Needs Microsoft.Extensions.DependencyModel, Microsoft.NET.HostModel (apphost patching; needs a native apphost later) |
-| S8 | `Microsoft.NETCore.App.Ref` 8.0 (reference assemblies) from `src/libraries/*/ref/*.cs` | S4 | PROBABLY | plain C# sources; `csproj_items.py` already evaluates the runtime's projects |
+| S6 | NuGet.Client 6.8.2.3 (net472: 15 NuGet.* libs, NuGet.Build.Tasks, NuGetSdkResolver) | S4 + S5 | **SOLVED-HERE** | no patches; deps Newtonsoft.Json 13.0.3, Microsoft.Web.Xdt 3.2.12, Microsoft.Extensions.* 8.0 from source; PackageReference restore from a local feed works in MSBuild on Mono |
+| S7 | dotnet/sdk 8.0.131 `Microsoft.NET.Build.Tasks` (net472) + `Sdks/Microsoft.NET.Sdk` on MSBuild/Mono | S4–S6 | **SOLVED-HERE** (net472 targets) | no patches; deps DependencyModel, HostModel (runtime 8.0.0), Deployment.DotNet.Releases from source; an SDK-style net472 Exe restores, builds and runs on Mono. Missing pieces stubbed/disabled: workloads, SourceLink, roslyn-analyzers (empty NetAnalyzers.props), BundledVersions.props hand-written |
+| S8 | `Microsoft.NETCore.App.Ref` 8.0 (163 ref assemblies + facades, 20 shim stubs, FrameworkList.xml) | S4 | **SOLVED-HERE** | `refpack.sh`; identities match upstream (e.g. System.Runtime 8.0.0.0, b03f5f7f11d50a3a); an SDK-style **net8.0** library compiles against it with the SDK of S7 on Mono (UseAppHost=false, no runtime needed) |
 | S9 | System.Private.CoreLib + `src/libraries/*/src` for net8.0-windows | S4 + S8 | UNKNOWN | compile-feasible with the direct-csc method (source generators build from source, §6.2), but CoreLib's build has many generated inputs and runtime-flavor specifics; no one has done this outside Arcade |
-| S10a | Host (dotnet.exe, hostfxr, hostpolicy, apphost) with CLANG64/UCRT64 | MinGW toolchain | PROBABLY | corehost MSVC bits are behind `if(MSVC)` (§3) |
+| S10a | Host (dotnet.exe, hostfxr, hostpolicy, apphost) with CLANG64/UCRT64 | MinGW toolchain | PROBABLY, needs a CMake patch | probe: `cmake -G Ninja -S src/native/corehost` with CLANG64 clang stops at `eng/native/configurecompiler.cmake:969 MC not found` (the shared Windows config demands MASM + mc.exe even for the host); the host sources themselves keep MSVC bits behind if(MSVC) (§3) |
 | S10b | Runtime: Mono flavor of dotnet/runtime 8.0 (`-rf Mono`) with MinGW | MinGW | UNKNOWN (most promising) | s390x/ppc64le precedent; C only |
 | S10c | Runtime: CoreCLR with CLANG64 clang (GNU driver) | MinGW | **BLOCKED for now** (large port) | MSVC-only CMake, ~24 MASM files, /EHa semantics, mc.exe ETW, PE TLS (§3) |
 | S11 | Assemble SDK 8.0 (host + shared framework + SDK managed bits built for net8.0) | all above | UNKNOWN | depends on S9/S10 |
@@ -311,9 +311,102 @@ is IL: its `.il` goes through `cpp -P` (for upstream's `#include/#define`),
 is assembled with the seed's `ilasm`, and gets the public key through
 `.publickey`.
 
-### 6.3 Roslyn 4.13 / 5.0
+### 6.3 Roslyn 4.13 / 5.0 (C# 14)
 
-See the addendum at the end. The run was started after S5.
+```
+PKGDIR=m612/pkgs bash repo/bootstrap/m612/roslyn.sh 4.13.0 m612/roslyn-4.12.0/csc.exe
+PKGDIR=m612/pkgs ROSLYN_TAG=NET-SDK-10.0.100-preview.4.25258.110 bash repo/bootstrap/m612/roslyn.sh 5.0.0-p4 m612/roslyn-4.13.0/csc.exe
+PKGDIR=m612/pkgs ROSLYN_TAG=Visual-Studio-2026-Version-18.0 bash repo/bootstrap/m612/roslyn.sh 5.0.0 m612/roslyn-5.0.0-p4/csc.exe
+$ mono m612/roslyn-5.0.0/csc.exe -version
+5.0.0 (m612 bootstrap) ()
+C# 14 on Mono: 5 abab 42 0 7 12 List
+```
+
+The C# 14 test uses extension blocks (`extension(string s) {...}`, static
+extension properties on `int`), the `field` keyword, null-conditional
+assignment, `nameof(List<>)` and modifiers on simple lambda parameters.
+4.13 → 5.0 directly fails on `extension(...)` blocks in 5.0's own source;
+the 10.0-preview.4 Roslyn (already 5.0.0-prerelease, extension blocks in
+preview) bridges it. 4.14+ moved `Core/CommandLine` into `Shared/`, so the
+csc file list now comes from `CscCommandLine.projitems`, and
+`src/Dependencies/Contracts` (polyfills) joined Microsoft.CodeAnalysis.
+
+### 6.5 NuGet.Client 6.8.2.3 (`bootstrap/m612/nuget.sh 6.8.2.3 <csc> 17.8.49`)
+
+Builds Microsoft.Web.XmlTransform 3.2.12 (dotnet/xdt), NuGet.Frameworks …
+NuGet.Commands, NuGet.Resolver, NuGet.PackageManagement, NuGet.Build.Tasks
+and Microsoft.Build.NuGetSdkResolver (net472, public-signed with the
+MSShared key, version 6.8.2.3) with `IS_DESKTOP;IS_SIGNING_SUPPORTED` read
+from NuGet's own `build/common.targets`; NuGet.Build.Tasks is compiled
+against our MSBuild instead of the GAC's Microsoft.Build.Utilities.v4.0.
+Test: a package made from source (our csc + a nuspec, zipped) in a local
+folder feed, and an SDK-less PackageReference project:
+
+```
+$ mono m612/msbuild-17.8.49/tools/MSBuild.exe -nologo -m:1 -nr:false -t:Restore restoreme.csproj
+  Determining projects to restore...
+  Restored ...\nuget-6.8.2.3-restore\restoreme.csproj (in 278 ms).
+obj/project.assets.json: "Bootstrap.Greeting/1.0.0"; packages/bootstrap.greeting/1.0.0/lib/net472/Bootstrap.Greeting.dll
+```
+
+### 6.6 .NET SDK tasks (`bootstrap/m612/sdk.sh 8.0.131 <csc> 17.8.49`)
+
+dotnet/sdk v8.0.131 is the SDK that pins exactly MSBuild 17.8.49 and NuGet
+6.8.2. `Microsoft.NET.Build.Tasks` (net472) is compiled from
+`src/Tasks/Microsoft.NET.Build.Tasks` + `Tasks/Common` + the workload
+manifest reader, with the SDK's implicit global usings plus the repo's
+`<Using>` items. Layout `m612/dotnet-sdk-8.0.131/sdk/8.0.131/Sdks/Microsoft.NET.Sdk/{Sdk,targets,tools/net472}`,
+a hand-written subset of `Microsoft.NETCoreSdk.BundledVersions.props`
+(upstream generates it while assembling the whole product), and the RID
+graph from runtime's `Microsoft.NETCore.Platforms/src/runtime.json`.
+MSBuild finds it through `MSBuildSDKsPath` (environment; the wrapper
+`m612/dotnet-sdk-8.0.131/msbuild-mono` sets it). Toolset defaults added:
+`MSBuildEnableWorkloadResolver=false` (no workloads; the upstream
+sentinel needs the dotnet SDK resolver, which needs native hostfxr),
+`SuppressImplicitGitSourceLink=true` (dotnet/sourcelink not built), and an
+empty `analyzers/build/Microsoft.CodeAnalysis.NetAnalyzers.props`
+(dotnet/roslyn-analyzers not built).
+
+The MSBuild layout was changed to standalone (`m612/msbuild-17.8.49/tools/`):
+a `MSBuild/Current/Bin` path switches BuildEnvironmentHelper into
+"Visual Studio" mode, which then wants NuGet under `Common7/IDE`.
+
+```
+$ MSBuildSDKsPath=...\sdk\8.0.131\Sdks mono m612/msbuild-17.8.49/tools/MSBuild.exe -nologo -m:1 -nr:false -restore sdkstyle.csproj
+  Restored ...\sdk-8.0.131-sdkstyle\sdkstyle.csproj (in 136 ms).
+  sdkstyle -> ...\bin\Debug\net472\sdkstyle.exe
+$ mono bin/Debug/net472/sdkstyle.exe
+Hello from an SDK-style project: SDK STYLE ON MONO
+running on Mono
+```
+
+The `-v:diag` log shows the tasks loaded from our
+`tools/net472/Microsoft.NET.Build.Tasks.dll`, csc started through
+`csc-mono.cmd`, and no `C:\Windows\Microsoft.NET` path in use.
+
+### 6.7 Targeting pack (`bootstrap/m612/refpack.sh <csc>`)
+
+`plan` reads `NetCoreAppLibrary.props` (168 names, minus 4
+`System.Private.*`), finds each library's `ref/` project or its shim
+(`shims/*/ref` or `shims/*/src`, checked-in type-forward sources), follows
+`ProjectReference`s (transitively) to get a build order, and adds the 20
+`shims/stubs` assemblies (empty public types for forwards into OOB
+packages, generated from their `ForwardedType` items like the upstream
+`Directory.Build.targets` does). `refs` compiles 183 assemblies (~10 min on
+Mono); `pack` writes `packs/Microsoft.NETCore.App.Ref/8.0.31/{ref/net8.0,data/FrameworkList.xml}`
+and the `KnownFrameworkReference`/`KnownAppHostPack` items.
+
+```
+$ MSBuildSDKsPath=... mono .../MSBuild.exe -restore -p:NetCoreRoot=...\dotnet-sdk-8.0.131\ -p:NetCoreTargetingPackRoot=...\packs net8lib.csproj
+  net8lib -> ...\refpack-8.0.0-net8lib\bin\Debug\net8.0\net8lib.dll
+$ monodis --assemblyref net8lib.dll
+1: Version=8.0.0.0 Name=System.Runtime  Public Key token: B0 3F 5F 7F 11 D5 0A 3A
+2: Version=8.0.0.0 Name=System.Collections.Immutable ...
+```
+
+The library uses .NET 8 APIs (generic math `INumber<T>`,
+`FrozenDictionary`, `TimeProvider`), so it really binds to the new
+reference surface. It cannot run yet: there is no .NET runtime.
 
 ### 6.4 MSBuild (`bootstrap/m612/msbuild.sh 17.8.49 <csc.exe> 4.12.0`)
 
@@ -402,6 +495,11 @@ in 2021 (dotnet/msbuild#6058):
 | `Microsoft.VisualStudio.Setup.Configuration.Interop` | prebuilt COM-interop NuGet | **no**, disabled by `MonoBuild` (no `FEATURE_VISUALSTUDIOSETUP`) | — |
 | `Microsoft.CodeAnalysis.Collections` (MSBuild dep) | source-only NuGet | **no**, compiled from the Roslyn 4.12 tree instead | — |
 | `LargeAddressAware`, `System.Private.Uri`, `System.Runtime` (MSBuild exe PackageReferences) | build-time / reference-only NuGets | no | not needed for a net472 build on Mono |
+| NuGet.Client tarball: 81 test packages/PEs (`test/EndToEnd/Packages`, test `compiler/resources`) | test binaries | **no**, deleted | — |
+| dotnet/sdk tarball: 4 test PEs (`dummyshim.exe`, `testwpf.dll`, …) | test binaries | **no**, deleted | — |
+| Newtonsoft.Json `Src/Newtonsoft.Json/Dynamic.snk` | key pair (data) | **no**, deleted; public-signed with the public key text from its `AssemblyInfo.cs` | — |
+| Public keys `adb9793829ddae60` (Microsoft.Extensions), `30ad4fe6b2a6aeed` (Newtonsoft), ECMA `b77a5c561934e089` | public-key blobs (data) | yes | taken from `PublicKey=` *text* in the runtime / Newtonsoft sources, and the 16-byte ECMA-335 pseudo key |
+| `ILMerge` (NuGet.Build.Tasks.Pack), `Microsoft.DotNet.ApiCompat.Task` (SDK project ref), `Microsoft.CodeAnalysis.NetAnalyzers`, SourceLink, workload packs | prebuilt tools/packages | **no**, not built / disabled | pack, API compat, analyzers and SourceLink are not needed to build projects |
 | Windows' own .NET Framework 4.8 (`C:\Windows\Microsoft.NET`) | OS component | **no**, all paths redirected to Mono; verified by a `-v:diag` grep | out-of-proc MSBuild nodes and directly started `csc.exe` would use it, so we avoid both |
 
 Nothing was stopped for: every binary that came up was either part of the
@@ -409,6 +507,7 @@ trusted seed, deleted, or avoided.
 
 ## 8. Recommended next steps
 
+0. *(Done since this list was written: S6 NuGet, S7 SDK tasks, S8 targeting pack — §6.5–6.7.)*
 1. **NuGet.Client 6.8 and dotnet/sdk 8.0 tasks on MSBuild/Mono (S6/S7).**
    This gives an MSBuild that understands `<Project Sdk="Microsoft.NET.Sdk">`
    for `net472` targets. It is the same pattern as S5:
@@ -432,6 +531,29 @@ trusted seed, deleted, or avoided.
    - `FEATURE_EVENT_TRACE` off, to replace `mc -um`;
    - the `/EHa` semantics audit.
 
-## Addendum: Roslyn 4.13 / 5.0
+## 9. Where this stops, and why
 
-(filled in below when the run finished)
+Everything up to here is managed code compiled by our own Roslyn on Mono,
+and the result is an SDK that builds net472 *and compiles* net8.0 projects
+on Mono. The next stages produce the .NET runtime itself, and that is the
+first hard blocker:
+
+- **S9 (System.Private.CoreLib + libraries src for net8.0-windows)** is
+  compile-feasible with the same driver (the libraries are C# with source
+  generators we can build), but CoreLib is runtime-flavor-specific (CoreCLR
+  vs Mono) and is only useful together with S10.
+- **S10 (runtime)** is native code. dotnet/runtime's shared Windows CMake
+  configuration assumes MSVC: the first probe of even the *host* with
+  CLANG64 clang fails at `configurecompiler.cmake:969` "MC not found"
+  (MASM and the Windows Message Compiler are mandatory for every Windows
+  native build); CoreCLR additionally needs ~24 MASM files ported or an
+  MASM-compatible assembler (UASM / llvm-ml), `/EHa` semantics, PE TLS and
+  the ETW `mc -um` generator replaced or disabled (§3).
+- **Assessment:** not blocked in principle, but a multi-week port.
+  Recommended order: (1) a GNU-on-Windows branch in
+  `eng/native/configurecompiler.cmake` (no `mc`, no MASM for the host),
+  then corehost (dotnet.exe/hostfxr/hostpolicy/apphost) with CLANG64 — this
+  also unblocks the SDK's apphost; (2) the **Mono flavor** of dotnet/runtime
+  8.0 for win-x64 with MinGW (C only, Mono has a MinGW history, and .NET on
+  s390x/ppc64le ships this flavor) plus its CoreLib from S9; (3) CoreCLR on
+  CLANG64 later.
