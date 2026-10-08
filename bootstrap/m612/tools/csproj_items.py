@@ -50,8 +50,10 @@ def tfm_compatible(target, candidate):
     return False
 
 class Evaluator:
-    def __init__(self, props):
+    def __init__(self, props, globals_=()):
         self.props = dict(props)
+        # -p properties behave like MSBuild global properties: projects cannot override them
+        self.globals = set(globals_)
         self.items = {}   # kind -> list of (path, metadata)
         self.warnings = []
 
@@ -83,6 +85,15 @@ class Evaluator:
             if name == 'NormalizeDirectory' or name == 'NormalizePath':
                 p = os.path.join(*args) if args else ''
                 return p.replace('\\', '/') + ('/' if name == 'NormalizeDirectory' else '')
+            if name in ('GetDirectoryNameOfFileAbove', 'GetPathOfFileAbove'):
+                d = os.path.abspath(os.path.join(base, args[0].replace('\\', '/')) if name == 'GetDirectoryNameOfFileAbove' else base)
+                f = args[1] if name == 'GetDirectoryNameOfFileAbove' else args[0]
+                while True:
+                    if os.path.exists(os.path.join(d, f)):
+                        return d if name == 'GetDirectoryNameOfFileAbove' else os.path.join(d, f)
+                    nd = os.path.dirname(d)
+                    if nd == d: return ''
+                    d = nd
             if name == 'IsOSPlatform': return str(args[0].lower() == 'windows').lower()
             if name == 'IsOsPlatform': return str(args[0].lower() == 'windows').lower()
             if name == 'ValueOrDefault': return args[0] if args[0] else args[1]
@@ -179,6 +190,7 @@ class Evaluator:
                 for p in el:
                     if not isinstance(p.tag, str): continue
                     if not self.cond(p.get('Condition'), base): continue
+                    if strip_ns(p.tag) in self.globals: continue
                     self.props[strip_ns(p.tag)] = self.expand((p.text or '').strip(), base)
             elif tag == 'ItemGroup':
                 for it in el:
@@ -296,7 +308,7 @@ def main():
         ident, ver = tfm_info(props['TargetFramework'])
         props.setdefault('TargetFrameworkIdentifier', ident)
         props.setdefault('TargetFrameworkVersion', 'v' + '.'.join(str(x) for x in (ver + (0,))[:max(2, len(ver))]))
-    ev = Evaluator(props)
+    ev = Evaluator(props, [kv.partition('=')[0] for kv in a.p])
     if a.default_items:
         text = open(a.project, encoding='utf-8-sig').read()
         if not re.search(r'<EnableDefault(Compile)?Items>\s*false', text, re.I):

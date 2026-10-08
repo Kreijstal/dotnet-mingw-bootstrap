@@ -23,6 +23,7 @@ B=$M612/build/netfx-pkgs
 PKGDIR=$OUTDIR   # libraries built here are referenced by later ones
 MP=$M612/src/maintenance-packages-$MP_TAG
 RT=$M612/src/runtime-$RT_VER
+NJ_VER=${NJ_VER:-13.0.3}
 ROSLYN_DIR=${ROSLYN_DIR:-$(dirname "$BCSC")}   # analyzers are built against this Roslyn
 
 prep_sources() {
@@ -56,13 +57,18 @@ build_lib() {
   local pdir; pdir=$(cd "$(dirname "$proj")" && pwd)
   local o="$B/obj/$name"; rm -rf "${o:?}"; mkdir -p "$o"
   local common corelib items=() extra=() defs
-  if [ $flavor = mp ]; then common="$MP/src/Common/"; corelib="$MP/src/Common/src/CoreLib/"
+  [ $flavor = nj ] && tfm=net45
+  if [ $flavor = mp ] || [ $flavor = nj ]; then common="$MP/src/Common/"; corelib="$MP/src/Common/src/CoreLib/"
   else common="$RT/src/libraries/Common/src/"; corelib="$RT/src/libraries/System.Private.CoreLib/src/"; fi
   local props=(-p TargetFramework=$tfm -p AssemblyName=$name -p CommonPath=$common -p CoreLibSharedDir=$corelib
     -p NetCoreAppCurrent=net${RT_VER%%.*}.0 -p NetCoreAppPrevious=net$(( ${RT_VER%%.*} - 1 )).0 -p NetCoreAppMinimum=net6.0
     -p NetFrameworkMinimum=net462 -p NetFrameworkCurrent=net481 -p MSBuildProjectExtension=.csproj -p Language=C#
     -p LibrariesProjectRoot=$RT/src/libraries/ -p TargetOS=windows -p TargetsWindows=true)
   local dflag=(); [ $flavor != rt ] && dflag=(--default-items)
+  # dotnet/runtime turns default items off globally; some projects turn them back on
+  [ $flavor = rt ] && [ "$(cd "$pdir" && csproj_items -p TargetFramework=$tfm --pre "$RT/src/libraries/Directory.Build.props" --prop EnableDefaultItems "$(basename "$proj")" 2>/dev/null | cut -d= -f2)" = true ] && dflag=(--default-items)
+  [ $flavor = nj ] && exclude='/obj/|/bin/'
+
   mapfile -t items < <(cd "$pdir" && csproj_items "${dflag[@]}" "${props[@]}" "$(basename "$proj")" | grep -Ev "$exclude" | sed "s|^|$pdir/|")
   local sres; sres=$(cd "$pdir" && csproj_items "${props[@]}" --prop StringResourcesPath "$(basename "$proj")" | cut -d= -f2)
   [ -n "$sres" ] && sres=$(cd "$pdir" && realpath -m "$sres") || sres="$pdir/Resources/Strings.resx"
@@ -76,7 +82,7 @@ build_lib() {
     if [ $flavor = mp ]; then extra+=("$MP/src/Common/src/System/SR.cs"); else extra+=("$RT/src/libraries/Common/src/System/SR.cs"); fi
   fi
   # implicit polyfills of dotnet/runtime's src/libraries/Directory.Build.targets
-  if [ $flavor != mp ] && [ "$nullable" != disable ]; then
+  if { [ $flavor = rt ] || [ $flavor = rtgen ]; } && [ "$nullable" != disable ]; then
     extra+=("$corelib/System/Diagnostics/CodeAnalysis/NullableAttributes.cs"); nullable=enable
   fi
   if [ $flavor = rt ]; then   # (maintenance-packages projects carry their own copies)
@@ -150,11 +156,12 @@ lib_refs() {
 }
 rt_key() { # StrongNameKeyId of a dotnet/runtime library (per-library Directory.Build.props, default Open)
   local k; k=$(grep -ho '<StrongNameKeyId>[^<]*' "$RT/src/libraries/$1/Directory.Build.props" "$RT/src/libraries/$1/src/$1.csproj" 2>/dev/null | head -1 | cut -d'>' -f2)
-  echo "${k:-Open}"
+  case $1 in Microsoft.Extensions.*) echo "${k:-MicrosoftAspNetCore}" ;; *) echo "${k:-Open}" ;; esac
 }
 
 tfm_defines() {
   case $1 in
+    net45) echo -d:NETFRAMEWORK -d:NET45 -d:NET45_OR_GREATER ;;
     net462) echo -d:NETFRAMEWORK -d:NET462 -d:NET461_OR_GREATER -d:NET462_OR_GREATER -d:NET45_OR_GREATER -d:NET46_OR_GREATER ;;
     netstandard2.0) echo -d:NETSTANDARD -d:NETSTANDARD2_0 -d:NETSTANDARD2_0_OR_GREATER -d:NETSTANDARD1_0_OR_GREATER ;;
   esac
@@ -166,6 +173,15 @@ recipe() {
     System.Buffers) build_lib System.Buffers "$MP/src/System.Buffers/src/System.Buffers.csproj" Open auto mp ;;
     System.Numerics.Vectors) build_lib System.Numerics.Vectors "$MP/src/System.Numerics.Vectors/src/System.Numerics.Vectors.csproj" Microsoft auto mp ;;
     System.Threading.Tasks.Extensions) build_lib System.Threading.Tasks.Extensions "$MP/src/System.Threading.Tasks.Extensions/src/System.Threading.Tasks.Extensions.csproj" Open auto mp ;;
+    Newtonsoft.Json)
+      local NJ=$M612/src/newtonsoft.json-$NJ_VER
+      if [ ! -d "$NJ/Src" ]; then
+        fetch_tarball "https://github.com/JamesNK/Newtonsoft.Json/archive/refs/tags/$NJ_VER.tar.gz" "$NJ.tar.gz"
+        mkdir -p "$NJ"; tar -C "$NJ" --strip-components=1 -xzf "$NJ.tar.gz"; delete_binaries "$NJ"
+        rm -f "$NJ/Src/Newtonsoft.Json/Dynamic.snk"   # private key pair; we public-sign with keys/Newtonsoft-*
+      fi
+      build_lib Newtonsoft.Json "$NJ/Src/Newtonsoft.Json/Newtonsoft.Json.csproj" Newtonsoft 13.0.0.0 nj -d:SIGNED \
+        -r:"$RA/Microsoft.CSharp.dll" -r:"$RA/System.Data.dll" -r:"$RA/System.ComponentModel.DataAnnotations.dll" ;;
     Microsoft.IO.Redist) build_lib Microsoft.IO.Redist "$MP/src/Microsoft.IO.Redist/src/Microsoft.IO.Redist.csproj" Open 6.0.0.0 mp ;;
     System.Memory) build_lib System.Memory "$MP/src/System.Memory/src/System.Memory.csproj" Open auto mp ;;
     # source generators (Roslyn components), needed to compile runtime libraries

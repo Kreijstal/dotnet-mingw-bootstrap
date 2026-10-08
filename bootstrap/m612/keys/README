@@ -11,3 +11,9 @@ each file name is SHA-1(key)[last 8 bytes, reversed] and was verified.
   MSShared-31bf3856ad364e35   Microsoft.CodeAnalysis*, NuGet? (MSSharedLib1024)
 
 Convert: xxd -r -p NAME.pubkey.hex > NAME.snk
+  MicrosoftAspNetCore-adb9793829ddae60  Microsoft.Extensions.* (dotnet/runtime); taken from
+                              the PublicKey= text of InternalsVisibleTo attributes in the
+                              runtime-8.0.0 sources (21 occurrences), token verified
+  Newtonsoft-30ad4fe6b2a6aeed Newtonsoft.Json; from the PublicKey= text of an InternalsVisibleTo
+                              attribute in Newtonsoft.Json 13.0.3's Properties/AssemblyInfo.cs
+                              (the in-repo Dynamic.snk key pair is not used)
