@@ -19,7 +19,9 @@ W=$DNB/build/bdwgc$BOOT_SFX${GC_STATIC:+-static}; mkdir -p "$W"; [ -d "$W/gc-8.2
 mkdir -p "$W/build"; cd "$W/build"
 [ -f Makefile ] || ../gc-8.2.12/configure $BOOT_TRIPLET --prefix="$GC_PREFIX" \
    --enable-threads=win32 --enable-win32-dllmain ${GC_STATIC:+--disable-thread-local-alloc} $SH --enable-static \
-   --with-libatomic-ops=none --disable-docs CFLAGS="-O2 -g ${GC_STATIC:+-DGC_INSIDE_DLL}"
+   --enable-large-config --with-libatomic-ops=none --disable-docs CFLAGS="-O2 -g ${GC_STATIC:+-DGC_INSIDE_DLL}"
+# --enable-large-config as in MSYS2's mingw-w64-gc: without it the heap-section
+# table fills up (mdoc assemble in mono-2.6.4: "Too many heap sections" abort)
 # (static copy: -DGC_INSIDE_DLL makes win32_threads.c name its DllMain
 #  GC_DllMain, which Mono's own DllMain in libmono calls)
 # (DllMain thread discovery is compiled only without thread-local alloc)

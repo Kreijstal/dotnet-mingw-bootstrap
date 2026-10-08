@@ -431,6 +431,71 @@ Mono's build system. Results:
   0.1–0.2 s. ilrun is not on the critical path of Mono's build, so
   interpreter speed is irrelevant for this route.
 
+## i686 libmono init failure (mono-2.6.4 built by cscc, MINGW32)
+
+**Symptom.** `mono.exe --version` exited with status 127 and printed
+nothing. `LoadLibrary("libmono.dll")` failed with ERROR_DLL_INIT_FAILED
+(1114).
+
+**Tool.** I installed `mingw-w64-i686-gdb` 18.1-3 from the mingw32
+repository (a source-built MSYS2 debugger).
+
+**Evidence.**
+- With a breakpoint on `GC_DllMain@12`, the backtrace is
+  `ntdll → DllMainCRTStartup@12 → DllMain@12 (driver.c:1212) →
+  GC_DllMain@12`. On return, the process faults at `0x005ffd24`, which is
+  exactly the value of the `reserved` argument.
+- objdump of libmono's `_DllMain@12` shows a cdecl-style call: arguments are
+  stored with `mov` at `0..8(%esp)`, then `call _GC_DllMain`, with no stack
+  adjustment afterwards, while `GC_DllMain@12` ends in `ret $0xc`.
+
+**Root cause.**
+- With an external bdwgc 8.x, `<gc.h>` declares `GC_DllMain` only when
+  `GC_INSIDE_DLL` is defined, i.e. when compiling the GC itself.
+- So `driver.c` called an *implicitly declared* (cdecl) `GC_DllMain`. That
+  was only a warning, because the GCC 14+ escape hatch
+  `-Wno-error=implicit-function-declaration` is in our CFLAGS. ld's stdcall
+  fixup then resolved `_GC_DllMain` to the WINAPI `_GC_DllMain@12`.
+- The callee popped 12 bytes, so libmono's DllMain returned through a
+  corrupted frame.
+- x86_64 has a single calling convention, so UCRT64 never saw this. Mono's
+  bundled libgc used to declare the function unconditionally.
+
+**Fix.** `patches/mono-2.6.4/0017-driver-gc-dllmain-prototype` declares
+`BOOL WINAPI GC_DllMain (HINSTANCE, ULONG, LPVOID)`.
+- After a relink (only `driver.c` recompiles), `mono --version` works.
+
+**Next failure: stack overflow in `System.MulticastDelegate:op_Equality`.**
+- Every program died there; the method called itself (gdb plus `mono -v`).
+- cscc compiles `d1 == null` inside `operator ==` as a call to that same
+  operator.
+- Fix: `0018-corlib-multicastdelegate-op-eq-cscc` (`(object)` casts, as in
+  Guix' 1.2.6 patch). Only the cscc-built basic mscorlib is rebuilt (cscc,
+  about 5 s).
+
+**Result.**
+- On i686 mono-2.6.4 a cscc-built hello world runs, as do
+  `throw`/`catch` and a caught NullReferenceException.
+- The cscc-built basic `mcs.exe` reports "Mono C# compiler version
+  2.6.4.0" and compiles hello world in about 1.5 s.
+- Mono's own build then continued past basic and net_1_1_bootstrap into the
+  net_1_1 profile.
+
+**Follow-ups during the build.**
+1. `keyboards.resources` for Managed.Windows.Forms. Its `.resx` needs SWF's
+   own ResX reader, and the prebuilt fallback is deleted. The two-pass
+   solution in `06-mono-2.6.4-cscc.sh`:
+   - build everything with an empty placeholder made by pnet's C `resgen`;
+   - regenerate the file from `keyboards.resx` with the freshly built
+     SWF's `resgen`;
+   - let make rebuild SWF.
+
+   The `.resx` still carries the keyboard table as BinaryFormatter data;
+   that is source text in the tarball, and there is no generator for it in
+   2.6.4.
+2. MSYS2 argument conversion mangled `Apigen.exe /n:… /apiName:…`
+   (RabbitMQ.Client). Added to `MSYS2_ARG_CONV_EXCL`.
+
 ## Generic MSYS2 lessons (apply to every later stage)
 
 1. GCC 16 defaults to C23: use `-std=gnu17` and the Guix `-Wno-error=…` set.

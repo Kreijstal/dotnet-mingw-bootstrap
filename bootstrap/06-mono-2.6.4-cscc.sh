@@ -42,6 +42,24 @@ if [ ! -f .disable-signing ]; then
   [ ! -f mcs/class/FirebirdSql.Data.Firebird/Assembly/AssemblyInfo.cs ] || /usr/bin/perl -pi -e 's/AssemblyDelaySign\(false\)/AssemblyDelaySign(true)/' mcs/class/FirebirdSql.Data.Firebird/Assembly/AssemblyInfo.cs
   touch .disable-signing
 fi
-if [ "${STEP:-}" = runtime ]; then make -C mono -j4 CFLAGS="$CF"; exit 0; fi
+if [ "${STEP:-}" = runtime ]; then make -C mono -j2 CFLAGS="$CF"; exit 0; fi
+# Managed.Windows.Forms needs resources/keyboards.resources, made by
+# "resgen keyboards.resx", which needs System.Windows.Forms itself for ResX
+# support; Mono's tarball falls back to a prebuilt blob (deleted here).  So:
+# build everything once with an empty placeholder (pnet's C resgen, text
+# input), then regenerate it from keyboards.resx with the freshly built SWF
+# and let make rebuild SWF in every profile.
+KB=mcs/class/Managed.Windows.Forms/resources
+if [ ! -f $KB/keyboards.resources ]; then
+  : > $KB/empty.txt
+  "$STAGE0/bin/resgen" $KB/empty.txt $KB/keyboards.resources
+  touch $KB/.keyboards-placeholder
+fi
 make "${MK[@]}"
+if [ -f $KB/.keyboards-placeholder ]; then
+  L=mcs/class/lib
+  (cd $KB/.. && MONO_PATH="../lib/net_1_1" ../../../runtime/mono-wrapper ../lib/net_1_1_bootstrap/resgen.exe resources/keyboards.resx resources/keyboards.resources)
+  rm -f $KB/.keyboards-placeholder $KB/empty.txt
+  make "${MK[@]}"
+fi
 make install "${MK[@]}"
