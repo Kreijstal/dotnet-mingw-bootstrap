@@ -10,6 +10,13 @@ here=$(cd "$(dirname "$0")" && pwd)
 . "$here/../env-m612.sh"
 V=${1:?version}; BCSC=${2:?bootstrap csc.exe}; shift 2
 steps=${*:-prep res gen core csharp csc install test}
+# git tag of version V (4.3+ are only tagged as Visual-Studio-2022-Version-17.N)
+case $V in
+  4.0.1|4.1.0|4.2.0) TAG=v$V ;;
+  4.*.0) _m=${V#4.}; TAG=Visual-Studio-2022-Version-17.${_m%.0} ;;
+  *) TAG=${ROSLYN_TAG:?set ROSLYN_TAG for $V} ;;
+esac
+TAG=${ROSLYN_TAG:-$TAG}
 SRC=$M612/src/roslyn-$V.tar.gz
 B=$M612/build/roslyn-$V
 OUT=$M612/roslyn-$V
@@ -46,10 +53,16 @@ REFS=(-r:"$RA/mscorlib.dll" -r:"$RA/System.dll" -r:"$RA/System.Core.dll"
   -r:"$ML/System.Memory.dll" -r:"$ML/System.Runtime.CompilerServices.Unsafe.dll"
   -r:"$ML/System.Threading.Tasks.Extensions.dll" -r:"$ML/System.Numerics.Vectors.dll"
   -r:"$ML/Facades/System.Text.Encoding.CodePages.dll")
+# Build-time tools (syntax/bound-tree generators) target .NET Core upstream
+# and only ever run here on Mono: compile them against Mono's runtime
+# profile (lib/mono/4.5), which has Index/Range, string.Contains(char)...
+TOOLREFS=(-r:"$ML/mscorlib.dll" -r:"$ML/System.dll" -r:"$ML/System.Core.dll" -r:"$ML/System.Xml.dll"
+  -r:"$ML/System.Xml.Linq.dll" -r:"$ML/Facades/netstandard.dll" -r:"$ML/Facades/System.Runtime.dll"
+  -r:"$ML/System.Collections.Immutable.dll")
 COMMON=(-nostdlib -optimize+ -debug:portable -deterministic -d:TRACE -nullable:enable -unsafe)
 
 step_prep() {
-  [ -f "$SRC" ] || curl -sSL -o "$SRC" "https://github.com/dotnet/roslyn/archive/refs/tags/v$V.tar.gz"
+  [ -f "$SRC" ] || curl -sSL -o "$SRC" "https://github.com/dotnet/roslyn/archive/refs/tags/$TAG.tar.gz"
   rm -rf "${B:?}"; mkdir -p "$B"
   tar -C "$B" --strip-components=1 -xzf "$SRC"
   # provenance: the tarball ships test-resource PE files (and nothing used by
@@ -82,13 +95,20 @@ step_res() {
 step_gen() {
   cd "$B"; mkdir -p obj/gen
   local G=src/Tools/Source/CompilerGeneratorTools/Source
+  # net472 has no System.Index/Range: reuse Roslyn's own polyfills, whose
+  # "#if !NETCOREAPP" would hide them under the -d:NETCOREAPP below.
+  mkdir -p obj/polyfill; local f
+  for f in src/Compilers/Core/Portable/InternalUtilities/{Index,Range}.cs; do
+    [ -f "$f" ] && sed 's/^#if !NETCOREAPP/#if true/; /^using Roslyn.Utilities;/d; s/Hash.Combine(\(.*\), \(.*\));/unchecked(\1 * 31 + \2);/' "$f" > obj/polyfill/$(basename "$f")
+  done
   # CSharpSyntaxGenerator console mode (#if NETCOREAPP in Program.cs)
-  csc gen-syntax -target:exe -d:NETCOREAPP -out:obj/gen/CSharpSyntaxGenerator.exe "${REFS[@]}" -nostdlib \
+  csc gen-syntax -target:exe -d:NETCOREAPP -out:obj/gen/CSharpSyntaxGenerator.exe "${TOOLREFS[@]}" -nostdlib \
     $(find $G/CSharpSyntaxGenerator -name '*.cs' ! -name SourceGenerator.cs ! -name CachingSourceGenerator.cs) \
     src/Compilers/CSharp/Portable/Syntax/SyntaxKind.cs src/Compilers/CSharp/Portable/Syntax/SyntaxKindFacts.cs \
-    src/Compilers/CSharp/Portable/Declarations/DeclarationModifiers.cs src/Compilers/Core/Portable/Symbols/WellKnownMemberNames.cs
-  csc gen-bound -target:exe -out:obj/gen/BoundTreeGenerator.exe "${REFS[@]}" -nostdlib $(find $G/BoundTreeGenerator -name '*.cs')
-  csc gen-errfacts -target:exe -out:obj/gen/CSharpErrorFactsGenerator.exe "${REFS[@]}" -nostdlib $(find $G/CSharpErrorFactsGenerator -name '*.cs')
+    src/Compilers/CSharp/Portable/Declarations/DeclarationModifiers.cs src/Compilers/Core/Portable/Symbols/WellKnownMemberNames.cs \
+    ${GEN_POLYFILL:+$(ls obj/polyfill/*.cs 2>/dev/null)}
+  csc gen-bound -target:exe -out:obj/gen/BoundTreeGenerator.exe "${TOOLREFS[@]}" -nostdlib $(find $G/BoundTreeGenerator -name '*.cs')
+  csc gen-errfacts -target:exe -out:obj/gen/CSharpErrorFactsGenerator.exe "${TOOLREFS[@]}" -nostdlib $(find $G/CSharpErrorFactsGenerator -name '*.cs')
   # regenerate the checked-in generated sources and record any difference
   local GD=src/Compilers/CSharp/Portable/Generated
   mkdir -p obj/gen/syntax
@@ -96,9 +116,9 @@ step_gen() {
   mono obj/gen/BoundTreeGenerator.exe CSharp src/Compilers/CSharp/Portable/BoundTree/BoundNodes.xml obj/gen/BoundNodes.xml.Generated.cs
   mono obj/gen/CSharpErrorFactsGenerator.exe src/Compilers/CSharp/Portable/Errors/ErrorCode.cs obj/gen/ErrorFacts.Generated.cs
   log "diff of regenerated vs checked-in generated sources:"
-  for f in obj/gen/syntax/*.cs; do diff -q --strip-trailing-cr "$f" "$GD/CSharpSyntaxGenerator/CSharpSyntaxGenerator.SourceGenerator/$(basename "$f")" || true; done
-  diff -q --strip-trailing-cr obj/gen/BoundNodes.xml.Generated.cs $GD/BoundNodes.xml.Generated.cs || true
-  diff -q --strip-trailing-cr obj/gen/ErrorFacts.Generated.cs $GD/ErrorFacts.Generated.cs || true
+  for f in obj/gen/syntax/*.cs; do diff -qBw --strip-trailing-cr "$f" "$GD/CSharpSyntaxGenerator/CSharpSyntaxGenerator.SourceGenerator/$(basename "$f")" || true; done
+  diff -qBw --strip-trailing-cr obj/gen/BoundNodes.xml.Generated.cs $GD/BoundNodes.xml.Generated.cs || true
+  diff -qBw --strip-trailing-cr obj/gen/ErrorFacts.Generated.cs $GD/ErrorFacts.Generated.cs || true
   # build only from regenerated files
   rm -rf "${GD:?}"/*.cs "${GD:?}"/CSharpSyntaxGenerator
 }
@@ -162,10 +182,15 @@ step_install() {
 }
 
 step_test() {
-  local T=$B/obj/test; mkdir -p "$T"; cd "$T"
-  cp "$here/tests/cs10.cs" .
-  mono "$OUT/csc.exe" -nologo -langversion:latest -out:cs10.exe "$(cygpath -m "$here/tests/cs10.cs")" "$(cygpath -m "$here/tests/polyfill.cs")"
-  mono cs10.exe
+  # compile and run every tests/csNN.cs up to the language version of $V
+  local T=$B/obj/test maxlang n t rc=0; mkdir -p "$T"; cd "$T"
+  case $V in 4.0.*|4.1.*|4.2.*|4.3.*) maxlang=10 ;; 4.4.*|4.5.*|4.6.*|4.7.*) maxlang=11 ;; 4.8.*|4.9.*|4.10.*|4.11.*) maxlang=12 ;; 4.1[2-9].*) maxlang=13 ;; *) maxlang=14 ;; esac
+  for t in "$here"/tests/cs[0-9][0-9].cs; do
+    n=$(basename "$t" .cs); [ "${n#cs}" -le "$maxlang" ] || continue
+    mono "$OUT/csc.exe" -nologo -langversion:latest -out:$n.exe "$(cygpath -m "$t")" "$(cygpath -m "$here/tests/polyfill.cs")" || { rc=1; continue; }
+    mono $n.exe || rc=1
+  done
+  return $rc
 }
 
 for s in $steps; do log "roslyn $V: $s"; "step_$s"; done
