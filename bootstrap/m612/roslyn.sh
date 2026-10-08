@@ -63,7 +63,7 @@ step_gen() {
     [ -f "$f" ] && sed 's/^#if !NETCOREAPP/#if true/; /^using Roslyn.Utilities;/d; s/Hash.Combine(\(.*\), \(.*\));/unchecked(\1 * 31 + \2);/' "$f" > obj/polyfill/$(basename "$f")
   done
   # CSharpSyntaxGenerator console mode (#if NETCOREAPP in Program.cs)
-  csc gen-syntax -target:exe -d:NETCOREAPP -out:obj/gen/CSharpSyntaxGenerator.exe "${TOOLREFS[@]}" -nostdlib \
+  csc gen-syntax -target:exe -d:NETCOREAPP -d:NET -out:obj/gen/CSharpSyntaxGenerator.exe "${TOOLREFS[@]}" -nostdlib \
     $(find $G/CSharpSyntaxGenerator -name '*.cs' ! -name SourceGenerator.cs ! -name CachingSourceGenerator.cs) \
     src/Compilers/CSharp/Portable/Syntax/SyntaxKind.cs src/Compilers/CSharp/Portable/Syntax/SyntaxKindFacts.cs \
     src/Compilers/CSharp/Portable/Declarations/DeclarationModifiers.cs src/Compilers/Core/Portable/Symbols/WellKnownMemberNames.cs \

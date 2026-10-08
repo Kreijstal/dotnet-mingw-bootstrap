@@ -69,7 +69,7 @@ TOOLREFS=(-r:"$ML/mscorlib.dll" -r:"$ML/System.dll" -r:"$ML/System.Core.dll" -r:
 # public-sign key file: keyfile <Microsoft|Open|MSShared>
 keyfile() {
   local f; f=$(ls "$KEYS/$1"-*.pubkey.hex) || return 1
-  local out="$B/obj/$1.snk"; mkdir -p "$B/obj"
+  local out="$M612/keys/$1.snk"; mkdir -p "$M612/keys"
   [ -f "$out" ] || perl -ne 'BEGIN { binmode STDOUT } s/[^0-9a-fA-F]//g; print pack("H*", $_)' "$f" > "$out"
   cygpath -m "$out"
 }
