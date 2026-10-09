@@ -97,6 +97,9 @@ class Evaluator:
             if name == 'IsOSPlatform': return str(args[0].lower() == 'windows').lower()
             if name == 'IsOsPlatform': return str(args[0].lower() == 'windows').lower()
             if name == 'ValueOrDefault': return args[0] if args[0] else args[1]
+            if name in ('Add', 'Subtract', 'Multiply'):
+                a, b = (int(x) for x in args[:2])
+                return str({'Add': a + b, 'Subtract': a - b, 'Multiply': a * b}[name])
             m2 = re.match(r'^Version(GreaterThanOrEquals|GreaterThan|LessThanOrEquals|LessThan|Equals|NotEquals)$', name)
             if m2:
                 a, b = (tuple(int(x) for x in re.findall(r'\d+', v)) for v in args[:2])
@@ -300,6 +303,8 @@ def main():
     ap.add_argument('--prop', action='append', default=[])
     ap.add_argument('--meta', default=None, help='print item metadata NAME after a tab')
     ap.add_argument('--pre', action='append', default=[], help='props file evaluated before the project (imports followed)')
+    ap.add_argument('--pre-local', action='append', default=[], help='props file evaluated before the project (imports not followed)')
+    ap.add_argument('--init', action='append', default=[], help='Name=Value initial property the project may override')
     ap.add_argument('--post', action='append', default=[], help='targets file evaluated after the project (imports followed)')
     ap.add_argument('--default-items', action='store_true',
                     help='SDK default Compile glob (**/*.cs minus bin/obj) unless the project sets EnableDefaultCompileItems=false')
@@ -325,7 +330,10 @@ def main():
     ev.props.setdefault('MSBuildProjectName', os.path.splitext(os.path.basename(a.project))[0])
     ev.props.setdefault('MSBuildProjectFile', os.path.basename(a.project))
     ev.props.setdefault('MSBuildProjectExtension', os.path.splitext(a.project)[1])
+    for kv in a.init:
+        k, _, v = kv.partition('='); ev.props[k] = v
     for f in a.pre: ev.load(f, kinds, True)
+    for f in a.pre_local: ev.load(f, kinds, False)
     ev.load(a.project, kinds, not os.environ.get('CSPROJ_NO_FOLLOW'))
     for f in a.post: ev.load(f, kinds, True)
     for w in ev.warnings: print('warning: ' + w, file=sys.stderr)

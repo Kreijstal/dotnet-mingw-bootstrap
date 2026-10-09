@@ -12,15 +12,16 @@
 #           Arcade); the shims (mscorlib, netstandard, System.Core, ...) are the
 #           ones refpack.sh compiled, except System/System.Data/mscorlib, whose ref
 #           pack versions come from shims/*/ref and are rebuilt from shims/*/src
+#   vb      Microsoft.VisualBasic.Core (VB; vbc.sh builds the VB compiler from source)
 #   report  list what was built and skipped
 #
-# usage: libraries.sh <csc.exe> [step...]    (default: plan gens build report)
+# usage: libraries.sh <csc.exe> [step...]    (default: plan gens build vb report)
 #   ONLY="A B" builds just those (and rebuilds them); REBUILD=1 rebuilds all
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 . "$here/../env-m612.sh"
 BCSC=${1:?csc.exe}; shift
-steps=${*:-plan gens build report}
+steps=${*:-plan gens build vb report}
 RT_VER=${RT_VER:-8.0.0}; TFM=net${RT_VER%%.*}.0
 SRC=$M612/src/runtime-$RT_VER-native
 L=$SRC/src/libraries
@@ -225,12 +226,53 @@ step_build() {
   [ ${#failed[@]} -eq 0 ] || echo "FAILED (${#failed[@]}): ${failed[*]}"
 }
 
+# Microsoft.VisualBasic.Core is the one VB project of the shared framework
+# (Microsoft.VisualBasic.Core.vbproj, net8.0-windows), compiled with the VB
+# compiler that vbc.sh built from Roslyn source; tools/vbresx.py writes its SR.
+VBC=${VBC:-$M612/roslyn-4.8.0/vbc.exe}
+step_vb() {
+  local n=Microsoft.VisualBasic.Core pd=$L/Microsoft.VisualBasic.Core/src o=$B/obj/Microsoft.VisualBasic.Core items=() refs=() r a
+  [ -f "$VBC" ] || die "no $VBC; run vbc.sh first"
+  rm -rf "${o:?}"; mkdir -p "$o"
+  local props=(-p TargetFramework=$TFM-windows -p TargetPlatformIdentifier=windows -p NetCoreAppCurrent=$TFM -p TargetOS=windows
+    -p LibrariesProjectRoot=$L/ -p CommonPath=$L/Common/src/ -p MSBuildProjectName=$n)
+  mapfile -t items < <(cd "$pd" && csproj_items "${props[@]}" $n.vbproj 2>/dev/null | sed "s|^|$pd/|")
+  while read -r r; do refs+=("$RP/$r.dll"); done < <(cd "$pd" && csproj_items "${props[@]}" --kind Reference $n.vbproj 2>/dev/null)
+  local _n av tok; read -r _n av tok < "$RP/$n.meta"
+  resgen "$pd/Resources/Strings.resx" "$o/FxResources.$n.SR.resources" > /dev/null
+  python3 -S "$M612_TOOLS_SRC/vbresx.py" "$pd/Resources/Strings.resx" "$o/SR.g.vb" "FxResources.$n.SR"
+  {
+    printf '<Assembly: System.Reflection.AssemblyVersion("%s")>\n<Assembly: System.Reflection.AssemblyFileVersion("%s")>\n' "$av" "$RT_VER.0"
+    printf '<Assembly: System.Reflection.AssemblyInformationalVersion("%s+%s")>\n' "$RT_VER" "$COMMIT"
+    printf '<Assembly: System.Reflection.AssemblyCompany("Microsoft Corporation")>\n<Assembly: System.Reflection.AssemblyTitle("%s")>\n' "$n"
+    printf '<Assembly: System.Reflection.AssemblyDescription("%s")>\n<Assembly: System.Reflection.AssemblyDefaultAlias("%s")>\n' "$n" "$n"
+    printf '<Assembly: System.Reflection.AssemblyMetadata("Serviceable", "True")>\n<Assembly: System.Reflection.AssemblyMetadata("PreferInbox", "True")>\n'
+    printf '<Assembly: System.Resources.NeutralResourcesLanguage("en-US")>\n<Assembly: System.CLSCompliant(True)>\n'
+    printf '<Assembly: System.Runtime.InteropServices.DefaultDllImportSearchPaths(System.Runtime.InteropServices.DllImportSearchPath.AssemblyDirectory Or System.Runtime.InteropServices.DllImportSearchPath.System32)>\n'
+    printf '<Assembly: System.Runtime.Versioning.TargetFramework(".NETCoreApp,Version=v%s", FrameworkDisplayName:=".NET %s")>\n' "${TFM#net}" "${TFM#net}"
+  } > "$o/AssemblyInfo.g.vb"
+  local rsp=$o/vbc.rsp; : > "$rsp"
+  for a in -target:library -nostdlib -optimize+ -deterministic -debug:portable -vbruntime- -nowarn:42025,40056 \
+      -optionstrict+ -optionexplicit+ -optioninfer- -optioncompare:binary -removeintchecks- -langversion:latest \
+      '-define:TRACE=True,RELEASE=True,NETCOREAPP=True,NET=True,NET8_0=True,NET8_0_OR_GREATER=True,NET7_0_OR_GREATER=True,NET6_0_OR_GREATER=True,NET5_0_OR_GREATER=True,WINDOWS=True,LATEBINDING=True,TARGET_WINDOWS=True,_MYTYPE="Empty"' \
+      -imports:Microsoft.VisualBasic,System,System.Collections,System.Collections.Generic,System.Diagnostics,System.Linq,System.Threading.Tasks \
+      -out:"$(winpath "$o/$n.dll")" -publicsign -keyfile:"$(keyfile "$(key_of_token "$tok")")" \
+      -resource:"$(winpath "$o/FxResources.$n.SR.resources"),FxResources.$n.SR.resources"; do printf '%s\n' "$a" >> "$rsp"; done
+  for a in "${refs[@]}"; do printf '"-r:%s"\n' "$(winpath "$a")" >> "$rsp"; done
+  for a in "$o/SR.g.vb" "$L/Common/src/System/SR.vb" "$o/AssemblyInfo.g.vb" "${items[@]}"; do printf '"%s"\n' "$(winpath "$a")" >> "$rsp"; done
+  local rc=0; mono "$VBC" -nologo -noconfig @"$(winpath "$rsp")" > "$B/obj/$n.log" 2>&1 || rc=$?
+  grep -E 'error BC' "$B/obj/$n.log" | head -30 || true
+  echo "vbc $n: rc=$rc, $(grep -c 'error BC' "$B/obj/$n.log" || true) errors"
+  [ $rc = 0 ] && cp "$o/$n.dll" "$O/$n.dll"
+}
+
 step_report() {
   local n kind tfm deps ok=0 bad=()
   while IFS=$'\t' read -r n kind tfm deps; do
     if [ -f "$O/$n.dll" ]; then ok=$((ok+1)); else bad+=("$n"); fi
   done < "$B/plan.tsv"
-  echo "built: $ok of $(wc -l < "$B/plan.tsv") planned (+ System.Private.CoreLib)"
+  [ -f "$O/Microsoft.VisualBasic.Core.dll" ] && ok=$((ok+1))
+  echo "built: $ok implementation assemblies + System.Private.CoreLib ($(wc -l < "$B/plan.tsv") C# projects planned + Microsoft.VisualBasic.Core)"
   [ ${#bad[@]} -eq 0 ] || echo "not built: ${bad[*]}"
   echo "skipped by the plan:"; sed 's/^/  /' "$B/skipped.tsv"
 }

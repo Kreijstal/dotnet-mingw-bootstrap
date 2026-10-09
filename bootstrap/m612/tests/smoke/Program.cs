@@ -70,8 +70,9 @@ Check("compression (System.IO.Compression.Native)", () => {
     var data = Encoding.UTF8.GetBytes(string.Concat(Enumerable.Repeat("compress me ", 1000)));
     var ms = new MemoryStream(); using (var gz = new System.IO.Compression.GZipStream(ms, System.IO.Compression.CompressionLevel.Optimal, true)) gz.Write(data);
     var bs = new MemoryStream(); using (var br = new System.IO.Compression.BrotliStream(bs, System.IO.Compression.CompressionLevel.Optimal, true)) br.Write(data);
-    ms.Position = 0; var back = new MemoryStream(); using (var gz = new System.IO.Compression.GZipStream(ms, System.IO.Compression.CompressionMode.Decompress)) gz.CopyTo(back);
-    return $"{data.Length} -> gzip {ms.Length}, brotli {bs.Length}, roundtrip {back.Length == data.Length}";
+    long gzLen = ms.Length; ms.Position = 0; var back = new MemoryStream();
+    using (var gz = new System.IO.Compression.GZipStream(ms, System.IO.Compression.CompressionMode.Decompress)) gz.CopyTo(back);
+    return $"{data.Length} -> gzip {gzLen}, brotli {bs.Length}, roundtrip {back.ToArray().AsSpan().SequenceEqual(data)}";
 });
 Check("crypto (SHA256, AES via CNG)", () => {
     var h = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData("abc"u8));
@@ -80,7 +81,11 @@ Check("crypto (SHA256, AES via CNG)", () => {
 });
 Check("GC + finalizers + weak refs", () => {
     var wr = new WeakReference(new object()); GC.Collect(); GC.WaitForPendingFinalizers(); GC.Collect();
-    return $"collected={!wr.IsAlive}, gen2={GC.CollectionCount(2)}, heap={GC.GetTotalMemory(false) / 1024} KB";
+    // (Mono's SGen scans stacks conservatively, so the object may survive)
+    return $"weak target collected={!wr.IsAlive}, gen2={GC.CollectionCount(2)}, heap={GC.GetTotalMemory(false) / 1024} KB";
 });
+Check("Microsoft.VisualBasic.Core (VB, late binding)", () =>
+    $"{Microsoft.VisualBasic.Strings.StrReverse("cisab")} {Microsoft.VisualBasic.CompilerServices.Operators.AddObject(40, "2")} " +
+    $"{Microsoft.VisualBasic.Financial.Pmt(0.05 / 12, 360, 200000):F2} {Microsoft.VisualBasic.Information.IsNumeric("1e3")}");
 Console.WriteLine(failures == 0 ? "SMOKE OK" : $"SMOKE: {failures} failure(s)");
 return failures;

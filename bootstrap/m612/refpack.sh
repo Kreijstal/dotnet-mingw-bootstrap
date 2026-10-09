@@ -75,8 +75,11 @@ print(len(order), 'assemblies planned')
 EOPY
 }
 
-ver_of() { # AssemblyVersion of a project (default MajorVersion.0.0.0)
-  local d; d=$(cd "$(dirname "$1")" && csproj_items -p TargetFramework=$TFM -p NetCoreAppCurrent=$TFM --prop AssemblyVersion "$(basename "$1")" 2>/dev/null | cut -d= -f2)
+ver_of() { # AssemblyVersion of a project (default MajorVersion.0.0.0); the library's own
+  # Directory.Build.props may change it (Microsoft.VisualBasic.Core: MajorVersion + 5 = 13.0.0.0)
+  local pre=() dbp; dbp=$(dirname "$(dirname "$1")")/Directory.Build.props; [ -f "$dbp" ] && pre=(--pre-local "$dbp")
+  local d; d=$(cd "$(dirname "$1")" && csproj_items -p TargetFramework=$TFM -p NetCoreAppCurrent=$TFM --init MajorVersion=${RT_VER%%.*} --init MinorVersion=0 \
+    "${pre[@]}" --prop AssemblyVersion "$(basename "$1")" 2>/dev/null | cut -d= -f2)
   echo "${d:-${RT_VER%%.*}.0.0.0}"
 }
 

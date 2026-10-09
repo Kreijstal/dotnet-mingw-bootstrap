@@ -97,6 +97,8 @@ for n in names:
         tf, tpi = tfm, ''
         ev = evaluate(n, shimp, tf, tpi)
         kind, proj = 'shim', shimp
+    elif os.path.exists('%s/%s/src/%s.vbproj' % (L, n, n)):
+        skipped.append((n, 'VB project: built by libraries.sh step vb')); continue
     else:
         skipped.append((n, 'no src or shim project')); continue
     d = out + '/p/' + n

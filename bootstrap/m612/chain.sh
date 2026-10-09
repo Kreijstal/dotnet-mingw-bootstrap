@@ -48,3 +48,15 @@ step 18 env MSYSTEM=CLANG64 bash "$here/corehost.sh"
 #     with CLANG64 clang/lld; tests the compression DLL and dotnet.exe -> hostfxr -> hostpolicy -> coreclr.dll,
 #     which initialises and stops at the missing System.Private.CoreLib (S9)
 step 19 env MSYSTEM=CLANG64 bash "$here/mono-runtime.sh"
+# 20: the VB compiler (Microsoft.CodeAnalysis.VisualBasic + vbc.exe) from the Roslyn 4.8.0 tree; the seed vbc 3.9
+#     compiles the VB parts once (like the seed csc did for Roslyn 4.0.1); needed for Microsoft.VisualBasic.Core
+step 20 bash "$here/vbc.sh" 4.8.0
+# 21: System.Private.CoreLib (Mono flavor, win-x64) from the patched runtime tree, with Roslyn 4.8 (the compiler
+#     runtime 8.0.0 builds with) and the from-source EventSourceGenerator/LibraryImportGenerator
+step 21 bash "$here/corelib.sh" "$(R 4.8.0)"
+# 22: the 167 other Microsoft.NETCore.App implementation assemblies (net8.0-windows/net8.0, partial facades with
+#     generated type forwards, shims; Microsoft.VisualBasic.Core with the from-source vbc)
+step 22 bash "$here/libraries.sh" "$(R 4.8.0)"
+# 23: shared/Microsoft.NETCore.App/8.0.0 (+ deps.json) in the SDK root; tests a net8.0 hello world and a smoke
+#     test (file IO, LINQ, Regex, JSON, XML, Process, sockets, HttpClient, Reflection.Emit, compression, crypto, VB)
+step 23 env TESTS="hello smoke" bash "$here/framework.sh"
