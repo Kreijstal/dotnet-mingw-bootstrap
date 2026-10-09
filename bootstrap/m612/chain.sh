@@ -92,3 +92,16 @@ step 35 bash "$here/illink-net8.sh"
 # 36-37: dotnet-sdk-8.0.131-net8 (upstream layout) and the end-to-end proof (no Mono 6.12 involved)
 step 36 bash "$here/sdk-layout-net8.sh"
 step 37 bash "$here/sdk-net8-test.sh"
+
+# ---- CoreCLR (docs §6.12): the runtime the upstream SDK ships, with CLANG64 instead of MSVC ----
+# 38: coreclr.dll, clrjit.dll, mscorrc.dll from the same tree (patches 0008-0016: GNU-driver CMake, inc/mingw,
+#     ETW header without mc.exe, /EHa for libc++abi, clang SEH workaround, UASM for the MASM helpers);
+#     needs mingw-w64-clang-x86_64-uasm
+step 38 env MSYSTEM=CLANG64 bash "$here/coreclr.sh"
+# 39: System.Private.CoreLib of the CoreCLR flavor, compiled by the net8.0 csc.dll of step 36 (Roslyn 4.8 with
+#     System.Reflection.Metadata 8: the seed's SRM 5 misaligns CreateSpan data, which CoreCLR rejects)
+step 39 bash "$here/corelib-coreclr.sh" "$(cygpath -m "$M612/dotnet-sdk-8.0.131-net8/sdk/8.0.131/Roslyn/bincore/csc.dll")"
+# 40: m612/dotnet-sdk-8.0.131-net8-coreclr: the net8.0 SDK with the CoreCLR shared framework; hello + smoke
+step 40 env TESTS="hello smoke" bash "$here/framework-coreclr.sh"
+# 41: the end-to-end SDK proof of step 37 on CoreCLR
+step 41 env ROOT="$M612/dotnet-sdk-8.0.131-net8-coreclr" TESTDIR="$M612/test/sdk-net8-coreclr" bash "$here/sdk-net8-test.sh"

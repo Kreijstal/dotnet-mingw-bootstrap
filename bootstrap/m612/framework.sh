@@ -10,34 +10,66 @@
 # LatestRuntimeFrameworkVersion = 8.0.0, so a framework-dependent net8.0 app's
 # runtimeconfig.json asks for 8.0.0 (the reference pack keeps its 8.0.31 version).
 #
-# usage: framework.sh [step...]     steps: layout install runtimepack test
+# FLAVOR=coreclr (framework-coreclr.sh): the same libraries with CoreCLR instead
+# (coreclr.sh: coreclr.dll, clrjit.dll, mscorrc.dll; corelib-coreclr.sh: its CoreLib),
+# installed into a separate SDK root, dotnet-sdk-8.0.131-net8-coreclr (step newroot
+# copies dotnet-sdk-8.0.131-net8 without its shared framework), so the Mono one stays.
+#
+# usage: framework.sh [step...]     steps: [newroot] layout install runtimepack [check] test
+#   check: tools/rvaalign.cs over the framework (CreateSpan data CoreCLR would reject)
 #   runtimepack: packs/Microsoft.NETCore.App.Runtime.win-x64/<ver> (the same files as the shared
 #   framework + hostfxr, data/RuntimeList.xml) in the SDK root, for self-contained publish
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 . "$here/../env-m612.sh"
+. "$here/common.sh"    # (net8tool)
 steps=${*:-layout install runtimepack test}
 RT_VER=${RT_VER:-8.0.0}; TFM=net${RT_VER%%.*}.0
-FX=${FXOUT:-$M612/netcoreapp-$RT_VER}
-FW=$FX/shared/Microsoft.NETCore.App/$RT_VER
-SDKROOT=${SDKROOT:-$M612/dotnet-sdk-8.0.131}
+FLAVOR=${FLAVOR:-mono}
+LIBS=$M612/netcoreapp-$RT_VER/lib            # the libraries (flavor-independent) + the Mono CoreLib
 MONO_OUT=$M612/mono-$RT_VER
+CLR_OUT=$M612/coreclr-$RT_VER
 HOSTPOLICY=$M612/corehost-$RT_VER/corehost/hostpolicy.dll
 RID=win-x64
+case $FLAVOR in
+  mono)    FX=${FXOUT:-$M612/netcoreapp-$RT_VER}; SDKROOT=${SDKROOT:-$M612/dotnet-sdk-8.0.131}
+           RUNTIME_FILES=("$MONO_OUT/lib/coreclr.dll") ;;
+  coreclr) FX=${FXOUT:-$M612/netcoreapp-$RT_VER-coreclr}; SDKROOT=${SDKROOT:-$M612/dotnet-sdk-8.0.131-net8-coreclr}
+           RUNTIME_FILES=("$CLR_OUT/coreclr.dll" "$CLR_OUT/clrjit.dll" "$CLR_OUT/mscorrc.dll") ;;
+  *) die "FLAVOR must be mono or coreclr" ;;
+esac
+FW=$FX/shared/Microsoft.NETCore.App/$RT_VER
+NATIVE_NAMES="coreclr.dll clrjit.dll mscorrc.dll hostpolicy.dll System.IO.Compression.Native.dll"
+
+# a new SDK root for the CoreCLR flavor: everything of the net8.0 SDK root but its shared framework
+step_newroot() {
+  local src=$M612/dotnet-sdk-8.0.131-net8
+  [ "$FLAVOR" = coreclr ] || die "newroot is for FLAVOR=coreclr"
+  rm -rf "${SDKROOT:?}"; mkdir -p "$SDKROOT"
+  local e
+  for e in "$src"/*; do
+    [ "$(basename "$e")" = shared ] && continue
+    cp -r "$e" "$SDKROOT/"
+  done
+  rm -rf "${SDKROOT:?}/packs/Microsoft.NETCore.App.Runtime.$RID"
+  du -sh "$SDKROOT"
+}
 
 step_layout() {
   rm -rf "${FW:?}"; mkdir -p "$FW"
-  cp "$FX"/lib/*.dll "$FW/"
-  cp "$MONO_OUT/lib/coreclr.dll" "$MONO_OUT/libs/System.IO.Compression.Native.dll" "$HOSTPOLICY" "$FW/"
-  python3 -S - "$FW" "$RT_VER" "$TFM" "$RID" <<'EOPY'
+  cp "$LIBS"/*.dll "$FW/"
+  cp "$FX"/lib/System.Private.CoreLib.dll "$FW/"     # the CoreLib of this flavor
+  cp "${RUNTIME_FILES[@]}" "$MONO_OUT/libs/System.IO.Compression.Native.dll" "$HOSTPOLICY" "$FW/"
+  python3 -S - "$FW" "$RT_VER" "$TFM" "$RID" "$NATIVE_NAMES" <<'EOPY'
 import os, sys, json, subprocess
-fw, ver, tfm, rid = sys.argv[1:5]
+fw, ver, tfm, rid, natives = sys.argv[1:6]
+natives = natives.split()
 tv = '.NETCoreApp,Version=v' + tfm[3:]
 pkg = 'Microsoft.NETCore.App.Runtime.%s/%s' % (rid, ver)
 runtime, native = {}, {}
 for f in sorted(os.listdir(fw)):
     if not f.endswith('.dll'): continue
-    if f in ('coreclr.dll', 'hostpolicy.dll', 'System.IO.Compression.Native.dll'):
+    if f in natives:
         native[f] = {'fileVersion': ver + '.0'}
     else:
         # assembly version from the metadata (monodis --assembly)
@@ -75,7 +107,7 @@ step_runtimepack() {
   local f
   for f in "$FW"/*.dll; do
     case $(basename "$f") in
-      coreclr.dll|hostpolicy.dll|System.IO.Compression.Native.dll|System.Private.CoreLib.dll) cp "$f" "$RP/runtimes/$RID/native/" ;;
+      coreclr.dll|clrjit.dll|mscorrc.dll|hostpolicy.dll|System.IO.Compression.Native.dll|System.Private.CoreLib.dll) cp "$f" "$RP/runtimes/$RID/native/" ;;
       *) cp "$f" "$RP/runtimes/$RID/lib/$TFM/" ;;
     esac
   done
@@ -103,6 +135,11 @@ print('RuntimeList.xml: %d files' % (len(out) - 2))
 EOPY
 }
 
+step_check() {
+  log "RVA data alignment (RuntimeHelpers.CreateSpan)"
+  net8tool rvaalign "$(cygpath -m "$FW")"
+}
+
 # build tests/<name>/*.csproj with the SDK (MSBuild on the seed Mono) -> its bin/Release/net8.0/
 build_test_app() {
   local name=$1 T=$M612/test/fx-$RT_VER/$1 MSBOUT=$M612/msbuild-17.8.49/tools
@@ -117,10 +154,14 @@ step_test() {
   local d rc
   for t in ${TESTS:-hello}; do
     log "test $t"
-    d=$(build_test_app "$t")
+    if [ "$FLAVOR" = coreclr ] && [ -f "$M612/test/fx-$RT_VER/$t/bin/Release/$TFM/$t.dll" ]; then
+      d=$M612/test/fx-$RT_VER/$t/bin/Release/$TFM     # the app the Mono flavor test built: same IL, other runtime
+    else
+      d=$(build_test_app "$t")
+    fi
     cat "$d"/*.runtimeconfig.json
     rc=0; "$SDKROOT/dotnet.exe" "$d/$t.dll" ${TEST_ARGS:-} || rc=$?; echo "rc=$rc"
   done
 }
 
-for s in $steps; do log "framework $RT_VER: $s"; "step_$s"; done
+for s in $steps; do log "framework $RT_VER ($FLAVOR): $s"; "step_$s"; done

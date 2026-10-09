@@ -22,7 +22,7 @@ here=$(cd "$(dirname "$0")" && pwd)
 steps=${*:-info new pkgref multi roslyncore generators selfcontained trimmed}
 ROOT=${ROOT:-$M612/dotnet-sdk-8.0.131-net8}
 D=$ROOT/dotnet.exe
-T=$M612/test/sdk-net8
+T=${TESTDIR:-$M612/test/sdk-net8}
 export DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_NOLOGO=1 DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
 # keep the user's NuGet caches out of the way of the tests
 export NUGET_PACKAGES=$(cygpath -w "$T/nuget-packages") DOTNET_CLI_HOME=$(cygpath -w "$T/home")
