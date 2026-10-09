@@ -102,6 +102,6 @@ step 38 env MSYSTEM=CLANG64 bash "$here/coreclr.sh"
 #     System.Reflection.Metadata 8: the seed's SRM 5 misaligns CreateSpan data, which CoreCLR rejects)
 step 39 bash "$here/corelib-coreclr.sh" "$(cygpath -m "$M612/dotnet-sdk-8.0.131-net8/sdk/8.0.131/Roslyn/bincore/csc.dll")"
 # 40: m612/dotnet-sdk-8.0.131-net8-coreclr: the net8.0 SDK with the CoreCLR shared framework; hello + smoke
-step 40 env TESTS="hello smoke" bash "$here/framework-coreclr.sh"
+step 40 env TESTS="hello smoke ehstress" bash "$here/framework-coreclr.sh"
 # 41: the end-to-end SDK proof of step 37 on CoreCLR
 step 41 env ROOT="$M612/dotnet-sdk-8.0.131-net8-coreclr" TESTDIR="$M612/test/sdk-net8-coreclr" bash "$here/sdk-net8-test.sh"

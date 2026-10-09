@@ -150,12 +150,22 @@ build_test_app() {
   echo "$T/bin/Release/$TFM"
 }
 
+# the CoreCLR root is a net8.0 SDK: it builds its test apps itself (dotnet build on CoreCLR)
+build_test_app_dotnet() {
+  local name=$1 T=$M612/test/fx-$RT_VER-$FLAVOR/$1
+  rm -rf "${T:?}"; mkdir -p "$T"; cp "$here/tests/$name"/* "$T/"
+  ( cd "$T"; DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_CLI_HOME=$(cygpath -w "$M612/test/fx-$RT_VER-$FLAVOR/home") \
+      NUGET_PACKAGES=$(cygpath -w "$M612/test/fx-$RT_VER-$FLAVOR/nuget-packages") \
+      "$SDKROOT/dotnet.exe" build -nologo -v:${TEST_VERBOSITY:-q} -c Release ./*.csproj ) >&2
+  echo "$T/bin/Release/$TFM"
+}
+
 step_test() {
   local d rc
   for t in ${TESTS:-hello}; do
     log "test $t"
-    if [ "$FLAVOR" = coreclr ] && [ -f "$M612/test/fx-$RT_VER/$t/bin/Release/$TFM/$t.dll" ]; then
-      d=$M612/test/fx-$RT_VER/$t/bin/Release/$TFM     # the app the Mono flavor test built: same IL, other runtime
+    if [ "$FLAVOR" = coreclr ]; then
+      d=$(build_test_app_dotnet "$t")
     else
       d=$(build_test_app "$t")
     fi
