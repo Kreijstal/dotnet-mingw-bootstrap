@@ -1,6 +1,6 @@
 # Phase 6: from Mono 6.12 to a source-built .NET SDK on MSYS2
 
-Status as of 2026-10-08. Host: `ssh topkek@win11`, MSYS2 UCRT64, 4 cores.
+Status as of 2026-10-09. Host: `ssh topkek@win11`, MSYS2 UCRT64, 4 cores.
 Work tree on win11: `~/dotnetboot/m612/`. Scripts: `bootstrap/m612/`,
 environment `bootstrap/env-m612.sh`, patches `patches/m612/`.
 
@@ -89,11 +89,11 @@ against the repositories.
 | NuGet client (NuGet.Build.Tasks, NuGet.* libs, restore) | NuGet/NuGet.Client | C# | restore and package resolution in SDK builds | not started |
 | .NET SDK tasks and targets (Microsoft.NET.Build.Tasks, Sdks/Microsoft.NET.Sdk) | dotnet/sdk | C# + targets | SDK-style projects | not started |
 | Reference packs (Microsoft.NETCore.App.Ref) | dotnet/runtime `src/libraries/*/ref` | C# | compiling anything for netX | not started |
-| System.Private.CoreLib + framework libraries | dotnet/runtime | C# | the shared framework | not started |
+| System.Private.CoreLib + framework libraries | dotnet/runtime | C# | the shared framework | **built** (Mono flavor, 168 assemblies, §6.10) |
 | Runtime: CoreCLR (`coreclr.dll`, `clrjit.dll`) **or** the Mono flavor of dotnet/runtime | dotnet/runtime | C/C++/asm | the shared framework | Mono flavor native runtime built (§6.9); CoreCLR not started (§3) |
 | Host: `dotnet.exe`, `hostfxr.dll`, `hostpolicy.dll`, `apphost.exe` | dotnet/runtime `src/native/corehost` | C/C++ | running anything | **done** with CLANG64 (§6.8) |
-| Native shims (System.IO.Compression.Native, Globalization) | dotnet/runtime `src/native` | C | framework | not started |
-| Arcade SDK, source generators, ILLink, GenAPI … | dotnet/arcade, runtime | C# | only to run the upstream build | avoided so far (direct csc) |
+| Native shims (System.IO.Compression.Native, Globalization) | dotnet/runtime `src/native` | C | framework | **built** (§6.9; Globalization is in the runtime) |
+| Arcade SDK, source generators, ILLink, GenAPI … | dotnet/arcade, runtime | C# | only to run the upstream build | avoided (direct csc); generators built from source; GenFacades/PNSE replaced by small scripts (§6.10) |
 
 ## 3. Native parts on MinGW
 
@@ -168,11 +168,11 @@ Statuses:
 | S6 | NuGet.Client 6.8.2.3 (net472: 15 NuGet.* libs, NuGet.Build.Tasks, NuGetSdkResolver) | S4 + S5 | **SOLVED-HERE** | no patches; deps Newtonsoft.Json 13.0.3, Microsoft.Web.Xdt 3.2.12, Microsoft.Extensions.* 8.0 from source; PackageReference restore from a local feed works in MSBuild on Mono |
 | S7 | dotnet/sdk 8.0.131 `Microsoft.NET.Build.Tasks` (net472) + `Sdks/Microsoft.NET.Sdk` on MSBuild/Mono | S4–S6 | **SOLVED-HERE** (net472 targets) | no patches; deps DependencyModel, HostModel (runtime 8.0.0), Deployment.DotNet.Releases from source; an SDK-style net472 Exe restores, builds and runs on Mono. Missing pieces stubbed/disabled: workloads, SourceLink, roslyn-analyzers (empty NetAnalyzers.props), BundledVersions.props hand-written |
 | S8 | `Microsoft.NETCore.App.Ref` 8.0 (163 ref assemblies + facades, 20 shim stubs, FrameworkList.xml) | S4 | **SOLVED-HERE** | `refpack.sh`; identities match upstream (e.g. System.Runtime 8.0.0.0, b03f5f7f11d50a3a); an SDK-style **net8.0** library compiles against it with the SDK of S7 on Mono (UseAppHost=false, no runtime needed) |
-| S9 | System.Private.CoreLib + `src/libraries/*/src` for net8.0-windows | S4 + S8 | UNKNOWN | compile-feasible with the direct-csc method (source generators build from source, §6.2), but CoreLib's build has many generated inputs and runtime-flavor specifics; no one has done this outside Arcade |
+| S9 | System.Private.CoreLib + `src/libraries/*/src` for net8.0-windows (Mono flavor) | S4 + S8 | **SOLVED-HERE** | `corelib.sh`, `libraries.sh`, `vbc.sh`, `framework.sh`, §6.10: CoreLib + 166 C# + Microsoft.VisualBasic.Core (VB compiler from source), nothing skipped, no source patches; `shared/Microsoft.NETCore.App/8.0.0` runs a net8.0 hello world and a smoke test (exceptions, threads, ICU, sockets, HttpClient/TLS, JSON, Regex, XML, Process, Reflection.Emit) on the from-source Mono runtime |
 | S10a | Host (dotnet.exe, hostfxr, hostpolicy, apphost, nethost, comhost) with CLANG64 | MinGW toolchain | **SOLVED-HERE** | `corehost.sh`, §6.8: 3 patches (GNU/MinGW branch in `eng/native`, skip ijwhost/tests, 7 small clang/libc++ source fixes); self-contained binaries (static libc++); `dotnet --info` runs, the SDK patches apphost.exe for a net8.0 `UseAppHost=true` app, apphost → hostfxr → hostpolicy load and report the missing runtime. singlefilehost needs `coreclr_static` (S10c) |
 | S10b | Runtime: Mono flavor of dotnet/runtime 8.0 (`-rf Mono`) with MinGW | MinGW | **SOLVED-HERE** (native part) | `mono-runtime.sh`, §6.9: 4 more patches (MSVC-only CMake, `__thread`, no MASM, POSIX configure results cleared, ICU C headers, zlib-intel/windres fixes). `coreclr.dll` (Mono VM) + `System.IO.Compression.Native.dll` build with CLANG64 and import only system DLLs; dotnet.exe → hostfxr → hostpolicy → `coreclr.dll` initialises Mono and stops at the missing System.Private.CoreLib (S9) |
 | S10c | Runtime: CoreCLR with CLANG64 clang (GNU driver) | MinGW | **BLOCKED for now** (large port) | MSVC-only CMake, ~24 MASM files, /EHa semantics, mc.exe ETW, PE TLS (§3) |
-| S11 | Assemble SDK 8.0 (host + shared framework + SDK managed bits built for net8.0) | all above | UNKNOWN | depends on S9/S10 |
+| S11 | Assemble SDK 8.0 (host + shared framework + SDK managed bits built for net8.0) | all above | UNKNOWN | the runtime half is done (S9 + S10a/b); the SDK's own tools (dotnet.dll, MSBuild, Roslyn, NuGet, SDK tasks) still run as net472 on Mono 6.12, see §8 |
 | S12 | Rebuild the SDK with itself (VMR, Windows) | S11 | UNKNOWN | VMR source-only mode is Linux-only; Windows would need Arcade from source and a local package feed |
 
 Earlier stages S0–S5 run only on Mono. Everything up to S8 is managed code
@@ -584,6 +584,177 @@ threads, and ICU through `icu.dll`. The build log has 214 `-Wformat`
 warnings (`%u` for `DWORD`, the same size on LLP64) and a few minor ones;
 none were made errors upstream.
 
+### 6.10 System.Private.CoreLib, the libraries and the shared framework (S9)
+
+```
+bash repo/bootstrap/m612/vbc.sh 4.8.0                                  # chain step 20 (VB compiler, for Microsoft.VisualBasic.Core)
+bash repo/bootstrap/m612/corelib.sh m612/roslyn-4.8.0/csc.exe          # chain step 21; steps: gen events compile
+bash repo/bootstrap/m612/libraries.sh m612/roslyn-4.8.0/csc.exe        # chain step 22; steps: plan gens build vb report
+TESTS="hello smoke" bash repo/bootstrap/m612/framework.sh              # chain step 23; steps: layout install test
+```
+
+Everything is compiled from the patched tree `m612/src/runtime-8.0.0-native`
+(the one `coreclr.dll` was built from, so CoreLib's icalls and the runtime's
+struct layouts match) with **Roslyn 4.8.0**, the compiler runtime 8.0.0
+builds with (`MicrosoftNetCompilersToolsetVersion` 4.8.0-3, `LangVersion`
+preview). No patch to the managed sources was needed.
+
+**CoreLib** (`corelib.sh`, ~1 min). `src/mono/System.Private.CoreLib/System.Private.CoreLib.csproj`
+plus the shared `System.Private.CoreLib.Shared.projitems`, evaluated by
+`csproj_items.py` with `TargetOS=windows Platform=x64 Configuration=Release`:
+1772 files, defines `MONO NETCOREAPP SYSTEM_PRIVATE_CORELIB TARGET_AMD64
+MONO_FEATURE_SRE FEATURE_MANAGED_ETW FEATURE_MANAGED_ETW_CHANNELS
+FEATURE_PERFTRACING TARGET_64BIT TARGET_WINDOWS` (+ the SDK's `NET*`
+symbols; no `DEBUG`/`TRACE`, the project sets
+`DisableImplicitConfigurationDefines`). Generated inputs, all from source:
+
+- `NativeRuntimeEventSource.Mono.cs`: `src/coreclr/scripts/genRuntimeEventSources.py --runtimeflavor mono` over `ClrEtwAll.man`;
+- `SR`: `Strings.resx` → `ResxGen --corelib` (manifest `System.Private.CoreLib.Strings.resources`, the projitems' `StringResourcesName`);
+- source generators as analyzers: the **EventSourceGenerator** (`System.Private.CoreLib.Generators`, new `netfx-pkgs.sh` recipe) and the LibraryImportGenerator (`LibraryImportGenerator_UseMarshalType=true`, `.NETCoreApp v8.0` in a `.globalconfig`);
+- assembly attributes (version 8.0.0.0, informational `8.0.0+<commit>`, `TargetFramework`).
+
+It is public-signed with the **SilverlightPlatform** key (`7cec85d7bea7798e`).
+The only warnings are 30× `AD0001` from `IntrinsicsInSystemPrivateCoreLibAnalyzer`,
+the known upstream issue (dotnet/runtime#90356, suppressed in the csproj).
+Result: `m612/netcoreapp-8.0.0/lib/System.Private.CoreLib.dll`, 4.7 MB of IL.
+
+**Libraries** (`libraries.sh`, ~35 min for all on Mono).
+
+- `plan` (`tools/libplan.py`, 1 s): reads `NetCoreAppLibrary.props` (168
+  names), evaluates each `src/<Name>.csproj` once for `net8.0-windows` if the
+  project has that target framework (35 do), else `net8.0` (72 do); the 59
+  names without a src project are the checked-in shims
+  (`src/libraries/shims/*/src`). Per project it records Compile items,
+  defines, `Reference` items (→ the reference pack of §6.7), `ProjectReference`s
+  (→ other implementation assemblies or CoreLib), analyzer references,
+  embedded resources, `AssemblyAttribute` items and properties, and computes
+  the build order.
+- `gens`: the generators the projects use, built from source by `netfx-pkgs.sh`
+  recipes: LibraryImportGenerator (every src project that references
+  System.Runtime.InteropServices or CoreLib, as in `eng/generators.targets`),
+  **ComInterfaceGenerator**, **System.Text.RegularExpressions.Generator**
+  (`[GeneratedRegex]` in System.Private.Xml, System.Data.Common,
+  System.ComponentModel.TypeConverter, System.Private.DataContractSerialization).
+- `build`: one csc command line per assembly, with the same identity (name,
+  version, key) as its reference assembly. What Arcade/eng would add is added
+  by the script: `FxResources.<Asm>.SR` + `Common/src/System/SR.cs`,
+  `SkipLocalsInit.cs`, `DefaultDllImportSearchPaths(AssemblyDirectory|System32)`,
+  `CLSCompliant`, `NeutralResourcesLanguage`, the SDK defines (`TRACE RELEASE NET8_0…`,
+  `WINDOWS` for `-windows`). **Partial facades** (`IsPartialFacadeAssembly`,
+  34 projects, e.g. System.Runtime with 856 forwards, System.Runtime.InteropServices
+  130, System.Xml.ReaderWriter 187) are compiled twice: `tools/genfacades.py`
+  (GenFacades without Arcade) lists the public types of the contract that the
+  first build does not define and that a compile reference does (`monodis --typedef`),
+  and writes `[assembly: TypeForwardedTo(typeof(...))]` for the second build.
+  56 shims are the ones `refpack.sh` compiled; `System`, `System.Data` and
+  `mscorlib`, whose ref-pack versions come from `shims/*/ref`, are compiled
+  from `shims/*/src` against the implementation assemblies (they also forward
+  implementation-only serialization types such as `TreeSet<T>`).
+  One PlatformNotSupported assembly: System.Runtime.InteropServices.JavaScript
+  (browser only) is its reference source with `throw null` → `throw new PlatformNotSupportedException()`
+  (Arcade's GenAPI-based PNSE generator does the same).
+- `vb`: **Microsoft.VisualBasic.Core** (13.0.0.0, the only VB project) with the
+  VB compiler of `vbc.sh`; `tools/vbresx.py` writes its VB `SR`.
+
+Result: **168 managed assemblies** (CoreLib + 166 C# + 1 VB), 24 MB of IL in
+`m612/netcoreapp-8.0.0/lib/`. Nothing is skipped. Not done (not needed to run):
+ILLink trimming and its embedded `ILLink.*.xml` descriptors, ReadyToRun,
+XML doc files.
+
+Problems found and fixed on the way (tools, not sources):
+`csproj_items.py` ignored `Exclude=` (System.Net.Quic got both its real and
+its `*.Unsupported.cs` files); the Regex generator needs System.Buffers
+4.0.5.0, which csc 4.8's directory does not have (passed as an extra
+`-analyzer` path so Roslyn's analyzer loader resolves it); csc on Mono does
+not create nested `-generatedfilesout` directories; and the reference pack
+had **Microsoft.VisualBasic.Core 8.0.0.0** instead of 13.0.0.0 (its
+`Directory.Build.props` adds 5 to `MajorVersion`): `refpack.sh` now
+evaluates the library's `Directory.Build.props` (`csproj_items --pre-local --init`,
+`[MSBuild]::Add`), and the VB ref and the `Microsoft.VisualBasic` shim were rebuilt.
+
+**VB compiler** (`vbc.sh 4.8.0`). The VB compiler is written in VB, so the
+seed's `vbc.exe` (Roslyn 3.9, in the MSYS2 mono package next to the seed csc)
+compiles, once, the VB syntax and error-facts generators and
+`Microsoft.CodeAnalysis.VisualBasic` 4.8.0 from the roslyn-4.8.0 tree
+(regenerated `Syntax.xml.*.Generated.vb`, `BoundNodes.xml.Generated.vb`
+(with the C# BoundTreeGenerator), `ErrorFacts.Generated.vb`: identical to the
+checked-in files, which are not used). `vbc.exe` is C# (our csc 4.8).
+Settings as Roslyn's: `-langversion:latest -removeintchecks+`, the SDK's
+default VB imports, `-vbruntime*`. Test: a VB program with LINQ/lambdas
+compiles and runs on Mono.
+
+**Framework** (`framework.sh`). `shared/Microsoft.NETCore.App/8.0.0/` =
+the 168 assemblies + `coreclr.dll` (Mono, §6.9) + `System.IO.Compression.Native.dll`
++ `hostpolicy.dll` (§6.8) + a `Microsoft.NETCore.App.deps.json` in the
+upstream shape (`runtimeTarget .NETCoreApp,Version=v8.0/win-x64`, one
+`Microsoft.NETCore.App.Runtime.win-x64/8.0.0` package with `runtime`
+(assembly/file versions from the metadata) and `native` sections).
+Upstream ships no `.runtimeconfig.json` for Microsoft.NETCore.App itself
+(only frameworks layered on it have one), so neither do we. It is installed
+into the SDK root next to `dotnet.exe`/`host/fxr`, and the SDK's
+`KnownFrameworkReference` now says `DefaultRuntimeFrameworkVersion` /
+`LatestRuntimeFrameworkVersion` = 8.0.0, so apps' `runtimeconfig.json` ask
+for 8.0.0 (the reference/apphost packs keep their 8.0.31 version numbers).
+
+Tests (`framework.sh test`; the apps are built by our SDK on MSBuild/Mono 6.12,
+then run by `dotnet.exe` → hostfxr → hostpolicy → coreclr.dll):
+
+```
+$ dotnet-sdk-8.0.131/dotnet.exe --list-runtimes
+Microsoft.NETCore.App 8.0.0 [E:\msys64\home\topkek\dotnetboot\m612\dotnet-sdk-8.0.131\shared\Microsoft.NETCore.App]
+$ dotnet-sdk-8.0.131/dotnet.exe test/fx-8.0.0/hello/bin/Release/net8.0/hello.dll     # tests/hello/Program.cs
+Hello, World! .NET 8.0.0 on Microsoft Windows 10.0.26200 (X64)
+CoreLib: E:\msys64\home\topkek\dotnetboot\m612\dotnet-sdk-8.0.131\shared\Microsoft.NETCore.App\8.0.0\System.Private.CoreLib.dll
+caught InvalidOperationException: deep; frames: 52
+finally ran
+rethrown DivideByZeroException
+NullReferenceException caught (hardware fault -> managed exception)
+4 threads x 1e6 increments = 4000000
+tasks: 204 (thread pool, async/await)
+thread pool work item: True
+invariant mode: False
+ToUpper: STRAßE ISTANBUL / tr: İSTANBUL / invariant: ISTANBUL
+de-DE: 1.234.567,89 Freitag, 9. Oktober 2026
+ja-JP: 2026年10月9日金曜日
+compare ä/z sv-SE: 1, de-DE: -1
+IndexOf ignore case: -1, normalization: 1
+current culture: en-GB, time zone: W. Europe Standard Time
+rc=0
+$ dotnet-sdk-8.0.131/dotnet.exe test/fx-8.0.0/smoke/bin/Release/net8.0/smoke.dll --net   # tests/smoke/Program.cs (two runs merged: --net adds the https line; code pages/VB were added later)
+[ok]   file IO: 1001 lines, 16898 bytes, 1 file(s), deleted=True
+[ok]   LINQ: 0:392,1:343
+[ok]   LINQ expression compile: 50
+[ok]   Regex (interpreted): 10
+[ok]   Regex (compiled, Reflection.Emit): HELLO WORLD / 4
+[ok]   System.Text.Json: {"Name":"m612","Values":[1,2,3],"When":"2026-10-09T00:00:00"} -> 3 values, Name=m612
+[ok]   XML (System.Private.Xml + Linq): 3
+[ok]   Process: 'from-child' exit=0, self=dotnet
+[ok]   sockets (loopback TCP): echo 'ping!' via port 50362
+[ok]   HttpClient (loopback HttpListener): hi from HttpListener
+[ok]   DNS: InterNetworkV6,InterNetwork
+[ok]   HttpClient https (internet): 200 577
+[ok]   Reflection.Emit: 1234
+[ok]   compression (System.IO.Compression.Native): 12000 -> gzip 108, brotli 23, roundtrip True
+[ok]   crypto (SHA256, AES via CNG): BA7816BF8F01CFEA... aes 48 bytes
+[ok]   GC + finalizers + weak refs: weak target collected=False, gen2=2, heap=5209 KB
+[ok]   code pages (System.Text.Encoding.CodePages, codepages.nlp): € 4
+[ok]   Microsoft.VisualBasic.Core (VB, late binding): basic 42 -1073.64 True
+SMOKE OK
+```
+
+This exercises what §6.9 could not: JIT-compiled managed code, exception
+handling through JIT frames (filters, finally, rethrow, 50-deep unwinding,
+an access violation turned into `NullReferenceException`), threads, the
+thread pool and async/await (hybrid suspend, `__thread` TLS), globalization
+through Windows' `icu.dll` (Turkish casing, Swedish collation, Japanese
+dates), P/Invoke into the OS (kernel32, ws2_32, bcrypt/CNG, SChannel for
+TLS) and into `System.IO.Compression.Native.dll`, Reflection.Emit (compiled
+Regex, LINQ expression trees), and child processes. No runtime crash was
+seen; no runtime patch beyond 0001–0007 was needed. Two notes: the weak
+reference target survives `GC.Collect()` because SGen scans stacks
+conservatively (Mono behaviour, not a bug); and `"Straße".IndexOf("SS",
+CurrentCultureIgnoreCase)` is -1 under en-GB (not compared against CoreCLR+ICU yet).
+
 ### 6.4 MSBuild (`bootstrap/m612/msbuild.sh 17.8.49 <csc.exe> 4.12.0`)
 
 ```
@@ -676,6 +847,9 @@ in 2021 (dotnet/msbuild#6058):
 | Newtonsoft.Json `Src/Newtonsoft.Json/Dynamic.snk` | key pair (data) | **no**, deleted; public-signed with the public key text from its `AssemblyInfo.cs` | — |
 | Public keys `adb9793829ddae60` (Microsoft.Extensions), `30ad4fe6b2a6aeed` (Newtonsoft), ECMA `b77a5c561934e089` | public-key blobs (data) | yes | taken from `PublicKey=` *text* in the runtime / Newtonsoft sources, and the 16-byte ECMA-335 pseudo key |
 | `ILMerge` (NuGet.Build.Tasks.Pack), `Microsoft.DotNet.ApiCompat.Task` (SDK project ref), `Microsoft.CodeAnalysis.NetAnalyzers`, SourceLink, workload packs | prebuilt tools/packages | **no**, not built / disabled | pack, API compat, analyzers and SourceLink are not needed to build projects |
+| Seed `lib/mono/4.5/vbc.exe` (Roslyn 3.9 VB compiler, MSYS2 mono package) | binary, part of the trusted seed | yes, once (`vbc.sh`) | compiles the VB generator tools and `Microsoft.CodeAnalysis.VisualBasic` 4.8.0 from source; everything VB after that (Microsoft.VisualBasic.Core) uses the from-source vbc |
+| Public key `7cec85d7bea7798e` (SilverlightPlatform, `keys/SilverlightPlatform-*.pubkey.hex`) | public-key blob (data) | yes | public signing of System.Private.CoreLib; taken from the `PublicKey` text in runtime-8.0.0 `System.Private.DataContractSerialization/.../Globals.cs`, token verified |
+| Windows' own `icu.dll`, `kernel32`/`ws2_32`/`bcrypt`/SChannel … | OS components | yes, at run time only | what any .NET 8 app on Windows uses (globalization, sockets, CNG, TLS); nothing is linked at build time |
 | MSYS2 `mingw-w64-clang-x86_64-icu` 78.3 headers (`unicode/*.h`) | C headers of an upstream MSYS2 package | yes, compile-time only (patch 0006) | trusted by the 2026-10-08 policy; stand in for the Windows SDK `icu.h`. No ICU code is linked; the runtime loads Windows' own `icu.dll` |
 | Windows' own .NET Framework 4.8 (`C:\Windows\Microsoft.NET`) | OS component | **no**, all paths redirected to Mono; verified by a `-v:diag` grep | out-of-proc MSBuild nodes and directly started `csc.exe` would use it, so we avoid both |
 
@@ -702,17 +876,38 @@ trusted seed, deleted, or avoided.
    with MinGW (CLANG64 and UCRT64) before attempting CoreCLR. In parallel,
    build `corehost` (dotnet.exe/hostfxr/hostpolicy) with MinGW, which looks
    cheap. *(Done: host §6.8, Mono native runtime §6.9.)*
-3b. **S9 for the Mono flavor.** `src/mono/System.Private.CoreLib` (the
-   shared `src/libraries/System.Private.CoreLib/src/*.projitems` plus the
-   Mono part) with the direct-csc driver: defines `TARGET_WINDOWS`,
-   `TARGET_AMD64`, `TARGET_64BIT`, `MONO`, the `FEATURE_*` of the Mono
-   csproj; `Strings.resx` → SR via ResxGen; the CoreLib source generators
-   (LibraryImportGenerator is built already, EventSourceGenerator is not);
-   CoreLib's icall signatures must match this exact runtime tree. Then the
-   `src/libraries/*/src` implementation assemblies for `net8.0-windows`,
-   and a `shared/Microsoft.NETCore.App/<ver>` layout (coreclr.dll,
-   hostpolicy.dll, System.IO.Compression.Native.dll, CoreLib, libraries,
-   `Microsoft.NETCore.App.deps.json`, `.runtimeconfig.json`).
+3b. *(Done: S9 for the Mono flavor, §6.10.)*
+3c. **S11: the SDK's tools on the new runtime instead of Mono 6.12.** What is
+   missing, in order:
+   - **net8.0 builds of the tools**: MSBuild 17.8 (`MSBuild.dll`, its
+     `net8.0` flavor, `FEATURE_*` of `Directory.BeforeCommon.targets` for
+     .NET Core), Roslyn (`csc.dll`/`vbc.dll`/`VBCSCompiler.dll` +
+     `Microsoft.Build.Tasks.CodeAnalysis` for net8.0), NuGet.Client (net8.0),
+     `Microsoft.NET.Build.Tasks` (net8.0) and the SDK resolver. They compile
+     against the reference pack of §6.7, with the same csproj_items/direct-csc
+     method (their projects multi-target `net472;net8.0`).
+   - **`dotnet.dll`** (dotnet/sdk `src/Cli/dotnet`, with
+     `Microsoft.DotNet.Cli.Utils`, `Microsoft.TemplateEngine.*`, System.CommandLine)
+     and the `sdk/8.0.131/` layout (`dotnet.runtimeconfig.json`,
+     `dotnet.deps.json`, `MSBuild.dll` + `.runtimeconfig.json`, `Roslyn/bincore/csc.dll`).
+     Then `dotnet build` replaces `mono MSBuild.exe`.
+   - **Out-of-proc nodes**: MSBuild's node launcher for .NET Core runs
+     `dotnet MSBuild.dll`, so `-m` works there (on Mono 6.12 it had to be
+     `-m:1 -nr:false`).
+   - **Packs**: the runtime pack `Microsoft.NETCore.App.Runtime.win-x64`
+     (the same 168 files + native, for self-contained publish), and the
+     reference pack's `analyzers/dotnet/cs` (LibraryImportGenerator,
+     ComInterfaceGenerator, Regex and JSON generators, all built already) so
+     user code gets `[LibraryImport]`/`[GeneratedRegex]`. `singlefilehost`
+     still needs a static runtime (`libmonosgen-2.0.a` could stand in for
+     `coreclr_static`).
+   - **roslyn-analyzers** (`Microsoft.CodeAnalysis.NetAnalyzers`, now an
+     empty props file) and ILLink (`Microsoft.NET.ILLink.Tasks`) for
+     `PublishTrimmed`.
+   - **Runtime risk**: the tools are large, heavily threaded apps; Roslyn and
+     MSBuild on Mono's JIT (no tiering, no R2R) will be slower than on
+     CoreCLR, and they will be the first real stress test of the MinGW Mono
+     (GC under load, many threads, named pipes for the compiler server).
 4. CoreCLR on CLANG64 remains the long pole:
    - a CMake branch for the GNU-on-Windows toolchain;
    - UASM or `llvm-ml` for the 24 MASM files;
@@ -726,10 +921,9 @@ and the result is an SDK that builds net472 *and compiles* net8.0 projects
 on Mono. The next stages produce the .NET runtime itself. The native part of
 the Mono flavor is done (§6.9); CoreCLR is the hard one:
 
-- **S9 (System.Private.CoreLib + libraries src for net8.0-windows)** is
-  compile-feasible with the same driver (the libraries are C# with source
-  generators we can build), but CoreLib is runtime-flavor-specific (CoreCLR
-  vs Mono) and is only useful together with S10.
+- **S9 (System.Private.CoreLib + libraries src for net8.0-windows)** is done
+  for the Mono flavor (§6.10); a CoreCLR CoreLib would be a separate build
+  of the same shared sources plus `src/coreclr/System.Private.CoreLib`.
 - **S10 (runtime)** is native code. dotnet/runtime's shared Windows CMake
   configuration assumes MSVC: the first probe of even the *host* with
   CLANG64 clang fails at `configurecompiler.cmake:969` "MC not found"

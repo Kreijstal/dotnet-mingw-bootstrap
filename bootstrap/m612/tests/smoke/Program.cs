@@ -84,6 +84,10 @@ Check("GC + finalizers + weak refs", () => {
     // (Mono's SGen scans stacks conservatively, so the object may survive)
     return $"weak target collected={!wr.IsAlive}, gen2={GC.CollectionCount(2)}, heap={GC.GetTotalMemory(false) / 1024} KB";
 });
+Check("code pages (System.Text.Encoding.CodePages, codepages.nlp)", () => {
+    Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+    return $"{Encoding.GetEncoding(1252).GetString(new byte[] { 0x80 })} {Encoding.GetEncoding("shift_jis").GetByteCount("日本")}";
+});
 Check("Microsoft.VisualBasic.Core (VB, late binding)", () =>
     $"{Microsoft.VisualBasic.Strings.StrReverse("cisab")} {Microsoft.VisualBasic.CompilerServices.Operators.AddObject(40, "2")} " +
     $"{Microsoft.VisualBasic.Financial.Pmt(0.05 / 12, 360, 200000):F2} {Microsoft.VisualBasic.Information.IsNumeric("1e3")}");
