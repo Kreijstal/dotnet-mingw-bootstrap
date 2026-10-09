@@ -28,6 +28,8 @@ R8=$M612/roslyn-4.8.0-net8
 . "$here/common.sh"
 
 step_layout() {
+  # a running compiler server / MSBuild node of this SDK keeps its files open
+  [ -x "$ROOT/dotnet.exe" ] && [ -f "$SDK/dotnet.dll" ] && { "$ROOT/dotnet.exe" build-server shutdown > /dev/null 2>&1 || true; }
   rm -rf "${ROOT:?}"; mkdir -p "$SDK"
   cp -r "$OLD/dotnet.exe" "$OLD/host" "$OLD/shared" "$OLD/packs" "$ROOT/"
   # MSBuild (assemblies, targets, Current/, its out-of-band dependencies)

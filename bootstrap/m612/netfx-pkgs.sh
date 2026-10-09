@@ -58,7 +58,7 @@ build_lib() {
   local name=$1 proj=$2 key=$3 aver=$4 flavor=$5; shift 5
   local tfm=net462 outfile="$OUTDIR/$name.dll" exclude='^$'
   if [ $flavor = rtgen ]; then
-    tfm=netstandard2.0; mkdir -p "$OUTDIR/analyzers"; outfile="$OUTDIR/analyzers/$name.dll"; exclude='Fixer\.cs$|FixAllContextExtensions\.cs$'
+    tfm=netstandard2.0; mkdir -p "$OUTDIR/analyzers"; outfile="$OUTDIR/analyzers/$name.dll"; exclude="Fixer\\.cs\$|FixAllContextExtensions\\.cs\$${RTGEN_EXCLUDE:+|$RTGEN_EXCLUDE}"
     set -- "$@" -r:"$ROSLYN_DIR/Microsoft.CodeAnalysis.dll" -r:"$ROSLYN_DIR/Microsoft.CodeAnalysis.CSharp.dll"
   fi
   local pdir; pdir=$(cd "$(dirname "$proj")" && pwd)
@@ -221,6 +221,14 @@ recipe() {
     # [GeneratedRegex] (System.Private.Xml, System.Data.Common, ... use it)
     System.Text.RegularExpressions.Generator)
       build_lib System.Text.RegularExpressions.Generator "$RT/src/libraries/System.Text.RegularExpressions/gen/System.Text.RegularExpressions.Generator.csproj" Open ${RT_VER%%.*}.0.0.0 rtgen ;;
+    # the other generators the Microsoft.NETCore.App.Ref pack ships in analyzers/dotnet/cs (refpack.sh pack)
+    System.Text.Json.SourceGeneration)   # the Roslyn 4.4 flavour (the pack's); its 3.11 entry point is left out
+      RTGEN_EXCLUDE='JsonSourceGenerator\.Roslyn3\.11\.cs$' build_lib System.Text.Json.SourceGeneration \
+        "$RT/src/libraries/System.Text.Json/gen/System.Text.Json.SourceGeneration.Roslyn4.4.csproj" Open ${RT_VER%%.*}.0.0.0 rtgen ;;
+    Microsoft.Interop.JavaScript.JSImportGenerator)
+      [ -f "$OUTDIR/analyzers/Microsoft.Interop.SourceGeneration.dll" ] || recipe Microsoft.Interop.SourceGeneration
+      build_lib Microsoft.Interop.JavaScript.JSImportGenerator "$RT/src/libraries/System.Runtime.InteropServices.JavaScript/gen/JSImportGenerator/JSImportGenerator.csproj" \
+        Open ${RT_VER%%.*}.0.0.0 rtgen -r:"$OUTDIR/analyzers/Microsoft.Interop.SourceGeneration.dll" ;;
     *) if [ -f "$RT/src/libraries/$1/src/$1.csproj" ]; then
          build_lib "$1" "$RT/src/libraries/$1/src/$1.csproj" "$(rt_key "$1")" ${RT_VER%%.*}.0.0.0 rt
        else die "no recipe for $1"; fi ;;

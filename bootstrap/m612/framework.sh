@@ -10,11 +10,13 @@
 # LatestRuntimeFrameworkVersion = 8.0.0, so a framework-dependent net8.0 app's
 # runtimeconfig.json asks for 8.0.0 (the reference pack keeps its 8.0.31 version).
 #
-# usage: framework.sh [step...]     steps: layout install test
+# usage: framework.sh [step...]     steps: layout install runtimepack test
+#   runtimepack: packs/Microsoft.NETCore.App.Runtime.win-x64/<ver> (the same files as the shared
+#   framework + hostfxr, data/RuntimeList.xml) in the SDK root, for self-contained publish
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 . "$here/../env-m612.sh"
-steps=${*:-layout install test}
+steps=${*:-layout install runtimepack test}
 RT_VER=${RT_VER:-8.0.0}; TFM=net${RT_VER%%.*}.0
 FX=${FXOUT:-$M612/netcoreapp-$RT_VER}
 FW=$FX/shared/Microsoft.NETCore.App/$RT_VER
@@ -62,6 +64,43 @@ step_install() {
   sed -i -E "/KnownFrameworkReference Include=\"Microsoft.NETCore.App\"/,/\/>/{s/(DefaultRuntimeFrameworkVersion|LatestRuntimeFrameworkVersion)=\"[^\"]*\"/\1=\"$RT_VER\"/g}" "$bv"
   grep -A3 'KnownFrameworkReference Include="Microsoft.NETCore.App"' "$bv" | grep -o 'De[a-zA-Z]*RuntimeFrameworkVersion="[^"]*"\|Lat[a-zA-Z]*RuntimeFrameworkVersion="[^"]*"'
   "$SDKROOT/dotnet.exe" --list-runtimes
+}
+
+# runtime pack (what NuGet would download as Microsoft.NETCore.App.Runtime.win-x64): the SDK takes it
+# from <root>/packs for RuntimeIdentifier builds / self-contained publish (KnownFrameworkReference
+# RuntimePackNamePatterns, version = LatestRuntimeFrameworkVersion)
+step_runtimepack() {
+  local RP=$SDKROOT/packs/Microsoft.NETCore.App.Runtime.$RID/$RT_VER HOSTFXR=$M612/corehost-$RT_VER/corehost/hostfxr.dll
+  rm -rf "${RP:?}"; mkdir -p "$RP/runtimes/$RID/lib/$TFM" "$RP/runtimes/$RID/native" "$RP/data"
+  local f
+  for f in "$FW"/*.dll; do
+    case $(basename "$f") in
+      coreclr.dll|hostpolicy.dll|System.IO.Compression.Native.dll|System.Private.CoreLib.dll) cp "$f" "$RP/runtimes/$RID/native/" ;;
+      *) cp "$f" "$RP/runtimes/$RID/lib/$TFM/" ;;
+    esac
+  done
+  cp "$HOSTFXR" "$RP/runtimes/$RID/native/"
+  python3 -S - "$RP" "$RT_VER" "$TFM" "$RID" <<'EOPY'
+import os, sys, subprocess, re
+rp, ver, tfm, rid = sys.argv[1:5]
+out = ['<FileList Name=".NET %s - %s" TargetFrameworkIdentifier=".NETCoreApp" TargetFrameworkVersion="%s" FrameworkName="Microsoft.NETCore.App">' % (tfm[3:], rid, tfm[3:])]
+def meta(path):
+    o = subprocess.run(['monodis', '--assembly', path], capture_output=True, text=True).stdout
+    v = re.search(r'^Version:\s*(\S+)', o, re.M)
+    return v.group(1) if v else None
+for sub, kind in (('lib/' + tfm, 'Managed'), ('native', 'Native')):
+    d = os.path.join(rp, 'runtimes', rid, sub)
+    for f in sorted(os.listdir(d)):
+        rel = 'runtimes/%s/%s/%s' % (rid, sub, f)
+        if kind == 'Managed' or f == 'System.Private.CoreLib.dll':
+            av = meta(os.path.join(d, f))
+            out.append('  <File Type="Managed" Path="%s" AssemblyName="%s" AssemblyVersion="%s" FileVersion="%s.0" />' % (rel, f[:-4], av, ver))
+        else:
+            out.append('  <File Type="Native" Path="%s" FileVersion="%s.0" />' % (rel, ver))
+out.append('</FileList>')
+open(os.path.join(rp, 'data', 'RuntimeList.xml'), 'w', newline='\n').write('\n'.join(out) + '\n')
+print('RuntimeList.xml: %d files' % (len(out) - 2))
+EOPY
 }
 
 # build tests/<name>/*.csproj with the SDK (MSBuild on the seed Mono) -> its bin/Release/net8.0/
