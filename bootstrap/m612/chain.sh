@@ -44,3 +44,7 @@ step 17 bash "$here/refpack.sh" "$(R 4.12.0)"
 #     installed into the SDK (muxer layout + Microsoft.NETCore.App.Host.win-x64 pack); tests --info, a
 #     net8.0 UseAppHost=true console build, and hostfxr -> hostpolicy against a fake framework
 step 18 env MSYSTEM=CLANG64 bash "$here/corehost.sh"
+# 19: the Mono flavor of the runtime (coreclr.dll = Mono VM, mono-sgen.exe) and System.IO.Compression.Native.dll
+#     with CLANG64 clang/lld; tests the compression DLL and dotnet.exe -> hostfxr -> hostpolicy -> coreclr.dll,
+#     which initialises and stops at the missing System.Private.CoreLib (S9)
+step 19 env MSYSTEM=CLANG64 bash "$here/mono-runtime.sh"
