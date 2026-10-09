@@ -210,6 +210,14 @@ recipe() {
       [ -f "$OUTDIR/analyzers/Microsoft.Interop.SourceGeneration.dll" ] || recipe Microsoft.Interop.SourceGeneration
       build_lib Microsoft.Interop.LibraryImportGenerator "$GEN/LibraryImportGenerator/LibraryImportGenerator.csproj" Open ${RT_VER%%.*}.0.0.0 rtgen \
       -r:"$OUTDIR/analyzers/Microsoft.Interop.SourceGeneration.dll" ;;
+    # System.Private.CoreLib's EventSourceGenerator (+ its intrinsics analyzer)
+    System.Private.CoreLib.Generators)
+      build_lib System.Private.CoreLib.Generators "$RT/src/libraries/System.Private.CoreLib/gen/System.Private.CoreLib.Generators.csproj" Open ${RT_VER%%.*}.0.0.0 rtgen ;;
+    # [GeneratedComInterface]/[GeneratedComClass] (libraries that reference System.Runtime.InteropServices directly)
+    Microsoft.Interop.ComInterfaceGenerator)
+      [ -f "$OUTDIR/analyzers/Microsoft.Interop.SourceGeneration.dll" ] || recipe Microsoft.Interop.SourceGeneration
+      build_lib Microsoft.Interop.ComInterfaceGenerator "$GEN/ComInterfaceGenerator/ComInterfaceGenerator.csproj" Open ${RT_VER%%.*}.0.0.0 rtgen \
+      -r:"$OUTDIR/analyzers/Microsoft.Interop.SourceGeneration.dll" ;;
     *) if [ -f "$RT/src/libraries/$1/src/$1.csproj" ]; then
          build_lib "$1" "$RT/src/libraries/$1/src/$1.csproj" "$(rt_key "$1")" ${RT_VER%%.*}.0.0.0 rt
        else die "no recipe for $1"; fi ;;

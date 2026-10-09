@@ -19,3 +19,7 @@ Convert: xxd -r -p NAME.pubkey.hex > NAME.snk
                               (the in-repo Dynamic.snk key pair is not used)
   ECMA-b77a5c561934e089       the 16-byte "ECMA standard" pseudo key of mscorlib/System and
                               friends (it is defined by ECMA-335, not a real RSA key)
+  SilverlightPlatform-7cec85d7bea7798e  System.Private.CoreLib and the other "platform" assemblies
+                              (StrongNameKeyId SilverlightPlatform); from the PublicKey text in
+                              runtime-8.0.0 System.Private.DataContractSerialization Globals.cs
+                              (FullSRSInternalsVisiblePattern), token verified

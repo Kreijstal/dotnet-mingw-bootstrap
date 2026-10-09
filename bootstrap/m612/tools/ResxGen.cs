@@ -14,6 +14,9 @@
 //                            OmitGetResourceString): emit the empty FxResources
 //                            marker class and a ResourceManager keyed on it;
 //                            GetResourceString comes from Common/src/System/SR.cs
+//   --corelib                System.Private.CoreLib style: like --fx, but the
+//                            ResourceManager uses the manifest name given with
+//                            --resource-name (CoreLib's SR.cs supplies the rest)
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -28,7 +31,7 @@ static class ResxGen
     {
         if (args.Length < 3) { Console.Error.WriteLine("usage: ResxGen in.resx out.cs Ns.Class [--public] [--format] [--no-rm] [--sr] [--resource-name n]"); return 2; }
         string inp = args[0], outp = args[1], full = args[2];
-        bool pub = false, fmt = false, noRm = false, sr = false; string resName = full, fx = null;
+        bool pub = false, fmt = false, noRm = false, sr = false; string resName = full, fx = null; bool corelib = false;
         for (int i = 3; i < args.Length; i++)
         {
             switch (args[i])
@@ -39,6 +42,7 @@ static class ResxGen
                 case "--sr": sr = true; noRm = true; break;
                 case "--resource-name": resName = args[++i]; break;
                 case "--fx": fx = args[++i]; sr = true; noRm = true; break;
+                case "--corelib": corelib = true; sr = true; noRm = true; break;
                 default: Console.Error.WriteLine("unknown option " + args[i]); return 2;
             }
         }
@@ -76,6 +80,11 @@ static class ResxGen
         {
             sb.AppendLine("        private static global::System.Resources.ResourceManager s_resourceManager;");
             sb.AppendLine("        internal static global::System.Resources.ResourceManager ResourceManager => s_resourceManager ?? (s_resourceManager = new global::System.Resources.ResourceManager(typeof(global::" + fx + ")));");
+        }
+        if (corelib)
+        {
+            sb.AppendLine("        private static global::System.Resources.ResourceManager s_resourceManager;");
+            sb.AppendLine("        internal static global::System.Resources.ResourceManager ResourceManager => s_resourceManager ?? (s_resourceManager = new global::System.Resources.ResourceManager(\"" + resName + "\", typeof(" + cls + ").Assembly));");
         }
         var seen = new HashSet<string>();
         foreach (var e in entries)
