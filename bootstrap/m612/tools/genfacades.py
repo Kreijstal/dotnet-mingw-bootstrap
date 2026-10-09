@@ -5,7 +5,9 @@ projects), without Arcade.
 
 usage: genfacades.py <contract.dll> <partial.dll> <out.cs> [--omit Type]... seed.dll...
 
-For every public top-level type of the contract (the reference assembly)
+For every public top-level type of the contract (the reference assembly),
+defined there or forwarded by it (System.Memory's contract forwards Span<T>,
+so must the implementation: netstandard-era code asks System.Memory for it),
 that the partial implementation (the project compiled once without
 forwards) does not define, emit
   [assembly: TypeForwardedTo(typeof(global::Ns.Name<,>))]
@@ -33,6 +35,10 @@ def all_typedefs(dll):   # every top-level type, any visibility
         if m and int(m.group(2), 16) & 6 == 0: r.add(m.group(1))
     return r
 
+def exported(dll):       # top-level types a facade forwards (ExportedType -> AssemblyRef)
+    out = subprocess.run(['monodis', '--exported', dll], capture_output=True, text=True).stdout
+    return set(m.group(1) for m in re.finditer(r'^\d+: (\S+) is in assemblyref ', out, re.M))
+
 def cs_name(t):
     m = re.match(r'^(.*?)`(\d+)$', t)
     if m: return 'global::%s<%s>' % (m.group(1), ',' * (int(m.group(2)) - 1))
@@ -44,7 +50,7 @@ omit, seeds, i = set(), [], 3
 while i < len(args):
     if args[i] == '--omit': omit.add(args[i + 1]); i += 2
     else: seeds.append(args[i]); i += 1
-want = sorted(typedefs(contract) - all_typedefs(partial) - omit)
+want = sorted((typedefs(contract) | exported(contract)) - all_typedefs(partial) - exported(partial) - omit)
 have = [(s, typedefs(s)) for s in seeds]
 lines, missing = [], []
 for t in want:

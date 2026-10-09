@@ -115,7 +115,7 @@ build_one() { # build_one <name> <kind> <csproj> <deps...>
     for d in "$O"/*.dll; do refs+=("-r:$(winpath "$d")"); done      # facades forward into the whole pack
     for d in "$@"; do case $d in stub:*) refs+=("-r:$(winpath "$B/stubs/${d#stub:}.dll")") ;; esac; done
   else
-    for d in "$@"; do refs+=("-r:$(winpath "$O/$d.dll")"); done
+    for d in "$@"; do case $d in stub:*) refs+=("-r:$(winpath "$B/stubs/${d#stub:}.dll")") ;; *) refs+=("-r:$(winpath "$O/$d.dll")") ;; esac; done
   fi
   local key; key=$(grep -ho '<StrongNameKeyId>[^<]*' "$L/$n/Directory.Build.props" "$L/shims/$n/Directory.Build.props" "$p" 2>/dev/null | head -1 | cut -d'>' -f2 || true)
   case $n in Microsoft.Extensions.*) key=${key:-MicrosoftAspNetCore} ;; esac
@@ -150,11 +150,22 @@ step_refs() {
 # targeting pack layout: packs/Microsoft.NETCore.App.Ref/<ver>/{ref/net8.0,data/FrameworkList.xml}
 step_pack() {
   local n av tok f
-  rm -rf "${PACK:?}"; mkdir -p "$PACK/ref/$TFM" "$PACK/data"
+  rm -rf "${PACK:?}"; mkdir -p "$PACK/ref/$TFM" "$PACK/data" "$PACK/analyzers/dotnet/cs"
   cp "$O"/*.dll "$PACK/ref/$TFM/"
+  # the source generators the pack ships for C# (the SDK passes them to csc as analyzers):
+  # [LibraryImport], [GeneratedComInterface], [JSImport], [GeneratedRegex], [JsonSerializable];
+  # built from source by netfx-pkgs.sh against Roslyn 4.8 (the compiler of SDK 8.0.1xx)
+  local g gens="Microsoft.Interop.SourceGeneration Microsoft.Interop.LibraryImportGenerator Microsoft.Interop.ComInterfaceGenerator
+    Microsoft.Interop.JavaScript.JSImportGenerator System.Text.RegularExpressions.Generator System.Text.Json.SourceGeneration"
+  for g in $gens; do
+    [ -f "$M612/pkgs/analyzers/$g.dll" ] && cp "$M612/pkgs/analyzers/$g.dll" "$PACK/analyzers/dotnet/cs/" || echo "  note: generator $g not built (netfx-pkgs.sh)"
+  done
   { echo "<FileList TargetFrameworkIdentifier=\".NETCoreApp\" TargetFrameworkVersion=\"${TFM#net}\" FrameworkName=\"Microsoft.NETCore.App\" Name=\".NET Runtime\">"
     for f in "$O"/*.meta; do read -r n av tok < "$f"
       echo "  <File Type=\"Managed\" Path=\"ref/$TFM/$n.dll\" AssemblyName=\"$n\" PublicKeyToken=\"$tok\" AssemblyVersion=\"$av\" FileVersion=\"$PACK_VER.0\" />"
+    done
+    for f in "$PACK"/analyzers/dotnet/cs/*.dll; do [ -e "$f" ] || continue; n=$(basename "$f" .dll)
+      echo "  <File Type=\"Analyzer\" Language=\"cs\" Path=\"analyzers/dotnet/cs/$n.dll\" AssemblyName=\"$n\" PublicKeyToken=\"cc7b13ffcd2ddd51\" AssemblyVersion=\"${RT_VER%%.*}.0.0.0\" FileVersion=\"$PACK_VER.0\" />"
     done
     echo "</FileList>"; } > "$PACK/data/FrameworkList.xml"
   # tell the SDK about the pack (KnownFrameworkReference) and where packs live

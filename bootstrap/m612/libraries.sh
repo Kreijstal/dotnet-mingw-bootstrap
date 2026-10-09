@@ -118,6 +118,9 @@ compile_lib() {
     # serialization types such as TreeSet<T>): compile against the implementation
     # assemblies and the OOB stubs
     refs=(); for d in "$O"/*.dll "$STUBS"/*.dll; do [ "$(basename "$d" .dll)" = "$n" ] || refs+=("-r:$d"); done
+    # shims/Directory.Build.props: a src shim with a contract (shims/<n>/ref) also compiles the
+    # contract's source, i.e. the bulk of the type forwards (mscorlib: System.Object, ...)
+    [ -f "$L/shims/$n/ref/$n.cs" ] && extra+=("$L/shims/$n/ref/$n.cs")
   fi
   # defines: the project's, plus what the SDK adds (Release, TargetFramework, TargetPlatform)
   local dl=(); IFS=';' read -ra dl < "$P/defines"
