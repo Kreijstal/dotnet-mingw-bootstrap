@@ -1,0 +1,87 @@
+#!/bin/bash
+# Assemble the Microsoft.NETCore.App 8.0.0 shared framework from the
+# from-source parts and install it into the SDK root, next to the host:
+#   shared/Microsoft.NETCore.App/8.0.0/
+#     System.Private.CoreLib.dll + the libraries   (corelib.sh, libraries.sh)
+#     coreclr.dll (the Mono VM), System.IO.Compression.Native.dll  (mono-runtime.sh)
+#     hostpolicy.dll                               (corehost.sh)
+#     Microsoft.NETCore.App.deps.json              (generated here, upstream layout)
+# and make the SDK target it: KnownFrameworkReference DefaultRuntimeFrameworkVersion /
+# LatestRuntimeFrameworkVersion = 8.0.0, so a framework-dependent net8.0 app's
+# runtimeconfig.json asks for 8.0.0 (the reference pack keeps its 8.0.31 version).
+#
+# usage: framework.sh [step...]     steps: layout install test
+set -euo pipefail
+here=$(cd "$(dirname "$0")" && pwd)
+. "$here/../env-m612.sh"
+steps=${*:-layout install test}
+RT_VER=${RT_VER:-8.0.0}; TFM=net${RT_VER%%.*}.0
+FX=${FXOUT:-$M612/netcoreapp-$RT_VER}
+FW=$FX/shared/Microsoft.NETCore.App/$RT_VER
+SDKROOT=${SDKROOT:-$M612/dotnet-sdk-8.0.131}
+MONO_OUT=$M612/mono-$RT_VER
+HOSTPOLICY=$M612/corehost-$RT_VER/corehost/hostpolicy.dll
+RID=win-x64
+
+step_layout() {
+  rm -rf "${FW:?}"; mkdir -p "$FW"
+  cp "$FX"/lib/*.dll "$FW/"
+  cp "$MONO_OUT/lib/coreclr.dll" "$MONO_OUT/libs/System.IO.Compression.Native.dll" "$HOSTPOLICY" "$FW/"
+  python3 -S - "$FW" "$RT_VER" "$TFM" "$RID" <<'EOPY'
+import os, sys, json, subprocess
+fw, ver, tfm, rid = sys.argv[1:5]
+tv = '.NETCoreApp,Version=v' + tfm[3:]
+pkg = 'Microsoft.NETCore.App.Runtime.%s/%s' % (rid, ver)
+runtime, native = {}, {}
+for f in sorted(os.listdir(fw)):
+    if not f.endswith('.dll'): continue
+    if f in ('coreclr.dll', 'hostpolicy.dll', 'System.IO.Compression.Native.dll'):
+        native[f] = {'fileVersion': ver + '.0'}
+    else:
+        # assembly version from the metadata (monodis --assembly)
+        out = subprocess.run(['monodis', '--assembly', os.path.join(fw, f)], capture_output=True, text=True).stdout
+        av = next((l.split(':', 1)[1].strip() for l in out.splitlines() if l.startswith('Version:')), ver[:1] + '.0.0.0')
+        runtime[f] = {'assemblyVersion': av, 'fileVersion': ver + '.0'}
+deps = {
+  'runtimeTarget': {'name': tv + '/' + rid, 'signature': ''},
+  'compilationOptions': {},
+  'targets': {tv: {}, tv + '/' + rid: {pkg: {'runtime': runtime, 'native': native}}},
+  'libraries': {pkg: {'type': 'package', 'serviceable': True, 'sha512': '',
+                      'path': pkg.lower(), 'hashPath': pkg.lower().replace('/', '.') + '.nupkg.sha512'}},
+}
+json.dump(deps, open(os.path.join(fw, 'Microsoft.NETCore.App.deps.json'), 'w', newline='\n'), indent=2)
+print('deps.json: %d managed, %d native' % (len(runtime), len(native)))
+EOPY
+  ls "$FW" | wc -l
+}
+
+step_install() {
+  local dst=$SDKROOT/shared/Microsoft.NETCore.App/$RT_VER
+  rm -rf "${dst:?}"; mkdir -p "$(dirname "$dst")"; cp -r "$FW" "$dst"
+  local bv="$SDKROOT/sdk/8.0.131/Microsoft.NETCoreSdk.BundledVersions.props"
+  sed -i -E "/KnownFrameworkReference Include=\"Microsoft.NETCore.App\"/,/\/>/{s/(DefaultRuntimeFrameworkVersion|LatestRuntimeFrameworkVersion)=\"[^\"]*\"/\1=\"$RT_VER\"/g}" "$bv"
+  grep -A3 'KnownFrameworkReference Include="Microsoft.NETCore.App"' "$bv" | grep -o 'De[a-zA-Z]*RuntimeFrameworkVersion="[^"]*"\|Lat[a-zA-Z]*RuntimeFrameworkVersion="[^"]*"'
+  "$SDKROOT/dotnet.exe" --list-runtimes
+}
+
+# build tests/<name>/*.csproj with the SDK (MSBuild on the seed Mono) -> its bin/Release/net8.0/
+build_test_app() {
+  local name=$1 T=$M612/test/fx-$RT_VER/$1 MSBOUT=$M612/msbuild-17.8.49/tools
+  rm -rf "${T:?}"; mkdir -p "$T/emptyfeed"; cp "$here/tests/$name"/* "$T/"
+  ( cd "$T"; PATH=/ucrt64/bin:$PATH
+    MSBuildSDKsPath=$(cygpath -w "$SDKROOT/sdk/8.0.131/Sdks") mono "$MSBOUT/MSBuild.exe" -nologo -m:1 -nr:false -v:${TEST_VERBOSITY:-m} \
+      -restore -p:Configuration=Release -p:NetCoreRoot="$(cygpath -w "$SDKROOT")\\" -p:NetCoreTargetingPackRoot="$(cygpath -w "$SDKROOT/packs")" ./*.csproj ) >&2
+  echo "$T/bin/Release/$TFM"
+}
+
+step_test() {
+  local d rc
+  for t in ${TESTS:-hello}; do
+    log "test $t"
+    d=$(build_test_app "$t")
+    cat "$d"/*.runtimeconfig.json
+    rc=0; "$SDKROOT/dotnet.exe" "$d/$t.dll" ${TEST_ARGS:-} || rc=$?; echo "rc=$rc"
+  done
+}
+
+for s in $steps; do log "framework $RT_VER: $s"; "step_$s"; done

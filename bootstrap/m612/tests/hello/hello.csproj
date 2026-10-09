@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- net8.0 hello world for the from-source Microsoft.NETCore.App 8.0.0 (Mono flavor) -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <AssemblyName>hello</AssemblyName>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseAppHost>false</UseAppHost>
+    <!-- dotnet/roslyn-analyzers is not built yet -->
+    <EnableNETAnalyzers>false</EnableNETAnalyzers>
+    <RestoreSources>$(MSBuildThisFileDirectory)emptyfeed</RestoreSources>
+  </PropertyGroup>
+</Project>

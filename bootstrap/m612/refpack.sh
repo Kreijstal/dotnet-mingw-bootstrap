@@ -156,13 +156,13 @@ step_pack() {
     echo "</FileList>"; } > "$PACK/data/FrameworkList.xml"
   # tell the SDK about the pack (KnownFrameworkReference) and where packs live
   local bv="$SDKROOT/sdk/8.0.131/Microsoft.NETCoreSdk.BundledVersions.props"
-  python3 -S - "$bv" "$PACK_VER" "$TFM" <<'EOPY'
+  python3 -S - "$bv" "$PACK_VER" "$TFM" "$RT_VER" <<'EOPY'
 import sys
-p, ver, tfm = sys.argv[1:4]
+p, ver, tfm, rtver = sys.argv[1:5]
 s = open(p).read()
 items = {
  'KnownFrameworkReference': f"""    <KnownFrameworkReference Include="Microsoft.NETCore.App" TargetFramework="{tfm}" RuntimeFrameworkName="Microsoft.NETCore.App"
-      DefaultRuntimeFrameworkVersion="{ver}" LatestRuntimeFrameworkVersion="{ver}" TargetingPackName="Microsoft.NETCore.App.Ref"
+      DefaultRuntimeFrameworkVersion="{rtver}" LatestRuntimeFrameworkVersion="{rtver}" TargetingPackName="Microsoft.NETCore.App.Ref"
       TargetingPackVersion="{ver}" RuntimePackNamePatterns="Microsoft.NETCore.App.Runtime.**RID**" RuntimePackRuntimeIdentifiers="win-x64" IsTrimmable="true" />""",
  # the apphost pack is native (MinGW host build, not done yet); listed so the SDK's
  # ResolveAppHosts task gets its input; projects must set UseAppHost=false for now

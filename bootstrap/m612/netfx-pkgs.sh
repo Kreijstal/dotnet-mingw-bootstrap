@@ -218,6 +218,9 @@ recipe() {
       [ -f "$OUTDIR/analyzers/Microsoft.Interop.SourceGeneration.dll" ] || recipe Microsoft.Interop.SourceGeneration
       build_lib Microsoft.Interop.ComInterfaceGenerator "$GEN/ComInterfaceGenerator/ComInterfaceGenerator.csproj" Open ${RT_VER%%.*}.0.0.0 rtgen \
       -r:"$OUTDIR/analyzers/Microsoft.Interop.SourceGeneration.dll" ;;
+    # [GeneratedRegex] (System.Private.Xml, System.Data.Common, ... use it)
+    System.Text.RegularExpressions.Generator)
+      build_lib System.Text.RegularExpressions.Generator "$RT/src/libraries/System.Text.RegularExpressions/gen/System.Text.RegularExpressions.Generator.csproj" Open ${RT_VER%%.*}.0.0.0 rtgen ;;
     *) if [ -f "$RT/src/libraries/$1/src/$1.csproj" ]; then
          build_lib "$1" "$RT/src/libraries/$1/src/$1.csproj" "$(rt_key "$1")" ${RT_VER%%.*}.0.0.0 rt
        else die "no recipe for $1"; fi ;;

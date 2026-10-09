@@ -200,10 +200,13 @@ class Evaluator:
                     lst = self.items.setdefault(k, [])
                     meta = {strip_ns(m.tag): self.expand((m.text or '').strip(), base) for m in it if isinstance(m.tag, str)}
                     for a, v in it.attrib.items():
-                        if a not in ('Include', 'Remove', 'Update', 'Condition'): meta[a] = self.expand(v, base)
+                        if a not in ('Include', 'Exclude', 'Remove', 'Update', 'Condition'): meta[a] = self.expand(v, base)
                     if it.get('Include') is not None:
+                        exc = set()
+                        if it.get('Exclude') is not None:
+                            exc = set(os.path.normpath(p) for p in self.paths(it.get('Exclude'), base, True))
                         for p in self.paths(it.get('Include'), base, k in kinds):
-                            lst.append((p, meta))
+                            if os.path.normpath(p) not in exc: lst.append((p, meta))
                     if it.get('Remove') is not None:
                         rem = set(os.path.normpath(p) for p in self.paths(it.get('Remove'), base, True))
                         self.items[k] = [x for x in lst if os.path.normpath(x[0]) not in rem]
