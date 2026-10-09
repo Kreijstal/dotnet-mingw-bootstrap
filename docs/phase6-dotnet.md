@@ -90,8 +90,8 @@ against the repositories.
 | .NET SDK tasks and targets (Microsoft.NET.Build.Tasks, Sdks/Microsoft.NET.Sdk) | dotnet/sdk | C# + targets | SDK-style projects | **built** (net472 §6.6, net8.0 §6.11) |
 | dotnet CLI (`dotnet.dll`, Cli.Utils, TemplateEngine, System.CommandLine, resolvers) | dotnet/sdk, templating, command-line-api | C# | `dotnet build/new/run/pack/publish` | **built** (net8.0, §6.11) |
 | Reference packs (Microsoft.NETCore.App.Ref) | dotnet/runtime `src/libraries/*/ref` | C# | compiling anything for netX | **built** (§6.7; generators in `analyzers/dotnet/cs`, runtime pack, §6.11) |
-| System.Private.CoreLib + framework libraries | dotnet/runtime | C# | the shared framework | **built** (Mono flavor, 168 assemblies, §6.10) |
-| Runtime: CoreCLR (`coreclr.dll`, `clrjit.dll`) **or** the Mono flavor of dotnet/runtime | dotnet/runtime | C/C++/asm | the shared framework | Mono flavor native runtime built (§6.9); CoreCLR not started (§3) |
+| System.Private.CoreLib + framework libraries | dotnet/runtime | C# | the shared framework | **built** (168 assemblies, §6.10; CoreLib for both flavors, §6.12) |
+| Runtime: CoreCLR (`coreclr.dll`, `clrjit.dll`) **or** the Mono flavor of dotnet/runtime | dotnet/runtime | C/C++/asm | the shared framework | **both built** with CLANG64: Mono flavor (§6.9), CoreCLR + its CoreLib + crossgen2/ReadyToRun (§6.12) |
 | Host: `dotnet.exe`, `hostfxr.dll`, `hostpolicy.dll`, `apphost.exe` | dotnet/runtime `src/native/corehost` | C/C++ | running anything | **done** with CLANG64 (§6.8) |
 | Native shims (System.IO.Compression.Native, Globalization) | dotnet/runtime `src/native` | C | framework | **built** (§6.9; Globalization is in the runtime) |
 | Arcade SDK, source generators, ILLink, GenAPI … | dotnet/arcade, runtime | C# | only to run the upstream build | avoided (direct csc); generators built from source; GenFacades/PNSE replaced by small scripts (§6.10); ILLink built for PublishTrimmed (§6.11) |
@@ -100,6 +100,10 @@ against the repositories.
 
 The source is dotnet/runtime `main` and `release/9.0`, read from shallow
 clones. Nothing was built.
+
+*(Written before the port. Outcome, §6.12: the CLANG64 route below worked; UASM, not
+`llvm-ml`, assembles the MASM files; `/EHa` is emulated in a personality wrapper; the ETW header
+is generated without `mc.exe` (ETW off); PE TLS needed nothing.)*
 
 - **CMake assumes MSVC on Windows.**
   - The Windows branches of `eng/native/configurecompiler.cmake` are all
@@ -172,7 +176,7 @@ Statuses:
 | S9 | System.Private.CoreLib + `src/libraries/*/src` for net8.0-windows (Mono flavor) | S4 + S8 | **SOLVED-HERE** | `corelib.sh`, `libraries.sh`, `vbc.sh`, `framework.sh`, §6.10: CoreLib + 166 C# + Microsoft.VisualBasic.Core (VB compiler from source), nothing skipped, no source patches; `shared/Microsoft.NETCore.App/8.0.0` runs a net8.0 hello world and a smoke test (exceptions, threads, ICU, sockets, HttpClient/TLS, JSON, Regex, XML, Process, Reflection.Emit) on the from-source Mono runtime |
 | S10a | Host (dotnet.exe, hostfxr, hostpolicy, apphost, nethost, comhost) with CLANG64 | MinGW toolchain | **SOLVED-HERE** | `corehost.sh`, §6.8: 3 patches (GNU/MinGW branch in `eng/native`, skip ijwhost/tests, 7 small clang/libc++ source fixes); self-contained binaries (static libc++); `dotnet --info` runs, the SDK patches apphost.exe for a net8.0 `UseAppHost=true` app, apphost → hostfxr → hostpolicy load and report the missing runtime. singlefilehost needs `coreclr_static` (S10c) |
 | S10b | Runtime: Mono flavor of dotnet/runtime 8.0 (`-rf Mono`) with MinGW | MinGW | **SOLVED-HERE** (native part) | `mono-runtime.sh`, §6.9: 4 more patches (MSVC-only CMake, `__thread`, no MASM, POSIX configure results cleared, ICU C headers, zlib-intel/windres fixes). `coreclr.dll` (Mono VM) + `System.IO.Compression.Native.dll` build with CLANG64 and import only system DLLs; dotnet.exe → hostfxr → hostpolicy → `coreclr.dll` initialises Mono and stops at the missing System.Private.CoreLib (S9) |
-| S10c | Runtime: CoreCLR with CLANG64 clang (GNU driver) | MinGW | **BLOCKED for now** (large port) | MSVC-only CMake, ~24 MASM files, /EHa semantics, mc.exe ETW, PE TLS (§3) |
+| S10c | Runtime: CoreCLR with CLANG64 clang (GNU driver) | MinGW | **SOLVED-HERE** | `coreclr.sh`, `corelib-coreclr.sh`, `framework-coreclr.sh`, `crossgen2.sh`, §6.12: patches 0008–0017 (GNU-driver CMake, inc/mingw, ETW header without mc.exe, /EHa emulation for clang's Itanium EH, a clang `__finally` miscompile worked around, MASM via UASM). hello/smoke/ehstress and the whole `sdk-net8-test.sh` pass on CoreCLR; crossgen2 R2R-compiles the framework and the SDK tools (SDK commands 2–2.5× faster than on Mono). Open: ETW, vxsort, DAC/DBI/createdump, singlefilehost |
 | S11 | Assemble SDK 8.0 (host + shared framework + SDK managed bits built for net8.0) | all above | **SOLVED-HERE** | §6.11: Roslyn, MSBuild, NuGet, SDK tasks/resolvers, `dotnet.dll`, TemplateEngine, SourceLink, ILLink as net8.0 assemblies in the upstream `sdk/8.0.131` layout; `dotnet new/build/run/pack/publish` (incl. self-contained, trimmed, PackageReference from a local feed, `-m` with node reuse, the compiler server) run on the from-source Mono-flavour runtime, no Mono 6.12. 1 patch (Roslyn compiler server mutex); open: roslyn-analyzers, vstest, F#, XPlat |
 | S12 | Rebuild the SDK with itself (VMR, Windows) | S11 | UNKNOWN | VMR source-only mode is Linux-only; Windows would need Arcade from source and a local package feed |
 
@@ -980,6 +984,154 @@ Roslyn workload, many threads, named pipes):
 - Mono-path only: GenerateResource in .NETCoreApp projects needs
   `-p:GenerateResourceMSBuildRuntime=CLR4` (MSB4214) on MSBuild/Mono.
 
+### 6.12 CoreCLR with CLANG64 (S10c), its CoreLib, crossgen2 and ReadyToRun
+
+The runtime the upstream SDK ships, from the same runtime 8.0.0 tree as §6.8–6.10, built with
+MSYS2 CLANG64 (clang 22.1.8 / lld / libc++, `x86_64-w64-mingw32`) instead of MSVC, and run
+under the S11 SDK in a **separate root** (`m612/dotnet-sdk-8.0.131-net8-coreclr`), so the
+Mono-flavour root stays as it is.
+
+**Patches** (`patches/m612/runtime-8.0.0/`, on top of 0001–0007):
+
+| Patch | What |
+|---|---|
+| 0008 | `eng/native`: MinGW `-O` flags for C/C++ only (not for the MASM language), no MSVC CRT libs, natvis only with MSVC |
+| 0009 | `src/coreclr` CMake for MinGW: MASM via UASM (`CMAKE_ASM_MASM_FLAGS -win64 -nologo`, `__MINGW32__` for asm), clang options, `USE_STL`, `-include inc/mingw/msvc_compat.h`; no DAC/DBI/createdump/single-file diagnostics, no vxsort; checked-in MIDL `_i.cpp`; resource DLLs linked as C++; `mscorrc.rc` string IDs masked to 16 bits for llvm-rc; `.def` `DATA` upper case; coreclr links the mingw system libs + `clrmingweha` |
+| 0010 | `src/coreclr/inc/mingw`: `msvc_compat.h` (force-included: `__annotation`, min/max, crtdbg.h, `_rdsspq` with MSVC's signature …), `sal_legacy.h` (415 SAL 1 macros, empty), a `winnt.h` wrapper (`KNONVOLATILE_CONTEXT_POINTERS` with the SDK's named members, `C_ASSERT` as `static_assert`), `verrsrc.h` |
+| 0011 | `genEtwProvider.py --nomc`: the ETW header without `mc.exe` (provider GUIDs/handles/contexts, event descriptors, task GUIDs, keyword/opcode defines); providers are never registered, so ETW is off; EventPipe works |
+| 0012 | `/EHa` for clang's Itanium C++ EH: `minipal/Windows/mingw_eha.cpp` + `mingw_guids.cpp`, the `clrmingweha` library linked with `--wrap=__gxx_personality_seh0,_Unwind_Resume,__cxa_rethrow,__C_specific_handler`; `RtlUnwind` → `CLR_MinGW_RtlUnwind` in `exceptionhandling.cpp` (below) |
+| 0013 | `SEH_FINALLY_FUNCTION` (`optnone,noinline` with clang+MinGW) on the 8 functions whose `__finally` reads a member of a parent local: clang 22 miscompiles them (below) |
+| 0014 | `vm/amd64/*.asm` for UASM: `.errnz` messages in `<>`, `NOP_3_BYTE`/`rdsspq`/`incsspq`/`rexw` as `db`, `ALTENTRY` as a public label, Itanium C++ names instead of MSVC-mangled ones (`_Z7JIT_NewP21CORINFO_CLASS_STRUCT_`, `_ZTV16InlinedCallFrame`, `RedirectTarget` names built with `@CatStr`/`@SizeStr`) |
+| 0015 | C++ fixes for clang with the GNU driver: function-pointer ↔ `void*`, gotos over initialisations, `AllocMemHolder`, `AlignUp`/`BitScan` overloads, `JITINTERFACE_HRESULT`, daccess VPTR ctors, enums with fixed types, `static g_SystemInfo` (Itanium does not mangle variable types, so the GC's and the VM's collided), GS cookie, `__report_gsfailure` … |
+| 0016 | `src/native`: cpufeatures `xsave` target attribute, EventPipe goto locals, ICU shim `U_FALLTHROUGH` in C |
+| 0017 | `COMIMAGE_FLAGS_NATIVE_ENTRYPOINT` moves from `msvc_compat.h` to the `winnt.h` wrapper (crossgen2's jitinterface includes `corhdr.h` without `windows.h`) |
+
+**Commands** (chain steps 38–44):
+
+```
+env MSYSTEM=CLANG64 bash bootstrap/m612/coreclr.sh            # prep configure build install test
+#   cmake -G Ninja -S src/coreclr ... -DCMAKE_ASM_MASM_COMPILER=uasm -DCLR_CMAKE_TARGET_OS=windows ...
+#   ninja coreclr clrjit mscorrc clretwrc   -> m612/coreclr-8.0.0 (stripped)
+bash bootstrap/m612/corelib-coreclr.sh "$(cygpath -m m612/dotnet-sdk-8.0.131-net8/sdk/8.0.131/Roslyn/bincore/csc.dll)"
+#   -> m612/netcoreapp-8.0.0-coreclr/lib/System.Private.CoreLib.dll
+env TESTS="hello smoke ehstress" bash bootstrap/m612/framework-coreclr.sh   # newroot layout install runtimepack check test
+env ROOT=m612/dotnet-sdk-8.0.131-net8-coreclr TESTDIR=m612/test/sdk-net8-coreclr bash bootstrap/m612/sdk-net8-test.sh
+bash bootstrap/m612/crossgen2.sh                               # native managed layout test
+bash bootstrap/m612/crossgen2.sh r2rroot r2rfx r2rsdk          # -> m612/dotnet-sdk-8.0.131-net8-coreclr-r2r
+env ROOT=m612/dotnet-sdk-8.0.131-net8-coreclr-r2r TESTDIR=m612/test/sdk-net8-coreclr-r2r bash bootstrap/m612/sdk-net8-test.sh
+```
+
+**Outputs**:
+
+```
+m612/coreclr-8.0.0/        coreclr.dll 7662080, clrjit.dll 3113472, mscorrc.dll 139264, clretwrc.dll 12288
+                           (imports: system DLLs and the UCRT api sets only; libc++ is static)
+m612/netcoreapp-8.0.0-coreclr/lib/System.Private.CoreLib.dll   4963840
+m612/dotnet-sdk-8.0.131-net8-coreclr/      the S11 SDK + the CoreCLR shared framework + runtime pack
+m612/crossgen2-8.0.0/      crossgen2.dll + ILCompiler.{DependencyAnalysisFramework,TypeSystem,Diagnostics,ReadyToRun}.dll,
+                           System.CommandLine.dll, clrjit_win_x64_x64.dll, jitinterface_x64.dll, crossgen2.runtimeconfig.json
+m612/dotnet-sdk-8.0.131-net8-coreclr-r2r/  the same root, framework (168 assemblies, 35 MB -> 70 MB) and SDK tools
+                           (81 assemblies, sdk/ 46 MB -> 91 MB) as ReadyToRun images
+```
+
+**Tests**:
+
+- `coreclr.sh test`: `tests/coreclr/eha.cpp`, the `/EHa` shim self-test: AV / `RaiseException` /
+  C++ throw through C++ frames into `__except` and `catch(...)` with destructors in order,
+  `catch(int)` skipped for an AV, `throw;` of an SEH exception, nesting; 10 cases `ok` and
+  200000 round trips.
+- `framework-coreclr.sh test` (apps built by the CoreCLR SDK itself, run by its `dotnet.exe`):
+  `hello` (exceptions, a 52-frame unwind, `finally`, rethrow, NullReferenceException from a
+  hardware fault, threads, thread pool, async, ICU cultures) passes; `smoke --net` prints
+  `SMOKE OK`; `ehstress` (exceptions across VM/native frames, reflection invoke, cctor failures,
+  reverse P/Invoke through `qsort`, filters, Monitor waits) prints `EHSTRESS OK`, and with
+  `CLR_MINGW_EHA_TRACE=1` 24803 cleanups ran and no unwind skipped one.
+  `check`: `tools/rvaalign.cs` finds 0 misaligned `CreateSpan` blobs.
+- `sdk-net8-test.sh` on the CoreCLR root: every step passes; the consumer app prints
+  `runtime: .NET 8.0.0 (CoreCLR)`.
+- `crossgen2.sh test`: `hello.dll` compiles in 1.6 s; the COR header goes from
+  `flags=0x1 ManagedNativeHeader=0x0/0 IL only` to `flags=0x4 ManagedNativeHeader=0x1560/160
+  READYTORUN (RTR) v9.1`; it runs, and `DOTNET_JitDisasmSummary=1` lists no `Program:` method
+  as jitted (3 with the IL image).
+- `r2rfx`: 168 of 168 framework assemblies compiled (5 native/R2R skipped), 2 min with 4 jobs;
+  `r2rsdk`: 68 (`sdk/8.0.131`) + 7 (`Roslyn/bincore`) + 4 (`Microsoft.NET.Sdk/tools/net8.0`)
+  + 1 (NuGet pack tasks) + 1 (SDK resolver), none failed.
+
+**Timings** (wall clock, win11, 4 cores, same day; `sdk-net8-test.sh` TIME lines):
+
+| Step | Mono flavour | CoreCLR (JIT) | CoreCLR + R2R |
+|---|---|---|---|
+| dotnet new console | 3.1 s | 3.2 s | 1.2 s |
+| dotnet build (first) | 6.3 s | 5.0 s | 2.4 s |
+| dotnet build (incremental) | 2.8 s | 2.3 s | 1.0 s |
+| dotnet run | 3.0 s | 2.5 s | 1.1 s |
+| dotnet pack | 3.5 s | 3.0 s | 1.4 s |
+| dotnet build (pkgref) | 3.5 s | 2.9 s | 1.4 s |
+| dotnet run (pkgref) | 1.7 s | 1.9 s | 0.9 s |
+| dotnet build -m:4 (3 projects) | 6.5 s | 5.0 s | 2.2 s |
+| dotnet build -m:4 (no-op) | 2.9 s | 2.4 s | 1.1 s |
+| dotnet build roslyncore (~1500 files) | 16.2 s | 18.4 s (repeats 7.6 / 7.1 s) | 9.5 s |
+| csc.dll (rebuilt MCA) hello | 1.6 s | 1.5 s | 0.8 s |
+| dotnet build (generators) | 3.5 s | 3.2 s | 1.7 s |
+| dotnet publish --self-contained | 3.6 s | 3.2 s | 2.1 s |
+| dotnet publish -p:PublishTrimmed=true | 7.2 s | 13.8 s (6.8 s in a rerun) | 4.8 s |
+| `dotnet hello.dll` | ~690 ms | ~560 ms | ~290 ms |
+| `dotnet smoke.dll --net` | ~1400 ms | ~1010 ms | ~430 ms |
+| `dotnet ehstress.dll` | — (cctor case fails on Mono) | ~4.1 s | ~4.0 s |
+
+CoreCLR with the JIT alone is already faster than Mono at steady state (the compiler server,
+roslyncore repeats: 7.1–7.6 s vs 12.3–14.6 s); the first build of a big project pays for
+tier-0 JIT of the compiler. With R2R the SDK commands are 2–2.5× faster than Mono.
+
+**How the hard parts were done**:
+
+- **MASM.** `llvm-ml64` lacks PROC-scoped labels and `mod`; UASM 2.58 (MSYS2
+  `mingw-w64-clang-x86_64-uasm`, `-win64`) assembles the 20 `vm/amd64` files (7 of them changed) with the byte
+  encodings and names of patch 0014.
+- **`/EHa` semantics.** CoreCLR relies on MSVC `/EHa`: `catch(...)` and C++ destructors also see
+  SEH exceptions (AVs, `RaiseException` of the managed exception code), and SEH unwinds run C++
+  cleanups. clang's Itanium EH over SEH (`_GCC_specific_handler`) ignores foreign exceptions.
+  `mingw_eha.cpp` wraps the personality: it parses the LSDA itself; in phase 1 a `catch(...)`
+  takes a foreign exception (wrapped in a C++ `EhaSehException`); in phase 2 cleanup landing
+  pads are entered by a collided `RtlUnwindEx` and resumed through a tagged copy of the
+  `EXCEPTION_RECORD` (`ExceptionInformation[13]` = entry, `[14]` = magic). `throw;` of a
+  foreign exception re-raises it. `__C_specific_handler` and `RtlUnwind` are wrapped so the
+  VM's own unwinds run C++ cleanups too.
+- **A clang bug.** A `__finally` that reads a member at a nonzero offset of a parent-frame local
+  is miscompiled by LLVM 22 (`llvm.localrecover` + constant offset loses the frame-escape symbol;
+  the same on the MSVC target). On the finalizer thread it clobbered RDI and killed the
+  process at shutdown ("Fatal error."), found by attaching gdb late (under a debugger started
+  with the process it did not reproduce). Workaround: `optnone` on the 8 functions (patch 0013).
+- **CoreLib** needs the net8.0 `csc.dll` (Roslyn 4.8 on System.Reflection.Metadata 8): the seed's
+  SRM 5 aligns RVA field data to 4 only and CoreCLR's `RuntimeHelpers.CreateSpan` rejects it
+  (ArgumentException at startup). Roslyn emits bodies for `InternalCall` auto-property accessors
+  that ILLink removes upstream; `tools/fcallrva.cs` does the same (else the VM took the getter
+  for an NDirect stub). The runtime-root ILLink descriptor
+  (`CreateRuntimeRootILLinkDescriptorFile` of the source-built ILLink.Tasks) is embedded, else a
+  trimmed app lost `System.__Canon`.
+
+**Open issues**:
+
+- ETW is off (no `mc.exe`; stub header, providers never registered). EventPipe/`dotnet-trace`
+  work.
+- No vxsort in the GC (AVX2/AVX-512 sort of the mark list; its `numeric_limits` clashes with
+  libc++'s), no DAC
+  (`mscordaccore`), DBI (`mscordbi`), `createdump` or single-file diagnostics: managed debugging
+  and `dotnet-dump` analysis are not available. `coreclr_static`/singlefilehost not built.
+- Asynchronous faults at instructions that are not calls are not covered by the C++ LSDA
+  (clang has no `-fasync-exceptions` for Itanium C++ EH; it crashes clang): a destructor whose
+  scope contains only the faulting instruction may not run. The VM itself converts hardware
+  faults in managed code, so this only matters for native VM code that faults inside a C++
+  scope with a destructor.
+- Unwinds started by initiators the shim does not know skip C++ cleanups;
+  `CLR_MINGW_EHA_TRACE=1` logs every such unwind (none in the tests).
+- The LLVM `__finally` bug should be reported upstream with the `fin7`/`fin10` reproducers;
+  until then patch 0013's `optnone` list has to be kept complete by inspection.
+- The Mono-flavour CoreLib keeps 18 misaligned `CreateSpan` blobs (Mono does not check).
+- The R2R images are compiled per assembly (no composite image, no PGO/MIBC data, no partial
+  R2R); crossgen2 itself runs as IL (it could be R2R-compiled by itself); no `--pdb`
+  (needs the native DiaSymReader).
+
 ### 6.4 MSBuild (`bootstrap/m612/msbuild.sh 17.8.49 <csc.exe> 4.12.0`)
 
 ```
@@ -1082,6 +1234,13 @@ in 2021 (dotnet/msbuild#6058):
 | dotnet/sdk `template_feed/` (console/classlib/... templates), `src/Layout/redist/trustedroots/*.pem` | text | yes | the template nupkgs in `templates/8.0.131` are zipped from this text with a hand-written nuspec; the PEM files are the code-signing/timestamping root lists NuGet verifies against (certificate data) |
 | `Microsoft.Windows.CsWin32`, `Microsoft.VisualStudio.Setup.Configuration.Interop`, `Microsoft.AspNetCore.DeveloperCertificates.XPlat`, `StaticCs`, `Microsoft.CodeAnalysis.BannedApiAnalyzers`, `Microsoft.Diagnostics.Tracing.EventRegister`, `ILMerge` | prebuilt packages | **no** | not referenced with `DotNetBuildFromSource=true` / `IncludeAspNetCoreRuntime=false`; EventRegister only registers ETW manifests at build time |
 | `Microsoft.Extensions.CommandLineUtils.Sources`, `Microsoft.Build.Locator` (NuGet.CommandLine.XPlat), vstest, F# compiler, dotnet/roslyn-analyzers | sources/packages | **no**, not built | `dotnet add package`/`dotnet nuget`, `dotnet test`, F# and the NetAnalyzers are not available (§6.11) |
+| MSYS2 `mingw-w64-clang-x86_64-uasm` 2.58-1 (UASM, MASM-compatible assembler) | binary package | yes, build-time only (§6.12) | trusted by the 2026-10-08 policy; assembles CoreCLR's `vm/amd64/*.asm` (the Windows SDK's `ml64.exe` is not available) |
+| MSYS2 CLANG64 toolchain (clang/lld/libc++ 22.1.8, llvm-rc/llvm-windres, cmake, ninja, python3) | binary packages | yes, build-time only | trusted; the native host, Mono and CoreCLR are built with it; libc++ is linked statically |
+| runtime-8.0.0 `src/coreclr/pal/prebuilt/idl/*_i.cpp` and `pal/prebuilt/inc/*.h` | MIDL-generated C/C++ checked into the runtime tarball | yes (§6.12, patch 0009) | text sources generated upstream by `midl.exe` (interface IDs and COM headers); the Unix build of CoreCLR uses the same files; no MIDL here |
+| `ILLink.Tasks.dll` (`CreateRuntimeRootILLinkDescriptorFile`), run by the net8.0 SDK's MSBuild | IL built from source (§6.11, `illink-net8.sh`) | yes, build-time only | generates CoreLib's runtime-root descriptor from `corelib.h`/`rexcep.h`/… as the upstream build does |
+| net8.0 `csc.dll` of the S11 SDK (Roslyn 4.8 on SRM 8) | IL built from source (§6.11) | yes, compiles the CoreCLR CoreLib | the seed-era SRM 5 aligns RVA data to 4 only; CoreCLR rejects such `CreateSpan` data |
+| System.CommandLine 2.0.0-beta4.23307.1 (`m612/net8-pkgs`, §6.11) | IL built from source | yes, crossgen2's command line | the version runtime 8.0.0 pins (`SystemCommandLineVersion`) |
+| `Microsoft.DiaSymReader.Native` (crossgen2 layout), `StaticCs`, `Microsoft.DiaSymReader` (ILCompiler PackageReferences) | prebuilt packages (the first is a native Microsoft DLL) | **no** | DiaSymReader.Native is only copied next to crossgen2 for `--pdb` (native PDBs of R2R code), which is therefore unavailable; the other two are not referenced with `DotNetBuildFromSource=true` (`ClosedAttribute` comes from ILLink.Shared) |
 | Windows' own .NET Framework 4.8 (`C:\Windows\Microsoft.NET`) | OS component | **no**, all paths redirected to Mono; verified by a `-v:diag` grep | out-of-proc MSBuild nodes and directly started `csc.exe` would use it, so we avoid both |
 
 Nothing was stopped for: every binary that came up was either part of the
@@ -1134,11 +1293,19 @@ trusted seed, deleted, or avoided.
    GenFacades …) built from dotnet/arcade source, and a local feed of source-built packages for
    every `PackageReference` (the S3/OOB/clideps assemblies packed as nupkgs). The VMR's
    `--source-only` mode is still Linux-only; on Windows it would be driven repo by repo.
-4. CoreCLR on CLANG64 remains the long pole:
-   - a CMake branch for the GNU-on-Windows toolchain;
-   - UASM or `llvm-ml` for the 24 MASM files;
-   - `FEATURE_EVENT_TRACE` off, to replace `mc -um`;
-   - the `/EHa` semantics audit.
+4. *(Done: CoreCLR on CLANG64, its CoreLib, crossgen2 and an R2R-compiled SDK root, §6.12.)*
+   Leftovers, in order of usefulness:
+   - report the clang/LLVM 22 `__finally` miscompile upstream (reproducers `fin7`/`fin10`)
+     and drop patch 0013 once fixed; until then audit new `PAL_FINALLY`/`__finally` users;
+   - make the R2R root the default S11 root (`sdk-layout-net8.sh` + `crossgen2.sh r2rfx r2rsdk`),
+     R2R-compile crossgen2 itself, try composite/partial R2R with the from-source MIBC data;
+   - ETW: generate the real manifest resources with an `mc.exe` replacement (the manifest is
+     plain XML: `genEtwProvider.py` + a small `mc -um` emitter);
+   - vxsort (its own `numeric_limits` clashes with libc++'s under `USE_STL`; MSVC `i64` literals);
+   - DAC (`mscordaccore`) and DBI (`mscordbi`) for managed debugging, `createdump`;
+   - `coreclr_static` + singlefilehost for `PublishSingleFile`;
+   - the async-fault gap of the `/EHa` emulation (needs `-fasync-exceptions` for Itanium EH in
+     clang, or an audit of VM code that relies on destructors during native AVs).
 
 ## 9. Where this stops, and why
 
@@ -1157,6 +1324,8 @@ the Mono flavor is done (§6.9); CoreCLR is the hard one:
   native build); CoreCLR additionally needs ~24 MASM files ported or an
   MASM-compatible assembler (UASM / llvm-ml), `/EHa` semantics, PE TLS and
   the ETW `mc -um` generator replaced or disabled (§3).
+- **Outcome (§6.12):** CoreCLR was ported after all (patches 0008–0017); the paragraph
+  below is the assessment from before the port.
 - **Assessment:** not blocked in principle, but a multi-week port.
   Recommended order: (1) a GNU-on-Windows branch in
   `eng/native/configurecompiler.cmake` (no `mc`, no MASM for the host),
