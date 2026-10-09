@@ -31,6 +31,11 @@ IVT_PK=$(tr -d '\n\r' < "$KEYS"/MSShared-*.pubkey.hex)
 ivt() { local f=$1; shift; : > "$f"; for a in "$@"; do echo "[assembly: System.Runtime.CompilerServices.InternalsVisibleTo(\"$a, PublicKey=$IVT_PK\")]" >> "$f"; done; }
 ver() { printf '[assembly: System.Reflection.AssemblyVersion("%s")]\n[assembly: System.Reflection.AssemblyFileVersion("%s")]\n[assembly: System.Reflection.AssemblyInformationalVersion("%s (m612 bootstrap, net8.0)")]\n[assembly: System.Runtime.Versioning.TargetFramework(".NETCoreApp,Version=v8.0", FrameworkDisplayName = ".NET 8.0")]\n' "${V%.*}.0.0" "$V.0" "$V" > "$1"; }
 refs() { net8_refs "$@"; }
+# The compiler server and its clients (csc/vbc, the Csc/Vbc tasks) only talk to each other when
+# their [CommitHash] agree (Roslyn's GenerateMicrosoftCodeAnalysisCommitHashAttribute): the
+# commit of the source tarball
+COMMIT=$( { gzip -dc "$M612/src/roslyn-$V.tar.gz" | git get-tar-commit-id; } 2>/dev/null | head -1 || true); COMMIT=${COMMIT:-unknown}
+commithash() { ver "$1"; echo "[assembly: Microsoft.CodeAnalysis.CommitHash(\"$COMMIT\")]" >> "$1"; }
 
 step_core() {
   cd "$B"
@@ -104,19 +109,19 @@ step_razor() {
 
 cmdline_items() { CSPROJ_NO_FOLLOW=1 csproj_items -p TargetFramework=net8.0 "$1" 2>/dev/null; }
 step_csc() {
-  cd "$B"; ver "$O/csc-ver.cs"
+  cd "$B"; commithash "$O/csc-ver.cs"
   csc net8-csc "${COMMON[@]}" "${SIGN[@]}" -target:exe -out:"$O/csc.dll" -main:Microsoft.CodeAnalysis.CSharp.CommandLine.Program \
     $(refs "$O/Microsoft.CodeAnalysis.dll" "$O/Microsoft.CodeAnalysis.CSharp.dll") "$O/csc-ver.cs" \
     $(cmdline_items src/Compilers/CSharp/csc/CscCommandLine.projitems) || die "csc.dll failed"
 }
 step_vbc() {
-  cd "$B"; ver "$O/vbc-ver.cs"
+  cd "$B"; commithash "$O/vbc-ver.cs"
   csc net8-vbc "${COMMON[@]}" "${SIGN[@]}" -target:exe -out:"$O/vbc.dll" -main:Microsoft.CodeAnalysis.VisualBasic.CommandLine.Program \
     $(refs "$O/Microsoft.CodeAnalysis.dll" "$O/Microsoft.CodeAnalysis.VisualBasic.dll") "$O/vbc-ver.cs" \
     $(cmdline_items src/Compilers/VisualBasic/vbc/VbcCommandLine.projitems) || die "vbc.dll failed"
 }
 step_server() {
-  cd "$B"; ver "$O/server-ver.cs"
+  cd "$B"; commithash "$O/server-ver.cs"
   csc net8-server "${COMMON[@]}" "${SIGN[@]}" -target:exe -out:"$O/VBCSCompiler.dll" -main:Microsoft.CodeAnalysis.CompilerServer.VBCSCompiler \
     $(refs "$O/Microsoft.CodeAnalysis.dll" "$O/Microsoft.CodeAnalysis.CSharp.dll" "$O/Microsoft.CodeAnalysis.VisualBasic.dll") "$O/server-ver.cs" \
     $(cmdline_items src/Compilers/Server/VBCSCompiler/VBCSCompilerCommandLine.projitems) || die "VBCSCompiler.dll failed"
@@ -130,7 +135,7 @@ step_tasks() {
   mapfile -t items < <(cd "$pd" && csproj_items --default-items -p TargetFramework=net8.0 Microsoft.Build.Tasks.CodeAnalysis.csproj 2>/dev/null | sed "s|^|$pd/|")
   resgen "$pd/ErrorString.resx" "$O/Microsoft.CodeAnalysis.BuildTasks.ErrorString.resources" > /dev/null
   resxgen "$pd/ErrorString.resx" "$O/ErrorString.g.cs" Microsoft.CodeAnalysis.BuildTasks.ErrorString --format
-  ver "$O/tasks-ver.cs"
+  commithash "$O/tasks-ver.cs"
   csc net8-tasks "${COMMON[@]}" "${SIGN[@]}" -target:library -out:"$O/Microsoft.Build.Tasks.CodeAnalysis.dll" \
     -nowarn:CS8600,CS8601,CS8602,CS8603,CS8604,CS8618,CS8625 \
     $(refs "$MSB8/Microsoft.Build.Framework.dll" "$MSB8/Microsoft.Build.Utilities.Core.dll" "$MSB8/Microsoft.Build.Tasks.Core.dll" "$MSB8/Microsoft.NET.StringTools.dll") \
