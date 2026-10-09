@@ -90,7 +90,7 @@ against the repositories.
 | .NET SDK tasks and targets (Microsoft.NET.Build.Tasks, Sdks/Microsoft.NET.Sdk) | dotnet/sdk | C# + targets | SDK-style projects | not started |
 | Reference packs (Microsoft.NETCore.App.Ref) | dotnet/runtime `src/libraries/*/ref` | C# | compiling anything for netX | not started |
 | System.Private.CoreLib + framework libraries | dotnet/runtime | C# | the shared framework | not started |
-| Runtime: CoreCLR (`coreclr.dll`, `clrjit.dll`) **or** the Mono flavor of dotnet/runtime | dotnet/runtime | C/C++/asm | the shared framework | not started; see §3 |
+| Runtime: CoreCLR (`coreclr.dll`, `clrjit.dll`) **or** the Mono flavor of dotnet/runtime | dotnet/runtime | C/C++/asm | the shared framework | Mono flavor native runtime built (§6.9); CoreCLR not started (§3) |
 | Host: `dotnet.exe`, `hostfxr.dll`, `hostpolicy.dll`, `apphost.exe` | dotnet/runtime `src/native/corehost` | C/C++ | running anything | **done** with CLANG64 (§6.8) |
 | Native shims (System.IO.Compression.Native, Globalization) | dotnet/runtime `src/native` | C | framework | not started |
 | Arcade SDK, source generators, ILLink, GenAPI … | dotnet/arcade, runtime | C# | only to run the upstream build | avoided so far (direct csc) |
@@ -170,7 +170,7 @@ Statuses:
 | S8 | `Microsoft.NETCore.App.Ref` 8.0 (163 ref assemblies + facades, 20 shim stubs, FrameworkList.xml) | S4 | **SOLVED-HERE** | `refpack.sh`; identities match upstream (e.g. System.Runtime 8.0.0.0, b03f5f7f11d50a3a); an SDK-style **net8.0** library compiles against it with the SDK of S7 on Mono (UseAppHost=false, no runtime needed) |
 | S9 | System.Private.CoreLib + `src/libraries/*/src` for net8.0-windows | S4 + S8 | UNKNOWN | compile-feasible with the direct-csc method (source generators build from source, §6.2), but CoreLib's build has many generated inputs and runtime-flavor specifics; no one has done this outside Arcade |
 | S10a | Host (dotnet.exe, hostfxr, hostpolicy, apphost, nethost, comhost) with CLANG64 | MinGW toolchain | **SOLVED-HERE** | `corehost.sh`, §6.8: 3 patches (GNU/MinGW branch in `eng/native`, skip ijwhost/tests, 7 small clang/libc++ source fixes); self-contained binaries (static libc++); `dotnet --info` runs, the SDK patches apphost.exe for a net8.0 `UseAppHost=true` app, apphost → hostfxr → hostpolicy load and report the missing runtime. singlefilehost needs `coreclr_static` (S10c) |
-| S10b | Runtime: Mono flavor of dotnet/runtime 8.0 (`-rf Mono`) with MinGW | MinGW | PROBABLY (most promising) | configure probe passes with the S10a `eng/native` patch (§6.8, "Mono flavor probe"); first build blockers are MSVC flags in `src/mono/CMakeLists.txt` and one MASM file |
+| S10b | Runtime: Mono flavor of dotnet/runtime 8.0 (`-rf Mono`) with MinGW | MinGW | **SOLVED-HERE** (native part) | `mono-runtime.sh`, §6.9: 4 more patches (MSVC-only CMake, `__thread`, no MASM, POSIX configure results cleared, ICU C headers, zlib-intel/windres fixes). `coreclr.dll` (Mono VM) + `System.IO.Compression.Native.dll` build with CLANG64 and import only system DLLs; dotnet.exe → hostfxr → hostpolicy → `coreclr.dll` initialises Mono and stops at the missing System.Private.CoreLib (S9) |
 | S10c | Runtime: CoreCLR with CLANG64 clang (GNU driver) | MinGW | **BLOCKED for now** (large port) | MSVC-only CMake, ~24 MASM files, /EHa semantics, mc.exe ETW, PE TLS (§3) |
 | S11 | Assemble SDK 8.0 (host + shared framework + SDK managed bits built for net8.0) | all above | UNKNOWN | depends on S9/S10 |
 | S12 | Rebuild the SDK with itself (VMR, Windows) | S11 | UNKNOWN | VMR source-only mode is Linux-only; Windows would need Arcade from source and a local package feed |
@@ -494,37 +494,95 @@ The SDK still runs on MSBuild/Mono: it has no `sdk/<ver>/dotnet.dll`, so
 `dotnet build` does not exist yet, and the SDK resolver
 (Microsoft.DotNet.MSBuildSdkResolver, which would call `hostfxr`) is not built.
 
-**Mono flavor probe (S10b).** With the patched tree:
+The Mono flavor of the runtime, built from the same patched tree, is in §6.9.
+
+### 6.9 The Mono runtime (`bootstrap/m612/mono-runtime.sh`, MSYSTEM=CLANG64)
 
 ```
-cmake -G Ninja -S src/mono -B build/probe-mono -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang \
-  -DCMAKE_CXX_COMPILER=clang++ -DCLR_CMAKE_TARGET_ARCH=x64 -DCLR_CMAKE_HOST_ARCH=x64 -DGC_SUSPEND=hybrid \
-  -DMONO_LIB_NAME=libmonosgen-2.0 -DMONO_SHARED_LIB_NAME=coreclr
+env MSYSTEM=CLANG64 bash repo/bootstrap/m612/mono-runtime.sh   # steps: prep configure build install nativelibs test
 ```
 
-configures (after copying `eng/native/version/NativeVersion.rc` to
-`artifacts/obj`, which Arcade's `copy_version_files` does). The first
-`ninja -k 0` failures, in the first 5 of 703 steps:
+Runs after `corehost.sh` (chain step 19): same tree
+(`m612/src/runtime-8.0.0-native`, patches 0001–0007), same version headers
+in `artifacts/obj`. The script calls the CMake project of `src/mono` with
+the options `src/mono/mono.proj` uses for `TargetsWindows`:
+`-DMONO_SHARED_LIB_NAME=coreclr` (the host loads the Mono VM as
+`coreclr.dll`), `-DGC_SUSPEND=hybrid`, `-DMONO_COMPONENTS_RID=windows-x64`,
+the mono.proj CPPFLAGS (`-DWIN32 -DWIN64 -DWIN32_THREADS -D_WIN32_WINNT=0x0601
+-DUNICODE -DFD_SETSIZE=1024 -DNVALGRIND …`), plus `-DSTATIC_COMPONENTS=1`
+(debugger, hot_reload, diagnostics_tracing and marshal-ilgen are linked into
+`coreclr.dll` instead of `mono-component-*.dll`). Step `nativelibs` builds
+`src/native/libs`, which on Windows is only `System.IO.Compression.Native`
+(zlib-intel + brotli); System.Globalization.Native is compiled into the
+runtime (it loads Windows' own `icu.dll`), and System.Native and the
+crypto/net shims are Unix-only.
 
-- `src/mono/CMakeLists.txt`'s Windows branch adds MSVC options
-  unconditionally: `/W4 /WX /EHsc /FC` and, for Release, `/Oi /GF /Zi /GL`,
-  `/LTCG /DEBUG /OPT:REF /OPT:ICF /STACK:0x800000`. This is the same pattern
-  as `configurecompiler.cmake`, and needs the same `if(MSVC)` split.
-- `mono/utils/win64.asm` (the only MASM file outside wasm) is built with
-  `ml`, which does not exist. Use `llvm-ml64`, or the GAS/inline-asm
-  equivalent that legacy Mono used on MinGW.
-- Configure finds MinGW's POSIX layer, which an MSVC build never sees:
-  `pthread.h`, `unistd.h`, `sys/time.h`, `semaphore.h`, `pthread_create`,
-  `clock_gettime`, `getopt.h` and others. The resulting `config.h` (59
-  `HAVE_*`) has to be audited against the `HOST_WIN32` code paths. That is
-  the real porting work; the next item is a guess.
-- `MONO_KEYWORD_THREAD` is set to `__declspec (thread)`. MinGW clang wants
-  `__thread` or `-fdeclspec`.
+Patches (`patches/m612/runtime-8.0.0/`):
 
-After those comes the managed half: System.Private.CoreLib for the Mono
-flavor (`src/mono/System.Private.CoreLib`, plus the shared CoreLib sources)
-and the `src/libraries` implementation assemblies (S9). The runtime is
-useless without them.
+| Patch | What |
+|---|---|
+| 0004 mono: build with a MinGW toolchain | MSVC options (`/W4 /WX /EHsc /FC /Oi /GF /Zi /GL`, `/LTCG /DEBUG /OPT:* /STACK`) only with MSVC; MinGW gets `-Wl,--stack,0x800000`, `-static`, no `lib` prefix. `MONO_KEYWORD_THREAD` = `__thread` (clang/MinGW uses native PE TLS). `win64.asm` only with MSVC: with a GNU compiler `mono-context.h`/`mono-threads-coop.c` already use inline asm and `__builtin_unwind_init`, so no MASM (and no llvm-ml) is needed. eglib `G_GNUC_NORETURN` on Windows (clang says `__GNUC_MINOR__` 2, so `eg_unreachable()` is empty). `OS_LIBS` without `.lib`, `--icf=none` for `/OPT:NOICF` |
+| 0005 mono: clear the POSIX configure results on MinGW | configure finds MinGW's POSIX layer; with the patch `config.h` has the same `HAVE_*` set an MSVC build gets (no pthread/unistd/sys/time/dirent/getopt/semaphore, no clock_gettime, mkstemp, vasprintf, struct timeval, tls_model …), so every `HOST_WIN32` path is the one MSVC builds |
+| 0006 System.Globalization.Native: ICU C headers with MinGW | MinGW has no Windows SDK `icu.h`; use ICU's own C headers (MSYS2 `mingw-w64-clang-x86_64-icu`, headers only) with `U_DISABLE_RENAMING`, `U_SHOW_CPLUSPLUS_API 0`, `U_HIDE_DEPRECATED_API` (as `icu.h`). Functions are still resolved from `icu.dll` at run time |
+| 0007 System.IO.Compression.Native, zlib: build with MinGW | `FAST_FAIL_HEAP_METADATA_CORRUPTION` (50) missing from MinGW's `winnt.h`; zlib-intel `crc_folding.c` / `deflate_quick.c` need `-mpclmul -msse4.2` (used after the CPUID check, as in zlib-intel's own Makefile); PDB install only with MSVC; windres needs `VER_FILEDESCRIPTION_STR` quoted once more |
+
+No component needed MSVC-only constructs: the `_MSC_VER` code in `src/mono`
+(MSVC inline asm, `__assume`, `#pragma` exports for x86) all has a GNU
+branch, which is the one legacy Mono used on MinGW.
+
+Output (`m612/mono-8.0.0`):
+
+- `lib/coreclr.dll` (4.2 MB with `--strip-debug`; 25 MB with `-g` in
+  `build/mono-8.0.0/mono/mono/mini/`). Imports: KERNEL32, USER32, SHELL32,
+  ole32, OLEAUT32, WS2_32, WINMM, bcrypt and the `api-ms-win-crt-*` UCRT;
+  exports `coreclr_initialize`/`_execute_assembly`/`_shutdown(_2)`/
+  `_create_delegate`/`_set_error_writer` and the `mono_*` embedding API;
+  has a `.tls` section.
+- `lib/libmonosgen-2.0.a`, `lib/libmono-component-*-static.a`,
+  `lib/coreclr.import.lib` (import library), `include/mono-2.0/`.
+- `bin/mono-sgen.exe` (the Mono driver, statically linked).
+- `libs/System.IO.Compression.Native.dll` (+ `.dll.a`, static `.a`): the
+  18 exports of its `.def`, imports only KERNEL32 and the UCRT, version
+  resource "System.IO.Compression.Native".
+
+Tests (`mono-runtime.sh test`):
+
+```
+$ ziptest.exe          # tests/mono/ziptest.c against System.IO.Compression.Native.dll
+deflate level 6: 200000 -> 5461 -> 200000 bytes
+deflate level 1: 200000 -> 5461 -> 200000 bytes
+deflate level 9: 200000 -> 5007 -> 200000 bytes
+crc32("123456789") = cbf43926 (expect cbf43926)
+brotli: 200000 -> 3597 -> 200000 bytes
+OK
+$ mono-8.0.0/bin/mono-sgen.exe --version
+Mono JIT compiler version 8.0.0.0 (8.0.0)
+	TLS:           __thread
+	SIGSEGV:       normal
+	Architecture:  amd64
+	Misc:          softdebug
+	Interpreter:   yes
+	Suspend:       hybrid
+	GC:            sgen (concurrent by default)
+$ MONO_LOG_LEVEL=debug MONO_LOG_MASK=asm fakeroot/dotnet.exe apphost-test.dll
+#   fakeroot/shared/Microsoft.NETCore.App/8.0.31 = hostpolicy.dll + coreclr.dll (Mono) + deps.json
+Mono: netcore preload hook: did not find 'System.Private.CoreLib'.
+Mono: Assembly Loader probing location: 'System.Private.CoreLib.dll'.
+* Assertion at .../src/mono/mono/metadata/assembly.c:2718, condition `corlib' not met
+  trace: CoreCLR path = '...\shared\Microsoft.NETCore.App\8.0.31\coreclr.dll'
+         Loaded library from ...\shared\Microsoft.NETCore.App\8.0.31\coreclr.dll
+```
+
+Before this step the host stopped at "Could not resolve CoreCLR path". Now
+hostpolicy loads `coreclr.dll`, calls `coreclr_initialize`, Mono starts up
+(GC, threads, TLS, JIT init) and asks for System.Private.CoreLib.
+
+Not verified yet, because it needs CoreLib: JIT-compiled managed code,
+exception handling through JIT frames (unwind info registered with
+`RtlAddGrowableFunctionTable`), hybrid suspend, `__thread` across
+threads, and ICU through `icu.dll`. The build log has 214 `-Wformat`
+warnings (`%u` for `DWORD`, the same size on LLP64) and a few minor ones;
+none were made errors upstream.
 
 ### 6.4 MSBuild (`bootstrap/m612/msbuild.sh 17.8.49 <csc.exe> 4.12.0`)
 
@@ -618,6 +676,7 @@ in 2021 (dotnet/msbuild#6058):
 | Newtonsoft.Json `Src/Newtonsoft.Json/Dynamic.snk` | key pair (data) | **no**, deleted; public-signed with the public key text from its `AssemblyInfo.cs` | — |
 | Public keys `adb9793829ddae60` (Microsoft.Extensions), `30ad4fe6b2a6aeed` (Newtonsoft), ECMA `b77a5c561934e089` | public-key blobs (data) | yes | taken from `PublicKey=` *text* in the runtime / Newtonsoft sources, and the 16-byte ECMA-335 pseudo key |
 | `ILMerge` (NuGet.Build.Tasks.Pack), `Microsoft.DotNet.ApiCompat.Task` (SDK project ref), `Microsoft.CodeAnalysis.NetAnalyzers`, SourceLink, workload packs | prebuilt tools/packages | **no**, not built / disabled | pack, API compat, analyzers and SourceLink are not needed to build projects |
+| MSYS2 `mingw-w64-clang-x86_64-icu` 78.3 headers (`unicode/*.h`) | C headers of an upstream MSYS2 package | yes, compile-time only (patch 0006) | trusted by the 2026-10-08 policy; stand in for the Windows SDK `icu.h`. No ICU code is linked; the runtime loads Windows' own `icu.dll` |
 | Windows' own .NET Framework 4.8 (`C:\Windows\Microsoft.NET`) | OS component | **no**, all paths redirected to Mono; verified by a `-v:diag` grep | out-of-proc MSBuild nodes and directly started `csc.exe` would use it, so we avoid both |
 
 Nothing was stopped for: every binary that came up was either part of the
@@ -642,7 +701,18 @@ trusted seed, deleted, or avoided.
 3. **Runtime decision (S10).** Try the **Mono flavor** of dotnet/runtime 8.0
    with MinGW (CLANG64 and UCRT64) before attempting CoreCLR. In parallel,
    build `corehost` (dotnet.exe/hostfxr/hostpolicy) with MinGW, which looks
-   cheap. *(Done: §6.8. Mono-flavor configure probe also in §6.8.)*
+   cheap. *(Done: host §6.8, Mono native runtime §6.9.)*
+3b. **S9 for the Mono flavor.** `src/mono/System.Private.CoreLib` (the
+   shared `src/libraries/System.Private.CoreLib/src/*.projitems` plus the
+   Mono part) with the direct-csc driver: defines `TARGET_WINDOWS`,
+   `TARGET_AMD64`, `TARGET_64BIT`, `MONO`, the `FEATURE_*` of the Mono
+   csproj; `Strings.resx` → SR via ResxGen; the CoreLib source generators
+   (LibraryImportGenerator is built already, EventSourceGenerator is not);
+   CoreLib's icall signatures must match this exact runtime tree. Then the
+   `src/libraries/*/src` implementation assemblies for `net8.0-windows`,
+   and a `shared/Microsoft.NETCore.App/<ver>` layout (coreclr.dll,
+   hostpolicy.dll, System.IO.Compression.Native.dll, CoreLib, libraries,
+   `Microsoft.NETCore.App.deps.json`, `.runtimeconfig.json`).
 4. CoreCLR on CLANG64 remains the long pole:
    - a CMake branch for the GNU-on-Windows toolchain;
    - UASM or `llvm-ml` for the 24 MASM files;
@@ -653,8 +723,8 @@ trusted seed, deleted, or avoided.
 
 Everything up to here is managed code compiled by our own Roslyn on Mono,
 and the result is an SDK that builds net472 *and compiles* net8.0 projects
-on Mono. The next stages produce the .NET runtime itself, and that is the
-first hard blocker:
+on Mono. The next stages produce the .NET runtime itself. The native part of
+the Mono flavor is done (§6.9); CoreCLR is the hard one:
 
 - **S9 (System.Private.CoreLib + libraries src for net8.0-windows)** is
   compile-feasible with the same driver (the libraries are C# with source
