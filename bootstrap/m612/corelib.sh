@@ -94,6 +94,10 @@ EOF
     local xs=(); mapfile -t xs < <(cd "$pd" && csproj_items "${PROPS[@]}" -p FeaturePerfTracing=true --kind ILLink${k}Xmls System.Private.CoreLib.csproj 2>/dev/null | sed "s|^\([^/A-Za-z]\)|\1|; s|^\([^A-Za-z]:\)|\1|")
     for kind in "${!xs[@]}"; do [[ ${xs[$kind]} == /* || ${xs[$kind]} =~ ^[A-Za-z]: ]] || xs[$kind]=$pd/${xs[$kind]}; done
     python3 -S "$M612_TOOLS_SRC/illinkxml.py" combine "$o/ILLink.$k.xml" "${xs[@]}" | sed 's/^/  /'
+    if [ "$FLAVOR" = coreclr ] && [ $k = Descriptors ]; then
+      runtime_roots "$o" "${dl[*]}" && illink+=(-resource:"$o/ILLink.Descriptors.xml,ILLink.Descriptors.xml")
+      continue
+    fi
     [ -f "$o/ILLink.$k.xml" ] && illink+=(-resource:"$o/ILLink.$k.xml,ILLink.$k.xml")
   done
   local A=$PKGDIR/analyzers
@@ -113,6 +117,30 @@ EOF
     "$o/AssemblyInfo.g.cs" "$o/SR.g.cs" "$B/gen/NativeRuntimeEventSource.$EVNAME.cs" "${items[@]}" || die "CoreLib failed ($B/obj/System.Private.CoreLib.log)"
   if [ "$FLAVOR" = coreclr ]; then fcallrva "$O/System.Private.CoreLib.dll"; fi
   ls -l "$O/System.Private.CoreLib.dll"
+}
+
+# CoreCLR's CoreLib embeds the runtime roots for ILLink (CreateRuntimeRootILLinkDescriptorFile.targets):
+# the types/methods/fields the VM binds by name (vm/corelib.h, namespace.h, rexcep.h, cortypeinfo.h) plus the
+# shared descriptors, written by ILLink.Tasks' CreateRuntimeRootILLinkDescriptorFile (built from source,
+# illink-net8.sh) run by the source-built SDK's MSBuild. Without them a trimmed app loses System.__Canon & co.
+runtime_roots() { # runtime_roots <objdir> <defines>
+  local o=$1 defs=$2 sdk=$M612/dotnet-sdk-8.0.131-net8 cl=$SRC/src/coreclr ill=$SRC/src/coreclr/System.Private.CoreLib/src/ILLink
+  local tasks; tasks=$(ls "$M612"/illink-$RT_VER-net8/microsoft.net.illink.tasks/*/tools/net8.0/ILLink.Tasks.dll | head -1)
+  python3 -S "$M612_TOOLS_SRC/illinkxml.py" combine "$o/ILLink.Descriptors.Combined.xml" \
+    "$ill/ILLink.Descriptors.Shared.xml" "$ill/ILLink.Descriptors.Windows.xml" "$L/System.Private.CoreLib/src/ILLink/ILLink.Descriptors.Shared.xml" | sed 's/^/  /'
+  cat > "$o/runtimeroots.proj" <<EOP
+<Project>
+  <UsingTask TaskName="CreateRuntimeRootILLinkDescriptorFile" AssemblyFile="$(cygpath -m "$tasks")" />
+  <Target Name="Build">
+    <CreateRuntimeRootILLinkDescriptorFile NamespaceFilePath="$(cygpath -m "$cl/vm/namespace.h")"
+      MscorlibFilePath="$(cygpath -m "$cl/vm/corelib.h")" CortypeFilePath="$(cygpath -m "$cl/inc/cortypeinfo.h")"
+      RexcepFilePath="$(cygpath -m "$cl/vm/rexcep.h")" ILLinkTrimXmlFilePath="$(cygpath -m "$o/ILLink.Descriptors.Combined.xml")"
+      DefineConstants="${defs// /;};FOR_ILLINK" RuntimeRootDescriptorFilePath="$(cygpath -m "$o/ILLink.Descriptors.xml")" />
+  </Target>
+</Project>
+EOP
+  DOTNET_CLI_TELEMETRY_OPTOUT=1 "$sdk/dotnet.exe" msbuild -nologo -v:q "$(cygpath -m "$o/runtimeroots.proj")" || return 1
+  echo "  ILLink.Descriptors.xml: runtime roots, $(grep -c '<type ' "$o/ILLink.Descriptors.xml") types"
 }
 
 # CoreCLR binds [MethodImpl(InternalCall)] methods as FCalls only if they have no IL body
