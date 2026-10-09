@@ -139,6 +139,22 @@ compile_lib() {
     extra+=("$o/SR.g.cs" "$L/Common/src/System/SR.cs" -resource:"$o/FxResources.$n.SR.resources,FxResources.$n.SR.resources")
     nres=1
   fi
+  # eng/illink.targets: ILLink.Descriptors/Substitutions/LinkAttributes.xml embedded (combined), plus the
+  # UseSystemResourceKeys substitution for libraries with string resources (GenerateResourcesSubstitutions)
+  if [ "$kind" = src ] && [ -z "$OOB" ]; then
+    local ik ixs
+    for ik in Descriptors Substitutions LinkAttributes; do
+      ixs=(); mapfile -t ixs < <(sed -n "s/^$ik\t//p" "$P/illink" 2>/dev/null)
+      if [ "$ik" = Substitutions ] && [ $nres = 1 ]; then
+        python3 -S "$M612_TOOLS_SRC/illinkxml.py" resources "$o/ILLink.Resources.Substitutions.xml" \
+          "$SRC/eng/ILLink.Substitutions.Resources.template" "$n" "FxResources.$n.SR"
+        ixs+=("$o/ILLink.Resources.Substitutions.xml")
+      fi
+      [ ${#ixs[@]} -gt 0 ] || continue
+      python3 -S "$M612_TOOLS_SRC/illinkxml.py" combine "$o/ILLink.$ik.xml" "${ixs[@]}" > /dev/null
+      [ -f "$o/ILLink.$ik.xml" ] && extra+=(-resource:"$o/ILLink.$ik.xml,ILLink.$ik.xml")
+    done
+  fi
   local rp rlog rgen rcls
   while IFS=$'\t' read -r rp rlog rgen rcls; do
     [ -n "$rp" ] || continue

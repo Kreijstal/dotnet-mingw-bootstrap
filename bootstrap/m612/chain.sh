@@ -60,3 +60,35 @@ step 22 bash "$here/libraries.sh" "$(R 4.8.0)"
 # 23: shared/Microsoft.NETCore.App/8.0.0 (+ deps.json) in the SDK root; tests a net8.0 hello world and a smoke
 #     test (file IO, LINQ, Regex, JSON, XML, Process, sockets, HttpClient, Reflection.Emit, compression, crypto, VB)
 step 23 env TESTS="hello smoke" bash "$here/framework.sh"
+
+# ---- S11: the SDK's own tools as net8.0 assemblies, on the source-built runtime (docs §6.11) ----
+# 24: out-of-band runtime libraries the tools need (ConfigurationManager, MetadataLoadContext, Pkcs/Xml,
+#     CodeDom, Resources.Extensions, Microsoft.Extensions.*), net8.0, against the reference pack
+OOB_LIBS="System.Configuration.ConfigurationManager System.Diagnostics.EventLog System.Security.Cryptography.ProtectedData
+  System.Reflection.MetadataLoadContext System.Resources.Extensions System.CodeDom System.Security.Cryptography.Pkcs
+  System.Security.Cryptography.Xml System.ServiceProcess.ServiceController Microsoft.Extensions.Primitives
+  Microsoft.Extensions.FileProviders.Abstractions Microsoft.Extensions.FileSystemGlobbing Microsoft.Extensions.DependencyModel
+  Microsoft.Extensions.Logging Microsoft.Extensions.Logging.Abstractions Microsoft.Extensions.Logging.Console Microsoft.Extensions.Options
+  Microsoft.Extensions.DependencyInjection Microsoft.Extensions.DependencyInjection.Abstractions Microsoft.Extensions.Configuration
+  Microsoft.Extensions.Configuration.Abstractions Microsoft.Extensions.Configuration.Binder Microsoft.Extensions.Options.ConfigurationExtensions
+  Microsoft.Extensions.Logging.Configuration"
+step 24 env OOB="$OOB_LIBS" bash "$here/libraries.sh" "$(R 4.8.0)" plan gens build report
+# 25: the generators the reference pack ships that S9 did not need (System.Text.Json, JSImport), then the pack
+#     again with analyzers/dotnet/cs; the runtime pack for self-contained publish
+step 25 bash "$here/netfx-pkgs.sh" "$(R 4.8.0)" "$M612/pkgs" System.Text.Json.SourceGeneration Microsoft.Interop.JavaScript.JSImportGenerator
+step 26 bash "$here/refpack.sh" "$(R 4.8.0)" pack
+# 27-28: Roslyn 4.8 (csc.dll, vbc.dll, VBCSCompiler.dll) and MSBuild 17.8 (MSBuild.dll) for net8.0
+step 27 bash "$here/roslyn-net8.sh" 4.8.0
+step 28 bash "$here/msbuild-net8.sh" 17.8.49
+step 29 bash "$here/roslyn-net8.sh" 4.8.0 tasks
+# 30-32: Newtonsoft.Json, HostModel, Releases, System.CommandLine, ApplicationInsights; NuGet 6.8; TemplateEngine
+step 30 bash "$here/clideps-net8.sh"
+step 31 bash "$here/nuget-net8.sh" 6.8.2.3
+step 32 bash "$here/clideps-net8.sh" templating
+# 33-35: SourceLink, the SDK (resolvers, CLI with dotnet.dll, Microsoft.NET.Build.Tasks), ILLink
+step 33 bash "$here/sourcelink-net8.sh"
+step 34 bash "$here/sdk-net8.sh"
+step 35 bash "$here/illink-net8.sh"
+# 36-37: dotnet-sdk-8.0.131-net8 (upstream layout) and the end-to-end proof (no Mono 6.12 involved)
+step 36 bash "$here/sdk-layout-net8.sh"
+step 37 bash "$here/sdk-net8-test.sh"

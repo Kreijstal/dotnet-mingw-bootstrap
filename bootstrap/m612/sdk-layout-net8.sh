@@ -8,6 +8,7 @@
 #                                                                           mono-based SDK root)
 #   <root>/sdk/8.0.131/  dotnet.dll + CLI libraries, MSBuild.dll + targets, NuGet, Roslyn/(bincore),
 #                        Sdks/, SdkResolvers/, BundledVersions.props, RID graphs, trustedroots
+#   <root>/library-packs/     Microsoft.NET.ILLink.Tasks 8.0.0 (illink-net8.sh), a restore source the SDK adds itself
 #   <root>/templates/8.0.131/  the common project/item templates (nupkgs zipped from source;
 #                              step layout recreates <root>, so run templates after it)
 #
@@ -93,8 +94,15 @@ add = """    <NetCoreRoot Condition="'$(NetCoreRoot)' == ''">$([MSBuild]::Normal
     <EnableNETAnalyzers Condition="'$(EnableNETAnalyzers)' == ''">false</EnableNETAnalyzers>
 """
 s = s.replace('  </PropertyGroup>', add + '  </PropertyGroup>', 1)
+# the ILLink package (illink-net8.sh) the SDK references implicitly for PublishTrimmed/IsTrimmable
+if '<KnownILLinkPack ' not in s:
+    s = s.replace('</Project>', '  <ItemGroup>\n    <KnownILLinkPack Include="Microsoft.NET.ILLink.Tasks" TargetFramework="net8.0" ILLinkPackVersion="8.0.0" />\n  </ItemGroup>\n</Project>')
 open(p, 'w', newline='\n').write(s)
 EOPY
+  # <root>/library-packs: a restore source the SDK adds by itself (Microsoft.NET.NuGetOfflineCache.targets)
+  if [ -f "$M612/illink-8.0.0-net8/Microsoft.NET.ILLink.Tasks.8.0.0.nupkg" ]; then
+    mkdir -p "$ROOT/library-packs"; cp "$M612/illink-8.0.0-net8/Microsoft.NET.ILLink.Tasks.8.0.0.nupkg" "$ROOT/library-packs/"
+  fi
   mkdir -p "$SDK/trustedroots" "$SDK/Current/SolutionFile/ImportAfter"
   cp "$S"/src/Layout/redist/trustedroots/*.pem "$SDK/trustedroots/"
   cp "$S/src/Layout/redist/MSBuildImports/Current/SolutionFile/ImportAfter/Microsoft.NuGet.ImportAfter.targets" "$SDK/Current/SolutionFile/ImportAfter/"

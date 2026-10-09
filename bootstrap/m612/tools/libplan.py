@@ -75,6 +75,7 @@ def evaluate(n, proj, tfm_, tpi, seed=None):
     # the library's own Directory.Build.props (StrongNameKeyId, ...), without its imports
     dbp = os.path.join(os.path.dirname(os.path.dirname(proj)), 'Directory.Build.props')
     if os.path.exists(dbp): ev.load(dbp, kinds, False)
+    ev.props['ILLinkDirectory'] = os.path.dirname(proj).replace('\\', '/') + '/ILLink/'   # eng/illink.targets default
     ev.load(proj, kinds, True)
     return ev
 
@@ -172,6 +173,17 @@ for n in (oob if oob is not None else names):
     open(d + '/attributes', 'w', newline='\n').write(''.join(x + '\n' for x in aa))
     open(d + '/omit', 'w', newline='\n').write(''.join(x + '\n' for x, _ in ev.items.get('GenFacadesOmitType', [])))
     open(d + '/warnings', 'w', newline='\n').write(''.join(w + '\n' for w in ev.warnings))
+    # eng/illink.targets: ILLink XMLs embedded into the assembly (kind<TAB>path, existing files only)
+    ild = os.path.join(os.path.dirname(proj), 'ILLink')
+    il = []
+    for kind in ('Descriptors', 'Substitutions', 'LinkAttributes'):
+        xs = [x for x, _ in ev.items.get('ILLink%sXmls' % kind, [])]
+        if kind == 'Descriptors' and not xs and pr.get('ILLinkDescriptorsXml'): xs = [pr['ILLinkDescriptorsXml']]
+        if kind == 'Descriptors' and not xs: xs = [os.path.join(ild, 'ILLink.Descriptors.xml')]
+        for x in xs:
+            x = x if os.path.isabs(x) else os.path.join(os.path.dirname(proj), x)
+            if os.path.exists(x): il.append('%s\t%s' % (kind, os.path.normpath(x).replace('\\', '/')))
+    open(d + '/illink', 'w', newline='\n').write(''.join(x + '\n' for x in il))
     plan[n] = (kind, tf); deps[n] = dl
 
 # build order (ProjectReferences between implementation assemblies)

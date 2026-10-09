@@ -10,15 +10,16 @@
 #   roslyncore  a nontrivial project: Microsoft.CodeAnalysis 4.8 (~1500 files) as an SDK-style
 #             net8.0 library; the result replaces the compiler's own copy and compiles hello again
 #   selfcontained  dotnet publish -r win-x64 --self-contained (runtime pack), the exe runs alone
+#   trimmed   dotnet publish -p:PublishTrimmed=true (ILLink from source), the trimmed exe runs
 #   generators  [GeneratedRegex]/[LibraryImport]/[JsonSerializable] through the reference pack's generators
 #   mono      the same new/roslyncore builds with the mono-based SDK (mono MSBuild.exe), for timings
 # Each step prints wall-clock times ("TIME <what> <seconds>").
 #
-# usage: sdk-net8-test.sh [step...]   (default: info new pkgref multi roslyncore generators selfcontained)
+# usage: sdk-net8-test.sh [step...]   (default: info new pkgref multi roslyncore generators selfcontained trimmed)
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 . "$here/../env-m612.sh"
-steps=${*:-info new pkgref multi roslyncore generators selfcontained}
+steps=${*:-info new pkgref multi roslyncore generators selfcontained trimmed}
 ROOT=${ROOT:-$M612/dotnet-sdk-8.0.131-net8}
 D=$ROOT/dotnet.exe
 T=$M612/test/sdk-net8
@@ -98,6 +99,15 @@ step_selfcontained() {
   local P=bin/Release/net8.0/win-x64/publish
   echo "publish: $(ls "$P" | wc -l) files, $(du -sh "$P" | cut -f1)"; ls "$P" | grep -i 'sc\.\|coreclr\|host\|CoreLib'
   ( unset DOTNET_ROOT; PATH=/usr/bin; "$P/sc.exe" )
+}
+# PublishTrimmed: the ILLink package from <root>/library-packs (illink-net8.sh), illink.dll on the runtime
+step_trimmed() {
+  local W=$T/trimmed; rm -rf "${W:?}"; mkdir -p "$W"; cd "$W"
+  "$D" new console -o tr > /dev/null; cd tr
+  timed "dotnet publish -p:PublishTrimmed=true" "$D" publish -c Release -r win-x64 --self-contained -p:PublishTrimmed=true
+  local P=bin/Release/net8.0/win-x64/publish
+  echo "trimmed publish: $(ls "$P" | wc -l) files, $(du -sh "$P" | cut -f1) (untrimmed: see selfcontained)"
+  ( unset DOTNET_ROOT; PATH=/usr/bin; "$P/tr.exe" )
 }
 # the mono-based SDK (dotnet-sdk-8.0.131 + mono MSBuild.exe) on the same projects, for the timings
 step_mono() {
