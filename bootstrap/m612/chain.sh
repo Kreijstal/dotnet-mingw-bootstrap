@@ -105,3 +105,11 @@ step 39 bash "$here/corelib-coreclr.sh" "$(cygpath -m "$M612/dotnet-sdk-8.0.131-
 step 40 env TESTS="hello smoke ehstress" bash "$here/framework-coreclr.sh"
 # 41: the end-to-end SDK proof of step 37 on CoreCLR
 step 41 env ROOT="$M612/dotnet-sdk-8.0.131-net8-coreclr" TESTDIR="$M612/test/sdk-net8-coreclr" bash "$here/sdk-net8-test.sh"
+# 42: crossgen2 (ReadyToRun compiler) from source: clrjit_win_x64_x64 + jitinterface_x64 (CLANG64, step 38's tree)
+#     and the managed ILCompiler.* + crossgen2.dll; R2R-compiles a hello app and runs it on step 40's root
+step 42 bash "$here/crossgen2.sh"
+# 43: m612/dotnet-sdk-8.0.131-net8-coreclr-r2r: a copy of step 40's root with the shared framework and the
+#     SDK's managed tools R2R-compiled (one image per assembly, as upstream ships them)
+step 43 bash "$here/crossgen2.sh" r2rroot r2rfx r2rsdk
+# 44: the end-to-end SDK proof on the R2R root
+step 44 env ROOT="$M612/dotnet-sdk-8.0.131-net8-coreclr-r2r" TESTDIR="$M612/test/sdk-net8-coreclr-r2r" bash "$here/sdk-net8-test.sh"
