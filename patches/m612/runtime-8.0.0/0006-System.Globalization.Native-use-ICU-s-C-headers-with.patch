@@ -1,0 +1,60 @@
+From 9e630f32c4f311b859f560d8321d70656083859a Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Fri, 9 Oct 2026 10:29:52 +0200
+Subject: [PATCH 6/7] System.Globalization.Native: use ICU's C headers with
+ MinGW (no icu.h)
+
+On Windows the ICU shim includes the Windows SDK's icu.h, the C API of
+the OS's own icu.dll, which MinGW does not have.  With MinGW include
+ICU's own C headers (MSYS2 icu package; headers only) with
+U_DISABLE_RENAMING (icu.dll exports unversioned names),
+U_SHOW_CPLUSPLUS_API 0 and U_HIDE_DEPRECATED_API (icu.h leaves the
+deprecated API out, e.g. UIDNA_ALLOW_UNASSIGNED which pal_idna.c defines
+itself).  The functions are still resolved from icu.dll at run time.
+---
+ .../pal_icushim_internal.h                    | 28 +++++++++++++++++++
+ 1 file changed, 28 insertions(+)
+
+diff --git a/src/native/libs/System.Globalization.Native/pal_icushim_internal.h b/src/native/libs/System.Globalization.Native/pal_icushim_internal.h
+index 9b5fd1a..c738604 100644
+--- a/src/native/libs/System.Globalization.Native/pal_icushim_internal.h
++++ b/src/native/libs/System.Globalization.Native/pal_icushim_internal.h
+@@ -45,7 +45,35 @@
+ 
+ #elif defined(TARGET_WINDOWS)
+ 
++#if defined(__MINGW32__)
++// MinGW has no Windows SDK icu.h (the single-header C API of Windows' own
++// icu.dll). Use ICU's own C headers instead, with unversioned names like the
++// exports of icu.dll; the functions are still resolved at run time below.
++#define U_DISABLE_RENAMING 1
++#define U_SHOW_CPLUSPLUS_API 0
++// icu.h leaves out deprecated API too (see UIDNA_ALLOW_UNASSIGNED in pal_idna.c)
++#define U_HIDE_DEPRECATED_API 1
++#include <unicode/ucurr.h>
++#include <unicode/ucal.h>
++#include <unicode/uchar.h>
++#include <unicode/ucol.h>
++#include <unicode/udat.h>
++#include <unicode/udata.h>
++#include <unicode/udatpg.h>
++#include <unicode/uenum.h>
++#include <unicode/uidna.h>
++#include <unicode/uldnames.h>
++#include <unicode/ulocdata.h>
++#include <unicode/unorm2.h>
++#include <unicode/unum.h>
++#include <unicode/ures.h>
++#include <unicode/usearch.h>
++#include <unicode/utf16.h>
++#include <unicode/utypes.h>
++#include <unicode/ustring.h>
++#else
+ #include "icu.h"
++#endif
+ 
+ #define HAVE_SET_MAX_VARIABLE 1
+ #define UDAT_STANDALONE_SHORTER_WEEKDAYS 1
+-- 
+2.55.0
+

@@ -1,0 +1,49 @@
+From 8d0491a25562b2ef33e1e5e866ae672e730c9782 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Fri, 9 Oct 2026 10:30:00 +0200
+Subject: [PATCH 5/7] mono: on MinGW, clear the POSIX configure results so the
+ Windows paths are used
+
+MinGW ships a POSIX layer (unistd.h, winpthreads, sys/time.h, dirent.h,
+getopt.h, semaphore.h, clock_gettime, vasprintf, ...) that an MSVC build
+never sees, so configure.cmake found ~30 HAVE_* results an MSVC build does
+not have.  The HOST_WIN32 code is written against what MSVC detects;
+clear the POSIX-only results with MinGW so config.h matches an MSVC
+config.h (pthread_*, POSIX headers, clock_gettime/CLOCK_MONOTONIC,
+mkstemp/mkdtemp, ftruncate, popen, execv/execve, rewinddir, vasprintf,
+strndup, struct timeval, tls_model, GNU strerror_r).
+---
+ src/mono/cmake/configure.cmake | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+
+diff --git a/src/mono/cmake/configure.cmake b/src/mono/cmake/configure.cmake
+index 0137831..eced395 100644
+--- a/src/mono/cmake/configure.cmake
++++ b/src/mono/cmake/configure.cmake
+@@ -247,6 +247,23 @@ if(HOST_WIN32)
+   set(HAVE_STRUCT_SOCKADDR_IN6 1)
+   set(HAVE_STRTOK_R 1)
+   set(HAVE_EXECVP 0)
++  if(NOT MSVC)
++    # MinGW ships a POSIX layer (unistd.h, winpthreads, sys/time.h, dirent.h,
++    # getopt.h, ...) that an MSVC build never sees, so the checks above find
++    # it. The Windows code paths (HOST_WIN32) are written against what MSVC
++    # detects; select those by clearing the POSIX-only results.
++    foreach(v
++        STRINGS_H UNISTD_H SEMAPHORE_H SYS_PARAM_H SYS_TIME_H UTIME_H UNWIND_H
++        DIRENT_H GETOPT_H PTHREAD_H
++        PTHREAD_GETNAME_NP PTHREAD_SETNAME_NP PTHREAD_COND_TIMEDWAIT_RELATIVE_NP
++        PTHREAD_KILL PTHREAD_ATTR_SETSTACKSIZE PTHREAD_GET_STACKADDR_NP
++        DECL_PTHREAD_MUTEXATTR_SETPROTOCOL
++        CLOCK_GETTIME CLOCK_MONOTONIC CLOCK_MONOTONIC_COARSE
++        MKSTEMP MKDTEMP FTRUNCATE POPEN EXECV EXECVE REWINDDIR VASPRINTF STRNDUP
++        STRUCT_TIMEVAL TLS_MODEL_ATTR GNU_STRERROR_R)
++      set(HAVE_${v} 0)
++    endforeach()
++  endif()
+ elseif(HOST_IOS OR HOST_TVOS)
+   set(HAVE_SYSTEM 0)
+   set(HAVE_SYS_USER_H 0)
+-- 
+2.55.0
+
