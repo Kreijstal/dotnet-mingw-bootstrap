@@ -23,3 +23,5 @@ Convert: xxd -r -p NAME.pubkey.hex > NAME.snk
                               (StrongNameKeyId SilverlightPlatform); from the PublicKey text in
                               runtime-8.0.0 System.Private.DataContractSerialization Globals.cs
                               (FullSRSInternalsVisiblePattern), token verified
+  Cecil-50cebf1cceb9d05e      Mono.Cecil* (dotnet/cecil, for illink); from the Consts.PublicKey text in
+                              Mono.Cecil/Consts.cs, token verified (the in-repo cecil.snk key pair is not used)

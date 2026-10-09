@@ -23,8 +23,10 @@
 #               the Microsoft.NETCore.App.Ref pack (default: LibraryImport + COM, built from source
 #               by netfx-pkgs.sh against Roslyn 4.8, so compile with that Roslyn)
 SP_TF=${SP_TF:-net8.0}
-SP_GENERATORS=${SP_GENERATORS:-Microsoft.Interop.SourceGeneration Microsoft.Interop.LibraryImportGenerator Microsoft.Interop.ComInterfaceGenerator}
+SP_GENERATORS=${SP_GENERATORS:-Microsoft.Interop.SourceGeneration Microsoft.Interop.LibraryImportGenerator Microsoft.Interop.ComInterfaceGenerator
+  System.Text.RegularExpressions.Generator System.Text.Json.SourceGeneration}
 sp_prop() { sed -n "s/^$1=//p" "$SP_O/props"; }
+sp_true() { local v; v=$(sp_prop "$1"); [ "${v,,}" = true ]; }      # MSBuild booleans are case-insensitive
 SP_REG=$M612/build/sdkproj/registry.tsv
 sp_prefs() { # the outputs of the transitive ProjectReferences of $SP_O (from the registry)
   [ -f "$SP_REG" ] || return 0
@@ -92,9 +94,11 @@ sdkproj() {
   fv=${SP_FILEVER:-$av}; iv=${SP_INFOVER:-$fv}
   local tfa; case $SP_TF in net8.0) tfa='.NETCoreApp,Version=v8.0", FrameworkDisplayName = ".NET 8.0' ;; net6.0) tfa='.NETCoreApp,Version=v6.0", FrameworkDisplayName = ".NET 6.0' ;; *) tfa='.NETStandard,Version=v2.0", FrameworkDisplayName = ".NET Standard 2.0' ;; esac
   {
-    printf '[assembly: System.Reflection.AssemblyVersion("%s")]\n[assembly: System.Reflection.AssemblyFileVersion("%s")]\n' "$av" "$fv"
-    printf '[assembly: System.Reflection.AssemblyInformationalVersion("%s+m612.bootstrap.from.source")]\n' "$iv"
-    printf '[assembly: System.Reflection.AssemblyTitle("%s")]\n[assembly: System.Reflection.AssemblyProduct("%s")]\n' "$an" "$an"
+    if [ "$(sp_prop GenerateAssemblyInfo | tr A-Z a-z)" != false ]; then
+      printf '[assembly: System.Reflection.AssemblyVersion("%s")]\n[assembly: System.Reflection.AssemblyFileVersion("%s")]\n' "$av" "$fv"
+      printf '[assembly: System.Reflection.AssemblyInformationalVersion("%s+m612.bootstrap.from.source")]\n' "$iv"
+      printf '[assembly: System.Reflection.AssemblyTitle("%s")]\n[assembly: System.Reflection.AssemblyProduct("%s")]\n' "$an" "$an"
+    fi
     printf '[assembly: System.Runtime.Versioning.TargetFramework("%s")]\n' "$tfa"
   } > "$SP_O/AssemblyInfo.g.cs"
   # InternalsVisibleTo items (key of the friend = our key, as upstream signs everything with it)
@@ -109,10 +113,12 @@ sdkproj() {
   local target=library ext=dll; case $(sp_prop OutputType) in Exe|exe|WinExe) target=exe ;; esac
   local nullable; nullable=$(sp_prop Nullable); nullable=${nullable:-disable}
   local lv; lv=$(sp_prop LangVersion); case $lv in ''|latest|preview|default|Latest|Preview) lv=${SP_LANGVERSION:-12} ;; esac
-  local unsafe=(); [ "$(sp_prop AllowUnsafeBlocks)" = true ] && unsafe=(-unsafe)
+  local unsafe=(); sp_true AllowUnsafeBlocks && unsafe=(-unsafe)
   local nw; nw=$(sp_prop NoWarn | tr -d ' \r' | tr ';' ',' | sed 's/^,*//; s/,*$//; s/,,*/,/g')
   local an_args=() g
   for g in $SP_GENERATORS; do an_args+=(-analyzer:"$M612/pkgs/analyzers/$g.dll"); done
+  # (csc 4.8 on Mono has no System.Buffers 4.0.5.0 for the Regex generator: as in libraries.sh)
+  [[ " $SP_GENERATORS " == *" System.Text.RegularExpressions.Generator "* ]] && an_args+=(-analyzer:"$M612/pkgs/analyzers/System.Buffers.dll")
   if [ ${#an_args[@]} -gt 0 ]; then
     printf 'is_global = true\nbuild_property.TargetFrameworkIdentifier = .NETCoreApp\nbuild_property.TargetFrameworkVersion = v8.0\nbuild_property.RootNamespace = %s\n' "$(sp_prop RootNamespace)" > "$SP_O/build.globalconfig"
     an_args+=(-analyzerconfig:"$SP_O/build.globalconfig")

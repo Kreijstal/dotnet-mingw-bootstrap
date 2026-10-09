@@ -128,8 +128,11 @@ build_one() { # build_one <name> <kind> <csproj> <deps...>
   local sign=(-publicsign -keyfile:"$(keyfile "$key")")
   local tok; tok=$(basename "$(ls "$KEYS/$key"-*.pubkey.hex)" .pubkey.hex); tok=${tok##*-}
   printf '%s %s %s\n' "$n" "$av" "$tok" > "$O/$n.meta"
+  # -runtimemetadataversion: the metadata version string of the corlib (System.Runtime in this set) is
+  # what Roslyn writes into everything compiled against the pack; without it, it is empty and Cecil
+  # (illink) writes broken portable PDBs for such assemblies
   csc "$n" -target:library -nostdlib -noconfig -optimize+ -deterministic -unsafe -nullable:enable -debug- \
-    -out:"$(winpath "$O/$n.dll")" "${sign[@]}" -d:NETCOREAPP -d:NET -d:NET8_0 -d:NET8_0_OR_GREATER -d:NET7_0_OR_GREATER \
+    -runtimemetadataversion:v4.0.30319 -out:"$(winpath "$O/$n.dll")" "${sign[@]}" -d:NETCOREAPP -d:NET -d:NET8_0 -d:NET8_0_OR_GREATER -d:NET7_0_OR_GREATER \
     -d:NET6_0_OR_GREATER -d:NET5_0_OR_GREATER -d:NETCOREAPP3_0_OR_GREATER -d:NETCOREAPP2_0_OR_GREATER -d:TARGETS_WINDOWS \
     -nowarn:CS0618,CS0809,CS3021,CS0067,CS0169,CS0649,CS8597,CS8625,CS8617,CS0436,CS1591,CS0108,CS0114,CS3016,CS8618,CS0672,CS0612,CS8603,CS8600,CS8601,CS8602,CS8604,CS0419,SYSLIB0003,SYSLIB0004 \
     "${dargs[@]}" "${refs[@]}" "$o/AssemblyInfo.g.cs" "${items[@]}" || die "$n failed ($B/obj/$n.log)"

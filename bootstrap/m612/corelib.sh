@@ -77,6 +77,15 @@ step_compile() {
 EOF
   printf 'is_global = true\nbuild_property.TargetFrameworkIdentifier = .NETCoreApp\nbuild_property.TargetFrameworkVersion = v%s\nbuild_property.LibraryImportGenerator_UseMarshalType = true\n' \
     "${TFM#net}" > "$o/build.globalconfig"
+  # eng/illink.targets: the combined ILLink descriptors/substitutions/link attributes, embedded so
+  # that trimming an app (PublishTrimmed) keeps what the runtime needs (System.TypedReference, ...)
+  local k kind illink=()
+  for k in Descriptors Substitutions LinkAttributes; do
+    local xs=(); mapfile -t xs < <(cd "$pd" && csproj_items "${PROPS[@]}" -p FeaturePerfTracing=true --kind ILLink${k}Xmls System.Private.CoreLib.csproj 2>/dev/null | sed "s|^\([^/A-Za-z]\)|\1|; s|^\([^A-Za-z]:\)|\1|")
+    for kind in "${!xs[@]}"; do [[ ${xs[$kind]} == /* || ${xs[$kind]} =~ ^[A-Za-z]: ]] || xs[$kind]=$pd/${xs[$kind]}; done
+    python3 -S "$M612_TOOLS_SRC/illinkxml.py" combine "$o/ILLink.$k.xml" "${xs[@]}" | sed 's/^/  /'
+    [ -f "$o/ILLink.$k.xml" ] && illink+=(-resource:"$o/ILLink.$k.xml,ILLink.$k.xml")
+  done
   local A=$PKGDIR/analyzers
   # csc on Mono does not create the -generatedfilesout subdirectories itself
   mkdir -p "$o/generated/Microsoft.Interop.LibraryImportGenerator/Microsoft.Interop.LibraryImportGenerator" \
@@ -90,7 +99,7 @@ EOF
     -analyzer:"$A/Microsoft.Interop.SourceGeneration.dll" -analyzer:"$A/Microsoft.Interop.LibraryImportGenerator.dll" \
     -analyzer:"$A/System.Private.CoreLib.Generators.dll" -analyzerconfig:"$o/build.globalconfig" \
     -generatedfilesout:"$o/generated" \
-    -resource:"$o/System.Private.CoreLib.Strings.resources,System.Private.CoreLib.Strings.resources" \
+    -resource:"$o/System.Private.CoreLib.Strings.resources,System.Private.CoreLib.Strings.resources" "${illink[@]}" \
     "$o/AssemblyInfo.g.cs" "$o/SR.g.cs" "$B/gen/NativeRuntimeEventSource.Mono.cs" "${items[@]}" || die "CoreLib failed ($B/obj/System.Private.CoreLib.log)"
   ls -l "$O/System.Private.CoreLib.dll"
 }
