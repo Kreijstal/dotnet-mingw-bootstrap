@@ -3,7 +3,12 @@
 libraries (dotnet/runtime src/libraries/NetCoreAppLibrary.props) for one
 target OS, and write what a direct csc build needs.
 
-usage: libplan.py <runtime-src-root> <tfm e.g. net8.0> <outdir>
+usage: libplan.py <runtime-src-root> <tfm e.g. net8.0> <outdir> [names]
+
+names (optional, comma/space separated): plan these out-of-band libraries
+(src/libraries/<Name>/src, not part of Microsoft.NETCore.App) instead of the
+shared framework; they compile against the whole reference pack (the SDK's
+implicit framework reference), see libraries.sh OOB=.
 
 For every shared-framework assembly (System.Private.CoreLib excluded, it is
 built by corelib.sh) this picks the project and the target framework the
@@ -38,6 +43,7 @@ netfx = re.search(r'<NetFxReference>(.*?)</NetFxReference>', t, re.S).group(1)
 names = [x.strip() for x in re.search(r'<NetCoreAppLibrary>(.*?)</NetCoreAppLibrary>', t, re.S).group(1)
          .replace('$(NetFxReference)', netfx).split(';') if x.strip()]
 netcoreapp = ';'.join(names) + ';'
+oob = [x for x in re.split(r'[,\s]+', sys.argv[4]) if x] if len(sys.argv) > 4 else None
 gens = [x.strip() for x in re.search(r'<NetCoreAppLibraryGenerator>(.*?)</NetCoreAppLibraryGenerator>', t, re.S).group(1).split(';') if x.strip()]
 
 def base_props(n, tfm_, tpi):
@@ -57,9 +63,11 @@ def base_props(n, tfm_, tpi):
     }
     return p
 
-def evaluate(n, proj, tfm_, tpi):
+def evaluate(n, proj, tfm_, tpi, seed=None):
     p = base_props(n, tfm_, tpi)
     ev = ci.Evaluator(p, list(p.keys()))
+    if seed:   # SDK default Compile items, present before the project so its Compile Remove applies
+        ev.items['Compile'] = [(f, {}) for f in seed]
     ev.props.setdefault('MSBuildProjectDirectory', os.path.dirname(proj))
     ev.props['AssemblyName'] = n
     kinds = {'Compile', 'EmbeddedResource', 'None', 'Content'}
@@ -82,7 +90,7 @@ def pick_tfm(n, proj):
 
 os.makedirs(out + '/p', exist_ok=True)
 plan, skipped, deps = {}, [], {}
-for n in names:
+for n in (oob if oob is not None else names):
     if n == 'System.Private.CoreLib': continue
     srcp = '%s/%s/src/%s.csproj' % (L, n, n)
     shimp = '%s/shims/%s/src/%s.csproj' % (L, n, n)
@@ -106,7 +114,15 @@ for n in names:
     pr = ev.props
     # SDK default items (EnableDefaultItems is false for dotnet/runtime, the shims and a few projects turn it on)
     comp = [os.path.normpath(x).replace('\\', '/') for x, _ in ev.items.get('Compile', [])]
-    if kind == 'shim' or pr.get('EnableDefaultItems', '').lower() == 'true' or pr.get('EnableDefaultCompileItems', '').lower() == 'true':
+    if kind != 'shim' and (pr.get('EnableDefaultItems', '').lower() == 'true' or pr.get('EnableDefaultCompileItems', '').lower() == 'true'):
+        import glob
+        pd = os.path.dirname(proj)
+        seed = [os.path.normpath(f).replace('\\', '/') for f in sorted(glob.glob(pd + '/**/*.cs', recursive=True))
+                if os.path.relpath(f, pd).replace('\\', '/').split('/')[0] not in ('bin', 'obj')]
+        ev = evaluate(n, proj, tf, tpi, seed)
+        pr = ev.props
+        comp = [os.path.normpath(x).replace('\\', '/') for x, _ in ev.items.get('Compile', [])]
+    elif kind == 'shim':
         import glob
         pd = os.path.dirname(proj)
         rem = set(os.path.normpath(x) for x, _ in ev.items.get('Compile', []))

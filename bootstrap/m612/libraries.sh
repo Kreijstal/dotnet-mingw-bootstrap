@@ -17,6 +17,10 @@
 #
 # usage: libraries.sh <csc.exe> [step...]    (default: plan gens build vb report)
 #   ONLY="A B" builds just those (and rebuilds them); REBUILD=1 rebuilds all
+#   OOB="A B ..." out-of-band mode: build those src/libraries packages (not in the
+#     shared framework; e.g. System.Configuration.ConfigurationManager for the SDK's
+#     net8.0 tools) into $M612/oob-<ver>/lib, against the whole reference pack plus
+#     each other, with the generators the reference pack ships (LibraryImport, COM)
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 . "$here/../env-m612.sh"
@@ -25,8 +29,13 @@ steps=${*:-plan gens build vb report}
 RT_VER=${RT_VER:-8.0.0}; TFM=net${RT_VER%%.*}.0
 SRC=$M612/src/runtime-$RT_VER-native
 L=$SRC/src/libraries
-B=$M612/build/libraries-$RT_VER
-O=${FXOUT:-$M612/netcoreapp-$RT_VER}/lib
+OOB=${OOB:-}
+if [ -n "$OOB" ]; then
+  B=$M612/build/oob-$RT_VER; O=${FXOUT:-$M612/oob-$RT_VER}/lib
+  case " $steps " in *" vb "*) steps=${steps/vb/} ;; esac
+else
+  B=$M612/build/libraries-$RT_VER; O=${FXOUT:-$M612/netcoreapp-$RT_VER}/lib
+fi
 RP=$M612/build/refpack-$RT_VER/out          # reference assemblies (+ .meta: name version token)
 STUBS=$M612/build/refpack-$RT_VER/stubs
 PKGDIR=${PKGDIR:-$M612/pkgs}
@@ -35,7 +44,7 @@ A=$PKGDIR/analyzers
 mkdir -p "$B" "$O"
 COMMIT=$(cat "$SRC/.commit" 2>/dev/null || echo unknown)
 
-step_plan() { python3 -S "$M612_TOOLS_SRC/libplan.py" "$SRC" "$TFM" "$B" | grep -v '^\[fc-sc\]'; }
+step_plan() { python3 -S "$M612_TOOLS_SRC/libplan.py" "$SRC" "$TFM" "$B" ${OOB:+"$OOB"} | grep -v '^\[fc-sc\]'; }
 
 # generator project name -> analyzer dlls (built by netfx-pkgs.sh recipes)
 gen_dlls() {
@@ -47,6 +56,9 @@ gen_dlls() {
     # analyzer path lets Roslyn's analyzer loader resolve the generator's dependency
     System.Text.RegularExpressions.Generator) echo System.Text.RegularExpressions.Generator System.Buffers ;;
     JSImportGenerator) ;;                                   # browser only
+    # [OOB] Microsoft.Extensions.Logging.Configuration/Console turn on the (C# 12 interceptor based)
+    # configuration binding generator; without it the same calls bind through reflection
+    Microsoft.Extensions.Configuration.Binder.SourceGeneration) ;;
     *) die "unknown generator $1" ;;
   esac
 }
@@ -92,6 +104,15 @@ compile_lib() {
     elif [ -f "$O/$rn.dll" ]; then refs+=("-r:$O/$rn.dll")
     else echo "  note: $n: reference $rn not found"; fi
   done < "$P/refs"
+  if [ -n "$OOB" ]; then
+    # implicit framework reference: the whole reference pack, except names built here;
+    # ProjectReferences are transitive in MSBuild: reference every OOB assembly built so far
+    haveinterop=1
+    for d in "$O"/*.dll; do [ -e "$d" ] && [ "$(basename "$d" .dll)" != "$n" ] && refs+=("-r:$d"); done
+    for d in "$RP"/*.dll; do rn=$(basename "$d" .dll); [ -f "$O/$rn.dll" ] || [ "$rn" = "$n" ] || refs+=("-r:$d"); done
+    # de-duplicate (an explicit reference may also be in the pack)
+    mapfile -t refs < <(printf '%s\n' "${refs[@]}" | awk '!seen[$0]++')
+  fi
   if [ "$kind" = shim ]; then
     # checked-in forwards (System, System.Data, mscorlib also forward implementation-only
     # serialization types such as TreeSet<T>): compile against the implementation
@@ -129,7 +150,7 @@ compile_lib() {
   # generators (eng/generators.targets) + the project's own analyzer references
   local gl=() g
   if [ "$kind" = src ] && [ -n "$haveinterop" ] && [ "$(prop "$n" EnableLibraryImportGenerator)" != false ]; then gl+=(LibraryImportGenerator); fi
-  if [ "$kind" = src ] && grep -qx 'ref System.Runtime.InteropServices' "$P/refs"; then gl+=(ComInterfaceGenerator); fi
+  if [ "$kind" = src ] && { grep -qx 'ref System.Runtime.InteropServices' "$P/refs" || [ -n "$OOB" ]; }; then gl+=(ComInterfaceGenerator); fi
   mapfile -t -O "${#gl[@]}" gl < "$P/analyzers"
   local seen=" "
   for g in "${gl[@]}"; do for d in $(gen_dlls "$g"); do
@@ -271,7 +292,7 @@ step_report() {
   while IFS=$'\t' read -r n kind tfm deps; do
     if [ -f "$O/$n.dll" ]; then ok=$((ok+1)); else bad+=("$n"); fi
   done < "$B/plan.tsv"
-  [ -f "$O/Microsoft.VisualBasic.Core.dll" ] && ok=$((ok+1))
+  [ -z "$OOB" ] && [ -f "$O/Microsoft.VisualBasic.Core.dll" ] && ok=$((ok+1))
   echo "built: $ok implementation assemblies + System.Private.CoreLib ($(wc -l < "$B/plan.tsv") C# projects planned + Microsoft.VisualBasic.Core)"
   [ ${#bad[@]} -eq 0 ] || echo "not built: ${bad[*]}"
   echo "skipped by the plan:"; sed 's/^/  /' "$B/skipped.tsv"
