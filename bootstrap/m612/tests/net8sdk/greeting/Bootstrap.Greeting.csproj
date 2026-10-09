@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- a library packed by `dotnet pack` (NuGet.Build.Tasks.Pack from source) into a local feed -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <PackageId>Bootstrap.Greeting</PackageId>
+    <Version>2.0.0</Version>
+    <Authors>dotnet-bootstrap</Authors>
+    <Description>Test package built from source by the source-built SDK.</Description>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+</Project>

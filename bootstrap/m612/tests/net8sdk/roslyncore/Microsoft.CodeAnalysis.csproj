@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- A nontrivial project: Roslyn's Microsoft.CodeAnalysis (4.8.0, ~1500 files) from the tree
+       roslyn.sh prepared ($(RoslynSrc)), as an ordinary SDK-style net8.0 library: GenerateResource
+       for its resx, the Csc task through the compiler server, ~1500 sources. -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <AssemblyName>Microsoft.CodeAnalysis</AssemblyName>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>12</LangVersion>
+    <DefineConstants>$(DefineConstants);COMPILERCORE</DefineConstants>
+    <NoWarn>$(NoWarn);CS1591;CS1573;CS8632;CS0436;CS8602;CS8600;CS8604;CS8603;CS8601;CS8618;CS8625</NoWarn>
+    <Deterministic>true</Deterministic>
+    <AssemblyVersion>4.8.0.0</AssemblyVersion>
+    <SignAssembly>true</SignAssembly>
+    <PublicSign>true</PublicSign>
+    <AssemblyOriginatorKeyFile>$(KeyFile)</AssemblyOriginatorKeyFile>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(RoslynSrc)/src/Compilers/Core/Portable/**/*.cs" />
+    <Compile Include="$(RoslynSrc)/src/Compilers/Core/AnalyzerDriver/**/*.cs" />
+    <Compile Include="$(RoslynSrc)/src/Dependencies/CodeAnalysis.Debugging/**/*.cs" />
+    <Compile Include="$(RoslynSrc)/src/Dependencies/PooledObjects/**/*.cs" />
+    <Compile Include="$(RoslynSrc)/src/Dependencies/Collections/**/*.cs" Exclude="$(RoslynSrc)/src/Dependencies/Collections/**/*.Package.*" />
+    <Compile Include="$(RoslynSrc)/obj/CodeAnalysisResources.g.cs" />
+    <Compile Include="$(RoslynSrc)/obj/CollectionsStrings.g.cs" />
+    <Compile Include="$(RoslynSrc)/obj/net8/core-ivt.cs" />
+    <EmbeddedResource Include="$(RoslynSrc)/src/Compilers/Core/Portable/CodeAnalysisResources.resx" LogicalName="Microsoft.CodeAnalysis.CodeAnalysisResources.resources" />
+    <EmbeddedResource Include="$(RoslynSrc)/src/Dependencies/Collections/Internal/Strings.resx" LogicalName="Microsoft.CodeAnalysis.Collections.Internal.Strings.resources" />
+    <EmbeddedResource Include="$(RoslynSrc)/src/Compilers/Core/Portable/Resources/default.win32manifest" LogicalName="Microsoft.CodeAnalysis.Resources.default.win32manifest" />
+  </ItemGroup>
+</Project>

@@ -8,7 +8,8 @@
 #                                                                           mono-based SDK root)
 #   <root>/sdk/8.0.131/  dotnet.dll + CLI libraries, MSBuild.dll + targets, NuGet, Roslyn/(bincore),
 #                        Sdks/, SdkResolvers/, BundledVersions.props, RID graphs, trustedroots
-#   <root>/templates/8.0.131/  the common project/item templates (nupkgs zipped from source)
+#   <root>/templates/8.0.131/  the common project/item templates (nupkgs zipped from source;
+#                              step layout recreates <root>, so run templates after it)
 #
 # usage: sdk-layout-net8.sh [step...]    steps: layout templates   (default: both)
 set -euo pipefail
