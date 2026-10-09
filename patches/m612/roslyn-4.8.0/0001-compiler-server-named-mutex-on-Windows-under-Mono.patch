@@ -1,0 +1,22 @@
+Why: Roslyn takes Mono for Unix: under the Mono runtime the compiler server (VBCSCompiler) and its clients use ServerFileMutex, a lock file that is deleted while it is still open. Windows refuses that delete, CouldLock() reports a running server that is not there, and every compile falls back to csc after a 1 s connect timeout. On Windows use the named Mutex like CoreCLR does (the .NET 8 Mono flavour of CoreLib implements it with the Win32 API).
+
+--- a/src/Compilers/Shared/BuildServerConnection.cs
++++ b/src/Compilers/Shared/BuildServerConnection.cs
+@@ -547,7 +547,7 @@
+         {
+             try
+             {
+-                if (PlatformInformation.IsUsingMonoRuntime)
++                if (PlatformInformation.IsUsingMonoRuntime && !PlatformInformation.IsWindows)
+                 {
+                     using var mutex = new ServerFileMutex(mutexName);
+                     return !mutex.CouldLock();
+@@ -567,7 +567,7 @@
+ 
+         internal static IServerMutex OpenOrCreateMutex(string name, out bool createdNew)
+         {
+-            if (PlatformInformation.IsUsingMonoRuntime)
++            if (PlatformInformation.IsUsingMonoRuntime && !PlatformInformation.IsWindows)
+             {
+                 var mutex = new ServerFileMutex(name);
+                 createdNew = mutex.TryLock(0);
