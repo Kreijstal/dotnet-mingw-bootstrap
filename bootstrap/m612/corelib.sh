@@ -2,6 +2,9 @@
 # Build System.Private.CoreLib for the Mono flavor of dotnet/runtime 8.0.0
 # (win-x64), from the same patched tree the native runtime (mono-runtime.sh)
 # was built from, so that CoreLib's icalls/structure layouts match coreclr.dll.
+# FLAVOR=coreclr (corelib-coreclr.sh) builds the CoreCLR flavor instead
+# (src/coreclr/System.Private.CoreLib, for coreclr.sh's runtime) into
+# netcoreapp-<ver>-coreclr/lib.
 #
 # Sources: src/mono/System.Private.CoreLib/System.Private.CoreLib.csproj plus
 # the shared src/libraries/System.Private.CoreLib/src/System.Private.CoreLib.Shared.projitems,
@@ -22,10 +25,17 @@ here=$(cd "$(dirname "$0")" && pwd)
 BCSC=${1:?csc.exe}; shift
 steps=${*:-gen events compile}
 RT_VER=${RT_VER:-8.0.0}; TFM=net${RT_VER%%.*}.0
+FLAVOR=${FLAVOR:-mono}
 SRC=$M612/src/runtime-$RT_VER-native          # full tree, patches 0001.. applied (corehost.sh prep)
 L=$SRC/src/libraries
-B=$M612/build/corelib-$RT_VER
-O=${FXOUT:-$M612/netcoreapp-$RT_VER}/lib      # implementation assemblies of Microsoft.NETCore.App
+case $FLAVOR in
+  mono)    B=$M612/build/corelib-$RT_VER; FX=$M612/netcoreapp-$RT_VER
+           PD=$SRC/src/mono/System.Private.CoreLib; EVNAME=Mono ;;
+  coreclr) B=$M612/build/corelib-coreclr-$RT_VER; FX=$M612/netcoreapp-$RT_VER-coreclr
+           PD=$SRC/src/coreclr/System.Private.CoreLib; EVNAME=CoreCLR ;;
+  *) die "FLAVOR must be mono or coreclr" ;;
+esac
+O=${FXOUT:-$FX}/lib                           # implementation assemblies of Microsoft.NETCore.App
 PKGDIR=${PKGDIR:-$M612/pkgs}
 . "$here/common.sh"
 mkdir -p "$B" "$O"
@@ -42,8 +52,8 @@ step_gen() {
 step_events() {
   mkdir -p "$B/gen"
   python3 -B "$SRC/src/coreclr/scripts/genRuntimeEventSources.py" --man "$SRC/src/coreclr/vm/ClrEtwAll.man" \
-    --intermediate "$B/gen" --runtimeflavor mono
-  ls -l "$B/gen/NativeRuntimeEventSource.Mono.cs"
+    --intermediate "$B/gen" --runtimeflavor $FLAVOR
+  ls -l "$B/gen/NativeRuntimeEventSource.$EVNAME.cs"
 }
 
 PROPS=(-p TargetFramework=$TFM -p NetCoreAppCurrent=$TFM -p TargetOS=windows -p TargetsWindows=true -p Platform=x64
@@ -51,7 +61,7 @@ PROPS=(-p TargetFramework=$TFM -p NetCoreAppCurrent=$TFM -p TargetOS=windows -p 
   -p CoreClrProjectRoot=$SRC/src/coreclr/)
 
 step_compile() {
-  local pd=$SRC/src/mono/System.Private.CoreLib o=$B/obj/System.Private.CoreLib items=() dl=() dargs=() d
+  local pd=$PD o=$B/obj/System.Private.CoreLib items=() dl=() dargs=() d
   rm -rf "${o:?}"; mkdir -p "$o"
   mapfile -t items < <(cd "$pd" && csproj_items "${PROPS[@]}" System.Private.CoreLib.csproj 2>/dev/null | grep -v '^@' | sed "s|^|$pd/|")
   IFS=';' read -ra dl <<< "$(cd "$pd" && csproj_items "${PROPS[@]}" --define System.Private.CoreLib.csproj 2>/dev/null)"
@@ -100,8 +110,13 @@ EOF
     -analyzer:"$A/System.Private.CoreLib.Generators.dll" -analyzerconfig:"$o/build.globalconfig" \
     -generatedfilesout:"$o/generated" \
     -resource:"$o/System.Private.CoreLib.Strings.resources,System.Private.CoreLib.Strings.resources" "${illink[@]}" \
-    "$o/AssemblyInfo.g.cs" "$o/SR.g.cs" "$B/gen/NativeRuntimeEventSource.Mono.cs" "${items[@]}" || die "CoreLib failed ($B/obj/System.Private.CoreLib.log)"
+    "$o/AssemblyInfo.g.cs" "$o/SR.g.cs" "$B/gen/NativeRuntimeEventSource.$EVNAME.cs" "${items[@]}" || die "CoreLib failed ($B/obj/System.Private.CoreLib.log)"
+  if [ "$FLAVOR" = coreclr ]; then fcallrva "$O/System.Private.CoreLib.dll"; fi
   ls -l "$O/System.Private.CoreLib.dll"
 }
 
-for s in $steps; do log "corelib $RT_VER: $s"; "step_$s"; done
+# CoreCLR binds [MethodImpl(InternalCall)] methods as FCalls only if they have no IL body
+# (tools/fcallrva.cs: what ILLink's rewrite of CoreLib does upstream)
+fcallrva() { net8tool fcallrva "$(cygpath -m "$1")"; }
+
+for s in $steps; do log "corelib $RT_VER ($FLAVOR): $s"; "step_$s"; done

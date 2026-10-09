@@ -25,7 +25,11 @@ csc() {
     printf '"%s"\n' "$a" >> "$rsp"
   done
   local rc=0
-  mono "$BCSC" -nologo -noconfig -langversion:${LANGVERSION:-preview} -nowarn:1701,1702,8632,8669,1573,1591,${EXTRA_NOWARN:-0} @"$rsp" > "$B/obj/$name.log" 2>&1 || rc=$?
+  # BCSC is csc.exe (a net472 build, run by the seed Mono) or csc.dll (a net8.0 build, run by
+  # CSC_DOTNET, the source-built SDK's dotnet.exe)
+  local runner=(mono)
+  [[ $BCSC == *.dll ]] && runner=("${CSC_DOTNET:-$M612/dotnet-sdk-8.0.131-net8/dotnet.exe}" exec)
+  "${runner[@]}" "$BCSC" -nologo -noconfig -langversion:${LANGVERSION:-preview} -nowarn:1701,1702,8632,8669,1573,1591,${EXTRA_NOWARN:-0} @"$rsp" > "$B/obj/$name.log" 2>&1 || rc=$?
   grep -E 'error CS' "$B/obj/$name.log" | head -${SHOW_ERRORS:-60} || true
   echo "csc $name: rc=$rc, $(grep -c 'error CS' "$B/obj/$name.log" || true) errors"
   return $rc
@@ -112,4 +116,22 @@ net8_refs() {
   done
   [ -n "${NET8_SELF:-}" ] && unset "m[$NET8_SELF]"
   for n in "${!m[@]}"; do echo "-r:$(winpath "${m[$n]}")"; done
+}
+
+# net8tool <name> [args...]: compile tools/<name>.cs (if needed) with the net8.0 csc.dll of the
+# source-built SDK against the reference pack, and run it on that SDK's runtime
+net8tool() {
+  local name=$1; shift
+  local dn=${CSC_DOTNET:-$M612/dotnet-sdk-8.0.131-net8/dotnet.exe} t=$M612/tools/$name.dll r refs=()
+  if ! [ "$t" -nt "$M612_TOOLS_SRC/$name.cs" ]; then
+    mkdir -p "$M612/tools"
+    for r in System.Runtime System.Reflection.Metadata System.Collections.Immutable System.Console System.Memory \
+             System.Linq System.IO System.Runtime.Extensions System.Collections; do
+      [ -f "$NET8_RP/$r.dll" ] && refs+=(-r:"$(cygpath -m "$NET8_RP/$r.dll")")
+    done
+    "$dn" exec "$(cygpath -m "$M612/dotnet-sdk-8.0.131-net8/sdk/8.0.131/Roslyn/bincore/csc.dll")" -nologo -noconfig -nostdlib \
+      "${refs[@]}" -out:"$(cygpath -m "$t")" "$(cygpath -m "$M612_TOOLS_SRC/$name.cs")" || return 1
+    printf '{"runtimeOptions":{"tfm":"net8.0","framework":{"name":"Microsoft.NETCore.App","version":"8.0.0"}}}\n' > "${t%.dll}.runtimeconfig.json"
+  fi
+  "$dn" "$(cygpath -m "$t")" "$@"
 }
