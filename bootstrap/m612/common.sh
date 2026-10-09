@@ -92,3 +92,24 @@ resxgen() {
 }
 M612_TOOLS_SRC=$(cd "$(dirname "${BASH_SOURCE[0]}")/tools" && pwd)
 csproj_items() { python3 -S "$M612_TOOLS_SRC/csproj_items.py" "$@"; }
+
+# ---- net8.0 flavour of the tool builds (S11) ----
+# Compile references for a net8.0 assembly: the reference pack (refpack.sh), the
+# out-of-band libraries (libraries.sh OOB=...), then the given assemblies or
+# directories; one reference per assembly name, the last one given wins.
+# NET8_SELF names the assembly being compiled (never referenced).
+NET8_RP=$M612/build/refpack-8.0.0/out
+NET8_OOB=$M612/oob-8.0.0/lib
+NET8_DEFS=(-d:TRACE -d:RELEASE -d:NETCOREAPP -d:NET -d:NET8_0 -d:NET8_0_OR_GREATER -d:NET7_0_OR_GREATER -d:NET6_0_OR_GREATER
+  -d:NET5_0_OR_GREATER -d:NETCOREAPP3_1_OR_GREATER -d:NETCOREAPP3_0_OR_GREATER -d:NETCOREAPP2_2_OR_GREATER -d:NETCOREAPP2_1_OR_GREATER
+  -d:NETCOREAPP2_0_OR_GREATER -d:NETCOREAPP1_1_OR_GREATER -d:NETCOREAPP1_0_OR_GREATER)
+net8_refs() {
+  local -A m; local f a n
+  for f in "$NET8_RP"/*.dll "$NET8_OOB"/*.dll; do [ -e "$f" ] && m[$(basename "$f" .dll)]=$f; done
+  for a in "$@"; do
+    if [ -d "$a" ]; then for f in "$a"/*.dll; do [ -e "$f" ] && m[$(basename "$f" .dll)]=$f; done
+    elif [ -e "$a" ]; then m[$(basename "$a" .dll)]=$a; fi
+  done
+  [ -n "${NET8_SELF:-}" ] && unset "m[$NET8_SELF]"
+  for n in "${!m[@]}"; do echo "-r:$(winpath "${m[$n]}")"; done
+}

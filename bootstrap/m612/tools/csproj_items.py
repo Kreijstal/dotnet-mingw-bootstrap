@@ -211,10 +211,10 @@ class Evaluator:
                         for p in self.paths(it.get('Include'), base, k in kinds):
                             if os.path.normpath(p) not in exc: lst.append((p, meta))
                     if it.get('Remove') is not None:
-                        rem = set(os.path.normpath(p) for p in self.paths(it.get('Remove'), base, True))
+                        rem = set(os.path.normpath(p) for p in self.paths(it.get('Remove'), base, k in kinds))
                         self.items[k] = [x for x in lst if os.path.normpath(x[0]) not in rem]
                     if it.get('Update') is not None:
-                        upd = set(os.path.normpath(p) for p in self.paths(it.get('Update'), base, True))
+                        upd = set(os.path.normpath(p) for p in self.paths(it.get('Update'), base, k in kinds))
                         self.items[k] = [(x[0], {**x[1], **meta}) if os.path.normpath(x[0]) in upd else x for x in lst]
             elif tag == 'Import':
                 proj = self.expand(el.get('Project'), base).replace('\\', '/')
