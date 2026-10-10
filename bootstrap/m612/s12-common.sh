@@ -15,7 +15,11 @@
 #                        version "lifting": imported by Arcade right after the repo's eng/Versions.props)
 #   home/                DOTNET_CLI_HOME
 #
-# STAGE=2: built by BUILD_SDK (the stage-1 SDK, CoreCLR + R2R); STAGE=3: built by the stage-2 SDK.
+# STAGE=2: built by BUILD_SDK (the stage-1 SDK, CoreCLR + R2R); STAGE=3: built by the stage-2 SDK;
+# STAGE=4: by the stage-3 SDK (the fixed point: stage 3 and 4 are built by compilers built from the same
+# sources by the same kind of build; stage 1's compiler identifies itself differently, see s12-verify.sh).
+# Every repo build passes RepositoryUrl (its GitHub URL): with source-control queries off, Arcade would
+# write file://<RepoRoot> into AssemblyMetadata("RepositoryUrl"), which differs between stage directories.
 S12=${S12:-$M612/s12}
 STAGE=${STAGE:-2}
 SN=$S12/s$STAGE

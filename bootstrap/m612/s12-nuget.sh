@@ -40,7 +40,7 @@ for d in sorted(os.listdir(os.path.join(root, 'src', 'NuGet.Core'))):
 json.dump({'solution': {'path': 'NuGet.sln', 'projects': ps}}, open(sys.argv[1], 'w', newline='\n'), indent=2)
 print(len(ps), 'projects')
 EOPY
-  s12_build nuget "$X" s12.slnf -p:BuildNumber=3 -p:RepositoryCommit=$(repo_commit "$TAR") -p:SourceRevisionId=$(repo_commit "$TAR") -p:IsXPlat=true \
+  s12_build nuget "$X" s12.slnf -p:BuildNumber=3 -p:RepositoryCommit=$(repo_commit "$TAR") -p:SourceRevisionId=$(repo_commit "$TAR") -p:RepositoryUrl=https://github.com/NuGet/NuGet.Client -p:IsXPlat=true \
     -p:SystemSecurityCryptographyPkcsVersion=7.0.2 -p:SystemSecurityCryptographyXmlVersion=7.0.1 \
     -p:SystemComponentModelCompositionPackageVersion=7.0.0 -p:DebugType=portable -p:PathMap="$(w "$X")=/_/" -p:TreatWarningsAsErrors=false -p:MSBuildTreatWarningsAsErrors=false
 }

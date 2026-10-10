@@ -15,7 +15,7 @@ step_prep() { s12_prep_repo "$TAR" "$X" "$here/../../patches/m612/s12-runtime-8.
 step_build() {
   local p
   for p in ${PROJECTS:?}; do
-    s12_build runtime-$(basename "$p" .csproj) "$X" "$p" -p:OfficialBuildId=20231031.4 -p:RepositoryCommit=$(repo_commit "$TAR") -p:SourceRevisionId=$(repo_commit "$TAR") \
+    s12_build runtime-$(basename "$p" .csproj) "$X" "$p" -p:OfficialBuildId=20231031.4 -p:RepositoryCommit=$(repo_commit "$TAR") -p:SourceRevisionId=$(repo_commit "$TAR") -p:RepositoryUrl=https://github.com/dotnet/runtime \
       ${RUNTIME_EXTRA:-}
   done
 }

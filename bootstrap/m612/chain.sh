@@ -121,7 +121,12 @@ step 44 env ROOT="$M612/dotnet-sdk-8.0.131-net8-coreclr-r2r" TESTDIR="$M612/test
 #     `dotnet build` of their own project files, and m612/dotnet-sdk-8.0.131-stage2 laid out from their outputs
 step 45 env STAGE=2 bash "$here/s12-stage.sh"
 # 46: the end-to-end SDK proof on the stage-2 root
-step 46 env ROOT="$M612/dotnet-sdk-8.0.131-stage2" TESTDIR="$M612/test/sdk-stage2" bash "$here/sdk-net8-test.sh"
-# 47-48: stage 3 = the same with the stage-2 SDK; the determinism proof compares stage 2 and stage 3
+step 46 env ROOT="$M612/dotnet-sdk-8.0.131-stage2" TESTDIR="$M612/test/sdk-stage2" bash "$here/sdk-net8-test.sh" \
+  info new pkgref addpackage multi roslyncore generators selfcontained trimmed
+# 47-49: stage 3 = the same with the stage-2 SDK, stage 4 with the stage-3 SDK; the determinism proof
+#        compares stage 2 with 3 (they differ only by the compiler's own version string in the PDBs) and
+#        stage 3 with 4 (bit-identical)
 step 47 env STAGE=3 bash "$here/s12-stage.sh"
-step 48 bash "$here/s12-verify.sh"
+step 48 env STAGE=4 bash "$here/s12-stage.sh"
+step 49 env V1=2 V2=3 bash "$here/s12-verify.sh"
+step 50 env V1=3 V2=4 bash "$here/s12-verify.sh"

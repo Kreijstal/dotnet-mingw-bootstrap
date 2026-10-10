@@ -112,7 +112,7 @@ step_build() {
   rm -rf artifacts
   s12_build arcade "$A" src/Microsoft.DotNet.Arcade.Sdk/Microsoft.DotNet.Arcade.Sdk.csproj \
     -p:OfficialBuildId=20260811.4 -p:MicrosoftExtensionsLoggingConsoleVersion=6.0.0 \
-    -p:RepositoryCommit=$ARCADE_SHA -p:SourceRevisionId=$ARCADE_SHA
+    -p:RepositoryCommit=$ARCADE_SHA -p:SourceRevisionId=$ARCADE_SHA -p:RepositoryUrl=https://github.com/dotnet/arcade
 }
 
 for s in $steps; do log "s12 arcade (stage $STAGE): $s"; "step_$s"; done

@@ -14,6 +14,6 @@ X=$WORK/command-line-api
 TAR=$M612/src/command-line-api-02fe27cd.tar.gz
 step_prep() { s12_prep_repo "$TAR" "$X" "$here/../../patches/m612/s12-command-line-api"; }
 step_build() {
-  s12_build cmdline "$X" sourcebuild.slnf -p:UseBetaVersion=true -p:OfficialBuildId=20230607.1 -p:RepositoryCommit=$(repo_commit "$TAR") -p:SourceRevisionId=$(repo_commit "$TAR")
+  s12_build cmdline "$X" sourcebuild.slnf -p:UseBetaVersion=true -p:OfficialBuildId=20230607.1 -p:RepositoryCommit=$(repo_commit "$TAR") -p:SourceRevisionId=$(repo_commit "$TAR") -p:RepositoryUrl=https://github.com/dotnet/command-line-api
 }
 for s in $steps; do log "s12 command-line-api (stage $STAGE): $s"; "step_$s"; done

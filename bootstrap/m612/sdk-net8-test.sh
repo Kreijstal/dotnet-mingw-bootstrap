@@ -12,6 +12,8 @@
 #   selfcontained  dotnet publish -r win-x64 --self-contained (runtime pack), the exe runs alone
 #   trimmed   dotnet publish -p:PublishTrimmed=true (ILLink from source), the trimmed exe runs
 #   generators  [GeneratedRegex]/[LibraryImport]/[JsonSerializable] through the reference pack's generators
+#   addpackage  dotnet add package / dotnet list package against the local feed of step pkgref
+#             (NuGet.CommandLine.XPlat; the S12 SDKs have it, the S11 roots do not)
 #   mono      the same new/roslyncore builds with the mono-based SDK (mono MSBuild.exe), for timings
 # Each step prints wall-clock times ("TIME <what> <seconds>").
 #
@@ -89,6 +91,13 @@ step_generators() {
   timed "dotnet build (generators)" "$D" build
   ls obj/Debug/net8.0/generated/*/* | sed 's|.*/generated/||'
   "$D" run --no-build
+}
+step_addpackage() {
+  local W=$T/pkgref; [ -d "$W/feed" ] || die "run step pkgref first"
+  rm -rf "${W:?}/addpkg"; "$D" new console -o "$W/addpkg" > /dev/null; cp "$W/consumer/NuGet.Config" "$W/addpkg/"; cd "$W/addpkg"
+  timed "dotnet add package" "$D" add package Bootstrap.Greeting --version 2.0.0
+  grep PackageReference addpkg.csproj
+  "$D" list package
 }
 # self-contained publish with the source-built runtime pack (framework.sh runtimepack): the apphost
 # finds hostfxr/hostpolicy/coreclr.dll (Mono) and the 168 assemblies next to it, no dotnet root needed

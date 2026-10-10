@@ -17,6 +17,6 @@ step_prep() {
   s12_prep_repo "$TAR" "$X" "$here/../../patches/m612/xliff-tasks"
 }
 step_build() {
-  s12_build xliff "$X" src/XliffTasks/XliffTasks.csproj -p:OfficialBuildId=20230925.1 -p:RepositoryCommit=$XLIFF_SHA -p:SourceRevisionId=$XLIFF_SHA
+  s12_build xliff "$X" src/XliffTasks/XliffTasks.csproj -p:OfficialBuildId=20230925.1 -p:RepositoryCommit=$XLIFF_SHA -p:SourceRevisionId=$XLIFF_SHA -p:RepositoryUrl=https://github.com/dotnet/xliff-tasks
 }
 for s in $steps; do log "s12 xliff-tasks (stage $STAGE): $s"; "step_$s"; done

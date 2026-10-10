@@ -9,6 +9,11 @@ here=$(cd "$(dirname "$0")" && pwd)
 STAGE=${STAGE:-2}; export STAGE
 start=${1:-1}
 step() { local n=$1; shift; [ "$n" -ge "$start" ] || return 0; log "s12 stage $STAGE step $n: $*"; local t0=$SECONDS; "$@"; echo "STEPTIME $n $((SECONDS - t0)) s: $*"; }
+# a stage starts from nothing of its own (its feed, package cache, trees and bootstrap packages)
+if [ "$start" -le 4 ]; then
+  SN=${S12:-$M612/s12}/s$STAGE
+  for d in "$SN/work" "$SN/feed" "$SN/packages" "$SN/boot"; do rm -rf "${d:?}"; done; rm -f "$SN/versions.props"
+fi
 if [ "$STAGE" = 2 ]; then
   step 1 bash "$here/s12-sbrp.sh" prep targetpacks textonly
   step 2 bash "$here/s12-packs.sh"

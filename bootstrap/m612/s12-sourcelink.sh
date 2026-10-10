@@ -23,5 +23,5 @@ json.dump({'solution': {'path': 'SourceLink.sln', 'projects': [proj(p) for p in 
           open(sys.argv[1], 'w', newline='\n'), indent=2)
 EOPY
 }
-step_build() { s12_build sourcelink "$X" s12.slnf -p:OfficialBuildId=20230828.1 -p:RepositoryCommit=$(repo_commit "$TAR") -p:SourceRevisionId=$(repo_commit "$TAR"); }
+step_build() { s12_build sourcelink "$X" s12.slnf -p:OfficialBuildId=20230828.1 -p:RepositoryCommit=$(repo_commit "$TAR") -p:SourceRevisionId=$(repo_commit "$TAR") -p:RepositoryUrl=https://github.com/dotnet/sourcelink; }
 for s in $steps; do log "s12 sourcelink (stage $STAGE): $s"; "step_$s"; done

@@ -15,6 +15,6 @@ TAR=$M612/src/deployment-tools-$SHA.tar.gz
 step_prep() { s12_prep_repo "$TAR" "$X" "$here/../../patches/m612/s12-deployment-tools"; }
 step_build() {
   s12_build deployment-tools "$X" src/Microsoft.Deployment.DotNet.Releases/src/Microsoft.Deployment.DotNet.Releases.csproj \
-    -p:OfficialBuildId=20250114.1 -p:RepositoryCommit=$SHA -p:SourceRevisionId=$SHA
+    -p:OfficialBuildId=20250114.1 -p:RepositoryCommit=$SHA -p:SourceRevisionId=$SHA -p:RepositoryUrl=https://github.com/dotnet/deployment-tools
 }
 for s in $steps; do log "s12 deployment-tools (stage $STAGE): $s"; "step_$s"; done
