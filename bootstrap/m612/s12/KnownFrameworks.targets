@@ -1,0 +1,50 @@
+<Project>
+  <!--
+    m612 S12: targeting packs of the older frameworks, for SDKs whose BundledVersions.props lacks them.
+    The stage-1 SDK's BundledVersions.props (hand-written in S7/S11) only knows net8.0; upstream's
+    (dotnet/installer GenerateBundledVersions) lists every netcoreapp/net TFM and netstandard2.1.
+    Source-build-reference-packages and some repo projects target net6.0/net7.0/netstandard2.1, whose
+    reference packs come from SBRP (s12-sbrp.sh targetpacks: Microsoft.NETCore.App.Ref 3.0.0-7.0.0,
+    NETStandard.Library.Ref 2.1.0).  Imported through CustomAfterMicrosoftCommonTargets; each group is
+    only added when the SDK does not define that TFM already (the stage-2 SDK does).
+  -->
+  <ItemGroup Condition="'@(KnownFrameworkReference->WithMetadataValue('TargetFramework', 'netcoreapp3.0'))' == ''">
+    <KnownFrameworkReference Include="Microsoft.NETCore.App" TargetFramework="netcoreapp3.0" RuntimeFrameworkName="Microsoft.NETCore.App"
+      DefaultRuntimeFrameworkVersion="3.0.0" LatestRuntimeFrameworkVersion="3.0.0" TargetingPackName="Microsoft.NETCore.App.Ref"
+      TargetingPackVersion="3.0.0" RuntimePackNamePatterns="Microsoft.NETCore.App.Runtime.**RID**" RuntimePackRuntimeIdentifiers="win-x64" />
+  </ItemGroup>
+  <ItemGroup Condition="'@(KnownFrameworkReference->WithMetadataValue('TargetFramework', 'netcoreapp3.1'))' == ''">
+    <KnownFrameworkReference Include="Microsoft.NETCore.App" TargetFramework="netcoreapp3.1" RuntimeFrameworkName="Microsoft.NETCore.App"
+      DefaultRuntimeFrameworkVersion="3.1.0" LatestRuntimeFrameworkVersion="3.1.0" TargetingPackName="Microsoft.NETCore.App.Ref"
+      TargetingPackVersion="3.1.0" RuntimePackNamePatterns="Microsoft.NETCore.App.Runtime.**RID**" RuntimePackRuntimeIdentifiers="win-x64" />
+  </ItemGroup>
+  <ItemGroup Condition="'@(KnownFrameworkReference->WithMetadataValue('TargetFramework', 'net5.0'))' == ''">
+    <KnownFrameworkReference Include="Microsoft.NETCore.App" TargetFramework="net5.0" RuntimeFrameworkName="Microsoft.NETCore.App"
+      DefaultRuntimeFrameworkVersion="5.0.0" LatestRuntimeFrameworkVersion="5.0.0" TargetingPackName="Microsoft.NETCore.App.Ref"
+      TargetingPackVersion="5.0.0" RuntimePackNamePatterns="Microsoft.NETCore.App.Runtime.**RID**" RuntimePackRuntimeIdentifiers="win-x64" />
+  </ItemGroup>
+  <ItemGroup Condition="'@(KnownFrameworkReference->WithMetadataValue('TargetFramework', 'net6.0'))' == ''">
+    <KnownFrameworkReference Include="Microsoft.NETCore.App" TargetFramework="net6.0" RuntimeFrameworkName="Microsoft.NETCore.App"
+      DefaultRuntimeFrameworkVersion="6.0.0" LatestRuntimeFrameworkVersion="6.0.0" TargetingPackName="Microsoft.NETCore.App.Ref"
+      TargetingPackVersion="6.0.0" RuntimePackNamePatterns="Microsoft.NETCore.App.Runtime.**RID**" RuntimePackRuntimeIdentifiers="win-x64" />
+  </ItemGroup>
+  <ItemGroup Condition="'@(KnownFrameworkReference->WithMetadataValue('TargetFramework', 'net7.0'))' == ''">
+    <KnownFrameworkReference Include="Microsoft.NETCore.App" TargetFramework="net7.0" RuntimeFrameworkName="Microsoft.NETCore.App"
+      DefaultRuntimeFrameworkVersion="7.0.0" LatestRuntimeFrameworkVersion="7.0.0" TargetingPackName="Microsoft.NETCore.App.Ref"
+      TargetingPackVersion="7.0.0" RuntimePackNamePatterns="Microsoft.NETCore.App.Runtime.**RID**" RuntimePackRuntimeIdentifiers="win-x64" />
+  </ItemGroup>
+  <ItemGroup Condition="'@(KnownFrameworkReference->WithMetadataValue('TargetFramework', 'netstandard2.1'))' == ''">
+    <KnownFrameworkReference Include="NETStandard.Library" TargetFramework="netstandard2.1" TargetingPackName="NETStandard.Library.Ref"
+      TargetingPackVersion="2.1.0" />
+  </ItemGroup>
+  <!--
+    The stage-1 SDK's Microsoft.NETCore.App.Ref (refpack.sh) has data/FrameworkList.xml but no
+    data/PlatformManifest.txt, so the SDK's conflict resolution did not know which assemblies the
+    shared framework carries: a publish of a net8.0 app copied lower package versions (e.g. the SBRP
+    System.Collections.Immutable 7.0.0) next to it.  s12-common.sh writes the manifest from
+    FrameworkList.xml (S12PlatformManifest) for such an SDK; the stage-2 pack ships its own.
+  -->
+  <ItemGroup Condition="'$(S12PlatformManifest)' != '' and '$(TargetFrameworkIdentifier)' == '.NETCoreApp' and '$(TargetFrameworkVersion)' == 'v8.0'">
+    <PackageConflictPlatformManifests Include="$(S12PlatformManifest)" />
+  </ItemGroup>
+</Project>
