@@ -113,3 +113,15 @@ step 42 bash "$here/crossgen2.sh"
 step 43 bash "$here/crossgen2.sh" r2rroot r2rfx r2rsdk
 # 44: the end-to-end SDK proof on the R2R root
 step 44 env ROOT="$M612/dotnet-sdk-8.0.131-net8-coreclr-r2r" TESTDIR="$M612/test/sdk-net8-coreclr-r2r" bash "$here/sdk-net8-test.sh"
+
+# ---- S12: the SDK rebuilds itself from the upstream project files (docs §6.13) ----
+# 45: stage 2, built by the stage-1 CoreCLR/R2R SDK of step 43: source-build-reference-packages (ilasm), the
+#     fixed targeting pack, the seed feed, then Arcade, xliff-tasks, Roslyn, MSBuild, Newtonsoft.Json, xdt,
+#     NuGet.Client, command-line-api, templating, deployment-tools, sourcelink and dotnet/sdk with
+#     `dotnet build` of their own project files, and m612/dotnet-sdk-8.0.131-stage2 laid out from their outputs
+step 45 env STAGE=2 bash "$here/s12-stage.sh"
+# 46: the end-to-end SDK proof on the stage-2 root
+step 46 env ROOT="$M612/dotnet-sdk-8.0.131-stage2" TESTDIR="$M612/test/sdk-stage2" bash "$here/sdk-net8-test.sh"
+# 47-48: stage 3 = the same with the stage-2 SDK; the determinism proof compares stage 2 and stage 3
+step 47 env STAGE=3 bash "$here/s12-stage.sh"
+step 48 bash "$here/s12-verify.sh"

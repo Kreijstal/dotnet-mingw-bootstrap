@@ -22,6 +22,7 @@ step_prep() { s12_prep_repo "$TAR" "$X" "$here/../../patches/m612/s12-nuget-$V";
 # Microsoft.Build.Tasks.Core 17.8.49 package NuGet now compiles against requires (else NU1605 downgrade);
 # System.ComponentModel.Composition 4.5.0 -> 7.0.0 (NuGet.PackageManagement only; SBRP has 7.0.0, the VMR
 # lifts it to the runtime's 8.0 build).
+# PathMap: NuGet is not Arcade-based, nothing maps its source root to /_/ (Arcade does that from SourceRoot).
 # DebugType=portable: Release asks for pdbonly, which Roslyn writes as a portable PDB on Linux (the
 # source build) but as a Windows PDB through the native Microsoft.DiaSymReader.Native on Windows.
 # TreatWarningsAsErrors=false: .NET 8 obsoletions (SYSLIB0051) in NuGet 6.8 code (warnings only).
@@ -39,8 +40,8 @@ for d in sorted(os.listdir(os.path.join(root, 'src', 'NuGet.Core'))):
 json.dump({'solution': {'path': 'NuGet.sln', 'projects': ps}}, open(sys.argv[1], 'w', newline='\n'), indent=2)
 print(len(ps), 'projects')
 EOPY
-  s12_build nuget "$X" s12.slnf -p:BuildNumber=3 -p:RepositoryCommit=$(repo_commit "$TAR") -p:IsXPlat=true \
+  s12_build nuget "$X" s12.slnf -p:BuildNumber=3 -p:RepositoryCommit=$(repo_commit "$TAR") -p:SourceRevisionId=$(repo_commit "$TAR") -p:IsXPlat=true \
     -p:SystemSecurityCryptographyPkcsVersion=7.0.2 -p:SystemSecurityCryptographyXmlVersion=7.0.1 \
-    -p:SystemComponentModelCompositionPackageVersion=7.0.0 -p:DebugType=portable -p:TreatWarningsAsErrors=false -p:MSBuildTreatWarningsAsErrors=false
+    -p:SystemComponentModelCompositionPackageVersion=7.0.0 -p:DebugType=portable -p:PathMap="$(w "$X")=/_/" -p:TreatWarningsAsErrors=false -p:MSBuildTreatWarningsAsErrors=false
 }
 for s in $steps; do log "s12 nuget $V (stage $STAGE): $s"; "step_$s"; done

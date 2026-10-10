@@ -109,15 +109,10 @@ step_build() {
   cd "$A"
   python3 -S "$M612_TOOLS_SRC/s12globaljson.py" global.json "$SDKV" Microsoft.DotNet.Arcade.Sdk=8.0.0-boot
   s12_nugetconfig "$A" "$BOOT/feed"
-  versions_props
   rm -rf artifacts
-  local t0=$SECONDS
-  dn build src/Microsoft.DotNet.Arcade.Sdk/Microsoft.DotNet.Arcade.Sdk.csproj -c Release -nologo -v:m -nodeReuse:false \
-    $(s12_props) -p:OfficialBuildId=20260811.4 -p:MicrosoftExtensionsLoggingConsoleVersion=6.0.0 \
-    -bl:"$(w "$S12/logs/arcade-s$STAGE.binlog")"
-  echo "TIME arcade build $((SECONDS - t0)) s"
-  local p; p=$(ls artifacts/packages/Release/*/Microsoft.DotNet.Arcade.Sdk.*.nupkg)
-  feed_add $p; ls -la $p
+  s12_build arcade "$A" src/Microsoft.DotNet.Arcade.Sdk/Microsoft.DotNet.Arcade.Sdk.csproj \
+    -p:OfficialBuildId=20260811.4 -p:MicrosoftExtensionsLoggingConsoleVersion=6.0.0 \
+    -p:RepositoryCommit=$ARCADE_SHA -p:SourceRevisionId=$ARCADE_SHA
 }
 
 for s in $steps; do log "s12 arcade (stage $STAGE): $s"; "step_$s"; done

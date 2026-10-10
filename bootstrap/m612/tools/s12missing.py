@@ -35,6 +35,13 @@ for dp, dn, fn in os.walk(tree):
 refs = os.path.join(sbrp, 'src', 'referencePackages', 'src')
 text_only = os.path.join(sbrp, 'src', 'textOnlyPackages', 'src')
 for i in sorted(ids):
+    if not ids[i]:
+        # a transitive NU1101 (no version anywhere): every version SBRP has of it
+        d = os.path.join(refs, i.lower())
+        if os.path.isdir(d):
+            for v in sorted(os.listdir(d)):
+                print('%s/%s' % (i.lower(), v))
+            continue
     for r in sorted(ids[i]) or ['?']:
         v = re.sub(r'[\[\]()\s]', '', r).split(',')[0].lstrip('>=')
         if v and (os.path.isdir(os.path.join(refs, i.lower(), v)) or os.path.isdir(os.path.join(text_only, i.lower(), v))):

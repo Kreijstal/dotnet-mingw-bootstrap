@@ -16,5 +16,5 @@ step_prep() {
   fetch_tarball "https://github.com/dotnet/xdt/archive/$SHA.tar.gz" "$TAR"
   s12_prep_repo "$TAR" "$X" "$here/../../patches/m612/s12-xdt"
 }
-step_build() { s12_build xdt "$X" src/Microsoft.Web.XmlTransform/Microsoft.Web.XmlTransform.csproj -p:OfficialBuildId=20220823.2 -p:RepositoryCommit=$SHA; }
+step_build() { s12_build xdt "$X" src/Microsoft.Web.XmlTransform/Microsoft.Web.XmlTransform.csproj -p:OfficialBuildId=20220823.2 -p:RepositoryCommit=$SHA -p:SourceRevisionId=$SHA; }
 for s in $steps; do log "s12 xdt (stage $STAGE): $s"; "step_$s"; done

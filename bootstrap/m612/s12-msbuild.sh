@@ -20,7 +20,7 @@ X=$WORK/msbuild
 TAR=$M612/src/msbuild-$V.tar.gz
 step_prep() { s12_prep_repo "$TAR" "$X" "$here/../../patches/m612/s12-msbuild-$V"; }
 step_build() {
-  s12_build msbuild "$X" MSBuild.SourceBuild.slnf -p:OfficialBuildId=20251216.8 -p:RepositoryCommit=$(repo_commit "$TAR") \
+  s12_build msbuild "$X" MSBuild.SourceBuild.slnf -p:OfficialBuildId=20251216.8 -p:RepositoryCommit=$(repo_commit "$TAR") -p:SourceRevisionId=$(repo_commit "$TAR") \
     -p:UsingToolMicrosoftNetCompilers=false -p:EnablePackageValidation=false
 }
 for s in $steps; do log "s12 msbuild $V (stage $STAGE): $s"; "step_$s"; done

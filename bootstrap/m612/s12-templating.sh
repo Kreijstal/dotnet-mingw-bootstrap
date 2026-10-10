@@ -31,7 +31,7 @@ json.dump({'solution': {'path': 'Microsoft.TemplateEngine.sln', 'projects': ps}}
 EOPY
 }
 step_build() {
-  s12_build templating "$X" s12.slnf -p:OfficialBuildId=20260811.1 -p:RepositoryCommit=$(repo_commit "$TAR") \
+  s12_build templating "$X" s12.slnf -p:OfficialBuildId=20260811.1 -p:RepositoryCommit=$(repo_commit "$TAR") -p:SourceRevisionId=$(repo_commit "$TAR") \
     -p:MicrosoftExtensionsLoggingPackageVersion=6.0.0 -p:MicrosoftExtensionsLoggingAbstractionsPackageVersion=6.0.0 \
     -p:MicrosoftExtensionsLoggingConsolePackageVersion=6.0.0 -p:MicrosoftExtensionsDependencyInjectionAbstractionsPackageVersion=6.0.0 \
     -p:SystemFormatsAsn1Version=7.0.0 -p:TreatWarningsAsErrors=false

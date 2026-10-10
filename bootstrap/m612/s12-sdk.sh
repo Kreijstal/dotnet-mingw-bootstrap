@@ -41,7 +41,7 @@ json.dump({'solution': {'path': 'sdk.sln', 'projects': ['src\\' + p.replace('/',
 EOPY
 }
 step_build() {
-  s12_build sdk "$X" s12.slnf -p:OfficialBuildId=20260811.6 -p:RepositoryCommit=$(repo_commit "$TAR") \
+  s12_build sdk "$X" s12.slnf -p:OfficialBuildId=20260811.6 -p:RepositoryCommit=$(repo_commit "$TAR") -p:SourceRevisionId=$(repo_commit "$TAR") \
     -p:IncludeAspNetCoreRuntime=false -p:UsingToolMicrosoftNetCompilers=false \
     -p:MicrosoftNETCoreAppRuntimePackageVersion=8.0.0 -p:MicrosoftNETCoreAppRuntimewinx64PackageVersion=8.0.0
 }

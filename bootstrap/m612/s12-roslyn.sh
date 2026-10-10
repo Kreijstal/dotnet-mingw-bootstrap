@@ -77,7 +77,7 @@ EOX
 # tarball in the VMR); compiling stage N's Roslyn with stage N-1's is the bootstrap itself
 step_build() {
   s12_nugetconfig "$R" "$BOOT/feed"
-  s12_build roslyn "$R" s12.slnf -p:OfficialBuildId=20251119.25 -p:RepositoryCommit=$(repo_commit "$TAR") \
+  s12_build roslyn "$R" s12.slnf -p:OfficialBuildId=20251119.25 -p:RepositoryCommit=$(repo_commit "$TAR") -p:SourceRevisionId=$(repo_commit "$TAR") \
     -p:UsingToolMicrosoftNetCompilers=false
 }
 

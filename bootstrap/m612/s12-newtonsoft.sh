@@ -3,6 +3,7 @@
 # pin) with `dotnet build/pack` of Src/Newtonsoft.Json/Newtonsoft.Json.csproj, as the VMR does:
 # LibraryFrameworks net6.0;netstandard2.0, version 13.0.3 / assembly 13.0.0.0 (what its build script
 # passes), public-signed with the Newtonsoft public key (Dynamic.snk, a key pair, is deleted).
+# PathMap: not Arcade-based, so nothing else maps the source root to /_/.
 # Patch 0001 drops its NetAnalyzers/SourceLink tool packages.
 # usage: s12-newtonsoft.sh [prep] [build]
 set -euo pipefail
@@ -24,7 +25,7 @@ step_build() {
   # (an environment variable: an escaped ';' in a global property would stay one TargetFramework)
   LibraryFrameworks='net6.0;netstandard2.0' s12_build newtonsoft "$X/Src" Newtonsoft.Json/Newtonsoft.Json.csproj \
     -p:VersionPrefix=13.0.3 -p:VersionSuffix= -p:AssemblyVersion=13.0.0.0 -p:FileVersion=13.0.3.27908 \
-    -p:AdditionalConstants=SIGNED -p:SignAssembly=true -p:PublicSign=true -p:AssemblyOriginatorKeyFile="$(keyfile Newtonsoft)" -p:EnablePackageValidation=false \
+    -p:AdditionalConstants=SIGNED -p:SignAssembly=true -p:PublicSign=true -p:AssemblyOriginatorKeyFile="$(keyfile Newtonsoft)" -p:EnablePackageValidation=false -p:PathMap="$(w "$X")=/_/" \
     -p:PackageOutputPath="$(w "$X/Src/artifacts/packages")"
 }
 for s in $steps; do log "s12 newtonsoft.json (stage $STAGE): $s"; "step_$s"; done
