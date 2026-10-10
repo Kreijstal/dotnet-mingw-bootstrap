@@ -1,6 +1,6 @@
 # Phase 6: from Mono 6.12 to a source-built .NET SDK on MSYS2
 
-Status as of 2026-10-09. Host: `ssh topkek@win11`, MSYS2 UCRT64, 4 cores.
+Status as of 2026-10-10. Host: `ssh topkek@win11`, MSYS2 UCRT64, 4 cores.
 Work tree on win11: `~/dotnetboot/m612/`. Scripts: `bootstrap/m612/`,
 environment `bootstrap/env-m612.sh`, patches `patches/m612/`.
 
@@ -82,19 +82,19 @@ against the repositories.
 
 | Component | Repo | Language | Needed as | Status |
 |---|---|---|---|---|
-| C# compiler (`csc`, Microsoft.CodeAnalysis*) | dotnet/roslyn | C# | net472 build on Mono now; netX build in the SDK later | **built (4.0 → 4.12)** |
-| MSBuild engine + tasks + Common targets | dotnet/msbuild | C# | net472 on Mono now; netX in the SDK later | **built (17.8.49, net472)** |
+| C# compiler (`csc`, Microsoft.CodeAnalysis*) | dotnet/roslyn | C# | net472 build on Mono now; netX build in the SDK later | **built (4.0 → 4.12)**; 4.8 net8.0 **by its own project files** (S12, §6.13) |
+| MSBuild engine + tasks + Common targets | dotnet/msbuild | C# | net472 on Mono now; netX in the SDK later | **built (17.8.49, net472)**; net8.0 **by its own project files** (S12) |
 | Roslyn MSBuild task (Csc) + Microsoft.CSharp.Core.targets | dotnet/roslyn | C# | with MSBuild | **built** |
 | netfx "package" assemblies (SCI, SRM, System.Memory, STJ, …) | dotnet/runtime, dotnet/maintenance-packages | C#/IL | MSBuild/Roslyn deps on Mono | **built** |
-| NuGet client (NuGet.Build.Tasks, NuGet.* libs, restore) | NuGet/NuGet.Client | C# | restore and package resolution in SDK builds | **built** (net472 §6.5, net8.0 §6.11) |
-| .NET SDK tasks and targets (Microsoft.NET.Build.Tasks, Sdks/Microsoft.NET.Sdk) | dotnet/sdk | C# + targets | SDK-style projects | **built** (net472 §6.6, net8.0 §6.11) |
-| dotnet CLI (`dotnet.dll`, Cli.Utils, TemplateEngine, System.CommandLine, resolvers) | dotnet/sdk, templating, command-line-api | C# | `dotnet build/new/run/pack/publish` | **built** (net8.0, §6.11) |
+| NuGet client (NuGet.Build.Tasks, NuGet.* libs, restore) | NuGet/NuGet.Client | C# | restore and package resolution in SDK builds | **built** (net472 §6.5, net8.0 §6.11; by its own project files incl. NuGet.CommandLine.XPlat, S12) |
+| .NET SDK tasks and targets (Microsoft.NET.Build.Tasks, Sdks/Microsoft.NET.Sdk) | dotnet/sdk | C# + targets | SDK-style projects | **built** (net472 §6.6, net8.0 §6.11; by its own project files, S12) |
+| dotnet CLI (`dotnet.dll`, Cli.Utils, TemplateEngine, System.CommandLine, resolvers) | dotnet/sdk, templating, command-line-api | C# | `dotnet build/new/run/pack/publish` | **built** (net8.0, §6.11; by their own project files, S12) |
 | Reference packs (Microsoft.NETCore.App.Ref) | dotnet/runtime `src/libraries/*/ref` | C# | compiling anything for netX | **built** (§6.7; generators in `analyzers/dotnet/cs`, runtime pack, §6.11) |
 | System.Private.CoreLib + framework libraries | dotnet/runtime | C# | the shared framework | **built** (168 assemblies, §6.10; CoreLib for both flavors, §6.12) |
 | Runtime: CoreCLR (`coreclr.dll`, `clrjit.dll`) **or** the Mono flavor of dotnet/runtime | dotnet/runtime | C/C++/asm | the shared framework | **both built** with CLANG64: Mono flavor (§6.9), CoreCLR + its CoreLib + crossgen2/ReadyToRun (§6.12) |
 | Host: `dotnet.exe`, `hostfxr.dll`, `hostpolicy.dll`, `apphost.exe` | dotnet/runtime `src/native/corehost` | C/C++ | running anything | **done** with CLANG64 (§6.8) |
 | Native shims (System.IO.Compression.Native, Globalization) | dotnet/runtime `src/native` | C | framework | **built** (§6.9; Globalization is in the runtime) |
-| Arcade SDK, source generators, ILLink, GenAPI … | dotnet/arcade, runtime | C# | only to run the upstream build | avoided (direct csc); generators built from source; GenFacades/PNSE replaced by small scripts (§6.10); ILLink built for PublishTrimmed (§6.11) |
+| Arcade SDK, source generators, ILLink, GenAPI … | dotnet/arcade, runtime | C# | only to run the upstream build | S8–S11: avoided (direct csc); generators built from source; GenFacades/PNSE replaced by small scripts (§6.10); ILLink built for PublishTrimmed (§6.11). S12: **Arcade SDK built from source** (§6.13) and used by every repo build |
 
 ## 3. Native parts on MinGW
 
@@ -178,7 +178,7 @@ Statuses:
 | S10b | Runtime: Mono flavor of dotnet/runtime 8.0 (`-rf Mono`) with MinGW | MinGW | **SOLVED-HERE** (native part) | `mono-runtime.sh`, §6.9: 4 more patches (MSVC-only CMake, `__thread`, no MASM, POSIX configure results cleared, ICU C headers, zlib-intel/windres fixes). `coreclr.dll` (Mono VM) + `System.IO.Compression.Native.dll` build with CLANG64 and import only system DLLs; dotnet.exe → hostfxr → hostpolicy → `coreclr.dll` initialises Mono and stops at the missing System.Private.CoreLib (S9) |
 | S10c | Runtime: CoreCLR with CLANG64 clang (GNU driver) | MinGW | **SOLVED-HERE** | `coreclr.sh`, `corelib-coreclr.sh`, `framework-coreclr.sh`, `crossgen2.sh`, §6.12: patches 0008–0017 (GNU-driver CMake, inc/mingw, ETW header without mc.exe, /EHa emulation for clang's Itanium EH, a clang `__finally` miscompile worked around, MASM via UASM). hello/smoke/ehstress and the whole `sdk-net8-test.sh` pass on CoreCLR; crossgen2 R2R-compiles the framework and the SDK tools (SDK commands 2–2.5× faster than on Mono). Open: ETW, vxsort, DAC/DBI/createdump, singlefilehost |
 | S11 | Assemble SDK 8.0 (host + shared framework + SDK managed bits built for net8.0) | all above | **SOLVED-HERE** | §6.11: Roslyn, MSBuild, NuGet, SDK tasks/resolvers, `dotnet.dll`, TemplateEngine, SourceLink, ILLink as net8.0 assemblies in the upstream `sdk/8.0.131` layout; `dotnet new/build/run/pack/publish` (incl. self-contained, trimmed, PackageReference from a local feed, `-m` with node reuse, the compiler server) run on the from-source Mono-flavour runtime, no Mono 6.12. 1 patch (Roslyn compiler server mutex); open: roslyn-analyzers, vstest, F#, XPlat |
-| S12 | Rebuild the SDK with itself (VMR, Windows) | S11 | UNKNOWN | VMR source-only mode is Linux-only; Windows would need Arcade from source and a local package feed |
+| S12 | Rebuild the SDK with itself (repo by repo, Windows) | S11 + S10c | **SOLVED-HERE** (SDK tools; runtime managed parts still hand-built) | §6.13: Arcade from source, source-build-reference-packages (ilasm from the CoreCLR tree), then Arcade, xliff-tasks, Roslyn, MSBuild, Newtonsoft.Json, xdt, NuGet.Client, command-line-api, templating, deployment-tools, sourcelink, dotnet/sdk with `dotnet build` of their own project files against a local feed only; `dotnet-sdk-8.0.131-stage2` passes `sdk-net8-test.sh` (+ `dotnet add package`); stage 3 (built by stage 2) and stage 4 (built by stage 3) are **bit-identical** (2725 assemblies); stage 2 vs 3 differ only in the compiler-version string in the PDBs. Open: runtime libraries/CoreLib/crossgen2 from their project files, roslyn-analyzers, vstest, F# |
 
 Earlier stages S0–S5 run only on Mono. Everything up to S8 is managed code
 and is platform-neutral.
@@ -1132,6 +1132,243 @@ tier-0 JIT of the compiler. With R2R the SDK commands are 2–2.5× faster than 
   R2R); crossgen2 itself runs as IL (it could be R2R-compiled by itself); no `--pdb`
   (needs the native DiaSymReader).
 
+### 6.13 S12: the SDK rebuilds itself from the upstream project files
+
+The SDK of §6.12 (`dotnet-sdk-8.0.131-net8-coreclr-r2r`, CoreCLR + ReadyToRun) builds the SDK's own
+repositories with **`dotnet build`/`dotnet pack` of their own project files** (no `csc` command lines,
+no `csproj_items.py`/`sdkproj.sh`, no Mono), in the upstream source-build configuration
+(`DotNetBuildFromSource=true`, `DotNetBuildFromSourceFlavor=Product`), restoring only from local feeds
+of packages built here. The result is laid out as a new SDK root, `m612/dotnet-sdk-8.0.131-stage2`;
+the same scripts run again with that SDK give stage 3, and once more stage 4.
+
+The VMR's `./build.sh --source-only` is Linux-only, so this goes **repo by repo**, in the VMR's order,
+with the VMR's own mechanisms where they exist:
+
+- **Version lifting.** The VMR passes every repo a `PackageVersions.props` with the versions the earlier
+  repos produced (`DotNetPackageVersionPropsPath`; Arcade imports it right after `eng/Versions.props`,
+  NuGet's `build/config.props` imports it itself). `tools/s12versions.py` writes the same file from
+  the stage's feed: `<IdWithoutDots>PackageVersion` and `<IdWithoutDots>Version` for every package.
+- **source-build-reference-packages** (SBRP, `release/8.0`) supplies compile-time-only packages, as in
+  the VMR: targeting packs (IL text), text-only packages, and C# reference packages.
+- **Target frameworks**: `DotNetTargetFrameworkFilter=netstandard2.0;netstandard2.1;net8.0` (no
+  .NET Framework, no older .NETCoreApp; SBRP itself also keeps netstandard1.x).
+
+**Scripts** (all under `bootstrap/m612/`; `s12-stage.sh` runs them in order, chain steps 45–50):
+
+| Step | Script | What |
+|---|---|---|
+| 1 | `s12-sbrp.sh prep targetpacks textonly` | SBRP: targeting packs NETStandard.Library 1.6.1/2.0.3, NETStandard.Library.Ref 2.1.0, Microsoft.NETCore.App.Ref 3.0.0–7.0.0 assembled from SBRP's IL with the **from-source CoreCLR `ilasm`** (`ninja ilasm` in the coreclr.sh tree), as SBRP's `build-il.sh` does; the 11 text-only packages. `s12-sbrp.sh refs` builds C# reference packages with `dotnet pack` of their SBRP project files, on demand: `s12_restore` reads NU1101/NU1102/NU1603 from a failed restore (`tools/s12missing.py`), works out the SBRP closure (`tools/s12sbrpdeps.py`) and retries |
+| 2 | `s12-packs.sh` | the targeting packs the builds use (`NetCoreTargetingPackRoot`): Microsoft.NETCore.App.Ref 8.0.31 rebuilt by `refpack.sh` (with the build SDK's `csc.dll`, no Mono) with two fixes found here, see below |
+| 3 | `s12-feed.sh` | the **seed feed**: 35 packages made from assemblies of the hand-made S9–S11 drivers (see below) |
+| 4 | `s12-arcade.sh` | dotnet/arcade 7945b1b6 (Microsoft.DotNet.Arcade.Sdk **8.0.0-beta.26411.4**, the version SDK 8.0.131 pins): a bootstrap SDK `8.0.0-boot` (Arcade's own `sdk/` + `tools/` text, its task assembly compiled by a 20-line project of ours from the same sources), then the real `Microsoft.DotNet.Arcade.Sdk.csproj` under it; every later repo's `global.json` points at this Arcade |
+| 5 | `s12-xliff.sh` | dotnet/xliff-tasks 73f08509 (Microsoft.DotNet.XliffTasks 1.0.0-beta.23475.1): the repos' `.xlf` → satellite assemblies |
+| 6 | `s12-roslyn.sh` | Roslyn 4.8.0 (tag), `s12.slnf`: Microsoft.CodeAnalysis{,.CSharp,.VisualBasic,.Scripting,.CSharp.Scripting,.ExternalAccess.RazorCompiler}, csc/vbc/VBCSCompiler/csi, Microsoft.Build.Tasks.CodeAnalysis, the **Microsoft.Net.Compilers.Toolset** package; 4.8.0-7.25569.25 (the SDK's pin) |
+| 7 | `s12-msbuild.sh` | MSBuild 17.8.49, `MSBuild.SourceBuild.slnf` (net8.0 + the netstandard2.0 reference builds), packages 17.8.49 |
+| 8–9 | `s12-newtonsoft.sh`, `s12-xdt.sh` | Newtonsoft.Json 13.0.3 (`LibraryFrameworks=net6.0;netstandard2.0`, `SIGNED`, public-signed); dotnet/xdt 9a1c3e1b (Microsoft.Web.Xdt 7.0.0-preview.22423.2) |
+| 10 | `s12-nuget.sh` | NuGet.Client 6.8.2.3: the 19 `XPLATProject` projects of its source build (NuGet.*, NuGet.Build.Tasks(.Console,.Pack), Microsoft.Build.NuGetSdkResolver, **NuGet.CommandLine.XPlat**), 6.8.2-rc.3 |
+| 11–14 | `s12-cmdline.sh`, `s12-templating.sh`, `s12-deployment-tools.sh`, `s12-sourcelink.sh` | System.CommandLine 2.0.0-beta4.23307.1 (`sourcebuild.slnf`), Microsoft.TemplateEngine.* 8.0.131, Microsoft.Deployment.DotNet.Releases 2.0.0-rtm.1.25064.1, Microsoft.Build.Tasks.Git + Microsoft.SourceLink.* (public tag 8.0.0) |
+| 15 | `s12-sdk.sh` | dotnet/sdk 8.0.131, `s12.slnf` = the S11 set: dotnet.dll, Cli.Utils, Configurer, Sln.Internal, InternalAbstractions, TemplateLocator, Microsoft.Win32.Msi, Microsoft.TemplateEngine.Cli, the resolvers, Microsoft.NET.Build.Tasks (+ ApiCompat tasks, which it references), `IncludeAspNetCoreRuntime=false` |
+| 16 | `s12-layout.sh` | `dotnet-sdk-8.0.131-stageN-il` and the R2R root `dotnet-sdk-8.0.131-stageN` (below) |
+| — | `s12-verify.sh` | the stage comparison (below) |
+
+Common settings (`s12-common.sh`): `ContinuousIntegrationBuild=true`, `Deterministic=true`, source-control
+queries and SourceLink off (tarballs, not checkouts; Arcade then maps `RepoRoot` to `/_/`; the two
+non-Arcade repos get `PathMap`), `RepositoryCommit`/`SourceRevisionId` = the tarball's commit,
+`RepositoryUrl` = the GitHub URL, `OfficialBuildId` chosen to reproduce each pinned version number
+(e.g. 20251119.25 → Roslyn 4.8.0-7.25569.25). Every `dotnet` runs with a private CLI home and
+`NUGET_PACKAGES` per stage, and `HTTP(S)_PROXY=http://127.0.0.1:9`, so any network access fails; each
+repo's `NuGet.config` is replaced by one that `<clear/>`s and lists only `s<N>/feed`, `feed-sbrp`,
+`feed-seed` (and the bootstrap feed). The SDK itself adds `<root>/library-packs` (the ILLink nupkg).
+
+**Turned off** (tools, not product code; Arcade's own source-build mode turns off the same):
+Pdb2Pdb (Windows-PDB conversion, a prebuilt native tool; also `PublishWindowsPdb=false`), VS SDK,
+IBC optimization data/training, symbol uploader; `FullAssemblySigningSupported=false` (public signing
+only, as Arcade offers for distros; the Open/AspNetCore/cecil key *pairs* in Arcade's `tools/snk` are
+replaced by the public keys of `keys/`); `EnableNETAnalyzers=false` and `EnforceCodeStyleInBuild=false`
+(not built; analyzers only report); package validation (`EnablePackageValidation=false`, MSBuild and
+Newtonsoft: needs the previous release from nuget.org); `UsingToolMicrosoftNetCompilers=false` (Roslyn,
+MSBuild, sdk pin a toolset package: they are compiled by the building SDK's own Roslyn, which is the
+point of the exercise).
+
+**Patches** (`patches/m612/`):
+
+| Patch | What |
+|---|---|
+| `sbrp/0001-configurationmanager-7.0.0-ConfigurationPropertyAttribute.patch` | SBRP's generated System.Configuration.ConfigurationManager 7.0.0 reference source lacks `ConfigurationPropertyAttribute` (a GenAPI omission; the real 7.0.0 has it); MSBuild's `ToolsetElement.cs` needs it. The VMR never notices: it lifts ConfigurationManager to the runtime's 8.0 build |
+| `s12-newtonsoft.json-13.0.3/0001-no-prebuilt-analyzer-and-sourcelink-packages.patch` | drops Newtonsoft's Microsoft.CodeAnalysis.NetAnalyzers 6.0.0 and Microsoft.SourceLink.GitHub 1.0.0 tool references (prebuilt; the VMR does the same) |
+| `roslyn-4.8.0/0001` (S11) | applied as before (compiler-server mutex) |
+
+The S5 MSBuild patch (Mono code paths) is not applied: nothing here runs on Mono.
+
+**Fixes to the stage-1 drivers found by S12** (`refpack.sh`): the reference assemblies lacked
+`[assembly: CLSCompliant(true)]` (upstream's `eng/versioning.targets` adds it to every library unless a
+project opts out), so every CLS-checked compile against the pack failed (MSBuild: CS3009 "base type
+'object' is not CLS-compliant"); and the pack had no `data/PlatformManifest.txt`, so the SDK's conflict
+resolution did not know what the framework carries and a net8.0 publish copied lower package versions
+(SBRP's System.Collections.Immutable 7.0.0, a *reference* assembly) next to the app — found in the first
+Roslyn toolset package. The stage-1 roots are left as they were; S12 uses the rebuilt pack.
+
+**Bootstrap stubs and version overrides** (each one deliberate):
+
+- `8.0.0-boot` Arcade SDK (bootstrap only, see step 4; replaced by the real build).
+- `Microsoft.CodeAnalysis.Analyzers 3.3.4` **stub**: a package with no analyzers. Roslyn's
+  CSharpSyntaxGenerator references it (`PrivateAssets=all`); it is built by dotnet/roslyn-analyzers, which
+  needs Roslyn first (the VMR takes it from the previously-source-built tarball). Analyzers only report
+  diagnostics, so the stub changes no output.
+- `s12/KnownFrameworks.targets` (via `CustomAfterMicrosoftCommonTargets`): `KnownFrameworkReference`s for
+  netcoreapp3.0–net7.0 and netstandard2.1 when the SDK lacks them (the stage-1 `BundledVersions.props`
+  is hand-written and knows net8.0 only); SBRP projects target those frameworks.
+- every repo's `global.json` (`tools/s12globaljson.py`): our SDK version and Arcade 8.0.0-beta.26411.4
+  (each repo pins a different 8.0 Arcade build).
+- Arcade: Microsoft.Extensions.Logging.Console 8.0.1 → 6.0.0 (SBRP; used by Microsoft.Arcade.Common only).
+- NuGet: System.Security.Cryptography.Pkcs 6.0.4 → 7.0.2, .Xml 6.0.1 → 7.0.1 (what Microsoft.Build.Tasks.Core
+  17.8.49 needs, else NU1605), System.ComponentModel.Composition 4.5.0 → 7.0.0 (SBRP has no 4.5.0);
+  `IsXPlat=true` (what its Linux source build sees; on Windows it would add Microsoft.SourceLink.GitHub
+  1.0.0); `DebugType=portable` (pdbonly means a native Windows PDB on Windows); warnings not as errors
+  (SYSLIB0051 obsoletions of .NET 8 in NuGet 6.8).
+- templating: Microsoft.Extensions.Logging(.Abstractions/.Console)/DependencyInjection.Abstractions 8.0.x
+  → 6.0.0 and System.Formats.Asn1 8.0.1 → 7.0.0 (SBRP; netstandard2.0 targets need a netstandard2.0
+  asset, which our runtime libraries do not have); NU5104 not an error.
+- sdk: the runtime version properties 8.0.31 → our 8.0.0; the seed packages are lifted.
+
+**The seed feed** (`s12-feed.sh`, `feed-seed/`): the runtime is *not* rebuilt from its project files
+(below), so the packages dotnet/runtime produces in the VMR are packed from the S11 assemblies: the 24
+out-of-band libraries of `libraries.sh` (Microsoft.Extensions.*, System.Configuration.ConfigurationManager,
+EventLog, MetadataLoadContext, Pkcs/Xml, …), 8 framework assemblies the SDK pins as packages
+(System.Text.Json, …), Microsoft.NET.HostModel 8.0.0, Microsoft.ApplicationInsights 2.21.0 (`clideps-net8.sh`)
+and Microsoft.NETCore.DotNetHostResolver 8.0.0 (our `hostfxr.dll`). They are net8.0-only and therefore
+lifted only where a repo asks for them (`S12_LIFT_SEEDS`: dotnet/sdk); everything else compiles against
+SBRP.
+
+**Feeds after stage 2**: `s2/feed` 72 packages, all built by `dotnet build/pack` here (Arcade, XliffTasks,
+11 Roslyn, 7 MSBuild, Newtonsoft.Json, Xdt, 19 NuGet, 4 System.CommandLine, 8 TemplateEngine,
+Deployment.DotNet.Releases, 6 SourceLink, 11 dotnet/sdk, 4 symbol packages); `feed-sbrp` 219 packages
+(~190 reference packages, 8 targeting packs, 21 text-only; all from SBRP text, one patched); `feed-seed` 35 (above). No package with
+compiled code comes from outside; nuget.org is never reachable.
+
+**Layout** (`s12-layout.sh`): `sdk/8.0.131` is assembled the way dotnet/sdk's `src/Layout/redist` does it,
+from the outputs: MSBuild's `bin/MSBuild` (only MSBuild's own assemblies, targets, `Current/`, `ref/`,
+satellites), the CLI's `bin/dotnet` (dotnet.dll + the libraries it references), NuGet's restore/pack/
+XPlat/resolver assemblies and targets, `Roslyn/` = the Toolset package's `tasks/netcore`, `Sdks/` =
+dotnet/sdk's `bin/Release/Sdks` + NuGet.Build.Tasks.Pack + SourceLink from their packages, the MSBuild
+SDK resolver. `redist.csproj` itself is not used: it also wants dotnet-format, vstest, F#, Razor,
+NetAnalyzers/CodeStyle, Containers, dotnet-watch. Not rebuilt and taken from stage 1: `dotnet.exe`,
+`host/`, `shared/` (the framework of S9/S10c), `templates/`, `library-packs/` (ILLink),
+`BundledVersions.props`, the RID graphs, and the out-of-band runtime libraries MSBuild/NuGet run with.
+`check` fails on any `[ReferenceAssembly]` DLL outside `sdk/8.0.131/ref` (MSBuild's and NuGet's output
+folders do contain SBRP reference assemblies; they are never copied). `r2r` compiles the SDK directory
+with crossgen2 (stage 1's) and reuses stage 1's R2R framework.
+
+**Timings** (win11, 4 cores; one stage = steps 4–16):
+
+| | stage 2 (built by stage 1) | stage 3 (by stage 2) | stage 4 (by stage 3) |
+|---|---|---|---|
+| Arcade (bootstrap + real) | 12 s | 12 s | 14 s |
+| xliff-tasks | 5 s | 5 s | 6 s |
+| Roslyn | 62 s | 72 s | 84 s |
+| MSBuild | 21 s | 23 s | 22 s |
+| Newtonsoft.Json + xdt | 14 s | 13 s | 14 s |
+| NuGet.Client | 32 s | 34 s | 34 s |
+| command-line-api, templating, deployment-tools, sourcelink | 38 s | 38 s | 37 s |
+| dotnet/sdk | 32 s | 33 s | 32 s |
+| layout + check + R2R of the SDK directory | 119 s | 121 s | 121 s |
+| **total** | **5.6 min** | **5.9 min** | **6.1 min** |
+
+One-time (shared by all stages): SBRP targeting packs + text-only 1.5 min, ~190 SBRP reference packages
+≈ 8 min in total (built on demand during the first restores), the fixed targeting pack 7 min, seeds
+30 s. (For comparison: S11's hand-made drivers on Mono 6.12 took ~3 min for Roslyn alone.)
+
+**End-to-end proof**: `sdk-net8-test.sh` with `ROOT=m612/dotnet-sdk-8.0.131-stage2`: every step passes
+(`--info` reports the stage-2 SDK; new/build/run, apphost, pack + PackageReference from a local feed,
+3-project sln with `-m:4`, Roslyn's Microsoft.CodeAnalysis rebuilt and used, the reference pack's
+generators, self-contained and trimmed publish). New step `addpackage`: **`dotnet add package` and
+`dotnet list package` work** (NuGet.CommandLine.XPlat, an S11 gap):
+
+```
+TIME dotnet new console                    1.5 s        TIME dotnet build -m:4 (3 projects)        2.2 s
+TIME dotnet build (first)                  2.5 s        TIME dotnet build -m:4 (no-op)             1.1 s
+TIME dotnet build (incremental)            1.0 s        TIME dotnet build roslyncore               9.9 s
+TIME dotnet run                            1.1 s        TIME csc.dll (rebuilt MCA) hello           0.8 s
+TIME dotnet pack                           1.4 s        TIME dotnet build (generators)             1.6 s
+TIME dotnet build (pkgref)                 1.4 s        TIME dotnet publish --self-contained       1.6 s
+TIME dotnet run (pkgref)                   0.5 s        TIME dotnet publish -p:PublishTrimmed=true 4.6 s
+$ dotnet add package Bootstrap.Greeting --version 2.0.0     # 1.3 s
+info : PackageReference for package 'Bootstrap.Greeting' version '2.0.0' added to file '...\app2.csproj'.
+```
+
+(the same speed as the stage-1 R2R root, §6.12, as expected: same runtime, same compiler sources.)
+
+**The bootstrap proof** (`s12-verify.sh`: every `.dll`/`.exe` in the repos' output folders, byte by byte;
+then `tools/pecompare.cs` on each difference: it blanks the fields a deterministic build derives from
+content hashes — MVID, COFF time stamp, PE checksum, CodeView GUID/age, PDB checksum — and compares the
+rest, and lists the portable-PDB compilation options and references that differ):
+
+| repo | stage 2 vs 3 identical / different | stage 3 vs 4 identical / different |
+|---|---|---|
+| Arcade | 22 / 8 | 30 / 0 |
+| xliff-tasks | 0 / 1 | 1 / 0 |
+| Roslyn | 442 / 51 | 493 / 0 |
+| MSBuild | 550 / 60 | 610 / 0 |
+| xdt | 0 / 2 | 2 / 0 |
+| command-line-api | 78 / 12 | 90 / 0 |
+| templating | 169 / 26 | 195 / 0 |
+| deployment-tools | 13 / 1 | 14 / 0 |
+| sourcelink | 78 / 6 | 84 / 0 |
+| dotnet/sdk | 580 / 95 | 675 / 0 |
+| NuGet.Client | 288 / 241 | 529 / 0 |
+| Newtonsoft.Json | 0 / 2 | 2 / 0 |
+| **SDK root `sdk/8.0.131`** (all files) | 630 / 110 | 735 / 5 |
+
+- **Stage 3 = stage 4, bit for bit**: all 2725 assemblies (csc/Microsoft.CodeAnalysis*, MSBuild.dll and
+  Microsoft.Build*, dotnet.dll, NuGet, the tasks, every satellite). The only differing files in the SDK
+  roots are `.m612-stage` (a build note with the date) and four `deps.json` of the Roslyn toolset: they
+  record the SHA-512 of the Microsoft.DotNet.XliffTasks *package*, and `.nupkg` files are zip archives
+  with the packing time in them (NuGet's pack is not deterministic); no assembly depends on that.
+- **Stage 2 vs 3**: all satellite assemblies identical; 478 of the 483 differing main assemblies are
+  identical after normalization, and the PDBs show why: `compiler-version` — stage 2 was compiled by
+  stage 1's csc, which reports itself as `4.8.0 (m612 bootstrap, net8.0)` (S11's hand-written
+  AssemblyInformationalVersion), stage 3 by stage 2's, `4.8.0-7.25569.25+e091728607ca…`. Roslyn writes
+  that string into every portable PDB, the PDB's hash goes into the PE's debug directory and MVID, and
+  the MVIDs of references go into the PDBs of their dependents. The other 5 are Arcade's assemblies,
+  which embed their PDB (`DebugType=embedded`), so the same string changes the PE layout itself.
+  Nothing else differs: the IL, metadata and resources stage 1's compiler produced are the ones stage 2's
+  produces.
+- Found and fixed on the way: Arcade writes `RepositoryUrl=file://<RepoRoot>` into every assembly when
+  source-control queries are off (the stage directories differ) → `RepositoryUrl` is passed; NuGet and
+  Newtonsoft are not Arcade-based, so nothing mapped their source root → `PathMap`.
+
+**What is built from its own project files now, and what still is not** (stage 2 SDK):
+
+- from project files: everything in `sdk/8.0.131` that comes from Roslyn, MSBuild, NuGet.Client,
+  dotnet/sdk, templating, command-line-api, deployment-tools, sourcelink, Newtonsoft.Json, xdt, and the
+  Arcade SDK/XliffTasks that built them;
+- still from the hand-made drivers of S8–S11: the shared framework (CoreLib `corelib.sh`, the 168
+  libraries `libraries.sh`, Microsoft.VisualBasic.Core `vbc.sh`), the out-of-band runtime libraries in the
+  SDK directory (Microsoft.Extensions.*, System.Configuration.ConfigurationManager, …: `libraries.sh` OOB),
+  Microsoft.NET.HostModel and Microsoft.ApplicationInsights (`clideps-net8.sh`), the reference pack
+  (`refpack.sh`, now with CLSCompliant/PlatformManifest) and its source generators (`netfx-pkgs.sh`, compiled
+  in stage 1 by Roslyn 4.8 on Mono), ILLink (`illink-net8.sh`), crossgen2 (`crossgen2.sh`), the templates
+  and `BundledVersions.props`; natively: host, CoreCLR, clrjit (CMake, §6.8/§6.12). Mono runs nowhere in
+  stages 2–4.
+- not built at all: roslyn-analyzers (NetAnalyzers/CodeStyle), vstest (`dotnet test`), F#, Razor/Web SDKs,
+  dotnet-format, dotnet-watch, Containers, workloads.
+
+**Open issues**:
+
+- **dotnet/runtime's managed parts from their project files** (CoreLib, the libraries, the out-of-band
+  packages, ILLink, crossgen2). A first attempt (`s12-runtime.sh`, Microsoft.Extensions.Logging.Abstractions)
+  stops at restore on the runtime repo's own build tooling: Microsoft.DotNet.Build.Tasks.TargetFramework and
+  Microsoft.DotNet.GenFacades (Arcade repo projects, buildable), Microsoft.DotNet.ApiCompat.Task (dotnet/sdk,
+  built here), Microsoft.NET.ILLink.Tasks (bootstrap ILLink), and the generators' Microsoft.CodeAnalysis
+  4.4/4.5 + **Workspaces** packages; Roslyn's Workspaces in turn need Humanizer.Core 2.14.1 (the VMR builds
+  Humanizer from source) and System.Composition 7.0 (runtime). Ordering that loop is the next piece; with
+  real runtime packages (netstandard2.0 + net8.0) the seed feed and most version overrides above go away.
+- roslyn-analyzers needs Roslyn's Workspaces too (its docs/config generator runs Microsoft.CodeAnalysis);
+  then the analyzer stub goes and `EnableNETAnalyzers` can default to true.
+- NuGet's `.nupkg` timestamps (the only stage-3/4 difference in the SDK root, via `deps.json` hashes).
+- The stage-N SDKs still use stage 1's hand-written `BundledVersions.props` (dotnet/installer's
+  `GenerateBundledVersions` is not run).
+
 ### 6.4 MSBuild (`bootstrap/m612/msbuild.sh 17.8.49 <csc.exe> 4.12.0`)
 
 ```
@@ -1242,6 +1479,16 @@ in 2021 (dotnet/msbuild#6058):
 | System.CommandLine 2.0.0-beta4.23307.1 (`m612/net8-pkgs`, §6.11) | IL built from source | yes, crossgen2's command line | the version runtime 8.0.0 pins (`SystemCommandLineVersion`) |
 | `Microsoft.DiaSymReader.Native` (crossgen2 layout), `StaticCs`, `Microsoft.DiaSymReader` (ILCompiler PackageReferences) | prebuilt packages (the first is a native Microsoft DLL) | **no** | DiaSymReader.Native is only copied next to crossgen2 for `--pdb` (native PDBs of R2R code), which is therefore unavailable; the other two are not referenced with `DotNetBuildFromSource=true` (`ClosedAttribute` comes from ILLink.Shared) |
 | Windows' own .NET Framework 4.8 (`C:\Windows\Microsoft.NET`) | OS component | **no**, all paths redirected to Mono; verified by a `-v:diag` grep | out-of-proc MSBuild nodes and directly started `csc.exe` would use it, so we avoid both |
+| dotnet/source-build-reference-packages `release/8.0` 5aeee273 (S12) | text: C# reference sources (GenAPI output), IL text of targeting packs, nuspecs, text-only packages (MSBuild SDKs, Microsoft.NETCore.Platforms runtime.json, source packages) | yes, compile time only | the VMR's own answer to reference packages; IL assembled by our CoreCLR `ilasm`, C# compiled by our Roslyn via `dotnet pack` of the SBRP projects; nothing from SBRP is shipped in the SDK (`s12-layout.sh check`). One reference source patched (sbrp/0001). `Icon.png` files are images |
+| dotnet/arcade 7945b1b6, dotnet/xliff-tasks 73f08509, dotnet/xdt 9a1c3e1b, deployment-tools 5255d40e, command-line-api 02fe27cd, templating/sourcelink/NuGet/Roslyn/MSBuild/sdk tags (S12) | source tarballs | yes | test binaries deleted (arcade 44 test nupkgs/PEs, roslyn 162, NuGet 81, sdk 4, templating 2, runtime 30). Arcade's `tools/snk` Open/AspNetCore/cecil key *pairs* replaced by public keys (`keys/`) |
+| Arcade's toolset packages: MicroBuild, Microsoft.DotNet.SignTool, Microsoft.DiaSymReader.Pdb2Pdb, Microsoft.DotNet.Build.Tasks.Feed/VisualStudio, NuGetRepack, SymbolUploader, IBC data, Microsoft.VSSDK.BuildTools | prebuilt tools | **no** | Arcade's `Tools.proj` restore is never run; source-build mode / `UsingTool*=false` (§6.13) |
+| `Microsoft.Net.Compilers.Toolset` (pinned by Roslyn, MSBuild, sdk, roslyn-analyzers) | prebuilt compiler | **no** | `UsingToolMicrosoftNetCompilers=false`: the building SDK's own (from-source) Roslyn compiles |
+| `Microsoft.CodeAnalysis.Analyzers` 3.3.4 (Roslyn's CSharpSyntaxGenerator) | prebuilt analyzer | **no**, an empty stub package (`s12-roslyn.sh boot`) | analyzers only report diagnostics; roslyn-analyzers needs Roslyn first |
+| `Microsoft.CodeAnalysis.NetAnalyzers` 6.0.0, `Microsoft.SourceLink.GitHub` 1.0.0 (Newtonsoft.Json; NuGet on Windows) | prebuilt tool packages | **no** | Newtonsoft patch 0001; NuGet built with `IsXPlat=true` as its Linux source build |
+| Microsoft.Build* 17.7.0, Newtonsoft.Json 13.0.1 (package-validation baselines) | prebuilt packages | **no** | `EnablePackageValidation=false` |
+| `Microsoft.DotNet.Arcade.Sdk` of the previously-source-built tarball / Microsoft's feeds | prebuilt SDK package | **no** | `s12-arcade.sh` bootstraps Arcade from its own sources |
+| Seed feed (`feed-seed`, 35 packages: runtime OOB libraries, HostModel, ApplicationInsights, DotNetHostResolver) | IL/native built from source in S8–S11 by the hand-made drivers | yes, S12 | stands in for the VMR's runtime build until dotnet/runtime's managed parts are built from their project files |
+| nuget.org (user NuGet.Config) | package source | **no** | every repo's `NuGet.config` `<clear/>`s; `HTTP(S)_PROXY` points at a closed port during all S12 builds |
 
 Nothing was stopped for: every binary that came up was either part of the
 trusted seed, deleted, or avoided.
@@ -1286,13 +1533,21 @@ trusted seed, deleted, or avoided.
      CMake to accept a Mono static runtime (upstream only does that for mobile/WASM).
    - rebuild the S11 tool assemblies against the fixed reference pack (their metadata version
      string is empty, §6.11), ideally with the new SDK itself (the start of S12).
-3e. **S12 (self-rebuild / dotnet/dotnet source-build)**: the new SDK can now build ordinary
-   SDK-style projects, so the next step is to rebuild its own components with `dotnet build` from
-   their real project files instead of `sdkproj.sh`. That needs, per repo, what Arcade provides
-   (`Microsoft.DotNet.Arcade.Sdk` targets: versioning, GenerateResxSource, signing, ApiCompat,
-   GenFacades …) built from dotnet/arcade source, and a local feed of source-built packages for
-   every `PackageReference` (the S3/OOB/clideps assemblies packed as nupkgs). The VMR's
-   `--source-only` mode is still Linux-only; on Windows it would be driven repo by repo.
+3e. *(Done: S12, §6.13: Arcade from source, SBRP, and Roslyn/MSBuild/NuGet/sdk/templating/command-line-api/
+   deployment-tools/sourcelink/xdt/Newtonsoft rebuilt with `dotnet build` of their project files;
+   stage 3 = stage 4 bit for bit.)*  Leftovers, in order:
+   - **dotnet/runtime's managed parts from their project files**: first the out-of-band packages
+     (Microsoft.Extensions.*, System.Configuration.ConfigurationManager, … with netstandard2.0 + net8.0),
+     which needs Arcade's Microsoft.DotNet.Build.Tasks.TargetFramework/GenFacades packages (arcade repo),
+     dotnet/sdk's ApiCompat task (built), a bootstrap ILLink, and Roslyn's Workspaces (Humanizer.Core from
+     source, System.Composition); then the reference pack, CoreLib and the libraries (`build.cmd libs`
+     subsets), ILLink and crossgen2. That retires the seed feed, most version overrides and `refpack.sh`.
+   - roslyn-analyzers (same Workspaces prerequisite) → real Microsoft.CodeAnalysis.Analyzers instead of
+     the stub, NetAnalyzers in the SDK, `EnableNETAnalyzers` back to its default.
+   - vstest (`dotnet test`), dotnet-format, dotnet-watch; then `src/Layout/redist/redist.csproj`
+     itself instead of `s12-layout.sh`, and dotnet/installer's `GenerateBundledVersions` for
+     `BundledVersions.props`.
+   - deterministic `.nupkg`s (the last stage-3/4 difference, through `deps.json` package hashes).
 4. *(Done: CoreCLR on CLANG64, its CoreLib, crossgen2 and an R2R-compiled SDK root, §6.12.)*
    Leftovers, in order of usefulness:
    - report the clang/LLVM 22 `__finally` miscompile upstream (reproducers `fin7`/`fin10`)
