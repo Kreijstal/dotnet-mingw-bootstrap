@@ -14,7 +14,7 @@ steps=${*:-plan refs pack test}
 RT_VER=${RT_VER:-8.0.0}; PACK_VER=${PACK_VER:-8.0.31}; TFM=net${RT_VER%%.*}.0
 RT=$M612/src/runtime-$RT_VER
 L=$RT/src/libraries
-B=$M612/build/refpack-$RT_VER
+B=${REFPACK_B:-$M612/build/refpack-$RT_VER}
 O=$B/out
 SDKROOT=${SDKROOT:-$M612/dotnet-sdk-8.0.131}
 PACK=$SDKROOT/packs/Microsoft.NETCore.App.Ref/$PACK_VER
@@ -125,6 +125,11 @@ build_one() { # build_one <name> <kind> <csproj> <deps...>
     "$av" "$PACK_VER.0" "$PACK_VER" > "$o/AssemblyInfo.g.cs"
   # reference assemblies carry [ReferenceAssembly] (Arcade adds it for ref projects)
   [ "$kind" != shim ] && [ "$n" != System.Runtime ] && echo '[assembly: System.Runtime.CompilerServices.ReferenceAssembly]' >> "$o/AssemblyInfo.g.cs"
+  # [CLSCompliant(true)] as eng/versioning.targets adds it (src/libraries/Directory.Build.props: CLSCompliant
+  # defaults to true; System.Reflection.Metadata opts out).  Without it every CLS-checked compile against the
+  # pack fails (CS3009 "base type 'object' is not CLS-compliant"), found by S12's MSBuild build.
+  local cls; cls=$(cd "$pd" && csproj_items "${props[@]}" --prop CLSCompliant "$(basename "$p")" 2>/dev/null | cut -d= -f2 || true)
+  [ "${cls,,}" != false ] && echo '[assembly: System.CLSCompliant(true)]' >> "$o/AssemblyInfo.g.cs"
   local sign=(-publicsign -keyfile:"$(keyfile "$key")")
   local tok; tok=$(basename "$(ls "$KEYS/$key"-*.pubkey.hex)" .pubkey.hex); tok=${tok##*-}
   printf '%s %s %s\n' "$n" "$av" "$tok" > "$O/$n.meta"
@@ -171,8 +176,12 @@ step_pack() {
       echo "  <File Type=\"Analyzer\" Language=\"cs\" Path=\"analyzers/dotnet/cs/$n.dll\" AssemblyName=\"$n\" PublicKeyToken=\"cc7b13ffcd2ddd51\" AssemblyVersion=\"${RT_VER%%.*}.0.0.0\" FileVersion=\"$PACK_VER.0\" />"
     done
     echo "</FileList>"; } > "$PACK/data/FrameworkList.xml"
+  # data/PlatformManifest.txt: what the shared framework carries, for the SDK's package conflict resolution
+  # (without it a net8.0 publish copies lower package versions of framework assemblies next to the app)
+  for f in "$O"/*.meta; do read -r n av tok < "$f"; echo "$n.dll|Microsoft.NETCore.App.Ref|$av|$PACK_VER.0"; done | sort > "$PACK/data/PlatformManifest.txt"
   # tell the SDK about the pack (KnownFrameworkReference) and where packs live
   local bv="$SDKROOT/sdk/8.0.131/Microsoft.NETCoreSdk.BundledVersions.props"
+  [ -f "$bv" ] || return 0
   python3 -S - "$bv" "$PACK_VER" "$TFM" "$RT_VER" <<'EOPY'
 import sys
 p, ver, tfm, rtver = sys.argv[1:5]

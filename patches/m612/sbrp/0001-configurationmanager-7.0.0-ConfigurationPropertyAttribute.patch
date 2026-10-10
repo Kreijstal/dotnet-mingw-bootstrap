@@ -1,0 +1,66 @@
+diff -ruN sbrpa/src/referencePackages/src/system.configuration.configurationmanager/7.0.0/lib/net6.0/System.Configuration.ConfigurationManager.cs sbrpb/src/referencePackages/src/system.configuration.configurationmanager/7.0.0/lib/net6.0/System.Configuration.ConfigurationManager.cs
+--- a/src/referencePackages/src/system.configuration.configurationmanager/7.0.0/lib/net6.0/System.Configuration.ConfigurationManager.cs	2026-10-10 15:33:27.866207026 +0200
++++ b/src/referencePackages/src/system.configuration.configurationmanager/7.0.0/lib/net6.0/System.Configuration.ConfigurationManager.cs	2026-10-10 15:33:27.879207217 +0200
+@@ -607,6 +607,18 @@
+         public static void RefreshSection(string sectionName) { }
+     }
+ 
++    [AttributeUsage(AttributeTargets.Property)]
++    public sealed partial class ConfigurationPropertyAttribute : Attribute
++    {
++        public ConfigurationPropertyAttribute(string name) { }
++        public object DefaultValue { get { throw null; } set { } }
++        public bool IsDefaultCollection { get { throw null; } set { } }
++        public bool IsKey { get { throw null; } set { } }
++        public bool IsRequired { get { throw null; } set { } }
++        public string Name { get { throw null; } }
++        public ConfigurationPropertyOptions Options { get { throw null; } set { } }
++    }
++
+     public sealed partial class ConfigurationProperty
+     {
+         public ConfigurationProperty(string name, Type type, object defaultValue, ComponentModel.TypeConverter typeConverter, ConfigurationValidatorBase validator, ConfigurationPropertyOptions options, string description) { }
+diff -ruN sbrpa/src/referencePackages/src/system.configuration.configurationmanager/7.0.0/lib/net7.0/System.Configuration.ConfigurationManager.cs sbrpb/src/referencePackages/src/system.configuration.configurationmanager/7.0.0/lib/net7.0/System.Configuration.ConfigurationManager.cs
+--- a/src/referencePackages/src/system.configuration.configurationmanager/7.0.0/lib/net7.0/System.Configuration.ConfigurationManager.cs	2026-10-10 15:33:27.886207320 +0200
++++ b/src/referencePackages/src/system.configuration.configurationmanager/7.0.0/lib/net7.0/System.Configuration.ConfigurationManager.cs	2026-10-10 15:33:27.898207496 +0200
+@@ -607,6 +607,18 @@
+         public static void RefreshSection(string sectionName) { }
+     }
+ 
++    [AttributeUsage(AttributeTargets.Property)]
++    public sealed partial class ConfigurationPropertyAttribute : Attribute
++    {
++        public ConfigurationPropertyAttribute(string name) { }
++        public object DefaultValue { get { throw null; } set { } }
++        public bool IsDefaultCollection { get { throw null; } set { } }
++        public bool IsKey { get { throw null; } set { } }
++        public bool IsRequired { get { throw null; } set { } }
++        public string Name { get { throw null; } }
++        public ConfigurationPropertyOptions Options { get { throw null; } set { } }
++    }
++
+     public sealed partial class ConfigurationProperty
+     {
+         public ConfigurationProperty(string name, Type type, object defaultValue, ComponentModel.TypeConverter typeConverter, ConfigurationValidatorBase validator, ConfigurationPropertyOptions options, string description) { }
+diff -ruN sbrpa/src/referencePackages/src/system.configuration.configurationmanager/7.0.0/lib/netstandard2.0/System.Configuration.ConfigurationManager.cs sbrpb/src/referencePackages/src/system.configuration.configurationmanager/7.0.0/lib/netstandard2.0/System.Configuration.ConfigurationManager.cs
+--- a/src/referencePackages/src/system.configuration.configurationmanager/7.0.0/lib/netstandard2.0/System.Configuration.ConfigurationManager.cs	2026-10-10 15:33:27.838206616 +0200
++++ b/src/referencePackages/src/system.configuration.configurationmanager/7.0.0/lib/netstandard2.0/System.Configuration.ConfigurationManager.cs	2026-10-10 15:33:27.858206909 +0200
+@@ -606,6 +606,18 @@
+         public static void RefreshSection(string sectionName) { }
+     }
+ 
++    [AttributeUsage(AttributeTargets.Property)]
++    public sealed partial class ConfigurationPropertyAttribute : Attribute
++    {
++        public ConfigurationPropertyAttribute(string name) { }
++        public object DefaultValue { get { throw null; } set { } }
++        public bool IsDefaultCollection { get { throw null; } set { } }
++        public bool IsKey { get { throw null; } set { } }
++        public bool IsRequired { get { throw null; } set { } }
++        public string Name { get { throw null; } }
++        public ConfigurationPropertyOptions Options { get { throw null; } set { } }
++    }
++
+     public sealed partial class ConfigurationProperty
+     {
+         public ConfigurationProperty(string name, Type type, object defaultValue, ComponentModel.TypeConverter typeConverter, ConfigurationValidatorBase validator, ConfigurationPropertyOptions options, string description) { }

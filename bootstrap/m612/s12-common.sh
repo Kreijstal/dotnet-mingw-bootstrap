@@ -92,22 +92,25 @@ versions_props() { python3 -S "$M612_TOOLS_SRC/s12versions.py" "$FEED" > "$VERPR
 # MSBuild properties of every S12 repo build: the upstream source-build configuration
 # (DotNetBuildFromSource, Product flavour), deterministic CI build with /_/ source paths (Arcade sets
 # SourceRoot=RepoRoot when SCM queries are off; the trees are tarballs, not git checkouts), the
-# lifted versions, and the target frameworks the SDK needs (net8.0; netstandard2.0 for analyzers,
+# lifted versions, and the target frameworks the SDK needs (net8.0; netstandard2.0/2.1 for analyzers,
 # generators and libraries that ship it)
-S12_TFMS=${S12_TFMS:-netstandard2.0%3bnet8.0}
+S12_TFMS=${S12_TFMS:-netstandard2.0%3bnetstandard2.1%3bnet8.0}
 s12_props() {
   echo -p:DotNetBuildFromSource=true -p:DotNetBuildFromSourceFlavor=Product \
        -p:ContinuousIntegrationBuild=true -p:Deterministic=true \
        -p:EnableSourceControlManagerQueries=false -p:EnableSourceLink=false -p:PublishWindowsPdb=false -p:FullAssemblySigningSupported=false \
        -p:UsingToolPdbConverter=false -p:UsingToolVSSDK=false -p:UsingToolIbcOptimization=false \
        -p:UsingToolVisualStudioIbcTraining=false -p:UsingToolSymbolUploader=false \
+       -p:EnableNETAnalyzers=false -p:EnforceCodeStyleInBuild=false \
        -p:DotNetTargetFrameworkFilter="$S12_TFMS" \
        -p:DotNetPackageVersionPropsPath="$(w "$VERPROPS")" $(s12_kf)
 }
 # the older targeting packs for an SDK that does not list them (s12/KnownFrameworks.targets)
 s12_kf() {
   local pm=""
-  if ! ls "$BUILD_SDK"/packs/Microsoft.NETCore.App.Ref/*/data/PlatformManifest.txt > /dev/null 2>&1; then
+  # stage 2: the fixed targeting packs of s12-packs.sh (CLSCompliant, PlatformManifest)
+  if [ "$STAGE" = 2 ] && [ -d "$S12/packroot/packs" ]; then pm="-p:NetCoreTargetingPackRoot=$(w "$S12/packroot/packs")"
+  elif ! ls "$BUILD_SDK"/packs/Microsoft.NETCore.App.Ref/*/data/PlatformManifest.txt > /dev/null 2>&1; then
     [ -f "$SN/PlatformManifest.txt" ] || python3 -S - "$(ls "$BUILD_SDK"/packs/Microsoft.NETCore.App.Ref/*/data/FrameworkList.xml | head -1)" "$SN/PlatformManifest.txt" <<'EOPY'
 import re, sys
 s = open(sys.argv[1], encoding='utf-8-sig').read()
@@ -151,7 +154,7 @@ repo_commit() {
 
 # s12_build <name> <tree> <target(s)> [msbuild args...]: the standard S12 repo build in <tree>
 # (global.json/NuGet.config already written): restore (with the SBRP retry loop), build, pack;
-# logs in $S12/logs/<name>-s<N>-*.log + .binlog; every nupkg under artifacts/packages goes to the stage feed.
+# logs in $S12/logs/<name>-s<N>-*.log + .binlog; every nupkg under artifacts/ goes to the stage feed.
 # <target(s)> is a project/solution/slnf path (relative to <tree>) or several separated by ';'.
 s12_build() {
   local name=$1 tree=$2 targets=$3; shift 3
@@ -171,12 +174,12 @@ s12_build() {
   echo "TIME $name build $((SECONDS - t0)) s"; t0=$SECONDS
   if [ -z "${S12_NOPACK:-}" ]; then
     for t in "${tgts[@]}"; do
-      dn pack "$t" --no-build "${P[@]}" -v:m > "$L-pack.log" 2>&1 \
+      dn pack "$t" --no-restore "${P[@]}" -v:m > "$L-pack.log" 2>&1 \
         || { grep -E ': error' "$L-pack.log" | sed 's/ \[[A-Z]:.*//' | sort -u | head -40; die "$name: pack of $t failed ($L-pack.log)"; }
     done
     echo "TIME $name pack $((SECONDS - t0)) s"
   fi
-  local p; for p in $(find "$tree/artifacts/packages" -name '*.nupkg' ! -name '*.symbols.nupkg' 2>/dev/null); do feed_add "$p"; echo "feed: $(basename "$p")"; done
+  local p; for p in $(find "$tree/artifacts" -name '*.nupkg' ! -name '*.symbols.nupkg' ! -path '*/obj/*' 2>/dev/null); do feed_add "$p"; echo "feed: $(basename "$p")"; done
 }
 # s12_prep_repo <tarball> <tree> <patchdir> [MsbuildSdk=version...]: fresh tree, patches, global.json, NuGet.config
 s12_prep_repo() {

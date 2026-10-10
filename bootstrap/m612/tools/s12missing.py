@@ -16,6 +16,9 @@ for m in re.finditer(r'error NU110[123]: Unable to find package (\S+?)(?:\. No p
     ids.setdefault(m.group(1), set())
     if m.group(2):
         ids[m.group(1)].add(m.group(2).strip())
+# NU1603 (warning as error in some repos): "X depends on Y (>= V) but Y V was not found"
+for m in re.finditer(r'NU1603: (?:Warning As Error: )?.*? depends on (\S+) \(>= ([^)]+)\) but', text):
+    ids.setdefault(m.group(1), set()).add(m.group(2).strip())
 # requested ranges from the assets files
 for dp, dn, fn in os.walk(tree):
     dn[:] = [d for d in dn if d not in ('.git', 'node_modules')]

@@ -1,0 +1,14 @@
+Newtonsoft.Json references two prebuilt tool packages: Microsoft.CodeAnalysis.NetAnalyzers 6.0.0
+(analyzers: diagnostics only) and Microsoft.SourceLink.GitHub 1.0.0 (the .NET 8 SDK has SourceLink
+built in).  The VMR's source-build drops them the same way.
+--- a/Src/Newtonsoft.Json/Newtonsoft.Json.csproj
++++ b/Src/Newtonsoft.Json/Newtonsoft.Json.csproj
+@@ -48,8 +48,6 @@
+     <None Include="README.md" Pack="true" PackagePath="\" />
+   </ItemGroup>
+   <ItemGroup>
+-    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="$(MicrosoftCodeAnalysisNetAnalyzersPackageVersion)" PrivateAssets="All" />
+-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="$(MicrosoftSourceLinkGitHubPackageVersion)" PrivateAssets="All" />
+   </ItemGroup>
+   <PropertyGroup Condition="'$(TargetFramework)'=='net6.0'">
+     <AssemblyTitle>Json.NET .NET 6.0</AssemblyTitle>

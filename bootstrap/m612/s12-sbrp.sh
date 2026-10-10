@@ -25,6 +25,8 @@ step_prep() {
   local t=$S12/src/sbrp-$SBRP_SHA.tar.gz
   fetch_tarball "https://github.com/dotnet/source-build-reference-packages/archive/$SBRP_SHA.tar.gz" "$t"
   s12_extract "$t" "$SRC"
+  apply_patches "$SRC" "$here/../../patches/m612/sbrp"
+  rm -f "$S12/build/sbrp-refs/.s12-prepared"     # refs works on a copy; take the patched tree next time
 }
 
 # the IL files SBRP patches before assembling (TargetingPackSrcRequiringConstraintPatch)
