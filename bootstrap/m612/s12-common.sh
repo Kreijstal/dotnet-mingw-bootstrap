@@ -5,10 +5,10 @@
 #   src/                 tarballs + pristine extracted trees (arcade, xliff-tasks, sbrp, ...)
 #   feed-sbrp/           source-build-reference-packages: reference/targeting/text-only packages built
 #                        from the SBRP text (C#, IL, nuspecs); compile-time only, never lifted
-#   feed-seed/           seed packages: assemblies of the hand-made S8-S11 drivers packed under their
-#                        upstream id/version (s12-feed.sh seed); used only where no real build exists
-#   s<N>/feed/           stage N's feed: hard links of feed-seed + the packages stage N built with
-#                        `dotnet build/pack` (they replace a seed of the same id/version)
+#   feed-seed/           seed packages: net8.0 assemblies of the hand-made S9-S11 drivers packed under
+#                        their upstream ids (s12-feed.sh); used only where no real build exists, and lifted
+#                        only for the repos that name them (S12_LIFT_SEEDS)
+#   s<N>/feed/           stage N's feed: the packages stage N built with `dotnet build/pack`
 #   s<N>/packages/       NUGET_PACKAGES of stage N (fresh per stage)
 #   s<N>/work/<repo>/    the build trees (extracted + patched) of stage N
 #   s<N>/versions.props  DotNetPackageVersionPropsPath: the versions in s<N>/feed (source-build's
@@ -68,6 +68,7 @@ s12_nugetconfig() {
     <clear />
     <add key="s12-stage$STAGE" value="$(w "$FEED")" />
     <add key="s12-sbrp" value="$(w "$FEED_SBRP")" />
+    <add key="s12-seed" value="$(w "$FEED_SEED")" />
 ${extra}  </packageSources>
   <disabledPackageSources>
     <clear />
@@ -81,13 +82,12 @@ EOF
 
 # feed_add <nupkg...>: put packages built by stage N into its feed (replacing a seed of the same name)
 feed_add() { local p; for p in "$@"; do rm -f "$FEED/$(basename "$p" | tr 'A-Z' 'a-z')" "$FEED/$(basename "$p")"; cp "$p" "$FEED/"; done; }
-# feed_link_seed: hard-link the seed packages into the stage feed (where the stage has not built them)
-feed_link_seed() {
-  local p b; for p in "$FEED_SEED"/*.nupkg; do [ -e "$p" ] || continue; b=$(basename "$p")
-    [ -e "$FEED/$b" ] || ln "$p" "$FEED/$b" 2>/dev/null || cp "$p" "$FEED/$b"; done
-}
 # versions_props: DotNetPackageVersionPropsPath for the packages of $FEED (source-build's PackageVersions.props)
-versions_props() { python3 -S "$M612_TOOLS_SRC/s12versions.py" "$FEED" > "$VERPROPS.tmp" && mv "$VERPROPS.tmp" "$VERPROPS"; }
+# Seed packages (feed-seed, s12-feed.sh) are lifted only for the ids a repo lists in S12_LIFT_SEEDS.
+versions_props() {
+  local also=(); [ -n "${S12_LIFT_SEEDS:-}" ] && also=(--also "$FEED_SEED" "$(echo $S12_LIFT_SEEDS | tr ' ' ',')")
+  python3 -S "$M612_TOOLS_SRC/s12versions.py" "$FEED" "${also[@]}" > "$VERPROPS.tmp" && mv "$VERPROPS.tmp" "$VERPROPS"
+}
 
 # MSBuild properties of every S12 repo build: the upstream source-build configuration
 # (DotNetBuildFromSource, Product flavour), deterministic CI build with /_/ source paths (Arcade sets
