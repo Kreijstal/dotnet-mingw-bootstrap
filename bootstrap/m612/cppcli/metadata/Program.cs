@@ -10,9 +10,9 @@ using System.Text.Json;
 
 record CliType(string Il, string Cpp, string Kind, string Name = "");
 record CliMethod(string Id, string Name, bool Static, CliType Return, CliType[] Parameters,
-                 bool Supported, int GenericArity);
+                 bool Supported, int GenericArity, bool Virtual, bool Abstract, bool Final);
 record CliProperty(string Name, CliType Type, string Getter, string Setter, bool Static, bool Supported);
-record CliClass(string Assembly, string Name, string Cpp, string Kind, string Base, CliMethod[] Methods, CliProperty[] Properties);
+record CliClass(string Assembly, string Name, string Cpp, string Kind, string Base, CliMethod[] Methods, CliProperty[] Properties, string[] Interfaces);
 record CliAssembly(string Name, string Version, string Token);
 
 sealed class SignatureTypes : ISignatureTypeProvider<CliType, object?>
@@ -120,7 +120,9 @@ static class Program
                             sig.ReturnType.Kind != "unsupported" && sig.ParameterTypes.All(p => p.Kind != "unsupported") &&
                             (mn == ".ctor" || ValidName(mn));
                         methods.Add(new(id, mn, (md.Attributes & MethodAttributes.Static) != 0,
-                            sig.ReturnType, sig.ParameterTypes.ToArray(), supported, sig.GenericParameterCount));
+                            sig.ReturnType, sig.ParameterTypes.ToArray(), supported, sig.GenericParameterCount,
+                            (md.Attributes & MethodAttributes.Virtual) != 0, (md.Attributes & MethodAttributes.Abstract) != 0,
+                            (md.Attributes & MethodAttributes.Final) != 0));
                     }
                     var properties = new List<CliProperty>();
                     foreach (var ph in td.GetProperties())
@@ -145,7 +147,15 @@ static class Program
                     }
                     else if (!td.BaseType.IsNil && td.BaseType.Kind == HandleKind.TypeDefinition)
                         baseName = FullName(r, r.GetTypeDefinition((TypeDefinitionHandle)td.BaseType));
-                    types.Add(new(assembly, name, SignatureTypes.CppName(name), "ref", baseName, methods.ToArray(), properties.ToArray()));
+                    types.Add(new(assembly, name, SignatureTypes.CppName(name), (td.Attributes & TypeAttributes.Interface) != 0 ? "interface" : "ref", baseName, methods.ToArray(), properties.ToArray(), td.GetInterfaceImplementations().Select(ih => {
+                        var handle = r.GetInterfaceImplementation(ih).Interface;
+                        if (handle.Kind == HandleKind.TypeDefinition) return FullName(r, r.GetTypeDefinition((TypeDefinitionHandle)handle));
+                        if (handle.Kind == HandleKind.TypeReference) {
+                            var tr = r.GetTypeReference((TypeReferenceHandle)handle);
+                            return (r.GetString(tr.Namespace).Length == 0 ? "" : r.GetString(tr.Namespace) + ".") + r.GetString(tr.Name);
+                        }
+                        return ""; // Generic interface signatures remain outside the imported subset.
+                    }).Where(n => n.Length != 0).ToArray()));
                 }
             }
             var found = types.Select(t => t.Name).ToHashSet(StringComparer.Ordinal);
@@ -173,7 +183,9 @@ static class Program
                 if (!emitted.Add(t.Name)) return;
                 var parent = types.FirstOrDefault(p => p.Name == t.Base);
                 if (parent != null) Define(parent);
-                WriteClass(header, t, false, parent != null);
+                var interfaces = types.Where(p => t.Interfaces.Contains(p.Name)).ToArray();
+                foreach (var i in interfaces) Define(i);
+                WriteClass(header, t, false, parent != null, interfaces);
             }
             foreach (var t in types) Define(t);
             File.WriteAllText(jsonPath, JsonSerializer.Serialize(new { version = 1, assemblies, types }, new JsonSerializerOptions { WriteIndented = true }), new UTF8Encoding(false));
@@ -181,16 +193,20 @@ static class Program
         }
         catch (Exception e) { Console.Error.WriteLine("cli-metadata: " + e.Message); return 1; }
     }
-    static void WriteClass(StreamWriter w, CliClass t, bool forward, bool hasBase = false)
+    static void WriteClass(StreamWriter w, CliClass t, bool forward, bool hasBase = false, CliClass[]? interfaces = null)
     {
         string[] parts = t.Name.Split('.');
         foreach (string ns in parts.SkipLast(1)) w.Write("namespace " + ns + " { ");
         string name = parts[^1];
-        w.Write("class __attribute__((annotate(\"cli.external:" + Escape(t.Assembly + "|" + t.Name) + "\"))) " + name);
+        w.Write("class __attribute__((annotate(\"cli.external:" + Escape(t.Assembly + "|" + t.Name) + "\")" +
+            (t.Kind == "interface" ? ", annotate(\"cli.interface\")" : "") + ")) " + name);
         if (forward) w.Write("; ");
         else
         {
-            if (hasBase) w.Write(" : public " + SignatureTypes.CppName(t.Base));
+            var bases = new List<string>();
+            if (hasBase) bases.Add(t.Base);
+            if (interfaces != null) bases.AddRange(interfaces.Select(i => i.Name));
+            if (bases.Count != 0) w.Write(" : " + string.Join(", ", bases.Select(b => "public " + SignatureTypes.CppName(b))));
             w.WriteLine(" { public:");
             if (t.Name == "System.Object") w.WriteLine("virtual ~Object() = default;");
             if (t.Name == "System.String") w.WriteLine("String(const char*); String(const wchar_t*);");
@@ -203,7 +219,8 @@ static class Program
                 if (!seen.Add(signature)) throw new Exception("surrogate overload collision: " + t.Name + "::" + signature);
                 w.Write("__attribute__((annotate(\"cli.import:" + Escape(m.Id) + "\"))) ");
                 if (m.Name == ".ctor") w.WriteLine(name + "(" + parameters + ");");
-                else w.WriteLine((m.Static ? "static " : "") + m.Return.Cpp + " " + m.Name + "(" + parameters + ");");
+                else w.WriteLine((m.Static ? "static " : m.Virtual ? "virtual " : "") + m.Return.Cpp + " " + m.Name + "(" + parameters + ")" +
+                    (m.Final ? " final" : "") + (m.Abstract ? " = 0" : "") + ";");
             }
             foreach (var p in t.Properties.Where(p => p.Supported))
             {

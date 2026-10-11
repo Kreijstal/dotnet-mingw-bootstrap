@@ -39,6 +39,16 @@ bool annotated(const Decl* d, llvm::StringRef text) {
     for (auto* a : d->specific_attrs<AnnotateAttr>()) if (a->getAnnotation() == text) return true;
     return false;
 }
+bool is_interface(const CXXRecordDecl* r) {
+    return r && (annotated(r, "cli.interface") || (r->getDefinition() && annotated(r->getDefinition(), "cli.interface")));
+}
+const CXXRecordDecl* class_base(const CXXRecordDecl* r) {
+    for (auto& b : r->bases()) {
+        auto* parent = b.getType()->getAsCXXRecordDecl();
+        if (!is_interface(parent)) return parent;
+    }
+    return nullptr;
+}
 std::string quote(const std::string& s) {
     std::string result = "\"";
     for (char c : s) {
@@ -221,7 +231,7 @@ protected:
             // Only managed declarations and allocation markers are rewritten.
             // Expressions/statements remain C++ and are parsed by Clang later.
             for (size_t i = 0; i + 2 < tokens.size(); ++i)
-                if (tokens[i].text == "ref" && tokens[i + 1].text == "class") metadata.short_types.insert(tokens[i + 2].text);
+                if ((tokens[i].text == "ref" || tokens[i].text == "interface") && (tokens[i + 1].text == "class" || tokens[i + 1].text == "struct")) metadata.short_types.insert(tokens[i + 2].text);
             std::ostringstream out;
             std::string file;
             unsigned line = 0;
@@ -241,8 +251,9 @@ protected:
             // Find only CLI class/member declaration boundaries. Clang still
             // parses parameter expressions, default arguments and method bodies.
             std::vector<std::string> class_context(tokens.size());
+            std::set<size_t> interface_virtual, interface_pure;
             for (size_t i = 0; i + 2 < tokens.size(); ++i) {
-                if (tokens[i].text != "ref" || tokens[i + 1].text != "class") continue;
+                if ((tokens[i].text != "ref" && tokens[i].text != "interface") || (tokens[i + 1].text != "class" && tokens[i + 1].text != "struct")) continue;
                 std::string name = tokens[i + 2].text;
                 size_t open = i + 3;
                 while (open < tokens.size() && tokens[open].text != "{" && tokens[open].text != ";") ++open;
@@ -261,6 +272,15 @@ protected:
                             ++end;
                         }
                         if (string_parameter) managed_string_calls.insert(name + "::" + tokens[j - 1].text);
+                        if (tokens[i].text == "interface") {
+                            if (end >= tokens.size() || tokens[end].text != ";") throw std::runtime_error("interface instance methods currently require a declaration without a body");
+                            size_t start = j - 1;
+                            while (start > open + 1 && tokens[start - 1].text != ";" && tokens[start - 1].text != ":") --start;
+                            bool already_virtual = false;
+                            for (size_t k = start; k < j; ++k) already_virtual |= tokens[k].text == "virtual";
+                            if (!already_virtual) interface_virtual.insert(start);
+                            interface_pure.insert(end);
+                        }
                     }
                 }
             }
@@ -283,6 +303,10 @@ protected:
             }
             for (size_t i = 0; i < tokens.size(); ++i) {
                 auto& t = tokens[i];
+                if (interface_virtual.count(i)) emit(t, "virtual");
+                if (interface_pure.count(i)) emit(t, "= 0");
+                if (!class_context[i].empty() && t.text == "abstract" && i && tokens[i - 1].text == ")") { emit(t, "= 0"); continue; }
+                if (!class_context[i].empty() && t.text == "sealed" && i && (tokens[i - 1].text == ")" || tokens[i - 1].text == "override")) { emit(t, "final"); continue; }
                 if (t.text == "property" && !class_context[i].empty()) {
                     size_t name = i + 1;
                     while (name + 1 < tokens.size() && !(tokens[name].kind == tok::identifier &&
@@ -335,19 +359,30 @@ protected:
                     for (size_t j = i + 2; j < end; ++j) if (tokens[j].text == "^") handle = true;
                     if (handle) { emit(t, "__cli_dynamic_cast"); continue; }
                 }
-                if (t.text == "public" && i + 2 < tokens.size() && tokens[i + 1].text == "ref" && tokens[i + 2].text == "class") continue;
-                if (t.text == "ref" && i + 2 < tokens.size() && tokens[i + 1].text == "class") {
+                if ((t.text == "public" || t.text == "private") && i + 2 < tokens.size() &&
+                    (tokens[i + 1].text == "ref" || tokens[i + 1].text == "interface") &&
+                    (tokens[i + 2].text == "class" || tokens[i + 2].text == "struct")) continue;
+                if ((t.text == "ref" || t.text == "interface") && i + 2 < tokens.size() &&
+                    (tokens[i + 1].text == "class" || tokens[i + 1].text == "struct")) {
+                    bool interface = t.text == "interface";
                     std::string attributes = "annotate(\"cli.ref\")";
+                    if (interface) attributes += ", annotate(\"cli.interface\"), annotate(\"cli.abstract\")";
                     size_t end = i + 3;
                     while (end < tokens.size() && (tokens[end].text == "abstract" || tokens[end].text == "sealed")) {
                         attributes += ", annotate(\"cli." + tokens[end].text + "\")";
                         ++end;
                     }
-                    emit(t, "class __attribute__((" + attributes + ")) " + tokens[i + 2].text);
-                    if (end < tokens.size() && tokens[end].text == ":" && end + 1 < tokens.size() &&
-                        tokens[end + 1].text != "public" && tokens[end + 1].text != "protected" && tokens[end + 1].text != "private") {
-                        emit(tokens[end], ": public"); ++end;
-                    } else if (end < tokens.size() && tokens[end].text == "{") emit(t, ": public ::System::Object");
+                    emit(t, std::string(interface || tokens[i + 1].text == "struct" ? "struct" : "class") + " __attribute__((" + attributes + ")) " + tokens[i + 2].text);
+                    if (attributes.find("cli.sealed") != std::string::npos) emit(t, "final");
+                    if (end < tokens.size() && tokens[end].text == ":") {
+                        emit(tokens[end], ":"); ++end;
+                        bool start = true;
+                        while (end < tokens.size() && tokens[end].text != "{" && tokens[end].text != ";") {
+                            if (start && tokens[end].text != "public" && tokens[end].text != "protected" && tokens[end].text != "private") emit(tokens[end], "public");
+                            if (tokens[end].text == "protected" || tokens[end].text == "private") throw std::runtime_error("managed bases require public inheritance");
+                            emit(tokens[end], tokens[end].text); start = tokens[end].text == ","; ++end;
+                        }
+                    } else if (!interface && end < tokens.size() && tokens[end].text == "{") emit(t, ": public ::System::Object");
                     i = end - 1;
                     continue;
                 }
@@ -693,10 +728,12 @@ class Emitter {
             if (imported == metadata.methods.end()) fail(c, "imported member is absent from metadata");
             sig = imported_signature(imported->second);
         } else {
-            if (!f->hasBody()) fail(c, "calling a function without an emitted definition");
+            if (!f->hasBody() && !(m && m->isPureVirtual())) fail(c, "calling a function without an emitted definition");
             sig = signature(f);
         }
-        op(std::string(instance ? "callvirt " : "call ") + sig, c->getNumArgs() + unsigned(instance), f->getReturnType()->isVoidType() ? 0 : 1);
+        bool qualified = false;
+        if (auto* member = dyn_cast<CXXMemberCallExpr>(c)) if (auto* callee = dyn_cast<MemberExpr>(member->getCallee()->IgnoreParenImpCasts())) qualified = callee->hasQualifier();
+        op(std::string(instance && !qualified ? "callvirt " : "call ") + sig, c->getNumArgs() + unsigned(instance), f->getReturnType()->isVoidType() ? 0 : 1);
     }
     void expr(const Expr* original) {
         const Expr* e = strip(original);
@@ -901,13 +938,14 @@ class Emitter {
         label_count = 0; loop_labels.clear();
         auto* method = dyn_cast<CXXMethodDecl>(f);
         bool instance = method && !method->isStatic();
+        if (method && method->isPureVirtual()) return {method_name(f), record_name(method->getParent()), type(f->getReturnType()), instance, 0, "", ""};
         if (f->isVariadic()) throw std::runtime_error("variadic managed functions are unsupported");
         for (unsigned i = 0; i < f->getNumParams(); ++i) parameters[f->getParamDecl(i)] = i + unsigned(instance);
         collect_locals(f->getBody());
         if (auto* constructor = dyn_cast<CXXConstructorDecl>(f)) {
             bool base_initialized = false;
             for (auto* init : constructor->inits()) {
-                if (init->isBaseInitializer()) {
+                if (init->isBaseInitializer() && !is_interface(init->getBaseClass()->getAsCXXRecordDecl())) {
                     auto* construct = dyn_cast<CXXConstructExpr>(init->getInit());
                     if (!construct) fail(init->getInit(), "unsupported managed base initializer");
                     op("ldarg.0", 0, 1);
@@ -946,7 +984,8 @@ class Emitter {
 public:
     Emitter(CompilerInstance& compiler, const Metadata& md) : ci(compiler), context(ci.getASTContext()), metadata(md) {}
     bool VisitFunctionDecl(FunctionDecl* f) {
-        if (f->isImplicit() || !f->doesThisDeclarationHaveABody() || llvm::StringRef(f->getNameAsString()).starts_with("__cli_")) return true;
+        auto* method = dyn_cast<CXXMethodDecl>(f);
+        if (f->isImplicit() || (!f->doesThisDeclarationHaveABody() && !(method && method->isPureVirtual())) || llvm::StringRef(f->getNameAsString()).starts_with("__cli_")) return true;
         if (auto* m = dyn_cast<CXXMethodDecl>(f)) if (!annotation(m->getParent(), "cli.external:").empty()) return true;
         validate_declarator(f->getTypeSourceInfo());
         for (auto* p : f->parameters()) validate_declarator(p->getTypeSourceInfo());
@@ -957,7 +996,10 @@ public:
     }
     bool VisitCXXRecordDecl(CXXRecordDecl* r) {
         if (r->isThisDeclarationADefinition() && annotated(r, "cli.ref")) {
-            if (r->getNumBases() > 1) throw std::runtime_error("multiple managed bases/interfaces are not enabled yet");
+            unsigned classes = 0;
+            for (auto& b : r->bases()) if (!is_interface(b.getType()->getAsCXXRecordDecl())) ++classes;
+            if (classes > 1 || (is_interface(r) && classes)) throw std::runtime_error("a managed class permits one class base and interfaces only");
+            if (is_interface(r) && !r->field_empty()) throw std::runtime_error("interface instance fields are forbidden");
             for (const auto& base : r->bases()) record_name(base.getType()->getAsCXXRecordDecl());
             for (auto* field : r->fields()) { type(field->getType()); validate_declarator(field->getTypeSourceInfo()); }
             records.push_back(r);
@@ -993,20 +1035,36 @@ public:
         il << metadata.externs << ".assembly '" << options.assembly << "' {}\n.module '" << options.assembly << ".dll'\n";
         auto emit_function = [&](size_t i) {
             auto* f = functions[i]; auto& body = ir[i];
-            il << "  .method " << (isa<CXXMethodDecl>(f) && f->getAccess() == AS_private ? "private" : f->getAccess() == AS_protected ? "family" : "public") << " hidebysig "
+            auto* method = dyn_cast<CXXMethodDecl>(f);
+            std::string flags;
+            if (method && method->isVirtual()) {
+                bool class_override = false;
+                for (auto* base : method->overridden_methods()) if (!is_interface(base->getParent())) class_override = true;
+                flags = "virtual " + std::string(class_override ? "" : "newslot ") + (method->isPureVirtual() ? "abstract " : "");
+                if (method->hasAttr<FinalAttr>()) flags += "final ";
+            }
+            il << "  .method " << (isa<CXXMethodDecl>(f) && f->getAccess() == AS_private ? "private" : f->getAccess() == AS_protected ? "family" : "public") << " hidebysig " << flags
                << (isa<CXXConstructorDecl>(f) ? "specialname rtspecialname " : !annotation(f, "cli.accessor:").empty() ? "specialname " : "") << (body.instance ? "instance " : "static ")
                << type(f->getReturnType()) << " '" << body.name << "'(";
             for (unsigned j = 0; j < f->getNumParams(); ++j) { if (j) il << ", "; il << type(f->getParamDecl(j)->getType()); }
             il << ") cil managed {\n";
             if (f->getNameAsString() == "main" && body.owner.empty() && options.target == "exe") il << "    .entrypoint\n";
+            if (method && method->isPureVirtual()) { il << "  }\n"; return; }
             il << "    .maxstack " << body.max_stack << "\n";
             if (!body.locals.empty()) il << "    .locals init (" << body.locals << ")\n";
             il << body.code << "  }\n";
         };
         for (auto* r : records) {
-            il << ".class public auto ansi " << (annotated(r, "cli.abstract") ? "abstract " : "")
-               << (annotated(r, "cli.sealed") ? "sealed " : "") << record_name(r) << " extends "
-               << (r->getNumBases() ? record_name(r->bases_begin()->getType()->getAsCXXRecordDecl()) : "[System.Runtime]System.Object") << " {\n";
+            auto* parent = class_base(r);
+            il << ".class public " << (is_interface(r) ? "interface abstract " : "auto ansi ")
+               << (!is_interface(r) && (annotated(r, "cli.abstract") || r->isAbstract()) ? "abstract " : "")
+               << (annotated(r, "cli.sealed") ? "sealed " : "") << record_name(r);
+            if (!is_interface(r)) il << " extends " << (parent ? record_name(parent) : "[System.Runtime]System.Object");
+            bool first_interface = true;
+            for (auto& base : r->bases()) if (is_interface(base.getType()->getAsCXXRecordDecl())) {
+                il << (first_interface ? " implements " : ", ") << record_name(base.getType()->getAsCXXRecordDecl()); first_interface = false;
+            }
+            il << " {\n";
             for (auto* field : r->fields()) il << "  .field " << (field->getAccess() == AS_private ? "private " : field->getAccess() == AS_protected ? "family " : "public ")
                 << type(field->getType()) << " '" << field->getNameAsString() << "'\n";
             for (size_t i = 0; i < functions.size(); ++i) if (ir[i].owner == record_name(r)) emit_function(i);
@@ -1020,10 +1078,10 @@ public:
             }
             bool has_ctor = false;
             for (auto* ctor : r->ctors()) if (!ctor->isImplicit()) has_ctor = true;
-            if (!has_ctor && !annotated(r, "cli.abstract")) {
+            if (!has_ctor && !is_interface(r)) {
                 il << "  .method public hidebysig specialname rtspecialname instance void .ctor() cil managed {\n"
                    << "    .maxstack 1\n    ldarg.0\n    call instance void "
-                   << (r->getNumBases() ? record_name(r->bases_begin()->getType()->getAsCXXRecordDecl()) : "[System.Runtime]System.Object")
+                   << (parent ? record_name(parent) : "[System.Runtime]System.Object")
                    << "::.ctor()\n    ret\n  }\n";
             }
             il << "}\n";

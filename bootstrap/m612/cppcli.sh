@@ -119,4 +119,43 @@ step_test-adapter-gate() {
 step_test-properties() {
   run_case properties "$src/tests/properties.cpp" $'set\nget\n4\nreceiver\nget\nset\nget\n6\n7'
 }
+step_test-virtuals() {
+  run_case virtuals "$src/tests/virtuals.cpp" $'7\n7\n9\n6\n17\nTrue'
+  mkdir -p "$testdir/virtual-consumer"
+  cat > "$testdir/virtual-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers></PropertyGroup><ItemGroup><Reference Include="virtuals"><HintPath>../virtuals.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  cat > "$testdir/virtual-consumer/Program.cs" <<'EOF'
+using System;
+using Example;
+Base counter = new Override(2);
+if (counter.Read() != 42 || ((IRead)counter).Read() != 42 || counter.Scale() != 6 ||
+    !typeof(Base).IsAbstract || !typeof(IRead).IsInterface || !typeof(Base).GetMethod("Fixed").IsFinal)
+    throw new Exception("incorrect virtual/interface metadata");
+((IWrite)counter).Write(12);
+Console.WriteLine("dispatch metadata OK");
+class Override : Counter {
+    public Override(int value) : base(value) {}
+    public override int Read() => 42;
+}
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/virtual-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -p:NuGetAudit=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/virtual-consumer/bin/Debug/net8.0/consumer.dll")"
+  cat > "$testdir/virtual-reference.cpp" <<'EOF'
+#using "virtuals.dll"
+using namespace System;
+int main() {
+    Example::Counter^ counter = gcnew Example::Counter(13);
+    Example::IRead^ reader = counter;
+    Console::WriteLine(reader->Read());
+    return 0;
+}
+EOF
+  run_case virtual-reference "$testdir/virtual-reference.cpp" '13' --type Example.Counter --type Example.Base --type Example.IRead
+  reject_case incomplete-interface 'public interface class I { int Read(); }; public ref class C : I {}; int main() { C^ c = gcnew C(); return 0; }' 'abstract'
+  reject_case invalid-override 'public ref class C { public: virtual int Read() override { return 1; } }; int main() { return 0; }' 'does not override'
+  reject_case sealed-override 'public ref class B { public: virtual int Read() sealed { return 1; } }; public ref class D : B { public: virtual int Read() override { return 2; } }; int main() { return 0; }' 'final'
+  reject_case sealed-base 'public ref class B sealed {}; public ref class D : B {}; int main() { return 0; }' 'final'
+}
 for step in $steps; do "step_$step"; done

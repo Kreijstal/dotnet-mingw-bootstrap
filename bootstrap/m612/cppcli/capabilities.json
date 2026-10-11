@@ -29,7 +29,10 @@
     "Instance properties and auto-properties using Clang MSPropertyDecl/PseudoObjectExpr",
     "Property compound assignments preserve receiver/getter/setter evaluation order",
     "C# consumption and reflection of generated property metadata",
-    "Imported non-indexed instance properties, including System.String.Length and generated library properties"
+    "Imported non-indexed instance properties, including System.String.Length and generated library properties",
+    "Interface declarations, multiple interface implementations and imported interface lists",
+    "Abstract and virtual methods, CLR override slots, sealed methods/classes",
+    "Qualified base calls and virtual/interface dispatch validated from C#"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -39,6 +42,8 @@
     "No native/managed interop or mixed-mode PE output yet",
     "Unsupported AST nodes are errors; this is not a conforming general C++/CLI compiler",
     "#using directives in included headers are not shimmed yet",
-    "Properties currently cover non-indexed instance members; accessor bodies have limited CLI token adaptation"
+    "Properties currently cover non-indexed instance members; accessor bodies have limited CLI token adaptation",
+    "Interface surrogates use C++ abstract bases; interface-only classes need an explicit Object base for Object upcasts",
+    "Interface declarations currently permit ordinary method declarations only; named/explicit interface implementations are not enabled"
   ]
 }
