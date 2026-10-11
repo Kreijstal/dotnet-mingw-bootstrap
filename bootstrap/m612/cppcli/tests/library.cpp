@@ -1,5 +1,9 @@
 namespace Example {
+public ref class Defaults { public: int Value = 23; };
+public ref class RequiredBase { public: RequiredBase(int value) {} };
+public ref class NoDefault : RequiredBase {};
 public ref class Counter {
+    property int Secret;
 public:
     int Value;
     Counter(int initial) : Value(initial) {}

@@ -51,3 +51,31 @@
    // Collect global stats on Decls/Stmts (until we have a module streamer).
    if (PrintStats) {
      Decl::EnableStatistics();
+--- ParseExpr.cpp
++++ ParseExpr.cpp
+@@ -23,0 +24 @@
++#include "clang/AST/Attr.h"
+@@ -1779,2 +1780,21 @@
+-          LHS = Actions.ActOnArraySubscriptExpr(getCurScope(), LHS.get(), Loc,
+-                                                ArgExprs, RLoc);
++          // For a managed array handle, ask Sema to resolve the surrogate's
++          // element operator after type/name lookup. Ordinary pointer indexing
++          // is untouched, including identifiers shadowing managed type names.
++          QualType Handle = LHS.get()->getType();
++          if (Handle->isPointerType()) {
++            auto *Record = Handle->getPointeeType()->getAsCXXRecordDecl();
++            // Pointer-only metadata signatures need not instantiate an array
++            // specialization. Its primary template still carries the marker.
++            if (auto *Spec = dyn_cast_or_null<ClassTemplateSpecializationDecl>(Record))
++              Record = Spec->getSpecializedTemplate()->getTemplatedDecl();
++            if (Record && Record->getDefinition()) {
++              for (auto *Attr : Record->getDefinition()->specific_attrs<AnnotateAttr>())
++                if (Attr->getAnnotation() == "cli.array") {
++                  LHS = Actions.ActOnUnaryOp(getCurScope(), Loc, tok::star, LHS.get());
++                  break;
++                }
++            }
++          }
++          if (!LHS.isInvalid())
++            LHS = Actions.ActOnArraySubscriptExpr(getCurScope(), LHS.get(), Loc,
++                                                  ArgExprs, RLoc);

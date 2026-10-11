@@ -82,8 +82,10 @@ using System;
 using Example;
 var counter = new Counter(5);
 Console.WriteLine(counter.Add(3));
-if (counter.Value != 8 || typeof(Counter).BaseType != typeof(object) || typeof(Counter).GetConstructors().Length != 1)
+if (counter.Value != 8 || typeof(Counter).BaseType != typeof(object) || typeof(Counter).GetConstructors().Length != 1 || typeof(Counter).GetProperty("Secret") != null)
     throw new Exception("incorrect generated managed API");
+if (new Defaults().Value != 23 || typeof(NoDefault).GetConstructors().Length != 0)
+    throw new Exception("incorrect implicit constructor API");
 counter.Current = 11;
 if (counter.Current != 11 || typeof(Counter).GetProperty("Current").PropertyType != typeof(int))
     throw new Exception("incorrect generated property API");
@@ -110,6 +112,8 @@ EOF
   reject_case bad-downcast 'using namespace System; public ref class Base {}; public ref class Derived : Base {}; int main() { Base^ b = gcnew Base(); Derived^ d = b; return 0; }' 'cannot initialize'
   reject_case private-field 'using namespace System; public ref class Box { int hidden; }; int main() { Box^ b = gcnew Box(); b->hidden = 1; return 0; }' 'private member'
   reject_case native-managed-pointer 'using namespace System; public ref class Box {}; int main() { Box* b = gcnew Box(); return 0; }' "native '\*' pointers"
+  reject_case missing-default-constructor 'public ref class B { public: B(int value) {} }; public ref class D : B {}; int main() { D^ d = gcnew D(); return 0; }' 'no matching function'
+  reject_case missing-imported-constructor 'using namespace System; int main() { Console^ c = gcnew Console(); return 0; }' 'no public metadata constructor'
   log "PASS test-objects: managed identity and Clang constructor/member checking"
 }
 step_test-adapter-gate() {
@@ -157,5 +161,36 @@ EOF
   reject_case invalid-override 'public ref class C { public: virtual int Read() override { return 1; } }; int main() { return 0; }' 'does not override'
   reject_case sealed-override 'public ref class B { public: virtual int Read() sealed { return 1; } }; public ref class D : B { public: virtual int Read() override { return 2; } }; int main() { return 0; }' 'final'
   reject_case sealed-base 'public ref class B sealed {}; public ref class D : B {}; int main() { return 0; }' 'final'
+}
+step_test-arrays() {
+  run_case arrays "$src/tests/arrays.cpp" $'3\n0\n4\nreceiver\nindex\n5\nreceiver\nindex\n5\n6\nTrue\n9\n3\nl\n6\nFalse\nTrue'
+  mkdir -p "$testdir/array-consumer"
+  cat > "$testdir/array-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers></PropertyGroup><ItemGroup><Reference Include="arrays"><HintPath>../arrays.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  cat > "$testdir/array-consumer/Program.cs" <<'EOF'
+using System;
+int[] values = Arrays.Make(3);
+if (values.Length != 3 || values[1] != 0) throw new Exception("incorrect array initialization");
+Arrays.Write(values, 1, 11);
+GC.Collect(); GC.WaitForPendingFinalizers();
+if (Arrays.Read(values, 1) != 11) throw new Exception("incorrect array storage");
+try { Arrays.Read(values, 3); throw new Exception("missing bounds check"); }
+catch (IndexOutOfRangeException) {}
+try { Arrays.Read(null, 0); throw new Exception("missing null check"); }
+catch (NullReferenceException) {}
+Console.WriteLine("array metadata and bounds OK");
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/array-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -p:NuGetAudit=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/array-consumer/bin/Debug/net8.0/consumer.dll")"
+  cat > "$testdir/array-reference.cpp" <<'EOF'
+#using "arrays.dll"
+using namespace System;
+int main() { array<int>^ values = Arrays::Make(2); Arrays::Write(values, 1, 15); Console::WriteLine(Arrays::Read(values, 1)); values[0] = 21; Console::WriteLine(values[0]); return 0; }
+EOF
+  run_case array-reference "$testdir/array-reference.cpp" $'15\n21' --type Arrays
+  reject_case array-rank 'int main() { array<int, 2>^ a = gcnew array<int, 2>(3); return 0; }' 'rank-one'
+  reject_case array-element 'int main() { array<int>^ a = gcnew array<int>(3); a[0] = "bad"; return 0; }' 'incompatible'
 }
 for step in $steps; do "step_$step"; done

@@ -32,18 +32,24 @@
     "Imported non-indexed instance properties, including System.String.Length and generated library properties",
     "Interface declarations, multiple interface implementations and imported interface lists",
     "Abstract and virtual methods, CLR override slots, sealed methods/classes",
-    "Qualified base calls and virtual/interface dispatch validated from C#"
+    "Qualified base calls and virtual/interface dispatch validated from C#",
+    "Rank-one managed primitive/reference arrays, allocation, Length, element loads/stores/updates",
+    "Imported SZ-array signatures and C# array API consumption with CLR bounds/GC checks",
+    "Array casts, null integer handle initialization and handle conditions",
+    "Clang-defined implicit default constructors preserve member initializers and deleted constructors",
+    "Auto-properties preserve accessor visibility across C# reflection"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
     "Metadata headers are generated for explicitly selected types",
     "Constructor arguments currently require exact supported CLI types",
-    "No CLI generics, managed arrays, delegates, events or exception regions yet",
+    "No CLI generics, delegates, events or exception regions yet",
     "No native/managed interop or mixed-mode PE output yet",
     "Unsupported AST nodes are errors; this is not a conforming general C++/CLI compiler",
     "#using directives in included headers are not shimmed yet",
     "Properties currently cover non-indexed instance members; accessor bodies have limited CLI token adaptation",
     "Interface surrogates use C++ abstract bases; interface-only classes need an explicit Object base for Object upcasts",
-    "Interface declarations currently permit ordinary method declarations only; named/explicit interface implementations are not enabled"
+    "Interface declarations currently permit ordinary method declarations only; named/explicit interface implementations are not enabled",
+    "Managed arrays currently require rank one; no aggregate initializers, covariance or tracking references"
   ]
 }

@@ -61,8 +61,9 @@ sealed class SignatureTypes : ISignatureTypeProvider<CliType, object?>
     }
     public CliType GetTypeFromSpecification(MetadataReader r, object? c, TypeSpecificationHandle h, byte k) =>
         r.GetTypeSpecification(h).DecodeSignature(this, c);
-    public CliType GetSZArrayType(CliType t) => new(t.Il + "[]", "", "unsupported", t.Name + "[]");
-    public CliType GetArrayType(CliType t, ArrayShape s) => GetSZArrayType(t);
+    public CliType GetSZArrayType(CliType t) => t.Kind == "unsupported" ? new(t.Il + "[]", "", "unsupported", t.Name + "[]") :
+        new(t.Il + "[]", "::cli::array<" + t.Cpp + ">*", "array", t.Name);
+    public CliType GetArrayType(CliType t, ArrayShape s) => new(t.Il + "[... ]", "", "unsupported", t.Name);
     public CliType GetByReferenceType(CliType t) => new(t.Il + "&", "", "unsupported", t.Name + "&");
     public CliType GetPointerType(CliType t) => new(t.Il + "*", "", "unsupported", t.Name + "*");
     public CliType GetGenericInstantiation(CliType t, ImmutableArray<CliType> a) => new(t.Il, "", "unsupported", t.Name);
@@ -161,7 +162,7 @@ static class Program
             var found = types.Select(t => t.Name).ToHashSet(StringComparer.Ordinal);
             if (!wanted.IsSubsetOf(found)) throw new Exception("reference metadata lacks: " + string.Join(", ", wanted.Except(found)));
             // Cross-type signatures may refer to types we haven't imported yet.
-            bool Available(CliType t) => t.Kind == "primitive" || (t.Kind == "ref" && found.Contains(t.Name));
+            bool Available(CliType t) => t.Kind == "primitive" || (t.Kind == "ref" && found.Contains(t.Name)) || (t.Kind == "array" && (t.Name.Length == 0 || found.Contains(t.Name)));
             types = types.Select(t => t with { Methods = t.Methods.Select(m => m with {
                 Supported = m.Supported && Available(m.Return) && m.Parameters.All(Available)
             }).ToArray(), Properties = t.Properties.Select(p => p with {
@@ -172,6 +173,7 @@ static class Program
             using var header = new StreamWriter(headerPath, false, new UTF8Encoding(false));
             header.WriteLine("// Metadata declarations only; never compile these surrogates as native objects.");
             header.WriteLine("namespace System { class String; }");
+            header.WriteLine("namespace cli { template<class T, int Rank = 1> class array; }");
             header.WriteLine("template<class T, class... A> auto __cli_new(A... args) -> decltype(T(args...), (T*)nullptr); ");
             header.WriteLine("template<class T, class A> T __cli_safe_cast(A); template<class T, class A> T __cli_dynamic_cast(A);");
             header.WriteLine("System::String* __cli_literal(const char*); System::String* __cli_literal(const wchar_t*);");
@@ -188,6 +190,8 @@ static class Program
                 WriteClass(header, t, false, parent != null, interfaces);
             }
             foreach (var t in types) Define(t);
+            header.WriteLine("namespace cli { template<class T, int Rank> class __attribute__((annotate(\"cli.ref\"), annotate(\"cli.array\"))) array : public System::Object { public: static_assert(Rank == 1, \"only rank-one managed arrays are supported\"); explicit array(int); T& operator[](int); int get_Length(); __declspec(property(get=get_Length)) int Length; }; } using cli::array;");
+
             File.WriteAllText(jsonPath, JsonSerializer.Serialize(new { version = 1, assemblies, types }, new JsonSerializerOptions { WriteIndented = true }), new UTF8Encoding(false));
             return 0;
         }

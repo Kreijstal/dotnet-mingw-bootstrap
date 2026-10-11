@@ -13,6 +13,7 @@
 #include <clang/Lex/Lexer.h>
 #include <clang/Lex/Preprocessor.h>
 #include <clang/Lex/Pragma.h>
+#include <clang/Sema/Sema.h>
 #include <llvm/Support/ConvertUTF.h>
 #include <llvm/Support/JSON.h>
 #include <llvm/Support/MemoryBuffer.h>
@@ -37,6 +38,15 @@ std::string annotation(const Decl* d, llvm::StringRef prefix) {
 }
 bool annotated(const Decl* d, llvm::StringRef text) {
     for (auto* a : d->specific_attrs<AnnotateAttr>()) if (a->getAnnotation() == text) return true;
+    return false;
+}
+bool record_annotated(const CXXRecordDecl* r, llvm::StringRef name) {
+    if (!r) return false;
+    if (annotated(r, name) || (r->getDefinition() && annotated(r->getDefinition(), name))) return true;
+    if (auto* spec = dyn_cast<ClassTemplateSpecializationDecl>(r)) {
+        auto* primary = spec->getSpecializedTemplate()->getTemplatedDecl();
+        return annotated(primary, name) || (primary->getDefinition() && annotated(primary->getDefinition(), name));
+    }
     return false;
 }
 bool is_interface(const CXXRecordDecl* r) {
@@ -250,7 +260,7 @@ protected:
             }
             // Find only CLI class/member declaration boundaries. Clang still
             // parses parameter expressions, default arguments and method bodies.
-            std::vector<std::string> class_context(tokens.size());
+            std::vector<std::string> class_context(tokens.size()), class_access(tokens.size());
             std::set<size_t> interface_virtual, interface_pure;
             for (size_t i = 0; i + 2 < tokens.size(); ++i) {
                 if ((tokens[i].text != "ref" && tokens[i].text != "interface") || (tokens[i + 1].text != "class" && tokens[i + 1].text != "struct")) continue;
@@ -259,8 +269,11 @@ protected:
                 while (open < tokens.size() && tokens[open].text != "{" && tokens[open].text != ";") ++open;
                 if (open == tokens.size() || tokens[open].text != "{") continue;
                 int depth = 1;
+                std::string access = tokens[i].text == "interface" || tokens[i + 1].text == "struct" ? "public" : "private";
                 for (size_t j = open + 1; j < tokens.size() && depth; ++j) {
-                    class_context[j] = name;
+                    if (depth == 1 && j + 1 < tokens.size() && tokens[j + 1].text == ":" &&
+                        (tokens[j].text == "public" || tokens[j].text == "private" || tokens[j].text == "protected")) access = tokens[j].text;
+                    class_context[j] = name; class_access[j] = access;
                     if (tokens[j].text == "{") ++depth;
                     else if (tokens[j].text == "}") --depth;
                     else if (depth == 1 && tokens[j].text == "(" && j && tokens[j - 1].kind == tok::identifier) {
@@ -333,7 +346,7 @@ protected:
                     if (setter) attribute += "put=set_" + property;
                     emit(t, attribute + ")) " + property_type + property + ";");
                     if (tokens[name + 1].text == ";") {
-                        emit(t, "private: " + property_type + " __cli_backing_" + property + "; public:");
+                        emit(t, "private: " + property_type + " __cli_backing_" + property + "; " + class_access[i] + ":");
                         emit(t, property_type + " __attribute__((annotate(\"cli.accessor:get\"))) get_" + property + "() { return __cli_backing_" + property + "; }");
                         emit(t, "void __attribute__((annotate(\"cli.accessor:set\"))) set_" + property + "(" + property_type + " value) { __cli_backing_" + property + " = value; }");
                     } else {
@@ -388,7 +401,15 @@ protected:
                 }
                 if (t.text == "gcnew") {
                     size_t end = i + 1;
-                    while (end < tokens.size() && (tokens[end].kind == tok::identifier || tokens[end].text == "::")) ++end;
+                    int angles = 0;
+                    while (end < tokens.size()) {
+                        if (tokens[end].text == "<") ++angles;
+                        else if (tokens[end].text == ">") --angles;
+                        else if (tokens[end].text == ">>") angles -= 2;
+                        if (!angles && tokens[end].text == "(") break;
+                        if (angles < 0 || (!angles && tokens[end].text != ">" && tokens[end].text != ">>" && tokens[end].kind != tok::identifier && tokens[end].text != "::")) break;
+                        ++end;
+                    }
                     if (end == i + 1 || end == tokens.size() || tokens[end].text != "(")
                         throw std::runtime_error("unsupported gcnew declarator (arrays and generics are not enabled yet)");
                     std::string type;
@@ -467,7 +488,7 @@ class Emitter {
             auto* r = type->getPointeeType()->getAsCXXRecordDecl();
             if (!r) return nullptr;
             auto* definition = r->getDefinition();
-            if (annotated(r, "cli.ref") || !annotation(r, "cli.external:").empty() ||
+            if (record_annotated(r, "cli.ref") || !annotation(r, "cli.external:").empty() ||
                 (definition && (annotated(definition, "cli.ref") || !annotation(definition, "cli.external:").empty()))) return r;
             return nullptr;
         }
@@ -475,6 +496,13 @@ class Emitter {
         auto* spec = dyn_cast_or_null<ClassTemplateSpecializationDecl>(rec);
         if (!spec || spec->getSpecializedTemplate()->getName() != "__cli_handle") return nullptr;
         return spec->getTemplateArgs()[0].getAsType()->getAsCXXRecordDecl();
+    }
+    QualType array_element(const CXXRecordDecl* r) const {
+        if (!record_annotated(r, "cli.array")) return {};
+        auto* specialization = dyn_cast<ClassTemplateSpecializationDecl>(r);
+        if (!specialization || specialization->getTemplateArgs().size() != 2 || specialization->getTemplateArgs()[1].getAsIntegral() != 1)
+            throw std::runtime_error("only rank-one managed arrays are supported");
+        return specialization->getTemplateArgs()[0].getAsType();
     }
     std::string record_name(const CXXRecordDecl* record) const {
         std::string ext = annotation(record, "cli.external:");
@@ -502,12 +530,19 @@ class Emitter {
         }
         if (t->isRealFloatingType()) return context.getTypeSize(t) == 32 ? "float32" : "float64";
         if (auto* r = handle_target(t)) {
+            QualType element = array_element(r);
+            if (!element.isNull()) return type(element) + "[]";
             std::string name = record_name(r);
             if (name == "[System.Runtime]'System.String'") return "string";
             if (name == "[System.Runtime]'System.Object'") return "object";
             return "class " + name;
         }
         throw std::runtime_error("unsupported CLI type: " + t.getAsString());
+    }
+    std::string reference_token(QualType t) const {
+        auto* r = handle_target(t);
+        if (!r) throw std::runtime_error("reference token requires a managed handle");
+        return array_element(r).isNull() ? record_name(r) : type(t);
     }
     unsigned temporary(const std::string& il_type) {
         unsigned index = locals.size() + temporary_types.size();
@@ -587,8 +622,37 @@ class Emitter {
         }
         fail(at, "unsupported declaration reference");
     }
+    const CXXOperatorCallExpr* array_subscript(const Expr* e) const {
+        auto* call = dyn_cast<CXXOperatorCallExpr>(e->IgnoreParenImpCasts());
+        if (!call || call->getOperator() != OO_Subscript || call->getNumArgs() != 2) return nullptr;
+        auto* method = dyn_cast_or_null<CXXMethodDecl>(call->getDirectCallee());
+        return method && !array_element(method->getParent()).isNull() ? call : nullptr;
+    }
+    const Expr* array_receiver(const CXXOperatorCallExpr* call) const {
+        auto* dereference = dyn_cast<UnaryOperator>(call->getArg(0)->IgnoreParenImpCasts());
+        if (!dereference || dereference->getOpcode() != UO_Deref) fail(call, "array indexing lacks a managed handle receiver");
+        return dereference->getSubExpr();
+    }
+    std::pair<unsigned, unsigned> capture_array(const CXXOperatorCallExpr* call) {
+        const Expr* receiver = array_receiver(call);
+        unsigned handle = temporary(type(receiver->getType())), index = temporary("int32");
+        expr(receiver); op("stloc " + std::to_string(handle), 1);
+        expr(call->getArg(1)); op("stloc " + std::to_string(index), 1);
+        return {handle, index};
+    }
+    void load_array_location(std::pair<unsigned, unsigned> slots) {
+        op("ldloc " + std::to_string(slots.first), 0, 1);
+        op("ldloc " + std::to_string(slots.second), 0, 1);
+    }
     void store(const Expr* target, bool retain) {
         target = target->IgnoreParenImpCasts();
+        if (auto* subscript = array_subscript(target)) {
+            unsigned result = temporary(type(subscript->getType())); op("stloc " + std::to_string(result), 1);
+            auto slots = capture_array(subscript); load_array_location(slots); op("ldloc " + std::to_string(result), 0, 1);
+            op("stelem " + type(subscript->getType()), 3);
+            if (retain) op("ldloc " + std::to_string(result), 0, 1);
+            return;
+        }
         if (auto* member = dyn_cast<MemberExpr>(target)) {
             auto* field = dyn_cast<FieldDecl>(member->getMemberDecl());
             if (!field) fail(target, "assignment target is not an instance field");
@@ -615,6 +679,13 @@ class Emitter {
                 case BO_SubAssign: operation = "sub"; break;
                 case BO_MulAssign: operation = "mul"; break;
                 default: fail(b, "unsupported compound assignment");
+            }
+            if (auto* subscript = array_subscript(b->getLHS())) {
+                auto slots = capture_array(subscript); load_array_location(slots);
+                op("ldelem " + type(subscript->getType()), 2, 1); expr(b->getRHS()); op(operation, 2, 1);
+                unsigned result = temporary(type(subscript->getType())); op("stloc " + std::to_string(result), 1);
+                load_array_location(slots); op("ldloc " + std::to_string(result), 0, 1); op("stelem " + type(subscript->getType()), 3);
+                op("ldloc " + std::to_string(result), 0, 1); return;
             }
             if (auto* member = dyn_cast<MemberExpr>(b->getLHS()->IgnoreParenImpCasts())) {
                 auto* field = dyn_cast<FieldDecl>(member->getMemberDecl());
@@ -665,6 +736,14 @@ class Emitter {
     void call(const CallExpr* c) {
         auto* f = c->getDirectCallee();
         if (!f) fail(c, "indirect calls are not supported yet");
+        if (auto* subscript = array_subscript(c)) {
+            expr(array_receiver(subscript)); expr(subscript->getArg(1)); op("ldelem " + type(subscript->getType()), 2, 1); return;
+        }
+        if (auto* method = dyn_cast<CXXMethodDecl>(f)) if (!array_element(method->getParent()).isNull() && method->getNameAsString() == "get_Length") {
+            auto* member = dyn_cast<CXXMemberCallExpr>(c);
+            if (!member) fail(c, "array Length lacks a receiver");
+            expr(member->getImplicitObjectArgument()); op("ldlen", 1, 1); op("conv.i4", 1, 1); return;
+        }
         if (f->getNameAsString() == "__cli_literal") {
             if (c->getNumArgs() != 1 || !isa<StringLiteral>(c->getArg(0)->IgnoreParenImpCasts())) fail(c, "invalid string literal marker");
             expr(c->getArg(0)); return;
@@ -679,12 +758,17 @@ class Emitter {
             auto* target = handle_target(c->getType());
             if (!target || c->getNumArgs() != 1 || !handle_target(c->getArg(0)->getType())) fail(c, "only managed reference casts are enabled");
             expr(c->getArg(0));
-            op(std::string(f->getNameAsString() == "__cli_safe_cast" ? "castclass " : "isinst ") + record_name(target), 1, 1);
+            op(std::string(f->getNameAsString() == "__cli_safe_cast" ? "castclass " : "isinst ") + reference_token(c->getType()), 1, 1);
             return;
         }
         if (f->getNameAsString() == "__cli_new") {
             auto* target = handle_target(c->getType());
             if (!target) fail(c, "allocation marker has no managed type");
+            QualType element = array_element(target);
+            if (!element.isNull()) {
+                if (c->getNumArgs() != 1 || !c->getArg(0)->getType()->isIntegerType()) fail(c, "array allocation requires one integer length");
+                expr(c->getArg(0)); op("newarr " + type(element), 1, 1); return;
+            }
             if (record_name(target) == "[System.Runtime]'System.String'") {
                 if (c->getNumArgs() != 1 || !isa<StringLiteral>(c->getArg(0)->IgnoreParenImpCasts()))
                     fail(c, "String allocation currently requires a literal");
@@ -705,6 +789,8 @@ class Emitter {
             };
             if (auto* trailing = dyn_cast<DecltypeType>(f->getReturnType().getTypePtr())) find_constructor(trailing->getUnderlyingExpr());
             if (!selected) fail(c, "allocation has no Clang-resolved managed constructor");
+            if (!annotation(target, "cli.external:").empty() && annotation(selected, "cli.import:").empty())
+                fail(c, "imported class has no public metadata constructor");
             if (selected->getNumParams() != c->getNumArgs()) fail(c, "default constructor arguments are not supported yet");
             for (unsigned i = 0; i < c->getNumArgs(); ++i) {
                 if (type(c->getArg(i)->getType()) != type(selected->getParamDecl(i)->getType())) fail(c, "constructor argument conversion is not enabled yet");
@@ -738,7 +824,11 @@ class Emitter {
     void expr(const Expr* original) {
         const Expr* e = strip(original);
         if (auto* c = dyn_cast<ImplicitCastExpr>(e)) {
+            if (c->getCastKind() == CK_NullToPointer && handle_target(c->getType())) { op("ldnull", 0, 1); return; }
             expr(c->getSubExpr());
+            if (c->getCastKind() == CK_PointerToBoolean && handle_target(c->getSubExpr()->getType())) {
+                op("ldnull", 0, 1); op("ceq", 2, 1); op("ldc.i4.0", 0, 1); op("ceq", 2, 1); return;
+            }
             if (c->getCastKind() == CK_IntegralToBoolean) { op("ldc.i4.0", 0, 1); op("ceq", 2, 1); op("ldc.i4.0", 0, 1); op("ceq", 2, 1); }
             else if (c->getCastKind() == CK_IntegralCast || c->getCastKind() == CK_IntegralToFloating || c->getCastKind() == CK_FloatingCast || c->getCastKind() == CK_FloatingToIntegral) {
                 std::string target = type(c->getType());
@@ -814,6 +904,7 @@ class Emitter {
         }
         if (auto* s = dyn_cast<SubstNonTypeTemplateParmExpr>(e)) { expr(s->getReplacement()); return; }
         if (auto* d = dyn_cast<CXXDefaultArgExpr>(e)) { expr(d->getExpr()); return; }
+        if (auto* d = dyn_cast<CXXDefaultInitExpr>(e)) { expr(d->getExpr()); return; }
         if (auto* b = dyn_cast<BinaryOperator>(e)) { binary(b); return; }
         if (auto* conditional = dyn_cast<ConditionalOperator>(e)) {
             int base = stack; auto otherwise = label(), done = label();
@@ -841,6 +932,17 @@ class Emitter {
         }
         if (auto* u = dyn_cast<UnaryOperator>(e)) {
             if (u->isIncrementDecrementOp()) {
+                if (auto* subscript = array_subscript(u->getSubExpr())) {
+                    auto slots = capture_array(subscript); load_array_location(slots);
+                    std::string element = type(subscript->getType());
+                    op("ldelem " + element, 2, 1);
+                    unsigned old = temporary(element), result = temporary(element);
+                    op("stloc " + std::to_string(old), 1); op("ldloc " + std::to_string(old), 0, 1);
+                    op(element == "int64" || element == "uint64" ? "ldc.i8 1" : element == "float32" ? "ldc.r4 1" : element == "float64" ? "ldc.r8 1" : "ldc.i4.1", 0, 1);
+                    op(u->isIncrementOp() ? "add" : "sub", 2, 1); op("stloc " + std::to_string(result), 1);
+                    load_array_location(slots); op("ldloc " + std::to_string(result), 0, 1); op("stelem " + element, 3);
+                    op("ldloc " + std::to_string(u->isPostfix() ? old : result), 0, 1); return;
+                }
                 if (auto* member = dyn_cast<MemberExpr>(u->getSubExpr()->IgnoreParenImpCasts())) {
                     auto* field = dyn_cast<FieldDecl>(member->getMemberDecl());
                     if (!field) fail(u, "increment target is not an instance field");
@@ -869,14 +971,14 @@ class Emitter {
             return;
         }
         if (auto* c = dyn_cast<ExplicitCastExpr>(e)) {
-            if (auto* target = handle_target(c->getType())) {
+            if (handle_target(c->getType())) {
                 const Expr* source = strip(c->getSubExpr());
                 if (auto* ctor = dyn_cast<CXXConstructExpr>(source)) {
                     if (ctor->getNumArgs() != 1) fail(c, "invalid explicit handle cast");
                     source = ctor->getArg(0);
                 }
                 if (!handle_target(source->getType())) fail(c, "explicit handle cast requires a managed reference");
-                expr(source); op("castclass " + record_name(target), 1, 1); return;
+                expr(source); op("castclass " + reference_token(c->getType()), 1, 1); return;
             }
             if (c->getCastKind() != CK_NoOp) fail(c, "explicit conversions are not enabled yet");
             expr(c->getSubExpr()); return;
@@ -985,7 +1087,9 @@ public:
     Emitter(CompilerInstance& compiler, const Metadata& md) : ci(compiler), context(ci.getASTContext()), metadata(md) {}
     bool VisitFunctionDecl(FunctionDecl* f) {
         auto* method = dyn_cast<CXXMethodDecl>(f);
-        if (f->isImplicit() || (!f->doesThisDeclarationHaveABody() && !(method && method->isPureVirtual())) || llvm::StringRef(f->getNameAsString()).starts_with("__cli_")) return true;
+        if (isa<CXXConstructorDecl>(f) && method && is_interface(method->getParent())) return true;
+        if (f->isImplicit() && method && annotated(method->getParent(), "cli.abstract") && annotated(method->getParent(), "cli.sealed")) return true;
+        if ((f->isImplicit() && !(isa<CXXConstructorDecl>(f) && cast<CXXConstructorDecl>(f)->isDefaultConstructor())) || (!f->doesThisDeclarationHaveABody() && !(method && method->isPureVirtual())) || llvm::StringRef(f->getNameAsString()).starts_with("__cli_")) return true;
         if (auto* m = dyn_cast<CXXMethodDecl>(f)) if (!annotation(m->getParent(), "cli.external:").empty()) return true;
         validate_declarator(f->getTypeSourceInfo());
         for (auto* p : f->parameters()) validate_declarator(p->getTypeSourceInfo());
@@ -995,13 +1099,19 @@ public:
         return true;
     }
     bool VisitCXXRecordDecl(CXXRecordDecl* r) {
-        if (r->isThisDeclarationADefinition() && annotated(r, "cli.ref")) {
+        if (r->isThisDeclarationADefinition() && annotated(r, "cli.ref") && !annotated(r, "cli.array")) {
             unsigned classes = 0;
             for (auto& b : r->bases()) if (!is_interface(b.getType()->getAsCXXRecordDecl())) ++classes;
             if (classes > 1 || (is_interface(r) && classes)) throw std::runtime_error("a managed class permits one class base and interfaces only");
             if (is_interface(r) && !r->field_empty()) throw std::runtime_error("interface instance fields are forbidden");
             for (const auto& base : r->bases()) record_name(base.getType()->getAsCXXRecordDecl());
             for (auto* field : r->fields()) { type(field->getType()); validate_declarator(field->getTypeSourceInfo()); }
+            if (!is_interface(r) && !(annotated(r, "cli.abstract") && annotated(r, "cli.sealed"))) {
+                auto* ctor = ci.getSema().LookupDefaultConstructor(r);
+                if (ctor && ctor->isImplicit() && !ctor->isDeleted() && !ctor->hasBody())
+                    ci.getSema().DefineImplicitDefaultConstructor(r->getLocation(), ctor);
+                if (ci.getDiagnostics().hasErrorOccurred()) throw std::runtime_error("Clang rejected an implicit managed constructor");
+            }
             records.push_back(r);
         }
         return true;
@@ -1075,14 +1185,6 @@ public:
                     if (property->getSetterId() && method->getIdentifier() == property->getSetterId()) il << "    .set " << signature(method) << "\n";
                 }
                 il << "  }\n";
-            }
-            bool has_ctor = false;
-            for (auto* ctor : r->ctors()) if (!ctor->isImplicit()) has_ctor = true;
-            if (!has_ctor && !is_interface(r)) {
-                il << "  .method public hidebysig specialname rtspecialname instance void .ctor() cil managed {\n"
-                   << "    .maxstack 1\n    ldarg.0\n    call instance void "
-                   << (parent ? record_name(parent) : "[System.Runtime]System.Object")
-                   << "::.ctor()\n    ret\n  }\n";
             }
             il << "}\n";
         }
