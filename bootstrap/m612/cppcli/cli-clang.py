@@ -14,6 +14,11 @@ def run(command):
 
 
 def main():
+    if os.name == "nt":
+        # Redirected Windows streams otherwise use an ANSI code page and can
+        # turn a successful Unicode-path compilation into an encoding error.
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("input", type=Path)
     ap.add_argument("-o", required=True, type=Path)
