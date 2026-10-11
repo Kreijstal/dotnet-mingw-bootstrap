@@ -1710,3 +1710,10 @@ checks events, embedded dialog/icon resources and GDI+ pixels, and closes throug
 the message loop. It runs both shared-framework and self-contained outputs.
 The sibling msys2-ur recipe `mingw-w64-dotnet-winforms-bootstrap` rebuilds its
 Microsoft inputs from pinned source archives and includes these checks.
+
+The frontend driver also accepts `--framework windowsforms`, selecting the
+source-built desktop pack, the common Form/Control/Application metadata graph
+and the matching runtime configuration. `winforms-tests/check-cppcli.sh` compiles
+`hello.cpp` with that flag, shows/closes a real Form and verifies its window
+handle. The packaged command is `cli-clang --framework windowsforms hello.cpp
+-o hello.dll`, followed by `dotnet hello.dll`.

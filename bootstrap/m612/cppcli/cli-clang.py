@@ -24,6 +24,7 @@ def main():
     ap.add_argument("--emit", choices=["il", "assembly"], default="assembly")
     ap.add_argument("--target", choices=["exe", "library"], default="exe")
     ap.add_argument("--assembly-name")
+    ap.add_argument("--framework", choices=["windowsforms"], help="reference the source-built Windows Forms pack and select its runtime framework")
     ap.add_argument("--native-library", default="", help="DLL supplying used extern-C functions through a split native bridge")
     ap.add_argument("--clang", default=os.environ.get("CPPCLI_CLANG", "clang++"))
     ap.add_argument("--sdk", type=Path, default=os.environ.get("CPPCLI_SDK"))
@@ -47,6 +48,21 @@ def main():
     references = [packs[-1] / n for n in ["System.Runtime.dll", "System.Console.dll"]]
     references += [r.resolve() for r in a.reference]
     types = sorted(set(["System.Object", "System.String", "System.Console"] + a.type))
+    runtime_frameworks = [{"name": "Microsoft.NETCore.App", "version": "8.0.0"}]
+    reference_directories = [packs[-1]]
+    if a.framework == "windowsforms":
+        desktop = sorted((sdk / "packs/Microsoft.WindowsDesktop.App.Ref").glob("*/ref/net8.0"))
+        if not desktop:
+            ap.error("--framework windowsforms requires the source-built WinForms targeting pack")
+        desktop = desktop[-1]
+        desktop_version = desktop.parents[1].name
+        references += sorted(desktop.glob("*.dll"))
+        references += [packs[-1] / n for n in ["System.ComponentModel.Primitives.dll", "System.Drawing.Primitives.dll"]]
+        types = sorted(set(types + ["System.Windows.Forms.Form", "System.Windows.Forms.ContainerControl",
+            "System.Windows.Forms.ScrollableControl", "System.Windows.Forms.Control", "System.Windows.Forms.Application",
+            "System.ComponentModel.Component", "System.MarshalByRefObject"]))
+        runtime_frameworks.append({"name": "Microsoft.WindowsDesktop.App", "version": desktop_version})
+        reference_directories.append(desktop)
     source = a.input.resolve()
     output = a.o.resolve()
     assembly_name = a.assembly_name or output.stem
@@ -82,7 +98,7 @@ def main():
     action("cli-references", shim, ["output=" + str(reference_file)])
     for item in json.loads(reference_file.read_text(encoding="utf-8")):
         ref = Path(item["path"])
-        candidates = [ref] if ref.is_absolute() else [Path(item["source"]).parent / ref, packs[-1] / ref]
+        candidates = [ref] if ref.is_absolute() else [Path(item["source"]).parent / ref] + [directory / ref for directory in reference_directories]
         found = next((p.resolve() for p in candidates if p.is_file()), None)
         if found is None:
             ap.error("#using assembly not found in source directory or source-built pack: " + item["path"])
@@ -102,8 +118,9 @@ def main():
         temporary = work / "result.dll"
         run([a.ilasm.resolve(), il, "-exe" if a.target == "exe" else "-dll", "-quiet", "-nologo", "-output=" + str(temporary)])
         temporary.replace(output)
+        framework_config = {"framework": runtime_frameworks[0]} if len(runtime_frameworks) == 1 else {"frameworks": runtime_frameworks}
         output.with_suffix(".runtimeconfig.json").write_text(json.dumps({"runtimeOptions": {
-            "tfm": "net8.0", "framework": {"name": "Microsoft.NETCore.App", "version": "8.0.0"}
+            "tfm": "net8.0", **framework_config
         }}) + "\n", encoding="utf-8")
     print("cli-clang: emitted " + str(output))
 

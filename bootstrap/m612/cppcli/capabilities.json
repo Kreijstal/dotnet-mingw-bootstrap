@@ -50,7 +50,8 @@
     "Explicit safe_cast boxing to Object and unbox.any with real CLR cast/null exceptions",
     "Private Clang parser distinguishes tracking-reference declarators (%) from ordinary remainder expressions",
     "CLR byref method parameters and local aliases to scalar/value/object locals, fields and array elements",
-    "Imported byref signatures and C# ref parameter interoperability"
+    "Imported byref signatures and C# ref parameter interoperability",
+    "Source-built Windows Forms framework selection with --framework windowsforms and a real generated C++/CLI Form window"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
