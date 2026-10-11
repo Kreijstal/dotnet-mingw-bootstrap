@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "stage": "clang-ast-subset",
+  "clang": "22.1.8",
+  "runtime": "net8.0-windows-x64",
+  "supported": [
+    "Clang preprocessing, macros, includes and original-source line mapping",
+    "ref class declarations, abstract and sealed class flags",
+    "static managed methods and ordinary global functions",
+    "String handles, literal allocation and UTF-16 string emission",
+    "imported public primitive/String/Object method signatures",
+    "Clang overload resolution after contextual managed literal adaptation",
+    "initialized locals, parameters, arithmetic, comparisons and native XOR",
+    "if/else, while, for, break, continue and returns",
+    "source-built ilasm assembly and source-built CoreCLR execution"
+  ],
+  "limitations": [
+    "Only directly imported qualified static calls receive contextual literal adaptation",
+    "Metadata headers are generated for explicitly selected types",
+    "No instance members, fields, inheritance or user constructors yet",
+    "No CLI generics, managed arrays, properties, delegates, events or exception regions yet",
+    "No native/managed interop or mixed-mode PE output yet",
+    "Unsupported AST nodes are errors; this is not a conforming general C++/CLI compiler"
+  ]
+}

@@ -1,0 +1,15 @@
+cmake_minimum_required(VERSION 3.24)
+project(cppcli LANGUAGES C CXX)
+find_package(LLVM 22.1.8 EXACT REQUIRED CONFIG)
+find_path(CPPCLI_CLANG_INCLUDE clang/Frontend/FrontendPluginRegistry.h HINTS ${LLVM_INCLUDE_DIRS} REQUIRED)
+# MSYS2 splits clang-tools-extra libraries from clang. Its ClangConfig checks
+# every static tool library even though this plugin only needs clang-cpp.
+find_library(CPPCLI_CLANG_CPP NAMES clang-cpp HINTS ${LLVM_LIBRARY_DIRS} REQUIRED)
+add_library(cli_ast SHARED frontend.cpp)
+target_compile_features(cli_ast PRIVATE cxx_std_17)
+target_include_directories(cli_ast SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS} ${CPPCLI_CLANG_INCLUDE})
+target_link_libraries(cli_ast PRIVATE ${CPPCLI_CLANG_CPP} LLVM)
+target_compile_options(cli_ast PRIVATE -Wall -Wextra -Wno-unused-parameter -fno-rtti)
+set_target_properties(cli_ast PROPERTIES PREFIX "")
+configure_file(cli-clang.py cli-clang COPYONLY)
+configure_file(capabilities.json capabilities.json COPYONLY)

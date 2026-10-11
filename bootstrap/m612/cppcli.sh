@@ -1,0 +1,68 @@
+#!/bin/bash
+# Build the adapter/Clang AST frontend; all managed tools use the source-built SDK.
+set -euo pipefail
+here=$(cd "$(dirname "$0")" && pwd)
+. "$here/../env-m612.sh"
+src=$here/cppcli
+build=${CPPCLI_BUILD:-$M612/build/cppcli}
+testdir=${CPPCLI_TESTDIR:-$M612/test/cppcli}
+export CPPCLI_SDK=${CPPCLI_SDK:-$M612/dotnet-sdk-8.0.131-stage2}
+export CPPCLI_ILASM=${CPPCLI_ILASM:-$M612/build/coreclr-8.0.0/cmake/ilasm/ilasm.exe}
+export CPPCLI_CLANG=/clang64/bin/clang++.exe
+steps=${*:-build test-core}
+mkdir -p "$build" "$testdir"
+
+step_build() {
+  [ "$MSYSTEM" = CLANG64 ] || die "build this Clang plugin under MSYSTEM=CLANG64"
+  log "Build metadata reader with source-built SDK"
+  cat > "$build/NuGet.config" <<'EOF'
+<configuration><packageSources><clear /></packageSources></configuration>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$src/metadata/metadata.csproj")" -c Release -nologo \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false \
+    "-p:BaseIntermediateOutputPath=$(cygpath -m "$build/metadata-obj")/" \
+    "-p:OutputPath=$(cygpath -m "$build/metadata")/" -p:NuGetAudit=false
+  log "Build Clang token adapter and AST emitter"
+  /clang64/bin/cmake.exe -S "$src" -B "$build" -GNinja -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_C_COMPILER=/clang64/bin/clang.exe -DCMAKE_CXX_COMPILER=/clang64/bin/clang++.exe \
+    -DLLVM_DIR=/clang64/lib/cmake/llvm -DClang_DIR=/clang64/lib/cmake/clang
+  /clang64/bin/cmake.exe --build "$build" --target cli_ast -j2
+}
+compile() {
+  /clang64/bin/python.exe "$build/cli-clang" --sdk "$(cygpath -m "$CPPCLI_SDK")" \
+    --clang "$(cygpath -m "$CPPCLI_CLANG")" --ilasm "$(cygpath -m "$CPPCLI_ILASM")" "$@"
+}
+run_case() {
+  local name=$1 input=$2 expected=$3; shift 3
+  compile "$(cygpath -m "$input")" -o "$(cygpath -m "$testdir/$name.dll")" "$@"
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/$name.dll")" > "$testdir/$name.stdout"
+  tr -d '\r' < "$testdir/$name.stdout" > "$testdir/$name.actual"
+  printf '%s\n' "$expected" > "$testdir/$name.expected"
+  cmp "$testdir/$name.expected" "$testdir/$name.actual" || die "runtime mismatch in $name"
+  [ -s "$testdir/$name.dll.work/ast.json" ] || die "missing Clang AST evidence"
+  printf 'PASS %s\n' "$name"
+}
+reject_case() {
+  local name=$1 text=$2 diagnostic=$3
+  printf '%s\n' "$text" > "$testdir/$name.cpp"
+  rm -f "$testdir/$name.dll"
+  if compile "$(cygpath -m "$testdir/$name.cpp")" -o "$(cygpath -m "$testdir/$name.dll")" > "$testdir/$name.log" 2>&1; then
+    die "accepted invalid/unsupported input: $name"
+  fi
+  [ ! -e "$testdir/$name.dll" ] || die "produced assembly for rejected input: $name"
+  grep -q "$diagnostic" "$testdir/$name.log" || { cat "$testdir/$name.log"; die "wrong rejection diagnostic: $name"; }
+  printf 'PASS reject %s\n' "$name"
+}
+step_test-core() {
+  log "Actual Clang AST -> source-built ilasm -> source-built CoreCLR"
+  run_case hello "$here/cli-poc/hello.cpp" 'Hello from C++/CLI through a GCC plugin!'
+  run_case control "$src/tests/control.cpp" $'13\ncontrol OK\nUnicode: λ 😀'
+  run_case macros "$src/tests/control.cpp" $'8\ncontrol OK\nUnicode: λ 😀' -D LIMIT=5
+  run_case overloads "$src/tests/overloads.cpp" $'5\n10\nFalse\ntext'
+  reject_case unknown 'using namespace System; int main() { int n = missing; return n; }' 'undeclared identifier'
+  reject_case mismatch 'using namespace System; int main() { int n = "wrong"; return n; }' 'cannot initialize'
+  reject_case outside 'using namespace System; int main() { switch (1) { default: return 0; } }' 'unsupported AST statement'
+  reject_case missing-return 'using namespace System; int broken() { int n = 0; } int main() { return broken(); }' 'does not return'
+  log "PASS test-core: Clang parsing, metadata overloads, control flow, macros/includes, Unicode, negative checks"
+}
+for step in $steps; do "step_$step"; done
