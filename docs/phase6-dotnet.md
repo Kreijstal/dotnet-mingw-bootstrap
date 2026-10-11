@@ -1717,3 +1717,75 @@ and the matching runtime configuration. `winforms-tests/check-cppcli.sh` compile
 `hello.cpp` with that flag, shows/closes a real Form and verifies its window
 handle. The packaged command is `cli-clang --framework windowsforms hello.cpp
 -o hello.dll`, followed by `dotnet hello.dll`.
+
+## 12. WPF managed foundations and native dependency inventory
+
+On 2026-10-12 the current Greenshot source was checked for packaging. It targets
+.NET Framework 4.8 and uses WPF in its application, editor and capture code;
+the Light edition still requires WPF. The user selected current Greenshot and
+WPF support rather than an interim port of the older WinForms-only release.
+No Greenshot package or complete WPF shared framework has been produced.
+
+`bootstrap/m612/wpf.sh` now builds these v8.0.0 WPF source projects with the
+installed, source-built SDK and an empty NuGet feed:
+
+- `System.Windows.Input.Manipulations` (26 source files);
+- `System.Xaml` (181 source files);
+- `WindowsBase` (318 source files, including the upstream Perl-generated XML table);
+- `UIAutomationTypes` (64 source files);
+- `UIAutomationProvider` (31 source files).
+
+The driver also builds `System.IO.Packaging` and `System.Security.Permissions`
+from runtime v8.0.0 source. Existing source-built OOB libraries and the interim
+WinForms framework supply the remaining managed dependencies. Public signing
+uses the upstream assembly keys, including WindowsBase's MicrosoftShared key.
+`tools/wpfplan.py` preserves the projects' default-item settings, compile/remove
+lists, embedded resource names and declared project dependencies. References to
+native DLLs and reverse dependencies are excluded from managed compilation.
+
+The source-built `PresentationNative_cor3.dll` currently implements 38 Win32
+and OS-version exports. Its window wrappers preserve Unicode and clear stale
+last-error values when a zero result is a successful Win32 operation. This is
+only the Win32 portion; it provides no text or paragraph-layout stubs.
+
+Validation on win11, from the staged driver at `~/wpfboot/driver`:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh \
+  foundations native-win32 check-foundations inventory
+```
+
+All five assembly builds and the check finished with zero warnings and errors.
+The check runs on the source-built CoreCLR and exercises Point/Rect geometry,
+embedded error strings, XAML parsing and serialization, automation assembly
+identity, dependency-property defaults and updates, dispatcher thread affinity
+and its Win32 message loop, native Unicode window text and last-error behavior,
+the native OS-version bool ABI, and manipulation events/translation.
+Outputs and source-item manifests remain under `~/wpfboot/build`; no installed
+SDK/shared-framework files are modified by these foundation checks.
+
+The next build gate is `DirectWriteForwarder`: planning PresentationCore stops
+with `Build WPF dependency first: DirectWriteForwarder`. Compiling the real
+upstream DirectWriteForwarder translation unit with the packaged frontend also
+fails: `#using WINDOWS_BASE_DLL as_friend` in included headers is not handled,
+and `vcclr.h` is missing. Its native pointers, managed class templates, cleanup,
+callbacks and other CLI features still exceed the frontend's supported subset.
+The same compiler failure can be reproduced with `wpf.sh bridge-gate`; it
+retains the original Clang diagnostics in `build/directwrite-gate.log`.
+The System.Printing bridge, higher-level managed libraries, WPF build tasks and
+desktop framework/SDK packaging also remain unfinished.
+
+There is an additional independent source-only blocker. Upstream's
+`redist/PresentationNative/PresentationNative.vcxproj` discovers and copies the
+DLL from a binary package rather than compiling its source. The managed WPF
+source references 139 unique exports from it. `tools/wpfnative-inventory.py`
+records each caller and its category in `build/native-coverage.json`; 38 are
+implemented and 101 remain, including Unicode classification, line services,
+paragraph layout and natural-language services. `--require-complete` deliberately
+fails while any required export is absent. Completing the C++/CLI bridges alone
+will therefore not complete source-only WPF. The existing native gfx/PenImc
+packages are v10.0.12; their versions and rendering protocol must also be matched
+to the eventual managed framework before a rendered-window check or Greenshot
+package can be claimed.
