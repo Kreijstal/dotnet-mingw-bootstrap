@@ -44,7 +44,10 @@
     "Split MinGW native DLL bridges for used extern-C integer/floating scalar functions",
     "P/Invoke import metadata and native calls validated from generated CLI and C# code",
     "Assembly-qualified imported reference signatures, including library factory return types",
-    "Managed enums with integral underlying types, literal metadata, casts, arrays and external enum imports"
+    "Managed enums with integral underlying types, literal metadata, casts, arrays and external enum imports",
+    "Managed value structs/classes with fields, constructors, copy semantics, instance methods and value arrays",
+    "Imported value types and public fields, including assembly-qualified struct signatures",
+    "Explicit safe_cast boxing to Object and unbox.any with real CLR cast/null exceptions"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -60,7 +63,9 @@
     "Managed arrays currently require rank one; no aggregate initializers, covariance or tracking references",
     "Managed destructors/finalizers, covariance metadata and managed operator metadata are explicitly rejected",
     "Native bridges currently require extern-C scalar functions; no pointers, bool/string marshalling, callbacks or automatic native partitioning",
-    "Managed value classes/boxing, static field initialization and multi-translation-unit linking are not implemented",
-    "WPF DirectWriteForwarder and System.Printing are not compiled by this frontend yet"
+    "Implicit boxing, static field initialization and multi-translation-unit linking are not implemented",
+    "WPF DirectWriteForwarder and System.Printing are not compiled by this frontend yet",
+    "Value classes currently exclude nested types, bases/interfaces, virtual methods, native pointer fields and custom zero-argument constructors",
+    "Boxing currently uses explicit safe_cast to Object; boxed value handles, constrained dispatch and implicit boxing are not implemented"
   ]
 }

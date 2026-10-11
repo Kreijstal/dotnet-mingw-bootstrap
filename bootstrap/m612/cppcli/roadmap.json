@@ -30,10 +30,12 @@
         "rank-one primitive/reference arrays",
         "managed catch/rethrow/finally and protected control flow",
         "ordinary native C++ function template instantiations",
-        "managed enums and imported enum signatures"
+        "managed enums and imported enum signatures",
+        "managed value classes and value-copy/address semantics",
+        "explicit boxing/unboxing and imported public value fields"
       ],
       "remaining": [
-        "managed value classes and boxing",
+        "implicit boxing and boxed value handles",
         "CLI generics",
         "delegates/events/indexers",
         "destructors/finalizers and deterministic cleanup",
@@ -41,7 +43,7 @@
         "attributes/static initialization/multiple translation units",
         "full CLI semantic analysis and metadata type discovery"
       ],
-      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums"
+      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values"
     },
     {
       "stage": 4,

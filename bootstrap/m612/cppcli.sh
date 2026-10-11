@@ -275,4 +275,40 @@ EOF
   run_case enum-reference "$testdir/enum-reference.cpp" '2' --type Example.Enums --type Example.Shade
   reject_case enum-overflow 'public enum class Small : unsigned char { Value = 256 }; int main() { return 0; }' 'cannot be narrowed'
 }
+step_test-values() {
+  run_case values "$src/tests/values.cpp" $'7\n3\n5\n13\n3\n13\n10\n12\n9\n0\n9\n42'
+  mkdir -p "$testdir/value-consumer"
+  cat > "$testdir/value-consumer/value-consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers></PropertyGroup><ItemGroup><Reference Include="values"><HintPath>../values.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  cat > "$testdir/value-consumer/Program.cs" <<'EOF'
+using System;
+using Example;
+var p = new Point(3, 4);
+var copy = p;
+copy.Move(2);
+if (!typeof(Point).IsValueType || p.X != 3 || copy.X != 5 || p.Sum() != 7 || Values.ByValue(p) != 13 || p.X != 3 || Values.Echo(p).Y != 4)
+    throw new Exception("incorrect value copy/method metadata");
+var h = new Holder();
+h.Position.Move(5);
+if (h.Position.X != 7 || default(Point).Sum() != 0) throw new Exception("incorrect value fields/default");
+Console.WriteLine("value metadata and copy semantics OK");
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/value-consumer/value-consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -p:NuGetAudit=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/value-consumer/bin/Debug/net8.0/value-consumer.dll")"
+  cat > "$testdir/value-reference.cpp" <<'EOF'
+#using "values.dll"
+using namespace System;
+int main() { Example::Point p = Example::Values::Make(3); p.Move(4); Console::WriteLine(p.X); Console::WriteLine(p.Sum()); Object^ box = safe_cast<Object^>(p); Example::Point q = safe_cast<Example::Point>(box); Console::WriteLine(q.Y); return 0; }
+EOF
+  run_case value-reference "$testdir/value-reference.cpp" $'7\n11\n4' --type Example.Point --type Example.Values
+  cat > "$testdir/boxing-exceptions.cpp" <<'EOF'
+using namespace System;
+int main() { Object^ p = safe_cast<Object^>(1); try { double d = safe_cast<double>(p); } catch (InvalidCastException^ e) { Console::WriteLine(1); } Object^ n = nullptr; try { int i = safe_cast<int>(n); } catch (NullReferenceException^ e) { Console::WriteLine(2); } return 0; }
+EOF
+  run_case boxing-exceptions "$testdir/boxing-exceptions.cpp" $'1\n2' --type System.InvalidCastException --type System.NullReferenceException
+  reject_case value-base 'public value struct Bad : System::Object {}; int main() { return 0; }' 'value types with bases'
+}
 for step in $steps; do "step_$step"; done
+

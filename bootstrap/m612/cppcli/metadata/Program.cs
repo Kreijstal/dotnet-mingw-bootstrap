@@ -11,9 +11,10 @@ using System.Text.Json;
 record CliType(string Il, string Cpp, string Kind, string Name = "");
 record CliMethod(string Id, string Name, bool Static, CliType Return, CliType[] Parameters,
                  bool Supported, int GenericArity, bool Virtual, bool Abstract, bool Final);
+record CliField(string Name, CliType Type, bool Supported);
 record CliEnumMember(string Name, string Value);
 record CliProperty(string Name, CliType Type, string Getter, string Setter, bool Static, bool Supported);
-record CliClass(string Assembly, string Name, string Cpp, string Kind, string Base, CliMethod[] Methods, CliProperty[] Properties, string[] Interfaces, CliType? Underlying = null, CliEnumMember[]? EnumMembers = null);
+record CliClass(string Assembly, string Name, string Cpp, string Kind, string Base, CliMethod[] Methods, CliProperty[] Properties, string[] Interfaces, CliType? Underlying = null, CliEnumMember[]? EnumMembers = null, CliField[]? Fields = null);
 record CliAssembly(string Name, string Version, string Token);
 
 sealed class SignatureTypes : ISignatureTypeProvider<CliType, object?>
@@ -149,8 +150,9 @@ static class Program
                     }
                     else if (!td.BaseType.IsNil && td.BaseType.Kind == HandleKind.TypeDefinition)
                         baseName = FullName(r, r.GetTypeDefinition((TypeDefinitionHandle)td.BaseType));
-                    if (baseName == "System.ValueType")
-                        throw new Exception("imported value types are not enabled yet: " + name);
+                    var fields = td.GetFields().Select(fh => r.GetFieldDefinition(fh))
+                        .Where(f => (f.Attributes & FieldAttributes.FieldAccessMask) == FieldAttributes.Public && (f.Attributes & FieldAttributes.Static) == 0)
+                        .Select(f => new CliField(r.GetString(f.Name), f.DecodeSignature(new SignatureTypes(), null), ValidName(r.GetString(f.Name)))).ToArray();
                     if (baseName == "System.Enum") {
                         CliType? underlying = null;
                         var members = new List<CliEnumMember>();
@@ -179,7 +181,7 @@ static class Program
                             methods.ToArray(), properties.ToArray(), Array.Empty<string>(), underlying, members.ToArray()));
                         continue;
                     }
-                    types.Add(new(assembly, name, SignatureTypes.CppName(name), (td.Attributes & TypeAttributes.Interface) != 0 ? "interface" : "ref", baseName, methods.ToArray(), properties.ToArray(), td.GetInterfaceImplementations().Select(ih => {
+                    types.Add(new(assembly, name, SignatureTypes.CppName(name), baseName == "System.ValueType" ? "value" : (td.Attributes & TypeAttributes.Interface) != 0 ? "interface" : "ref", baseName, methods.ToArray(), properties.ToArray(), td.GetInterfaceImplementations().Select(ih => {
                         var handle = r.GetInterfaceImplementation(ih).Interface;
                         if (handle.Kind == HandleKind.TypeDefinition) return FullName(r, r.GetTypeDefinition((TypeDefinitionHandle)handle));
                         if (handle.Kind == HandleKind.TypeReference) {
@@ -187,7 +189,7 @@ static class Program
                             return (r.GetString(tr.Namespace).Length == 0 ? "" : r.GetString(tr.Namespace) + ".") + r.GetString(tr.Name);
                         }
                         return ""; // Generic interface signatures remain outside the imported subset.
-                    }).Where(n => n.Length != 0).ToArray()));
+                    }).Where(n => n.Length != 0).ToArray(), Fields: fields));
                 }
             }
             var found = types.Select(t => t.Name).ToHashSet(StringComparer.Ordinal);
@@ -199,7 +201,7 @@ static class Program
                 var owner = types.FirstOrDefault(c => c.Name == t.Name);
                 return owner == null ? t : t with { Il = t.Il.Replace("'" + t.Name + "'", "[" + owner.Assembly + "]'" + t.Name + "'") };
             }
-            types = types.Select(t => t with { Methods = t.Methods.Select(m => m with {
+            types = types.Select(t => t with { Fields = t.Fields?.Select(f => f with { Type = Qualified(f.Type), Supported = f.Supported && Available(f.Type) }).ToArray(), Methods = t.Methods.Select(m => m with {
                 Supported = m.Supported && Available(m.Return) && m.Parameters.All(Available),
                 Return = Qualified(m.Return), Parameters = m.Parameters.Select(Qualified).ToArray()
             }).ToArray(), Properties = t.Properties.Select(p => p with {
@@ -249,17 +251,20 @@ static class Program
             w.WriteLine(); return;
         }
         w.Write("class __attribute__((annotate(\"cli.external:" + Escape(t.Assembly + "|" + t.Name) + "\")" +
-            (t.Kind == "interface" ? ", annotate(\"cli.interface\")" : "") + ")) " + name);
+            (t.Kind == "interface" ? ", annotate(\"cli.interface\")" : t.Kind == "value" ? ", annotate(\"cli.value\")" : "") + ")) " + name);
         if (forward) w.Write("; ");
         else
         {
             var bases = new List<string>();
-            if (hasBase) bases.Add(t.Base);
-            if (interfaces != null) bases.AddRange(interfaces.Select(i => i.Name));
+            if (hasBase && t.Kind != "value") bases.Add(t.Base);
+            if (interfaces != null && t.Kind != "value") bases.AddRange(interfaces.Select(i => i.Name));
             if (bases.Count != 0) w.Write(" : " + string.Join(", ", bases.Select(b => "public " + SignatureTypes.CppName(b))));
             w.WriteLine(" { public:");
             if (t.Name == "System.Object") w.WriteLine("virtual ~Object() = default;");
             if (t.Name == "System.String") w.WriteLine("String(const char*); String(const wchar_t*);");
+            if (t.Kind == "value" && !t.Methods.Any(m => m.Name == ".ctor" && m.Parameters.Length == 0 && m.Supported))
+                w.WriteLine("__attribute__((annotate(\"cli.value.zero\"))) " + name + "() {}");
+            foreach (var f in t.Fields ?? Array.Empty<CliField>()) if (f.Supported) w.WriteLine(f.Type.Cpp + " " + f.Name + ";");
             var seen = new HashSet<string>();
             foreach (var m in t.Methods.Where(m => m.Supported))
             {
@@ -269,8 +274,8 @@ static class Program
                 if (!seen.Add(signature)) throw new Exception("surrogate overload collision: " + t.Name + "::" + signature);
                 w.Write("__attribute__((annotate(\"cli.import:" + Escape(m.Id) + "\"))) ");
                 if (m.Name == ".ctor") w.WriteLine(name + "(" + parameters + ");");
-                else w.WriteLine((m.Static ? "static " : m.Virtual ? "virtual " : "") + m.Return.Cpp + " " + m.Name + "(" + parameters + ")" +
-                    (m.Final ? " final" : "") + (m.Abstract ? " = 0" : "") + ";");
+                else w.WriteLine((m.Static ? "static " : m.Virtual && t.Kind != "value" ? "virtual " : "") + m.Return.Cpp + " " + m.Name + "(" + parameters + ")" +
+                    (m.Final && t.Kind != "value" ? " final" : "") + (m.Abstract && t.Kind != "value" ? " = 0" : "") + ";");
             }
             foreach (var p in t.Properties.Where(p => p.Supported))
             {
