@@ -283,6 +283,50 @@ protected:
             }
             for (size_t i = 0; i < tokens.size(); ++i) {
                 auto& t = tokens[i];
+                if (t.text == "property" && !class_context[i].empty()) {
+                    size_t name = i + 1;
+                    while (name + 1 < tokens.size() && !(tokens[name].kind == tok::identifier &&
+                        (tokens[name + 1].text == "{" || tokens[name + 1].text == ";"))) ++name;
+                    if (name + 1 == tokens.size()) throw std::runtime_error("unsupported property declarator");
+                    std::string property = tokens[name].text, property_type;
+                    for (size_t j = i + 1; j < name; ++j) property_type += tokens[j].text + " ";
+                    size_t end = name + 1; bool getter = false, setter = false;
+                    if (tokens[end].text == "{") {
+                        int depth = 1; ++end;
+                        for (; end < tokens.size() && depth; ++end) {
+                            if (tokens[end].text == "{") ++depth;
+                            else if (tokens[end].text == "}") --depth;
+                            else if (depth == 1 && end + 1 < tokens.size() && tokens[end + 1].text == "(") {
+                                getter |= tokens[end].text == "get";
+                                setter |= tokens[end].text == "set";
+                            }
+                        }
+                        if (end == tokens.size() && tokens.back().text != "}") throw std::runtime_error("unterminated property");
+                    } else { getter = setter = true; ++end; }
+                    std::string attribute = "__declspec(property(";
+                    if (getter) attribute += "get=get_" + property;
+                    if (getter && setter) attribute += ",";
+                    if (setter) attribute += "put=set_" + property;
+                    emit(t, attribute + ")) " + property_type + property + ";");
+                    if (tokens[name + 1].text == ";") {
+                        emit(t, "private: " + property_type + " __cli_backing_" + property + "; public:");
+                        emit(t, property_type + " __attribute__((annotate(\"cli.accessor:get\"))) get_" + property + "() { return __cli_backing_" + property + "; }");
+                        emit(t, "void __attribute__((annotate(\"cli.accessor:set\"))) set_" + property + "(" + property_type + " value) { __cli_backing_" + property + " = value; }");
+                    } else {
+                        int depth = 1;
+                        for (size_t j = name + 2; j + 1 < end; ++j) {
+                            if (depth == 1 && j + 1 < end && tokens[j + 1].text == "(" && (tokens[j].text == "get" || tokens[j].text == "set"))
+                                emit(tokens[j], "__attribute__((annotate(\"cli.accessor:" + tokens[j].text + "\"))) " + tokens[j].text + "_" + property);
+                            else if (tok::isStringLiteral(tokens[j].kind) && call_context[j] && j > 0 && j + 1 < tokens.size() &&
+                                (tokens[j - 1].text == "(" || tokens[j - 1].text == ",") &&
+                                (tokens[j + 1].text == ")" || tokens[j + 1].text == ",")) emit(tokens[j], "__cli_literal(" + tokens[j].text + ")");
+                            else emit(tokens[j], tokens[j].text);
+                            if (tokens[j].text == "{") ++depth;
+                            else if (tokens[j].text == "}") --depth;
+                        }
+                    }
+                    i = end - 1; continue;
+                }
                 if (t.text == "safe_cast") { emit(t, "__cli_safe_cast"); continue; }
                 if (t.text == "dynamic_cast" && i + 1 < tokens.size() && tokens[i + 1].text == "<") {
                     size_t end = i + 2;
@@ -356,6 +400,7 @@ class Emitter {
     std::vector<std::pair<std::string, std::string>> loop_labels;
     std::vector<FunctionIR> ir;
     std::vector<std::string> temporary_types;
+    std::map<const OpaqueValueExpr*, unsigned> opaque_values;
 
     [[noreturn]] void fail(const Stmt* s, const std::string& message) const {
         auto loc = ci.getSourceManager().getPresumedLoc(s ? s->getBeginLoc() : current->getLocation());
@@ -700,6 +745,36 @@ class Emitter {
             expr(member->getBase()); op("ldfld " + field_signature(field), 1, 1); return;
         }
         if (auto* d = dyn_cast<DeclRefExpr>(e)) { load_decl(d->getDecl(), e); return; }
+        if (auto* opaque = dyn_cast<OpaqueValueExpr>(e)) {
+            auto found = opaque_values.find(opaque);
+            if (found == opaque_values.end()) fail(e, "unbound opaque property value");
+            op("ldloc " + std::to_string(found->second), 0, 1); return;
+        }
+        if (auto* pseudo = dyn_cast<PseudoObjectExpr>(e)) {
+            const Expr* result_expr = pseudo->getResultExpr();
+            unsigned result = 0; bool has_result = false;
+            for (const Expr* semantic : pseudo->semantics()) {
+                if (auto* opaque = dyn_cast<OpaqueValueExpr>(semantic)) {
+                    unsigned slot = temporary(type(opaque->getType()));
+                    expr(opaque->getSourceExpr()); op("stloc " + std::to_string(slot), 1);
+                    opaque_values[opaque] = slot;
+                    if (semantic == result_expr) { result = slot; has_result = true; }
+                } else {
+                    expr(semantic);
+                    if (!semantic->getType()->isVoidType()) {
+                        if (semantic == result_expr) {
+                            result = temporary(type(semantic->getType()));
+                            op("stloc " + std::to_string(result), 1); has_result = true;
+                        } else op("pop", 1);
+                    }
+                }
+            }
+            if (!pseudo->getType()->isVoidType()) {
+                if (!has_result) fail(e, "property expression lacks a result");
+                op("ldloc " + std::to_string(result), 0, 1);
+            }
+            return;
+        }
         if (auto* s = dyn_cast<SubstNonTypeTemplateParmExpr>(e)) { expr(s->getReplacement()); return; }
         if (auto* d = dyn_cast<CXXDefaultArgExpr>(e)) { expr(d->getExpr()); return; }
         if (auto* b = dyn_cast<BinaryOperator>(e)) { binary(b); return; }
@@ -822,7 +897,7 @@ class Emitter {
         if (stack != before) fail(s, "internal IL stack mismatch at statement boundary");
     }
     FunctionIR function(FunctionDecl* f) {
-        current = f; locals.clear(); parameters.clear(); temporary_types.clear(); code.str(""); code.clear(); stack = 0; max_stack = 0;
+        current = f; locals.clear(); parameters.clear(); temporary_types.clear(); opaque_values.clear(); code.str(""); code.clear(); stack = 0; max_stack = 0;
         label_count = 0; loop_labels.clear();
         auto* method = dyn_cast<CXXMethodDecl>(f);
         bool instance = method && !method->isStatic();
@@ -919,7 +994,7 @@ public:
         auto emit_function = [&](size_t i) {
             auto* f = functions[i]; auto& body = ir[i];
             il << "  .method " << (isa<CXXMethodDecl>(f) && f->getAccess() == AS_private ? "private" : f->getAccess() == AS_protected ? "family" : "public") << " hidebysig "
-               << (isa<CXXConstructorDecl>(f) ? "specialname rtspecialname " : "") << (body.instance ? "instance " : "static ")
+               << (isa<CXXConstructorDecl>(f) ? "specialname rtspecialname " : !annotation(f, "cli.accessor:").empty() ? "specialname " : "") << (body.instance ? "instance " : "static ")
                << type(f->getReturnType()) << " '" << body.name << "'(";
             for (unsigned j = 0; j < f->getNumParams(); ++j) { if (j) il << ", "; il << type(f->getParamDecl(j)->getType()); }
             il << ") cil managed {\n";
@@ -935,6 +1010,14 @@ public:
             for (auto* field : r->fields()) il << "  .field " << (field->getAccess() == AS_private ? "private " : field->getAccess() == AS_protected ? "family " : "public ")
                 << type(field->getType()) << " '" << field->getNameAsString() << "'\n";
             for (size_t i = 0; i < functions.size(); ++i) if (ir[i].owner == record_name(r)) emit_function(i);
+            for (auto* member : r->decls()) if (auto* property = dyn_cast<MSPropertyDecl>(member)) {
+                il << "  .property instance " << type(property->getType()) << " '" << property->getNameAsString() << "'() {\n";
+                for (auto* method : r->methods()) {
+                    if (property->getGetterId() && method->getIdentifier() == property->getGetterId()) il << "    .get " << signature(method) << "\n";
+                    if (property->getSetterId() && method->getIdentifier() == property->getSetterId()) il << "    .set " << signature(method) << "\n";
+                }
+                il << "  }\n";
+            }
             bool has_ctor = false;
             for (auto* ctor : r->ctors()) if (!ctor->isImplicit()) has_ctor = true;
             if (!has_ctor && !annotated(r, "cli.abstract")) {

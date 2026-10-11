@@ -84,6 +84,9 @@ var counter = new Counter(5);
 Console.WriteLine(counter.Add(3));
 if (counter.Value != 8 || typeof(Counter).BaseType != typeof(object) || typeof(Counter).GetConstructors().Length != 1)
     throw new Exception("incorrect generated managed API");
+counter.Current = 11;
+if (counter.Current != 11 || typeof(Counter).GetProperty("Current").PropertyType != typeof(int))
+    throw new Exception("incorrect generated property API");
 Console.WriteLine("metadata OK");
 EOF
   "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/consumer/consumer.csproj")" -nologo -v:q \
@@ -112,5 +115,8 @@ EOF
 step_test-adapter-gate() {
   log "Scope lookup must distinguish a shadowed managed type name from native XOR"
   run_case scope-xor "$src/tests/scope-xor.cpp" '4'
+}
+step_test-properties() {
+  run_case properties "$src/tests/properties.cpp" $'set\nget\n4\nreceiver\nget\nset\nget\n6\n7'
 }
 for step in $steps; do "step_$step"; done

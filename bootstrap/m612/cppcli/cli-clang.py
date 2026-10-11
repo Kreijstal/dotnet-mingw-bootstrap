@@ -60,7 +60,7 @@ def main():
     # LLVM's in-process crash recovery treats MinGW C++ exceptions raised by a
     # plugin as crashes before its local catch handler can run. Use a dedicated
     # cc1 process so unsupported input produces normal diagnostics.
-    common = [a.clang, "-fno-integrated-cc1", "-std=c++17", "-Werror=return-type", "-x", "c++", "-fsyntax-only", "-I", source.parent]
+    common = [a.clang, "-fno-integrated-cc1", "-std=c++17", "-fms-extensions", "-Werror=return-type", "-x", "c++", "-fsyntax-only", "-I", source.parent]
     for inc in a.I:
         common += ["-I", str(Path(inc).resolve())]
     for define in a.D:
