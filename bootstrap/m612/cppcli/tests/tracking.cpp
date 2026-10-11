@@ -18,6 +18,7 @@ int main() {
     cli::array<int>^ a = gcnew cli::array<int>(2);
     a[0] = 20;
     int% element = a[0];
+    System::GC::Collect();
     Example::Tracking::Change(element);
     Console::WriteLine(a[0]);
     Example::Coordinate p(4);

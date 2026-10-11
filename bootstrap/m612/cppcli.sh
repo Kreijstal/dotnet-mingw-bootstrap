@@ -311,7 +311,7 @@ EOF
   reject_case value-base 'public value struct Bad : System::Object {}; int main() { return 0; }' 'value types with bases'
 }
 step_test-tracking() {
-  run_case tracking "$src/tests/tracking.cpp" $'8\n10\n23\n5\n6\nTrue\n2'
+  run_case tracking "$src/tests/tracking.cpp" $'8\n10\n23\n5\n6\nTrue\n2' --type System.GC
   mkdir -p "$testdir/tracking-consumer"
   cat > "$testdir/tracking-consumer/tracking-consumer.csproj" <<'EOF'
 <Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers></PropertyGroup><ItemGroup><Reference Include="tracking"><HintPath>../tracking.dll</HintPath></Reference></ItemGroup></Project>

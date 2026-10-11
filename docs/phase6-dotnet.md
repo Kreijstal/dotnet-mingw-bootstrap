@@ -1649,11 +1649,64 @@ CoreCLR `ilasm.exe`. Builds and C# consumer checks use an empty NuGet source
 list; no prebuilt Microsoft binary or package was introduced. Native tools
 and their libraries come from the trusted MSYS2 toolchain.
 
-Managed value types/enums, boxing, CLI generics, delegates/events/indexers,
-tracking references/pinning, managed destruction/finalization, attributes,
-static initialization and multiple translation units still require work.
+The frontend now also emits managed enums and value classes, including CLR
+literal/field metadata, value copies, constructors, methods, arrays and imported
+public struct fields. Explicit `safe_cast<Object^>(value)` boxes, and
+`safe_cast<ValueType>(object)` unboxes with genuine CLR cast/null exceptions.
+The private parser recognizes `%` tracking-reference declarators while keeping
+ordinary remainder expressions intact. Parameters and local aliases use CLR
+byref storage, including aliases into value fields and managed array elements.
+C# consumers and re-imported generated assemblies exercise each feature;
+`test-enums test-values test-tracking` extend the regression command above.
+
+Implicit boxing, CLI generics, delegates/events/indexers, extended tracking
+references/pinning, managed destruction/finalization, attributes, static
+initialization and multiple translation units still require work.
 Some surrogate rules also differ from full CLI semantics, notably interface
 lookup and implicit Object conversions for interface-only classes. WPF's
 DirectWriteForwarder and System.Printing have not been compiled by this
 frontend. The next native milestone is genuine mixed-mode output and the
 MinGW `ijwhost` port, followed by those WPF bridges.
+
+
+## 11. Interim WinForms source package on .NET 8
+
+`bootstrap/m612/winforms.sh` evaluates upstream source items into offline SDK
+projects, preserving resources, reference assemblies, public signing keys and
+interop source generation. Drawing.Common and Accessibility build from
+WinForms 8.0.0 source. WinForms 8's Primitives assembly needs CsWin32-generated
+bindings; its Win32Metadata/ClangSharp source bootstrap remains pending. The
+planner rejects missing bindings with an explicit diagnostic instead of
+restoring a binary generator or WinMD package.
+
+The approved interim uses WinForms 7.0.20 source (which contains its native
+bindings), compiled for net8.0 with assembly identities 8.0.0.0. Runtime OOB
+libraries and Drawing.Common come from 8.0.0 source. The installed framework
+version is explicitly `8.0.0-bootstrap.7.0.20`, with a provenance JSON recording
+this compatibility port. It provides WindowsForms only: WPF, design assemblies
+and localized satellites are not supplied.
+
+Build/validation on win11:
+
+```sh
+MSYSTEM=CLANG64 bash ~/dotnetboot/repo/bootstrap/m612/winforms.sh fetch drawing
+# Build Microsoft.Win32.SystemEvents before Drawing.Common, and the remaining
+# runtime OOB dependencies before the steps below. The package recipe does this.
+WINFORMS_VERSION=7.0.20 MSYSTEM=CLANG64 \
+  bash ~/dotnetboot/repo/bootstrap/m612/winforms.sh \
+  fetch accessibility generator primitives forms analyzers smoke layout
+```
+
+`tools/winforms-layout.py` stages shared-framework, reference and runtime packs,
+plus upstream WindowsDesktop SDK XML and the WinForms application configuration
+generator. The SDK profile includes the base runtime-pack mapping needed for
+self-contained publish. Assembly identities are read from the source-built
+assemblies; analyzer manifest entries carry the metadata the SDK expects.
+
+`winforms-tests/check-sdk.sh <isolated-sdk-root> <work>` builds a standard
+`net8.0-windows` / `UseWindowsForms=true` application against an empty NuGet feed,
+uses `ApplicationConfiguration.Initialize()`, opens a real form with controls,
+checks events, embedded dialog/icon resources and GDI+ pixels, and closes through
+the message loop. It runs both shared-framework and self-contained outputs.
+The sibling msys2-ur recipe `mingw-w64-dotnet-winforms-bootstrap` rebuilds its
+Microsoft inputs from pinned source archives and includes these checks.
