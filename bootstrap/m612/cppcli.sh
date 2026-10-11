@@ -65,4 +65,37 @@ step_test-core() {
   reject_case missing-return 'using namespace System; int broken() { int n = 0; } int main() { return broken(); }' 'does not return'
   log "PASS test-core: Clang parsing, metadata overloads, control flow, macros/includes, Unicode, negative checks"
 }
+step_test-objects() {
+  log "Managed constructors, fields, inheritance, handles and member calls"
+  run_case objects "$src/tests/objects.cpp" $'8\n16\nTrue\nTrue\nTrue\nTrue\nFalse\ntyped literal\n1\n2'
+  compile "$(cygpath -m "$src/tests/library.cpp")" --target library -o "$(cygpath -m "$testdir/counter.dll")"
+  mkdir -p "$testdir/consumer"
+  cat > "$testdir/consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers></PropertyGroup><ItemGroup><Reference Include="counter"><HintPath>../counter.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  cat > "$testdir/consumer/Program.cs" <<'EOF'
+using System;
+using Example;
+var counter = new Counter(5);
+Console.WriteLine(counter.Add(3));
+if (counter.Value != 8 || typeof(Counter).BaseType != typeof(object) || typeof(Counter).GetConstructors().Length != 1)
+    throw new Exception("incorrect generated managed API");
+Console.WriteLine("metadata OK");
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -p:NuGetAudit=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/consumer/bin/Debug/net8.0/consumer.dll")" > "$testdir/consumer.stdout"
+  tr -d '\r' < "$testdir/consumer.stdout" > "$testdir/consumer.actual"
+  printf '%s\n' '8' 'metadata OK' > "$testdir/consumer.expected"
+  cmp "$testdir/consumer.expected" "$testdir/consumer.actual"
+  printf 'PASS C# consumer and metadata\n'
+  reject_case bad-constructor 'using namespace System; public ref class Box { public: Box(int x) {} }; int main() { Box^ b = gcnew Box("bad"); return 0; }' 'no matching function'
+  reject_case bad-downcast 'using namespace System; public ref class Base {}; public ref class Derived : Base {}; int main() { Base^ b = gcnew Base(); Derived^ d = b; return 0; }' 'no viable conversion'
+  reject_case private-field 'using namespace System; public ref class Box { int hidden; }; int main() { Box^ b = gcnew Box(); b->hidden = 1; return 0; }' 'private member'
+  log "PASS test-objects: managed identity and Clang constructor/member checking"
+}
+step_test-adapter-gate() {
+  log "Scope lookup must distinguish a shadowed managed type name from native XOR"
+  run_case scope-xor "$src/tests/scope-xor.cpp" '4'
+}
 for step in $steps; do "step_$step"; done

@@ -11,7 +11,7 @@ using System.Text.Json;
 record CliType(string Il, string Cpp, string Kind, string Name = "");
 record CliMethod(string Id, string Name, bool Static, CliType Return, CliType[] Parameters,
                  bool Supported, int GenericArity);
-record CliClass(string Assembly, string Name, string Cpp, string Kind, CliMethod[] Methods);
+record CliClass(string Assembly, string Name, string Cpp, string Kind, string Base, CliMethod[] Methods);
 record CliAssembly(string Name, string Version, string Token);
 
 sealed class SignatureTypes : ISignatureTypeProvider<CliType, object?>
@@ -121,7 +121,16 @@ static class Program
                         methods.Add(new(id, mn, (md.Attributes & MethodAttributes.Static) != 0,
                             sig.ReturnType, sig.ParameterTypes.ToArray(), supported, sig.GenericParameterCount));
                     }
-                    types.Add(new(assembly, name, SignatureTypes.CppName(name), "ref", methods.ToArray()));
+                    string baseName = "";
+                    if (!td.BaseType.IsNil && td.BaseType.Kind == HandleKind.TypeReference)
+                    {
+                        var b = r.GetTypeReference((TypeReferenceHandle)td.BaseType);
+                        string ns = r.GetString(b.Namespace);
+                        baseName = (ns.Length == 0 ? "" : ns + ".") + r.GetString(b.Name);
+                    }
+                    else if (!td.BaseType.IsNil && td.BaseType.Kind == HandleKind.TypeDefinition)
+                        baseName = FullName(r, r.GetTypeDefinition((TypeDefinitionHandle)td.BaseType));
+                    types.Add(new(assembly, name, SignatureTypes.CppName(name), "ref", baseName, methods.ToArray()));
                 }
             }
             var found = types.Select(t => t.Name).ToHashSet(StringComparer.Ordinal);
@@ -134,18 +143,28 @@ static class Program
             using var header = new StreamWriter(headerPath, false, new UTF8Encoding(false));
             header.WriteLine("// Metadata declarations only; never compile these surrogates as native objects.");
             header.WriteLine("namespace System { class String; } int __cli_string_enabled(System::String*);");
-            header.WriteLine("template<class T> struct __cli_handle { __cli_handle() = default; __cli_handle(decltype(nullptr)); template<class U=T, class=decltype(__cli_string_enabled((U*)nullptr))> __cli_handle(const char*); template<class U=T, class=decltype(__cli_string_enabled((U*)nullptr))> __cli_handle(const wchar_t*); T* operator->() const; }; ");
-            header.WriteLine("template<class T, class... A> __cli_handle<T> __cli_new(A...); ");
+            header.WriteLine("template<class T> void __cli_accept_pointer(T*);");
+            header.WriteLine("template<class T> struct __cli_handle { __cli_handle() = default; __cli_handle(decltype(nullptr)); template<class U, class=decltype(__cli_accept_pointer<T>((U*)nullptr))> __cli_handle(__cli_handle<U>); template<class U, class=decltype(__cli_accept_pointer<U>((T*)nullptr)), class=void> explicit __cli_handle(__cli_handle<U>); template<class U=T, class=decltype(__cli_string_enabled((U*)nullptr))> __cli_handle(const char*); template<class U=T, class=decltype(__cli_string_enabled((U*)nullptr))> __cli_handle(const wchar_t*); T* operator->() const; }; ");
+            header.WriteLine("template<class T, class... A> auto __cli_new(A... args) -> decltype(T(args...), __cli_handle<T>{}); ");
+            header.WriteLine("template<class T, class A> T __cli_safe_cast(A); template<class T, class A> T __cli_dynamic_cast(A);");
             header.WriteLine("__cli_handle<System::String> __cli_literal(const char*); __cli_handle<System::String> __cli_literal(const wchar_t*);");
             header.WriteLine("namespace System { using Int32 = int; using Int64 = long long; using Boolean = bool; }");
             foreach (var t in types) WriteClass(header, t, true);
-            foreach (var t in types) WriteClass(header, t, false);
+            var emitted = new HashSet<string>();
+            void Define(CliClass t)
+            {
+                if (!emitted.Add(t.Name)) return;
+                var parent = types.FirstOrDefault(p => p.Name == t.Base);
+                if (parent != null) Define(parent);
+                WriteClass(header, t, false, parent != null);
+            }
+            foreach (var t in types) Define(t);
             File.WriteAllText(jsonPath, JsonSerializer.Serialize(new { version = 1, assemblies, types }, new JsonSerializerOptions { WriteIndented = true }), new UTF8Encoding(false));
             return 0;
         }
         catch (Exception e) { Console.Error.WriteLine("cli-metadata: " + e.Message); return 1; }
     }
-    static void WriteClass(StreamWriter w, CliClass t, bool forward)
+    static void WriteClass(StreamWriter w, CliClass t, bool forward, bool hasBase = false)
     {
         string[] parts = t.Name.Split('.');
         foreach (string ns in parts.SkipLast(1)) w.Write("namespace " + ns + " { ");
@@ -154,7 +173,9 @@ static class Program
         if (forward) w.Write("; ");
         else
         {
+            if (hasBase) w.Write(" : public " + SignatureTypes.CppName(t.Base));
             w.WriteLine(" { public:");
+            if (t.Name == "System.String") w.WriteLine("String(const char*); String(const wchar_t*);");
             var seen = new HashSet<string>();
             foreach (var m in t.Methods.Where(m => m.Supported))
             {

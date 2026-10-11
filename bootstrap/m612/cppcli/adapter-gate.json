@@ -1,0 +1,8 @@
+{
+  "fixture": "tests/scope-xor.cpp",
+  "expected_stdout": "4\n",
+  "observed": "Clang rejects the adapted template argument because the local variable String shadows the imported type",
+  "cause": "Type-name token rewriting precedes Clang scope lookup and cannot reliably distinguish XOR from a managed declarator",
+  "decision": "Reuse Clang's existing parser with a targeted caret-declarator patch; preserve the adapter, importer, IR and IL backend",
+  "status": "reproduced on win11 with Clang 22.1.8"
+}

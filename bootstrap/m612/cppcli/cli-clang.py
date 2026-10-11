@@ -3,6 +3,7 @@
 import argparse
 import json
 import os
+import re
 from pathlib import Path
 import subprocess
 import sys
@@ -21,6 +22,8 @@ def main():
     ap.add_argument("--reference", action="append", default=[], type=Path)
     ap.add_argument("--type", action="append", default=[])
     ap.add_argument("--emit", choices=["il", "assembly"], default="assembly")
+    ap.add_argument("--target", choices=["exe", "library"], default="exe")
+    ap.add_argument("--assembly-name")
     ap.add_argument("--clang", default=os.environ.get("CPPCLI_CLANG", "clang++"))
     ap.add_argument("--sdk", type=Path, default=os.environ.get("CPPCLI_SDK"))
     ap.add_argument("--ilasm", type=Path, default=os.environ.get("CPPCLI_ILASM"))
@@ -45,6 +48,9 @@ def main():
     types = sorted(set(["System.Object", "System.String", "System.Console"] + a.type))
     source = a.input.resolve()
     output = a.o.resolve()
+    assembly_name = a.assembly_name or output.stem
+    if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_.-]*", assembly_name):
+        ap.error("invalid assembly name")
     if source == output:
         ap.error("input and output must differ")
     work = output.parent / (output.name + ".work")
@@ -72,14 +78,15 @@ def main():
     # Never suppress Clang diagnostics to make a surrogate parse.
     action("cli-adapt", source, ["metadata=" + str(manifest), "output=" + str(adapted)])
     action("cli-emit", adapted, ["metadata=" + str(manifest), "output=" + str(il),
-                                 "evidence=" + str(work / "ast.json")], True)
+                                 "evidence=" + str(work / "ast.json"),
+                                 "assembly=" + assembly_name, "target=" + a.target], True)
     if a.emit == "il":
         output.write_bytes(il.read_bytes())
     else:
         if not a.ilasm:
             ap.error("--ilasm or CPPCLI_ILASM must identify source-built ilasm")
         temporary = work / "result.dll"
-        run([a.ilasm.resolve(), il, "-exe", "-quiet", "-nologo", "-output=" + str(temporary)])
+        run([a.ilasm.resolve(), il, "-exe" if a.target == "exe" else "-dll", "-quiet", "-nologo", "-output=" + str(temporary)])
         temporary.replace(output)
         output.with_suffix(".runtimeconfig.json").write_text(json.dumps({"runtimeOptions": {
             "tfm": "net8.0", "framework": {"name": "Microsoft.NETCore.App", "version": "8.0.0"}

@@ -12,12 +12,19 @@
     "Clang overload resolution after contextual managed literal adaptation",
     "initialized locals, parameters, arithmetic, comparisons and native XOR",
     "if/else, while, for, break, continue and returns",
+    "instance constructors, primitive fields and instance methods",
+    "single managed class inheritance, implicit upcasts and null handles",
+    "safe_cast, dynamic_cast and explicit reference downcasts",
+    "executable/library output with distinct assembly identities",
+    "C# consumption of generated public constructors, fields and methods",
     "source-built ilasm assembly and source-built CoreCLR execution"
   ],
   "limitations": [
-    "Only directly imported qualified static calls receive contextual literal adaptation",
+    "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
     "Metadata headers are generated for explicitly selected types",
-    "No instance members, fields, inheritance or user constructors yet",
+    "Native XOR with a parenthesized shadowed managed type name fails the adapter architecture gate",
+    "Constructor arguments currently require exact supported CLI types",
+    "Field compound assignments with side-effectful receivers require additional lowering",
     "No CLI generics, managed arrays, properties, delegates, events or exception regions yet",
     "No native/managed interop or mixed-mode PE output yet",
     "Unsupported AST nodes are errors; this is not a conforming general C++/CLI compiler"

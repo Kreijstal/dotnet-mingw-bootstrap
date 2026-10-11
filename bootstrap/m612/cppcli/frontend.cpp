@@ -16,6 +16,7 @@
 #include <llvm/Support/raw_ostream.h>
 #include <algorithm>
 #include <fstream>
+#include <functional>
 #include <map>
 #include <set>
 #include <sstream>
@@ -105,6 +106,7 @@ struct Metadata {
 
 struct Options {
     std::string metadata, output, evidence;
+    std::string assembly = "cli_program", target = "exe";
     bool parse(const CompilerInstance& ci, const std::vector<std::string>& args) {
         for (const auto& arg : args) {
             auto eq = arg.find('=');
@@ -113,9 +115,11 @@ struct Options {
             if (key == "metadata") metadata = value;
             else if (key == "output") output = value;
             else if (key == "evidence") evidence = value;
+            else if (key == "assembly") assembly = value;
+            else if (key == "target") target = value;
             else return false;
         }
-        return !metadata.empty() && !output.empty();
+        return !metadata.empty() && !output.empty() && (target == "exe" || target == "library");
     }
 };
 void report(CompilerInstance& ci, SourceLocation loc, const std::string& message) {
@@ -167,6 +171,32 @@ protected:
                 if (std::find(m.parameters.begin(), m.parameters.end(), "string") != m.parameters.end())
                     managed_string_calls.insert(m.owner.substr(m.owner.find_last_of('.') + 1) + "::" + m.name);
             }
+            // Find only CLI class/member declaration boundaries. Clang still
+            // parses parameter expressions, default arguments and method bodies.
+            std::vector<std::string> class_context(tokens.size());
+            for (size_t i = 0; i + 2 < tokens.size(); ++i) {
+                if (tokens[i].text != "ref" || tokens[i + 1].text != "class") continue;
+                std::string name = tokens[i + 2].text;
+                size_t open = i + 3;
+                while (open < tokens.size() && tokens[open].text != "{" && tokens[open].text != ";") ++open;
+                if (open == tokens.size() || tokens[open].text != "{") continue;
+                int depth = 1;
+                for (size_t j = open + 1; j < tokens.size() && depth; ++j) {
+                    class_context[j] = name;
+                    if (tokens[j].text == "{") ++depth;
+                    else if (tokens[j].text == "}") --depth;
+                    else if (depth == 1 && tokens[j].text == "(" && j && tokens[j - 1].kind == tok::identifier) {
+                        size_t end = j + 1; int parentheses = 1; bool string_parameter = false;
+                        while (end < tokens.size() && parentheses) {
+                            if (tokens[end].text == "(") ++parentheses;
+                            if (tokens[end].text == ")") --parentheses;
+                            if (tokens[end].text == "String" && end + 1 < tokens.size() && tokens[end + 1].text == "^") string_parameter = true;
+                            ++end;
+                        }
+                        if (string_parameter) managed_string_calls.insert(name + "::" + tokens[j - 1].text);
+                    }
+                }
+            }
             // Contextual literal conversion must happen before C++ overload
             // resolution: otherwise char* -> bool outranks the surrogate's
             // user-defined char* -> String^ conversion. Native calls/literals
@@ -177,6 +207,8 @@ protected:
                 if (tokens[i].text == "(") {
                     bool managed = i >= 3 && tokens[i - 2].text == "::" &&
                         managed_string_calls.count(tokens[i - 3].text + "::" + tokens[i - 1].text);
+                    if (!managed && i && !class_context[i].empty())
+                        managed = managed_string_calls.count(class_context[i] + "::" + tokens[i - 1].text);
                     parentheses.push_back(managed);
                 }
                 if (!parentheses.empty()) call_context[i] = parentheses.back();
@@ -184,6 +216,14 @@ protected:
             }
             for (size_t i = 0; i < tokens.size(); ++i) {
                 auto& t = tokens[i];
+                if (t.text == "safe_cast") { emit(t, "__cli_safe_cast"); continue; }
+                if (t.text == "dynamic_cast" && i + 1 < tokens.size() && tokens[i + 1].text == "<") {
+                    size_t end = i + 2;
+                    while (end < tokens.size() && tokens[end].text != ">") ++end;
+                    bool handle = false;
+                    for (size_t j = i + 2; j < end; ++j) if (tokens[j].text == "^") handle = true;
+                    if (handle) { emit(t, "__cli_dynamic_cast"); continue; }
+                }
                 if (t.text == "public" && i + 2 < tokens.size() && tokens[i + 1].text == "ref" && tokens[i + 2].text == "class") continue;
                 if (t.text == "ref" && i + 2 < tokens.size() && tokens[i + 1].text == "class") {
                     std::string attributes = "annotate(\"cli.ref\")";
@@ -193,6 +233,10 @@ protected:
                         ++end;
                     }
                     emit(t, "class __attribute__((" + attributes + ")) " + tokens[i + 2].text);
+                    if (end < tokens.size() && tokens[end].text == ":" && end + 1 < tokens.size() &&
+                        tokens[end + 1].text != "public" && tokens[end + 1].text != "protected" && tokens[end + 1].text != "private") {
+                        emit(tokens[end], ": public"); ++end;
+                    } else if (end < tokens.size() && tokens[end].text == "{") emit(t, ": public ::System::Object");
                     i = end - 1;
                     continue;
                 }
@@ -216,7 +260,8 @@ protected:
                 if (t.kind == tok::identifier) {
                     size_t end = i + 1;
                     while (end + 1 < tokens.size() && tokens[end].text == "::" && tokens[end + 1].kind == tok::identifier) end += 2;
-                    if (end < tokens.size() && tokens[end].text == "^" && metadata.short_types.count(tokens[end - 1].text)) {
+                    bool expression = i && (tokens[i - 1].text == "return" || tokens[i - 1].text == "=" || tokens[i - 1].text == "+" || tokens[i - 1].text == "-");
+                    if (!expression && end < tokens.size() && tokens[end].text == "^" && metadata.short_types.count(tokens[end - 1].text)) {
                         std::string type;
                         for (size_t j = i; j < end; ++j) type += tokens[j].text;
                         emit(t, "__cli_handle<" + type + ">");
@@ -253,6 +298,7 @@ class Emitter {
     int stack = 0;
     std::vector<std::pair<std::string, std::string>> loop_labels;
     std::vector<FunctionIR> ir;
+    std::vector<std::string> temporary_types;
 
     [[noreturn]] void fail(const Stmt* s, const std::string& message) const {
         auto loc = ci.getSourceManager().getPresumedLoc(s ? s->getBeginLoc() : current->getLocation());
@@ -316,6 +362,16 @@ class Emitter {
         }
         throw std::runtime_error("unsupported CLI type: " + t.getAsString());
     }
+    unsigned temporary(const std::string& il_type) {
+        unsigned index = locals.size() + temporary_types.size();
+        temporary_types.push_back(il_type);
+        return index;
+    }
+    std::string field_signature(const FieldDecl* f) const {
+        auto* parent = dyn_cast<CXXRecordDecl>(f->getParent());
+        if (!parent) throw std::runtime_error("field has no managed parent");
+        return type(f->getType()) + " " + record_name(parent) + "::'" + f->getNameAsString() + "'";
+    }
     std::string signature(const FunctionDecl* f) const {
         std::string owner;
         auto* method = dyn_cast<CXXMethodDecl>(f);
@@ -365,6 +421,16 @@ class Emitter {
     }
     void store(const Expr* target, bool retain) {
         target = target->IgnoreParenImpCasts();
+        if (auto* member = dyn_cast<MemberExpr>(target)) {
+            auto* field = dyn_cast<FieldDecl>(member->getMemberDecl());
+            if (!field) fail(target, "assignment target is not an instance field");
+            unsigned slot = temporary(type(field->getType()));
+            op("stloc " + std::to_string(slot), 1);
+            expr(member->getBase()); op("ldloc " + std::to_string(slot), 0, 1);
+            op("stfld " + field_signature(field), 2);
+            if (retain) op("ldloc " + std::to_string(slot), 0, 1);
+            return;
+        }
         auto* d = dyn_cast<DeclRefExpr>(target);
         if (!d) fail(target, "assignment target is not a local or parameter");
         if (retain) op("dup", 1, 2);
@@ -415,7 +481,20 @@ class Emitter {
             if (c->getNumArgs() != 1 || !isa<StringLiteral>(c->getArg(0)->IgnoreParenImpCasts())) fail(c, "invalid string literal marker");
             expr(c->getArg(0)); return;
         }
-        if (f->getName() == "__cli_new") {
+        if (auto* opcall = dyn_cast<CXXOperatorCallExpr>(c)) {
+            if (opcall->getOperator() == OO_Arrow) { expr(opcall->getArg(0)); return; }
+            if (opcall->getOperator() == OO_Equal && opcall->getNumArgs() == 2 && handle_target(opcall->getArg(0)->getType())) {
+                expr(opcall->getArg(1)); store(opcall->getArg(0), true); return;
+            }
+        }
+        if (f->getNameAsString() == "__cli_safe_cast" || f->getNameAsString() == "__cli_dynamic_cast") {
+            auto* target = handle_target(c->getType());
+            if (!target || c->getNumArgs() != 1 || !handle_target(c->getArg(0)->getType())) fail(c, "only managed reference casts are enabled");
+            expr(c->getArg(0));
+            op(std::string(f->getNameAsString() == "__cli_safe_cast" ? "castclass " : "isinst ") + record_name(target), 1, 1);
+            return;
+        }
+        if (f->getNameAsString() == "__cli_new") {
             auto* target = handle_target(c->getType());
             if (!target) fail(c, "allocation marker has no managed type");
             if (record_name(target) == "[System.Runtime]'System.String'") {
@@ -426,10 +505,33 @@ class Emitter {
                 op("newobj instance void [System.Runtime]System.String::.ctor(char[])", 1, 1);
                 return;
             }
-            fail(c, "user managed constructors are not supported yet");
+            if (target->getDefinition() && annotated(target->getDefinition(), "cli.abstract")) fail(c, "cannot allocate an abstract managed class");
+            const CXXConstructorDecl* selected = nullptr;
+            // Reuse Clang's constructor overload resolution in __cli_new's
+            // decltype(T(args...)) constraint, rather than selecting by arity.
+            std::function<void(const Stmt*)> find_constructor = [&](const Stmt* s) {
+                if (!s) return;
+                if (auto* construct = dyn_cast<CXXConstructExpr>(s))
+                    if (construct->getConstructor()->getParent()->getCanonicalDecl() == target->getCanonicalDecl()) selected = construct->getConstructor();
+                for (auto* child : s->children()) find_constructor(child);
+            };
+            if (auto* trailing = dyn_cast<DecltypeType>(f->getReturnType().getTypePtr())) find_constructor(trailing->getUnderlyingExpr());
+            if (!selected) fail(c, "allocation has no Clang-resolved managed constructor");
+            if (selected->getNumParams() != c->getNumArgs()) fail(c, "default constructor arguments are not supported yet");
+            for (unsigned i = 0; i < c->getNumArgs(); ++i) {
+                if (type(c->getArg(i)->getType()) != type(selected->getParamDecl(i)->getType())) fail(c, "constructor argument conversion is not enabled yet");
+                expr(c->getArg(i));
+            }
+            op("newobj " + signature(selected), c->getNumArgs(), 1);
+            return;
         }
         auto* m = dyn_cast<CXXMethodDecl>(f);
-        if (m && !m->isStatic()) fail(c, "instance method calls are not enabled yet");
+        bool instance = m && !m->isStatic();
+        if (instance) {
+            auto* member = dyn_cast<CXXMemberCallExpr>(c);
+            if (!member) fail(c, "unsupported instance call shape");
+            expr(member->getImplicitObjectArgument());
+        }
         for (auto* a : c->arguments()) expr(a);
         std::string id = annotation(f, "cli.import:");
         std::string sig;
@@ -441,7 +543,7 @@ class Emitter {
             if (!f->hasBody()) fail(c, "calling a function without an emitted definition");
             sig = signature(f);
         }
-        op("call " + sig, c->getNumArgs(), f->getReturnType()->isVoidType() ? 0 : 1);
+        op(std::string(instance ? "callvirt " : "call ") + sig, c->getNumArgs() + unsigned(instance), f->getReturnType()->isVoidType() ? 0 : 1);
     }
     void expr(const Expr* original) {
         const Expr* e = strip(original);
@@ -460,7 +562,8 @@ class Emitter {
                 else fail(c, "unsupported numeric conversion");
                 op(conversion, 1, 1);
             } else if (c->getCastKind() != CK_LValueToRValue && c->getCastKind() != CK_NoOp && c->getCastKind() != CK_ArrayToPointerDecay && c->getCastKind() != CK_FunctionToPointerDecay &&
-                       !(c->getCastKind() == CK_ConstructorConversion && handle_target(c->getType())))
+                       !(c->getCastKind() == CK_ConstructorConversion && handle_target(c->getType())) &&
+                       !((c->getCastKind() == CK_DerivedToBase || c->getCastKind() == CK_UncheckedDerivedToBase) && c->getType()->isPointerType()))
                 fail(c, std::string("unsupported implicit conversion: ") + c->getCastKindName());
             return;
         }
@@ -477,6 +580,16 @@ class Emitter {
         }
         if (auto* s = dyn_cast<StringLiteral>(e)) { string_literal(s); return; }
         if (isa<CXXNullPtrLiteralExpr>(e)) { op("ldnull", 0, 1); return; }
+        if (isa<CXXThisExpr>(e)) {
+            auto* method = dyn_cast<CXXMethodDecl>(current);
+            if (!method || method->isStatic()) fail(e, "this outside a managed instance method");
+            op("ldarg.0", 0, 1); return;
+        }
+        if (auto* member = dyn_cast<MemberExpr>(e)) {
+            auto* field = dyn_cast<FieldDecl>(member->getMemberDecl());
+            if (!field) fail(e, "unsupported managed member expression");
+            expr(member->getBase()); op("ldfld " + field_signature(field), 1, 1); return;
+        }
         if (auto* d = dyn_cast<DeclRefExpr>(e)) { load_decl(d->getDecl(), e); return; }
         if (auto* b = dyn_cast<BinaryOperator>(e)) { binary(b); return; }
         if (auto* c = dyn_cast<CallExpr>(e)) { call(c); return; }
@@ -490,7 +603,7 @@ class Emitter {
             if (isa<StringLiteral>(stripped) && record_name(target) != "[System.Runtime]'System.String'")
                 fail(c, "string literals can only initialize String handles");
             if (auto* other = handle_target(arg->getType()))
-                if (record_name(target) != record_name(other)) fail(c, "unsupported managed handle conversion");
+                if (record_name(target) != record_name(other) && !other->isDerivedFrom(target)) fail(c, "invalid managed handle conversion");
             expr(arg); return;
         }
         if (auto* u = dyn_cast<UnaryOperator>(e)) {
@@ -508,6 +621,15 @@ class Emitter {
             return;
         }
         if (auto* c = dyn_cast<ExplicitCastExpr>(e)) {
+            if (auto* target = handle_target(c->getType())) {
+                const Expr* source = strip(c->getSubExpr());
+                if (auto* ctor = dyn_cast<CXXConstructExpr>(source)) {
+                    if (ctor->getNumArgs() != 1) fail(c, "invalid explicit handle cast");
+                    source = ctor->getArg(0);
+                }
+                if (!handle_target(source->getType())) fail(c, "explicit handle cast requires a managed reference");
+                expr(source); op("castclass " + record_name(target), 1, 1); return;
+            }
             if (c->getCastKind() != CK_NoOp) fail(c, "explicit conversions are not enabled yet");
             expr(c->getSubExpr()); return;
         }
@@ -563,16 +685,38 @@ class Emitter {
         if (stack != before) fail(s, "internal IL stack mismatch at statement boundary");
     }
     FunctionIR function(FunctionDecl* f) {
-        current = f; locals.clear(); parameters.clear(); code.str(""); code.clear(); stack = 0; max_stack = 0;
+        current = f; locals.clear(); parameters.clear(); temporary_types.clear(); code.str(""); code.clear(); stack = 0; max_stack = 0;
         label_count = 0; loop_labels.clear();
         auto* method = dyn_cast<CXXMethodDecl>(f);
-        if (method && !method->isStatic()) throw std::runtime_error("instance methods are not enabled yet");
+        bool instance = method && !method->isStatic();
         if (f->isVariadic()) throw std::runtime_error("variadic managed functions are unsupported");
-        for (unsigned i = 0; i < f->getNumParams(); ++i) parameters[f->getParamDecl(i)] = i;
+        for (unsigned i = 0; i < f->getNumParams(); ++i) parameters[f->getParamDecl(i)] = i + unsigned(instance);
         collect_locals(f->getBody());
+        if (auto* constructor = dyn_cast<CXXConstructorDecl>(f)) {
+            bool base_initialized = false;
+            for (auto* init : constructor->inits()) {
+                if (init->isBaseInitializer()) {
+                    auto* construct = dyn_cast<CXXConstructExpr>(init->getInit());
+                    if (!construct) fail(init->getInit(), "unsupported managed base initializer");
+                    op("ldarg.0", 0, 1);
+                    for (auto* arg : construct->arguments()) expr(arg);
+                    op("call " + signature(construct->getConstructor()), construct->getNumArgs() + 1);
+                    base_initialized = true;
+                }
+            }
+            if (!base_initialized) { op("ldarg.0", 0, 1); op("call instance void [System.Runtime]System.Object::.ctor()", 1); }
+            for (auto* init : constructor->inits()) if (init->isMemberInitializer()) {
+                op("ldarg.0", 0, 1); expr(init->getInit()); op("stfld " + field_signature(init->getMember()), 2);
+            }
+        }
         statement(f->getBody());
         if (f->getReturnType()->isVoidType()) op("ret");
-        else { op("ldc.i4.0", 0, 1); op("ret", 1); } // Unreachable for correctly-returning non-void functions.
+        else {
+            std::string result = type(f->getReturnType());
+            op(result == "int64" || result == "uint64" ? "ldc.i8 0" : result == "float32" ? "ldc.r4 0" : result == "float64" ? "ldc.r8 0" :
+               handle_target(f->getReturnType()) ? "ldnull" : "ldc.i4.0", 0, 1);
+            op("ret", 1);
+        } // Unreachable for correctly-returning non-void functions except main.
         std::string declarations;
         std::vector<const VarDecl*> ordered(locals.size());
         for (auto& entry : locals) ordered[entry.second] = entry.first;
@@ -580,20 +724,26 @@ class Emitter {
             if (i) declarations += ", ";
             declarations += "[" + std::to_string(i) + "] " + type(ordered[i]->getType()) + " 'local" + std::to_string(i) + "'";
         }
-        return {f->getNameAsString(), method ? record_name(method->getParent()) : "", type(f->getReturnType()), false,
+        for (unsigned i = 0; i < temporary_types.size(); ++i) {
+            if (!declarations.empty()) declarations += ", ";
+            declarations += "[" + std::to_string(ordered.size() + i) + "] " + temporary_types[i] + " 'temporary" + std::to_string(i) + "'";
+        }
+        return {isa<CXXConstructorDecl>(f) ? ".ctor" : f->getNameAsString(), method ? record_name(method->getParent()) : "", type(f->getReturnType()), instance,
             std::max(1u, max_stack), declarations, code.str()};
     }
 public:
     Emitter(CompilerInstance& compiler, const Metadata& md) : ci(compiler), context(ci.getASTContext()), metadata(md) {}
     bool VisitFunctionDecl(FunctionDecl* f) {
-        if (f->isImplicit() || !f->doesThisDeclarationHaveABody() || f->getName().starts_with("__cli_")) return true;
+        if (f->isImplicit() || !f->doesThisDeclarationHaveABody() || llvm::StringRef(f->getNameAsString()).starts_with("__cli_")) return true;
         if (f->getTemplatedKind() != FunctionDecl::TK_NonTemplate) throw std::runtime_error("managed function templates are not enabled yet");
         if (seen.insert(f->getCanonicalDecl()).second) functions.push_back(f);
         return true;
     }
     bool VisitCXXRecordDecl(CXXRecordDecl* r) {
         if (r->isThisDeclarationADefinition() && annotated(r, "cli.ref")) {
-            if (r->getNumBases() || r->field_begin() != r->field_end()) throw std::runtime_error("managed inheritance and fields are not enabled yet");
+            if (r->getNumBases() > 1) throw std::runtime_error("multiple managed bases/interfaces are not enabled yet");
+            for (const auto& base : r->bases()) record_name(base.getType()->getAsCXXRecordDecl());
+            for (auto* field : r->fields()) type(field->getType());
             records.push_back(r);
         }
         return true;
@@ -606,34 +756,47 @@ public:
             } else if (auto* ns = dyn_cast<NamespaceDecl>(decl)) collect(ns);
         }
     }
-    std::string emit() {
+    std::string emit(const Options& options) {
         collect(context.getTranslationUnitDecl());
         bool entry = false;
         for (auto* f : functions) {
-            if (f->getName() == "main") {
+            if (f->getNameAsString() == "main") {
                 if (isa<CXXMethodDecl>(f) || f->getNumParams() != 0 || type(f->getReturnType()) != "int32")
                     throw std::runtime_error("entry point must be global int main()");
                 entry = true;
             }
             ir.push_back(function(f));
         }
-        if (!entry) throw std::runtime_error("missing global int main() entry point");
+        if (!entry && options.target == "exe") throw std::runtime_error("missing global int main() entry point");
         std::ostringstream il;
-        il << metadata.externs << ".assembly cli_program {}\n.module cli_program.dll\n";
+        il << metadata.externs << ".assembly '" << options.assembly << "' {}\n.module '" << options.assembly << ".dll'\n";
         auto emit_function = [&](size_t i) {
             auto* f = functions[i]; auto& body = ir[i];
-            il << "  .method public hidebysig static " << type(f->getReturnType()) << " '" << f->getNameAsString() << "'(";
+            il << "  .method " << (isa<CXXMethodDecl>(f) && f->getAccess() == AS_private ? "private" : f->getAccess() == AS_protected ? "family" : "public") << " hidebysig "
+               << (isa<CXXConstructorDecl>(f) ? "specialname rtspecialname " : "") << (body.instance ? "instance " : "static ")
+               << type(f->getReturnType()) << " '" << body.name << "'(";
             for (unsigned j = 0; j < f->getNumParams(); ++j) { if (j) il << ", "; il << type(f->getParamDecl(j)->getType()); }
             il << ") cil managed {\n";
-            if (f->getName() == "main" && body.owner.empty()) il << "    .entrypoint\n";
+            if (f->getNameAsString() == "main" && body.owner.empty() && options.target == "exe") il << "    .entrypoint\n";
             il << "    .maxstack " << body.max_stack << "\n";
             if (!body.locals.empty()) il << "    .locals init (" << body.locals << ")\n";
             il << body.code << "  }\n";
         };
         for (auto* r : records) {
             il << ".class public auto ansi " << (annotated(r, "cli.abstract") ? "abstract " : "")
-               << (annotated(r, "cli.sealed") ? "sealed " : "") << record_name(r) << " extends [System.Runtime]System.Object {\n";
+               << (annotated(r, "cli.sealed") ? "sealed " : "") << record_name(r) << " extends "
+               << (r->getNumBases() ? record_name(r->bases_begin()->getType()->getAsCXXRecordDecl()) : "[System.Runtime]System.Object") << " {\n";
+            for (auto* field : r->fields()) il << "  .field " << (field->getAccess() == AS_private ? "private " : field->getAccess() == AS_protected ? "family " : "public ")
+                << type(field->getType()) << " '" << field->getNameAsString() << "'\n";
             for (size_t i = 0; i < functions.size(); ++i) if (ir[i].owner == record_name(r)) emit_function(i);
+            bool has_ctor = false;
+            for (auto* ctor : r->ctors()) if (!ctor->isImplicit()) has_ctor = true;
+            if (!has_ctor && !annotated(r, "cli.abstract")) {
+                il << "  .method public hidebysig specialname rtspecialname instance void .ctor() cil managed {\n"
+                   << "    .maxstack 1\n    ldarg.0\n    call instance void "
+                   << (r->getNumBases() ? record_name(r->bases_begin()->getType()->getAsCXXRecordDecl()) : "[System.Runtime]System.Object")
+                   << "::.ctor()\n    ret\n  }\n";
+            }
             il << "}\n";
         }
         for (size_t i = 0; i < functions.size(); ++i) if (ir[i].owner.empty()) emit_function(i);
@@ -659,7 +822,7 @@ public:
         try {
             Metadata metadata; metadata.load(options.metadata);
             Emitter emitter(ci, metadata);
-            std::string il = emitter.emit();
+            std::string il = emitter.emit(options);
             write_file(options.output, il);
             if (!options.evidence.empty()) write_file(options.evidence, emitter.evidence());
         } catch (const std::exception& e) { report(ci, {}, e.what()); }
