@@ -103,9 +103,9 @@ EOF
 #using "counter.dll"
 using namespace System;
 using namespace Example;
-int main() { Counter^ counter = gcnew Counter(4); Console::WriteLine(counter->Add(6)); return 0; }
+int main() { Counter^ counter = gcnew Counter(4); Console::WriteLine(counter->Add(6)); counter->Current = 12; Console::WriteLine(counter->Current); String^ text = gcnew String("hello"); Console::WriteLine(text->Length); return 0; }
 EOF
-  run_case references "$testdir/references.cpp" '10' --type Example.Counter
+  run_case references "$testdir/references.cpp" $'10\n12\n5' --type Example.Counter
   reject_case bad-constructor 'using namespace System; public ref class Box { public: Box(int x) {} }; int main() { Box^ b = gcnew Box("bad"); return 0; }' 'no matching function'
   reject_case bad-downcast 'using namespace System; public ref class Base {}; public ref class Derived : Base {}; int main() { Base^ b = gcnew Base(); Derived^ d = b; return 0; }' 'cannot initialize'
   reject_case private-field 'using namespace System; public ref class Box { int hidden; }; int main() { Box^ b = gcnew Box(); b->hidden = 1; return 0; }' 'private member'

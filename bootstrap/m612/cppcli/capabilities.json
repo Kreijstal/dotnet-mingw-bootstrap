@@ -28,7 +28,8 @@
     "Importing and calling a source-built C++/CLI library",
     "Instance properties and auto-properties using Clang MSPropertyDecl/PseudoObjectExpr",
     "Property compound assignments preserve receiver/getter/setter evaluation order",
-    "C# consumption and reflection of generated property metadata"
+    "C# consumption and reflection of generated property metadata",
+    "Imported non-indexed instance properties, including System.String.Length and generated library properties"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",

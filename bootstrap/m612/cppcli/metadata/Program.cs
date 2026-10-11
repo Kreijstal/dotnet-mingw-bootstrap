@@ -11,7 +11,8 @@ using System.Text.Json;
 record CliType(string Il, string Cpp, string Kind, string Name = "");
 record CliMethod(string Id, string Name, bool Static, CliType Return, CliType[] Parameters,
                  bool Supported, int GenericArity);
-record CliClass(string Assembly, string Name, string Cpp, string Kind, string Base, CliMethod[] Methods);
+record CliProperty(string Name, CliType Type, string Getter, string Setter, bool Static, bool Supported);
+record CliClass(string Assembly, string Name, string Cpp, string Kind, string Base, CliMethod[] Methods, CliProperty[] Properties);
 record CliAssembly(string Name, string Version, string Token);
 
 sealed class SignatureTypes : ISignatureTypeProvider<CliType, object?>
@@ -121,6 +122,20 @@ static class Program
                         methods.Add(new(id, mn, (md.Attributes & MethodAttributes.Static) != 0,
                             sig.ReturnType, sig.ParameterTypes.ToArray(), supported, sig.GenericParameterCount));
                     }
+                    var properties = new List<CliProperty>();
+                    foreach (var ph in td.GetProperties())
+                    {
+                        var pd = r.GetPropertyDefinition(ph);
+                        var sig = pd.DecodeSignature(new SignatureTypes(), null);
+                        var accessors = pd.GetAccessors();
+                        CliMethod? Accessor(MethodDefinitionHandle h) => h.IsNil ? null : methods.FirstOrDefault(m =>
+                            m.Id == assembly + ":" + System.Reflection.Metadata.Ecma335.MetadataTokens.GetToken(h).ToString("x8"));
+                        var getter = Accessor(accessors.Getter); var setter = Accessor(accessors.Setter);
+                        string pn = r.GetString(pd.Name);
+                        properties.Add(new(pn, sig.ReturnType, getter?.Name ?? "", setter?.Name ?? "",
+                            (getter ?? setter)?.Static ?? false, ValidName(pn) && sig.ParameterTypes.Length == 0 &&
+                            (getter?.Supported == true || setter?.Supported == true) && !(getter ?? setter)!.Static));
+                    }
                     string baseName = "";
                     if (!td.BaseType.IsNil && td.BaseType.Kind == HandleKind.TypeReference)
                     {
@@ -130,7 +145,7 @@ static class Program
                     }
                     else if (!td.BaseType.IsNil && td.BaseType.Kind == HandleKind.TypeDefinition)
                         baseName = FullName(r, r.GetTypeDefinition((TypeDefinitionHandle)td.BaseType));
-                    types.Add(new(assembly, name, SignatureTypes.CppName(name), "ref", baseName, methods.ToArray()));
+                    types.Add(new(assembly, name, SignatureTypes.CppName(name), "ref", baseName, methods.ToArray(), properties.ToArray()));
                 }
             }
             var found = types.Select(t => t.Name).ToHashSet(StringComparer.Ordinal);
@@ -139,6 +154,10 @@ static class Program
             bool Available(CliType t) => t.Kind == "primitive" || (t.Kind == "ref" && found.Contains(t.Name));
             types = types.Select(t => t with { Methods = t.Methods.Select(m => m with {
                 Supported = m.Supported && Available(m.Return) && m.Parameters.All(Available)
+            }).ToArray(), Properties = t.Properties.Select(p => p with {
+                Supported = p.Supported && Available(p.Type) &&
+                    (p.Getter.Length == 0 || t.Methods.Any(m => m.Name == p.Getter && m.Supported && Available(m.Return) && m.Parameters.All(Available))) &&
+                    (p.Setter.Length == 0 || t.Methods.Any(m => m.Name == p.Setter && m.Supported && Available(m.Return) && m.Parameters.All(Available)))
             }).ToArray() }).OrderBy(t => t.Name, StringComparer.Ordinal).ToList();
             using var header = new StreamWriter(headerPath, false, new UTF8Encoding(false));
             header.WriteLine("// Metadata declarations only; never compile these surrogates as native objects.");
@@ -185,6 +204,13 @@ static class Program
                 w.Write("__attribute__((annotate(\"cli.import:" + Escape(m.Id) + "\"))) ");
                 if (m.Name == ".ctor") w.WriteLine(name + "(" + parameters + ");");
                 else w.WriteLine((m.Static ? "static " : "") + m.Return.Cpp + " " + m.Name + "(" + parameters + ");");
+            }
+            foreach (var p in t.Properties.Where(p => p.Supported))
+            {
+                var accessors = new List<string>();
+                if (p.Getter.Length != 0) accessors.Add("get=" + p.Getter);
+                if (p.Setter.Length != 0) accessors.Add("put=" + p.Setter);
+                w.WriteLine("__declspec(property(" + string.Join(",", accessors) + ")) " + p.Type.Cpp + " " + p.Name + ";");
             }
             w.Write("}; ");
         }
