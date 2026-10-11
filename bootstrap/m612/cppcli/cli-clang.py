@@ -56,7 +56,6 @@ def main():
     work = output.parent / (output.name + ".work")
     work.mkdir(parents=True, exist_ok=True)
     manifest, header = work / "metadata.json", work / "metadata.hpp"
-    run([dotnet, metadata_tool.resolve(), manifest, header, ";".join(types), *references])
     adapted, il = work / "adapted.cpp", work / "assembly.il"
     # LLVM's in-process crash recovery treats MinGW C++ exceptions raised by a
     # plugin as crashes before its local catch handler can run. Use a dedicated
@@ -75,8 +74,20 @@ def main():
             command += ["-include", header]
         command += [input_path]
         run(command)
+    shim, reference_file = work / "shim.cpp", work / "references.json"
+    action("cli-shim", source, ["output=" + str(shim)])
+    action("cli-references", shim, ["output=" + str(reference_file)])
+    for item in json.loads(reference_file.read_text(encoding="utf-8")):
+        ref = Path(item["path"])
+        candidates = [ref] if ref.is_absolute() else [Path(item["source"]).parent / ref, packs[-1] / ref]
+        found = next((p.resolve() for p in candidates if p.is_file()), None)
+        if found is None:
+            ap.error("#using assembly not found in source directory or source-built pack: " + item["path"])
+        references.append(found)
+    references = list({os.path.normcase(str(p.resolve())): p.resolve() for p in references}.values())
+    run([dotnet, metadata_tool.resolve(), manifest, header, ";".join(types), *references])
     # Never suppress Clang diagnostics to make a surrogate parse.
-    action("cli-adapt", source, ["metadata=" + str(manifest), "output=" + str(adapted)])
+    action("cli-adapt", shim, ["metadata=" + str(manifest), "output=" + str(adapted)])
     action("cli-emit", adapted, ["metadata=" + str(manifest), "output=" + str(il),
                                  "evidence=" + str(work / "ast.json"),
                                  "assembly=" + assembly_name, "target=" + a.target], True)

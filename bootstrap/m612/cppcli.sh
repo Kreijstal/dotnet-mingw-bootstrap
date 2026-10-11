@@ -60,6 +60,8 @@ step_test-core() {
   run_case control "$src/tests/control.cpp" $'13\ncontrol OK\nUnicode: λ 😀'
   run_case macros "$src/tests/control.cpp" $'8\ncontrol OK\nUnicode: λ 😀' -D LIMIT=5
   run_case overloads "$src/tests/overloads.cpp" $'5\n10\nFalse\ntext'
+  run_case templates "$src/tests/templates.cpp" $'14\n5\n7'
+  run_case branches "$src/tests/branches.cpp" $'False\nTrue\nTrue\n1\n12\n25'
   reject_case unknown 'using namespace System; int main() { int n = missing; return n; }' 'undeclared identifier'
   reject_case mismatch 'using namespace System; int main() { int n = "wrong"; return n; }' 'cannot initialize'
   reject_case outside 'using namespace System; int main() { switch (1) { default: return 0; } }' 'unsupported AST statement'
@@ -91,6 +93,16 @@ EOF
   printf '%s\n' '8' 'metadata OK' > "$testdir/consumer.expected"
   cmp "$testdir/consumer.expected" "$testdir/consumer.actual"
   printf 'PASS C# consumer and metadata\n'
+  cat > "$testdir/references.cpp" <<'EOF'
+#if 0
+#using "this-file-must-not-be-loaded.dll"
+#endif
+#using "counter.dll"
+using namespace System;
+using namespace Example;
+int main() { Counter^ counter = gcnew Counter(4); Console::WriteLine(counter->Add(6)); return 0; }
+EOF
+  run_case references "$testdir/references.cpp" '10' --type Example.Counter
   reject_case bad-constructor 'using namespace System; public ref class Box { public: Box(int x) {} }; int main() { Box^ b = gcnew Box("bad"); return 0; }' 'no matching function'
   reject_case bad-downcast 'using namespace System; public ref class Base {}; public ref class Derived : Base {}; int main() { Base^ b = gcnew Base(); Derived^ d = b; return 0; }' 'cannot initialize'
   reject_case private-field 'using namespace System; public ref class Box { int hidden; }; int main() { Box^ b = gcnew Box(); b->hidden = 1; return 0; }' 'private member'

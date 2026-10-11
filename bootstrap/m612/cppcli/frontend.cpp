@@ -6,11 +6,13 @@
 #include <clang/AST/DeclCXX.h>
 #include <clang/AST/ExprCXX.h>
 #include <clang/AST/TypeLoc.h>
+#include <clang/AST/Mangle.h>
 #include <clang/Basic/Version.h>
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Frontend/FrontendPluginRegistry.h>
 #include <clang/Lex/Lexer.h>
 #include <clang/Lex/Preprocessor.h>
+#include <clang/Lex/Pragma.h>
 #include <llvm/Support/ConvertUTF.h>
 #include <llvm/Support/JSON.h>
 #include <llvm/Support/MemoryBuffer.h>
@@ -109,7 +111,7 @@ struct Metadata {
 struct Options {
     std::string metadata, output, evidence;
     std::string assembly = "cli_program", target = "exe";
-    bool parse(const CompilerInstance& ci, const std::vector<std::string>& args) {
+    bool parse(const CompilerInstance& ci, const std::vector<std::string>& args, bool require_metadata = true) {
         for (const auto& arg : args) {
             auto eq = arg.find('=');
             if (eq == std::string::npos) return false;
@@ -121,7 +123,7 @@ struct Options {
             else if (key == "target") target = value;
             else return false;
         }
-        return !metadata.empty() && !output.empty() && (target == "exe" || target == "library");
+        return (!require_metadata || !metadata.empty()) && !output.empty() && (target == "exe" || target == "library");
     }
 };
 void report(CompilerInstance& ci, SourceLocation loc, const std::string& message) {
@@ -130,6 +132,67 @@ void report(CompilerInstance& ci, SourceLocation loc, const std::string& message
 }
 
 struct Lexeme { std::string text, file; unsigned line; tok::TokenKind kind; };
+class ReferencePragma : public PragmaHandler {
+    llvm::json::Array& references;
+public:
+    explicit ReferencePragma(llvm::json::Array& result) : PragmaHandler("cli_reference"), references(result) {}
+    void HandlePragma(Preprocessor& pp, PragmaIntroducer, Token& first) override {
+        Token path; pp.LexHeaderName(path);
+        std::string text = pp.getSpelling(path);
+        if (text.size() < 2 || (text.front() != '"' && text.front() != '<')) {
+            unsigned id = pp.getDiagnostics().getCustomDiagID(DiagnosticsEngine::Error, "C++/CLI: #using requires a quoted or angle-bracket assembly path");
+            pp.getDiagnostics().Report(path.getLocation(), id); return;
+        }
+        auto loc = pp.getSourceManager().getPresumedLoc(first.getLocation());
+        references.push_back(llvm::json::Object{{"path", text.substr(1, text.size() - 2)},
+            {"source", loc.isValid() ? loc.getFilename() : ""}});
+    }
+};
+class ShimAction : public PluginASTAction {
+    Options options;
+protected:
+    bool ParseArgs(const CompilerInstance& ci, const std::vector<std::string>& args) override { return options.parse(ci, args, false); }
+    std::unique_ptr<ASTConsumer> CreateASTConsumer(CompilerInstance&, llvm::StringRef) override { return std::make_unique<ASTConsumer>(); }
+    void ExecuteAction() override {
+        auto& ci = getCompilerInstance();
+        try {
+            auto& sm = ci.getSourceManager(); auto file = sm.getMainFileID();
+            auto buffer = sm.getBufferData(file); auto start = sm.getLocForStartOfFile(file);
+            Lexer lexer(start, ci.getLangOpts(), buffer.begin(), buffer.begin(), buffer.end());
+            std::vector<std::pair<unsigned, unsigned>> replacements;
+            Token token;
+            while (!lexer.LexFromRawLexer(token)) {
+                if (token.is(tok::hash) && token.isAtStartOfLine()) {
+                    Token name; lexer.LexFromRawLexer(name);
+                    if (Lexer::getSpelling(name, sm, ci.getLangOpts()) == "using")
+                        replacements.emplace_back(sm.getFileOffset(name.getLocation()), name.getLength());
+                }
+            }
+            std::string text = buffer.str();
+            for (auto it = replacements.rbegin(); it != replacements.rend(); ++it) text.replace(it->first, it->second, "pragma cli_reference");
+            text = "#line 1 " + quote(sm.getFilename(start).str()) + "\n" + text;
+            write_file(options.output, text);
+        } catch (const std::exception& e) { report(ci, {}, e.what()); }
+    }
+};
+class ReferencesAction : public PluginASTAction {
+    Options options;
+protected:
+    bool ParseArgs(const CompilerInstance& ci, const std::vector<std::string>& args) override { return options.parse(ci, args, false); }
+    std::unique_ptr<ASTConsumer> CreateASTConsumer(CompilerInstance&, llvm::StringRef) override { return std::make_unique<ASTConsumer>(); }
+    void ExecuteAction() override {
+        auto& ci = getCompilerInstance();
+        try {
+            auto& pp = ci.getPreprocessor(); llvm::json::Array references;
+            pp.AddPragmaHandler(new ReferencePragma(references));
+            pp.EnterMainSourceFile(); Token token;
+            do { pp.Lex(token); } while (!token.is(tok::eof));
+            if (ci.getDiagnostics().hasErrorOccurred()) return;
+            std::string text; llvm::raw_string_ostream stream(text); stream << llvm::json::Value(std::move(references));
+            write_file(options.output, text + "\n");
+        } catch (const std::exception& e) { report(ci, {}, e.what()); }
+    }
+};
 class AdaptAction : public PluginASTAction {
     Options options;
 protected:
@@ -141,6 +204,8 @@ protected:
             Metadata metadata;
             metadata.load(options.metadata);
             auto& pp = ci.getPreprocessor();
+            llvm::json::Array ignored_references;
+            pp.AddPragmaHandler(new ReferencePragma(ignored_references));
             auto& sm = ci.getSourceManager();
             pp.EnterMainSourceFile();
             std::vector<Lexeme> tokens;
@@ -385,12 +450,22 @@ class Emitter {
         if (!parent) throw std::runtime_error("field has no managed parent");
         return type(f->getType()) + " " + record_name(parent) + "::'" + f->getNameAsString() + "'";
     }
+    std::string method_name(const FunctionDecl* f) const {
+        if (isa<CXXConstructorDecl>(f)) return ".ctor";
+        if (f->getTemplatedKind() == FunctionDecl::TK_FunctionTemplateSpecialization) {
+            std::unique_ptr<MangleContext> mangler(context.createMangleContext());
+            std::string name; llvm::raw_string_ostream out(name);
+            mangler->mangleName(f, out);
+            return "__cpp_template_" + name;
+        }
+        return f->getNameAsString();
+    }
     std::string signature(const FunctionDecl* f) const {
         std::string owner;
         auto* method = dyn_cast<CXXMethodDecl>(f);
         if (method) owner = record_name(method->getParent()) + "::";
         std::string result = isa<CXXConstructorDecl>(f) ? "void" : type(f->getReturnType());
-        std::string name = isa<CXXConstructorDecl>(f) ? ".ctor" : f->getNameAsString();
+        std::string name = method_name(f);
         std::string sig = (method && !method->isStatic() ? "instance " : "") + result + " " + owner + "'" + name + "'(";
         for (unsigned i = 0; i < f->getNumParams(); ++i) {
             if (i) sig += ", ";
@@ -476,7 +551,15 @@ class Emitter {
             expr(b->getLHS()); expr(b->getRHS());
             op(operation, 2, 1); store(b->getLHS(), true); return;
         }
-        if (b->getOpcode() == BO_LAnd || b->getOpcode() == BO_LOr) fail(b, "short-circuit operators are not enabled yet");
+        if (b->getOpcode() == BO_LAnd || b->getOpcode() == BO_LOr) {
+            int base = stack; auto short_path = label(), done = label();
+            expr(b->getLHS()); op(std::string(b->getOpcode() == BO_LAnd ? "brfalse " : "brtrue ") + short_path, 1);
+            expr(b->getRHS());
+            if (stack != base + 1) fail(b, "logical operand did not produce one value");
+            op("br " + done); stack = base; code << short_path << ":\n";
+            op(b->getOpcode() == BO_LAnd ? "ldc.i4.0" : "ldc.i4.1", 0, 1);
+            code << done << ":\n"; return;
+        }
         expr(b->getLHS()); expr(b->getRHS());
         bool unsign = b->getLHS()->getType()->isUnsignedIntegerType();
         std::string operation;
@@ -617,7 +700,19 @@ class Emitter {
             expr(member->getBase()); op("ldfld " + field_signature(field), 1, 1); return;
         }
         if (auto* d = dyn_cast<DeclRefExpr>(e)) { load_decl(d->getDecl(), e); return; }
+        if (auto* s = dyn_cast<SubstNonTypeTemplateParmExpr>(e)) { expr(s->getReplacement()); return; }
+        if (auto* d = dyn_cast<CXXDefaultArgExpr>(e)) { expr(d->getExpr()); return; }
         if (auto* b = dyn_cast<BinaryOperator>(e)) { binary(b); return; }
+        if (auto* conditional = dyn_cast<ConditionalOperator>(e)) {
+            int base = stack; auto otherwise = label(), done = label();
+            expr(conditional->getCond()); op("brfalse " + otherwise, 1);
+            expr(conditional->getTrueExpr());
+            if (stack != base + 1) fail(e, "conditional operand did not produce one value");
+            op("br " + done); stack = base; code << otherwise << ":\n";
+            expr(conditional->getFalseExpr());
+            if (stack != base + 1) fail(e, "conditional branch stack mismatch");
+            code << done << ":\n"; return;
+        }
         if (auto* c = dyn_cast<CallExpr>(e)) { call(c); return; }
         if (auto* c = dyn_cast<CXXConstructExpr>(e)) {
             auto* target = handle_target(c->getType());
@@ -770,7 +865,7 @@ class Emitter {
             if (!declarations.empty()) declarations += ", ";
             declarations += "[" + std::to_string(ordered.size() + i) + "] " + temporary_types[i] + " 'temporary" + std::to_string(i) + "'";
         }
-        return {isa<CXXConstructorDecl>(f) ? ".ctor" : f->getNameAsString(), method ? record_name(method->getParent()) : "", type(f->getReturnType()), instance,
+        return {method_name(f), method ? record_name(method->getParent()) : "", type(f->getReturnType()), instance,
             std::max(1u, max_stack), declarations, code.str()};
     }
 public:
@@ -780,7 +875,8 @@ public:
         if (auto* m = dyn_cast<CXXMethodDecl>(f)) if (!annotation(m->getParent(), "cli.external:").empty()) return true;
         validate_declarator(f->getTypeSourceInfo());
         for (auto* p : f->parameters()) validate_declarator(p->getTypeSourceInfo());
-        if (f->getTemplatedKind() != FunctionDecl::TK_NonTemplate) throw std::runtime_error("managed function templates are not enabled yet");
+        if (f->getType()->isDependentType() || f->getTemplatedKind() == FunctionDecl::TK_FunctionTemplate)
+            throw std::runtime_error("unspecialized dependent function reached IL emission");
         if (seen.insert(f->getCanonicalDecl()).second) functions.push_back(f);
         return true;
     }
@@ -799,6 +895,10 @@ public:
             else if (auto* r = dyn_cast<CXXRecordDecl>(decl)) {
                 if (r->isThisDeclarationADefinition()) { VisitCXXRecordDecl(r); collect(r); }
             } else if (auto* ns = dyn_cast<NamespaceDecl>(decl)) collect(ns);
+            else if (auto* tmpl = dyn_cast<FunctionTemplateDecl>(decl)) {
+                if (llvm::StringRef(tmpl->getNameAsString()).starts_with("__cli_")) continue;
+                for (auto* specialization : tmpl->specializations()) if (specialization->isUsed()) VisitFunctionDecl(specialization);
+            }
             else if (auto* alias = dyn_cast<TypedefNameDecl>(decl)) validate_declarator(alias->getTypeSourceInfo());
         }
     }
@@ -886,5 +986,7 @@ protected:
     }
 };
 FrontendPluginRegistry::Add<AdaptAction> adapt("cli-adapt", "Adapt CLI-only syntax using Clang preprocessing tokens");
+FrontendPluginRegistry::Add<ShimAction> shim("cli-shim", "Map #using to a reference pragma with Clang raw lexing");
+FrontendPluginRegistry::Add<ReferencesAction> references("cli-references", "Discover active #using references with Clang preprocessing");
 FrontendPluginRegistry::Add<EmitAction> emit("cli-emit", "Validate managed annotations and emit IL from Clang AST");
 } // namespace

@@ -21,7 +21,11 @@
     "Private Clang parser built from 18 checksum-pinned LLVM source files",
     "Managed caret declarators resolved after real C++ scope lookup",
     "Native XOR with shadowed managed type names",
-    "Field updates evaluate side-effectful receivers exactly once"
+    "Field updates evaluate side-effectful receivers exactly once",
+    "Ordinary C++ function template instantiations with type and integral parameters",
+    "Short-circuit logical operators and conditional expressions",
+    "Active quoted/angle #using directives in the primary source file",
+    "Importing and calling a source-built C++/CLI library"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -29,6 +33,7 @@
     "Constructor arguments currently require exact supported CLI types",
     "No CLI generics, managed arrays, properties, delegates, events or exception regions yet",
     "No native/managed interop or mixed-mode PE output yet",
-    "Unsupported AST nodes are errors; this is not a conforming general C++/CLI compiler"
+    "Unsupported AST nodes are errors; this is not a conforming general C++/CLI compiler",
+    "#using directives in included headers are not shimmed yet"
   ]
 }
