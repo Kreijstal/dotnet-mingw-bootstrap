@@ -43,7 +43,8 @@
     "Managed allocations and try/finally inside property accessors",
     "Split MinGW native DLL bridges for used extern-C integer/floating scalar functions",
     "P/Invoke import metadata and native calls validated from generated CLI and C# code",
-    "Assembly-qualified imported reference signatures, including library factory return types"
+    "Assembly-qualified imported reference signatures, including library factory return types",
+    "Managed enums with integral underlying types, literal metadata, casts, arrays and external enum imports"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -59,7 +60,7 @@
     "Managed arrays currently require rank one; no aggregate initializers, covariance or tracking references",
     "Managed destructors/finalizers, covariance metadata and managed operator metadata are explicitly rejected",
     "Native bridges currently require extern-C scalar functions; no pointers, bool/string marshalling, callbacks or automatic native partitioning",
-    "Managed value classes/enums, static field initialization and multi-translation-unit linking are not implemented",
+    "Managed value classes/boxing, static field initialization and multi-translation-unit linking are not implemented",
     "WPF DirectWriteForwarder and System.Printing are not compiled by this frontend yet"
   ]
 }

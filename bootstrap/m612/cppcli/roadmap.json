@@ -29,10 +29,11 @@
         "instance/auto-properties",
         "rank-one primitive/reference arrays",
         "managed catch/rethrow/finally and protected control flow",
-        "ordinary native C++ function template instantiations"
+        "ordinary native C++ function template instantiations",
+        "managed enums and imported enum signatures"
       ],
       "remaining": [
-        "managed value classes/enums and boxing",
+        "managed value classes and boxing",
         "CLI generics",
         "delegates/events/indexers",
         "destructors/finalizers and deterministic cleanup",
@@ -40,7 +41,7 @@
         "attributes/static initialization/multiple translation units",
         "full CLI semantic analysis and metadata type discovery"
       ],
-      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions"
+      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums"
     },
     {
       "stage": 4,

@@ -20,6 +20,7 @@
 #include <llvm/Support/raw_ostream.h>
 #include <algorithm>
 #include <fstream>
+#include <filesystem>
 #include <functional>
 #include <map>
 #include <set>
@@ -75,7 +76,7 @@ std::string read_file(const std::string& path) {
     return (*buffer)->getBuffer().str();
 }
 void write_file(const std::string& path, const std::string& text) {
-    std::ofstream out(path, std::ios::binary);
+    std::ofstream out(std::filesystem::u8path(path), std::ios::binary);
     out << text;
     out.close();
     if (!out) throw std::runtime_error("cannot write " + path);
@@ -370,6 +371,11 @@ protected:
                 if (interface_pure.count(i)) emit(t, "= 0");
                 if (!class_context[i].empty() && t.text == "abstract" && i && tokens[i - 1].text == ")") { emit(t, "= 0"); continue; }
                 if (!class_context[i].empty() && t.text == "sealed" && i && (tokens[i - 1].text == ")" || tokens[i - 1].text == "override")) { emit(t, "final"); continue; }
+                if ((t.text == "public" || t.text == "private") && i + 3 < tokens.size() && tokens[i + 1].text == "enum" &&
+                    (tokens[i + 2].text == "class" || tokens[i + 2].text == "struct")) {
+                    emit(t, "enum class __attribute__((annotate(\"cli.enum\"), annotate(\"cli.visibility:" + t.text + "\")))");
+                    i += 2; continue;
+                }
                 if (t.text == "property" && !class_context[i].empty()) {
                     size_t name = i + 1;
                     while (name + 1 < tokens.size() && !(tokens[name].kind == tok::identifier &&
@@ -485,6 +491,7 @@ class Emitter {
     const Metadata& metadata;
     std::vector<FunctionDecl*> functions;
     std::vector<CXXRecordDecl*> records;
+    std::vector<EnumDecl*> enums;
     std::set<const FunctionDecl*> seen;
     std::map<const VarDecl*, unsigned> locals;
     std::map<const ParmVarDecl*, unsigned> parameters;
@@ -561,8 +568,43 @@ class Emitter {
         for (size_t at; (at = name.find("::")) != std::string::npos;) name.replace(at, 2, ".");
         return "'" + name + "'";
     }
+    std::string enum_name(const EnumDecl* enumeration) const {
+        std::string ext = annotation(enumeration, "cli.external:");
+        if (ext.empty() && enumeration->getDefinition()) ext = annotation(enumeration->getDefinition(), "cli.external:");
+        if (!ext.empty()) {
+            auto bar = ext.find('|'); return "[" + ext.substr(0, bar) + "]'" + ext.substr(bar + 1) + "'";
+        }
+        std::string name = enumeration->getQualifiedNameAsString();
+        for (size_t at; (at = name.find("::")) != std::string::npos;) name.replace(at, 2, ".");
+        return "'" + name + "'";
+    }
+    std::string numeric_type(QualType t) const {
+        if (auto* enumeration = t->getAs<EnumType>()) return type(enumeration->getDecl()->getIntegerType());
+        return type(t);
+    }
+    void numeric_conversion(QualType t) {
+        std::string target = numeric_type(t), instruction;
+        if (target == "int8") instruction = "conv.i1";
+        else if (target == "uint8") instruction = "conv.u1";
+        else if (target == "int16") instruction = "conv.i2";
+        else if (target == "uint16" || target == "char") instruction = "conv.u2";
+        else if (target == "int32") instruction = "conv.i4";
+        else if (target == "uint32") instruction = "conv.u4";
+        else if (target == "int64") instruction = "conv.i8";
+        else if (target == "uint64") instruction = "conv.u8";
+        else if (target == "float32") instruction = "conv.r4";
+        else if (target == "float64") instruction = "conv.r8";
+        else throw std::runtime_error("unsupported numeric conversion");
+        op(instruction, 1, 1);
+    }
     std::string type(QualType t) const {
         t = t.getCanonicalType();
+        if (auto* enumeration = t->getAs<EnumType>()) {
+            auto* decl = enumeration->getDecl();
+            if (annotated(decl, "cli.enum") || (decl->getDefinition() && annotated(decl->getDefinition(), "cli.enum")))
+                return "valuetype " + enum_name(decl);
+            return type(decl->getIntegerType());
+        }
         if (t->isVoidType()) return "void";
         if (t->isBooleanType()) return "bool";
         if (t->isSpecificBuiltinType(BuiltinType::Char16) ||
@@ -662,6 +704,10 @@ class Emitter {
         op(bytes.str(), 0, 1);
     }
     void load_decl(const ValueDecl* d, const Expr* at) {
+        if (auto* enumeration = dyn_cast<EnumConstantDecl>(d)) {
+            llvm::SmallString<32> value; enumeration->getInitVal().toString(value, 10);
+            op(std::string(context.getTypeSize(enumeration->getType()) > 32 ? "ldc.i8 " : "ldc.i4 ") + value.str().str(), 0, 1); return;
+        }
         if (auto* p = dyn_cast<ParmVarDecl>(d)) { op("ldarg " + std::to_string(parameters.at(p)), 0, 1); return; }
         if (auto* v = dyn_cast<VarDecl>(d)) {
             auto it = locals.find(v);
@@ -888,16 +934,7 @@ class Emitter {
             }
             if (c->getCastKind() == CK_IntegralToBoolean) { op("ldc.i4.0", 0, 1); op("ceq", 2, 1); op("ldc.i4.0", 0, 1); op("ceq", 2, 1); }
             else if (c->getCastKind() == CK_IntegralCast || c->getCastKind() == CK_IntegralToFloating || c->getCastKind() == CK_FloatingCast || c->getCastKind() == CK_FloatingToIntegral) {
-                std::string target = type(c->getType());
-                std::string conversion;
-                if (target == "int32") conversion = "conv.i4";
-                else if (target == "int64") conversion = "conv.i8";
-                else if (target == "uint32") conversion = "conv.u4";
-                else if (target == "uint64") conversion = "conv.u8";
-                else if (target == "float64") conversion = "conv.r8";
-                else if (target == "float32") conversion = "conv.r4";
-                else fail(c, "unsupported numeric conversion");
-                op(conversion, 1, 1);
+                numeric_conversion(c->getType());
             } else if (c->getCastKind() != CK_LValueToRValue && c->getCastKind() != CK_NoOp && c->getCastKind() != CK_ArrayToPointerDecay && c->getCastKind() != CK_FunctionToPointerDecay &&
                        !(c->getCastKind() == CK_ConstructorConversion && handle_target(c->getType())) &&
                        !((c->getCastKind() == CK_DerivedToBase || c->getCastKind() == CK_UncheckedDerivedToBase || c->getCastKind() == CK_NullToPointer) && handle_target(c->getType())))
@@ -1050,6 +1087,9 @@ class Emitter {
                 if (!handle_target(source->getType())) fail(c, "explicit handle cast requires a managed reference");
                 if (isa<CXXReinterpretCastExpr>(c)) fail(c, "reinterpret_cast of managed handles is unsupported");
                 expr(source); op(std::string(isa<CXXDynamicCastExpr>(c) ? "isinst " : "castclass ") + reference_token(c->getType()), 1, 1); return;
+            }
+            if (c->getCastKind() == CK_IntegralCast || c->getCastKind() == CK_IntegralToFloating || c->getCastKind() == CK_FloatingCast || c->getCastKind() == CK_FloatingToIntegral) {
+                expr(c->getSubExpr()); numeric_conversion(c->getType()); return;
             }
             if (c->getCastKind() != CK_NoOp) fail(c, "explicit conversions are not enabled yet");
             expr(c->getSubExpr()); return;
@@ -1276,6 +1316,12 @@ public:
                 if (llvm::StringRef(tmpl->getNameAsString()).starts_with("__cli_")) continue;
                 for (auto* specialization : tmpl->specializations()) if (specialization->isUsed()) VisitFunctionDecl(specialization);
             }
+            else if (auto* enumeration = dyn_cast<EnumDecl>(decl)) {
+                if (enumeration->isThisDeclarationADefinition() && annotated(enumeration, "cli.enum") && annotation(enumeration, "cli.external:").empty()) {
+                    if (isa<CXXRecordDecl>(enumeration->getDeclContext())) throw std::runtime_error("nested managed enum metadata is not enabled yet");
+                    enums.push_back(enumeration);
+                }
+            }
             else if (auto* alias = dyn_cast<TypedefNameDecl>(decl)) validate_declarator(alias->getTypeSourceInfo());
         }
     }
@@ -1322,6 +1368,17 @@ public:
             if (!body.locals.empty()) il << "    .locals init (" << body.locals << ")\n";
             il << body.code << "  }\n";
         };
+        for (auto* enumeration : enums) {
+            il << ".class " << (annotation(enumeration, "cli.visibility:") == "private" ? "private" : "public")
+               << " auto ansi sealed " << enum_name(enumeration) << " extends [System.Runtime]System.Enum {\n"
+               << "  .field public specialname rtspecialname " << type(enumeration->getIntegerType()) << " value__\n";
+            for (auto* member : enumeration->enumerators()) {
+                llvm::SmallString<32> value; member->getInitVal().toString(value, 10);
+                il << "  .field public static literal valuetype " << enum_name(enumeration) << " '" << member->getNameAsString()
+                   << "' = " << type(enumeration->getIntegerType()) << "(" << value.str().str() << ")\n";
+            }
+            il << "}\n";
+        }
         for (auto* r : records) {
             auto* parent = class_base(r);
             il << ".class public " << (is_interface(r) ? "interface abstract " : "auto ansi ")

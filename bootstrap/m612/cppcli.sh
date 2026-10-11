@@ -250,4 +250,29 @@ EOF
   reject_case native-variadic 'extern "C" int NativePrint(int value, ...); int main() { return NativePrint(1, 2); }' 'non-variadic' --native-library cppcli-native.dll
   reject_case unbound-native 'extern "C" int NativeSum(int, int); int main() { return NativeSum(1, 2); }' 'without an emitted definition'
 }
+step_test-enums() {
+  run_case enums "$src/tests/enums.cpp" $'2\n-5\n5000000002\n5\n1' --type System.DayOfWeek
+  mkdir -p "$testdir/enum-consumer"
+  cat > "$testdir/enum-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers></PropertyGroup><ItemGroup><Reference Include="enums"><HintPath>../enums.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  cat > "$testdir/enum-consumer/Program.cs" <<'EOF'
+using System;
+using Example;
+if (Enums.Echo(Shade.Bright) != Shade.Bright || Enums.Number(Shade.Dark) != 1 || Enums.Day() != DayOfWeek.Friday ||
+    Enum.GetUnderlyingType(typeof(Shade)) != typeof(byte) || (long)Signed.Negative != -5 || (long)Signed.Positive != 5000000002L)
+    throw new Exception("incorrect enum metadata or values");
+Console.WriteLine("enum metadata OK");
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/enum-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -p:NuGetAudit=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/enum-consumer/bin/Debug/net8.0/consumer.dll")"
+  cat > "$testdir/enum-reference.cpp" <<'EOF'
+#using "enums.dll"
+using namespace System;
+int main() { Console::WriteLine(Example::Enums::Number(Example::Shade::Bright)); return 0; }
+EOF
+  run_case enum-reference "$testdir/enum-reference.cpp" '2' --type Example.Enums --type Example.Shade
+  reject_case enum-overflow 'public enum class Small : unsigned char { Value = 256 }; int main() { return 0; }' 'cannot be narrowed'
+}
 for step in $steps; do "step_$step"; done

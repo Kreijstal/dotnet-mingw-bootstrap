@@ -11,8 +11,9 @@ using System.Text.Json;
 record CliType(string Il, string Cpp, string Kind, string Name = "");
 record CliMethod(string Id, string Name, bool Static, CliType Return, CliType[] Parameters,
                  bool Supported, int GenericArity, bool Virtual, bool Abstract, bool Final);
+record CliEnumMember(string Name, string Value);
 record CliProperty(string Name, CliType Type, string Getter, string Setter, bool Static, bool Supported);
-record CliClass(string Assembly, string Name, string Cpp, string Kind, string Base, CliMethod[] Methods, CliProperty[] Properties, string[] Interfaces);
+record CliClass(string Assembly, string Name, string Cpp, string Kind, string Base, CliMethod[] Methods, CliProperty[] Properties, string[] Interfaces, CliType? Underlying = null, CliEnumMember[]? EnumMembers = null);
 record CliAssembly(string Name, string Version, string Token);
 
 sealed class SignatureTypes : ISignatureTypeProvider<CliType, object?>
@@ -148,8 +149,36 @@ static class Program
                     }
                     else if (!td.BaseType.IsNil && td.BaseType.Kind == HandleKind.TypeDefinition)
                         baseName = FullName(r, r.GetTypeDefinition((TypeDefinitionHandle)td.BaseType));
-                    if (baseName == "System.ValueType" || baseName == "System.Enum")
-                        throw new Exception("imported value/enum types are not enabled yet: " + name);
+                    if (baseName == "System.ValueType")
+                        throw new Exception("imported value types are not enabled yet: " + name);
+                    if (baseName == "System.Enum") {
+                        CliType? underlying = null;
+                        var members = new List<CliEnumMember>();
+                        foreach (var fh in td.GetFields()) {
+                            var field = r.GetFieldDefinition(fh);
+                            string fn = r.GetString(field.Name);
+                            if (fn == "value__") { underlying = field.DecodeSignature(new SignatureTypes(), null); continue; }
+                            var ch = field.GetDefaultValue(); if (ch.IsNil) continue;
+                            var constant = r.GetConstant(ch); var blob = r.GetBlobReader(constant.Value);
+                            string value = constant.TypeCode switch {
+                                ConstantTypeCode.SByte => blob.ReadSByte().ToString(System.Globalization.CultureInfo.InvariantCulture),
+                                ConstantTypeCode.Byte => blob.ReadByte().ToString(System.Globalization.CultureInfo.InvariantCulture),
+                                ConstantTypeCode.Int16 => blob.ReadInt16().ToString(System.Globalization.CultureInfo.InvariantCulture),
+                                ConstantTypeCode.UInt16 => blob.ReadUInt16().ToString(System.Globalization.CultureInfo.InvariantCulture),
+                                ConstantTypeCode.Int32 => blob.ReadInt32().ToString(System.Globalization.CultureInfo.InvariantCulture),
+                                ConstantTypeCode.UInt32 => blob.ReadUInt32().ToString(System.Globalization.CultureInfo.InvariantCulture),
+                                ConstantTypeCode.Int64 => blob.ReadInt64().ToString(System.Globalization.CultureInfo.InvariantCulture),
+                                ConstantTypeCode.UInt64 => blob.ReadUInt64().ToString(System.Globalization.CultureInfo.InvariantCulture),
+                                _ => throw new Exception("unsupported enum constant: " + name + "." + fn)
+                            };
+                            if (!ValidName(fn)) throw new Exception("unsupported enum member name: " + fn);
+                            members.Add(new(fn, value));
+                        }
+                        if (underlying == null) throw new Exception("missing enum underlying type: " + name);
+                        types.Add(new(assembly, name, SignatureTypes.CppName(name), "enum", baseName,
+                            methods.ToArray(), properties.ToArray(), Array.Empty<string>(), underlying, members.ToArray()));
+                        continue;
+                    }
                     types.Add(new(assembly, name, SignatureTypes.CppName(name), (td.Attributes & TypeAttributes.Interface) != 0 ? "interface" : "ref", baseName, methods.ToArray(), properties.ToArray(), td.GetInterfaceImplementations().Select(ih => {
                         var handle = r.GetInterfaceImplementation(ih).Interface;
                         if (handle.Kind == HandleKind.TypeDefinition) return FullName(r, r.GetTypeDefinition((TypeDefinitionHandle)handle));
@@ -164,7 +193,7 @@ static class Program
             var found = types.Select(t => t.Name).ToHashSet(StringComparer.Ordinal);
             if (!wanted.IsSubsetOf(found)) throw new Exception("reference metadata lacks: " + string.Join(", ", wanted.Except(found)));
             // Cross-type signatures may refer to types we haven't imported yet.
-            bool Available(CliType t) => t.Kind == "primitive" || (t.Kind == "ref" && found.Contains(t.Name)) || (t.Kind == "array" && (t.Name.Length == 0 || found.Contains(t.Name)));
+            bool Available(CliType t) => t.Kind == "primitive" || ((t.Kind == "ref" || t.Kind == "value") && found.Contains(t.Name)) || (t.Kind == "array" && (t.Name.Length == 0 || found.Contains(t.Name)));
             CliType Qualified(CliType t)
             {
                 var owner = types.FirstOrDefault(c => c.Name == t.Name);
@@ -211,6 +240,14 @@ static class Program
         string[] parts = t.Name.Split('.');
         foreach (string ns in parts.SkipLast(1)) w.Write("namespace " + ns + " { ");
         string name = parts[^1];
+        if (t.Kind == "enum") {
+            w.Write("enum class __attribute__((annotate(\"cli.enum\"), annotate(\"cli.external:" + Escape(t.Assembly + "|" + t.Name) + "\"))) " + name + " : " + t.Underlying!.Cpp);
+            if (forward) w.Write("; ");
+            else w.Write(" { " + string.Join(", ", t.EnumMembers!.Select(m => m.Name + " = " + m.Value +
+                (t.Underlying.Il.StartsWith("uint", StringComparison.Ordinal) ? "ULL" : "LL"))) + " }; ");
+            foreach (string ns in parts.SkipLast(1)) w.Write("} ");
+            w.WriteLine(); return;
+        }
         w.Write("class __attribute__((annotate(\"cli.external:" + Escape(t.Assembly + "|" + t.Name) + "\")" +
             (t.Kind == "interface" ? ", annotate(\"cli.interface\")" : "") + ")) " + name);
         if (forward) w.Write("; ");
