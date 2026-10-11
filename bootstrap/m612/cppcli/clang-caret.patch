@@ -1,0 +1,53 @@
+--- ParseDecl.cpp
++++ ParseDecl.cpp
+@@ -6458,7 +6458,10 @@
+     // Recursively parse the declarator.
+     Actions.runWithSufficientStackSpace(
+         D.getBeginLoc(), [&] { ParseDeclaratorInternal(D, DirectDeclParser); });
+-    if (Kind == tok::star)
++    // This parser is private to the CLI frontend. Clang has already resolved
++    // declaration/type context, so expression XOR remains untouched. Preserve
++    // the caret source location for managed-type validation by the AST plugin.
++    if (Kind == tok::star || (Kind == tok::caret && !getLangOpts().Blocks))
+       // Remember that we parsed a pointer type, and remember the type-quals.
+       D.AddTypeInfo(DeclaratorChunk::getPointer(
+                         DS.getTypeQualifiers(), Loc, DS.getConstSpecLoc(),
+--- ParseAST.cpp
++++ ParseAST.cpp
+@@ -27,6 +27,12 @@
+ #include <memory>
+ 
+ using namespace clang;
++
++namespace clang {
++void cppcliParseAST(Preprocessor &, ASTConsumer *, ASTContext &, bool,
++                    TranslationUnitKind, CodeCompleteConsumer *, bool);
++void cppcliParseAST(Sema &, bool, bool);
++}
+ 
+ namespace {
+ 
+@@ -96,7 +102,7 @@
+ /// the file is parsed.  This inserts the parsed decls into the translation unit
+ /// held by Ctx.
+ ///
+-void clang::ParseAST(Preprocessor &PP, ASTConsumer *Consumer,
++void clang::cppcliParseAST(Preprocessor &PP, ASTConsumer *Consumer,
+                      ASTContext &Ctx, bool PrintStats,
+                      TranslationUnitKind TUKind,
+                      CodeCompleteConsumer *CompletionConsumer,
+@@ -108,10 +114,10 @@
+   // Recover resources if we crash before exiting this method.
+   llvm::CrashRecoveryContextCleanupRegistrar<Sema> CleanupSema(S.get());
+ 
+-  ParseAST(*S, PrintStats, SkipFunctionBodies);
+-}
+-
+-void clang::ParseAST(Sema &S, bool PrintStats, bool SkipFunctionBodies) {
++  cppcliParseAST(*S, PrintStats, SkipFunctionBodies);
++}
++
++void clang::cppcliParseAST(Sema &S, bool PrintStats, bool SkipFunctionBodies) {
+   // Collect global stats on Decls/Stmts (until we have a module streamer).
+   if (PrintStats) {
+     Decl::EnableStatistics();

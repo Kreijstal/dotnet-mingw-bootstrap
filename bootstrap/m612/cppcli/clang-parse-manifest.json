@@ -1,0 +1,74 @@
+[
+  {
+    "file": "ParseAST.cpp",
+    "sha256": "733349ba89f600a8902d059bb20f6e2d15f0b4491ed7660c7f06b8ca24856d17"
+  },
+  {
+    "file": "ParseCXXInlineMethods.cpp",
+    "sha256": "1d3c117e448184000e6f446cbf16a7553a8c0db35ed0909dcee6b62873a90057"
+  },
+  {
+    "file": "ParseDecl.cpp",
+    "sha256": "28aa51a88ccebd2d19825b2d61246caf8b83ad8d83dc9313669a7c34154b6591"
+  },
+  {
+    "file": "ParseDeclCXX.cpp",
+    "sha256": "6598dcd7f0fdef7c8cdf3d7e14846adffa6f8fcb3c4ff62aaed2b3dc238c2b46"
+  },
+  {
+    "file": "ParseExpr.cpp",
+    "sha256": "be659823e85cf4401510fed6b6f3a9a2d266499c6714165e7d8ab17f7a3936e7"
+  },
+  {
+    "file": "ParseExprCXX.cpp",
+    "sha256": "6a61327601814e49573f338da7823fdda3e96db2de40cc31fc29556da342195b"
+  },
+  {
+    "file": "ParseHLSL.cpp",
+    "sha256": "d43ca50f127289d6c5e0379993c6f6562e56f5130ad4bd993cf6bf060bee6dd1"
+  },
+  {
+    "file": "ParseHLSLRootSignature.cpp",
+    "sha256": "4456fc0d4e59d95c2b05d32a2e843c38119ad6767bc5935df1d5f29521282af1"
+  },
+  {
+    "file": "ParseInit.cpp",
+    "sha256": "e24a7bcfad1b914a3951bed6800eb254b8adb1a4a9d9c146e0b38af4cb65a7ca"
+  },
+  {
+    "file": "ParseObjc.cpp",
+    "sha256": "a28542e38c35fc14c7421da77f373f24f2388cf6c449c5f991e590d8476a695e"
+  },
+  {
+    "file": "ParseOpenACC.cpp",
+    "sha256": "58f081bec744d55d730d5bccb8e51f7ac5ebb56338f1dc78ac735210efba772d"
+  },
+  {
+    "file": "ParseOpenMP.cpp",
+    "sha256": "62e06eceaf236089014a85fce1d4fd0a8dbaf1cc04823a19ff7e32af2ae5b052"
+  },
+  {
+    "file": "ParsePragma.cpp",
+    "sha256": "b7c9d5777f74d5d7acd9fe5eadb99a069ad4f898f422b0835a4aee3343f301c4"
+  },
+  {
+    "file": "ParseStmt.cpp",
+    "sha256": "2924c7fd490855f3b63d1c4abdca050a7599d6382a1b2bc9f2735eef05217ec5"
+  },
+  {
+    "file": "ParseStmtAsm.cpp",
+    "sha256": "e133b291db72fd1c504ddda97d531901b7c11c571253006aba0fe7b7238382cc"
+  },
+  {
+    "file": "ParseTemplate.cpp",
+    "sha256": "13059e9963c1b117ea3b19df6d7510171a8c016d03fa873a8dea05574871cad7"
+  },
+  {
+    "file": "ParseTentative.cpp",
+    "sha256": "9522a11bb4b900c71d28ce384a83b8a57d054d0ecca1d5151a03b56c1507fc1f"
+  },
+  {
+    "file": "Parser.cpp",
+    "sha256": "dc6d58f43e0117f58c1174c809eab7cb76f87bc7a9906d0a43051e456393aac9"
+  }
+]

@@ -20,11 +20,11 @@ sealed class SignatureTypes : ISignatureTypeProvider<CliType, object?>
     static CliType Unsupported(string name) => new("", "", "unsupported", name);
     public static CliType Named(string name, bool value)
     {
-        if (name == "System.String") return new("string", "__cli_handle<::System::String>", "ref", name);
-        if (name == "System.Object") return new("object", "__cli_handle<::System::Object>", "ref", name);
+        if (name == "System.String") return new("string", "::System::String*", "ref", name);
+        if (name == "System.Object") return new("object", "::System::Object*", "ref", name);
         if (name.Contains('`') || name.Contains('+')) return Unsupported(name);
         return new((value ? "valuetype " : "class ") + "'" + name + "'",
-                   value ? CppName(name) : "__cli_handle<" + CppName(name) + ">", value ? "value" : "ref", name);
+                   value ? CppName(name) : CppName(name) + "*", value ? "value" : "ref", name);
     }
     public CliType GetPrimitiveType(PrimitiveTypeCode type) => type switch
     {
@@ -142,12 +142,10 @@ static class Program
             }).ToArray() }).OrderBy(t => t.Name, StringComparer.Ordinal).ToList();
             using var header = new StreamWriter(headerPath, false, new UTF8Encoding(false));
             header.WriteLine("// Metadata declarations only; never compile these surrogates as native objects.");
-            header.WriteLine("namespace System { class String; } int __cli_string_enabled(System::String*);");
-            header.WriteLine("template<class T> void __cli_accept_pointer(T*);");
-            header.WriteLine("template<class T> struct __cli_handle { __cli_handle() = default; __cli_handle(decltype(nullptr)); template<class U, class=decltype(__cli_accept_pointer<T>((U*)nullptr))> __cli_handle(__cli_handle<U>); template<class U, class=decltype(__cli_accept_pointer<U>((T*)nullptr)), class=void> explicit __cli_handle(__cli_handle<U>); template<class U=T, class=decltype(__cli_string_enabled((U*)nullptr))> __cli_handle(const char*); template<class U=T, class=decltype(__cli_string_enabled((U*)nullptr))> __cli_handle(const wchar_t*); T* operator->() const; }; ");
-            header.WriteLine("template<class T, class... A> auto __cli_new(A... args) -> decltype(T(args...), __cli_handle<T>{}); ");
+            header.WriteLine("namespace System { class String; }");
+            header.WriteLine("template<class T, class... A> auto __cli_new(A... args) -> decltype(T(args...), (T*)nullptr); ");
             header.WriteLine("template<class T, class A> T __cli_safe_cast(A); template<class T, class A> T __cli_dynamic_cast(A);");
-            header.WriteLine("__cli_handle<System::String> __cli_literal(const char*); __cli_handle<System::String> __cli_literal(const wchar_t*);");
+            header.WriteLine("System::String* __cli_literal(const char*); System::String* __cli_literal(const wchar_t*);");
             header.WriteLine("namespace System { using Int32 = int; using Int64 = long long; using Boolean = bool; }");
             foreach (var t in types) WriteClass(header, t, true);
             var emitted = new HashSet<string>();
@@ -175,6 +173,7 @@ static class Program
         {
             if (hasBase) w.Write(" : public " + SignatureTypes.CppName(t.Base));
             w.WriteLine(" { public:");
+            if (t.Name == "System.Object") w.WriteLine("virtual ~Object() = default;");
             if (t.Name == "System.String") w.WriteLine("String(const char*); String(const wchar_t*);");
             var seen = new HashSet<string>();
             foreach (var m in t.Methods.Where(m => m.Supported))

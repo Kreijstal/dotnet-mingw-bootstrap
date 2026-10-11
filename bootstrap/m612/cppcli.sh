@@ -23,9 +23,10 @@ EOF
     "-p:BaseIntermediateOutputPath=$(cygpath -m "$build/metadata-obj")/" \
     "-p:OutputPath=$(cygpath -m "$build/metadata")/" -p:NuGetAudit=false
   log "Build Clang token adapter and AST emitter"
+  /clang64/bin/python.exe "$src/fetch-clang-parse.py" "$M612/src/clang-parse-22.1.8" "$build/clang-parse"
   /clang64/bin/cmake.exe -S "$src" -B "$build" -GNinja -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_C_COMPILER=/clang64/bin/clang.exe -DCMAKE_CXX_COMPILER=/clang64/bin/clang++.exe \
-    -DLLVM_DIR=/clang64/lib/cmake/llvm -DClang_DIR=/clang64/lib/cmake/clang
+    -DLLVM_DIR=/clang64/lib/cmake/llvm -DCPPCLI_PARSE_DIR="$build/clang-parse"
   /clang64/bin/cmake.exe --build "$build" --target cli_ast -j2
 }
 compile() {
@@ -68,6 +69,7 @@ step_test-core() {
 step_test-objects() {
   log "Managed constructors, fields, inheritance, handles and member calls"
   run_case objects "$src/tests/objects.cpp" $'8\n16\nTrue\nTrue\nTrue\nTrue\nFalse\ntyped literal\n1\n2'
+  run_case evaluation "$src/tests/evaluation.cpp" $'receiver\n3\nreceiver\n3\nreceiver\n5\n5'
   compile "$(cygpath -m "$src/tests/library.cpp")" --target library -o "$(cygpath -m "$testdir/counter.dll")"
   mkdir -p "$testdir/consumer"
   cat > "$testdir/consumer/consumer.csproj" <<'EOF'
@@ -90,8 +92,9 @@ EOF
   cmp "$testdir/consumer.expected" "$testdir/consumer.actual"
   printf 'PASS C# consumer and metadata\n'
   reject_case bad-constructor 'using namespace System; public ref class Box { public: Box(int x) {} }; int main() { Box^ b = gcnew Box("bad"); return 0; }' 'no matching function'
-  reject_case bad-downcast 'using namespace System; public ref class Base {}; public ref class Derived : Base {}; int main() { Base^ b = gcnew Base(); Derived^ d = b; return 0; }' 'no viable conversion'
+  reject_case bad-downcast 'using namespace System; public ref class Base {}; public ref class Derived : Base {}; int main() { Base^ b = gcnew Base(); Derived^ d = b; return 0; }' 'cannot initialize'
   reject_case private-field 'using namespace System; public ref class Box { int hidden; }; int main() { Box^ b = gcnew Box(); b->hidden = 1; return 0; }' 'private member'
+  reject_case native-managed-pointer 'using namespace System; public ref class Box {}; int main() { Box* b = gcnew Box(); return 0; }' "native '\*' pointers"
   log "PASS test-objects: managed identity and Clang constructor/member checking"
 }
 step_test-adapter-gate() {

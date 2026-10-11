@@ -5,6 +5,7 @@
 #include <clang/AST/Attr.h>
 #include <clang/AST/DeclCXX.h>
 #include <clang/AST/ExprCXX.h>
+#include <clang/AST/TypeLoc.h>
 #include <clang/Basic/Version.h>
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Frontend/FrontendPluginRegistry.h>
@@ -25,6 +26,7 @@
 #include <vector>
 
 using namespace clang;
+namespace clang { void cppcliParseAST(Sema&, bool, bool); }
 namespace {
 std::string annotation(const Decl* d, llvm::StringRef prefix) {
     for (auto* a : d->specific_attrs<AnnotateAttr>())
@@ -257,18 +259,8 @@ protected:
                     emit(t, "__cli_literal(" + t.text + ")");
                     continue;
                 }
-                if (t.kind == tok::identifier) {
-                    size_t end = i + 1;
-                    while (end + 1 < tokens.size() && tokens[end].text == "::" && tokens[end + 1].kind == tok::identifier) end += 2;
-                    bool expression = i && (tokens[i - 1].text == "return" || tokens[i - 1].text == "=" || tokens[i - 1].text == "+" || tokens[i - 1].text == "-");
-                    if (!expression && end < tokens.size() && tokens[end].text == "^" && metadata.short_types.count(tokens[end - 1].text)) {
-                        std::string type;
-                        for (size_t j = i; j < end; ++j) type += tokens[j].text;
-                        emit(t, "__cli_handle<" + type + ">");
-                        i = end;
-                        continue;
-                    }
-                }
+                // Keep ^ unchanged. Only the private Clang parser can resolve
+                // declarator/type context correctly after C++ scope lookup.
                 std::string next = i + 1 < tokens.size() ? tokens[i + 1].text : "";
                 if ((t.text == "value" && (next == "class" || next == "struct")) ||
                     ((t.text == "generic" || t.text == "pin_ptr" || t.text == "interior_ptr") && next == "<") ||
@@ -326,6 +318,14 @@ class Emitter {
         return e;
     }
     const CXXRecordDecl* handle_target(QualType type) const {
+        if (type->isPointerType()) {
+            auto* r = type->getPointeeType()->getAsCXXRecordDecl();
+            if (!r) return nullptr;
+            auto* definition = r->getDefinition();
+            if (annotated(r, "cli.ref") || !annotation(r, "cli.external:").empty() ||
+                (definition && (annotated(definition, "cli.ref") || !annotation(definition, "cli.external:").empty()))) return r;
+            return nullptr;
+        }
         auto* rec = type->getAsCXXRecordDecl();
         auto* spec = dyn_cast_or_null<ClassTemplateSpecializationDecl>(rec);
         if (!spec || spec->getSpecializedTemplate()->getName() != "__cli_handle") return nullptr;
@@ -348,6 +348,8 @@ class Emitter {
         t = t.getCanonicalType();
         if (t->isVoidType()) return "void";
         if (t->isBooleanType()) return "bool";
+        if (t->isSpecificBuiltinType(BuiltinType::Char16) ||
+            (t->isWideCharType() && context.getTypeSize(t) == 16)) return "char";
         if (t->isIntegerType()) {
             unsigned bits = context.getTypeSize(t);
             if (bits != 8 && bits != 16 && bits != 32 && bits != 64) throw std::runtime_error("unsupported integer width");
@@ -366,6 +368,17 @@ class Emitter {
         unsigned index = locals.size() + temporary_types.size();
         temporary_types.push_back(il_type);
         return index;
+    }
+    void validate_declarator(const TypeSourceInfo* info) const {
+        if (!info) return;
+        auto& sm = ci.getSourceManager();
+        for (TypeLoc loc = info->getTypeLoc(); !loc.isNull(); loc = loc.getNextTypeLoc()) {
+            auto pointer = loc.getAs<PointerTypeLoc>();
+            if (pointer.isNull() || !handle_target(pointer.getType())) continue;
+            SourceLocation star = sm.getSpellingLoc(pointer.getStarLoc());
+            if (star.isValid() && sm.isWrittenInMainFile(star) && *sm.getCharacterData(star) == '*')
+                throw std::runtime_error("native '*' pointers to managed reference classes are not supported; declare a '^' handle");
+        }
     }
     std::string field_signature(const FieldDecl* f) const {
         auto* parent = dyn_cast<CXXRecordDecl>(f->getParent());
@@ -441,7 +454,6 @@ class Emitter {
     void binary(const BinaryOperator* b) {
         if (b->getOpcode() == BO_Assign) { expr(b->getRHS()); store(b->getLHS(), true); return; }
         if (b->isCompoundAssignmentOp()) {
-            expr(b->getLHS()); expr(b->getRHS());
             std::string operation;
             switch (b->getOpcode()) {
                 case BO_AddAssign: operation = "add"; break;
@@ -449,6 +461,19 @@ class Emitter {
                 case BO_MulAssign: operation = "mul"; break;
                 default: fail(b, "unsupported compound assignment");
             }
+            if (auto* member = dyn_cast<MemberExpr>(b->getLHS()->IgnoreParenImpCasts())) {
+                auto* field = dyn_cast<FieldDecl>(member->getMemberDecl());
+                if (!field) fail(b, "compound assignment target is not an instance field");
+                unsigned receiver = temporary("class " + record_name(cast<CXXRecordDecl>(field->getParent())));
+                unsigned result = temporary(type(field->getType()));
+                expr(member->getBase()); op("stloc " + std::to_string(receiver), 1);
+                op("ldloc " + std::to_string(receiver), 0, 1); op("ldfld " + field_signature(field), 1, 1);
+                expr(b->getRHS()); op(operation, 2, 1); op("stloc " + std::to_string(result), 1);
+                op("ldloc " + std::to_string(receiver), 0, 1); op("ldloc " + std::to_string(result), 0, 1);
+                op("stfld " + field_signature(field), 2); op("ldloc " + std::to_string(result), 0, 1);
+                return;
+            }
+            expr(b->getLHS()); expr(b->getRHS());
             op(operation, 2, 1); store(b->getLHS(), true); return;
         }
         if (b->getOpcode() == BO_LAnd || b->getOpcode() == BO_LOr) fail(b, "short-circuit operators are not enabled yet");
@@ -563,7 +588,7 @@ class Emitter {
                 op(conversion, 1, 1);
             } else if (c->getCastKind() != CK_LValueToRValue && c->getCastKind() != CK_NoOp && c->getCastKind() != CK_ArrayToPointerDecay && c->getCastKind() != CK_FunctionToPointerDecay &&
                        !(c->getCastKind() == CK_ConstructorConversion && handle_target(c->getType())) &&
-                       !((c->getCastKind() == CK_DerivedToBase || c->getCastKind() == CK_UncheckedDerivedToBase) && c->getType()->isPointerType()))
+                       !((c->getCastKind() == CK_DerivedToBase || c->getCastKind() == CK_UncheckedDerivedToBase || c->getCastKind() == CK_NullToPointer) && handle_target(c->getType())))
                 fail(c, std::string("unsupported implicit conversion: ") + c->getCastKindName());
             return;
         }
@@ -573,6 +598,7 @@ class Emitter {
             op(std::string(context.getTypeSize(i->getType()) > 32 ? "ldc.i8 " : "ldc.i4 ") + digits.str().str(), 0, 1); return;
         }
         if (auto* b = dyn_cast<CXXBoolLiteralExpr>(e)) { op(b->getValue() ? "ldc.i4.1" : "ldc.i4.0", 0, 1); return; }
+        if (auto* c = dyn_cast<CharacterLiteral>(e)) { op("ldc.i4 " + std::to_string(c->getValue()), 0, 1); return; }
         if (auto* f = dyn_cast<FloatingLiteral>(e)) {
             llvm::SmallString<32> digits;
             f->getValue().toString(digits);
@@ -608,6 +634,21 @@ class Emitter {
         }
         if (auto* u = dyn_cast<UnaryOperator>(e)) {
             if (u->isIncrementDecrementOp()) {
+                if (auto* member = dyn_cast<MemberExpr>(u->getSubExpr()->IgnoreParenImpCasts())) {
+                    auto* field = dyn_cast<FieldDecl>(member->getMemberDecl());
+                    if (!field) fail(u, "increment target is not an instance field");
+                    unsigned receiver = temporary("class " + record_name(cast<CXXRecordDecl>(field->getParent())));
+                    unsigned old = temporary(type(field->getType())), result = temporary(type(field->getType()));
+                    expr(member->getBase()); op("stloc " + std::to_string(receiver), 1);
+                    op("ldloc " + std::to_string(receiver), 0, 1); op("ldfld " + field_signature(field), 1, 1);
+                    op("stloc " + std::to_string(old), 1); op("ldloc " + std::to_string(old), 0, 1);
+                    std::string ft = type(field->getType());
+                    op(ft == "int64" || ft == "uint64" ? "ldc.i8 1" : ft == "float32" ? "ldc.r4 1" : ft == "float64" ? "ldc.r8 1" : "ldc.i4.1", 0, 1);
+                    op(u->isIncrementOp() ? "add" : "sub", 2, 1); op("stloc " + std::to_string(result), 1);
+                    op("ldloc " + std::to_string(receiver), 0, 1); op("ldloc " + std::to_string(result), 0, 1);
+                    op("stfld " + field_signature(field), 2); op("ldloc " + std::to_string(u->isPostfix() ? old : result), 0, 1);
+                    return;
+                }
                 expr(u->getSubExpr());
                 if (u->isPostfix()) op("dup", 1, 2);
                 op("ldc.i4.1", 0, 1); op(u->isIncrementOp() ? "add" : "sub", 2, 1);
@@ -641,6 +682,7 @@ class Emitter {
             auto* v = dyn_cast<VarDecl>(d);
             if (!v || v->isStaticLocal() || v->getType()->isReferenceType()) fail(s, "unsupported local declaration");
             type(v->getType());
+            validate_declarator(v->getTypeSourceInfo());
             locals.emplace(v, locals.size());
         }
         for (auto* child : s->children()) collect_locals(child);
@@ -735,6 +777,9 @@ public:
     Emitter(CompilerInstance& compiler, const Metadata& md) : ci(compiler), context(ci.getASTContext()), metadata(md) {}
     bool VisitFunctionDecl(FunctionDecl* f) {
         if (f->isImplicit() || !f->doesThisDeclarationHaveABody() || llvm::StringRef(f->getNameAsString()).starts_with("__cli_")) return true;
+        if (auto* m = dyn_cast<CXXMethodDecl>(f)) if (!annotation(m->getParent(), "cli.external:").empty()) return true;
+        validate_declarator(f->getTypeSourceInfo());
+        for (auto* p : f->parameters()) validate_declarator(p->getTypeSourceInfo());
         if (f->getTemplatedKind() != FunctionDecl::TK_NonTemplate) throw std::runtime_error("managed function templates are not enabled yet");
         if (seen.insert(f->getCanonicalDecl()).second) functions.push_back(f);
         return true;
@@ -743,7 +788,7 @@ public:
         if (r->isThisDeclarationADefinition() && annotated(r, "cli.ref")) {
             if (r->getNumBases() > 1) throw std::runtime_error("multiple managed bases/interfaces are not enabled yet");
             for (const auto& base : r->bases()) record_name(base.getType()->getAsCXXRecordDecl());
-            for (auto* field : r->fields()) type(field->getType());
+            for (auto* field : r->fields()) { type(field->getType()); validate_declarator(field->getTypeSourceInfo()); }
             records.push_back(r);
         }
         return true;
@@ -754,6 +799,7 @@ public:
             else if (auto* r = dyn_cast<CXXRecordDecl>(decl)) {
                 if (r->isThisDeclarationADefinition()) { VisitCXXRecordDecl(r); collect(r); }
             } else if (auto* ns = dyn_cast<NamespaceDecl>(decl)) collect(ns);
+            else if (auto* alias = dyn_cast<TypedefNameDecl>(decl)) validate_declarator(alias->getTypeSourceInfo());
         }
     }
     std::string emit(const Options& options) {
@@ -805,7 +851,7 @@ public:
     std::string evidence() const {
         llvm::json::Array list;
         for (auto& f : ir) list.push_back(llvm::json::Object{{"name", f.name}, {"owner", f.owner}, {"maxstack", f.max_stack}});
-        llvm::json::Object result{{"clang", CLANG_VERSION_STRING}, {"parser", "clang::Parser"}, {"functions", std::move(list)}};
+        llvm::json::Object result{{"clang", CLANG_VERSION_STRING}, {"parser", "clang::Parser with private caret declarator patch"}, {"functions", std::move(list)}};
         std::string text;
         llvm::raw_string_ostream stream(text); stream << llvm::json::Value(std::move(result));
         return text + "\n";
@@ -833,6 +879,11 @@ class EmitAction : public PluginASTAction {
 protected:
     bool ParseArgs(const CompilerInstance& ci, const std::vector<std::string>& args) override { return options.parse(ci, args); }
     std::unique_ptr<ASTConsumer> CreateASTConsumer(CompilerInstance& ci, llvm::StringRef) override { return std::make_unique<EmitConsumer>(ci, options); }
+    void ExecuteAction() override {
+        auto& ci = getCompilerInstance();
+        if (!ci.hasSema()) ci.createSema(getTranslationUnitKind(), nullptr);
+        cppcliParseAST(ci.getSema(), false, false);
+    }
 };
 FrontendPluginRegistry::Add<AdaptAction> adapt("cli-adapt", "Adapt CLI-only syntax using Clang preprocessing tokens");
 FrontendPluginRegistry::Add<EmitAction> emit("cli-emit", "Validate managed annotations and emit IL from Clang AST");
