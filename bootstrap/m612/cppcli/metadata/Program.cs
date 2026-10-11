@@ -173,7 +173,8 @@ static class Program
             using var header = new StreamWriter(headerPath, false, new UTF8Encoding(false));
             header.WriteLine("// Metadata declarations only; never compile these surrogates as native objects.");
             header.WriteLine("namespace System { class String; }");
-            header.WriteLine("namespace cli { template<class T, int Rank = 1> class array; }");
+            header.WriteLine("namespace cli { template<class T, int Rank = 1> class array; class __attribute__((annotate(\"cli.finally\"))) __finally_marker {}; }");
+            header.WriteLine("[[noreturn]] void __cli_end_finally();");
             header.WriteLine("template<class T, class... A> auto __cli_new(A... args) -> decltype(T(args...), (T*)nullptr); ");
             header.WriteLine("template<class T, class A> T __cli_safe_cast(A); template<class T, class A> T __cli_dynamic_cast(A);");
             header.WriteLine("System::String* __cli_literal(const char*); System::String* __cli_literal(const wchar_t*);");

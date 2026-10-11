@@ -314,8 +314,57 @@ protected:
                 if (!parentheses.empty()) call_context[i] = parentheses.back();
                 if (tokens[i].text == ")" && !parentheses.empty()) parentheses.pop_back();
             }
+            // A typed catch marker lets Clang parse/check finally bodies. With
+            // real catch clauses, nest the catch region inside the finally
+            // region, as required by CLR exception table structure.
+            std::map<size_t, std::string> cli_structural;
+            auto matching = [&](size_t begin, const std::string& open, const std::string& close) {
+                int depth = 0;
+                for (size_t end = begin; end < tokens.size(); ++end) {
+                    if (tokens[end].text == open) ++depth;
+                    if (tokens[end].text == close && --depth == 0) return end;
+                }
+                throw std::runtime_error("unterminated managed exception region");
+            };
+            for (size_t begin = 0; begin + 1 < tokens.size(); ++begin) {
+                if (tokens[begin].text != "try" || tokens[begin + 1].text != "{") continue;
+                size_t end = matching(begin + 1, "{", "}") + 1;
+                bool catches = false;
+                while (end + 1 < tokens.size() && tokens[end].text == "catch" && tokens[end + 1].text == "(") {
+                    catches = true; end = matching(end + 1, "(", ")") + 1;
+                    if (end == tokens.size() || tokens[end].text != "{") throw std::runtime_error("catch requires a block");
+                    end = matching(end, "{", "}") + 1;
+                }
+                if (end + 1 >= tokens.size() || tokens[end].text != "finally" || tokens[end + 1].text != "{") continue;
+                if (catches) cli_structural[begin] = "try { try";
+                cli_structural[end] = std::string(catches ? "} " : "") + "catch (::cli::__finally_marker*)";
+                size_t close = matching(end + 1, "{", "}");
+                cli_structural[close] = "::__cli_end_finally(); }";
+            }
+            auto adapt_allocation = [&](size_t& i) {
+                if (tokens[i].text != "gcnew") return false;
+                auto& t = tokens[i];
+                size_t end = i + 1;
+                int angles = 0;
+                while (end < tokens.size()) {
+                    if (tokens[end].text == "<") ++angles;
+                    else if (tokens[end].text == ">") --angles;
+                    else if (tokens[end].text == ">>") angles -= 2;
+                    if (!angles && tokens[end].text == "(") break;
+                    if (angles < 0 || (!angles && tokens[end].text != ">" && tokens[end].text != ">>" && tokens[end].kind != tok::identifier && tokens[end].text != "::")) break;
+                    ++end;
+                }
+                if (end == i + 1 || end == tokens.size() || tokens[end].text != "(")
+                    throw std::runtime_error("gcnew currently requires a named type and parenthesized constructor arguments");
+                std::string type;
+                for (size_t j = i + 1; j < end; ++j) type += tokens[j].text;
+                emit(t, "__cli_new<" + type + ">");
+                i = end - 1;
+                return true;
+            };
             for (size_t i = 0; i < tokens.size(); ++i) {
                 auto& t = tokens[i];
+                if (cli_structural.count(i)) { emit(t, cli_structural[i]); continue; }
                 if (interface_virtual.count(i)) emit(t, "virtual");
                 if (interface_pure.count(i)) emit(t, "= 0");
                 if (!class_context[i].empty() && t.text == "abstract" && i && tokens[i - 1].text == ")") { emit(t, "= 0"); continue; }
@@ -352,6 +401,13 @@ protected:
                     } else {
                         int depth = 1;
                         for (size_t j = name + 2; j + 1 < end; ++j) {
+                            if (cli_structural.count(j)) {
+                                emit(tokens[j], cli_structural[j]);
+                                if (tokens[j].text == "}") --depth;
+                                continue;
+                            }
+                            if (adapt_allocation(j)) continue;
+                            if (tokens[j].text == "safe_cast") { emit(tokens[j], "__cli_safe_cast"); continue; }
                             if (depth == 1 && j + 1 < end && tokens[j + 1].text == "(" && (tokens[j].text == "get" || tokens[j].text == "set"))
                                 emit(tokens[j], "__attribute__((annotate(\"cli.accessor:" + tokens[j].text + "\"))) " + tokens[j].text + "_" + property);
                             else if (tok::isStringLiteral(tokens[j].kind) && call_context[j] && j > 0 && j + 1 < tokens.size() &&
@@ -399,25 +455,7 @@ protected:
                     i = end - 1;
                     continue;
                 }
-                if (t.text == "gcnew") {
-                    size_t end = i + 1;
-                    int angles = 0;
-                    while (end < tokens.size()) {
-                        if (tokens[end].text == "<") ++angles;
-                        else if (tokens[end].text == ">") --angles;
-                        else if (tokens[end].text == ">>") angles -= 2;
-                        if (!angles && tokens[end].text == "(") break;
-                        if (angles < 0 || (!angles && tokens[end].text != ">" && tokens[end].text != ">>" && tokens[end].kind != tok::identifier && tokens[end].text != "::")) break;
-                        ++end;
-                    }
-                    if (end == i + 1 || end == tokens.size() || tokens[end].text != "(")
-                        throw std::runtime_error("unsupported gcnew declarator (arrays and generics are not enabled yet)");
-                    std::string type;
-                    for (size_t j = i + 1; j < end; ++j) type += tokens[j].text;
-                    emit(t, "__cli_new<" + type + ">");
-                    i = end - 1;
-                    continue;
-                }
+                if (adapt_allocation(i)) continue;
                 if (tok::isStringLiteral(t.kind) && call_context[i] && i > 0 && i + 1 < tokens.size() &&
                     (tokens[i - 1].text == "(" || tokens[i - 1].text == ",") &&
                     (tokens[i + 1].text == ")" || tokens[i + 1].text == ",")) {
@@ -453,7 +491,11 @@ class Emitter {
     FunctionDecl* current = nullptr;
     unsigned label_count = 0, max_stack = 0;
     int stack = 0;
-    std::vector<std::pair<std::string, std::string>> loop_labels;
+    struct LoopLabels { std::string stop, next; unsigned depth; };
+    std::vector<LoopLabels> loop_labels;
+    unsigned exception_depth = 0, catch_depth = 0, finally_depth = 0, return_slot = 0;
+    std::string return_label;
+    bool return_slot_set = false;
     std::vector<FunctionIR> ir;
     std::vector<std::string> temporary_types;
     std::map<const OpaqueValueExpr*, unsigned> opaque_values;
@@ -744,6 +786,10 @@ class Emitter {
             if (!member) fail(c, "array Length lacks a receiver");
             expr(member->getImplicitObjectArgument()); op("ldlen", 1, 1); op("conv.i4", 1, 1); return;
         }
+        if (f->getNameAsString() == "__cli_end_finally") {
+            if (!finally_depth) fail(c, "finally marker outside a finally region");
+            return;
+        }
         if (f->getNameAsString() == "__cli_literal") {
             if (c->getNumArgs() != 1 || !isa<StringLiteral>(c->getArg(0)->IgnoreParenImpCasts())) fail(c, "invalid string literal marker");
             expr(c->getArg(0)); return;
@@ -819,6 +865,7 @@ class Emitter {
         }
         bool qualified = false;
         if (auto* member = dyn_cast<CXXMemberCallExpr>(c)) if (auto* callee = dyn_cast<MemberExpr>(member->getCallee()->IgnoreParenImpCasts())) qualified = callee->hasQualifier();
+        if (qualified && m && m->isPureVirtual()) fail(c, "a qualified base call cannot target an abstract method");
         op(std::string(instance && !qualified ? "callvirt " : "call ") + sig, c->getNumArgs() + unsigned(instance), f->getReturnType()->isVoidType() ? 0 : 1);
     }
     void expr(const Expr* original) {
@@ -860,6 +907,16 @@ class Emitter {
             op(std::string(context.getTypeSize(f->getType()) == 32 ? "ldc.r4 " : "ldc.r8 ") + digits.str().str(), 0, 1); return;
         }
         if (auto* s = dyn_cast<StringLiteral>(e)) { string_literal(s); return; }
+        if (auto* thrown = dyn_cast<CXXThrowExpr>(e)) {
+            if (const Expr* value = thrown->getSubExpr()) {
+                if (!handle_target(value->getType())) fail(e, "only managed handle exceptions are supported");
+                expr(value); op("throw", 1);
+            } else {
+                if (!catch_depth || finally_depth) fail(e, "rethrow requires a managed catch handler");
+                op("rethrow");
+            }
+            return;
+        }
         if (isa<CXXNullPtrLiteralExpr>(e)) { op("ldnull", 0, 1); return; }
         if (isa<CXXThisExpr>(e)) {
             auto* method = dyn_cast<CXXMethodDecl>(current);
@@ -978,15 +1035,28 @@ class Emitter {
                     source = ctor->getArg(0);
                 }
                 if (!handle_target(source->getType())) fail(c, "explicit handle cast requires a managed reference");
-                expr(source); op("castclass " + reference_token(c->getType()), 1, 1); return;
+                if (isa<CXXReinterpretCastExpr>(c)) fail(c, "reinterpret_cast of managed handles is unsupported");
+                expr(source); op(std::string(isa<CXXDynamicCastExpr>(c) ? "isinst " : "castclass ") + reference_token(c->getType()), 1, 1); return;
             }
             if (c->getCastKind() != CK_NoOp) fail(c, "explicit conversions are not enabled yet");
             expr(c->getSubExpr()); return;
         }
         fail(e, std::string("unsupported AST expression: ") + e->getStmtClassName());
     }
+    bool finally_handler(const CXXCatchStmt* handler) const {
+        auto* variable = handler->getExceptionDecl();
+        return variable && variable->getType()->isPointerType() &&
+            record_annotated(variable->getType()->getPointeeType()->getAsCXXRecordDecl(), "cli.finally");
+    }
     void collect_locals(const Stmt* s) {
         if (!s) return;
+        if (auto* handler = dyn_cast<CXXCatchStmt>(s)) if (!finally_handler(handler)) {
+            if (auto* variable = handler->getExceptionDecl()) {
+                if (!handle_target(variable->getType())) fail(s, "only managed handle catch types are supported");
+                validate_declarator(variable->getTypeSourceInfo());
+                locals.emplace(variable, locals.size());
+            }
+        }
         if (auto* ds = dyn_cast<DeclStmt>(s)) for (auto* d : ds->decls()) {
             auto* v = dyn_cast<VarDecl>(d);
             if (!v || v->isStaticLocal() || v->getType()->isReferenceType()) fail(s, "unsupported local declaration");
@@ -1007,8 +1077,40 @@ class Emitter {
                 expr(v->getInit()); op("stloc " + std::to_string(locals.at(v)), 1);
             }
         } else if (auto* r = dyn_cast<ReturnStmt>(s)) {
+            if (finally_depth) fail(s, "return cannot leave a finally handler");
             if (r->getRetValue()) expr(r->getRetValue());
-            op("ret", current->getReturnType()->isVoidType() ? 0 : 1);
+            if (exception_depth) {
+                if (return_label.empty()) return_label = label();
+                if (r->getRetValue()) {
+                    if (!return_slot_set) { return_slot = temporary(type(current->getReturnType())); return_slot_set = true; }
+                    op("stloc " + std::to_string(return_slot), 1);
+                }
+                op("leave " + return_label);
+            } else op("ret", current->getReturnType()->isVoidType() ? 0 : 1);
+        } else if (auto* region = dyn_cast<CXXTryStmt>(s)) {
+            auto done = label();
+            code << "    .try {\n"; ++exception_depth;
+            statement(region->getTryBlock()); op("leave " + done); --exception_depth;
+            code << "    }\n";
+            for (unsigned i = 0; i < region->getNumHandlers(); ++i) {
+                auto* handler = region->getHandler(i);
+                bool final = finally_handler(handler);
+                if (final && region->getNumHandlers() != 1) fail(s, "finally must wrap the catch region");
+                auto* variable = handler->getExceptionDecl();
+                code << (final ? "    finally {\n" : "    catch " + (variable ? reference_token(variable->getType()) : "[System.Runtime]System.Object") + " {\n");
+                ++exception_depth;
+                if (final) ++finally_depth;
+                else {
+                    ++catch_depth; stack = 1; max_stack = std::max(max_stack, 1u);
+                    if (variable) op("stloc " + std::to_string(locals.at(variable)), 1);
+                    else op("pop", 1);
+                }
+                statement(handler->getHandlerBlock());
+                op(final ? "endfinally" : "leave " + done);
+                if (final) --finally_depth; else --catch_depth;
+                --exception_depth; code << "    }\n";
+            }
+            mark(done);
         } else if (auto* i = dyn_cast<IfStmt>(s)) {
             if (i->getInit() || i->getConditionVariable()) fail(s, "if initializer is not supported yet");
             auto otherwise = label(), done = label();
@@ -1019,17 +1121,19 @@ class Emitter {
             if (w->getConditionVariable()) fail(s, "while condition variable is not supported yet");
             auto check = label(), done = label(); mark(check);
             expr(w->getCond()); op("brfalse " + done, 1);
-            loop_labels.emplace_back(done, check); statement(w->getBody()); loop_labels.pop_back();
+            loop_labels.push_back({done, check, exception_depth}); statement(w->getBody()); loop_labels.pop_back();
             op("br " + check); mark(done);
         } else if (auto* f = dyn_cast<ForStmt>(s)) {
             if (f->getConditionVariable()) fail(s, "for condition variable is not supported yet");
             statement(f->getInit()); auto check = label(), inc = label(), done = label(); mark(check);
             if (f->getCond()) { expr(f->getCond()); op("brfalse " + done, 1); }
-            loop_labels.emplace_back(done, inc); statement(f->getBody()); loop_labels.pop_back();
+            loop_labels.push_back({done, inc, exception_depth}); statement(f->getBody()); loop_labels.pop_back();
             mark(inc); statement(f->getInc()); op("br " + check); mark(done);
         } else if (isa<BreakStmt>(s) || isa<ContinueStmt>(s)) {
             if (loop_labels.empty()) fail(s, "loop control outside a loop");
-            op("br " + (isa<BreakStmt>(s) ? loop_labels.back().first : loop_labels.back().second));
+            auto& target = loop_labels.back();
+            if (finally_depth && exception_depth > target.depth) fail(s, "loop control cannot leave a finally handler");
+            op(std::string(exception_depth > target.depth ? "leave " : "br ") + (isa<BreakStmt>(s) ? target.stop : target.next));
         } else if (auto* e = dyn_cast<Expr>(s)) {
             expr(e); if (!e->getType()->isVoidType()) op("pop", 1);
         } else fail(s, std::string("unsupported AST statement: ") + s->getStmtClassName());
@@ -1037,7 +1141,7 @@ class Emitter {
     }
     FunctionIR function(FunctionDecl* f) {
         current = f; locals.clear(); parameters.clear(); temporary_types.clear(); opaque_values.clear(); code.str(""); code.clear(); stack = 0; max_stack = 0;
-        label_count = 0; loop_labels.clear();
+        label_count = 0; loop_labels.clear(); exception_depth = catch_depth = finally_depth = 0; return_label.clear(); return_slot_set = false;
         auto* method = dyn_cast<CXXMethodDecl>(f);
         bool instance = method && !method->isStatic();
         if (method && method->isPureVirtual()) return {method_name(f), record_name(method->getParent()), type(f->getReturnType()), instance, 0, "", ""};
@@ -1069,6 +1173,11 @@ class Emitter {
                handle_target(f->getReturnType()) ? "ldnull" : "ldc.i4.0", 0, 1);
             op("ret", 1);
         } // Unreachable for correctly-returning non-void functions except main.
+        if (!return_label.empty()) {
+            mark(return_label);
+            if (return_slot_set) op("ldloc " + std::to_string(return_slot), 0, 1);
+            op("ret", return_slot_set ? 1 : 0);
+        }
         std::string declarations;
         std::vector<const VarDecl*> ordered(locals.size());
         for (auto& entry : locals) ordered[entry.second] = entry.first;
@@ -1091,6 +1200,13 @@ public:
         if (f->isImplicit() && method && annotated(method->getParent(), "cli.abstract") && annotated(method->getParent(), "cli.sealed")) return true;
         if ((f->isImplicit() && !(isa<CXXConstructorDecl>(f) && cast<CXXConstructorDecl>(f)->isDefaultConstructor())) || (!f->doesThisDeclarationHaveABody() && !(method && method->isPureVirtual())) || llvm::StringRef(f->getNameAsString()).starts_with("__cli_")) return true;
         if (auto* m = dyn_cast<CXXMethodDecl>(f)) if (!annotation(m->getParent(), "cli.external:").empty()) return true;
+        if (isa<CXXDestructorDecl>(f)) throw std::runtime_error("managed destructors/finalizers are not enabled yet");
+        if (method && f->isOverloadedOperator()) throw std::runtime_error("managed operator metadata is not enabled yet");
+        if (method) for (auto* base : method->overridden_methods()) {
+            if (type(method->getReturnType()) != type(base->getReturnType())) throw std::runtime_error("covariant managed return metadata is not enabled yet");
+            if (!is_interface(base->getParent()) && !method->hasAttr<OverrideAttr>()) throw std::runtime_error("managed class overrides require an explicit override specifier");
+            if (is_interface(base->getParent()) && method->getAccess() != AS_public) throw std::runtime_error("implicit interface implementations must be public");
+        }
         validate_declarator(f->getTypeSourceInfo());
         for (auto* p : f->parameters()) validate_declarator(p->getTypeSourceInfo());
         if (f->getType()->isDependentType() || f->getTemplatedKind() == FunctionDecl::TK_FunctionTemplate)

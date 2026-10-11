@@ -121,7 +121,7 @@ step_test-adapter-gate() {
   run_case scope-xor "$src/tests/scope-xor.cpp" '4'
 }
 step_test-properties() {
-  run_case properties "$src/tests/properties.cpp" $'set\nget\n4\nreceiver\nget\nset\nget\n6\n7'
+  run_case properties "$src/tests/properties.cpp" $'set\nget\n4\nreceiver\nget\nset\nget\n6\n7\nproperty finally\n2'
 }
 step_test-virtuals() {
   run_case virtuals "$src/tests/virtuals.cpp" $'7\n7\n9\n6\n17\nTrue'
@@ -160,6 +160,9 @@ EOF
   reject_case incomplete-interface 'public interface class I { int Read(); }; public ref class C : I {}; int main() { C^ c = gcnew C(); return 0; }' 'abstract'
   reject_case invalid-override 'public ref class C { public: virtual int Read() override { return 1; } }; int main() { return 0; }' 'does not override'
   reject_case sealed-override 'public ref class B { public: virtual int Read() sealed { return 1; } }; public ref class D : B { public: virtual int Read() override { return 2; } }; int main() { return 0; }' 'final'
+  reject_case implicit-class-override 'public ref class B { public: virtual int Read() { return 1; } }; public ref class D : B { public: virtual int Read() { return 2; } }; int main() { return 0; }' 'explicit override'
+  reject_case qualified-abstract 'public ref class B { public: virtual int Read() abstract; }; public ref class D : B { public: virtual int Read() override { return B::Read(); } }; int main() { return 0; }' 'cannot target an abstract'
+  reject_case destructor 'public ref class B { public: ~B() {} }; int main() { return 0; }' 'destructors/finalizers'
   reject_case sealed-base 'public ref class B sealed {}; public ref class D : B {}; int main() { return 0; }' 'final'
 }
 step_test-arrays() {
@@ -192,5 +195,28 @@ EOF
   run_case array-reference "$testdir/array-reference.cpp" $'15\n21' --type Arrays
   reject_case array-rank 'int main() { array<int, 2>^ a = gcnew array<int, 2>(3); return 0; }' 'rank-one'
   reject_case array-element 'int main() { array<int>^ a = gcnew array<int>(3); a[0] = "bad"; return 0; }' 'incompatible'
+}
+step_test-exceptions() {
+  run_case exceptions "$src/tests/exceptions.cpp" $'try\nfinally\n7\ntry\ncatch\nfinally\n9\nrethrow\nall\n13\n0\n1\n11\nonly finally\n21' --type System.Exception --type System.InvalidOperationException
+  mkdir -p "$testdir/exception-consumer"
+  cat > "$testdir/exception-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers></PropertyGroup><ItemGroup><Reference Include="exceptions"><HintPath>../exceptions.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  cat > "$testdir/exception-consumer/Program.cs" <<'EOF'
+using System;
+try { Errors.Fail(); throw new Exception("missing managed throw"); }
+catch (InvalidOperationException) {}
+if (Errors.Bounds(new int[1]) != 11) throw new Exception("missing runtime exception handler");
+var regions = typeof(Errors).GetMethod("Flow").GetMethodBody().ExceptionHandlingClauses;
+if (regions.Count != 2 || regions[1].Flags != System.Reflection.ExceptionHandlingClauseOptions.Finally)
+    throw new Exception("incorrect catch/finally table");
+Console.WriteLine("exception metadata OK");
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/exception-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -p:NuGetAudit=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/exception-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case return-finally 'int main() { try { return 1; } finally { return 2; } }' 'return cannot leave'
+  reject_case native-exception 'int main() { try { throw 1; } catch (int value) { return value; } }' 'only managed handle'
+  reject_case rethrow-outside-catch 'int main() { throw; }' 'rethrow requires'
 }
 for step in $steps; do "step_$step"; done
