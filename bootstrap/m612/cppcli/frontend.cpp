@@ -130,7 +130,7 @@ struct Metadata {
 
 struct Options {
     std::string metadata, output, evidence;
-    std::string assembly = "cli_program", target = "exe";
+    std::string assembly = "cli_program", target = "exe", native_library;
     bool parse(const CompilerInstance& ci, const std::vector<std::string>& args, bool require_metadata = true) {
         for (const auto& arg : args) {
             auto eq = arg.find('=');
@@ -141,6 +141,7 @@ struct Options {
             else if (key == "evidence") evidence = value;
             else if (key == "assembly") assembly = value;
             else if (key == "target") target = value;
+            else if (key == "native-library") native_library = value;
             else return false;
         }
         return (!require_metadata || !metadata.empty()) && !output.empty() && (target == "exe" || target == "library");
@@ -489,6 +490,7 @@ class Emitter {
     std::map<const ParmVarDecl*, unsigned> parameters;
     std::ostringstream code;
     FunctionDecl* current = nullptr;
+    std::string native_library;
     unsigned label_count = 0, max_stack = 0;
     int stack = 0;
     struct LoopLabels { std::string stop, next; unsigned depth; };
@@ -570,7 +572,11 @@ class Emitter {
             if (bits != 8 && bits != 16 && bits != 32 && bits != 64) throw std::runtime_error("unsupported integer width");
             return std::string(t->isUnsignedIntegerType() ? "uint" : "int") + std::to_string(bits);
         }
-        if (t->isRealFloatingType()) return context.getTypeSize(t) == 32 ? "float32" : "float64";
+        if (t->isRealFloatingType()) {
+            unsigned bits = context.getTypeSize(t);
+            if (bits != 32 && bits != 64) throw std::runtime_error("unsupported floating-point width");
+            return bits == 32 ? "float32" : "float64";
+        }
         if (auto* r = handle_target(t)) {
             QualType element = array_element(r);
             if (!element.isNull()) return type(element) + "[]";
@@ -713,6 +719,9 @@ class Emitter {
         else fail(target, "unsupported assignment target");
     }
     void binary(const BinaryOperator* b) {
+        if ((handle_target(b->getLHS()->getType()) || handle_target(b->getRHS()->getType())) &&
+            b->getOpcode() != BO_Assign && b->getOpcode() != BO_EQ && b->getOpcode() != BO_NE)
+            fail(b, "managed handle arithmetic and ordering are unsupported");
         if (b->getOpcode() == BO_Assign) { expr(b->getRHS()); store(b->getLHS(), true); return; }
         if (b->isCompoundAssignmentOp()) {
             std::string operation;
@@ -755,6 +764,7 @@ class Emitter {
         }
         expr(b->getLHS()); expr(b->getRHS());
         bool unsign = b->getLHS()->getType()->isUnsignedIntegerType();
+        bool unordered = unsign || ((b->getOpcode() == BO_GE || b->getOpcode() == BO_LE) && b->getLHS()->getType()->isRealFloatingType());
         std::string operation;
         switch (b->getOpcode()) {
             case BO_Add: operation = "add"; break;
@@ -768,8 +778,8 @@ class Emitter {
             case BO_Shl: operation = "shl"; break;
             case BO_Shr: operation = unsign ? "shr.un" : "shr"; break;
             case BO_EQ: case BO_NE: operation = "ceq"; break;
-            case BO_LT: case BO_GE: operation = unsign ? "clt.un" : "clt"; break;
-            case BO_GT: case BO_LE: operation = unsign ? "cgt.un" : "cgt"; break;
+            case BO_LT: case BO_GE: operation = unordered ? "clt.un" : "clt"; break;
+            case BO_GT: case BO_LE: operation = unordered ? "cgt.un" : "cgt"; break;
             default: fail(b, "unsupported binary operator");
         }
         op(operation, 2, 1);
@@ -860,7 +870,7 @@ class Emitter {
             if (imported == metadata.methods.end()) fail(c, "imported member is absent from metadata");
             sig = imported_signature(imported->second);
         } else {
-            if (!f->hasBody() && !(m && m->isPureVirtual())) fail(c, "calling a function without an emitted definition");
+            if (!f->hasBody() && !(m && m->isPureVirtual()) && !native_function(f)) fail(c, "calling a function without an emitted definition");
             sig = signature(f);
         }
         bool qualified = false;
@@ -989,6 +999,7 @@ class Emitter {
         }
         if (auto* u = dyn_cast<UnaryOperator>(e)) {
             if (u->isIncrementDecrementOp()) {
+                if (handle_target(u->getSubExpr()->getType())) fail(u, "managed handles cannot be incremented");
                 if (auto* subscript = array_subscript(u->getSubExpr())) {
                     auto slots = capture_array(subscript); load_array_location(slots);
                     std::string element = type(subscript->getType());
@@ -1017,7 +1028,9 @@ class Emitter {
                 }
                 expr(u->getSubExpr());
                 if (u->isPostfix()) op("dup", 1, 2);
-                op("ldc.i4.1", 0, 1); op(u->isIncrementOp() ? "add" : "sub", 2, 1);
+                std::string increment_type = type(u->getSubExpr()->getType());
+                op(increment_type == "int64" || increment_type == "uint64" ? "ldc.i8 1" : increment_type == "float32" ? "ldc.r4 1" : increment_type == "float64" ? "ldc.r8 1" : "ldc.i4.1", 0, 1);
+                op(u->isIncrementOp() ? "add" : "sub", 2, 1);
                 store(u->getSubExpr(), !u->isPostfix()); return;
             }
             expr(u->getSubExpr());
@@ -1139,7 +1152,27 @@ class Emitter {
         } else fail(s, std::string("unsupported AST statement: ") + s->getStmtClassName());
         if (stack != before) fail(s, "internal IL stack mismatch at statement boundary");
     }
+    bool native_function(const FunctionDecl* f) const {
+        return !native_library.empty() && f->isExternC() && !isa<CXXMethodDecl>(f) && !f->hasBody() && f->isUsed();
+    }
+    void validate_native_signature(const FunctionDecl* f) const {
+        auto valid = [&](QualType t, bool result) {
+            if (result && t->isVoidType()) return;
+            if ((!t->isIntegerType() && !t->isRealFloatingType()) || t->isBooleanType())
+                throw std::runtime_error("native bridge signatures currently require integer/floating scalars; bool and managed/pointer marshalling are not enabled");
+            type(t);
+        };
+        valid(f->getReturnType(), true);
+        for (auto* parameter : f->parameters()) valid(parameter->getType(), false);
+        auto convention = f->getType()->castAs<FunctionType>()->getCallConv();
+        if (f->isVariadic() || f->hasAttr<AsmLabelAttr>() || (convention != CC_C && convention != CC_Win64))
+            throw std::runtime_error("native bridge requires a non-variadic extern-C function using the platform C ABI");
+    }
     FunctionIR function(FunctionDecl* f) {
+        if (native_function(f)) {
+            validate_native_signature(f);
+            return {method_name(f), "", type(f->getReturnType()), false, 0, "", ""};
+        }
         current = f; locals.clear(); parameters.clear(); temporary_types.clear(); opaque_values.clear(); code.str(""); code.clear(); stack = 0; max_stack = 0;
         label_count = 0; loop_labels.clear(); exception_depth = catch_depth = finally_depth = 0; return_label.clear(); return_slot_set = false;
         auto* method = dyn_cast<CXXMethodDecl>(f);
@@ -1198,7 +1231,7 @@ public:
         auto* method = dyn_cast<CXXMethodDecl>(f);
         if (isa<CXXConstructorDecl>(f) && method && is_interface(method->getParent())) return true;
         if (f->isImplicit() && method && annotated(method->getParent(), "cli.abstract") && annotated(method->getParent(), "cli.sealed")) return true;
-        if ((f->isImplicit() && !(isa<CXXConstructorDecl>(f) && cast<CXXConstructorDecl>(f)->isDefaultConstructor())) || (!f->doesThisDeclarationHaveABody() && !(method && method->isPureVirtual())) || llvm::StringRef(f->getNameAsString()).starts_with("__cli_")) return true;
+        if ((f->isImplicit() && !(isa<CXXConstructorDecl>(f) && cast<CXXConstructorDecl>(f)->isDefaultConstructor())) || (!f->doesThisDeclarationHaveABody() && !(method && method->isPureVirtual()) && !native_function(f)) || llvm::StringRef(f->getNameAsString()).starts_with("__cli_")) return true;
         if (auto* m = dyn_cast<CXXMethodDecl>(f)) if (!annotation(m->getParent(), "cli.external:").empty()) return true;
         if (isa<CXXDestructorDecl>(f)) throw std::runtime_error("managed destructors/finalizers are not enabled yet");
         if (method && f->isOverloadedOperator()) throw std::runtime_error("managed operator metadata is not enabled yet");
@@ -1238,6 +1271,7 @@ public:
             else if (auto* r = dyn_cast<CXXRecordDecl>(decl)) {
                 if (r->isThisDeclarationADefinition()) { VisitCXXRecordDecl(r); collect(r); }
             } else if (auto* ns = dyn_cast<NamespaceDecl>(decl)) collect(ns);
+            else if (auto* linkage = dyn_cast<LinkageSpecDecl>(decl)) collect(linkage);
             else if (auto* tmpl = dyn_cast<FunctionTemplateDecl>(decl)) {
                 if (llvm::StringRef(tmpl->getNameAsString()).starts_with("__cli_")) continue;
                 for (auto* specialization : tmpl->specializations()) if (specialization->isUsed()) VisitFunctionDecl(specialization);
@@ -1246,6 +1280,7 @@ public:
         }
     }
     std::string emit(const Options& options) {
+        native_library = options.native_library;
         collect(context.getTranslationUnitDecl());
         bool entry = false;
         for (auto* f : functions) {
@@ -1259,9 +1294,16 @@ public:
         if (!entry && options.target == "exe") throw std::runtime_error("missing global int main() entry point");
         std::ostringstream il;
         il << metadata.externs << ".assembly '" << options.assembly << "' {}\n.module '" << options.assembly << ".dll'\n";
+        if (!native_library.empty()) il << ".module extern '" << native_library << "'\n";
         auto emit_function = [&](size_t i) {
             auto* f = functions[i]; auto& body = ir[i];
             auto* method = dyn_cast<CXXMethodDecl>(f);
+            if (native_function(f)) {
+                il << "  .method public hidebysig static pinvokeimpl(" << quote(native_library) << " as " << quote(f->getNameAsString())
+                   << " cdecl) " << type(f->getReturnType()) << " '" << f->getNameAsString() << "'(";
+                for (unsigned j = 0; j < f->getNumParams(); ++j) { if (j) il << ", "; il << type(f->getParamDecl(j)->getType()); }
+                il << ") cil managed preservesig {}\n"; return;
+            }
             std::string flags;
             if (method && method->isVirtual()) {
                 bool class_override = false;

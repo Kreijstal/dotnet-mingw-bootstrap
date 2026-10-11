@@ -44,10 +44,10 @@ run_case() {
   printf 'PASS %s\n' "$name"
 }
 reject_case() {
-  local name=$1 text=$2 diagnostic=$3
+  local name=$1 text=$2 diagnostic=$3; shift 3
   printf '%s\n' "$text" > "$testdir/$name.cpp"
   rm -f "$testdir/$name.dll"
-  if compile "$(cygpath -m "$testdir/$name.cpp")" -o "$(cygpath -m "$testdir/$name.dll")" > "$testdir/$name.log" 2>&1; then
+  if compile "$(cygpath -m "$testdir/$name.cpp")" -o "$(cygpath -m "$testdir/$name.dll")" "$@" > "$testdir/$name.log" 2>&1; then
     die "accepted invalid/unsupported input: $name"
   fi
   [ ! -e "$testdir/$name.dll" ] || die "produced assembly for rejected input: $name"
@@ -61,6 +61,9 @@ step_test-core() {
   run_case macros "$src/tests/control.cpp" $'8\ncontrol OK\nUnicode: λ 😀' -D LIMIT=5
   run_case overloads "$src/tests/overloads.cpp" $'5\n10\nFalse\ntext'
   run_case templates "$src/tests/templates.cpp" $'14\n5\n7'
+  run_case numeric "$src/tests/numeric.cpp" $'5000000002\n5000000004\nTrue\nFalse\nFalse\nFalse\nFalse\nTrue'
+  reject_case handle-arithmetic 'public ref class Box {}; int main() { Box^ b = gcnew Box(); Box^ c = b + 1; return 0; }' 'managed handle arithmetic'
+  reject_case handle-increment 'public ref class Box {}; int main() { Box^ b = gcnew Box(); ++b; return 0; }' 'handles cannot be incremented'
   run_case branches "$src/tests/branches.cpp" $'False\nTrue\nTrue\n1\n12\n25'
   reject_case unknown 'using namespace System; int main() { int n = missing; return n; }' 'undeclared identifier'
   reject_case mismatch 'using namespace System; int main() { int n = "wrong"; return n; }' 'cannot initialize'
@@ -80,7 +83,7 @@ EOF
   cat > "$testdir/consumer/Program.cs" <<'EOF'
 using System;
 using Example;
-var counter = new Counter(5);
+var counter = Counter.Create(5);
 Console.WriteLine(counter.Add(3));
 if (counter.Value != 8 || typeof(Counter).BaseType != typeof(object) || typeof(Counter).GetConstructors().Length != 1 || typeof(Counter).GetProperty("Secret") != null)
     throw new Exception("incorrect generated managed API");
@@ -105,7 +108,7 @@ EOF
 #using "counter.dll"
 using namespace System;
 using namespace Example;
-int main() { Counter^ counter = gcnew Counter(4); Console::WriteLine(counter->Add(6)); counter->Current = 12; Console::WriteLine(counter->Current); String^ text = gcnew String("hello"); Console::WriteLine(text->Length); return 0; }
+int main() { Counter^ counter = Counter::Create(4); Console::WriteLine(counter->Add(6)); counter->Current = 12; Console::WriteLine(counter->Current); String^ text = gcnew String("hello"); Console::WriteLine(text->Length); return 0; }
 EOF
   run_case references "$testdir/references.cpp" $'10\n12\n5' --type Example.Counter
   reject_case bad-constructor 'using namespace System; public ref class Box { public: Box(int x) {} }; int main() { Box^ b = gcnew Box("bad"); return 0; }' 'no matching function'
@@ -218,5 +221,33 @@ EOF
   reject_case return-finally 'int main() { try { return 1; } finally { return 2; } }' 'return cannot leave'
   reject_case native-exception 'int main() { try { throw 1; } catch (int value) { return value; } }' 'only managed handle'
   reject_case rethrow-outside-catch 'int main() { throw; }' 'rethrow requires'
+}
+step_test-interop() {
+  log "MinGW g++ native C++ DLL -> generated CLR P/Invoke -> source-built CoreCLR"
+  PATH=/ucrt64/bin:$PATH /ucrt64/bin/g++.exe -std=c++17 -shared -O2 -static-libgcc -static-libstdc++ -DCPPCLI_NATIVE_BUILD \
+    "$src/tests/native.cpp" -o "$testdir/cppcli-native.dll"
+  run_case interop "$src/tests/interop.cpp" $'13\n10000000004\nTrue' --native-library cppcli-native.dll
+  mkdir -p "$testdir/native-consumer"
+  cat > "$testdir/native-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers></PropertyGroup><ItemGroup><Reference Include="interop"><HintPath>../interop.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  cat > "$testdir/native-consumer/Program.cs" <<'EOF'
+using System;
+using System.Reflection;
+using System.Runtime.InteropServices;
+if (NativeBridge.Sum(7, 6) != 13 || NativeBridge.Scale(5000000002L) != 10000000004L || NativeBridge.Half(7.0) != 3.5)
+    throw new Exception("incorrect native ABI bridge");
+var import = typeof(NativeBridge).Assembly.ManifestModule.GetMethod("NativeSum").GetCustomAttribute<DllImportAttribute>();
+if (import.Value != "cppcli-native.dll" || import.EntryPoint != "NativeSum" || import.CallingConvention != CallingConvention.Cdecl)
+    throw new Exception("incorrect native import metadata");
+Console.WriteLine("native bridge metadata OK");
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/native-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -p:NuGetAudit=false
+  cp "$testdir/cppcli-native.dll" "$testdir/native-consumer/bin/Debug/net8.0/"
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/native-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case native-bool 'extern "C" bool NativeFlag(); int main() { NativeFlag(); return 0; }' 'bool and managed/pointer marshalling' --native-library cppcli-native.dll
+  reject_case native-variadic 'extern "C" int NativePrint(int value, ...); int main() { return NativePrint(1, 2); }' 'non-variadic' --native-library cppcli-native.dll
+  reject_case unbound-native 'extern "C" int NativeSum(int, int); int main() { return NativeSum(1, 2); }' 'without an emitted definition'
 }
 for step in $steps; do "step_$step"; done

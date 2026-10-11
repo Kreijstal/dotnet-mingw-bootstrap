@@ -1589,3 +1589,71 @@ the Mono flavor is done (§6.9); CoreCLR is the hard one:
   8.0 for win-x64 with MinGW (C only, Mono has a MinGW history, and .NET on
   s390x/ppc64le ships this flavor) plus its CoreLib from S9; (3) CoreCLR on
   CLANG64 later.
+
+
+## 10. C++/CLI frontend for the MinGW bootstrap
+
+`bootstrap/m612/cppcli.sh` now builds a working C++/CLI subset using Clang
+22.1.8. It produces executable or library CLR assemblies that run on the
+source-built .NET 8 CoreCLR. The full compiler roadmap remains partially
+implemented; `bootstrap/m612/cppcli/roadmap.json` records each stage, and
+`capabilities.json` records the supported subset and its limitations.
+
+The pipeline uses Clang preprocessing, a CLI syntax adapter, metadata
+surrogate declarations, Clang's parser/Sema, an AST-to-IL emitter, and the
+source-built `ilasm.exe`. The metadata helper uses `System.Reflection.Metadata`
+to read assemblies without loading their code. Its default references come
+from the source-built SDK pack. Additional imported types are selected with
+`--type`; managed references use `#using` or `--reference`. The driver supports
+`--target exe|library`, `--emit il|assembly`, `-I`, `-D`, and distinct assembly
+identities. Intermediate metadata, adapted source, IL and AST evidence remain
+in the output's `.work` directory.
+
+The initial adapter failed the scope-lookup gate: a local variable named
+`String` made lexical caret rewriting mistake native XOR for a managed type.
+The implementation therefore builds a private parser from 18 SHA-256-pinned
+LLVM 22.1.8 source files and links it into the Clang plugin. The patches keep
+caret declarators and array indexing in Clang's normal scope/type lookup.
+`adapter-gate.json` records this decision and its passing regression fixture.
+Only source files are downloaded; the plugin links the trusted MSYS2
+`clang-cpp` library. Rebuilding a small parser patch preserves timestamps of
+unchanged parser sources.
+
+The current tests exercise managed classes, constructors and field
+initializers, class/interface inheritance, overloads and casts, ordinary C++
+function templates, properties, rank-one managed arrays, and genuine CLR
+catch/finally regions. C# consumers verify generated APIs and metadata,
+virtual dispatch, property visibility, array bounds/null checks and storage
+across a forced collection, and exception propagation. Invalid or unsupported
+input is checked for a diagnostic and absence of a newly generated assembly.
+The earlier GCC-hosted hello-world baseline remains in
+`bootstrap/m612/cli-poc.sh`.
+
+`--native-library cppcli-native.dll` binds used, undefined `extern "C"`
+functions to a separate native DLL through CLR P/Invoke metadata. The native
+fixture is built by UCRT64 MinGW g++ and called from both generated C++/CLI
+and C#. The bridge currently permits integer/floating scalar signatures;
+marshalling, pointers, callbacks and automatic native partitioning remain
+open. It does not produce a mixed-mode PE or use `ijwhost`.
+
+On the build host, the regression command is:
+
+```sh
+MSYSTEM=CLANG64 bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh \
+  build test-core test-objects test-adapter-gate test-properties \
+  test-virtuals test-arrays test-exceptions test-interop
+```
+
+The runner defaults to `m612/dotnet-sdk-8.0.131-stage2` and the source-built
+CoreCLR `ilasm.exe`. Builds and C# consumer checks use an empty NuGet source
+list; no prebuilt Microsoft binary or package was introduced. Native tools
+and their libraries come from the trusted MSYS2 toolchain.
+
+Managed value types/enums, boxing, CLI generics, delegates/events/indexers,
+tracking references/pinning, managed destruction/finalization, attributes,
+static initialization and multiple translation units still require work.
+Some surrogate rules also differ from full CLI semantics, notably interface
+lookup and implicit Object conversions for interface-only classes. WPF's
+DirectWriteForwarder and System.Printing have not been compiled by this
+frontend. The next native milestone is genuine mixed-mode output and the
+MinGW `ijwhost` port, followed by those WPF bridges.

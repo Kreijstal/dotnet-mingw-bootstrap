@@ -1,0 +1,70 @@
+{
+  "schema": 1,
+  "objective": "General C++/CLI frontend for the source-built MinGW .NET bootstrap, with eventual WPF bridge support",
+  "status": "partial implementation; full compiler and WPF integration remain open",
+  "stages": [
+    {
+      "stage": 0,
+      "status": "complete",
+      "result": "GCC-hosted hello-world baseline with source-built ilasm/CoreCLR and rejection checks",
+      "validation": "bootstrap/m612/cli-poc.sh"
+    },
+    {
+      "stage": 1,
+      "status": "initial subset complete",
+      "result": "Clang preprocessing/parser/Sema, selected metadata imports, AST-to-IL emitter, executable/library driver",
+      "validation": "cppcli.sh test-core"
+    },
+    {
+      "stage": 2,
+      "status": "initial subset and parser gate complete",
+      "result": "Managed classes, constructors, fields, inheritance, calls, casts, C# API checks; lexical caret gate resolved with private pinned Clang parser",
+      "validation": "cppcli.sh test-objects test-adapter-gate"
+    },
+    {
+      "stage": 3,
+      "status": "partial",
+      "implemented": [
+        "interfaces and CLR virtual slots",
+        "instance/auto-properties",
+        "rank-one primitive/reference arrays",
+        "managed catch/rethrow/finally and protected control flow",
+        "ordinary native C++ function template instantiations"
+      ],
+      "remaining": [
+        "managed value classes/enums and boxing",
+        "CLI generics",
+        "delegates/events/indexers",
+        "destructors/finalizers and deterministic cleanup",
+        "tracking references/pinning",
+        "attributes/static initialization/multiple translation units",
+        "full CLI semantic analysis and metadata type discovery"
+      ],
+      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions"
+    },
+    {
+      "stage": 4,
+      "status": "split scalar bridge implemented; mixed mode pending",
+      "implemented": [
+        "extern-C scalar bridge to a separate MinGW g++ DLL",
+        "P/Invoke metadata and C# interoperability checks"
+      ],
+      "remaining": [
+        "native pointers/layout/marshalling",
+        "callbacks and automatic native partitioning",
+        "real mixed-mode PE and native-to-managed thunks",
+        "MinGW ijwhost port"
+      ],
+      "validation": "cppcli.sh test-interop"
+    },
+    {
+      "stage": 5,
+      "status": "not implemented",
+      "remaining": [
+        "compile DirectWriteForwarder",
+        "compile System.Printing",
+        "integrate source-built WPF/WindowsDesktop and exercise real applications"
+      ]
+    }
+  ]
+}

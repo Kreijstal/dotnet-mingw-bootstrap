@@ -24,6 +24,7 @@ def main():
     ap.add_argument("--emit", choices=["il", "assembly"], default="assembly")
     ap.add_argument("--target", choices=["exe", "library"], default="exe")
     ap.add_argument("--assembly-name")
+    ap.add_argument("--native-library", default="", help="DLL supplying used extern-C functions through a split native bridge")
     ap.add_argument("--clang", default=os.environ.get("CPPCLI_CLANG", "clang++"))
     ap.add_argument("--sdk", type=Path, default=os.environ.get("CPPCLI_SDK"))
     ap.add_argument("--ilasm", type=Path, default=os.environ.get("CPPCLI_ILASM"))
@@ -51,6 +52,8 @@ def main():
     assembly_name = a.assembly_name or output.stem
     if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_.-]*", assembly_name):
         ap.error("invalid assembly name")
+    if a.native_library and not re.fullmatch(r"[A-Za-z0-9_.-]+\.dll", a.native_library):
+        ap.error("--native-library must be a simple DLL filename")
     if source == output:
         ap.error("input and output must differ")
     work = output.parent / (output.name + ".work")
@@ -90,7 +93,7 @@ def main():
     action("cli-adapt", shim, ["metadata=" + str(manifest), "output=" + str(adapted)])
     action("cli-emit", adapted, ["metadata=" + str(manifest), "output=" + str(il),
                                  "evidence=" + str(work / "ast.json"),
-                                 "assembly=" + assembly_name, "target=" + a.target], True)
+                                 "assembly=" + assembly_name, "target=" + a.target, "native-library=" + a.native_library], True)
     if a.emit == "il":
         output.write_bytes(il.read_bytes())
     else:

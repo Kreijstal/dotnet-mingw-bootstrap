@@ -40,20 +40,26 @@
     "Auto-properties preserve accessor visibility across C# reflection",
     "Managed throw, typed/catch-all handlers, rethrow and genuine CLR catch/finally tables",
     "Returns, break and continue use leave through exception regions",
-    "Managed allocations and try/finally inside property accessors"
+    "Managed allocations and try/finally inside property accessors",
+    "Split MinGW native DLL bridges for used extern-C integer/floating scalar functions",
+    "P/Invoke import metadata and native calls validated from generated CLI and C# code",
+    "Assembly-qualified imported reference signatures, including library factory return types"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
     "Metadata headers are generated for explicitly selected types",
     "Constructor arguments currently require exact supported CLI types",
     "No CLI generics, delegates, events yet",
-    "No native/managed interop or mixed-mode PE output yet",
+    "No mixed-mode PE output or ijwhost integration yet",
     "Unsupported AST nodes are errors; this is not a conforming general C++/CLI compiler",
     "#using directives in included headers are not shimmed yet",
     "Properties currently cover non-indexed instance members; indexed and static properties are not enabled",
     "Interface surrogates use C++ abstract bases; interface-only classes need an explicit Object base for Object upcasts",
     "Interface declarations currently permit ordinary method declarations only; named/explicit interface implementations are not enabled",
     "Managed arrays currently require rank one; no aggregate initializers, covariance or tracking references",
-    "Managed destructors/finalizers, covariance metadata and managed operator metadata are explicitly rejected"
+    "Managed destructors/finalizers, covariance metadata and managed operator metadata are explicitly rejected",
+    "Native bridges currently require extern-C scalar functions; no pointers, bool/string marshalling, callbacks or automatic native partitioning",
+    "Managed value classes/enums, static field initialization and multi-translation-unit linking are not implemented",
+    "WPF DirectWriteForwarder and System.Printing are not compiled by this frontend yet"
   ]
 }

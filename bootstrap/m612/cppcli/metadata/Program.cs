@@ -148,6 +148,8 @@ static class Program
                     }
                     else if (!td.BaseType.IsNil && td.BaseType.Kind == HandleKind.TypeDefinition)
                         baseName = FullName(r, r.GetTypeDefinition((TypeDefinitionHandle)td.BaseType));
+                    if (baseName == "System.ValueType" || baseName == "System.Enum")
+                        throw new Exception("imported value/enum types are not enabled yet: " + name);
                     types.Add(new(assembly, name, SignatureTypes.CppName(name), (td.Attributes & TypeAttributes.Interface) != 0 ? "interface" : "ref", baseName, methods.ToArray(), properties.ToArray(), td.GetInterfaceImplementations().Select(ih => {
                         var handle = r.GetInterfaceImplementation(ih).Interface;
                         if (handle.Kind == HandleKind.TypeDefinition) return FullName(r, r.GetTypeDefinition((TypeDefinitionHandle)handle));
@@ -163,10 +165,16 @@ static class Program
             if (!wanted.IsSubsetOf(found)) throw new Exception("reference metadata lacks: " + string.Join(", ", wanted.Except(found)));
             // Cross-type signatures may refer to types we haven't imported yet.
             bool Available(CliType t) => t.Kind == "primitive" || (t.Kind == "ref" && found.Contains(t.Name)) || (t.Kind == "array" && (t.Name.Length == 0 || found.Contains(t.Name)));
+            CliType Qualified(CliType t)
+            {
+                var owner = types.FirstOrDefault(c => c.Name == t.Name);
+                return owner == null ? t : t with { Il = t.Il.Replace("'" + t.Name + "'", "[" + owner.Assembly + "]'" + t.Name + "'") };
+            }
             types = types.Select(t => t with { Methods = t.Methods.Select(m => m with {
-                Supported = m.Supported && Available(m.Return) && m.Parameters.All(Available)
+                Supported = m.Supported && Available(m.Return) && m.Parameters.All(Available),
+                Return = Qualified(m.Return), Parameters = m.Parameters.Select(Qualified).ToArray()
             }).ToArray(), Properties = t.Properties.Select(p => p with {
-                Supported = p.Supported && Available(p.Type) &&
+                Type = Qualified(p.Type), Supported = p.Supported && Available(p.Type) &&
                     (p.Getter.Length == 0 || t.Methods.Any(m => m.Name == p.Getter && m.Supported && Available(m.Return) && m.Parameters.All(Available))) &&
                     (p.Setter.Length == 0 || t.Methods.Any(m => m.Name == p.Setter && m.Supported && Available(m.Return) && m.Parameters.All(Available)))
             }).ToArray() }).OrderBy(t => t.Name, StringComparer.Ordinal).ToList();
