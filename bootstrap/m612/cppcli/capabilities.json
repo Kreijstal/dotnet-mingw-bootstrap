@@ -47,7 +47,10 @@
     "Managed enums with integral underlying types, literal metadata, casts, arrays and external enum imports",
     "Managed value structs/classes with fields, constructors, copy semantics, instance methods and value arrays",
     "Imported value types and public fields, including assembly-qualified struct signatures",
-    "Explicit safe_cast boxing to Object and unbox.any with real CLR cast/null exceptions"
+    "Explicit safe_cast boxing to Object and unbox.any with real CLR cast/null exceptions",
+    "Private Clang parser distinguishes tracking-reference declarators (%) from ordinary remainder expressions",
+    "CLR byref method parameters and local aliases to scalar/value/object locals, fields and array elements",
+    "Imported byref signatures and C# ref parameter interoperability"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -60,12 +63,13 @@
     "Properties currently cover non-indexed instance members; indexed and static properties are not enabled",
     "Interface surrogates use C++ abstract bases; interface-only classes need an explicit Object base for Object upcasts",
     "Interface declarations currently permit ordinary method declarations only; named/explicit interface implementations are not enabled",
-    "Managed arrays currently require rank one; no aggregate initializers, covariance or tracking references",
+    "Managed arrays currently require rank one; no aggregate initializers or covariance",
     "Managed destructors/finalizers, covariance metadata and managed operator metadata are explicitly rejected",
     "Native bridges currently require extern-C scalar functions; no pointers, bool/string marshalling, callbacks or automatic native partitioning",
     "Implicit boxing, static field initialization and multi-translation-unit linking are not implemented",
     "WPF DirectWriteForwarder and System.Printing are not compiled by this frontend yet",
     "Value classes currently exclude nested types, bases/interfaces, virtual methods, native pointer fields and custom zero-argument constructors",
-    "Boxing currently uses explicit safe_cast to Object; boxed value handles, constrained dispatch and implicit boxing are not implemented"
+    "Boxing currently uses explicit safe_cast to Object; boxed value handles, constrained dispatch and implicit boxing are not implemented",
+    "Tracking references currently exclude constructors, fields, byref returns, pinning and interior_ptr"
   ]
 }

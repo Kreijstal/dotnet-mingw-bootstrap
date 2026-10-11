@@ -610,6 +610,7 @@ class Emitter {
     }
     std::string type(QualType t) const {
         t = t.getCanonicalType();
+        if (t->isLValueReferenceType()) return type(t->getPointeeType()) + "&";
         if (auto* enumeration = t->getAs<EnumType>()) {
             auto* decl = enumeration->getDecl();
             if (annotated(decl, "cli.enum") || (decl->getDefinition() && annotated(decl->getDefinition(), "cli.enum")))
@@ -655,6 +656,13 @@ class Emitter {
         if (!info) return;
         auto& sm = ci.getSourceManager();
         for (TypeLoc loc = info->getTypeLoc(); !loc.isNull(); loc = loc.getNextTypeLoc()) {
+            auto reference = loc.getAs<ReferenceTypeLoc>();
+            if (!reference.isNull()) {
+                if (reference.getType()->isRValueReferenceType()) throw std::runtime_error("rvalue reference signatures are not enabled yet");
+                SourceLocation sigil = sm.getSpellingLoc(reference.getSigilLoc());
+                if (sigil.isValid() && sm.isWrittenInMainFile(sigil) && *sm.getCharacterData(sigil) != '%')
+                    throw std::runtime_error("native '&' references are not supported in managed declarations; use a '%' tracking reference");
+            }
             auto pointer = loc.getAs<PointerTypeLoc>();
             if (pointer.isNull() || !handle_target(pointer.getType())) continue;
             SourceLocation star = sm.getSpellingLoc(pointer.getStarLoc());
@@ -718,8 +726,8 @@ class Emitter {
     void address(const Expr* original) {
         const Expr* e = strip(original)->IgnoreParenImpCasts();
         if (auto* d = dyn_cast<DeclRefExpr>(e)) {
-            if (auto* p = dyn_cast<ParmVarDecl>(d->getDecl())) op("ldarga " + std::to_string(parameters.at(p)), 0, 1);
-            else if (auto* v = dyn_cast<VarDecl>(d->getDecl())) op("ldloca " + std::to_string(locals.at(v)), 0, 1);
+            if (auto* p = dyn_cast<ParmVarDecl>(d->getDecl())) op(std::string(p->getType()->isReferenceType() ? "ldarg " : "ldarga ") + std::to_string(parameters.at(p)), 0, 1);
+            else if (auto* v = dyn_cast<VarDecl>(d->getDecl())) op(std::string(v->getType()->isReferenceType() ? "ldloc " : "ldloca ") + std::to_string(locals.at(v)), 0, 1);
             else fail(e, "value address requires a local or parameter");
             return;
         }
@@ -748,11 +756,11 @@ class Emitter {
             llvm::SmallString<32> value; enumeration->getInitVal().toString(value, 10);
             op(std::string(context.getTypeSize(enumeration->getType()) > 32 ? "ldc.i8 " : "ldc.i4 ") + value.str().str(), 0, 1); return;
         }
-        if (auto* p = dyn_cast<ParmVarDecl>(d)) { op("ldarg " + std::to_string(parameters.at(p)), 0, 1); return; }
+        if (auto* p = dyn_cast<ParmVarDecl>(d)) { op("ldarg " + std::to_string(parameters.at(p)), 0, 1); if (p->getType()->isReferenceType()) op("ldobj " + type(p->getType()->getPointeeType()), 1, 1); return; }
         if (auto* v = dyn_cast<VarDecl>(d)) {
             auto it = locals.find(v);
             if (it == locals.end()) fail(at, "global/static storage is not supported yet");
-            op("ldloc " + std::to_string(it->second), 0, 1); return;
+            op("ldloc " + std::to_string(it->second), 0, 1); if (v->getType()->isReferenceType()) op("ldobj " + type(v->getType()->getPointeeType()), 1, 1); return;
         }
         fail(at, "unsupported declaration reference");
     }
@@ -799,6 +807,13 @@ class Emitter {
         }
         auto* d = dyn_cast<DeclRefExpr>(target);
         if (!d) fail(target, "assignment target is not a local or parameter");
+        if (d->getDecl()->getType()->isReferenceType()) {
+            unsigned slot = temporary(type(d->getType()));
+            op("stloc " + std::to_string(slot), 1); address(d); op("ldloc " + std::to_string(slot), 0, 1);
+            op("stobj " + type(d->getType()), 2);
+            if (retain) op("ldloc " + std::to_string(slot), 0, 1);
+            return;
+        }
         if (retain) op("dup", 1, 2);
         if (auto* p = dyn_cast<ParmVarDecl>(d->getDecl())) op("starg " + std::to_string(parameters.at(p)), 1);
         else if (auto* v = dyn_cast<VarDecl>(d->getDecl())) op("stloc " + std::to_string(locals.at(v)), 1);
@@ -958,7 +973,9 @@ class Emitter {
             if (!member) fail(c, "unsupported instance call shape");
             emit_receiver(member->getImplicitObjectArgument());
         }
-        for (auto* a : c->arguments()) expr(a);
+        for (unsigned i = 0; i < c->getNumArgs(); ++i) {
+            if (f->getParamDecl(i)->getType()->isReferenceType()) address(c->getArg(i)); else expr(c->getArg(i));
+        }
         std::string id = annotation(f, "cli.import:");
         std::string sig;
         if (!id.empty()) {
@@ -1175,7 +1192,7 @@ class Emitter {
         }
         if (auto* ds = dyn_cast<DeclStmt>(s)) for (auto* d : ds->decls()) {
             auto* v = dyn_cast<VarDecl>(d);
-            if (!v || v->isStaticLocal() || v->getType()->isReferenceType()) fail(s, "unsupported local declaration");
+            if (!v || v->isStaticLocal()) fail(s, "unsupported local declaration");
             type(v->getType());
             validate_declarator(v->getTypeSourceInfo());
             locals.emplace(v, locals.size());
@@ -1190,7 +1207,7 @@ class Emitter {
             for (auto* decl : d->decls()) {
                 auto* v = cast<VarDecl>(decl);
                 if (!v->hasInit()) fail(s, "uninitialized locals are not supported yet");
-                expr(v->getInit()); op("stloc " + std::to_string(locals.at(v)), 1);
+                if (v->getType()->isReferenceType()) address(v->getInit()); else expr(v->getInit()); op("stloc " + std::to_string(locals.at(v)), 1);
             }
         } else if (auto* r = dyn_cast<ReturnStmt>(s)) {
             if (finally_depth) fail(s, "return cannot leave a finally handler");
@@ -1339,6 +1356,8 @@ public:
     bool VisitFunctionDecl(FunctionDecl* f) {
         auto* method = dyn_cast<CXXMethodDecl>(f);
         if (annotated(f, "cli.value.zero")) return true;
+        if (isa<CXXConstructorDecl>(f)) for (auto* parameter : f->parameters())
+            if (parameter->getType()->isReferenceType() && !f->isImplicit()) throw std::runtime_error("tracking references in constructors are not enabled yet");
         if (isa<CXXConstructorDecl>(f) && method && is_interface(method->getParent())) return true;
         if (f->isImplicit() && method && annotated(method->getParent(), "cli.abstract") && annotated(method->getParent(), "cli.sealed")) return true;
         if ((f->isImplicit() && !(isa<CXXConstructorDecl>(f) && cast<CXXConstructorDecl>(f)->isDefaultConstructor())) || (!f->doesThisDeclarationHaveABody() && !(method && method->isPureVirtual()) && !native_function(f)) || llvm::StringRef(f->getNameAsString()).starts_with("__cli_")) return true;
@@ -1350,6 +1369,7 @@ public:
             if (!is_interface(base->getParent()) && !method->hasAttr<OverrideAttr>()) throw std::runtime_error("managed class overrides require an explicit override specifier");
             if (is_interface(base->getParent()) && method->getAccess() != AS_public) throw std::runtime_error("implicit interface implementations must be public");
         }
+        if (f->getReturnType()->isReferenceType()) throw std::runtime_error("returning tracking references is not enabled yet");
         validate_declarator(f->getTypeSourceInfo());
         for (auto* p : f->parameters()) validate_declarator(p->getTypeSourceInfo());
         if (f->getType()->isDependentType() || f->getTemplatedKind() == FunctionDecl::TK_FunctionTemplate)
@@ -1369,7 +1389,7 @@ public:
             if (classes > 1 || (is_interface(r) && classes)) throw std::runtime_error("a managed class permits one class base and interfaces only");
             if (is_interface(r) && !r->field_empty()) throw std::runtime_error("interface instance fields are forbidden");
             for (const auto& base : r->bases()) record_name(base.getType()->getAsCXXRecordDecl());
-            for (auto* field : r->fields()) { type(field->getType()); validate_declarator(field->getTypeSourceInfo()); }
+            for (auto* field : r->fields()) { if (field->getType()->isReferenceType()) throw std::runtime_error("tracking reference fields are not enabled yet"); type(field->getType()); validate_declarator(field->getTypeSourceInfo()); }
             if (!is_interface(r) && !(annotated(r, "cli.abstract") && annotated(r, "cli.sealed"))) {
                 auto* ctor = ci.getSema().LookupDefaultConstructor(r);
                 if (ctor && ctor->isImplicit() && !ctor->isDeleted() && !ctor->hasBody())

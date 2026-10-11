@@ -66,7 +66,7 @@ sealed class SignatureTypes : ISignatureTypeProvider<CliType, object?>
     public CliType GetSZArrayType(CliType t) => t.Kind == "unsupported" ? new(t.Il + "[]", "", "unsupported", t.Name + "[]") :
         new(t.Il + "[]", "::cli::array<" + t.Cpp + ">*", "array", t.Name);
     public CliType GetArrayType(CliType t, ArrayShape s) => new(t.Il + "[... ]", "", "unsupported", t.Name);
-    public CliType GetByReferenceType(CliType t) => new(t.Il + "&", "", "unsupported", t.Name + "&");
+    public CliType GetByReferenceType(CliType t) => t.Kind == "unsupported" ? t : new(t.Il + "&", t.Cpp + "&", "byref", t.Name);
     public CliType GetPointerType(CliType t) => new(t.Il + "*", "", "unsupported", t.Name + "*");
     public CliType GetGenericInstantiation(CliType t, ImmutableArray<CliType> a) => new(t.Il, "", "unsupported", t.Name);
     public CliType GetGenericMethodParameter(object? c, int i) => new("!!" + i, "", "unsupported");
@@ -195,7 +195,7 @@ static class Program
             var found = types.Select(t => t.Name).ToHashSet(StringComparer.Ordinal);
             if (!wanted.IsSubsetOf(found)) throw new Exception("reference metadata lacks: " + string.Join(", ", wanted.Except(found)));
             // Cross-type signatures may refer to types we haven't imported yet.
-            bool Available(CliType t) => t.Kind == "primitive" || ((t.Kind == "ref" || t.Kind == "value") && found.Contains(t.Name)) || (t.Kind == "array" && (t.Name.Length == 0 || found.Contains(t.Name)));
+            bool Available(CliType t) => t.Kind == "primitive" || ((t.Kind == "ref" || t.Kind == "value") && found.Contains(t.Name)) || ((t.Kind == "array" || t.Kind == "byref") && (t.Name.Length == 0 || found.Contains(t.Name)));
             CliType Qualified(CliType t)
             {
                 var owner = types.FirstOrDefault(c => c.Name == t.Name);

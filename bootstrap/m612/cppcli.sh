@@ -310,5 +310,36 @@ EOF
   run_case boxing-exceptions "$testdir/boxing-exceptions.cpp" $'1\n2' --type System.InvalidCastException --type System.NullReferenceException
   reject_case value-base 'public value struct Bad : System::Object {}; int main() { return 0; }' 'value types with bases'
 }
+step_test-tracking() {
+  run_case tracking "$src/tests/tracking.cpp" $'8\n10\n23\n5\n6\nTrue\n2'
+  mkdir -p "$testdir/tracking-consumer"
+  cat > "$testdir/tracking-consumer/tracking-consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers></PropertyGroup><ItemGroup><Reference Include="tracking"><HintPath>../tracking.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  cat > "$testdir/tracking-consumer/Program.cs" <<'EOF'
+using System;
+using Example;
+int n = 7;
+Tracking.Change(ref n);
+var p = new Coordinate(4);
+Tracking.Move(ref p);
+object o = null;
+Tracking.Replace(ref o);
+if (n != 10 || p.X != 5 || (string)o != "replaced" || !typeof(Tracking).GetMethod("Change").GetParameters()[0].ParameterType.IsByRef)
+    throw new Exception("incorrect tracking references");
+Console.WriteLine("tracking reference metadata OK");
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/tracking-consumer/tracking-consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -p:NuGetAudit=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/tracking-consumer/bin/Debug/net8.0/tracking-consumer.dll")"
+  cat > "$testdir/tracking-reference.cpp" <<'EOF'
+#using "tracking.dll"
+using namespace System;
+int main() { int n = 5; Example::Tracking::Change(n); Console::WriteLine(n); return 0; }
+EOF
+  run_case tracking-reference "$testdir/tracking-reference.cpp" 8 --type Example.Tracking --type Example.Coordinate
+  reject_case native-reference 'void f(int& n) {} int main() { return 0; }' "native '&' references"
+  reject_case reference-return 'int% f(int% n) { return n; } int main() { return 0; }' 'returning tracking references'
+}
 for step in $steps; do "step_$step"; done
 

@@ -1,5 +1,14 @@
 --- ParseDecl.cpp
 +++ ParseDecl.cpp
+@@ -6315,7 +6315,7 @@
+   if (!Lang.CPlusPlus)
+     return false;
+ 
+-  if (Kind == tok::amp)
++  if (Kind == tok::amp || Kind == tok::percent)
+     return true;
+ 
+   // We parse rvalue refs in C++03, because otherwise the errors are scary.
 @@ -6458,7 +6458,10 @@
      // Recursively parse the declarator.
      Actions.runWithSufficientStackSpace(
@@ -12,6 +21,15 @@
        // Remember that we parsed a pointer type, and remember the type-quals.
        D.AddTypeInfo(DeclaratorChunk::getPointer(
                          DS.getTypeQualifiers(), Loc, DS.getConstSpecLoc(),
+@@ -6524,7 +6527,7 @@
+ 
+     // Remember that we parsed a reference type.
+     D.AddTypeInfo(DeclaratorChunk::getReference(DS.getTypeQualifiers(), Loc,
+-                                                Kind == tok::amp),
++                                                Kind == tok::amp || Kind == tok::percent),
+                   std::move(DS.getAttributes()), SourceLocation());
+   }
+ }
 --- ParseAST.cpp
 +++ ParseAST.cpp
 @@ -27,6 +27,12 @@
@@ -53,9 +71,18 @@
      Decl::EnableStatistics();
 --- ParseExpr.cpp
 +++ ParseExpr.cpp
-@@ -23,0 +24 @@
+@@ -21,6 +21,7 @@
+ //===----------------------------------------------------------------------===//
+ 
+ #include "clang/AST/ASTContext.h"
 +#include "clang/AST/Attr.h"
-@@ -1779,2 +1780,21 @@
+ #include "clang/AST/Availability.h"
+ #include "clang/AST/ExprCXX.h"
+ #include "clang/AST/LocInfoType.h"
+@@ -1776,8 +1777,27 @@
+                 RLoc);
+           }
+         } else {
 -          LHS = Actions.ActOnArraySubscriptExpr(getCurScope(), LHS.get(), Loc,
 -                                                ArgExprs, RLoc);
 +          // For a managed array handle, ask Sema to resolve the surrogate's
@@ -79,3 +106,6 @@
 +          if (!LHS.isInvalid())
 +            LHS = Actions.ActOnArraySubscriptExpr(getCurScope(), LHS.get(), Loc,
 +                                                  ArgExprs, RLoc);
+         }
+       } else {
+         LHS = ExprError();
