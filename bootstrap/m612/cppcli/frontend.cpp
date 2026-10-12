@@ -26,6 +26,7 @@
 #include <fstream>
 #include <filesystem>
 #include <functional>
+#include <iterator>
 #include <map>
 #include <optional>
 #include <set>
@@ -1228,6 +1229,8 @@ class Emitter {
     struct NativeImport { std::string library, entry; };
     std::map<std::string, NativeImport> native_imports;
     std::set<const FunctionDecl*> selected_native_imports;
+    struct GuidConstant { std::string name, type, bytes; };
+    std::map<std::string, GuidConstant> guid_constants;
     unsigned label_count = 0, max_stack = 0;
     int stack = 0;
     struct ControlLabels { std::string stop, next; unsigned depth; };
@@ -1766,6 +1769,7 @@ class Emitter {
         }
         if (t->isPointerType()) {
             auto element = t->getPointeeType();
+            if (element->isFunctionType()) return "native unsigned int";
             if (auto* r = value_target(element); r && !record_annotation(r, "cli.nativeint:").empty()) return type(element) + "*";
             if (element->isRecordType()) return "native unsigned int"; // Opaque native handle; no layout is claimed.
             return type(element) + "*";
@@ -2001,8 +2005,89 @@ class Emitter {
         else if (auto* r = boxed_target(e->getType())) { expr(e); op("unbox " + record_token(r), 1, 1); }
         else expr(e); // this on a value class is already a managed address.
     }
+    const Expr* mingw_uuid_initializer(const CallExpr* call, std::set<const FunctionDecl*> seen = {}) const {
+        auto* function = call->getDirectCallee();
+        if (!function || function->getNameAsString() != "__mingw_uuidof" || call->getNumArgs() ||
+            !ci.getSourceManager().isInSystemHeader(function->getLocation()) || !seen.insert(function->getCanonicalDecl()).second) return nullptr;
+        auto result = function->getReturnType();
+        if (!result->isLValueReferenceType() || !result->getPointeeType().isConstQualified() || !native_pod(result->getPointeeType())) return nullptr;
+        auto* definition = function->getDefinition();
+        auto* body = definition ? dyn_cast_or_null<CompoundStmt>(definition->getBody()) : nullptr;
+        if (!body) return nullptr;
+        const Expr* returned = nullptr;
+        for (auto* statement : body->body()) {
+            if (auto* declarations = dyn_cast<DeclStmt>(statement)) {
+                for (auto* declaration : declarations->decls()) {
+                    auto* variable = dyn_cast<VarDecl>(declaration);
+                    Expr::EvalResult evaluated;
+                    if (!variable || !variable->hasGlobalStorage() || !variable->getType().isConstQualified() ||
+                        !variable->getInit() || !variable->getInit()->EvaluateAsRValue(evaluated, context)) return nullptr;
+                }
+            } else if (auto* result = dyn_cast<ReturnStmt>(statement); result && !returned) returned = result->getRetValue();
+            else return nullptr;
+        }
+        if (!returned) return nullptr;
+        returned = returned->IgnoreParenImpCasts();
+        if (auto* reference = dyn_cast<DeclRefExpr>(returned)) {
+            auto* variable = dyn_cast<VarDecl>(reference->getDecl());
+            return variable && variable->hasGlobalStorage() && variable->getType().isConstQualified() ? variable->getAnyInitializer() : nullptr;
+        }
+        if (auto* nested = dyn_cast<CallExpr>(returned)) return mingw_uuid_initializer(nested, std::move(seen));
+        return nullptr;
+    }
+    bool native_guid_address(const Expr* original) {
+        const Expr* expression = strip(original)->IgnoreParenImpCasts();
+        auto* call = dyn_cast<CallExpr>(expression);
+        auto* initializer = call ? mingw_uuid_initializer(call) : nullptr;
+        if (!initializer || initializer->HasSideEffects(context)) return false;
+        Expr::EvalResult evaluated;
+        if (!initializer->EvaluateAsRValue(evaluated, context) || !evaluated.Val.isStruct() || evaluated.Val.getStructNumFields() != 4) return false;
+        auto t = expression->getType();
+        auto* record = t->getAsCXXRecordDecl();
+        if (!record || !native_pod(t) || std::distance(record->field_begin(), record->field_end()) != 4) return false;
+        unsigned field_index = 0;
+        for (auto* field : record->fields()) {
+            if (field->isBitField()) return false;
+            if (field_index < 3) {
+                if (!field->getType()->isIntegerType() || context.getTypeSize(field->getType()) != (field_index ? 16u : 32u)) return false;
+            } else {
+                auto* array = context.getAsConstantArrayType(field->getType());
+                if (!array || array->getSize() != 8 || !array->getElementType()->isIntegerType() || context.getTypeSize(array->getElementType()) != 8) return false;
+            }
+            ++field_index;
+        }
+        auto& layout = context.getASTRecordLayout(record);
+        if (layout.getSize().getQuantity() != 16 || layout.getFieldOffset(0) != 0 || layout.getFieldOffset(1) != 32 ||
+            layout.getFieldOffset(2) != 48 || layout.getFieldOffset(3) != 64) return false;
+        std::vector<unsigned> bytes;
+        for (unsigned i = 0; i < 3; ++i) {
+            auto& field = evaluated.Val.getStructField(i);
+            if (!field.isInt()) return false;
+            auto value = field.getInt().getZExtValue();
+            for (unsigned j = 0; j < (i ? 2u : 4u); ++j) bytes.push_back((value >> (8*j)) & 255);
+        }
+        auto& tail = evaluated.Val.getStructField(3);
+        if (!tail.isArray() || tail.getArraySize() != 8 || tail.getArrayInitializedElts() != 8) return false;
+        for (unsigned i = 0; i < 8; ++i) {
+            auto& value = tail.getArrayInitializedElt(i);
+            if (!value.isInt()) return false;
+            bytes.push_back(value.getInt().getZExtValue() & 255);
+        }
+        std::ostringstream data;
+        static const char hex[] = "0123456789abcdef";
+        for (auto byte : bytes) data << hex[byte >> 4] << hex[byte & 15] << ' ';
+        auto key = data.str();
+        auto found = guid_constants.find(key);
+        if (found == guid_constants.end()) {
+            auto name = "__cpp_cli_uuid_" + std::to_string(guid_constants.size());
+            found = guid_constants.emplace(key, GuidConstant{name, type(t), key}).first;
+        }
+        op("ldsflda " + found->second.type + " '" + found->second.name + "'", 0, 1); op("conv.u", 1, 1);
+        return true;
+    }
     void native_address(const Expr* original) {
         const Expr* e = strip(original)->IgnoreParenImpCasts();
+        if (native_guid_address(e)) return;
         if (auto* member = dyn_cast<MemberExpr>(e); member && native_field(dyn_cast<FieldDecl>(member->getMemberDecl()))) {
             native_field_address(member); return;
         }
@@ -2277,9 +2362,54 @@ class Emitter {
         op("calli unmanaged stdcall " + (result->isEnumeralType() ? numeric_type(result) : declared_type(method)) + "(" + signature + ")",
            call->getNumArgs() + 2, result->isVoidType() ? 0 : 1);
     }
+    std::string native_function_type(QualType t, bool result = false) const {
+        if (result && t->isVoidType()) return "void";
+        if (t->isReferenceType()) {
+            if (result) throw std::runtime_error("native function pointer reference returns are unsupported");
+            auto element = t->getPointeeType();
+            if (!element->isArithmeticType() && !element->isEnumeralType() && !native_pod(element))
+                throw std::runtime_error("native function pointer references require native scalar or POD storage");
+            return "native unsigned int";
+        }
+        if (t->isEnumeralType()) return numeric_type(t);
+        if ((!t->isIntegerType() && !t->isRealFloatingType() && !t->isPointerType()) || t->isBooleanType() || handle_target(t))
+            throw std::runtime_error("native function pointer signatures require scalars or unmanaged pointers; automatic marshalling is unsupported");
+        return type(t);
+    }
+    void native_indirect_call(const CallExpr* call) {
+        auto callee = call->getCallee()->getType();
+        auto* prototype = callee->isFunctionPointerType() ? callee->getPointeeType()->getAs<FunctionProtoType>() : nullptr;
+        if (!prototype) fail(call, "indirect calls require a native function pointer prototype");
+        if (!context.getTargetInfo().getTriple().isOSWindows() || context.getTargetInfo().getTriple().getArch() != llvm::Triple::x86_64)
+            fail(call, "native function pointer calls currently require Windows x64");
+        if (prototype->isVariadic() || prototype->getNumParams() != call->getNumArgs())
+            fail(call, "native function pointer calls require a fixed non-variadic signature");
+        auto convention = prototype->getCallConv();
+        if (convention != CC_C && convention != CC_Win64) fail(call, "native function pointer calls require the platform Windows ABI");
+        auto result = native_function_type(prototype->getReturnType(), true);
+        std::string parameters;
+        // Capture the callee once before evaluating arguments, including
+        // function-pointer-producing expressions with visible side effects.
+        unsigned pointer = temporary("native unsigned int");
+        expr(call->getCallee()); op("stloc " + std::to_string(pointer), 1);
+        for (unsigned i = 0; i < call->getNumArgs(); ++i) {
+            auto parameter = prototype->getParamType(i);
+            if (i) parameters += ", ";
+            parameters += native_function_type(parameter);
+            if (parameter->isReferenceType()) native_address(call->getArg(i));
+            else {
+                if (!native_value_pointer(call->getArg(i)).isNull())
+                    fail(call, "native function pointer managed-value arguments require an explicit raw native pointer cast");
+                expr(call->getArg(i));
+            }
+        }
+        op("ldloc " + std::to_string(pointer), 0, 1);
+        op("calli unmanaged cdecl " + result + "(" + parameters + ")", call->getNumArgs() + 1, result == "void" ? 0 : 1);
+    }
     void call(const CallExpr* c) {
+        if (native_guid_address(c)) { op("ldobj " + type(c->getType()), 1, 1); return; }
         auto* f = c->getDirectCallee();
-        if (!f) fail(c, "indirect calls are not supported yet");
+        if (!f) { native_indirect_call(c); return; }
         if (auto* member = dyn_cast<CXXMemberCallExpr>(c); member && member->getMethodDecl()->isVirtual() &&
             native_com_interface(member->getMethodDecl()->getParent())) {
             native_com_call(member, member->getMethodDecl()); return;
@@ -2574,6 +2704,24 @@ class Emitter {
     }
     void expr(const Expr* original) {
         const Expr* e = strip(original);
+        if (auto* trait = dyn_cast<UnaryExprOrTypeTraitExpr>(e)) {
+            auto argument = trait->getTypeOfArgument();
+            auto* record = argument->getAsCXXRecordDecl();
+            if (record && (record_annotated(record, "cli.ref") || record_annotated(record, "cli.value") || !record_annotation(record, "cli.external:").empty()) &&
+                record_annotation(record, "cli.nativeint:").empty())
+                fail(trait, "sizeof/alignof managed records require CLR layout support; facade C++ size cannot be used");
+            if (trait->getKind() != UETT_SizeOf && trait->getKind() != UETT_AlignOf && trait->getKind() != UETT_PreferredAlignOf)
+                fail(trait, "unsupported native type trait");
+            Expr::EvalResult evaluated;
+            if (!trait->EvaluateAsInt(evaluated, context, Expr::SE_NoSideEffects)) fail(trait, "native sizeof/alignof requires a constant layout");
+            auto value = evaluated.Val.getInt();
+            op(std::string(context.getTypeSize(trait->getType()) > 32 ? "ldc.i8 " : "ldc.i4 ") + std::to_string(value.getZExtValue()), 0, 1);
+            return;
+        }
+        if (auto* dereference = dyn_cast<UnaryOperator>(e); dereference && dereference->getOpcode() == UO_Deref &&
+            dereference->getType()->isFunctionType() && dereference->getSubExpr()->getType()->isFunctionPointerType()) {
+            expr(dereference->getSubExpr()); return;
+        }
         if (auto* allocation = dyn_cast<CXXNewExpr>(e)) {
             auto element = allocation->getAllocatedType();
             if (allocation->isArray() || allocation->getNumPlacementArgs() ||
@@ -2623,12 +2771,12 @@ class Emitter {
             return;
         }
         if (auto* cast = dyn_cast<CastExpr>(e); cast &&
-            (cast->getCastKind() == CK_DerivedToBase || cast->getCastKind() == CK_UncheckedDerivedToBase) &&
+            (cast->getCastKind() == CK_DerivedToBase || cast->getCastKind() == CK_UncheckedDerivedToBase || cast->getCastKind() == CK_BaseToDerived) &&
             cast->getType()->isPointerType() && cast->getSubExpr()->getType()->isPointerType() &&
             native_com_interface(cast->getType()->getPointeeType()->getAsCXXRecordDecl()) &&
             native_com_interface(cast->getSubExpr()->getType()->getPointeeType()->getAsCXXRecordDecl())) {
             // The supported COM interface chain has one nonvirtual base at
-            // offset zero, so the already type-checked upcast preserves bits.
+            // offset zero, so the already type-checked interface cast preserves bits.
             expr(cast->getSubExpr()); return;
         }
         if (auto* unary = dyn_cast<UnaryOperator>(e); unary && unary->getOpcode() == UO_Deref && !native_value_pointer(unary->getSubExpr()).isNull()) {
@@ -3452,6 +3600,11 @@ public:
         std::set<std::string> system_libraries;
         for (auto* function : selected_native_imports) system_libraries.insert(native_imports.at(function->getNameAsString()).library);
         for (const auto& library : system_libraries) il << ".module extern '" << library << "'\n";
+        for (const auto& entry : guid_constants) {
+            const auto& constant = entry.second;
+            il << ".data '" << constant.name << "_data' = bytearray (" << constant.bytes << ")\n"
+               << ".field assembly static initonly " << constant.type << " '" << constant.name << "' at '" << constant.name << "_data'\n";
+        }
         for (const auto& entry : native_records) {
             const auto& layout = context.getASTRecordLayout(entry.second);
             il << ".class public sequential ansi sealed " << entry.first << " extends [System.Runtime]System.ValueType {\n"

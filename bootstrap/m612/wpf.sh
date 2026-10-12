@@ -118,15 +118,23 @@ step_native_subsetter() {
 step_bridge_gate() {
   step_prepare_bridges
   [ -s "$build/lib/libwpf-subsetter.a" ] || step_native_subsetter
+  [ -s "$build/lib/libwpf-dwrite-loader.a" ] || step_native_dwrite_loader
   local cpp=$source/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/CPP
   local shared=$source/src/Microsoft.DotNet.Wpf/src/Shared/inc
   local core_refs=("$sdk"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
   local core_ref=${core_refs[-1]}
-  bridge_compile "$(cygpath -m "$cpp/DirectWriteForwarder.cpp")" --std c++14 --target library --emit il \
+  # Include the actual startup unit so its factory lookup is an emitted
+  # definition in the same CLR module, rather than an unresolved C++ extern.
+  cat > "$build/DirectWriteForwarderCombined.cpp" <<EOF
+#include "$(cygpath -m "$cpp/DirectWriteForwarder.cpp")"
+#include "$(cygpath -m "$cpp/../main.cpp")"
+EOF
+  bridge_compile "$(cygpath -m "$build/DirectWriteForwarderCombined.cpp")" --std c++14 --target library --emit il \
     --native-import "$(cygpath -m /clang64/lib/libadvapi32.a)" \
     --native-import "$(cygpath -m /clang64/lib/libkernel32.a)" \
     --native-import "$(cygpath -m "$build/lib/libwpf-subsetter.a")" \
-    -D WPF_SUBSETTER_SPLIT=1 -I "$(cygpath -m "$here/wpf-native")" \
+    --native-import "$(cygpath -m "$build/lib/libwpf-dwrite-loader.a")" \
+    -D WPF_SUBSETTER_SPLIT=1 -D WPF_MANAGED_STARTUP=1 -I "$(cygpath -m "$here/wpf-native")" \
     --public-key "$(cygpath -m "$build/keys/MSShared.snk")" \
     --type System.Double --type System.Int32 --type System.UInt32 --type System.IFormatProvider --type System.Globalization.NumberStyles \
     --type System.DateTime --type System.Threading.Monitor --type System.Security.SecurityCriticalAttribute \
@@ -155,6 +163,9 @@ step_bridge_gate() {
     --type System.Diagnostics.Debug \
     --type System.Type --type System.RuntimeTypeHandle --type System.ArgumentOutOfRangeException --type System.OverflowException \
     --type System.Runtime.InteropServices.ComTypes.FILETIME --type System.Threading.Thread \
+    --type System.AppDomain --type System.EventHandler --type System.EventArgs --type System.DllNotFoundException \
+    --type System.ComponentModel.Win32Exception --type System.Runtime.InteropServices.ExternalException --type System.SystemException \
+    --type System.Reflection.Assembly --type System.Runtime.CompilerServices.DependencyAttribute --type System.Runtime.CompilerServices.LoadHint \
     --type System.Windows.Threading.Dispatcher --type System.Windows.Threading.DispatcherOperation \
     --type System.Action --type System.Math --type System.Runtime.InteropServices.GCHandle --type System.Runtime.InteropServices.GCHandleType \
     --reference "$(cygpath -m "$core_ref/System.Threading.dll")" \
@@ -163,9 +174,10 @@ step_bridge_gate() {
     --reference "$(cygpath -m "$core_ref/System.Runtime.InteropServices.dll")" \
     --reference "$(cygpath -m "$core_ref/System.Net.Requests.dll")" \
     --reference "$(cygpath -m "$core_ref/System.Globalization.dll")" \
+    --reference "$(cygpath -m "$core_ref/Microsoft.Win32.Primitives.dll")" \
     --reference "$(cygpath -m "$oob/System.IO.Packaging.dll")" \
     --reference "$(cygpath -m "$build/lib/WindowsBase.dll")" -I "$(cygpath -m "$shared")" \
-    -I "$(cygpath -m "$cpp/..")" -I "$(cygpath -m "$cpp/TrueTypeSubsetter")" \
+    -I "$(cygpath -m "$cpp")" -I "$(cygpath -m "$cpp/..")" -I "$(cygpath -m "$cpp/TrueTypeSubsetter")" \
     -D '__field_bcount(x)=_Field_size_bytes_(x)' -D '__field_ecount(x)=_Field_size_(x)' \
     -D '__field_range(low,high)=_Field_range_(low,high)' -D '__deref_out_range(low,high)=_Deref_out_range_(low,high)' \
     -D '__success(x)=_Success_(x)' \
@@ -178,6 +190,80 @@ step_bridge_gate() {
       cat "$build/directwrite-gate.log"
       die "The frontend cannot compile the upstream DirectWriteForwarder bridge yet"
     }
+}
+
+step_native_dwrite_loader() {
+  step_prepare_bridges
+  local shared=$source/src/Microsoft.DotNet.Wpf/src/Shared
+  /clang64/bin/clang++.exe -std=c++14 -fms-extensions -O2 -shared "$here/wpf-native/DWriteLoaderBridge.cpp" \
+    -I "$shared/cpp" -I "$shared/inc" -D UNICODE=1 -D _UNICODE=1 \
+    -o "$build/lib/wpf-dwrite-loader.dll" "-Wl,--out-implib,$build/lib/libwpf-dwrite-loader.a"
+}
+
+step_check_dwrite_startup() {
+  initialize
+  step_native_dwrite_loader
+  local work=$build/dwrite-startup-check
+  local original=$source/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder
+  local shared=$source/src/Microsoft.DotNet.Wpf/src/Shared/inc
+  local core_refs=("$sdk"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
+  local core_ref=${core_refs[-1]}
+  mkdir -p "$work/CPP"
+  cp "$original/main.cpp" "$work/main.cpp"
+  printf '#include <windows.h>\n#include <vcclr.h>\n' > "$work/CPP/precomp.hxx"
+  cat > "$work/StartupCheck.cpp" <<'EOF'
+#include "main.cpp"
+#include <dwrite.h>
+using FactoryFunction = HRESULT (WINAPI*)(DWRITE_FACTORY_TYPE, REFIID, IUnknown**);
+public ref class WpfStartupCheck abstract sealed {
+public:
+static System::IntPtr Address() { return System::IntPtr(GetDWriteCreateFactoryFunctionPointer()); }
+static void Reload() { MS::Internal::NativeWPFDLLLoader::LoadDwrite(); }
+static bool CreateAndRelease() {
+    FactoryFunction create = reinterpret_cast<FactoryFunction>(GetDWriteCreateFactoryFunctionPointer());
+    IUnknown* factory = nullptr;
+    if (!create || create(DWRITE_FACTORY_TYPE_SHARED,__uuidof(IDWriteFactory),&factory) != S_OK || !factory) return false;
+    factory->Release();
+    return true;
+}
+};
+EOF
+  bridge_compile "$(cygpath -m "$work/StartupCheck.cpp")" --std c++14 --target library \
+    --ilasm "$(cygpath -m /clang64/bin/ilasm-dotnet.exe)" \
+    --type System.AppDomain --type System.EventHandler --type System.EventArgs --type System.Exception \
+    --type System.DllNotFoundException --type System.InvalidOperationException --type System.ComponentModel.Win32Exception \
+    --type System.Runtime.InteropServices.Marshal --type System.Runtime.InteropServices.ExternalException --type System.SystemException \
+    --type System.Reflection.Assembly --type System.Runtime.CompilerServices.DependencyAttribute --type System.Runtime.CompilerServices.LoadHint \
+    --type System.Security.SecurityCriticalAttribute --type System.Diagnostics.Debug \
+    --reference "$(cygpath -m "$core_ref/Microsoft.Win32.Primitives.dll")" \
+    --native-import "$(cygpath -m "$build/lib/libwpf-dwrite-loader.a")" \
+    --native-import "$(cygpath -m /clang64/lib/libkernel32.a)" \
+    -D WPF_MANAGED_STARTUP=1 -D WPF_SUBSETTER_SPLIT=1 \
+    -I "$(cygpath -m "$here/wpf-native")" -I "$(cygpath -m "$shared")" -o "$(cygpath -m "$work/StartupCheck.dll")"
+  cp "$here/wpf-tests/DWriteStartup.cs" "$work/Program.cs"
+  cat > "$work/StartupLifecycleCheck.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="StartupCheck"><HintPath>StartupCheck.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$sdk/dotnet.exe" build "$(cygpath -m "$work/StartupLifecycleCheck.csproj")" -c Release \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -v:q
+  cp "$build/lib/wpf-dwrite-loader.dll" "$work/bin/Release/net8.0/"
+  timeout 30 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/StartupLifecycleCheck.dll")" > "$work/runtime.log" 2>&1
+  cat "$work/runtime.log"
+  grep -q 'actual WPF ProcessExit cleanup OK' "$work/runtime.log"
+}
+
+step_check_function_pointer() {
+  step_native_dwrite_loader
+  local work=$build/function-pointer-check
+  mkdir -p "$work"
+  cp "$build/lib/wpf-dwrite-loader.dll" "$work/"
+  local mode
+  for mode in 14 17; do
+    bridge_compile "$(cygpath -m "$here/wpf-tests/FunctionPointerDWrite.cpp")" --std "c++$mode" \
+      --ilasm "$(cygpath -m /clang64/bin/ilasm-dotnet.exe)" --type System.GC \
+      --native-library wpf-dwrite-loader.dll -o "$(cygpath -m "$work/FunctionPointerDWrite$mode.dll")"
+    timeout 30 "$sdk/dotnet.exe" "$(cygpath -m "$work/FunctionPointerDWrite$mode.dll")"
+  done
 }
 
 step_check_native_cleanup() {

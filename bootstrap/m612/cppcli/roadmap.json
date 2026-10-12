@@ -117,7 +117,9 @@
         "Clang constexpr evaluation handles provably side-effect-free constant SDK integer/enum calls; no runtime native execution or ignored dynamic calls",
         "Clang-derived Windows x64 IUnknown-chain vtable dispatch with raw unmanaged calli and native ABI validation including mixed floating/integer register and stack arguments",
         "UCRT-backed native single scalar/POD allocation/deletion and initializer exception cleanup through the source-built NativeMemory API",
-        "Closed managed template unused instance property definitions instantiated before CLR metadata emission"
+        "Closed managed template unused instance property definitions instantiated before CLR metadata emission",
+        "raw fixed-prototype Windows x64 native function-pointer storage and calli with scalar/POD reference arguments",
+        "AST/constant-evaluation-based MinGW UUID extraction into stable RVA GUID fields and Clang native sizeof/alignof constants"
       ],
       "remaining": [
         "native layouts, complete pointer operations and automatic marshalling",
@@ -125,7 +127,7 @@
         "real mixed-mode PE and native-to-managed thunks",
         "MinGW ijwhost port"
       ],
-      "validation": "cppcli.sh test-interop test-pinning; wpf.sh check-directwrite-bridge; cppcli.sh test-com; cppcli.sh test-windows-api test-native-fields test-native-storage test-value-pointers; cppcli.sh test-native-com test-native-allocation; wpf.sh check-native-com check-native-cleanup"
+      "validation": "cppcli.sh test-interop test-pinning; wpf.sh check-directwrite-bridge; cppcli.sh test-com; cppcli.sh test-windows-api test-native-fields test-native-storage test-value-pointers; cppcli.sh test-native-com test-native-allocation; wpf.sh check-native-com check-native-cleanup; cppcli.sh test-function-pointers; wpf.sh check-function-pointer check-dwrite-startup"
     },
     {
       "stage": 5,
@@ -170,7 +172,9 @@
         "Full bridge passes the native subsetter and constant native enum flags; next IL gate is IUnknown::Release in NativePointerWrapper.cpp:35",
         "real DirectWrite native COM dispatch over SDK interface slots and pinned Unicode buffers, independently compared to native Clang calls",
         "complete original NativePointerWrapper.cpp and header with original IUnknown release and erased native deletion checked through CriticalHandle disposal and pointer getter reflection",
-        "full WPF gate passes IUnknown::Release and native delete; next unsupported type is the DWrite factory function pointer prototype"
+        "full WPF gate passes IUnknown::Release and native delete; next unsupported type is the DWrite factory function pointer prototype",
+        "Source-built upstream DWrite loader and ported managed main.cpp startup: real SDK function pointer call, concurrent initialization, exactly-once event registration, idempotent cleanup/reload and actual ProcessExit verification",
+        "Full WPF gate combines actual DirectWriteForwarder.cpp and main.cpp, with explicit native loader/subsetter imports; it passes Factory initialization, native SDK UUIDs, function calls and sizeof(WCHAR), then stops at Font.cpp:193 compound assignment"
       ]
     }
   ]

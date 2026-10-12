@@ -1,0 +1,53 @@
+--- a/src/Microsoft.DotNet.Wpf/src/Shared/cpp/dwriteloader.cpp
++++ b/src/Microsoft.DotNet.Wpf/src/Shared/cpp/dwriteloader.cpp
+@@ -15 +15 @@
+-        *pfncptrDWriteCreateFactory = GetProcAddress(hDWriteLibrary, "DWriteCreateFactory");
++        *pfncptrDWriteCreateFactory = reinterpret_cast<void*>(GetProcAddress(hDWriteLibrary, "DWriteCreateFactory"));
+--- a/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/main.cpp
++++ b/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/main.cpp
+@@ -6,0 +7 @@
++#if !defined(WPF_MANAGED_STARTUP)
+@@ -7,0 +9,7 @@
++#endif
++#if defined(WPF_MANAGED_STARTUP)
++#include "DWriteLoaderBridge.h"
++namespace WPFUtils {
++HMODULE LoadDWriteLibraryAndGetProcAddress(void** address) { return WpfLoadDwrite(address); }
++}
++#else
+@@ -8,0 +17 @@
++#endif
+@@ -14,0 +24 @@
++#if !defined(WPF_SUBSETTER_SPLIT)
+@@ -18,0 +29 @@
++#endif
+@@ -98,0 +110,26 @@
++#if defined(WPF_MANAGED_STARTUP)
++// CoreCLR initializes this managed owner once before the first factory lookup.
++// Its event subscriptions retain cleanup through domain/process shutdown.
++private ref class WpfModuleInitialize abstract sealed
++{
++    static WpfModuleInitialize()
++    {
++        MS::Internal::NativeWPFDLLLoader::LoadDwrite();
++        System::AppDomain::CurrentDomain->add_ProcessExit(gcnew System::EventHandler(&WpfModuleInitialize::Cleanup));
++        System::AppDomain::CurrentDomain->add_DomainUnload(gcnew System::EventHandler(&WpfModuleInitialize::Cleanup));
++    }
++    static void Cleanup(System::Object^, System::EventArgs^)
++    {
++        MS::Internal::NativeWPFDLLLoader::UnloadDWrite();
++    }
++public:
++    static void* FactoryFunction()
++    {
++        return MS::Internal::NativeWPFDLLLoader::GetDWriteCreateFactoryFunctionPointer();
++    }
++};
++void* GetDWriteCreateFactoryFunctionPointer()
++{
++    return WpfModuleInitialize::FactoryFunction();
++}
++#else
+@@ -177,0 +215,2 @@
++
++#endif // WPF_MANAGED_STARTUP

@@ -1796,8 +1796,10 @@ a checked managed split bridge (§33). Clang-proven side-effect-free SDK constex
 integer calls also pass, including MinGW's constant enum flag operator. IL
 IUnknown dispatch and scalar/POD native allocation/deletion now pass (§34),
 including the original NativePointerWrapper.cpp cleanup methods. IL collection
-next fails at the DWrite factory function-pointer prototype, which remains
-unsupported.
+now supports the DWrite factory function-pointer prototype, SDK UUID reference
+constants and native sizeof (§35). The full gate includes ported main.cpp startup
+with a source-built DWrite loader. It next fails at an unsupported compound
+assignment in Font.cpp:193.
 General native record operations, open managed
 generics, callbacks, finalizers and automatic native
 partitioning also remain outside its supported subset.
@@ -3594,3 +3596,90 @@ boundaries, remaining startup units, higher WPF, native-export coverage and
 desktop packaging remain open. Logs, original cleanup sources, emitted IL and
 native test artifacts are archived under
 `tmp/wpf8-support/validation/native-com-cleanup-20261012` on the local host.
+
+## 35. Native factory function pointers, SDK UUIDs and managed startup
+
+The 2026-10-12 continuation implements Windows x64 native function-pointer
+storage and invocation. Function pointers use opaque native integer storage in
+supported locals, fields, parameters and returns. A fixed Clang function prototype
+supplies the unmanaged calli signature; the callee is evaluated exactly once
+before its arguments. Pointer-dereference call syntax works without loading a
+function body as data. The native test checks mixed float/double/64-bit integer
+arguments extending beyond register slots, native scalar references, void/output
+calls, field/return storage and compacting GC. Variadic, managed/bool/by-value-record
+marshalling, reference-return and arbitrary managed method-address cases remain
+outside this path. Calli targets require Windows x64 and the platform C ABI.
+
+The trusted MinGW headers implement `__uuidof` through `__mingw_uuidof` templates.
+The frontend now inspects their Clang AST return/static-declaration shapes and
+uses constant evaluation to read the SDK initializer. It validates the native
+GUID's 16-byte layout, integer field widths/offsets and eight-byte tail. GUID
+bytes become assembly-visible initonly RVA fields, giving both global and class
+methods a stable native address without a movable GC allocation. Pointer-type
+UUID spelling resolves through the SDK's actual template chain. C++14 and C++17
+variants both pass real DWriteCreateFactory and QueryInterface calls, including
+GC between calls. This is SDK AST handling rather than a hardcoded interface IID
+table; general native constant-reference functions/globals remain unimplemented.
+
+Clang's zero-offset COM interface cast handling also covers checked base-to-derived
+casts. Native sizeof/alignof expressions use Clang constant layout evaluation and
+leave their operands unevaluated. The focused test checks WCHAR, pointer, GUID and
+native record sizes/alignment and a side-effectful operand that must not execute.
+Managed records/facades are rejected because their surrogate C++ layout is not a
+CLR layout calculation.
+
+The next full-gate error was a real missing compilation unit: Factory calls
+GetDWriteCreateFactoryFunctionPointer from main.cpp. The gate now combines the
+actual DirectWriteForwarder.cpp and main.cpp sources in one CLR translation unit.
+Patch 0006 adds an opt-in managed startup path in main.cpp, replacing the native
+CModuleInitialize/atexit workaround with a managed owner initialized before the
+first factory lookup. It retains the original NativeWPFDLLLoader load/unload/getter
+methods and registers ProcessExit and DomainUnload cleanup. Native subsetter tables
+retain their separate once-only initialization. The legacy path remains available
+without the new flag. The unused legacy Utils.hxx include is excluded from this
+path because its codeanalysis annotation header is absent in MinGW.
+
+`wpf.sh native-dwrite-loader` builds the actual upstream dwriteloader.cpp, with
+one explicit function-to-void-pointer cast for Clang, behind a small named C ABI.
+Its original LoadLibraryEx search remains restricted to System32. The managed
+startup calls that source-built DLL through its actual import archive; unloading
+uses the original FreeLibrary/error handling. Lifecycle validation performs eight
+concurrent first lookups, calls the actual factory, verifies exactly one registered
+handler for each event, invokes registered cleanup twice, checks the cleared
+pointer and reloads. A later ProcessExit observer verifies the WPF handler actually
+clears the pointer during real runtime shutdown. The check requires and observes
+`actual WPF ProcessExit cleanup OK`, not just a successful main return.
+
+Validation on win11:
+
+```sh
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-function-pointers
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh \
+  test-function-pointers test-native-com test-native-allocation test-delegates
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  WPF_CPPCLI_BUILD=/home/topkek/dotnetboot/m612/build/cppcli \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh \
+  check-dwrite-startup check-function-pointer bridge-gate
+```
+
+The build and focused/regression checks pass. Startup retains two upstream
+legacy assembly-attribute warnings; native sizeof's intentionally side-effectful
+operand produces its expected unevaluated-expression warning. C# lifecycle builds
+have zero warnings/errors. The final combined full gate still exits 1 after five
+warnings, now at Font.cpp:193, `unsupported compound assignment`. Factory's native
+prototype, missing startup helper, SDK UUIDs, interface downcast and sizeof(WCHAR)
+failures are gone. Legacy NGEN dependency attributes are still unimplemented.
+
+The 620 C# foundations, 14 nested native subsetter inputs and four complete
+directly included DirectWrite implementation bodies remain verified. The ported
+main.cpp startup unit and native shared loader are additionally compiled and
+checked; they do not increase the four-of-21 body count. No complete
+DirectWriteForwarder/System.Printing assembly, higher WPF framework or WindowsDesktop
+package is produced. Native callback/general object boundaries, remaining startup
+metadata/units, higher WPF, native-export coverage and packaging remain open.
+Development logs, original/patched startup sources, loader import/ABI artifacts
+and generated IL are archived under
+`tmp/wpf8-support/validation/function-pointer-startup-20261012` on the local host.

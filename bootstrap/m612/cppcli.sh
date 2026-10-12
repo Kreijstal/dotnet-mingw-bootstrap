@@ -442,6 +442,16 @@ EOF
   reject_case native-exception 'int main() { try { throw 1; } catch (int value) { return value; } }' 'only managed handle'
   reject_case rethrow-outside-catch 'int main() { throw; }' 'rethrow requires'
 }
+step_test-function-pointers() {
+  /clang64/bin/clang++.exe -std=c++17 -shared -O2 "$src/tests/function-pointers-native.cpp" -o "$testdir/cppcli-function-pointers.dll"
+  run_case function-pointers "$src/tests/function-pointers.cpp" 'native function pointer storage, returns, single callee evaluation, mixed ABI, references and outputs OK' \
+    --native-library cppcli-function-pointers.dll --type System.GC
+  reject_case function-pointer-variadic 'int main() { int (*pointer)(int,...)=nullptr; return pointer(1,2); }' 'fixed non-variadic signature'
+  reject_case function-pointer-bool 'int main() { bool (*pointer)()=nullptr; return pointer(); }' 'native function pointer signatures require scalars'
+  reject_case function-pointer-managed 'using namespace System; int main() { int (*pointer)(Object^)=nullptr; return pointer(nullptr); }' 'native function pointer signatures require scalars'
+  run_case native-sizeof "$src/tests/native-sizeof.cpp" 'native sizeof/alignof, SDK layout and unevaluated operands OK'
+  reject_case sizeof-managed 'public value struct Value { int Field; }; int main() { return sizeof(Value); }' 'managed records require CLR layout support'
+}
 step_test-native-allocation() {
   /clang64/bin/clang++.exe -std=c++17 -shared -O2 "$src/tests/native-allocation-native.cpp" -o "$testdir/cppcli-native-allocation.dll"
   run_case native-allocation "$src/tests/native-allocation.cpp" 'native scalar/POD allocation, UCRT ownership transfer, erased/null deletion, GC and initializer exceptions OK' \

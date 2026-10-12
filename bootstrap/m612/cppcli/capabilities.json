@@ -168,7 +168,13 @@
     "Side-effectful native new initialization at an empty evaluation stack frees its allocation in a CLR finally if initialization throws",
     "Closed source managed template instance property accessors are instantiated before method collection even when C++ never calls them, preserving CLR property metadata and reflection access",
     "Complete unchanged WPF NativePointerWrapper.cpp/header compile in focused dependency context; actual COM ReleaseHandle, owned GUID cleanup, zero state, repeated CLR Dispose and unused native pointer getter reflection pass",
-    "Actual DirectWrite factory/collection/family/localized-string interface calls execute through generated native calli, with inherited slots, pointer outputs, pinned Unicode buffers and native oracle comparison"
+    "Actual DirectWrite factory/collection/family/localized-string interface calls execute through generated native calli, with inherited slots, pointer outputs, pinned Unicode buffers and native oracle comparison",
+    "Native Windows x64 fixed-prototype function pointers use opaque native integer storage and unmanaged calli; fields/locals/parameters/returns, pointer dereference syntax and single callee evaluation are tested",
+    "Native function-pointer scalar/enum/pointer signatures and scalar/POD reference arguments preserve the platform ABI; mixed floating/integer register and stack arguments and void output calls execute through source-built native functions",
+    "MinGW SDK __mingw_uuidof template definitions are read from Clang ASTs and constant evaluation; validated 16-byte GUID values emit assembly-visible read-only RVA fields for stable native references in C++14 and C++17",
+    "Native sizeof/alignof constants use Clang layout and unevaluated operand semantics; managed facade/record layouts are rejected instead of using their surrogate C++ size",
+    "Zero-offset native COM interface casts now cover Clang-checked base-to-derived casts as well as upcasts",
+    "Actual upstream DWrite loader builds with an explicit function-to-void-pointer cast; ported WPF main.cpp uses managed once-only startup and registered domain/process cleanup, verified with concurrency, real factory calls, idempotent cleanup, reload and actual ProcessExit"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -218,7 +224,10 @@
     "Native value pointers currently require direct GC-free value storage and stable caller-owned addresses; struct pin_ptr/interior_ptr, arithmetic, allocation of managed-value storage and automatic native SDK partitioning remain unsupported",
     "Native import archives currently support named x64 short code imports; ordinal/data/decorated/forwarder forms, by-value native record API signatures, automatic marshalling and automatic Win32 last-error capture remain unsupported",
     "The WPF TrueType subsetter uses an explicit source patch and separate native DLL; generic automatic C++ native partitioning and general native class dispatch remain unsupported",
-    "Native COM calli excludes Windows x86, virtual/secondary-base vtables, concrete native classes, bool/managed/by-value-record marshalling, variadic methods and native function-pointer calls",
-    "Native heap operations cover UCRT-backed single scalar/trivial POD storage with alignment up to 8; side-effectful initializer cleanup currently requires an empty evaluation stack, and native arrays/placement/custom operators and native object lifetimes remain unsupported"
+    "Native COM calli excludes Windows x86, virtual/secondary-base vtables, concrete native classes, bool/managed/by-value-record marshalling, variadic methods and native function-pointer managed/bool/variadic marshalling",
+    "Native heap operations cover UCRT-backed single scalar/trivial POD storage with alignment up to 8; side-effectful initializer cleanup currently requires an empty evaluation stack, and native arrays/placement/custom operators and native object lifetimes remain unsupported",
+    "Native function-pointer calls currently require Windows x64, fixed prototypes, supported scalar/unmanaged pointer signatures and scalar/POD references; managed/bool/by-value-record marshalling, reference returns and arbitrary managed method addresses remain unsupported",
+    "Native GUID constant lowering currently recognizes the trusted MinGW __mingw_uuidof macro/template shapes and validates Windows GUID field layout; general native global/static storage and other native constant-reference functions remain unsupported",
+    "WPF managed startup is an explicit source port from the native CModuleInitialize/atexit workaround; it initializes before the first factory lookup, uses CLR shutdown handlers and retains the original loader methods, while legacy NGEN dependency attributes remain unimplemented"
   ]
 }
