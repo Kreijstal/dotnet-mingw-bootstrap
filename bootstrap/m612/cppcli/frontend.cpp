@@ -112,7 +112,7 @@ struct Metadata {
     std::map<std::string, ImportedMethod> methods;
     std::map<std::string, ImportedField> fields;
     std::map<std::string, std::string> types;
-    std::set<std::string> short_types;
+    std::set<std::string> short_types, interface_types;
     std::string externs;
     void load(const std::string& path) {
         auto value = llvm::json::parse(read_file(path));
@@ -140,6 +140,14 @@ struct Metadata {
             std::string name = c.getString("Name")->str(), assembly = c.getString("Assembly")->str();
             types[name] = assembly;
             short_types.insert(name.substr(name.find_last_of('.') + 1));
+            if (c.getString("Kind").value_or("") == "interface") {
+                std::string cpp_name = name;
+                for (size_t pos = 0; (pos = cpp_name.find('.', pos)) != std::string::npos; pos += 2) cpp_name.replace(pos, 1, "::");
+                auto generic = cpp_name.find('`');
+                if (generic != std::string::npos) cpp_name.erase(generic);
+                interface_types.insert(cpp_name);
+                interface_types.insert(cpp_name.substr(cpp_name.find_last_of(':') + 1));
+            }
             for (auto& method : *c.getArray("Methods")) {
                 auto& m = *method.getAsObject();
                 if (!m.getBoolean("Supported").value_or(false)) continue;
@@ -468,7 +476,10 @@ protected:
             // Only managed declarations and allocation markers are rewritten.
             // Expressions/statements remain C++ and are parsed by Clang later.
             for (size_t i = 0; i + 2 < tokens.size(); ++i)
-                if ((tokens[i].text == "ref" || tokens[i].text == "interface" || tokens[i].text == "value") && (tokens[i + 1].text == "class" || tokens[i + 1].text == "struct")) metadata.short_types.insert(tokens[i + 2].text);
+                if ((tokens[i].text == "ref" || tokens[i].text == "interface" || tokens[i].text == "value") && (tokens[i + 1].text == "class" || tokens[i + 1].text == "struct")) {
+                    metadata.short_types.insert(tokens[i + 2].text);
+                    if (tokens[i].text == "interface") metadata.interface_types.insert(tokens[i + 2].text);
+                }
             std::ostringstream out;
             std::string file;
             unsigned line = 0;
@@ -481,10 +492,16 @@ protected:
                 out << text << " ";
             };
             std::set<std::string> managed_string_calls;
+            std::map<std::string, std::set<unsigned>> managed_string_constructors;
             for (const auto& entry : metadata.methods) {
                 auto& m = entry.second;
-                if (std::find(m.parameters.begin(), m.parameters.end(), "string") != m.parameters.end())
-                    managed_string_calls.insert(m.owner.substr(m.owner.find_last_of('.') + 1) + "::" + m.name);
+                if (std::find(m.parameters.begin(), m.parameters.end(), "string") != m.parameters.end()) {
+                    auto owner = m.owner.substr(m.owner.find_last_of('.') + 1);
+                    if (m.name == ".ctor") {
+                        for (unsigned index = 0; index < m.parameters.size(); ++index)
+                            if (m.parameters[index] == "string") managed_string_constructors[owner.substr(0, owner.find('`'))].insert(index);
+                    } else managed_string_calls.insert(owner + "::" + m.name);
+                }
             }
             // Find only CLI class/member declaration boundaries. Clang still
             // parses parameter expressions, default arguments and method bodies.
@@ -529,16 +546,29 @@ protected:
                         j = end-1;
                     }
                     else if (depth == 1 && tokens[j].text == "(" && j && tokens[j - 1].kind == tok::identifier) {
-                        size_t end = j + 1; int parentheses = 1; bool string_parameter = false;
+                        size_t end = j + 1; int parentheses = 1, parameter_angles = 0; bool string_parameter = false;
+                        unsigned parameter_index = 0;
+                        std::set<unsigned> string_parameters;
                         while (end < tokens.size() && parentheses) {
                             if (tokens[end].text == "(") ++parentheses;
                             if (tokens[end].text == ")") --parentheses;
-                            if (tokens[end].text == "String" && end + 1 < tokens.size() && tokens[end + 1].text == "^") string_parameter = true;
+                            if (parentheses == 1) {
+                                if (tokens[end].text == "<") ++parameter_angles;
+                                else if (tokens[end].text == ">") --parameter_angles;
+                                else if (tokens[end].text == ">>") parameter_angles -= 2;
+                                else if (!parameter_angles && tokens[end].text == ",") ++parameter_index;
+                                else if (!parameter_angles && tokens[end].text == "String" && end+1 < tokens.size() && tokens[end+1].text == "^") {
+                                    string_parameter = true; string_parameters.insert(parameter_index);
+                                }
+                            }
                             ++end;
                         }
                         if (tokens[i].text == "value" && tokens[j-1].text == name && end == j+2 && (j < 2 || tokens[j-2].text != "static"))
                             throw std::runtime_error("user-defined zero-argument value constructors are not supported; default storage is zero initialized");
-                        if (string_parameter) managed_string_calls.insert(name + "::" + tokens[j - 1].text);
+                        if (string_parameter) {
+                            if (tokens[j-1].text == name) managed_string_constructors[name].insert(string_parameters.begin(), string_parameters.end());
+                            else managed_string_calls.insert(name + "::" + tokens[j - 1].text);
+                        }
                         if (tokens[i].text == "interface") {
                             if (end >= tokens.size() || tokens[end].text != ";") throw std::runtime_error("interface instance methods currently require a declaration without a body");
                             size_t start = j - 1;
@@ -785,9 +815,27 @@ protected:
                     (tokens[end].text == ";" || tokens[end].text == "," || tokens[end].text == ")");
                 if (end == i + 1 || end == tokens.size() || (tokens[end].text != "(" && !default_allocation))
                     throw std::runtime_error(t.file + ":" + std::to_string(t.line) + ": gcnew currently requires a named type and parenthesized constructor arguments");
-                std::string type;
+                std::string type, primary;
+                for (size_t j = i + 1; j < end && tokens[j].text != "<"; ++j)
+                    if (tokens[j].kind == tok::identifier) primary = tokens[j].text;
                 for (size_t j = i + 1; j < end; ++j) type += tokens[j].text;
-                emit(t, "__cli_new<" + type + ">" + (default_allocation ? "()" : ""));
+                if (!default_allocation && managed_string_constructors.count(primary)) {
+                    // Mark only immediate literal arguments of this constructor;
+                    // literals inside nested native calls keep their native type.
+                    size_t close = matching(end, "(", ")");
+                    unsigned depth = 0, argument_index = 0;
+                    for (size_t j = end + 1; j < close; ++j) {
+                        if (tokens[j].text == "(" || tokens[j].text == "[" || tokens[j].text == "{") ++depth;
+                        else if (tokens[j].text == ")" || tokens[j].text == "]" || tokens[j].text == "}") --depth;
+                        if (!depth && tokens[j].text == ",") ++argument_index;
+                        if (!depth && tok::isStringLiteral(tokens[j].kind) && managed_string_constructors.at(primary).count(argument_index)) call_context[j] = true;
+                    }
+                }
+                // A real new-expression keeps overload resolution and access checks
+                // in the original member/friend context. Only its marker is
+                // emitted as CLR allocation; no native allocation is generated.
+                if (!default_allocation) cli_structural[matching(end, "(", ")")] = ") )";
+                emit(t, "__cli_alloc(new " + type + (default_allocation ? "())" : ""));
                 i = end - 1;
                 return true;
             };
@@ -882,9 +930,13 @@ protected:
                         emit(t, std::string(class_access[i] == "internal" ? "__attribute__((annotate(\"cli.access:assembly\"))) " : "") + "static " + field_type + field + "; private: static " + field_type +
                             " __attribute__((annotate(\"cli.static.init:" + field + "\"))) _cli_init_" + field + "() { return");
                         for (size_t j = equal + 1; j < end; ++j) {
+                            if (cli_structural.count(j)) { emit(tokens[j], cli_structural[j]); continue; }
                             if (adapt_allocation(j)) continue;
                             if (tokens[j].text == "safe_cast") { emit(tokens[j], "__cli_safe_cast"); continue; }
-                            emit(tokens[j], tokens[j].text);
+                            if (tok::isStringLiteral(tokens[j].kind) && call_context[j] &&
+                                (tokens[j-1].text == "(" || tokens[j-1].text == ",") &&
+                                (tokens[j+1].text == ")" || tokens[j+1].text == ",")) emit(tokens[j], "__cli_literal(" + tokens[j].text + ")");
+                            else emit(tokens[j], tokens[j].text);
                         }
                         emit(tokens[end], "; } " + (class_access[i] == "internal" ? "public" : class_access[i]) + ":");
                         i = end; continue;
@@ -1028,7 +1080,24 @@ protected:
                     emit(t, std::string(interface || tokens[i + 1].text == "struct" ? "struct" : "class") + " __attribute__((" + attributes + ")) " + tokens[i + 2].text);
                     if (attributes.find("cli.sealed") != std::string::npos) emit(t, "final");
                     if (end < tokens.size() && tokens[end].text == ":") {
-                        emit(tokens[end], ":"); ++end;
+                        // An interface-only class still derives System.Object
+                        // in the CLR. Make that implicit class base visible to
+                        // Clang's normal reference conversions as well.
+                        bool only_interfaces = true;
+                        std::string base_name; int base_angles = 0;
+                        for (size_t j = end+1; j < tokens.size(); ++j) {
+                            auto text = tokens[j].text;
+                            if (!base_angles && (text == "," || text == "{" || text == ";")) {
+                                if (base_name.rfind("::", 0) == 0) base_name.erase(0, 2);
+                                only_interfaces &= metadata.interface_types.count(base_name) != 0;
+                                base_name.clear();
+                                if (text != ",") break;
+                            } else if (text == "<") ++base_angles;
+                            else if (text == ">") --base_angles;
+                            else if (text == ">>") base_angles -= 2;
+                            else if (!base_angles && text != "public" && text != "protected" && text != "private" && text != "virtual") base_name += text;
+                        }
+                        emit(tokens[end], !interface && !value && only_interfaces ? ": public ::System::Object," : ":"); ++end;
                         bool start = true; int angles = 0;
                         while (end < tokens.size() && tokens[end].text != "{" && tokens[end].text != ";") {
                             if (start && tokens[end].text != "public" && tokens[end].text != "protected" && tokens[end].text != "private") emit(tokens[end], "public");
@@ -1860,27 +1929,33 @@ class Emitter {
             op(std::string(safe ? "castclass " : "isinst ") + reference_token(c->getType()), 1, 1);
             return;
         }
-        if (f->getNameAsString() == "__cli_new") {
+        if (f->getNameAsString() == "__cli_alloc") {
             auto* target = handle_target(c->getType());
             if (!target) fail(c, "allocation marker has no managed type");
+            auto* allocation = c->getNumArgs() == 1 ? dyn_cast<CXXNewExpr>(c->getArg(0)->IgnoreParenImpCasts()) : nullptr;
+            auto* construction = allocation ? allocation->getConstructExpr() : nullptr;
+            if (!construction || allocation->isArray()) fail(c, "allocation has no Clang-resolved managed constructor");
+            auto* selected = construction->getConstructor();
+            const unsigned count = construction->getNumArgs();
+            auto argument = [&](unsigned i) { return construction->getArg(i); };
             if (auto* invoke = delegate_invoke(target)) {
-                if (c->getNumArgs() != 1 && c->getNumArgs() != 2) fail(c, "delegate construction requires a method and optional target");
-                auto* address = c->getArg(c->getNumArgs()-1)->IgnoreParenImpCasts();
+                if (count != 1 && count != 2) fail(c, "delegate construction requires a method and optional target");
+                auto* address = argument(count-1)->IgnoreParenImpCasts();
                 if (auto* unary = dyn_cast<UnaryOperator>(address); unary && unary->getOpcode() == UO_AddrOf) address = unary->getSubExpr()->IgnoreParenImpCasts();
                 auto* reference = dyn_cast<DeclRefExpr>(address);
                 auto* function = reference ? dyn_cast<FunctionDecl>(reference->getDecl()) : nullptr;
                 if (!function) fail(c, "delegate binding requires a named managed method");
                 auto* method = dyn_cast<CXXMethodDecl>(function);
                 bool instance = method && !method->isStatic();
-                if (instance != (c->getNumArgs() == 2)) fail(c, "delegate target does not match static/instance method binding");
+                if (instance != (count == 2)) fail(c, "delegate target does not match static/instance method binding");
                 if (type(function->getReturnType()) != type(invoke->getReturnType()) || function->getNumParams() != invoke->getNumParams()) fail(c, "delegate method signature mismatch");
                 for (unsigned i = 0; i < function->getNumParams(); ++i)
                     if (type(function->getParamDecl(i)->getType()) != type(invoke->getParamDecl(i)->getType())) fail(c, "delegate method parameter signature mismatch");
                 if (instance) {
-                    auto* owner = handle_target(c->getArg(0)->getType());
+                    auto* owner = handle_target(argument(0)->getType());
                     if (!owner || record_annotated(owner, "cli.value") || (owner->getCanonicalDecl() != method->getParent()->getCanonicalDecl() && !owner->isDerivedFrom(method->getParent())))
                         fail(c, "delegate instance target requires a compatible managed reference class");
-                    expr(c->getArg(0));
+                    expr(argument(0));
                     if (method->isVirtual()) { op("dup", 1, 2); op("ldvirtftn " + signature(function), 1, 1); }
                     else op("ldftn " + signature(function), 0, 1);
                 } else { op("ldnull", 0, 1); op("ldftn " + signature(function), 0, 1); }
@@ -1890,29 +1965,18 @@ class Emitter {
             if (is_interface(target)) fail(c, "cannot allocate a managed interface");
             QualType element = array_element(target);
             if (!element.isNull()) {
-                if (c->getNumArgs() != 1 || !c->getArg(0)->getType()->isIntegerType()) fail(c, "array allocation requires one integer length");
-                expr(c->getArg(0)); op("newarr " + type(element), 1, 1); return;
+                if (count != 1 || !argument(0)->getType()->isIntegerType()) fail(c, "array allocation requires one integer length");
+                expr(argument(0)); op("newarr " + type(element), 1, 1); return;
             }
             if (record_name(target) == "[System.Runtime]'System.String'") {
-                if (c->getNumArgs() != 1 || !isa<StringLiteral>(c->getArg(0)->IgnoreParenImpCasts()))
+                if (count != 1 || !isa<StringLiteral>(argument(0)->IgnoreParenImpCasts()))
                     fail(c, "String allocation currently requires a literal");
-                expr(c->getArg(0));
+                expr(argument(0));
                 op("callvirt instance char[] [System.Runtime]System.String::ToCharArray()", 1, 1);
                 op("newobj instance void [System.Runtime]System.String::.ctor(char[])", 1, 1);
                 return;
             }
             if (target->getDefinition() && annotated(target->getDefinition(), "cli.abstract")) fail(c, "cannot allocate an abstract managed class");
-            const CXXConstructorDecl* selected = nullptr;
-            // Reuse Clang's constructor overload resolution in __cli_new's
-            // decltype(T(args...)) constraint, rather than selecting by arity.
-            std::function<void(const Stmt*)> find_constructor = [&](const Stmt* s) {
-                if (!s) return;
-                if (auto* construct = dyn_cast<CXXConstructExpr>(s))
-                    if (construct->getConstructor()->getParent()->getCanonicalDecl() == target->getCanonicalDecl()) selected = construct->getConstructor();
-                for (auto* child : s->children()) find_constructor(child);
-            };
-            if (auto* trailing = dyn_cast<DecltypeType>(f->getReturnType().getTypePtr())) find_constructor(trailing->getUnderlyingExpr());
-            if (!selected) fail(c, "allocation has no Clang-resolved managed constructor");
             if (record_annotated(target, "cli.value") && annotated(selected, "cli.value.zero")) {
                 auto value_type = "valuetype " + record_name(target);
                 unsigned slot = temporary(value_type);
@@ -1921,12 +1985,13 @@ class Emitter {
             }
             if (!record_annotation(target, "cli.external:").empty() && annotation(selected, "cli.import:").empty())
                 fail(c, "imported class has no public metadata constructor");
-            if (selected->getNumParams() != c->getNumArgs()) fail(c, "default constructor arguments are not supported yet");
-            for (unsigned i = 0; i < c->getNumArgs(); ++i) {
-                if (type(c->getArg(i)->getType()) != type(selected->getParamDecl(i)->getType())) fail(c, "constructor argument conversion is not enabled yet");
-                expr(c->getArg(i));
+            if (selected->getNumParams() != count) fail(c, "default constructor arguments are not supported yet");
+            for (unsigned i = 0; i < count; ++i) {
+                if (type(argument(i)->getType()) != type(selected->getParamDecl(i)->getType())) fail(c, "constructor argument conversion is not enabled yet");
+                if (selected->getParamDecl(i)->getType()->isReferenceType()) address(argument(i));
+                else expr(argument(i));
             }
-            op("newobj " + signature(selected), c->getNumArgs(), 1);
+            op("newobj " + signature(selected), count, 1);
             if (record_annotated(target, "cli.value")) op("box valuetype " + record_name(target), 1, 1);
             return;
         }

@@ -75,6 +75,47 @@ template<> struct SystemTrait<float> {}; int main() { return 0; }' 'cannot be sp
   reject_case missing-return 'using namespace System; int broken() { int n = 0; } int main() { return broken(); }' 'does not return'
   log "PASS test-core: Clang parsing, metadata overloads, control flow, macros/includes, Unicode, negative checks"
 }
+step_test-constructors() {
+  log "Managed allocation resolves constructors in their source access context"
+  local refs=("$CPPCLI_SDK"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
+  local args=(--type System.GC --type System.ArgumentOutOfRangeException --type System.IDisposable
+    --type System.Runtime.InteropServices.CriticalHandle --type System.Runtime.ConstrainedExecution.CriticalFinalizerObject
+    --type System.IntPtr --reference "$(cygpath -m "${refs[-1]}/System.Runtime.InteropServices.dll")")
+  run_case constructor-access "$src/tests/constructor-access.cpp" $'17\n29\n41\n63\n23\n7' "${args[@]}"
+  mkdir -p "$testdir/constructor-consumer"
+  cat > "$testdir/constructor-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="constructor-access"><HintPath>../constructor-access.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  cat > "$testdir/constructor-consumer/Program.cs" <<'EOF'
+using System;
+using System.Reflection;
+using System.Runtime.InteropServices;
+if (PrivateFactory.Create(42).Value != 42 || ProtectedFactory.Create(43).Read() != 43 ||
+    typeof(PrivateFactory).GetConstructors().Length != 0 || typeof(ProtectedFactory).GetConstructors().Length != 0 ||
+    !typeof(PrivateFactory).GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic, null, new[] { typeof(int) }, null).IsPrivate ||
+    !typeof(ProtectedFactory).GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic, null, new[] { typeof(int) }, null).IsFamily)
+    throw new Exception("factory constructor access or visibility lost");
+var text = LiteralFactory.Create();
+if (text.Read() != "λ factory" || text.Next.Read() != "accessor literal" || LiteralFactory.Default.Read() != "static literal" ||
+    ConstructorProbes.Range() is not ArgumentOutOfRangeException range || range.ParamName != "faceIndex")
+    throw new Exception("literal constructor overload or parameter name lost");
+if (ConstructorProbes.Upcast() is not InterfaceFactory value || value is not IFactoryChild || value is not IDisposable ||
+    typeof(InterfaceFactory).BaseType != typeof(object) || ((IFactoryValue)value).Read() != 42)
+    throw new Exception("interface-only class Object identity or interface dispatch lost");
+using var handle = (CriticalHandle)ConstructorProbes.Handle();
+if (!handle.IsInvalid || typeof(ImportedFactory).BaseType != typeof(CriticalHandle))
+    throw new Exception("imported base chain Object conversion lost");
+Console.WriteLine("CLR factory access, literals and Object upcasts OK");
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/constructor-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/constructor-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case constructor-private 'public ref class C { C(int) {} }; int main() { C^ c = gcnew C(1); return 0; }' 'private constructor'
+  reject_case constructor-protected 'public ref class C { protected: C(int) {} }; int main() { C^ c = gcnew C(1); return 0; }' 'protected constructor'
+  reject_case constructor-abstract 'public ref class C abstract { public: C() {} }; int main() { C^ c = gcnew C(); return 0; }' 'cannot allocate an abstract'
+  reject_case constructor-native-new 'public ref class C {}; int main() { C^ c = new C(); return 0; }' 'unsupported AST expression: CXXNewExpr'
+  log "PASS test-constructors: private/protected factories, nested/default allocations, conversions and access rejection"
+}
 step_test-objects() {
   log "Managed constructors, fields, inheritance, handles and member calls"
   run_case objects "$src/tests/objects.cpp" $'8\n16\nTrue\nTrue\nTrue\nTrue\nFalse\ntyped literal\n1\n2'
@@ -121,12 +162,12 @@ using namespace Example;
 int main() { Counter^ counter = Counter::Create(4); Console::WriteLine(counter->Add(6)); counter->Current = 12; Console::WriteLine(counter->Current); String^ text = gcnew String("hello"); Console::WriteLine(text->Length); return 0; }
 EOF
   run_case references "$testdir/references.cpp" $'10\n12\n5' --type Example.Counter
-  reject_case bad-constructor 'using namespace System; public ref class Box { public: Box(int x) {} }; int main() { Box^ b = gcnew Box("bad"); return 0; }' 'no matching function'
+  reject_case bad-constructor 'using namespace System; public ref class Box { public: Box(int x) {} }; int main() { Box^ b = gcnew Box("bad"); return 0; }' 'no matching constructor'
   reject_case bad-downcast 'using namespace System; public ref class Base {}; public ref class Derived : Base {}; int main() { Base^ b = gcnew Base(); Derived^ d = b; return 0; }' 'cannot initialize'
   reject_case private-field 'using namespace System; public ref class Box { int hidden; }; int main() { Box^ b = gcnew Box(); b->hidden = 1; return 0; }' 'private member'
   reject_case native-managed-pointer 'using namespace System; public ref class Box {}; int main() { Box* b = gcnew Box(); return 0; }' "native '\*' pointers"
   reject_case native-value-pointer 'public value struct Point { int X; }; int main() { Point* native = nullptr; return 0; }' "native '\*' pointers"
-  reject_case missing-default-constructor 'public ref class B { public: B(int value) {} }; public ref class D : B {}; int main() { D^ d = gcnew D(); return 0; }' 'no matching function'
+  reject_case missing-default-constructor 'public ref class B { public: B(int value) {} }; public ref class D : B {}; int main() { D^ d = gcnew D(); return 0; }' 'deleted'
   reject_case missing-imported-constructor 'using namespace System; int main() { Console^ c = gcnew Console(); return 0; }' 'no public metadata constructor'
   log "PASS test-objects: managed identity and Clang constructor/member checking"
 }
@@ -674,7 +715,7 @@ EOF
 }
 step_test-delegates() {
   log "CLR delegate metadata, method binding and native-to-managed invocation"
-  local args=(--type System.Delegate --type System.MulticastDelegate --type System.InvalidOperationException)
+  local args=(--type System.Delegate --type System.MulticastDelegate --type System.InvalidOperationException --type System.Action)
   compile "$(cygpath -m "$src/tests/delegates.cpp")" --target library "${args[@]}" -o "$(cygpath -m "$testdir/delegates.dll")"
   mkdir -p "$testdir/delegate-consumer"
   /clang64/bin/clang++.exe -std=c++17 -O2 -shared "$src/tests/delegate-native.cpp" -o "$testdir/delegate-consumer/delegate-native.dll"
@@ -692,6 +733,47 @@ using namespace System;
 int main() { Scalar^ value = DelegateBridge::Static(); Console::WriteLine(value(21)); return 0; }
 EOF
   run_case delegate-reference "$testdir/delegate-reference.cpp" '42' --type Scalar --type DelegateBridge "${args[@]}"
+  cat > "$testdir/imported-delegate.cpp" <<'EOF'
+#using "delegates.dll"
+using namespace System;
+public ref class ImportedDelegateBindings {
+    static int _count;
+    static void Increment() { ++_count; }
+public:
+    static Action^ Create() { return gcnew Action(Increment); }
+    static Scalar^ Double() { return gcnew Scalar(&ImportedDelegateBindings::Twice); }
+    static int Twice(int value) { return value * 2; }
+    static int Count() { return _count; }
+};
+int main() {
+    Action^ action = ImportedDelegateBindings::Create(); action(); action->Invoke();
+    Console::WriteLine(ImportedDelegateBindings::Count());
+    Scalar^ value = ImportedDelegateBindings::Double(); Console::WriteLine(value(21));
+    CounterTarget^ target = gcnew CounterTarget(7);
+    Scalar^ instance = gcnew Scalar(target, &CounterTarget::Add); Console::WriteLine(instance(35));
+    BaseTarget^ derived = gcnew DerivedTarget();
+    Scalar^ dispatch = gcnew Scalar(derived, &BaseTarget::Apply); Console::WriteLine(dispatch(32));
+    return 0;
+}
+EOF
+  run_case imported-delegate "$testdir/imported-delegate.cpp" $'2\n42\n42\n42' --type Scalar --type CounterTarget --type BaseTarget --type DerivedTarget "${args[@]}"
+  mkdir -p "$testdir/imported-delegate-consumer"
+  cat > "$testdir/imported-delegate-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="imported-delegate"><HintPath>../imported-delegate.dll</HintPath></Reference><Reference Include="delegates"><HintPath>../delegates.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  cat > "$testdir/imported-delegate-consumer/Program.cs" <<'EOF'
+using System;
+var action = ImportedDelegateBindings.Create();
+if (action.GetType() != typeof(Action)) throw new Exception("imported delegate identity lost");
+GC.Collect(); GC.WaitForPendingFinalizers(); action();
+if (ImportedDelegateBindings.Count() != 1 || ImportedDelegateBindings.Double()(21) != 42)
+    throw new Exception("imported delegate source binding or lifetime lost");
+Console.WriteLine("Imported CLR delegates and Action binding OK");
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/imported-delegate-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/imported-delegate-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case imported-delegate-signature 'using namespace System; int Wrong(int value) { return value; } int main() { Action^ action = gcnew Action(Wrong); return 0; }' 'no matching constructor' "${args[@]}"
   reject_case delegate-missing-method 'public delegate int D(int); public ref class C { public: static int F(int); }; int main() { D^ d = gcnew D(&C::F); return 0; }' 'delegate target has no emitted definition' "${args[@]}"
   log "PASS test-delegates: CLR construction, virtual slots, multicast, signatures, GC and native callbacks"
 }
@@ -902,7 +984,7 @@ step_test-static-properties() {
   run_case static-properties "$src/tests/static-properties.cpp" $'40\n42\n11'
   mkdir -p "$testdir/static-property-consumer"
   cat > "$testdir/static-property-consumer/consumer.csproj" <<'EOF'
-<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers></PropertyGroup><ItemGroup><Reference Include="static-properties"><HintPath>../static-properties.dll</HintPath></Reference></ItemGroup></Project>
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><AssemblyName>static-property-fixture</AssemblyName><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers></PropertyGroup><ItemGroup><Reference Include="static-properties"><HintPath>../static-properties.dll</HintPath></Reference></ItemGroup></Project>
 EOF
   cat > "$testdir/static-property-consumer/Program.cs" <<'EOF'
 using System;
@@ -916,11 +998,58 @@ if (internalType.IsPublic || !internalType.GetMethod("Read", BindingFlags.Static
     !internalType.GetProperty("Value", BindingFlags.Static | BindingFlags.NonPublic).GetMethod.IsAssembly)
     throw new Exception("internal type/accessor visibility lost");
 Console.WriteLine("static properties and internal visibility OK");
+public class StaticAccessorAccess {
+    public static int ReadOnly { get; protected set; } = 7;
+    public static int WriteOnly { protected get; set; } = 8;
+    protected static int Hidden { get; set; } = 9;
+    public static int ReadWriteOnly() => WriteOnly;
+}
 EOF
   "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/static-property-consumer/consumer.csproj")" -nologo -v:q \
     --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -p:NuGetAudit=false
-  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/static-property-consumer/bin/Debug/net8.0/consumer.dll")"
-  log "PASS test-static-properties: C# access to real CLR static properties"
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/static-property-consumer/bin/Debug/net8.0/static-property-fixture.dll")"
+  cat > "$testdir/static-property-reference.cpp" <<'EOF'
+#using "static-properties.dll"
+using namespace System;
+int main() {
+    Console::WriteLine(Example::StaticProperties::Value);
+    Example::StaticProperties::Value = 61;
+    Console::WriteLine(Example::StaticProperties::Value);
+    Console::WriteLine(Example::StaticProperties::Text->Length);
+    return 0;
+}
+EOF
+  run_case static-property-reference "$testdir/static-property-reference.cpp" $'40\n61\n11' --type Example.StaticProperties
+  local refs=("$CPPCLI_SDK"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
+  local args=(--type System.Threading.Thread --type System.Globalization.CultureInfo
+    --reference "$(cygpath -m "${refs[-1]}/System.Threading.Thread.dll")" --reference "$(cygpath -m "${refs[-1]}/System.Globalization.dll")")
+  cat > "$testdir/framework-static-properties.cpp" <<'EOF'
+using namespace System;
+int main() {
+    System::Threading::Thread^ current = System::Threading::Thread::CurrentThread;
+    Console::WriteLine(current != nullptr);
+    Console::WriteLine(current->ManagedThreadId > 0);
+    Console::WriteLine(System::Globalization::CultureInfo::InvariantCulture->Name->Length == 0);
+    return 0;
+}
+EOF
+  run_case framework-static-properties "$testdir/framework-static-properties.cpp" $'True\nTrue\nTrue' "${args[@]}"
+  reject_case imported-static-property-readonly '#using "static-properties.dll"
+int main() { Example::StaticProperties::Text = __cli_literal("changed"); return 0; }' 'static property has no setter' --type Example.StaticProperties
+  cp "$testdir/static-property-consumer/bin/Debug/net8.0/static-property-fixture.dll" "$testdir/"
+  cat > "$testdir/static-property-access.cpp" <<'EOF'
+#using "static-property-fixture.dll"
+using namespace System;
+int main() { Console::WriteLine(StaticAccessorAccess::ReadOnly); StaticAccessorAccess::WriteOnly = 12; Console::WriteLine(StaticAccessorAccess::ReadWriteOnly()); return 0; }
+EOF
+  run_case static-property-access "$testdir/static-property-access.cpp" $'7\n12' --type StaticAccessorAccess
+  reject_case static-property-protected-set '#using "static-property-fixture.dll"
+int main() { StaticAccessorAccess::ReadOnly = 10; return 0; }' 'static property has no setter' --type StaticAccessorAccess
+  reject_case static-property-protected-get '#using "static-property-fixture.dll"
+int main() { int value = StaticAccessorAccess::WriteOnly; return value; }' 'static property has no getter' --type StaticAccessorAccess
+  reject_case static-property-protected-method '#using "static-property-fixture.dll"
+int main() { return StaticAccessorAccess::get_Hidden(); }' 'protected member' --type StaticAccessorAccess
+  log "PASS test-static-properties: CLR static properties, imported read/write and framework getters"
 }
 step_test-nativeints() {
   log "CLR native integers, primitive pointer metadata and WPF Marshal.Copy pattern"

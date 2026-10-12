@@ -115,6 +115,7 @@ step_bridge_gate() {
     --type System.UnauthorizedAccessException --type System.Net.WebException \
     --type System.InvalidOperationException --type System.Windows.Point --type System.Windows.Media.TextFormattingMode \
     --type System.Runtime.InteropServices.CriticalHandle --type System.Threading.Interlocked --type System.GC \
+    --type System.Runtime.ConstrainedExecution.CriticalFinalizerObject \
     --type System.Runtime.ConstrainedExecution.Cer --type System.Runtime.ConstrainedExecution.Consistency \
     --type System.Runtime.ConstrainedExecution.ReliabilityContractAttribute --type System.Globalization.CultureInfo \
     --type System.NotSupportedException --type System.NotImplementedException --type System.IO.UnmanagedMemoryStream --type MS.Internal.Invariant \
@@ -152,7 +153,7 @@ step_bridge_gate() {
     -D '__deref_inout_ecount(x)=_Inout_updates_(x)' -D '__inout_ecount(x)=_Inout_updates_(x)' \
     -D '__in_ecount(x)=_In_reads_(x)' -D '__out_ecount(x)=_Out_writes_(x)' \
     -D "WINDOWS_BASE_DLL=\"$(cygpath -m "$build/lib/WindowsBase.dll")\"" \
-    -D PRESENTATION_CORE=1 -D _CLR_NETCORE=1 -o "$(cygpath -m "$build/DirectWriteForwarder.il")" \
+    -D UNICODE=1 -D _UNICODE=1 -D PRESENTATION_CORE=1 -D _CLR_NETCORE=1 -o "$(cygpath -m "$build/DirectWriteForwarder.il")" \
     > "$build/directwrite-gate.log" 2>&1 || {
       cat "$build/directwrite-gate.log"
       die "The frontend cannot compile the upstream DirectWriteForwarder bridge yet"

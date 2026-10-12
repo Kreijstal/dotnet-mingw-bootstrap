@@ -119,7 +119,12 @@
     "Runtime Type identity for source reference/value/enum types, imported references, primitives, aliases, arrays, pointers and closed generic types",
     "ReliabilityContract method/accessor metadata preserves two Clang-checked enum constants and resolves its real constructor dependencies",
     "Factory-style Marshal.GetComInterfaceForObject(object, Interface::typeid) creates a real COM callback pointer verified by native dispatch",
-    "Unchanged upstream WPF Factory IsInvalid getter body and reliability accessor declaration compile and run in a CriticalHandle probe"
+    "Unchanged upstream WPF Factory IsInvalid getter body and reliability accessor declaration compile and run in a CriticalHandle probe",
+    "gcnew uses a Clang-resolved constructor in its original source access context, including private/protected factories and converted/default arguments",
+    "Contextual literal adaptation for directly named source/imported constructors preserves managed String overloads in ordinary bodies, accessors and static initializers",
+    "Implicit Object bases for source classes whose directly named bases are known CLI interfaces, preserving CLR Object identity and interface dispatch",
+    "Imported nonindexed static properties expose public accessors and bind real getter/setter metadata, including Thread.CurrentThread and CultureInfo.InvariantCulture",
+    "Typed source method binding to selected imported delegates, including System.Action and delegates from a second CLI assembly"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -129,7 +134,7 @@
     "No mixed-mode PE output or ijwhost integration yet",
     "Unsupported AST nodes are errors; this is not a conforming general C++/CLI compiler",
     "Indexed properties currently require one index parameter; overloads require the same value type and accessor forms; static indexed/auto-properties and static compound updates remain unsupported",
-    "Interface surrogates use C++ abstract bases; interface-only classes need an explicit Object base for Object upcasts",
+    "Interface-only implicit Object bases require directly recognized interface names; aliases and unresolved qualified source names still require an explicit Object base; interface-handle Object conversions remain incomplete",
     "Interface methods and property accessors require declarations without bodies; named overrides cover one imported-interface target; source-interface renamed methods, target lists and class-target overrides remain unsupported",
     "Managed arrays currently require rank one; no aggregate initializers or covariance",
     "Managed destructors/finalizers, covariance metadata and managed operator metadata are explicitly rejected",
@@ -147,7 +152,9 @@
     "For each currently requires braced bodies and managed array/reference-enumerator handles; MoveNext currently requires bool; tracking-reference variables and value/native enumerators remain unsupported",
     "Interop attributes remain a selected subset: canonical literal GUIDs, imported interfaces, zero/one positional arguments and selected parameter marshal kinds; coclass activation, field/return marshal metadata, named marshal options and general custom attributes remain unsupported",
     "Native SDK calls are not automatically partitioned; native record pointers remain opaque native addresses, and native integer boxes remain unsupported",
-    "Delegate support currently excludes nested/generic declarations, open-instance/value-instance binding, source combine/remove expressions and general delegate attributes; imported delegates can be invoked but do not have source binding facades",
-    "Managed typeid does not emit native record/enum RTTI metadata and rejects undefined source records; ReliabilityContract currently covers individual method/accessor attributes, with no added runtime CER guarantee"
+    "Delegate support currently excludes nested/generic declarations, open-instance/value-instance binding, source combine/remove expressions and general delegate attributes; imported binding requires an available supported Invoke signature; open-instance and value-instance binding remain unsupported",
+    "Managed typeid does not emit native record/enum RTTI metadata and rejects undefined source records; ReliabilityContract currently covers individual method/accessor attributes, with no added runtime CER guarantee",
+    "Imported base chains must be explicitly selected; parameter-array expansion, optional imported arguments and primitive static members such as Double.MinValue remain unsupported",
+    "Imported static property facades expose public accessors only; protected accessors require their original method names and retain Clang access checks"
   ]
 }

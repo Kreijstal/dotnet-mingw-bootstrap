@@ -56,7 +56,11 @@
         "ClassInterface/ComVisible metadata for source COM callback classes/methods",
         "native declaration visibility syntax and internal static initializer access restoration",
         "managed typeid tokens for supported types and closed generic/array/pointer Type identity",
-        "ReliabilityContract method/accessor custom metadata"
+        "ReliabilityContract method/accessor custom metadata",
+        "source-context constructor access, converted/default arguments and constructor String literal adaptation",
+        "Object facade bases for directly recognized interface-only source classes and explicitly selected imported class hierarchies",
+        "public imported static property accessors with protected-access rejection",
+        "source method binding to selected imported CLR delegates including Action"
       ],
       "remaining": [
         "implicit boxing into Object/interfaces, primitive boxes and boxed-handle conversions",
@@ -68,7 +72,7 @@
         "full CLI semantic analysis and metadata type discovery",
         "for each with unbraced bodies, tracking-reference variables and value/native enumerators"
       ],
-      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values test-tracking test-pinning test-boxed-values test-static-fields test-static-properties test-nativeints test-layout test-switch test-generics test-indexers test-named-overrides test-each test-com test-delegates test-type-tokens"
+      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values test-tracking test-pinning test-boxed-values test-static-fields test-static-properties test-nativeints test-layout test-switch test-generics test-indexers test-named-overrides test-each test-com test-delegates test-type-tokens test-constructors"
     },
     {
       "stage": 4,
@@ -109,7 +113,10 @@
         "unchanged LocalizedStrings CopyTo method compiled and checked with value pairs, Unicode, array offsets and exceptional cleanup",
         "unchanged WPF COM mirror/classification interface headers compiled with the actual Windows/DirectWrite SDK declarations",
         "unchanged WPF text-analysis delegate declarations and native CharAttribute constants compiled and checked at runtime",
-        "original WPF Factory IsInvalid getter and reliability declaration compiled; COM callback type tokens checked through native dispatch"
+        "original WPF Factory IsInvalid getter and reliability declaration compiled; COM callback type tokens checked through native dispatch",
+        "Full bridge Sema advanced past private Factory constructor access, source interface-only Object upcasts and explicitly imported CriticalHandle base-chain conversions",
+        "Original Factory exception String constructor arguments, Thread.CurrentThread and imported Action binding now pass Sema; Dispatcher.BeginInvoke parameter-array omission remains the first error",
+        "WPF bridge gate uses Unicode Windows APIs, resolving CreateFileA versus pinned wide-string mismatch"
       ]
     }
   ]

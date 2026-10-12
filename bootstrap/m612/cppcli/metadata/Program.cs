@@ -228,7 +228,7 @@ static class Program
                         string pn = r.GetString(pd.Name);
                         properties.Add(new(pn, sig.ReturnType, getter?.Name ?? "", setter?.Name ?? "",
                             (getter ?? setter)?.Static ?? false, ValidName(pn) && sig.ParameterTypes.Length <= 1 &&
-                            (getter?.Supported == true || setter?.Supported == true) && !(getter ?? setter)!.Static) { Parameters = sig.ParameterTypes.ToArray() });
+                            (getter?.Supported == true || setter?.Supported == true)) { Parameters = sig.ParameterTypes.ToArray() });
                     }
                     var baseType = td.BaseType.IsNil ? null : SignatureTypes.EntityType(r, td.BaseType);
                     string baseName = baseType?.Name ?? "";
@@ -300,7 +300,7 @@ static class Program
             header.WriteLine("namespace System { class String; }");
             header.WriteLine("namespace cli { template<class T, int Rank = 1> class array; class __attribute__((annotate(\"cli.finally\"))) __finally_marker {}; }");
             header.WriteLine("[[noreturn]] void __cli_end_finally();");
-            header.WriteLine("template<class T, class... A> auto __cli_new(A... args) -> decltype(T(args...), (T*)nullptr); ");
+            header.WriteLine("template<class T> T* __cli_alloc(T*);");
             header.WriteLine("template<class T, class A> T __cli_safe_cast(A); template<class T, class A> T __cli_dynamic_cast(A);");
             header.WriteLine("template<class T> class __attribute__((annotate(\"cli.static.property.proxy\"))) __cli_static_property { public: operator T() const; T operator->() const; __cli_static_property& operator=(T); };");
             header.WriteLine("System::String* __cli_literal(const char*); System::String* __cli_literal(const wchar_t*);");
@@ -370,6 +370,16 @@ static class Program
             if (t.Kind == "value")
                 w.WriteLine("__attribute__((annotate(\"cli.box\"))) operator " + name + "*() const;");
             foreach (var f in t.Fields ?? Array.Empty<CliField>()) if (f.Supported) w.WriteLine(f.Access + ": __attribute__((annotate(\"cli.import.field:" + Escape(f.Id) + "\"))) " + (f.ReadOnly ? "__attribute__((annotate(\"cli.readonly\"))) " : "") + (f.Static ? "static " : "") + f.Type.Cpp + " " + f.Name + ";");
+            if (t.Base == "System.MulticastDelegate") {
+                var invoke = t.Methods.FirstOrDefault(m => m.Name == "Invoke" && m.Supported && !m.Static);
+                if (invoke != null) {
+                    // Typed C++ binding facades resolve the source method. The
+                    // emitter writes the real CLR (Object, native int) .ctor.
+                    string parameters = string.Join(", ", invoke.Parameters.Select(p => p.Cpp));
+                    w.WriteLine("using _cli_signature = " + invoke.Return.Cpp + "(" + parameters + "); " + name + "(_cli_signature*);");
+                    w.WriteLine("template<class T, class C> " + name + "(T*, " + invoke.Return.Cpp + " (C::*)(" + parameters + "));");
+                }
+            }
             var overloads = t.Methods.Where(m => m.Supported).GroupBy(m => m.Name + "(" + string.Join(", ", m.Parameters.Select(p => p.Cpp)) + ")").ToDictionary(g => g.Key, g => g.Count());
             var seen = new HashSet<string>();
             foreach (var m in t.Methods.Where(m => m.Supported))
@@ -396,6 +406,17 @@ static class Program
             var propertyFacades = new Dictionary<string, string>();
             foreach (var p in t.Properties.Where(p => p.Supported))
             {
+                if (p.Static) {
+                    if (p.Parameters.Length != 0) throw new Exception("static indexed properties are unsupported: " + t.Name + "::" + p.Name);
+                    // A public proxy must not bypass a protected accessor.
+                    // Nonpublic accessors remain available under their real
+                    // method names, where Clang checks the calling context.
+                    string getter = t.Methods.Any(m => m.Name == p.Getter && m.Access == "public") ? p.Getter : "";
+                    string setter = t.Methods.Any(m => m.Name == p.Setter && m.Access == "public") ? p.Setter : "";
+                    if (getter.Length == 0 && setter.Length == 0) continue;
+                    w.WriteLine("public: static __attribute__((annotate(\"cli.static.property:" + getter + "|" + setter + "\"))) __cli_static_property<" + p.Type.Cpp + "> " + p.Name + ";");
+                    continue;
+                }
                 var accessors = new List<string>();
                 if (p.Getter.Length != 0) accessors.Add("get=" + p.Getter);
                 if (p.Setter.Length != 0) accessors.Add("put=" + p.Setter);

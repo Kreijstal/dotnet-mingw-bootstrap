@@ -1775,8 +1775,10 @@ property declarations are now supported (see §18). The full upstream translatio
 unit now parses `for each` (see §19) and COM interface attributes (see §20).
 Native declaration visibility and text-analysis delegates are now supported (see §21).
 Managed type tokens/reliability metadata and the associated imports now pass
-(see §22). The full Factory build still fails on constructor access, Object
-conversions and native operations. Native record
+(see §22). The full gate now passes Factory's private constructor access, concrete Object
+upcasts, String constructor literals, imported static properties and Action binding
+(see §23). It next fails on Dispatcher.BeginInvoke's omitted parameter array.
+Primitive static members and native operations also remain unsupported. Native record
 emission, managed class templates, callbacks, finalizers and automatic native
 partitioning also remain outside its supported subset.
 The same compiler failure can be reproduced with `wpf.sh bridge-gate`; it
@@ -2605,3 +2607,87 @@ System.Printing, higher WPF assemblies, missing PresentationNative exports,
 rendered-window validation, WindowsDesktop packaging and current Greenshot
 remain unfinished. The installed frontend still predates this development
 build, selected explicitly with WPF_CPPCLI_BUILD.
+
+
+## 23. Factory allocation access, Object conversions and imported members
+
+The 2026-10-12 continuation replaces the allocation facade's
+`decltype(T(args...))` constraint with `__cli_alloc(new T(args...))`. Clang now
+resolves the actual constructor and checks its access in the original source
+member or friend context, so Factory's own static method can call its private
+constructor. The emitter reads the resulting CXXConstructExpr and emits CLR
+`newobj`, `newarr` or boxing; it does not emit native operator new. Plain native
+`new` remains explicitly rejected. Constructor argument conversions and primitive
+default arguments are retained from Clang's resolved argument list. Adapter closing
+markers also work in nested allocations, property accessors and static initializers.
+
+Contextual String literals are now recognized at known String-parameter positions
+of directly named source and imported constructors. This fixes the original
+`gcnew ArgumentOutOfRangeException("faceIndex")` call and avoids the bool overload
+winning for a source constructor with String and bool alternatives. This remains
+selected token adaptation: constructor aliases, general literal conversions and
+all imported optional/parameter-array rules are not implemented.
+
+For source classes whose declared bases are all directly recognized interfaces,
+the adapter adds their real implicit System.Object class base to the C++ facade.
+The emitted CLR type still extends Object and implements the declared interfaces.
+The WPF gate also selects CriticalFinalizerObject explicitly, completing the
+actual CriticalHandle-to-Object imported facade chain. No synthetic CLR base is
+substituted for the real imported base. Unselected base chains, alias lookup and
+interface-handle conversions remain limitations.
+
+The metadata reader now preserves nonindexed static properties with supported
+public accessor signatures and emits the existing static-property proxy with real getter
+and setter identities. This resolves WPF's Thread.CurrentThread and
+CultureInfo.InvariantCulture calls. Imported delegates with a supported Invoke
+signature receive typed static/member binding constructors in the C++ facade;
+the emitter uses the real CLR Object/native-int constructor and ldftn/ldvirtftn.
+The original Factory `gcnew Action(CleanupTimeStampCache)` now passes Clang Sema.
+The WPF gate also defines UNICODE and _UNICODE, matching the upstream Windows
+build and selecting CreateFileW for its pinned wide-string buffer.
+
+Focused validation on win11:
+
+```sh
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh \
+  test-constructors test-objects test-delegates test-arrays test-boxed-values test-static-fields
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh \
+  test-static-properties test-constructors test-generics test-com
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh \
+  test-delegates test-static-properties test-constructors
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  WPF_CPPCLI_BUILD=/home/topkek/dotnetboot/m612/build/cppcli \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh bridge-gate
+```
+
+The builds and focused checks pass. The new C# consumer verifies actual private
+and protected constructor visibility, factory execution, Unicode and static/accessor
+String literals, the exception ParamName, Object identity, inherited interface
+dispatch, and the real CriticalHandle base. A second CLI assembly reads and writes
+imported static properties and rejects read-only and protected accessors. Protected
+accessors remain callable by their original method names with Clang access checks;
+the public property facade currently exposes only public accessors. Delegate checks bind
+imported static, bound-instance and virtual methods, invoke System.Action, verify
+its actual framework type after GC, and reject incompatible signatures. Existing
+native COM/delegate checks still pass. Generic C++ static-field facade warnings
+remain; managed consumer builds report zero warnings and errors.
+
+The complete bridge gate still fails: its first error is now Factory.cpp:363,
+where Dispatcher.BeginInvoke needs its omitted `params Object[]` argument.
+Following errors include Double.MinValue/TryParse and Int32/UInt32 static members,
+Guid literal construction, a boxed KeyValuePair-to-Object return, out-of-line
+generic wrapper property definitions, additional imports and native operations.
+These checks do not compile all of Factory.cpp or the complete bridge. The count
+remains one complete implementation body (LocalizedErrorMsgs.cpp) out of the 21
+included by DirectWriteForwarder.cpp; no additional full file is claimed.
+System.Printing, higher WPF assemblies, complete PresentationNative exports,
+version/protocol matching, WindowsDesktop packaging and current Greenshot remain
+unfinished. All new compiler features are in the development frontend; installed
+frontend packages are unchanged. Logs are archived under
+`tmp/wpf8-support/validation/factory-allocation-20261012` on the local build host.
