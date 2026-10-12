@@ -442,6 +442,29 @@ EOF
   reject_case native-exception 'int main() { try { throw 1; } catch (int value) { return value; } }' 'only managed handle'
   reject_case rethrow-outside-catch 'int main() { throw; }' 'rethrow requires'
 }
+step_test-native-fields() {
+  /clang64/bin/clang++.exe -std=c++17 -fms-extensions -shared -O2 -DCPPCLI_NATIVE_BUILD "$src/tests/native-fields-native.cpp" -o "$testdir/cppcli-native-fields.dll"
+  run_case native-fields "$src/tests/native-fields.cpp" 'native POD aggregate, packed nested fields, addresses and single evaluation OK' --native-library cppcli-native-fields.dll
+  reject_case native-bitfield 'struct Native { unsigned Value:3; }; int main() { Native value = {}; return value.Value; }' 'native POD bitfield operations'
+  reject_case native-array-field 'struct Native { int Values[2]; }; int main() { Native value = {{1, 2}}; return 0; }' 'native POD array field operations'
+}
+step_test-windows-api() {
+  log "MinGW import archives -> lazy Windows API P/Invoke bindings"
+  compile "$(cygpath -m "$src/tests/windows-api.cpp")" --target library \
+    --native-import "$(cygpath -m /clang64/lib/libadvapi32.a)" \
+    --native-import "$(cygpath -m /clang64/lib/libkernel32.a)" \
+    -o "$(cygpath -m "$testdir/windows-api.dll")"
+  mkdir -p "$testdir/windows-api-consumer"
+  cp "$src/tests/WindowsApiConsumer.cs" "$testdir/windows-api-consumer/Program.cs"
+  cat > "$testdir/windows-api-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers></PropertyGroup><ItemGroup><Reference Include="windows-api"><HintPath>../windows-api.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/windows-api-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -p:NuGetAudit=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/windows-api-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case windows-api-unbound '#include <windows.h>
+int main() { return RegCloseKey(NULL); }' 'without an emitted definition'
+}
 step_test-interop() {
   log "MinGW g++ native C++ DLL -> generated CLR P/Invoke -> source-built CoreCLR"
   PATH=/ucrt64/bin:$PATH /ucrt64/bin/g++.exe -std=c++17 -shared -O2 -static-libgcc -static-libstdc++ -DCPPCLI_NATIVE_BUILD \

@@ -1788,8 +1788,10 @@ Native Guid references and opaque trivial native record copies now pass (see
 §29). Source destructor disposal and genuine nested ref/value metadata now pass
 (§30), including the original LocalizedStringsEnumerator and its getters.
 GC-free managed value pointers now pass (§31), including the original
-GlyphMetrics header/native ABI. IL emission next fails at the missing
-RegOpenKeyExW native bridge in TrueTypeSubsetter/util2.cpp.
+GlyphMetrics header/native ABI. Windows API imports and native FILETIME
+aggregate/field operations now pass (§32); the complete original util2.cpp
+is compiled and checked against actual registry timestamps. IL emission next
+fails at an uninitialized local in TrueTypeSubsetter/TtfDelta/ttfdelta.cpp:46.
 General native record operations, open managed
 generics, callbacks, finalizers and automatic native
 partitioning also remain outside its supported subset.
@@ -3332,3 +3334,83 @@ System.Printing, higher WPF, missing native exports, protocol/version matching
 and WindowsDesktop packaging remain open. Changes are development frontend
 changes. Logs, emitted IL and glyph pointer source checks are archived in
 `tmp/wpf8-support/validation/value-glyph-pointers-20261012` on the local build host.
+
+## 32. Windows API imports and the complete registry helper
+
+The 2026-10-12 continuation implements Windows SDK call binding through explicit
+trusted MinGW import archives. `cli-clang --native-import <archive>` uses
+`llvm-readobj` to read named x64 COFF short code imports and writes the resolved
+DLL/export map into the assembly work directory. Ambiguous bindings fail. The
+emitter selects declarations only when managed bodies call a system-header
+extern-C DLL-import function; unrelated SDK inline code does not produce imports.
+These methods retain scalar/pointer ABI checks, exact export spelling, Winapi
+calling convention and PreserveSig. User split-DLL `--native-library` bindings
+remain separate. Ordinal/data/decorated/forwarder forms, by-value native record
+API signatures and automatic last-error capture remain unsupported. Registry
+APIs return their LSTATUS directly; no synthetic last-error handling is added.
+
+Native POD aggregate initialization now uses Clang's semantic field mapping and
+zeroed opaque value storage. Scalar/nested-record field reads, writes and addresses
+use actual Clang byte offsets. Compound updates and increments capture the
+receiver address once. Unaligned memory prefixes support packed records, and
+volatile field access retains the volatile prefix. Bitfield and array field
+operations, allocation/deletion, nontrivial constructors/destructors and native
+object dispatch remain unimplemented. Address formation still requires supported
+stable native storage rather than converting movable managed storage into an
+untracked address.
+
+The native ABI test exposed a preprocessing bug: the token adapter discarded
+`#pragma pack` directives. A preprocessing pragma handler now carries pack
+directives into the adapted source as `_Pragma` expressions, leaving pack-stack
+interpretation and layout to the real Clang parser. The test checks included-header
+`#pragma`, macro-expanded `__pragma`, `_Pragma`, and restored natural alignment
+against a separately compiled native DLL: a 15-byte nested packed record, a
+10-byte record packed to two-byte alignment, and a 16-byte natural record. It
+also checks 64-bit field values, nested field addresses, copies, union scalar
+initialization, volatile writes and single evaluation of side-effectful receivers.
+
+`wpf.sh check-registry-time` copies the complete upstream `util2.cpp` and its
+original `util2.h` byte for byte and compiles them with a focused precompiled-header
+context containing Windows and vcclr dependencies. No method body is extracted
+or rewritten. Its actual RegOpenKeyExW, RegQueryInfoKeyW and RegCloseKey calls
+are imported from `libadvapi32.a`. A reflection-based C# consumer accesses the
+original internal Util2 type, verifies Out/Int64-byref metadata, compares UTC
+ticks with an independent Win32 FILETIME query, exercises compacting GC and
+checks handle counts across 128 reads. A nonexistent Unicode key returns false
+and zero output. All registry operations are read-only.
+
+Validation on win11 with the source-built SDK/runtime and development frontend:
+
+```sh
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh \
+  test-native-fields test-windows-api test-native-storage test-value-pointers test-interop
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  WPF_CPPCLI_BUILD=/home/topkek/dotnetboot/m612/build/cppcli \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-registry-time bridge-gate
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  WPF_CPPCLI_BUILD=/home/topkek/dotnetboot/m612/build/cppcli \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-glyph-pointer check-native-guid
+```
+
+The build and focused checks pass. The Windows API consumer also verifies exactly
+three imports, both real DLL identities, ExactSpelling/Winapi/PreserveSig and
+unchanged native error status. Managed check builds have zero warnings/errors.
+The complete bridge gate still exits 1 after 39 upstream/native warnings, now at
+`TrueTypeSubsetter/TtfDelta/ttfdelta.cpp:46`: uninitialized locals are unsupported.
+The registry call, aggregate initializer and FILETIME field failures are gone.
+
+Whole implementation-file evidence is now **two of the 21 directly included
+DirectWrite bodies**: LocalizedErrorMsgs.cpp and util2.cpp, each checked in a
+focused dependency context. The 620 C# foundation inputs remain compiled. No
+complete DirectWriteForwarder/System.Printing assembly, WPF package or
+WindowsDesktop SDK has been produced. TrueType subsetter lowering/native
+partitioning, further native COM/font operations, missing PresentationNative
+exports, protocol/version matching and desktop packaging remain open. Frontend
+changes remain in the development build; installed packages are unchanged.
+Logs, original registry sources, native ABI checks and emitted IL are archived
+under `tmp/wpf8-support/validation/windows-api-registry-20261012` on the local host.

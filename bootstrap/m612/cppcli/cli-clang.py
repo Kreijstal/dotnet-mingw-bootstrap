@@ -13,6 +13,35 @@ def run(command):
     subprocess.run([str(x) for x in command], check=True)
 
 
+def native_imports(libraries, reader):
+    imports = {}
+    for library in libraries:
+        output = subprocess.check_output([reader, str(library.resolve())], text=True)
+        for block in re.split(r"(?m)^File: ", output)[1:]:
+            lines = block.splitlines()
+            dll = lines[0].strip()
+            if "Format: COFF-import-file-x86-64" not in lines or "Type: code" not in lines or "Name type: name" not in lines:
+                continue
+            if not re.fullmatch(r"[A-Za-z0-9_.-]+\.dll", dll, re.IGNORECASE):
+                raise ValueError("invalid native import DLL: " + dll)
+            exports = [line.removeprefix("Export name: ") for line in lines if line.startswith("Export name: ")]
+            if len(exports) != 1:
+                raise ValueError("incomplete named COFF import: " + dll)
+            entry = exports[0]
+            if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", entry):
+                continue # Decorated/ordinal/forwarder import forms need separate support.
+            for line in lines:
+                if not line.startswith("Symbol: "): continue
+                symbol = line.removeprefix("Symbol: ")
+                if symbol.startswith("__imp_"): continue
+                binding = {"library": dll, "entry": entry}
+                old = imports.get(symbol)
+                if old and {k: v.lower() for k, v in old.items()} != {k: v.lower() for k, v in binding.items()}:
+                    raise ValueError("ambiguous native import symbol: " + symbol)
+                imports[symbol] = binding
+    return imports
+
+
 def main():
     if os.name == "nt":
         # Redirected Windows streams otherwise use an ANSI code page and can
@@ -33,6 +62,8 @@ def main():
     ap.add_argument("--public-key", type=Path, help="strong-name public-key blob for the emitted assembly identity (public signing only)")
     ap.add_argument("--framework", choices=["windowsforms"], help="reference the source-built Windows Forms pack and select its runtime framework")
     ap.add_argument("--native-library", default="", help="DLL supplying used extern-C functions through a split native bridge")
+    ap.add_argument("--native-import", action="append", default=[], type=Path, help="trusted x64 MinGW import library supplying named Windows API bindings")
+    ap.add_argument("--llvm-readobj", default="llvm-readobj", help="LLVM reader used to inspect native COFF import libraries")
     ap.add_argument("--clang", default=os.environ.get("CPPCLI_CLANG", "clang++"))
     ap.add_argument("--sdk", type=Path, default=os.environ.get("CPPCLI_SDK"))
     ap.add_argument("--ilasm", type=Path, default=os.environ.get("CPPCLI_ILASM"))
@@ -82,6 +113,8 @@ def main():
         ap.error("input and output must differ")
     work = output.parent / (output.name + ".work")
     work.mkdir(parents=True, exist_ok=True)
+    native_manifest = work / "native-imports.json"
+    native_manifest.write_text(json.dumps({"version": 1, "imports": native_imports(a.native_import, a.llvm_readobj)}, sort_keys=True), encoding="utf-8")
     manifest, header = work / "metadata.json", work / "metadata.hpp"
     adapted, il = work / "adapted.cpp", work / "assembly.il"
     # LLVM's in-process crash recovery treats MinGW C++ exceptions raised by a
@@ -122,7 +155,8 @@ def main():
     action("cli-adapt", shim, ["metadata=" + str(manifest), "output=" + str(adapted)])
     action("cli-emit", adapted, ["metadata=" + str(manifest), "output=" + str(il),
                                  "evidence=" + str(work / "ast.json"),
-                                 "assembly=" + assembly_name, "public-key=" + public_key, "target=" + a.target, "native-library=" + a.native_library], True)
+                                 "assembly=" + assembly_name, "public-key=" + public_key, "target=" + a.target, "native-library=" + a.native_library,
+                                 "native-imports=" + str(native_manifest)], True)
     if a.emit == "il":
         output.write_bytes(il.read_bytes())
     else:
@@ -141,6 +175,6 @@ def main():
 if __name__ == "__main__":
     try:
         main()
-    except (OSError, subprocess.CalledProcessError) as e:
+    except (OSError, ValueError, subprocess.CalledProcessError) as e:
         print("cli-clang: " + str(e), file=sys.stderr)
         sys.exit(1)

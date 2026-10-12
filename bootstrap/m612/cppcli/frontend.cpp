@@ -26,6 +26,7 @@
 #include <filesystem>
 #include <functional>
 #include <map>
+#include <optional>
 #include <set>
 #include <sstream>
 #include <stdexcept>
@@ -170,7 +171,7 @@ struct Metadata {
 
 struct Options {
     std::string metadata, output, evidence;
-    std::string assembly = "cli_program", target = "exe", native_library, public_key;
+    std::string assembly = "cli_program", target = "exe", native_library, native_imports, public_key;
     bool parse(const CompilerInstance& ci, const std::vector<std::string>& args, bool require_metadata = true) {
         for (const auto& arg : args) {
             auto eq = arg.find('=');
@@ -182,6 +183,7 @@ struct Options {
             else if (key == "assembly") assembly = value;
             else if (key == "target") target = value;
             else if (key == "native-library") native_library = value;
+            else if (key == "native-imports") native_imports = value;
             else if (key == "public-key") public_key = value;
             else return false;
         }
@@ -315,6 +317,27 @@ public:
             {"source", loc.isValid() ? loc.getFilename() : ""}, {"as_friend", as_friend}});
     }
 };
+// This preprocessing action has no Parser/Sema pragma handlers. Carry pack
+// directives through flattening so the real parser owns layout and pack stacks.
+class PreservePackPragma : public PragmaHandler {
+    std::vector<Lexeme>& tokens;
+public:
+    explicit PreservePackPragma(std::vector<Lexeme>& result) : PragmaHandler("pack"), tokens(result) {}
+    void HandlePragma(Preprocessor& pp, PragmaIntroducer, Token& first) override {
+        auto& sm = pp.getSourceManager();
+        auto location = sm.getPresumedLoc(first.getLocation());
+        if (!location.isValid()) throw std::runtime_error("pack pragma has no source location");
+        std::string text = "pack";
+        Token token;
+        for (;;) {
+            pp.Lex(token);
+            if (token.is(tok::eod) || token.is(tok::eof)) break;
+            text += " " + pp.getSpelling(token);
+        }
+        tokens.push_back({"_Pragma(" + quote(text) + ")", location.getFilename(), location.getLine(), tok::identifier,
+                          sm.isInSystemHeader(first.getLocation())});
+    }
+};
 class ShimAction : public PluginASTAction {
     Options options;
 protected:
@@ -365,8 +388,9 @@ protected:
             llvm::json::Array ignored_references;
             pp.AddPragmaHandler(new ReferencePragma(ignored_references));
             auto& sm = ci.getSourceManager();
-            pp.EnterMainSourceFile();
             std::vector<Lexeme> tokens;
+            pp.AddPragmaHandler(new PreservePackPragma(tokens));
+            pp.EnterMainSourceFile();
             Token token;
             for (;;) {
                 pp.Lex(token);
@@ -1200,6 +1224,9 @@ class Emitter {
     std::ostringstream code;
     FunctionDecl* current = nullptr;
     std::string native_library;
+    struct NativeImport { std::string library, entry; };
+    std::map<std::string, NativeImport> native_imports;
+    std::set<const FunctionDecl*> selected_native_imports;
     unsigned label_count = 0, max_stack = 0;
     int stack = 0;
     struct ControlLabels { std::string stop, next; unsigned depth; };
@@ -1890,6 +1917,36 @@ class Emitter {
         bytes << ")";
         op(bytes.str(), 0, 1);
     }
+    bool native_field(const FieldDecl* field) const {
+        return field && native_pod(context.getCanonicalTagType(field->getParent()));
+    }
+    uint64_t native_field_offset(const FieldDecl* field, const Expr* where) const {
+        if (field->isBitField()) fail(where, "native POD bitfield operations are not enabled yet");
+        if (field->getType()->isArrayType()) fail(where, "native POD array field operations are not enabled yet");
+        auto* record = cast<CXXRecordDecl>(field->getParent());
+        auto bits = context.getASTRecordLayout(record).getFieldOffset(field->getFieldIndex());
+        if (bits % context.getCharWidth()) fail(where, "native POD field is not byte-aligned");
+        return bits / context.getCharWidth();
+    }
+    void native_offset(uint64_t offset) {
+        if (!offset) return;
+        op("ldc.i8 " + std::to_string(offset), 0, 1); op("conv.u", 1, 1); op("add", 2, 1);
+    }
+    void native_field_address(const MemberExpr* member) {
+        auto* field = cast<FieldDecl>(member->getMemberDecl());
+        auto offset = native_field_offset(field, member);
+        if (member->isArrow()) expr(member->getBase());
+        else native_address(member->getBase());
+        native_offset(offset);
+    }
+    void native_field_load(const FieldDecl* field) {
+        if (field->getType().isVolatileQualified()) op("volatile.");
+        op("unaligned. 1"); op("ldobj " + type(field->getType()), 1, 1);
+    }
+    void native_field_store(const FieldDecl* field) {
+        if (field->getType().isVolatileQualified()) op("volatile.");
+        op("unaligned. 1"); op("stobj " + type(field->getType()), 2);
+    }
     void address(const Expr* original) {
         const Expr* e = strip(original)->IgnoreParenImpCasts();
         if (auto* unary = dyn_cast<UnaryOperator>(e); unary && unary->getOpcode() == UO_Deref && !native_value_pointer(unary->getSubExpr()).isNull()) {
@@ -1915,6 +1972,7 @@ class Emitter {
         if (auto* member = dyn_cast<MemberExpr>(e)) {
             auto* field = dyn_cast<FieldDecl>(member->getMemberDecl());
             if (!field) fail(e, "value address requires an instance field");
+            if (native_field(field)) { native_field_address(member); return; }
             if (annotated(field, "cli.readonly")) fail(e, "readonly imported fields cannot be passed by writable reference");
             emit_receiver(member->getBase()); op("ldflda " + field_signature(field), 1, 1); return;
         }
@@ -1944,6 +2002,9 @@ class Emitter {
     }
     void native_address(const Expr* original) {
         const Expr* e = strip(original)->IgnoreParenImpCasts();
+        if (auto* member = dyn_cast<MemberExpr>(e); member && native_field(dyn_cast<FieldDecl>(member->getMemberDecl()))) {
+            native_field_address(member); return;
+        }
         if (auto* reference = dyn_cast<DeclRefExpr>(e)) {
             auto* variable = dyn_cast<VarDecl>(reference->getDecl());
             if (variable && variable->hasLocalStorage() && (!variable->getType()->isReferenceType() || native_reference(variable))) {
@@ -2032,6 +2093,11 @@ class Emitter {
             if (annotated(field, "cli.readonly")) fail(target, "readonly imported fields cannot be assigned");
             unsigned slot = temporary(declared_type(field));
             op("stloc " + std::to_string(slot), 1);
+            if (native_field(field)) {
+                native_field_address(member); op("ldloc " + std::to_string(slot), 0, 1); native_field_store(field);
+                if (retain) op("ldloc " + std::to_string(slot), 0, 1);
+                return;
+            }
             emit_receiver(member->getBase()); op("ldloc " + std::to_string(slot), 0, 1);
             op("stfld " + field_signature(field), 2);
             if (retain) op("ldloc " + std::to_string(slot), 0, 1);
@@ -2089,6 +2155,14 @@ class Emitter {
             if (auto* member = dyn_cast<MemberExpr>(b->getLHS()->IgnoreParenImpCasts())) {
                 auto* field = dyn_cast<FieldDecl>(member->getMemberDecl());
                 if (!field) fail(b, "compound assignment target is not an instance field");
+                if (native_field(field)) {
+                    unsigned pointer = temporary("native unsigned int"), result = temporary(type(field->getType()));
+                    native_field_address(member); op("stloc " + std::to_string(pointer), 1);
+                    op("ldloc " + std::to_string(pointer), 0, 1); native_field_load(field);
+                    expr(b->getRHS()); op(operation, 2, 1); op("stloc " + std::to_string(result), 1);
+                    op("ldloc " + std::to_string(pointer), 0, 1); op("ldloc " + std::to_string(result), 0, 1);
+                    native_field_store(field); op("ldloc " + std::to_string(result), 0, 1); return;
+                }
                 unsigned receiver = temporary(native_value_pointer(member->getBase()).isNull() ? receiver_type(field) : expression_type(member->getBase()));
                 unsigned result = temporary(type(field->getType()));
                 emit_receiver(member->getBase()); op("stloc " + std::to_string(receiver), 1);
@@ -2145,6 +2219,12 @@ class Emitter {
     void call(const CallExpr* c) {
         auto* f = c->getDirectCallee();
         if (!f) fail(c, "indirect calls are not supported yet");
+        auto binding = native_imports.find(f->getNameAsString());
+        if (binding != native_imports.end() && f->isExternC() && !isa<CXXMethodDecl>(f) && !f->hasBody() &&
+            f->hasAttr<DLLImportAttr>() && ci.getSourceManager().isInSystemHeader(f->getLocation())) {
+            selected_native_imports.insert(f->getCanonicalDecl());
+            if (seen.insert(f->getCanonicalDecl()).second) functions.push_back(const_cast<FunctionDecl*>(f));
+        }
         if (isa<CXXDestructorDecl>(f)) {
             auto* member = dyn_cast<CXXMemberCallExpr>(c);
             if (!member || !handle_target(member->getImplicitObjectArgument()->getType()))
@@ -2499,6 +2579,7 @@ class Emitter {
         if (auto* member = dyn_cast<MemberExpr>(e)) {
             auto* field = dyn_cast<FieldDecl>(member->getMemberDecl());
             if (!field) fail(e, "unsupported managed member expression");
+            if (native_field(field)) { native_field_address(member); native_field_load(field); return; }
             emit_receiver(member->getBase()); op("ldfld " + field_signature(field), 1, 1); return;
         }
         if (auto* d = dyn_cast<DeclRefExpr>(e)) { load_decl(d->getDecl(), e); return; }
@@ -2551,6 +2632,25 @@ class Emitter {
             if (stack != base + 1) fail(e, "conditional branch stack mismatch");
             code << done << ":\n"; return;
         }
+        if (auto* init = dyn_cast<InitListExpr>(e); init && native_pod(init->getType())) {
+            auto* semantic = init->isSemanticForm() ? init : init->getSemanticForm();
+            if (!semantic) fail(init, "native POD initializer lacks semantic field mapping");
+            auto* record = init->getType()->getAsCXXRecordDecl()->getDefinition();
+            unsigned slot = temporary(type(init->getType()));
+            op("ldloca " + std::to_string(slot), 0, 1); op("initobj " + type(init->getType()), 1);
+            unsigned index = 0;
+            for (auto* field : record->fields()) {
+                if (record->isUnion() && field != semantic->getInitializedFieldInUnion()) continue;
+                if (field->isUnnamedBitField()) continue;
+                if (index >= semantic->getNumInits()) break;
+                auto* value = semantic->getInit(index++);
+                if (isa<ImplicitValueInitExpr>(value)) continue; // initobj already zeroed this field.
+                auto offset = native_field_offset(field, init);
+                op("ldloca " + std::to_string(slot), 0, 1); op("conv.u", 1, 1); native_offset(offset);
+                expr(value); native_field_store(field);
+            }
+            op("ldloc " + std::to_string(slot), 0, 1); return;
+        }
         if (auto* c = dyn_cast<CallExpr>(e)) { call(c); return; }
         if (auto* c = dyn_cast<CXXConstructExpr>(e)) {
             if (native_pod(c->getType())) {
@@ -2598,6 +2698,9 @@ class Emitter {
         }
         if (auto* u = dyn_cast<UnaryOperator>(e)) {
             if (u->getOpcode() == UO_AddrOf && u->getType()->isPointerType() && !handle_target(u->getType())) {
+                if (auto* member = dyn_cast<MemberExpr>(u->getSubExpr()->IgnoreParenImpCasts()); member && native_field(dyn_cast<FieldDecl>(member->getMemberDecl()))) {
+                    native_field_address(member); return;
+                }
                 auto* reference = dyn_cast<DeclRefExpr>(u->getSubExpr()->IgnoreParenImpCasts());
                 auto* variable = reference ? dyn_cast<VarDecl>(reference->getDecl()) : nullptr;
                 auto element = u->getSubExpr()->getType();
@@ -2634,6 +2737,17 @@ class Emitter {
                 if (auto* member = dyn_cast<MemberExpr>(u->getSubExpr()->IgnoreParenImpCasts())) {
                     auto* field = dyn_cast<FieldDecl>(member->getMemberDecl());
                     if (!field) fail(u, "increment target is not an instance field");
+                    if (native_field(field)) {
+                        auto ft = type(field->getType());
+                        unsigned pointer = temporary("native unsigned int"), old = temporary(ft), result = temporary(ft);
+                        native_field_address(member); op("stloc " + std::to_string(pointer), 1);
+                        op("ldloc " + std::to_string(pointer), 0, 1); native_field_load(field); op("stloc " + std::to_string(old), 1);
+                        op("ldloc " + std::to_string(old), 0, 1);
+                        op(ft == "int64" || ft == "uint64" ? "ldc.i8 1" : ft == "float32" ? "ldc.r4 1" : ft == "float64" ? "ldc.r8 1" : "ldc.i4.1", 0, 1);
+                        op(u->isIncrementOp() ? "add" : "sub", 2, 1); op("stloc " + std::to_string(result), 1);
+                        op("ldloc " + std::to_string(pointer), 0, 1); op("ldloc " + std::to_string(result), 0, 1); native_field_store(field);
+                        op("ldloc " + std::to_string(u->isPostfix() ? old : result), 0, 1); return;
+                    }
                     unsigned receiver = temporary(native_value_pointer(member->getBase()).isNull() ? receiver_type(field) : expression_type(member->getBase()));
                     unsigned old = temporary(type(field->getType())), result = temporary(type(field->getType()));
                     emit_receiver(member->getBase()); op("stloc " + std::to_string(receiver), 1);
@@ -2846,8 +2960,9 @@ class Emitter {
         if (stack != before) fail(s, "internal IL stack mismatch at statement boundary");
     }
     bool native_function(const FunctionDecl* f) const {
-        return !native_library.empty() && f->isExternC() && !isa<CXXMethodDecl>(f) && !f->hasBody() && f->isUsed() &&
-            !ci.getSourceManager().isInSystemHeader(f->getLocation());
+        return selected_native_imports.count(f->getCanonicalDecl()) ||
+            (!native_library.empty() && f->isExternC() && !isa<CXXMethodDecl>(f) && !f->hasBody() && f->isUsed() &&
+            !ci.getSourceManager().isInSystemHeader(f->getLocation()));
     }
     void validate_native_signature(const FunctionDecl* f) const {
         auto valid = [&](const ValueDecl* declaration, QualType t, bool result) {
@@ -3131,9 +3246,24 @@ public:
     }
     std::string emit(const Options& options) {
         native_library = options.native_library;
+        if (!options.native_imports.empty()) {
+            auto json = llvm::json::parse(read_file(options.native_imports));
+            auto* root = json ? json->getAsObject() : nullptr;
+            if (!root || root->getInteger("version") != 1 || !root->getObject("imports")) throw std::runtime_error("invalid native import manifest");
+            for (const auto& entry : *root->getObject("imports")) {
+                auto* value = entry.second.getAsObject();
+                auto library = value ? value->getString("library") : std::nullopt;
+                auto symbol = value ? value->getString("entry") : std::nullopt;
+                if (!library || !symbol) throw std::runtime_error("incomplete native import binding");
+                native_imports.emplace(entry.first.str(), NativeImport{library->str(), symbol->str()});
+            }
+        }
         collect(context.getTranslationUnitDecl());
         bool entry = false;
-        for (auto* f : functions) {
+        // Managed calls discover native imports while generating their bodies.
+        // Index traversal keeps those appended declarations stable and emits them.
+        for (size_t i = 0; i < functions.size(); ++i) {
+            auto* f = functions[i];
             for (auto* parameter : f->parameters()) variable_type(parameter);
             if (f->getNameAsString() == "main") {
                 if (isa<CXXMethodDecl>(f) || f->getNumParams() != 0 || type(f->getReturnType()) != "int32")
@@ -3154,6 +3284,9 @@ public:
         }
         il << " }\n.module '" << options.assembly << ".dll'\n";
         if (!native_library.empty()) il << ".module extern '" << native_library << "'\n";
+        std::set<std::string> system_libraries;
+        for (auto* function : selected_native_imports) system_libraries.insert(native_imports.at(function->getNameAsString()).library);
+        for (const auto& library : system_libraries) il << ".module extern '" << library << "'\n";
         for (const auto& entry : native_records) {
             const auto& layout = context.getASTRecordLayout(entry.second);
             il << ".class public sequential ansi sealed " << entry.first << " extends [System.Runtime]System.ValueType {\n"
@@ -3176,8 +3309,10 @@ public:
             auto* method = dyn_cast<CXXMethodDecl>(f);
             bool cctor = annotated(f, "cli.cctor");
             if (native_function(f)) {
-                il << "  .method public hidebysig static pinvokeimpl(" << quote(native_library) << " as " << quote(f->getNameAsString())
-                   << " cdecl) " << declared_type(f) << " '" << f->getNameAsString() << "'(";
+                bool system = selected_native_imports.count(f->getCanonicalDecl());
+                auto binding = system ? native_imports.at(f->getNameAsString()) : NativeImport{native_library, f->getNameAsString()};
+                il << "  .method public hidebysig static pinvokeimpl(" << quote(binding.library) << " as " << quote(binding.entry)
+                   << (system ? " winapi nomangle) " : " cdecl) ") << declared_type(f) << " '" << f->getNameAsString() << "'(";
                 for (unsigned j = 0; j < f->getNumParams(); ++j) { if (j) il << ", "; il << parameter_signature(f->getParamDecl(j)); }
                 il << ") cil managed preservesig {}\n"; return;
             }

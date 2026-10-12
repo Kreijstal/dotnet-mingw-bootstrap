@@ -110,7 +110,9 @@
         "opaque trivial native POD storage with Clang size/alignment, by-value returns and native buffer copy/store",
         "system SDK declarations excluded from user split-DLL P/Invoke collection",
         "GC-free managed-value native pointer bridges, copies/member calls/stores and C# pinned struct-buffer ABI validation",
-        "ordinary native integer/pointer conversions with predefined Win32 handle sign extension"
+        "ordinary native integer/pointer conversions with predefined Win32 handle sign extension",
+        "opt-in x64 MinGW COFF import archive bindings for lazily selected Windows API calls",
+        "native POD aggregate/field/address lowering, single receiver evaluation and preserved pack pragmas with real native ABI checks"
       ],
       "remaining": [
         "native layouts, complete pointer operations and automatic marshalling",
@@ -118,7 +120,7 @@
         "real mixed-mode PE and native-to-managed thunks",
         "MinGW ijwhost port"
       ],
-      "validation": "cppcli.sh test-interop test-pinning; wpf.sh check-directwrite-bridge; cppcli.sh test-com"
+      "validation": "cppcli.sh test-interop test-pinning; wpf.sh check-directwrite-bridge; cppcli.sh test-com; cppcli.sh test-windows-api test-native-fields test-native-storage test-value-pointers"
     },
     {
       "stage": 5,
@@ -154,7 +156,9 @@
         "original LocalizedStrings nested enumerator and both getter bodies run with CLR IDisposable, boxing and compacting-GC checks",
         "full bridge passes missing enumerator Dispose slots and nested FontFaceCacheEntry collection; next IL gate is native GlyphMetrics value pointers",
         "original WPF GlyphMetrics typed native pointer signature, private explicit layout and all seven DirectWrite field writes checked in a pinned array after GC",
-        "full WPF gate passes GlyphMetrics pointer declarations and predefined HKEY casts; first missing native SDK bridge is RegOpenKeyExW"
+        "full WPF gate passes GlyphMetrics pointer declarations and predefined HKEY casts; first missing native SDK bridge is RegOpenKeyExW",
+        "complete unchanged upstream util2.cpp with original declaration and focused precompiled-header context; real Windows registry timestamps, Out metadata, Unicode failure output, compacting GC and repeated handle cleanup verified",
+        "full WPF bridge passes RegOpenKeyExW/RegQueryInfoKeyW/RegCloseKey and FILETIME aggregate/field operations; next IL gate is an uninitialized TrueType subsetter local in ttfdelta.cpp"
       ]
     }
   ]

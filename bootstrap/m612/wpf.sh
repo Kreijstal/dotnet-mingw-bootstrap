@@ -108,6 +108,8 @@ step_bridge_gate() {
   local core_refs=("$sdk"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
   local core_ref=${core_refs[-1]}
   bridge_compile "$(cygpath -m "$cpp/DirectWriteForwarder.cpp")" --std c++14 --target library --emit il \
+    --native-import "$(cygpath -m /clang64/lib/libadvapi32.a)" \
+    --native-import "$(cygpath -m /clang64/lib/libkernel32.a)" \
     --public-key "$(cygpath -m "$build/keys/MSShared.snk")" \
     --type System.Double --type System.Int32 --type System.UInt32 --type System.IFormatProvider --type System.Globalization.NumberStyles \
     --type System.DateTime --type System.Threading.Monitor --type System.Security.SecurityCriticalAttribute \
@@ -368,6 +370,35 @@ EOF
   "$sdk/dotnet.exe" build "$(cygpath -m "$work/PointerHandleCheck.csproj")" -c Release \
     --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -v:q
   timeout 30 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/PointerHandleCheck.dll")"
+}
+
+step_check_registry_time() {
+  initialize
+  local work=$build/registry-time-check
+  local original=$source/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/CPP/TrueTypeSubsetter
+  local core_refs=("$sdk"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
+  local core_ref=${core_refs[-1]}
+  mkdir -p "$work"
+  # Compile the entire unchanged implementation and its original declaration.
+  # This focused precompiled-header context supplies only their dependencies.
+  cp "$original/util2.cpp" "$original/util2.h" "$work/"
+  printf '#include <windows.h>\n#include <vcclr.h>\n' > "$work/precomp.hxx"
+  bridge_compile "$(cygpath -m "$work/util2.cpp")" --target library --std c++14 \
+    --ilasm "$(cygpath -m /clang64/bin/ilasm-dotnet.exe)" --type System.DateTime \
+    --type System.Runtime.InteropServices.OutAttribute \
+    --reference "$(cygpath -m "$core_ref/System.Runtime.InteropServices.dll")" \
+    --native-import "$(cygpath -m /clang64/lib/libadvapi32.a)" -D UNICODE=1 -D _UNICODE=1 \
+    -o "$(cygpath -m "$work/RegistryTime.dll")"
+  cmp "$original/util2.cpp" "$work/util2.cpp"
+  cmp "$original/util2.h" "$work/util2.h"
+  cp "$here/wpf-tests/RegistryTime.cs" "$work/Program.cs"
+  cat > "$work/RegistryTimeCheck.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup></Project>
+EOF
+  "$sdk/dotnet.exe" build "$(cygpath -m "$work/RegistryTimeCheck.csproj")" -c Release \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -v:q
+  cp "$work/RegistryTime.dll" "$work/bin/Release/net8.0/"
+  timeout 30 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/RegistryTimeCheck.dll")"
 }
 
 step_check_glyph_pointer() {

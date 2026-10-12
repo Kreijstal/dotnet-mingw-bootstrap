@@ -154,7 +154,12 @@
     "Native managed-value pointer parameters/locals/fields/returns emit typed CLR unmanaged pointers; field access, instance calls, copies and indirect assignment operate on native storage",
     "Boxing intrinsics preserve handle identity; native/boxed bindings, managed casts of native pointers, movable heap addresses, GC-bearing elements and conflicting canonical declarations are rejected",
     "Ordinary unmanaged integer/pointer casts preserve target pointer width and signed Win32 predefined handle bits",
-    "Unchanged WPF GlyphMetrics header supports a typed native pointer bridge to real MinGW DWRITE_GLYPH_METRICS writes in a pinned managed array across compacting GC"
+    "Unchanged WPF GlyphMetrics header supports a typed native pointer bridge to real MinGW DWRITE_GLYPH_METRICS writes in a pinned managed array across compacting GC",
+    "Explicit trusted x64 MinGW named COFF import archives resolve Windows SDK DLL/export bindings; managed call sites select only the imports actually called",
+    "Windows API P/Invoke preserves native return status and exact export spelling with the platform Winapi calling convention, independently of user native-library bindings",
+    "Native POD aggregate initialization, nested scalar/record fields, field addresses and single-evaluation updates use Clang field offsets with unaligned and volatile memory prefixes",
+    "#pragma pack, macro-expanded __pragma and _Pragma pack stacks survive preprocessing; packed and restored native layouts are verified against native Clang",
+    "Complete unchanged upstream WPF util2.cpp and util2.h compile in a focused dependency context; real registry timestamps, Out metadata, missing Unicode keys, compacting GC and handle cleanup pass on CoreCLR"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -181,7 +186,7 @@
     "Imported generic nested types remain unsupported; indexed compound updates used as values are unsupported; static template-field facades can produce native definition warnings",
     "For each currently requires braced bodies and managed array/reference-enumerator handles; MoveNext currently requires bool; tracking-reference variables and value/native enumerators remain unsupported",
     "Interop attributes remain a selected subset: canonical literal GUIDs, imported interfaces, zero/one positional arguments and selected parameter marshal kinds; coclass activation, field/return marshal metadata, named marshal options and general custom attributes remain unsupported",
-    "Native SDK calls are not automatically partitioned; native record pointers remain opaque native addresses, and native integer boxes remain unsupported; system SDK declarations are excluded from user-DLL P/Invoke selection",
+    "Native SDK bindings require explicit named x64 COFF import archives; automatic partitioning remains unimplemented; native record pointers remain opaque native addresses, and native integer boxes remain unsupported; system SDK declarations are excluded from user-DLL P/Invoke selection",
     "Delegate support currently excludes nested/generic declarations, open-instance/value-instance binding, source combine/remove expressions and general delegate attributes; imported binding requires an available supported Invoke signature; open-instance and value-instance binding remain unsupported",
     "Managed typeid does not emit native record/enum RTTI metadata and rejects undefined source records; ReliabilityContract currently covers individual method/accessor attributes, with no added runtime CER guarantee",
     "Imported base chains must be explicitly selected; nonempty parameter-array expansion, optional imported arguments remain unsupported",
@@ -195,12 +200,13 @@
     "Interior returns currently require direct proven managed heap addresses; local pointer aliases, forwarding calls, byref parameters and native/stack addresses are rejected rather than analyzed for escape safety",
     "Pin reinterpret_cast adaptation currently requires an explicit pointer declarator; arbitrary typedef pointer targets and general native reinterpretation remain unsupported",
     "Native reference support covers source parameters/locals with primitive or proven GC-free value storage; native reference returns, implicit stack-field/temporary bindings, general lifetime analysis and imported native reference signatures remain incomplete",
-    "Native records currently provide opaque trivial storage/copy with alignment up to 8 bytes; field access, native allocation/deletion, nontrivial constructors/destructors, native bases/vtables and larger alignment remain unsupported",
+    "Native records currently provide opaque trivial storage/copy with alignment up to 8 bytes; bitfield/array field operations, native allocation/deletion, nontrivial constructors/destructors, native bases/vtables and larger alignment remain unsupported",
     "Native storage types use generated canonical CLR identities; general metadata visibility/import compatibility with other C++/CLI compilers is not yet implemented",
     "Destructor support requires explicit source bodies in ref classes; defaulted destructors, explicit Dispose/Finalize conflicts, stack-semantics RAII and automatic nontrivial member cleanup remain unsupported",
     "Managed deletion supports single handles; native delete/delete[], native allocation and full cleanup/mixed-mode semantics remain incomplete",
     "Nested source ref/value metadata is supported, but imported nested types, general nested generic forms and nested delegates remain incomplete",
     "Native value pointer provenance remains a frontend subset over Clang surrogate types; pointer-versus-caret-only overloads/redeclarations are rejected, and imported native value-pointer signatures, native pointer properties/array/generic elements and general expression/lifetime forms remain incomplete",
-    "Native value pointers currently require direct GC-free value storage and stable caller-owned addresses; struct pin_ptr/interior_ptr, arithmetic, native allocation/deletion and automatic native SDK partitioning remain unsupported"
+    "Native value pointers currently require direct GC-free value storage and stable caller-owned addresses; struct pin_ptr/interior_ptr, arithmetic, native allocation/deletion and automatic native SDK partitioning remain unsupported",
+    "Native import archives currently support named x64 short code imports; ordinal/data/decorated/forwarder forms, by-value native record API signatures, automatic marshalling and automatic Win32 last-error capture remain unsupported"
   ]
 }
