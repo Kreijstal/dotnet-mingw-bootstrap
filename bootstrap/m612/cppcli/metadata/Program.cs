@@ -10,25 +10,31 @@ using System.Text.Json;
 
 record CliType(string Il, string Cpp, string Kind, string Name = "") {
     public string[] Modifiers { get; init; } = Array.Empty<string>();
+    public CliType? Element { get; init; }
+    public CliType[] Arguments { get; init; } = Array.Empty<CliType>();
 }
 record CliMethod(string Id, string Name, bool Static, CliType Return, CliType[] Parameters,
                  bool Supported, int GenericArity, bool Virtual, bool Abstract, bool Final, string Access);
-record CliField(string Name, CliType Type, bool Supported, string Access, bool Static, bool ReadOnly);
+record CliField(string Name, CliType Type, bool Supported, string Access, bool Static, bool ReadOnly, string Id);
 record CliEnumMember(string Name, string Value);
 record CliProperty(string Name, CliType Type, string Getter, string Setter, bool Static, bool Supported);
-record CliClass(string Assembly, string Name, string Cpp, string Kind, string Base, CliMethod[] Methods, CliProperty[] Properties, string[] Interfaces, CliType? Underlying = null, CliEnumMember[]? EnumMembers = null, CliField[]? Fields = null);
+record CliClass(string Assembly, string Name, string Cpp, string Kind, string Base, CliMethod[] Methods, CliProperty[] Properties, string[] Interfaces, CliType? Underlying = null, CliEnumMember[]? EnumMembers = null, CliField[]? Fields = null) {
+    public int GenericArity { get; init; }
+    public CliType? BaseType { get; init; }
+    public CliType[] InterfaceTypes { get; init; } = Array.Empty<CliType>();
+}
 record CliAssembly(string Name, string Version, string Token);
 record CliAccess(string Assembly, string PublicKey, string[] Friends);
 
 sealed class SignatureTypes : ISignatureTypeProvider<CliType, object?>
 {
-    public static string CppName(string name) => "::" + name.Replace(".", "::").Replace("+", "::");
+    public static string CppName(string name) => "::" + string.Join("::", name.Split('.').Select(p => p.Split('`')[0]));
     static CliType Unsupported(string name) => new("", "", "unsupported", name);
     public static CliType Named(string name, bool value)
     {
         if (name == "System.String") return new("string", "::System::String*", "ref", name);
         if (name == "System.Object") return new("object", "::System::Object*", "ref", name);
-        if (name.Contains('`') || name.Contains('+')) return Unsupported(name);
+        if (name.Contains('+')) return Unsupported(name);
         return new((value ? "valuetype " : "class ") + "'" + name + "'",
                    value ? CppName(name) : CppName(name) + "*", value ? "value" : "ref", name);
     }
@@ -66,14 +72,22 @@ sealed class SignatureTypes : ISignatureTypeProvider<CliType, object?>
     }
     public CliType GetTypeFromSpecification(MetadataReader r, object? c, TypeSpecificationHandle h, byte k) =>
         r.GetTypeSpecification(h).DecodeSignature(this, c);
+    public static CliType EntityType(MetadataReader r, EntityHandle h) => h.Kind switch {
+        HandleKind.TypeDefinition => new SignatureTypes().GetTypeFromDefinition(r, (TypeDefinitionHandle)h, 0x12),
+        HandleKind.TypeReference => new SignatureTypes().GetTypeFromReference(r, (TypeReferenceHandle)h, 0x12),
+        HandleKind.TypeSpecification => new SignatureTypes().GetTypeFromSpecification(r, null, (TypeSpecificationHandle)h, 0x12),
+        _ => new("", "", "unsupported")
+    };
     public CliType GetSZArrayType(CliType t) => t.Kind == "unsupported" ? new(t.Il + "[]", "", "unsupported", t.Name + "[]") :
-        new(t.Il + "[]", "::cli::array<" + t.Cpp + ">*", "array", t.Name);
+        new(t.Il + "[]", "::cli::array<" + t.Cpp + ">*", "array", t.Name) { Element = t };
     public CliType GetArrayType(CliType t, ArrayShape s) => new(t.Il + "[... ]", "", "unsupported", t.Name);
-    public CliType GetByReferenceType(CliType t) => t.Kind == "unsupported" ? t : new(t.Il + "&", t.Cpp + "&", "byref", t.Name);
+    public CliType GetByReferenceType(CliType t) => t.Kind == "unsupported" ? t : new(t.Il + "&", t.Cpp + "&", "byref", t.Name) { Element = t };
     public CliType GetPointerType(CliType t) => t.Kind == "primitive" ? new(t.Il + "*", t.Cpp + "*", "pointer") : new(t.Il + "*", "", "unsupported", t.Name + "*");
-    public CliType GetGenericInstantiation(CliType t, ImmutableArray<CliType> a) => new(t.Il, "", "unsupported", t.Name);
+    public CliType GetGenericInstantiation(CliType t, ImmutableArray<CliType> a) => t.Kind == "unsupported" || a.Any(p => p.Kind == "unsupported") ?
+        new(t.Il, "", "unsupported", t.Name) : new(t.Il + "<" + string.Join(", ", a.Select(p => p.Il)) + ">",
+            CppName(t.Name) + "<" + string.Join(", ", a.Select(p => p.Cpp)) + ">" + (t.Kind == "ref" ? "*" : ""), "generic", t.Name) { Element = t, Arguments = a.ToArray() };
     public CliType GetGenericMethodParameter(object? c, int i) => new("!!" + i, "", "unsupported");
-    public CliType GetGenericTypeParameter(object? c, int i) => new("!" + i, "", "unsupported");
+    public CliType GetGenericTypeParameter(object? c, int i) => new("!" + i, "__cli_T" + i, "typeparam");
     public CliType GetFunctionPointerType(MethodSignature<CliType> s) => new("", "", "unsupported");
     public CliType GetModifiedType(CliType m, CliType t, bool required) {
         if (required) return new(t.Il, "", "unsupported");
@@ -171,7 +185,8 @@ static class Program
                     if (!wanted.Contains(name)) continue;
                     if ((td.Attributes & TypeAttributes.VisibilityMask) != TypeAttributes.Public && !friend)
                         throw new Exception("imported type is internal; use #using as_friend with a matching InternalsVisibleTo: " + name);
-                    if (name.Contains('`') || name.Contains('+')) throw new Exception("unsupported imported type: " + name);
+                    if (name.Contains('+')) throw new Exception("unsupported imported nested type: " + name);
+                    int genericArity = td.GetGenericParameters().Count;
                     var methods = new List<CliMethod>();
                     foreach (var mh in td.GetMethods())
                     {
@@ -182,6 +197,7 @@ static class Program
                         var sig = md.DecodeSignature(new SignatureTypes(), null);
                         string id = assembly + ":" + System.Reflection.Metadata.Ecma335.MetadataTokens.GetToken(mh).ToString("x8");
                         bool supported = sig.GenericParameterCount == 0 && sig.Header.CallingConvention == SignatureCallingConvention.Default &&
+                            !((md.Attributes & MethodAttributes.Static) != 0 && (md.Attributes & MethodAttributes.Virtual) != 0) &&
                             sig.ReturnType.Kind != "unsupported" && sig.ParameterTypes.All(p => p.Kind != "unsupported") &&
                             (mn == ".ctor" || ValidName(mn));
                         methods.Add(new(id, mn, (md.Attributes & MethodAttributes.Static) != 0,
@@ -203,18 +219,12 @@ static class Program
                             (getter ?? setter)?.Static ?? false, ValidName(pn) && sig.ParameterTypes.Length == 0 &&
                             (getter?.Supported == true || setter?.Supported == true) && !(getter ?? setter)!.Static));
                     }
-                    string baseName = "";
-                    if (!td.BaseType.IsNil && td.BaseType.Kind == HandleKind.TypeReference)
-                    {
-                        var b = r.GetTypeReference((TypeReferenceHandle)td.BaseType);
-                        string ns = r.GetString(b.Namespace);
-                        baseName = (ns.Length == 0 ? "" : ns + ".") + r.GetString(b.Name);
-                    }
-                    else if (!td.BaseType.IsNil && td.BaseType.Kind == HandleKind.TypeDefinition)
-                        baseName = FullName(r, r.GetTypeDefinition((TypeDefinitionHandle)td.BaseType));
-                    var fields = td.GetFields().Select(fh => r.GetFieldDefinition(fh))
-                        .Where(f => MemberAccess((MethodAttributes)(int)(f.Attributes & FieldAttributes.FieldAccessMask), friend).Length != 0 && (f.Attributes & FieldAttributes.Literal) == 0)
-                        .Select(f => new CliField(r.GetString(f.Name), f.DecodeSignature(new SignatureTypes(), null), ValidName(r.GetString(f.Name)), MemberAccess((MethodAttributes)(int)(f.Attributes & FieldAttributes.FieldAccessMask), friend), (f.Attributes & FieldAttributes.Static) != 0, (f.Attributes & FieldAttributes.InitOnly) != 0)).ToArray();
+                    var baseType = td.BaseType.IsNil ? null : SignatureTypes.EntityType(r, td.BaseType);
+                    string baseName = baseType?.Name ?? "";
+                    var fields = td.GetFields().Select(fh => (Handle: fh, Field: r.GetFieldDefinition(fh)))
+                        .Where(f => MemberAccess((MethodAttributes)(int)(f.Field.Attributes & FieldAttributes.FieldAccessMask), friend).Length != 0 && (f.Field.Attributes & FieldAttributes.Literal) == 0)
+                        .Select(f => new CliField(r.GetString(f.Field.Name), f.Field.DecodeSignature(new SignatureTypes(), null), ValidName(r.GetString(f.Field.Name)), MemberAccess((MethodAttributes)(int)(f.Field.Attributes & FieldAttributes.FieldAccessMask), friend), (f.Field.Attributes & FieldAttributes.Static) != 0, (f.Field.Attributes & FieldAttributes.InitOnly) != 0,
+                            assembly + ":" + System.Reflection.Metadata.Ecma335.MetadataTokens.GetToken(f.Handle).ToString("x8"))).ToArray();
                     if (baseName == "System.Enum") {
                         CliType? underlying = null;
                         var members = new List<CliEnumMember>();
@@ -243,27 +253,30 @@ static class Program
                             methods.ToArray(), properties.ToArray(), Array.Empty<string>(), underlying, members.ToArray()));
                         continue;
                     }
-                    types.Add(new(assembly, name, SignatureTypes.CppName(name), baseName == "System.ValueType" ? "value" : (td.Attributes & TypeAttributes.Interface) != 0 ? "interface" : "ref", baseName, methods.ToArray(), properties.ToArray(), td.GetInterfaceImplementations().Select(ih => {
-                        var handle = r.GetInterfaceImplementation(ih).Interface;
-                        if (handle.Kind == HandleKind.TypeDefinition) return FullName(r, r.GetTypeDefinition((TypeDefinitionHandle)handle));
-                        if (handle.Kind == HandleKind.TypeReference) {
-                            var tr = r.GetTypeReference((TypeReferenceHandle)handle);
-                            return (r.GetString(tr.Namespace).Length == 0 ? "" : r.GetString(tr.Namespace) + ".") + r.GetString(tr.Name);
-                        }
-                        return ""; // Generic interface signatures remain outside the imported subset.
-                    }).Where(n => n.Length != 0).ToArray(), Fields: fields));
+                    var interfaceTypes = td.GetInterfaceImplementations().Select(ih => SignatureTypes.EntityType(r, r.GetInterfaceImplementation(ih).Interface)).ToArray();
+                    types.Add(new CliClass(assembly, name, SignatureTypes.CppName(name), baseName == "System.ValueType" ? "value" : (td.Attributes & TypeAttributes.Interface) != 0 ? "interface" : "ref", baseName, methods.ToArray(), properties.ToArray(),
+                        interfaceTypes.Where(t => t.Kind != "unsupported").Select(t => t.Name).ToArray(), Fields: fields) { GenericArity = genericArity, BaseType = baseType, InterfaceTypes = interfaceTypes });
                 }
             }
             var found = types.Select(t => t.Name).ToHashSet(StringComparer.Ordinal);
             if (!wanted.IsSubsetOf(found)) throw new Exception("reference metadata lacks: " + string.Join(", ", wanted.Except(found)));
             // Cross-type signatures may refer to types we haven't imported yet.
-            bool Available(CliType t) => t.Kind == "primitive" || t.Kind == "pointer" || ((t.Kind == "ref" || t.Kind == "value" || t.Kind == "boxed") && found.Contains(t.Name)) || ((t.Kind == "array" || t.Kind == "byref") && (t.Name.Length == 0 || found.Contains(t.Name)));
+            bool Available(CliType t) => t.Kind == "primitive" || t.Kind == "pointer" || t.Kind == "typeparam" ||
+                ((t.Kind == "ref" || t.Kind == "value" || t.Kind == "boxed") && found.Contains(t.Name)) ||
+                (t.Kind == "generic" && t.Element != null && Available(t.Element) && t.Arguments.All(Available)) ||
+                ((t.Kind == "array" || t.Kind == "byref") && t.Element != null && Available(t.Element));
             CliType Qualified(CliType t)
             {
+                if (t.Element != null) {
+                    var element = Qualified(t.Element); var arguments = t.Arguments.Select(Qualified).ToArray();
+                    return t with { Element = element, Arguments = arguments,
+                        Il = t.Kind == "generic" ? element.Il + "<" + string.Join(", ", arguments.Select(a => a.Il)) + ">" :
+                            t.Kind == "array" ? element.Il + "[]" : t.Kind == "byref" ? element.Il + "&" : t.Il };
+                }
                 var owner = types.FirstOrDefault(c => c.Name == t.Name);
                 return owner == null ? t : t with { Il = t.Il.Replace("'" + t.Name + "'", AssemblyReference(owner.Assembly) + "'" + t.Name + "'") };
             }
-            types = types.Select(t => t with { Fields = t.Fields?.Select(f => f with { Type = Qualified(f.Type), Supported = f.Supported && Available(f.Type) }).ToArray(), Methods = t.Methods.Select(m => m with {
+            types = types.Select(t => t with { BaseType = t.BaseType == null ? null : Qualified(t.BaseType), InterfaceTypes = t.InterfaceTypes.Select(Qualified).ToArray(), Fields = t.Fields?.Select(f => f with { Type = Qualified(f.Type), Supported = f.Supported && Available(f.Type) }).ToArray(), Methods = t.Methods.Select(m => m with {
                 Supported = m.Supported && Available(m.Return) && m.Parameters.All(Available),
                 Return = Qualified(m.Return), Parameters = m.Parameters.Select(Qualified).ToArray()
             }).ToArray(), Properties = t.Properties.Select(p => p with {
@@ -288,8 +301,8 @@ static class Program
                 if (!emitted.Add(t.Name)) return;
                 var parent = types.FirstOrDefault(p => p.Name == t.Base);
                 if (parent != null) Define(parent);
-                var interfaces = types.Where(p => t.Interfaces.Contains(p.Name)).ToArray();
-                foreach (var i in interfaces) Define(i);
+                var interfaces = t.InterfaceTypes.Where(i => types.Any(p => p.Name == i.Name)).ToArray();
+                foreach (var i in interfaces) Define(types.First(p => p.Name == i.Name));
                 WriteClass(header, t, false, parent != null, interfaces);
             }
             foreach (var t in types) Define(t);
@@ -300,11 +313,12 @@ static class Program
         }
         catch (Exception e) { Console.Error.WriteLine("cli-metadata: " + e.Message); return 1; }
     }
-    static void WriteClass(StreamWriter w, CliClass t, bool forward, bool hasBase = false, CliClass[]? interfaces = null)
+    static void WriteClass(StreamWriter w, CliClass t, bool forward, bool hasBase = false, CliType[]? interfaces = null)
     {
         string[] parts = t.Name.Split('.');
         foreach (string ns in parts.SkipLast(1)) w.Write("namespace " + ns + " { ");
-        string name = parts[^1];
+        string name = parts[^1].Split('`')[0];
+        if (t.GenericArity != 0) w.Write("template<" + string.Join(", ", Enumerable.Range(0, t.GenericArity).Select(i => "class __cli_T" + i)) + "> ");
         if (t.Kind == "enum") {
             w.Write("enum class __attribute__((annotate(\"cli.enum\"), annotate(\"cli.external:" + Escape(t.Assembly + "|" + t.Name) + "\"))) " + name + " : " + t.Underlying!.Cpp);
             if (forward) w.Write("; ");
@@ -320,9 +334,12 @@ static class Program
         else
         {
             var bases = new List<string>();
-            if (hasBase && t.Kind != "value") bases.Add(t.Base);
-            if (interfaces != null && t.Kind != "value") bases.AddRange(interfaces.Select(i => i.Name));
-            if (bases.Count != 0) w.Write(" : " + string.Join(", ", bases.Select(b => "public " + SignatureTypes.CppName(b))));
+            if (hasBase && t.Kind != "value") bases.Add(t.BaseType!.Cpp.TrimEnd('*'));
+            // CLI interfaces have one identity even along repeated inheritance
+            // paths. Virtual C++ surrogate bases coalesce those paths without
+            // claiming any native object representation.
+            if (interfaces != null && t.Kind != "value") bases.AddRange(interfaces.Select(i => "virtual " + i.Cpp.TrimEnd('*')));
+            if (bases.Count != 0) w.Write(" : " + string.Join(", ", bases.Select(b => "public " + b)));
             w.WriteLine(" { public:");
             if (t.Name == "System.Object") w.WriteLine("virtual ~Object() = default;");
             if (t.Name == "System.String") w.WriteLine("String(const char*); String(const wchar_t*);");
@@ -330,11 +347,18 @@ static class Program
                 w.WriteLine("__attribute__((annotate(\"cli.value.zero\"))) " + name + "() {}");
             if (t.Kind == "value")
                 w.WriteLine("__attribute__((annotate(\"cli.box\"))) operator " + name + "*() const;");
-            foreach (var f in t.Fields ?? Array.Empty<CliField>()) if (f.Supported) w.WriteLine(f.Access + ": " + (f.ReadOnly ? "__attribute__((annotate(\"cli.readonly\"))) " : "") + (f.Static ? "static " : "") + f.Type.Cpp + " " + f.Name + ";");
+            foreach (var f in t.Fields ?? Array.Empty<CliField>()) if (f.Supported) w.WriteLine(f.Access + ": __attribute__((annotate(\"cli.import.field:" + Escape(f.Id) + "\"))) " + (f.ReadOnly ? "__attribute__((annotate(\"cli.readonly\"))) " : "") + (f.Static ? "static " : "") + f.Type.Cpp + " " + f.Name + ";");
             var overloads = t.Methods.Where(m => m.Supported).GroupBy(m => m.Name + "(" + string.Join(", ", m.Parameters.Select(p => p.Cpp)) + ")").ToDictionary(g => g.Key, g => g.Count());
             var seen = new HashSet<string>();
             foreach (var m in t.Methods.Where(m => m.Supported))
             {
+                // These nongeneric enumeration slots conflict by return type
+                // with generic slots. Their CLR virtual/abstract metadata stays
+                // intact; declare a callable C++ facade and validate concrete
+                // implementations in the IL backend instead of imposing C++
+                // virtual return/covariance rules on the CLI interface graph.
+                bool cppVirtual = m.Virtual && !((t.Name == "System.Collections.IEnumerator" && m.Name == "get_Current") ||
+                    (t.Name == "System.Collections.IEnumerable" && m.Name == "GetEnumerator"));
                 string parameters = string.Join(", ", m.Parameters.Select(p => p.Cpp));
                 // C++ cannot distinguish overloads that collapse to the same surrogate signature.
                 string signature = m.Name + "(" + parameters + ")";
@@ -344,8 +368,8 @@ static class Program
                 else if (!seen.Add(signature)) throw new Exception("surrogate overload collision: " + t.Name + "::" + signature);
                 w.Write(m.Access + ": __attribute__((annotate(\"cli.import:" + Escape(m.Id) + "\"))) ");
                 if (m.Name == ".ctor") w.WriteLine(name + "(" + parameters + ");");
-                else w.WriteLine((m.Static ? "static " : m.Virtual && t.Kind != "value" ? "virtual " : "") + m.Return.Cpp + " " + cppMethod + "(" + parameters + ")" +
-                    (m.Final && t.Kind != "value" ? " final" : "") + (m.Abstract && t.Kind != "value" ? " = 0" : "") + ";");
+                else w.WriteLine((m.Static ? "static " : cppVirtual && t.Kind != "value" ? "virtual " : "") + m.Return.Cpp + " " + cppMethod + "(" + parameters + ")" +
+                    (m.Final && cppVirtual && t.Kind != "value" ? " final" : "") + (m.Abstract && cppVirtual && t.Kind != "value" && t.Kind != "interface" ? " = 0" : "") + ";");
             }
             foreach (var p in t.Properties.Where(p => p.Supported))
             {

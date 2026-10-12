@@ -43,18 +43,20 @@
         "pointer-sized IntPtr/UIntPtr and primitive pointer metadata imports",
         "managed explicit/sequential layout with field offsets, pack, size and charset",
         "typed CLI enum bitwise operators, Flags metadata and switch control flow",
-        "inline/out-of-line source static constructors and virtual property accessors"
+        "inline/out-of-line source static constructors and virtual property accessors",
+        "closed imported CLR generic types and bound methods/fields/constructors",
+        "generic reference/value/array/byref signatures and generic interface implementations"
       ],
       "remaining": [
         "implicit boxing into Object/interfaces, primitive boxes and boxed-handle conversions",
-        "CLI generics",
+        "generic declarations/methods, constraints/variance and nested generic types",
         "delegates/events/indexers",
         "destructors/finalizers and deterministic cleanup",
         "extended tracking references, nonprimitive pinning and managed pointer operations",
         "general attributes/interface static constructors/multiple translation units",
         "full CLI semantic analysis and metadata type discovery"
       ],
-      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values test-tracking test-pinning test-boxed-values test-static-fields test-static-properties test-nativeints test-layout test-switch"
+      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values test-tracking test-pinning test-boxed-values test-static-fields test-static-properties test-nativeints test-layout test-switch test-generics"
     },
     {
       "stage": 4,
@@ -86,7 +88,8 @@
         "WPF source patch for MinGW checked integers and DirectWrite UUID namespace declarations",
         "upstream localized error messages compiled and checked on source-built CoreCLR",
         "upstream font/glyph metric types with preserved layout and native DirectWrite glyph ABI checks",
-        "unchanged font-simulation conversion bodies with real Flags metadata and MinGW enum values"
+        "unchanged font-simulation conversion bodies with real Flags metadata and MinGW enum values",
+        "complete DirectWrite Sema gate advanced through real generic collection imports and generic base parsing"
       ]
     }
   ]

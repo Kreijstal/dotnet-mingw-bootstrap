@@ -1771,7 +1771,7 @@ with `Build WPF dependency first: DirectWriteForwarder`. The initial
 packaged frontend stopped at included-header `#using` and missing `vcclr.h`.
 The development frontend now handles these, boxed value handles, static fields
 and managed metric layouts (see §13–16). The full upstream translation unit
-still fails on generic collections and explicit interface implementations. Native record
+still fails on default indexed properties and named interface overrides. Native record
 emission, managed class templates, callbacks, finalizers and automatic native
 partitioning also remain outside its supported subset.
 The same compiler failure can be reproduced with `wpf.sh bridge-gate`; it
@@ -2116,3 +2116,66 @@ callbacks, finalizers or automatic native partitioning are complete. The
 installed compiler package remains the earlier release. Complete WPF,
 WindowsDesktop and current Greenshot remain unbuilt and unpackaged; the native
 PresentationNative text/layout export gap is unchanged.
+
+## 17. Imported CLR generic types and WPF collection declarations
+
+The next 2026-10-12 continuation added structured generic signatures to the
+metadata reader. Imported generic definitions become annotated C++ template
+declarations, with CLR generic VAR slots retained in their member signatures.
+Array, byref and nested generic arguments are qualified recursively. The backend
+emits constructed CLR types and bound member references, including generic
+constructors and instance/static fields. The actual generic declaration's
+`!0`/`!1` signatures remain on the member references, rather than being replaced
+by the caller's concrete types. CLR type identity is checked from C# reflection.
+This covers [consuming generic classes](https://learn.microsoft.com/en-us/cpp/extensions/generic-classes-cpp-cli?view=msvc-170)
+needed by WPF; generic declarations/methods, variance/constraint validation and
+nested imported types remain unfinished.
+
+`cppcli.sh test-generics` passes on source-built CoreCLR. It calls actual
+List<int> and Dictionary<string,int> APIs, tests a dictionary's byref output,
+constructs KeyValuePair<string,int> and Nullable<int>, and checks nested
+List<List<int>> returns. Source-built fixture types verify generic field mutation,
+constructor binding through a generic base class, and independent static fields
+for Slot<int> and Slot<long>. Generated classes implement IComparer<int> and a
+two-argument generic interface consumed by C#. Missing interface slots, direct
+interface allocation and native pointer generic arguments are rejected.
+Two C++ warnings about undefined native template-field storage remain on the
+CLR field facades; the emitted fields reference the real CLR storage and pass
+the runtime checks. All managed check builds have zero warnings/errors.
+
+Generic and nongeneric enumeration interfaces are also imported and exercised
+through a real List<int> enumerator, including MoveNext, Current and Dispose in
+finally. The C++ model coalesces repeated interface inheritance paths with
+virtual surrogate bases. Nongeneric Current/GetEnumerator declarations avoid
+native C++ return-type override rules, while preserving their CLR signatures.
+Imported interface completeness is validated by the backend; the facades no
+longer impose C++ pure-method requirements on real imported CLR classes whose
+member set is only partially selected. The interfaces remain actual CLR
+interfaces, and attempts to allocate them are rejected.
+
+The full WPF gate now imports IDictionary, ICollection, IEnumerable,
+IEnumerator and KeyValuePair from the source-built targeting pack, along with
+nongeneric enumeration and IDisposable. A token-adapter bug that inserted
+`public` after commas inside generic base arguments was fixed. The gate now
+gets through its generic collection declarations and the enumeration return-type
+conflict; the current first source failures are default indexed properties and
+named overrides in LocalizedStrings and FontList. The complete bridge still
+does not compile.
+
+Validation on win11:
+
+```sh
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh \
+  test-generics test-virtuals test-values test-boxed-values test-nativeints
+```
+
+This command passed after the focused frontend rebuild
+`cmake --build /home/topkek/dotnetboot/m612/build/cppcli --target cli_ast -j2`.
+The earlier affected friend/reference suite also passed. The metadata reader
+rebuild had zero warnings/errors. Current gate diagnostics remain in
+`~/wpfboot/build/directwrite-gate.log`; the installed frontend package has not
+been replaced by this development build. Source-defined generic types, indexed
+properties, named overrides, native record emission/partitioning, callbacks and
+finalizers still need work. Full WPF, WindowsDesktop and current Greenshot
+remain unpackaged, with the independent PresentationNative export gap unchanged.

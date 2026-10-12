@@ -80,13 +80,20 @@
     "Inline and out-of-line managed static constructors combine ordered field initialization with the source body in one CLR .cctor",
     "Virtual instance property accessors preserve CLR slots and C# override dispatch",
     "Quoted single-word assembly scopes prevent IL keyword collisions when importing generated assemblies",
-    "Unchanged upstream WPF font-simulation conversion methods compile and run against the actual MinGW enum declaration"
+    "Unchanged upstream WPF font-simulation conversion methods compile and run against the actual MinGW enum declaration",
+    "Imported CLR generic definitions become annotated C++ templates with structured type arguments and generic VAR signatures",
+    "Closed generic reference/value types, nested generic arguments and bound constructors/member references preserve CLR type identity",
+    "Generic instance/static fields retain declaration signatures and separate CLR storage per constructed type",
+    "Imported generic interface/base relationships and generated IComparer<int>/two-argument interface implementations",
+    "Generic and nongeneric enumeration calls preserve CLR dispatch and Dispose cleanup",
+    "Imported interface completeness is checked in the IL backend; nongeneric enumeration facade slots avoid native C++ return-type conflicts",
+    "Managed inheritance token adaptation preserves commas within generic base arguments"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
     "Metadata headers are generated for explicitly selected types",
     "Constructor arguments currently require exact supported CLI types",
-    "No CLI generics, delegates, events yet",
+    "Generic consumption is partial; generic declarations/methods, constraints/variance, delegates and events remain incomplete",
     "No mixed-mode PE output or ijwhost integration yet",
     "Unsupported AST nodes are errors; this is not a conforming general C++/CLI compiler",
     "Properties cover non-indexed instance and static members; indexed/static auto-properties and static compound updates are not implemented",
@@ -103,6 +110,7 @@
     "Layout attributes currently appear individually before managed declarations; inherited layout types, bitfields and general custom attributes remain unsupported",
     "CLI enum operations currently cover comparisons, explicit casts and bitwise OR/AND/XOR/complement; additive/increment/compound enum operators remain incomplete",
     "Switch initializers and GNU case ranges are rejected; switch labels cannot enter generated protected/pinned scopes",
-    "Source-defined static constructors currently cover ref/value classes in one translation unit; interface static constructors remain unsupported"
+    "Source-defined static constructors currently cover ref/value classes in one translation unit; interface static constructors remain unsupported",
+    "Imported generic nested types, indexed properties and named interface overrides remain unsupported; static template-field facades can produce native definition warnings"
   ]
 }

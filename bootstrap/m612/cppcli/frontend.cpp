@@ -52,7 +52,18 @@ bool record_annotated(const CXXRecordDecl* r, llvm::StringRef name) {
     return false;
 }
 bool is_interface(const CXXRecordDecl* r) {
-    return r && (annotated(r, "cli.interface") || (r->getDefinition() && annotated(r->getDefinition(), "cli.interface")));
+    return record_annotated(r, "cli.interface");
+}
+std::string record_annotation(const CXXRecordDecl* r, llvm::StringRef prefix) {
+    if (!r) return {};
+    auto value = annotation(r, prefix);
+    if (value.empty() && r->getDefinition()) value = annotation(r->getDefinition(), prefix);
+    if (value.empty()) if (auto* spec = dyn_cast<ClassTemplateSpecializationDecl>(r)) {
+        auto* primary = spec->getSpecializedTemplate()->getTemplatedDecl();
+        value = annotation(primary, prefix);
+        if (value.empty() && primary->getDefinition()) value = annotation(primary->getDefinition(), prefix);
+    }
+    return value;
 }
 const CXXRecordDecl* class_base(const CXXRecordDecl* r) {
     for (auto& b : r->bases()) {
@@ -94,9 +105,12 @@ struct ImportedMethod {
     std::string assembly, owner, name, result;
     std::vector<std::string> parameters;
     bool is_static;
+    bool is_abstract;
 };
+struct ImportedField { std::string assembly, owner, name, type; };
 struct Metadata {
     std::map<std::string, ImportedMethod> methods;
+    std::map<std::string, ImportedField> fields;
     std::map<std::string, std::string> types;
     std::set<std::string> short_types;
     std::string externs;
@@ -130,9 +144,14 @@ struct Metadata {
                 auto& m = *method.getAsObject();
                 if (!m.getBoolean("Supported").value_or(false)) continue;
                 ImportedMethod im{assembly, name, m.getString("Name")->str(),
-                    m.getObject("Return")->getString("Il")->str(), {}, m.getBoolean("Static").value_or(false)};
+                    m.getObject("Return")->getString("Il")->str(), {}, m.getBoolean("Static").value_or(false), m.getBoolean("Abstract").value_or(false)};
                 for (auto& p : *m.getArray("Parameters")) im.parameters.push_back(p.getAsObject()->getString("Il")->str());
                 methods.emplace(m.getString("Id")->str(), std::move(im));
+            }
+            if (auto* fields_list = c.getArray("Fields")) for (auto& field : *fields_list) {
+                auto& f = *field.getAsObject();
+                if (!f.getBoolean("Supported").value_or(false)) continue;
+                fields.emplace(f.getString("Id")->str(), ImportedField{assembly, name, f.getString("Name")->str(), f.getObject("Type")->getString("Il")->str()});
             }
         }
     }
@@ -681,11 +700,14 @@ protected:
                     if (attributes.find("cli.sealed") != std::string::npos) emit(t, "final");
                     if (end < tokens.size() && tokens[end].text == ":") {
                         emit(tokens[end], ":"); ++end;
-                        bool start = true;
+                        bool start = true; int angles = 0;
                         while (end < tokens.size() && tokens[end].text != "{" && tokens[end].text != ";") {
                             if (start && tokens[end].text != "public" && tokens[end].text != "protected" && tokens[end].text != "private") emit(tokens[end], "public");
                             if (tokens[end].text == "protected" || tokens[end].text == "private") throw std::runtime_error("managed bases require public inheritance");
-                            emit(tokens[end], tokens[end].text); start = tokens[end].text == ","; ++end;
+                            if (tokens[end].text == "<") ++angles;
+                            else if (tokens[end].text == ">") --angles;
+                            else if (tokens[end].text == ">>") angles -= 2;
+                            emit(tokens[end], tokens[end].text); start = tokens[end].text == "," && !angles; ++end;
                         }
                     } else if (!interface && !value && end < tokens.size() && tokens[end].text == "{") emit(t, ": public ::System::Object");
                     i = end - 1;
@@ -772,7 +794,7 @@ class Emitter {
             auto* r = type->getPointeeType()->getAsCXXRecordDecl();
             if (!r) return nullptr;
             auto* definition = r->getDefinition();
-            if (record_annotated(r, "cli.ref") || record_annotated(r, "cli.value") || !annotation(r, "cli.external:").empty() ||
+            if (record_annotated(r, "cli.ref") || record_annotated(r, "cli.value") || !record_annotation(r, "cli.external:").empty() ||
                 (definition && (annotated(definition, "cli.ref") || !annotation(definition, "cli.external:").empty()))) return r;
             return nullptr;
         }
@@ -828,17 +850,36 @@ class Emitter {
         return kind;
     }
     std::string record_name(const CXXRecordDecl* record) const {
-        std::string ext = annotation(record, "cli.external:");
-        if (ext.empty() && record->getDefinition()) ext = annotation(record->getDefinition(), "cli.external:");
+        std::string ext = record_annotation(record, "cli.external:");
         if (!ext.empty()) {
             auto bar = ext.find('|');
-            return assembly_reference(ext.substr(0, bar)) + "'" + ext.substr(bar + 1) + "'";
+            std::string result = assembly_reference(ext.substr(0, bar)) + "'" + ext.substr(bar + 1) + "'";
+            if (auto* spec = dyn_cast<ClassTemplateSpecializationDecl>(record)) {
+                if (ext.find('`', bar) == std::string::npos) throw std::runtime_error("imported template lacks CLI generic type identity");
+                result += '<';
+                for (unsigned i = 0; i < spec->getTemplateArgs().size(); ++i) {
+                    auto& arg = spec->getTemplateArgs()[i];
+                    if (arg.getKind() != TemplateArgument::Type) throw std::runtime_error("CLI generic arguments must be managed types");
+                    auto argument = arg.getAsType();
+                    if (argument->isVoidType() || (argument->isPointerType() && !handle_target(argument)) || boxed_target(argument))
+                        throw std::runtime_error("native pointers and typed boxed handles are not supported as CLI generic arguments");
+                    if (i) result += ", ";
+                    result += type(argument);
+                }
+                result += '>';
+            }
+            return result;
         }
+        if (isa<ClassTemplateSpecializationDecl>(record)) throw std::runtime_error("source-defined managed class template emission is not enabled yet");
         if (!record_annotated(record, "cli.ref") && !record_annotated(record, "cli.value"))
             throw std::runtime_error("native C++ class is not a managed type: " + record->getQualifiedNameAsString());
         std::string name = record->getQualifiedNameAsString();
         for (size_t at; (at = name.find("::")) != std::string::npos;) name.replace(at, 2, ".");
         return "'" + name + "'";
+    }
+    std::string record_token(const CXXRecordDecl* record) const {
+        return (isa<ClassTemplateSpecializationDecl>(record) && !record_annotation(record, "cli.external:").empty() ?
+            (record_annotated(record, "cli.value") ? "valuetype " : "class ") : "") + record_name(record);
     }
     std::string enum_name(const EnumDecl* enumeration) const {
         std::string ext = annotation(enumeration, "cli.external:");
@@ -920,7 +961,7 @@ class Emitter {
     std::string reference_token(QualType t) const {
         auto* r = handle_target(t);
         if (!r) throw std::runtime_error("reference token requires a managed handle");
-        return array_element(r).isNull() ? record_name(r) : type(t);
+        return array_element(r).isNull() ? record_token(r) : type(t);
     }
     unsigned temporary(const std::string& il_type) {
         unsigned index = locals.size() + temporary_types.size();
@@ -949,11 +990,13 @@ class Emitter {
     std::string field_signature(const FieldDecl* f) const {
         auto* parent = dyn_cast<CXXRecordDecl>(f->getParent());
         if (!parent) throw std::runtime_error("field has no managed parent");
-        return type(f->getType()) + " " + record_name(parent) + "::'" + f->getNameAsString() + "'";
+        auto imported = metadata.fields.find(annotation(f, "cli.import.field:"));
+        return (imported == metadata.fields.end() ? type(f->getType()) : imported->second.type) + " " + record_token(parent) + "::'" + f->getNameAsString() + "'";
     }
     std::string static_field_signature(const VarDecl* f) const {
         if (!f->isStaticDataMember()) throw std::runtime_error("static storage requires a managed class field");
-        return type(f->getType()) + " " + record_name(cast<CXXRecordDecl>(f->getDeclContext())) + "::'" + f->getNameAsString() + "'";
+        auto imported = metadata.fields.find(annotation(f, "cli.import.field:"));
+        return (imported == metadata.fields.end() ? type(f->getType()) : imported->second.type) + " " + record_token(cast<CXXRecordDecl>(f->getDeclContext())) + "::'" + f->getNameAsString() + "'";
     }
     const CXXMethodDecl* static_property_method(const VarDecl* property, bool write) const {
         auto names = annotation(property, "cli.static.property:");
@@ -979,7 +1022,9 @@ class Emitter {
     std::string signature(const FunctionDecl* f) const {
         std::string owner;
         auto* method = dyn_cast<CXXMethodDecl>(f);
-        if (method) owner = record_name(method->getParent()) + "::";
+        auto imported = metadata.methods.find(annotation(f, "cli.import:"));
+        if (imported != metadata.methods.end()) return imported_signature(imported->second, method);
+        if (method) owner = record_token(method->getParent()) + "::";
         std::string result = isa<CXXConstructorDecl>(f) ? "void" : type(f->getReturnType());
         std::string name = method_name(f);
         std::string sig = (method && !method->isStatic() ? "instance " : "") + result + " " + owner + "'" + name + "'(";
@@ -989,8 +1034,9 @@ class Emitter {
         }
         return sig + ")";
     }
-    std::string imported_signature(const ImportedMethod& m) const {
-        std::string sig = (m.is_static ? "" : "instance ") + m.result + " " + assembly_reference(m.assembly) + "'" + m.owner + "'::'" + m.name + "'(";
+    std::string imported_signature(const ImportedMethod& m, const CXXMethodDecl* bound = nullptr) const {
+        std::string owner = bound ? record_token(bound->getParent()) : assembly_reference(m.assembly) + "'" + m.owner + "'";
+        std::string sig = (m.is_static ? "" : "instance ") + m.result + " " + owner + "::'" + m.name + "'(";
         for (size_t i = 0; i < m.parameters.size(); ++i) { if (i) sig += ", "; sig += m.parameters[i]; }
         return sig + ")";
     }
@@ -1019,7 +1065,7 @@ class Emitter {
         if (auto* unary = dyn_cast<UnaryOperator>(e); unary && unary->getOpcode() == UO_Deref && boxed_target(unary->getSubExpr()->getType())) {
             auto* r = boxed_target(unary->getSubExpr()->getType());
             if (isa<CXXThisExpr>(unary->getSubExpr()->IgnoreParenImpCasts())) op("ldarg.0", 0, 1);
-            else { expr(unary->getSubExpr()); op("unbox " + record_name(r), 1, 1); }
+            else { expr(unary->getSubExpr()); op("unbox " + record_token(r), 1, 1); }
             return;
         }
         if (auto* d = dyn_cast<DeclRefExpr>(e)) {
@@ -1058,7 +1104,7 @@ class Emitter {
         }
         else if (isa<CXXThisExpr>(strip(e)->IgnoreParenImpCasts()) && isa<CXXMethodDecl>(current) &&
                  record_annotated(cast<CXXMethodDecl>(current)->getParent(), "cli.value")) op("ldarg.0", 0, 1);
-        else if (auto* r = boxed_target(e->getType())) { expr(e); op("unbox " + record_name(r), 1, 1); }
+        else if (auto* r = boxed_target(e->getType())) { expr(e); op("unbox " + record_token(r), 1, 1); }
         else expr(e); // this on a value class is already a managed address.
     }
     std::string receiver_type(const FieldDecl* field) const {
@@ -1299,6 +1345,7 @@ class Emitter {
         if (f->getNameAsString() == "__cli_new") {
             auto* target = handle_target(c->getType());
             if (!target) fail(c, "allocation marker has no managed type");
+            if (is_interface(target)) fail(c, "cannot allocate a managed interface");
             QualType element = array_element(target);
             if (!element.isNull()) {
                 if (c->getNumArgs() != 1 || !c->getArg(0)->getType()->isIntegerType()) fail(c, "array allocation requires one integer length");
@@ -1327,10 +1374,10 @@ class Emitter {
             if (record_annotated(target, "cli.value") && annotated(selected, "cli.value.zero")) {
                 auto value_type = "valuetype " + record_name(target);
                 unsigned slot = temporary(value_type);
-                op("ldloca " + std::to_string(slot), 0, 1); op("initobj " + record_name(target), 1);
+                op("ldloca " + std::to_string(slot), 0, 1); op("initobj " + record_token(target), 1);
                 op("ldloc " + std::to_string(slot), 0, 1); op("box " + value_type, 1, 1); return;
             }
-            if (!annotation(target, "cli.external:").empty() && annotation(selected, "cli.import:").empty())
+            if (!record_annotation(target, "cli.external:").empty() && annotation(selected, "cli.import:").empty())
                 fail(c, "imported class has no public metadata constructor");
             if (selected->getNumParams() != c->getNumArgs()) fail(c, "default constructor arguments are not supported yet");
             for (unsigned i = 0; i < c->getNumArgs(); ++i) {
@@ -1356,7 +1403,7 @@ class Emitter {
         if (!id.empty()) {
             auto imported = metadata.methods.find(id);
             if (imported == metadata.methods.end()) fail(c, "imported member is absent from metadata");
-            sig = imported_signature(imported->second);
+            sig = imported_signature(imported->second, m);
         } else {
             if (!f->hasBody() && !(m && m->isPureVirtual()) && !native_function(f)) fail(c, "calling a function without an emitted definition");
             sig = signature(f);
@@ -1486,7 +1533,7 @@ class Emitter {
             if (value_target(c->getType())) {
                 if (annotated(c->getConstructor(), "cli.value.zero")) {
                     unsigned slot = temporary(type(c->getType()));
-                    op("ldloca " + std::to_string(slot), 0, 1); op("initobj " + record_name(value_target(c->getType())), 1);
+                    op("ldloca " + std::to_string(slot), 0, 1); op("initobj " + record_token(value_target(c->getType())), 1);
                     op("ldloc " + std::to_string(slot), 0, 1); return;
                 }
                 if (c->getConstructor()->isCopyOrMoveConstructor()) {
@@ -1787,7 +1834,7 @@ class Emitter {
                 }
             }
             if (record_annotated(method->getParent(), "cli.value")) {
-                op("ldarg.0", 0, 1); op("initobj " + record_name(method->getParent()), 1);
+                op("ldarg.0", 0, 1); op("initobj " + record_token(method->getParent()), 1);
             } else if (!base_initialized) { op("ldarg.0", 0, 1); op("call instance void [System.Runtime]System.Object::.ctor()", 1); }
             for (auto* init : constructor->inits()) if (init->isMemberInitializer()) {
                 op("ldarg.0", 0, 1); expr(init->getInit()); op("stfld " + field_signature(init->getMember()), 2);
@@ -1797,7 +1844,7 @@ class Emitter {
         if (f->getReturnType()->isVoidType()) op("ret");
         else if (value_target(f->getReturnType())) {
             unsigned slot = temporary(type(f->getReturnType()));
-            op("ldloca " + std::to_string(slot), 0, 1); op("initobj " + record_name(value_target(f->getReturnType())), 1);
+            op("ldloca " + std::to_string(slot), 0, 1); op("initobj " + record_token(value_target(f->getReturnType())), 1);
             op("ldloc " + std::to_string(slot), 0, 1); op("ret", 1);
         } else {
             std::string result = type(f->getReturnType());
@@ -1837,7 +1884,7 @@ public:
         if (isa<CXXConstructorDecl>(f) && method && is_interface(method->getParent())) return true;
         if (f->isImplicit() && method && annotated(method->getParent(), "cli.abstract") && annotated(method->getParent(), "cli.sealed")) return true;
         if ((f->isImplicit() && !(isa<CXXConstructorDecl>(f) && cast<CXXConstructorDecl>(f)->isDefaultConstructor())) || (!f->doesThisDeclarationHaveABody() && !(method && method->isPureVirtual()) && !native_function(f)) || llvm::StringRef(f->getNameAsString()).starts_with("__cli_")) return true;
-        if (auto* m = dyn_cast<CXXMethodDecl>(f)) if (!annotation(m->getParent(), "cli.external:").empty()) return true;
+        if (auto* m = dyn_cast<CXXMethodDecl>(f)) if (!record_annotation(m->getParent(), "cli.external:").empty()) return true;
         if (isa<CXXDestructorDecl>(f)) throw std::runtime_error("managed destructors/finalizers are not enabled yet");
         if (method && f->isOverloadedOperator()) throw std::runtime_error("managed operator metadata is not enabled yet");
         if (method) for (auto* base : method->overridden_methods()) {
@@ -1856,6 +1903,33 @@ public:
     }
     bool VisitCXXRecordDecl(CXXRecordDecl* r) {
         if (r->isThisDeclarationADefinition() && (annotated(r, "cli.ref") || annotated(r, "cli.value")) && !annotated(r, "cli.array") && annotation(r,"cli.external:").empty()) {
+            if (!is_interface(r) && !annotated(r, "cli.abstract") && !r->isAbstract()) {
+                std::set<const CXXRecordDecl*> checked;
+                std::function<void(const CXXRecordDecl*)> validate_slots = [&](const CXXRecordDecl* base) {
+                    if (!base || !checked.insert(base->getCanonicalDecl()).second) return;
+                    // An imported CLR class supplies its own interface table;
+                    // omitted facade members do not make that real class abstract.
+                    if (!is_interface(base) && !record_annotation(base, "cli.external:").empty()) return;
+                    for (auto* expected : base->methods()) if (is_interface(base)) {
+                        auto imported = metadata.methods.find(annotation(expected, "cli.import:"));
+                        if (imported == metadata.methods.end() || !imported->second.is_abstract || imported->second.is_static) continue;
+                        bool implemented = false;
+                        std::function<void(const CXXRecordDecl*)> find_implementation = [&](const CXXRecordDecl* owner) {
+                            for (auto* method : owner->methods()) if (method->getNameAsString() == imported->second.name && method->isVirtual() &&
+                                method->getAccess() == AS_public && method->getNumParams() == expected->getNumParams() && type(method->getReturnType()) == type(expected->getReturnType())) {
+                                bool match = true;
+                                for (unsigned i = 0; i < method->getNumParams(); ++i) match &= type(method->getParamDecl(i)->getType()) == type(expected->getParamDecl(i)->getType());
+                                implemented |= match;
+                            }
+                            for (auto& parent : owner->bases()) if (!is_interface(parent.getType()->getAsCXXRecordDecl())) find_implementation(parent.getType()->getAsCXXRecordDecl());
+                        };
+                        find_implementation(r);
+                        if (!implemented) throw std::runtime_error("concrete managed class is missing interface slot: " + imported->second.owner + "::" + imported->second.name);
+                    }
+                    for (auto& parent : base->bases()) validate_slots(parent.getType()->getAsCXXRecordDecl());
+                };
+                for (auto& base : r->bases()) validate_slots(base.getType()->getAsCXXRecordDecl());
+            }
             auto layout = layout_kind(r);
             auto pack = layout_constant(r, "cli.layout.Pack", 0), size = layout_constant(r, "cli.layout.Size", 0);
             auto charset = layout_constant(r, "cli.layout.CharSet", 1);
@@ -2001,10 +2075,10 @@ public:
                 std::string(layout == 2 ? "explicit " : layout == 0 ? "sequential " : "auto ") + (charset == 3 ? "unicode " : charset == 4 ? "autochar " : "ansi "))
                << (!is_interface(r) && (annotated(r, "cli.abstract") || r->isAbstract()) ? "abstract " : "")
                << ((annotated(r, "cli.sealed") || annotated(r, "cli.value")) ? "sealed " : "") << record_name(r);
-            if (!is_interface(r)) il << " extends " << (annotated(r, "cli.value") ? "[System.Runtime]System.ValueType" : parent ? record_name(parent) : "[System.Runtime]System.Object");
+            if (!is_interface(r)) il << " extends " << (annotated(r, "cli.value") ? "[System.Runtime]System.ValueType" : parent ? record_token(parent) : "[System.Runtime]System.Object");
             bool first_interface = true;
             for (auto& base : r->bases()) if (is_interface(base.getType()->getAsCXXRecordDecl())) {
-                il << (first_interface ? " implements " : ", ") << record_name(base.getType()->getAsCXXRecordDecl()); first_interface = false;
+                il << (first_interface ? " implements " : ", ") << record_token(base.getType()->getAsCXXRecordDecl()); first_interface = false;
             }
             il << " {\n";
             if (annotated(r, "cli.layout.Pack")) il << "  .pack " << layout_constant(r, "cli.layout.Pack", 0) << "\n";

@@ -515,6 +515,72 @@ EOF
   reject_case switch-duplicate 'int main() { switch(1) { case 1: return 0; case 1: return 1; } return 0; }' 'duplicate case'
   log "PASS test-switch: typed enum operations and C# consumption of switch control flow"
 }
+step_test-generics() {
+  log "Closed CLR generic classes, value types, interfaces and bound member signatures"
+  local refs=("$CPPCLI_SDK"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
+  local generic_args=(--reference "$(cygpath -m "${refs[-1]}/System.Collections.dll")"
+    --type 'System.Collections.Generic.List`1' --type 'System.Collections.Generic.Dictionary`2'
+    --type 'System.Collections.Generic.KeyValuePair`2' --type 'System.Collections.Generic.IComparer`1' --type 'System.Nullable`1'
+    --type 'System.Collections.Generic.IEnumerable`1' --type 'System.Collections.Generic.IEnumerator`1'
+    --type System.Collections.IEnumerable --type System.Collections.IEnumerator --type System.IDisposable)
+  mkdir -p "$testdir/generic-fixture"
+  cat > "$testdir/generic-fixture/fixture.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><AssemblyName>generic-fixture</AssemblyName><EnableNETAnalyzers>false</EnableNETAnalyzers></PropertyGroup></Project>
+EOF
+  cat > "$testdir/generic-fixture/Fixture.cs" <<'EOF'
+namespace GenericFixture {
+    public interface ICombiner<TKey, TValue> { TValue Combine(TKey key, TValue value); }
+    public class Slot<T> { public T Value; public static T Last; public Slot(T value) { Value = value; Last = value; } public T Echo(T value) => value; }
+    public class Child<T> : Slot<T> { public Child(T value) : base(value) { } }
+}
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/generic-fixture/fixture.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -p:NuGetAudit=false
+  cp "$testdir/generic-fixture/bin/Debug/net8.0/generic-fixture.dll" "$testdir/"
+  compile "$(cygpath -m "$src/tests/generics.cpp")" --target library "${generic_args[@]}" \
+    --reference "$(cygpath -m "$testdir/generic-fixture.dll")" --type 'GenericFixture.Slot`1' --type 'GenericFixture.Child`1' --type 'GenericFixture.ICombiner`2' \
+    -o "$(cygpath -m "$testdir/generics.dll")"
+  mkdir -p "$testdir/generic-consumer"
+  cat > "$testdir/generic-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers></PropertyGroup><ItemGroup><Reference Include="generics"><HintPath>../generics.dll</HintPath></Reference><Reference Include="generic-fixture"><HintPath>../generic-fixture.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  cat > "$testdir/generic-consumer/Program.cs" <<'EOF'
+using System;
+using System.Collections.Generic;
+using GenericFixture;
+if (GenericBridge.ListSum(38) != 42) throw new Exception("bound List<int> method signatures failed");
+if (GenericBridge.Enumerate(40) != 42) throw new Exception("generic/nongeneric enumeration interface dispatch failed");
+var dictionary = GenericBridge.DictionaryValue("café", 42);
+int found = 0;
+if (dictionary["café"] != 42 || !GenericBridge.Lookup(dictionary, "café", ref found) || found != 42 || GenericBridge.Lookup(dictionary, "missing", ref found))
+    throw new Exception("generic dictionary/byref signatures failed");
+var pair = GenericBridge.Pair("東京", 17);
+if (pair.Key != "東京" || pair.Value != 17 || GenericBridge.Key(pair) != "東京" || GenericBridge.Value(pair) != 17 ||
+    GenericBridge.Empty().HasValue || GenericBridge.NullableValue(42) != 42)
+    throw new Exception("generic value type construction/property/default failed");
+if (GenericBridge.Nested(42)[0][0] != 42) throw new Exception("nested generic type signatures failed");
+IComparer<int> comparer = new IntComparer();
+if (comparer.Compare(42, 1) != 41) throw new Exception("generic interface implementation failed");
+ICombiner<string, int> combiner = new PairCombiner();
+if (combiner.Combine("ab", 40) != 42) throw new Exception("two-argument generic base/member binding failed");
+var slot = new Slot<int>(40);
+if (GenericBridge.Field(slot) != 41 || slot.Value != 41 || GenericBridge.StaticField(99) != 99 || Slot<int>.Last != 99 || GenericBridge.Child(42).Value != 42)
+    throw new Exception("generic field/static field/base constructor signatures failed");
+if (GenericBridge.StaticField64(5000000002) != 5000000002 || Slot<long>.Last != 5000000002 || Slot<int>.Last != 42)
+    throw new Exception("generic static fields lost type-instance identity");
+if (typeof(GenericBridge).GetMethod("Pair").ReturnType != typeof(KeyValuePair<string, int>) ||
+    typeof(GenericBridge).GetMethod("DictionaryValue").ReturnType != typeof(Dictionary<string, int>))
+    throw new Exception("closed generic API type identity lost");
+Console.WriteLine("closed CLR generic APIs OK");
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/generic-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -p:NuGetAudit=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/generic-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case generic-missing-interface 'using namespace System::Collections::Generic; public ref class Missing : IComparer<int> {}; int main() { return 0; }' 'missing interface slot' "${generic_args[@]}"
+  reject_case generic-allocate-interface 'using namespace System::Collections::Generic; int main() { IComparer<int>^ value = gcnew IComparer<int>(); return 0; }' 'cannot allocate a managed interface' "${generic_args[@]}"
+  reject_case generic-native-pointer 'using namespace System::Collections::Generic; int main() { List<void*>^ value = gcnew List<void*>(); return 0; }' 'native pointers and typed boxed handles' "${generic_args[@]}"
+  log "PASS test-generics: real CLR generic types, fields, constructors, methods and interface dispatch"
+}
 step_test-values() {
   run_case values "$src/tests/values.cpp" $'7\n3\n5\n13\n3\n13\n10\n12\n9\n0\n9\n42'
   mkdir -p "$testdir/value-consumer"

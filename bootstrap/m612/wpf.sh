@@ -118,6 +118,10 @@ step_bridge_gate() {
     --type System.Runtime.ConstrainedExecution.Cer --type System.Runtime.ConstrainedExecution.Consistency \
     --type System.Runtime.ConstrainedExecution.ReliabilityContractAttribute --type System.Globalization.CultureInfo \
     --type System.NotSupportedException --type MS.Internal.Invariant \
+    --type 'System.Collections.Generic.IDictionary`2' --type 'System.Collections.Generic.ICollection`1' \
+    --type 'System.Collections.Generic.IEnumerable`1' --type 'System.Collections.Generic.IEnumerator`1' \
+    --type 'System.Collections.Generic.KeyValuePair`2' --type System.Collections.IEnumerable \
+    --type System.Collections.IEnumerator --type System.IDisposable \
     --type System.Runtime.InteropServices.StructLayoutAttribute --type System.Runtime.InteropServices.LayoutKind \
     --type System.Runtime.InteropServices.FieldOffsetAttribute \
     --reference "$(cygpath -m "$core_ref/System.Threading.dll")" \
