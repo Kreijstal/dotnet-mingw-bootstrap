@@ -7,6 +7,7 @@ static class Check {
             var face = FontFace.Create();
             var faceHandle = face.Handle();
             if (faceHandle.IsInvalid || faceHandle.IsClosed) throw new Exception("font face ownership missing");
+            if (face.VerifyTablesAndGlyphs()!=0) throw new Exception("original font-table/embedding-rights/glyph methods disagree with native DirectWrite");
             var file = face.GetFileZero();
             if (file == null) throw new Exception("real font face returned no file");
             var fileHandle = file.Handle();
@@ -19,5 +20,6 @@ static class Check {
             if (!fileHandle.IsInvalid || !fileHandle.IsClosed) throw new Exception("font file cleanup failed");
         }
         Console.WriteLine("original WPF FontFace::GetFileZero, real DirectWrite array/COM ownership, GC and repeated disposal OK");
+        Console.WriteLine("original WPF font-table copy, missing table, embedding rights and native pointer pins/glyph indices OK");
     }
 }

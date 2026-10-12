@@ -1373,6 +1373,13 @@ class Emitter {
         if (auto* call = dyn_cast<CallExpr>(e); call && call->getDirectCallee()) return native_value_pointer(call->getDirectCallee());
         if (auto* address = dyn_cast<UnaryOperator>(e); address && address->getOpcode() == UO_AddrOf && value_target(address->getSubExpr()->getType()))
             return address->getSubExpr()->getType();
+        if (auto* unary = dyn_cast<UnaryOperator>(e); unary && unary->isIncrementDecrementOp())
+            return native_value_pointer(unary->getSubExpr());
+        if (auto* binary = dyn_cast<BinaryOperator>(e); binary && e->getType()->isPointerType() &&
+            (binary->getOpcode() == BO_Add || binary->getOpcode() == BO_Sub || binary->getOpcode() == BO_AddAssign || binary->getOpcode() == BO_SubAssign)) {
+            if (!native_value_pointer(binary->getLHS()).isNull() || !native_value_pointer(binary->getRHS()).isNull())
+                return e->getType()->getPointeeType();
+        }
         if (auto* opaque = dyn_cast<OpaqueValueExpr>(e)) return native_value_pointer(opaque->getSourceExpr());
         if (auto* pseudo = dyn_cast<PseudoObjectExpr>(e)) return native_value_pointer(pseudo->getResultExpr());
         if (auto* conditional = dyn_cast<ConditionalOperator>(e)) {
@@ -1968,7 +1975,7 @@ class Emitter {
         const Expr* e = strip(original)->IgnoreParenImpCasts();
         if (auto* pointer = interior_dereference(e)) { expr(pointer); return; }
         if (auto* subscript = dyn_cast<ArraySubscriptExpr>(e)) { native_array_address(subscript); return; }
-        if (auto* unary = dyn_cast<UnaryOperator>(e); unary && unary->getOpcode() == UO_Deref && !native_value_pointer(unary->getSubExpr()).isNull()) {
+        if (auto* unary = dyn_cast<UnaryOperator>(e); unary && unary->getOpcode() == UO_Deref && native_pointer(unary->getSubExpr())) {
             expr(unary->getSubExpr()); return;
         }
         if (auto* unary = dyn_cast<UnaryOperator>(e); unary && unary->getOpcode() == UO_Deref && boxed_target(unary->getSubExpr()->getType())) {
@@ -2101,6 +2108,12 @@ class Emitter {
     }
     void native_address(const Expr* original) {
         const Expr* e = strip(original)->IgnoreParenImpCasts();
+        if (auto* cast = dyn_cast<ExplicitCastExpr>(e); cast && cast->getTypeAsWritten()->isReferenceType() &&
+            cast->getCastKind() == CK_NoOp && context.hasSameUnqualifiedType(cast->getType(), cast->getSubExpr()->getType())) {
+            // A no-op native reference cast preserves the referent location.
+            // Recurse so a cast cannot bypass the stable-storage checks below.
+            native_address(cast->getSubExpr()); return;
+        }
         if (auto* subscript = dyn_cast<ArraySubscriptExpr>(e)) { native_array_address(subscript); return; }
         if (native_guid_address(e)) return;
         if (auto* member = dyn_cast<MemberExpr>(e); member && native_field(dyn_cast<FieldDecl>(member->getMemberDecl()))) {
@@ -2149,15 +2162,80 @@ class Emitter {
         }
         fail(at, "unsupported declaration reference");
     }
+    bool native_pointer(const Expr* expression) const {
+        return expression->getType()->isPointerType() &&
+            (!handle_target(expression->getType()) || !native_value_pointer(expression).isNull());
+    }
+    QualType native_pointer_element(const Expr* pointer) const {
+        if (!native_pointer(pointer)) fail(pointer, "pointer arithmetic requires an unmanaged pointer");
+        auto element = pointer->getType()->getPointeeType();
+        if (element->isIncompleteType() || element->isFunctionType() || element->isArrayType() || !native_storage(element))
+            fail(pointer, "native pointer arithmetic requires complete scalar, pointer, trivial POD or GC-free value elements");
+        return element;
+    }
+    void native_stride(QualType element) {
+        if (value_target(element)) op("sizeof " + type(element), 0, 1);
+        else op("ldc.i8 " + std::to_string(context.getTypeSizeInChars(element).getQuantity()), 0, 1);
+        op("conv.i", 1, 1);
+    }
+    void native_offset_value(const Expr* offset, QualType element) {
+        expr(offset); op(offset->getType()->isUnsignedIntegerType() ? "conv.u" : "conv.i", 1, 1);
+        native_stride(element); op("mul", 2, 1);
+    }
+    void native_pointer_update(const Expr* target, const Expr* offset, bool subtract, bool postfix) {
+        auto element = native_pointer_element(target);
+        auto token = expression_type(target);
+        unsigned delta = temporary("native int");
+        if (offset) native_offset_value(offset, element);
+        else native_stride(element);
+        op("stloc " + std::to_string(delta), 1);
+        unsigned location = temporary(token + "&"), old = temporary(token), result = temporary(token);
+        // Keep managed field locations as tracked byrefs; native storage
+        // addresses may also inhabit these unverifiable CLR byref locals.
+        address(target); op("stloc " + std::to_string(location), 1);
+        op("ldloc " + std::to_string(location), 0, 1);
+        if (target->getType().isVolatileQualified()) op("volatile.");
+        op("unaligned. 1"); op("ldobj " + token, 1, 1); op("stloc " + std::to_string(old), 1);
+        op("ldloc " + std::to_string(old), 0, 1); op("ldloc " + std::to_string(delta), 0, 1);
+        op(subtract ? "sub" : "add", 2, 1); op("stloc " + std::to_string(result), 1);
+        op("ldloc " + std::to_string(location), 0, 1); op("ldloc " + std::to_string(result), 0, 1);
+        if (target->getType().isVolatileQualified()) op("volatile.");
+        op("unaligned. 1"); op("stobj " + token, 2);
+        op("ldloc " + std::to_string(postfix ? old : result), 0, 1);
+    }
+    bool native_pointer_binary(const BinaryOperator* binary) {
+        auto* left = binary->getLHS(); auto* right = binary->getRHS();
+        bool left_pointer = native_pointer(left), right_pointer = native_pointer(right);
+        if (!left_pointer && !right_pointer) return false;
+        auto opcode = binary->getOpcode();
+        if ((opcode == BO_AddAssign || opcode == BO_SubAssign) && left_pointer) {
+            native_pointer_update(left, right, opcode == BO_SubAssign, false); return true;
+        }
+        if ((opcode == BO_Add || opcode == BO_Sub) && left_pointer && right->getType()->isIntegerType()) {
+            auto element = native_pointer_element(left);
+            expr(left); native_offset_value(right, element); op(opcode == BO_Sub ? "sub" : "add", 2, 1); return true;
+        }
+        if (opcode == BO_Add && right_pointer && left->getType()->isIntegerType()) {
+            auto element = native_pointer_element(right);
+            native_offset_value(left, element); expr(right); op("add", 2, 1); return true;
+        }
+        if (opcode == BO_Sub && left_pointer && right_pointer) {
+            auto element = native_pointer_element(left);
+            native_pointer_element(right);
+            expr(left); expr(right); op("sub", 2, 1); native_stride(element); op("div", 2, 1);
+            numeric_conversion(binary->getType()); return true;
+        }
+        if (opcode == BO_LT || opcode == BO_LE || opcode == BO_GT || opcode == BO_GE) {
+            if (!left_pointer || !right_pointer) fail(binary, "native value pointers and boxed value handles cannot be implicitly mixed");
+            expr(left); expr(right); op(opcode == BO_LT || opcode == BO_GE ? "clt.un" : "cgt.un", 2, 1);
+            if (opcode == BO_LE || opcode == BO_GE) { op("ldc.i4.0", 0, 1); op("ceq", 2, 1); }
+            return true;
+        }
+        return false;
+    }
     void native_array_address(const ArraySubscriptExpr* subscript) {
-        auto base = subscript->getBase()->getType();
-        auto element = subscript->getType();
-        if (!base->isPointerType() || handle_target(base) || !native_storage(element) || element->isArrayType() || element->isFunctionType())
-            fail(subscript, "native subscripting requires a scalar or POD element and an unmanaged pointer");
-        expr(subscript->getBase()); expr(subscript->getIdx());
-        op(subscript->getIdx()->getType()->isUnsignedIntegerType() ? "conv.u" : "conv.i", 1, 1);
-        op("ldc.i8 " + std::to_string(context.getTypeSizeInChars(element).getQuantity()), 0, 1);
-        op("conv.u", 1, 1); op("mul", 2, 1); op("add", 2, 1);
+        auto element = native_pointer_element(subscript->getBase());
+        expr(subscript->getBase()); native_offset_value(subscript->getIdx(), element); op("add", 2, 1);
     }
     const CXXOperatorCallExpr* array_subscript(const Expr* e) const {
         auto* call = dyn_cast<CXXOperatorCallExpr>(e->IgnoreParenImpCasts());
@@ -2249,6 +2327,7 @@ class Emitter {
         else fail(target, "unsupported assignment target");
     }
     void binary(const BinaryOperator* b) {
+        if (native_pointer_binary(b)) return;
         if ((b->getLHS()->getType()->isPointerType() || b->getRHS()->getType()->isPointerType()) &&
             !handle_target(b->getLHS()->getType()) && !handle_target(b->getRHS()->getType()) &&
             b->getOpcode() != BO_Assign && b->getOpcode() != BO_EQ && b->getOpcode() != BO_NE)
@@ -2751,12 +2830,32 @@ class Emitter {
                 expr(argument(0)); op("newarr " + type(element), 1, 1); return;
             }
             if (record_name(target) == "[System.Runtime]'System.String'") {
-                if (count != 1 || !isa<StringLiteral>(argument(0)->IgnoreParenImpCasts()))
-                    fail(c, "String allocation currently requires a literal");
-                expr(argument(0));
-                op("callvirt instance char[] [System.Runtime]System.String::ToCharArray()", 1, 1);
-                op("newobj instance void [System.Runtime]System.String::.ctor(char[])", 1, 1);
-                return;
+                if (count == 1 && isa<StringLiteral>(argument(0)->IgnoreParenImpCasts())) {
+                    expr(argument(0));
+                    op("callvirt instance char[] [System.Runtime]System.String::ToCharArray()", 1, 1);
+                    op("newobj instance void [System.Runtime]System.String::.ctor(char[])", 1, 1); return;
+                }
+                if (annotation(selected, "cli.import:").empty()) {
+                    // The const wchar_t/char facades provide CLI's native
+                    // character-pointer syntax; bind them to verified real
+                    // char*/sbyte* constructors rather than a surrogate body.
+                    if (count != 1 || !native_pointer(argument(0))) fail(c, "String allocation requires a supported metadata constructor or native character pointer");
+                    auto element = argument(0)->getType()->getPointeeType();
+                    std::string parameter;
+                    if ((element->isWideCharType() || element->isSpecificBuiltinType(BuiltinType::Char16)) && context.getTypeSize(element) == 16) parameter = "char*";
+                    else if (element->isCharType() || element->isSpecificBuiltinType(BuiltinType::SChar)) parameter = "int8*";
+                    else fail(c, "native String construction requires UTF-16 or narrow character elements");
+                    const CXXConstructorDecl* native_constructor = nullptr;
+                    for (auto* candidate : target->ctors()) {
+                        auto imported = metadata.methods.find(annotation(candidate, "cli.import:"));
+                        if (imported != metadata.methods.end() && imported->second.parameters == std::vector<std::string>{parameter}) {
+                            if (native_constructor) fail(c, "ambiguous native String constructor metadata");
+                            native_constructor = candidate;
+                        }
+                    }
+                    if (!native_constructor) fail(c, "native String constructor is absent from source-built metadata");
+                    expr(argument(0)); op("newobj " + signature(native_constructor), 1, 1); return;
+                }
             }
             if (target->getDefinition() && annotated(target->getDefinition(), "cli.abstract")) fail(c, "cannot allocate an abstract managed class");
             if (record_annotated(target, "cli.value") && annotated(selected, "cli.value.zero")) {
@@ -3159,6 +3258,9 @@ class Emitter {
                 expr(u->getSubExpr()); op("ldobj " + type(u->getType()), 1, 1); return;
             }
             if (u->isIncrementDecrementOp()) {
+                if (native_pointer(u->getSubExpr())) {
+                    native_pointer_update(u->getSubExpr(), nullptr, u->isDecrementOp(), u->isPostfix()); return;
+                }
                 if (handle_target(u->getSubExpr()->getType())) fail(u, "managed handles cannot be incremented");
                 if (u->getSubExpr()->getType()->isPointerType()) fail(u, "unmanaged pointer arithmetic and ordering are not enabled yet");
                 if (auto* receiver = interior_dereference(u->getSubExpr())) {

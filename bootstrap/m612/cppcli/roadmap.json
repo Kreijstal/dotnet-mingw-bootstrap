@@ -177,7 +177,11 @@
         "Full WPF gate combines actual DirectWriteForwarder.cpp and main.cpp, with explicit native loader/subsetter imports; it passes Factory initialization, native SDK UUIDs, function calls and sizeof(WCHAR), then stops at Font.cpp:193 compound assignment",
         "Scalar compound assignment and CLI enum flag compounds preserve Clang types, signedness, narrowing and single location evaluation; native trivial arrays and native pointer pin locals now compile",
         "Original FontFace::GetFileZero executes unchanged against real DirectWrite fonts with owned file references surviving face disposal and GC; complete-file proof remains four of 21 directly included bodies",
-        "Full WPF gate passes Font.cpp flag compounds and FontFace array allocation/native pin initializers; next unsupported operation is FontFace.cpp:250 native pointer addition"
+        "Full WPF gate passes Font.cpp flag compounds and FontFace array allocation/native pin initializers; next unsupported operation is FontFace.cpp:250 native pointer addition",
+        "Native pointer arithmetic now preserves Clang native strides, signed offsets/differences, address ordering and single-evaluation updates; GC-free value pointers instead use actual CLR sizeof, verified with a 32-byte explicit layout",
+        "No-op REFIID/native reference casts preserve stable native referent addresses; actual source-metadata String character-pointer constructors replace the next FontFile literal-only restriction",
+        "Complete original FontFile.cpp/header runtime proof increases whole directly included body coverage to five of 21; original GUID initialization, Analyze, Unicode path, metadata/friend access, original cleanup and GC pass against native DirectWrite",
+        "Original FontFace glyph-index/table-copy/embedding-rights methods also pass real native DirectWrite oracle checks; combined full bridge passes FontFace/FontFile and stops at TextItemizer.cpp:30 native inline array field access"
       ]
     }
   ]

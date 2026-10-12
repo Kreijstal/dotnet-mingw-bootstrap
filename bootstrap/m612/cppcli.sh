@@ -257,7 +257,7 @@ EOF
   reject_case bad-downcast 'using namespace System; public ref class Base {}; public ref class Derived : Base {}; int main() { Base^ b = gcnew Base(); Derived^ d = b; return 0; }' 'cannot initialize'
   reject_case private-field 'using namespace System; public ref class Box { int hidden; }; int main() { Box^ b = gcnew Box(); b->hidden = 1; return 0; }' 'private member'
   reject_case native-managed-pointer 'using namespace System; public ref class Box {}; int main() { Box* b = gcnew Box(); return 0; }' "native '\*' pointers"
-  reject_case native-value-pointer 'public value struct Point { int X; }; int main() { Point* native = nullptr; return 0; }' "native '\*' pointers"
+  reject_case native-value-pointer-gc 'public value struct Point { System::String^ Text; }; int main() { Point* native = nullptr; return 0; }' 'native value pointers require proven GC-free element storage'
   reject_case missing-default-constructor 'public ref class B { public: B(int value) {} }; public ref class D : B {}; int main() { D^ d = gcnew D(); return 0; }' 'deleted'
   reject_case missing-imported-constructor 'using namespace System; int main() { Console^ c = gcnew Console(); return 0; }' 'no public metadata constructor'
   log "PASS test-objects: managed identity and Clang constructor/member checking"
@@ -453,10 +453,32 @@ step_test-compound() {
   reject_case compound-native-enum 'enum class Flags { Low=1, High=2 }; int main() { Flags flags=Flags::Low; flags |= Flags::High; return 0; }' 'invalid operands'
   reject_case compound-mixed-enum 'public enum class First { Low=1 }; public enum class Second { High=2 }; int main() { First flags=First::Low; flags |= Second::High; return 0; }' 'invalid operands'
   reject_case compound-const-enum 'public enum class Flags { Low=1, High=2 }; int main() { const Flags flags=Flags::Low; flags |= Flags::High; return 0; }' 'invalid operands'
-  reject_case compound-pointer 'int main() { int value=0; int* pointer=&value; pointer+=1; return 0; }' 'unmanaged pointer arithmetic'
+  reject_case compound-void-pointer 'int main() { void* pointer=nullptr; pointer+=1; return 0; }' 'arithmetic'
+}
+step_test-pointer-arithmetic() {
+  /clang64/bin/clang++.exe -std=c++17 -shared -O2 "$src/tests/native-pointer-arithmetic-native.cpp" -o "$testdir/cppcli-pointer-arithmetic.dll"
+  run_case native-pointer-arithmetic "$src/tests/native-pointer-arithmetic.cpp" 'native pointer strides, signed offsets/differences, ordering, updates and single evaluation OK' \
+    --native-library cppcli-pointer-arithmetic.dll --type System.GC
+  compile "$(cygpath -m "$src/tests/value-pointer-arithmetic.cpp")" --target library --type System.GC \
+    --type System.Runtime.InteropServices.StructLayoutAttribute --type System.Runtime.InteropServices.LayoutKind \
+    --type System.Runtime.InteropServices.FieldOffsetAttribute -o "$(cygpath -m "$testdir/value-pointer-arithmetic.dll")"
+  mkdir -p "$testdir/value-pointer-arithmetic-consumer"
+  cp "$src/tests/ValuePointerArithmeticConsumer.cs" "$testdir/value-pointer-arithmetic-consumer/Program.cs"
+  cat > "$testdir/value-pointer-arithmetic-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><AllowUnsafeBlocks>true</AllowUnsafeBlocks><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="value-pointer-arithmetic"><HintPath>../value-pointer-arithmetic.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/value-pointer-arithmetic-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/value-pointer-arithmetic-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case pointer-incomplete 'struct Incomplete; int main() { Incomplete* value=nullptr; value+=1; return 0; }' 'incomplete type'
+  reject_case pointer-function 'int main() { void (*function)()=nullptr; function+=1; return 0; }' 'arithmetic'
+  reject_case reference-cast-managed 'public ref class Owner { public: int Value; }; int Read(const int& value) { return value; } int main() { Owner^ owner=gcnew Owner(); return Read((const int&)owner->Value); }' 'native reference cannot bind to movable managed storage'
 }
 step_test-native-pins() {
   run_case pin-native "$src/tests/pin-native.cpp" 'native pointer pin initialization, const parameters, managed/native reassignment and GC OK' --type System.GC
+}
+step_test-native-strings() {
+  run_case native-strings "$src/tests/native-strings.cpp" $'λ😀\n😀\nOK\nsource-metadata native UTF-16/narrow String constructors, slices, null, copy ownership and GC OK' --type System.GC
 }
 step_test-function-pointers() {
   /clang64/bin/clang++.exe -std=c++17 -shared -O2 "$src/tests/function-pointers-native.cpp" -o "$testdir/cppcli-function-pointers.dll"
@@ -755,7 +777,7 @@ EOF
 int Read(pin_ptr<int> value) { return *value; } int main() { return 0; }' 'restricted to block-scoped locals'
   reject_case pin-for-scope '#include <vcclr.h>
 int main() { int n = 1; for (pin_ptr<int> p = &n; n < 3; ++n) {} return 0; }' 'restricted to block-scoped locals'
-  reject_case pointer-arithmetic 'extern "C" int* Raw(); int main() { int* value = Raw(); value++; return 0; }' 'unmanaged pointer arithmetic' --native-library cppcli-pinning.dll
+  reject_case pointer-void-arithmetic 'int main() { void* value = nullptr; value++; return 0; }' 'arithmetic'
   reject_case interior-return '#include <vcclr.h>
 interior_ptr<int> Escape() { int n = 1; return &n; } int main() { return 0; }' 'interior pointer return must refer directly to managed heap storage'
   reject_case interior-parameter-copy-return '#include <vcclr.h>

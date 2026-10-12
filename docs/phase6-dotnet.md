@@ -3771,3 +3771,116 @@ remain incomplete. This is development frontend work, with no new installed
 WPF package. Logs, original extracted method/wrappers, emitted IL and native
 probe artifacts are archived under
 `tmp/wpf8-support/validation/compound-native-arrays-pins-20261012` on the local host.
+
+## 37. Native pointer arithmetic, native Strings and complete FontFile
+
+The 2026-10-13 continuation passes FontFace.cpp:250 native pointer addition,
+FontFile.cpp:85's explicit REFIID reference cast and FontFile.cpp:91's native
+UTF-16 String construction. The combined original DirectWriteForwarder.cpp and
+ported main.cpp gate now stops at TextItemizer.cpp:30: indexing the native
+DWriteTextAnalysisNode::Range inline array field. No complete bridge assembly is
+produced by that gate.
+
+Native scalar/pointer/trivial POD pointers now support addition/subtraction,
+integer-plus-pointer, signed element differences, unsigned address comparisons,
+compound updates and pre/post increment/decrement. Element strides come from
+Clang layout, and update locations are captured once, including packed native
+fields, managed fields, pointer-array slots, native references and side-effectful
+indirect locations. Compound updates capture the RHS first. Managed field
+locations remain tracked byrefs while native storage addresses use the same
+unverifiable CLR address form. Runtime checks cover negative/unsigned offsets,
+negative differences, 16-byte POD strides, all update forms, native oracle
+comparison, GC and observable receiver/index evaluation counts.
+
+Native GC-free managed-value pointers preserve pointer provenance through these
+operations and native indexing. Their stride uses CLR sizeof rather than Clang's
+surrogate record size. A public value type with explicit offsets and Size=32 is
+pinned in a C# array; pointer returns, positive/negative offsets and differences,
+field reads/writes, compound/increment updates and GC all match C#'s actual
+32-byte stride. Void/function/incomplete/array/nontrivial element arithmetic,
+movable unpinned storage and general intrinsic-pointer operations remain outside
+this support. Existing native value-pointer/boxed-handle rejection checks pass.
+The older object suite's blanket native value-pointer rejection is updated to
+reject value storage containing a GC reference; that object suite also passes.
+
+No-op explicit native reference casts recurse through native address binding,
+retaining checks for stable native storage. A native POD reference cast passes;
+a cast of a managed owner's integer field still fails the lifetime check.
+This supports the original FontFile QueryInterface argument without turning a
+reference cast into a permission to pass movable managed memory to native code.
+
+The native wchar_t/char String constructor facades now bind to verified real
+char*/sbyte* constructor signatures in source-built .NET metadata. Other
+Clang-selected imported String constructors use their real newobj signatures.
+The literal copy path remains unchanged. Tests cover UTF-16 lambda and surrogate
+pairs, a pointer slice through the imported three-argument constructor, typed
+null, narrow ASCII, source-buffer modification/freeing and GC. Narrow decoding
+belongs to the CLR constructor; no encoding translator or external managed
+binary is introduced.
+
+The FontFace component check now extracts three further original methods
+byte-for-byte: GetArrayOfGlyphIndices, TryGetFontTable and
+ReadFontEmbeddingRights. The complete original OpenTypeTableTag header is also
+included. Actual DirectWrite glyph results for Latin/Greek/supplementary code
+points match independent native calls; OS/2 table copying and big-endian fsType
+match a separate native parser, and a nonexistent table returns false/null.
+These are focused methods with surrounding fixture declarations, not a full
+FontFace.cpp runtime proof. The normal real-font paths pass; injected failure
+and malformed-font paths are not claimed.
+
+A new component check compiles the **complete unchanged FontFile.cpp and
+FontFile.h**, plus the original FontFileType/FontFaceType and
+NativePointerWrapper source headers/bodies. Common.h is a focused context with
+the exact original ToGUID method and a basic HRESULT exception helper; the
+unused DWriteTypeConverter include is an explicit placeholder. The test imports
+the actual source-built WindowsBase Invariant through #using as_friend and uses
+the original DirectWriteForwarder assembly name/public key. It runs the original
+static GUID constructor, instance constructor, Analyze, native pointer property,
+GetUriPath, ReleaseInterface and destructor. The C# consumer verifies private
+source type/property metadata, IDisposable and Analyze Out parameters.
+
+A native DirectWrite probe acquires an actual system-font file. The original
+Analyze result matches an independent native Analyze call. The original UTF-16
+path matches a native local-loader/GetReferenceKey/GetFilePathFromKey oracle,
+exists on disk, and remains valid after the original finally frees its native
+character array and the file is disposed twice. Thirty-two iterations and forced
+GC pass. This validates the normal local-file path; the nonlocal-loader and
+error paths are not claimed. The original loader lifetime behavior is retained.
+The test DLL is named DirectWriteForwarder for friend access but contains this
+focused component, not the complete bridge.
+
+Validation on win11:
+
+```sh
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-pointer-arithmetic
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-native-strings
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh \
+  test-native-arrays test-compound test-value-pointers test-native-storage test-pinning
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh \
+  test-core test-native-strings test-pointer-arithmetic
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-objects
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  WPF_CPPCLI_BUILD=/home/topkek/dotnetboot/m612/build/cppcli \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh \
+  check-font-file-zero check-original-font-file bridge-gate
+```
+
+The rebuilds and focused/runtime/regression checks pass. FontFile retains one
+upstream erased-void-delete warning; OpenTypeTableTag retains its upstream
+trailing #endif tokens. C# builds have zero warnings/errors. The full gate exits
+1 after five upstream warnings at TextItemizer.cpp:30. Complete directly
+included implementation-body proof is now **five of 21**, with FontFile.cpp
+joining LocalizedErrorMsgs.cpp, util2.cpp, the ported truetype.cpp and
+NativePointerWrapper.cpp. The 620 C# foundation inputs, 14 nested native subsetter
+inputs and startup/native-loader proof remain the previous compiled scope.
+System.Printing, higher WPF, native text-export coverage and WindowsDesktop
+packaging remain incomplete, and this development frontend is not a new
+installed WPF package. Original component sources, generated IL/metadata, native
+probes and logs are archived under
+`tmp/wpf8-support/validation/pointer-arithmetic-font-file-20261013` on the local host.
