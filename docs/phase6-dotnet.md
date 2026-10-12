@@ -1781,8 +1781,11 @@ upcasts, String constructor literals, imported static properties and Action bind
 expression now compile and execute (see §24). Primitive static members and WPF
 font-version parsing now pass (see §25). Guid literal construction and managed
 value-to-Object boxing now pass (see §26). Closed C++ managed templates and their
-out-of-line properties now pass (see §27). The full gate next fails on primitive
-keyword static scope in FontFileStream.cpp. Native record emission, open managed
+out-of-line properties now pass (see §27). Fundamental keyword static scopes,
+nested indexers, default/assigned pins and direct managed-heap interior returns
+now pass (see §28). The complete amalgamation passes Clang parsing and Sema;
+IL collection next fails at the native Guid reference in Common.h's ToGUID.
+Native record emission, open managed
 generics, callbacks, finalizers and automatic native
 partitioning also remain outside its supported subset.
 The same compiler failure can be reproduced with `wpf.sh bridge-gate`; it
@@ -2843,7 +2846,6 @@ frontend changes; installed compiler packages remain unchanged. Logs, IL and gen
 probe sources are archived in `tmp/wpf8-support/validation/primitive-statics-20261012`
 on the local build host.
 
-
 ## 26. Functional Guid construction and managed value boxing into Object
 
 The next 2026-10-12 continuation handles parenthesized functional managed value
@@ -2990,3 +2992,85 @@ version/protocol matching, WindowsDesktop packaging and current Greenshot remain
 unfinished. New features remain development frontend changes. Logs, generated
 source and IL are archived in `tmp/wpf8-support/validation/closed-templates-20261012`
 on the local build host.
+
+## 28. Primitive keyword scopes, nested indexers, assigned pins and interior returns
+
+The next 2026-10-12 continuation removes the remaining Clang parsing/Sema errors
+from the complete upstream DirectWriteForwarder amalgamation. Fundamental
+keyword scopes such as long::MaxValue, unsigned long::MaxValue and
+double::MinValue select the corresponding explicitly imported CLR primitive
+facade. Native target widths determine the mapping: Windows long remains
+Int32, while long long is Int64. Common signed/unsigned-prefix spellings are
+supported; arbitrary keyword order, long double and numeric typedef chains
+are not added. Ordinary native declarations and name shadowing remain intact.
+
+The private parser completes a preceding managed property subscript before
+processing a following bracket. List<array<unsigned int>^>[i][j] therefore
+indexes the first getter's returned array. A bare named property still waits
+for its first index. The nested-indexer test updates through side-effectful
+receiver/outer/inner expressions and verifies each runs once; existing named
+and default indexer checks cover the original regression.
+
+Primitive pin_ptr locals can now be default constructed and directly assigned
+tracked string/array addresses or nullptr. They keep the same CLR pinned slots
+and block finally cleanup. Explicit reinterpret_cast with a spelled native
+pointer target invokes the pin conversion intrinsic, retaining element const
+checks and the original pin. General pointer aliases/operations and arbitrary
+typedef cast targets remain incomplete. The TextAnalyzer source patch
+0004-mingw-loop-variable-scope.patch moves the loop counter declaration before
+the loop so its existing post-loop use is valid standard C++.
+
+Primitive interior_ptr returns now emit genuine CLR byref signatures when the
+returned expression is directly rooted in string characters, a managed array
+element or a reference-class instance field. Returning through a pin cleanup
+region stores the returned byref in a tracked temporary before leave. Stack
+locals, copied value parameters, stack-value fields, pointer aliases, pin
+returns and a conditional containing an unsafe branch are rejected. General
+provenance analysis of forwarding calls and local aliases remains unfinished.
+Native references are not silently converted to tracking references; their
+different GC behavior is described in Microsoft's
+[handle/reference examples](https://learn.microsoft.com/en-us/cpp/extensions/handle-to-object-operator-hat-cpp-component-extensions?view=msvc-170).
+
+`wpf.sh check-string-chars` stages the original GetPtrToStringChars declaration
+and body from Common.h in a public probe type. The C# consumer checks the CLR
+char& return signature and every UTF-16 character, including an empty string,
+after compacting collections. The pinning checks also call a source helper,
+pin its returned string byref for a real native call during concurrent
+compacting GC, and mutate returned array/instance-field byrefs after collection.
+This compiles the original helper, not the complete Common.h or another full
+DirectWrite implementation file.
+
+Validation on win11:
+
+```sh
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh \
+  test-pinning test-primitive-statics test-nested-indexers test-indexers
+MSYSTEM=CLANG64 bash -l -c "/clang64/bin/cmake.exe --build /home/topkek/dotnetboot/m612/build/cppcli --target cli_ast -j2"
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-pinning test-tracking
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  WPF_CPPCLI_BUILD=/home/topkek/dotnetboot/m612/build/cppcli \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-string-chars bridge-gate
+```
+
+Both rebuilds and all focused checks pass. Managed builds report zero warnings
+and errors; the WPF helper prints `WPF string interior-pointer return and moving
+GC OK`. The full bridge gate still exits 1 after 39 upstream/native C++ warnings.
+Its first IL-collection error is now Common.h:80, the System::Guid& parameter of
+Native::Util::ToGUID. That helper also returns a native _GUID by value and reads
+it from a pinned byte buffer; it requires actual native layout/reference
+handling rather than a diagnostic bypass. The earlier keyword/indexer/default
+pin/cast errors are gone. No DirectWriteForwarder assembly is produced.
+
+Complete-file evidence remains one of the 21 included implementation bodies;
+the five WPF foundation assemblies still cover 620 C# source inputs. Full
+native partitioning/lifetimes, System.Printing, higher WPF, 101 missing native
+exports, gfx/PenImc version/protocol matching and WindowsDesktop packaging
+remain open. These are development frontend changes, not a new installed
+compiler or WPF package. Logs, generated helper source and IL are archived in
+`tmp/wpf8-support/validation/keyword-index-pins-returns-20261012` on the local
+build host.

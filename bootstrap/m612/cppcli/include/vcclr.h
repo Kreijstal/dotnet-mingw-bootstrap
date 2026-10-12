@@ -12,6 +12,7 @@ public:
 };
 template<class T> class __attribute__((annotate("cli.pin"))) pin_ptr {
 public:
+    pin_ptr();
     pin_ptr(T*);
     pin_ptr(interior_ptr<T>);
     pin_ptr(decltype(nullptr));

@@ -13,6 +13,11 @@ if (PrimitiveStatics.IntMinimum() != int.MinValue || PrimitiveStatics.IntMaximum
     PrimitiveStatics.ULongMaximum() != ulong.MaxValue || PrimitiveStatics.SmallMinimum() != sbyte.MinValue + short.MinValue ||
     PrimitiveStatics.SmallMaximum() != byte.MaxValue + ushort.MaxValue || PrimitiveStatics.NativeLookup() != 17 || PrimitiveStatics.NativeClassLookup() != 18 || PrimitiveStatics.CharacterMaximum() != char.MaxValue)
     throw new Exception("primitive integer limits or native shadow lookup lost");
+if (PrimitiveStatics.KeywordLong() != int.MaxValue || PrimitiveStatics.KeywordInt() != int.MaxValue ||
+    PrimitiveStatics.KeywordUnsignedLong() != uint.MaxValue || PrimitiveStatics.KeywordWide() != long.MaxValue ||
+    PrimitiveStatics.KeywordUnsignedWide() != ulong.MaxValue || PrimitiveStatics.KeywordFloat() != float.MinValue ||
+    PrimitiveStatics.KeywordDouble() != double.MinValue)
+    throw new Exception("keyword static scopes lost Windows C++ widths");
 double parsed = 7;
 if (!PrimitiveStatics.Parse("1.25e2", ref parsed) || parsed != 125 || PrimitiveStatics.Parse("invalid", ref parsed) || parsed != 0 ||
     !PrimitiveStatics.Finite(125) || PrimitiveStatics.Finite(double.PositiveInfinity))

@@ -108,12 +108,20 @@
 @@ -1162,0 +1225,2 @@
 +      if (!Res.isInvalid() && !CliResult.isNull())
 +        Res = cppcliEnumCast(Actions, Res.get(), CliResult, SavedLoc);
-@@ -1779,2 +1843,45 @@
+@@ -1779,2 +1843,53 @@
 -          LHS = Actions.ActOnArraySubscriptExpr(getCurScope(), LHS.get(), Loc,
 -                                                ArgExprs, RLoc);
 +          // For a managed array handle, ask Sema to resolve the surrogate's
 +          // element operator after type/name lookup. Ordinary pointer indexing
 +          // is untouched, including identifiers shadowing managed type names.
++          // A following bracket indexes the getter result. Completing a
++          // previous property subscript here prevents Sema from treating a
++          // nested list/array access as one multi-index property invocation.
++          if (isa<MSPropertySubscriptExpr>(LHS.get()->IgnoreParens()) &&
++              LHS.get()->getType()->isSpecificBuiltinType(BuiltinType::PseudoObject)) {
++            LHS = Actions.CheckPlaceholderExpr(LHS.get());
++            if (LHS.isInvalid()) return ExprError();
++          }
 +          QualType Handle = LHS.get()->getType();
 +          if (Handle->isPointerType()) {
 +            auto *Record = Handle->getPointeeType()->getAsCXXRecordDecl();
@@ -156,7 +164,7 @@
 +          if (!LHS.isInvalid())
 +            LHS = Actions.ActOnArraySubscriptExpr(getCurScope(), LHS.get(), Loc,
 +                                                  ArgExprs, RLoc);
-@@ -1838,0 +1946,23 @@
+@@ -1838,0 +1954,23 @@
 +      }
 +
 +      // CLI delegate handles call their runtime Invoke method. Let Sema
@@ -226,7 +234,24 @@
 +    }
 +
 +    if (CLIPrimitiveScope) continue;
-@@ -1845,0 +1887,35 @@
+@@ -1547,0 +1589,16 @@
++  if (!Result.isInvalid() && Kind == tok::kw_reinterpret_cast &&
++      DeclaratorInfo.getNumTypeObjects() &&
++      DeclaratorInfo.getTypeObject(0).Kind == DeclaratorChunk::Pointer) {
++    auto *Record = Result.get()->getType()->getAsCXXRecordDecl();
++    if (auto *Spec = dyn_cast_or_null<ClassTemplateSpecializationDecl>(Record))
++      Record = Spec->getSpecializedTemplate()->getTemplatedDecl();
++    if (Record && Record->getDefinition())
++      for (const auto *Attr : Record->getDefinition()->specific_attrs<AnnotateAttr>())
++        if (Attr->getAnnotation() == "cli.pin") {
++          // CLI pin reinterpretation invokes the explicit pointer intrinsic;
++          // native C++ reinterpret_cast does not consider conversion members.
++          Kind = tok::kw_static_cast;
++          break;
++        }
++  }
++
+@@ -1845,0 +1903,35 @@
 +
 +    // Adapt literal arguments only after Clang has resolved the actual
 +    // managed value type. Native classes and same-named functions are untouched.

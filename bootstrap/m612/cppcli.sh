@@ -75,6 +75,13 @@ template<> struct SystemTrait<float> {}; int main() { return 0; }' 'cannot be sp
   reject_case missing-return 'using namespace System; int broken() { int n = 0; } int main() { return broken(); }' 'does not return'
   log "PASS test-core: Clang parsing, metadata overloads, control flow, macros/includes, Unicode, negative checks"
 }
+step_test-nested-indexers() {
+  log "Nested imported indexers returning managed arrays"
+  local refs=("$CPPCLI_SDK"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
+  run_case nested-indexers "$src/tests/nested-indexers.cpp" '42' --type 'System.Collections.Generic.List`1' \
+    --reference "$(cygpath -m "${refs[-1]}/System.Collections.dll")"
+  log "PASS test-nested-indexers: array getter result and single receiver/index evaluation"
+}
 step_test-managed-templates() {
   log "Closed managed C++ class templates and generic-owner property definitions"
   compile "$(cygpath -m "$src/tests/managed-templates.cpp")" --target library -o "$(cygpath -m "$testdir/managed-templates.dll")"
@@ -536,6 +543,27 @@ try {
         int before = Volatile.Read(ref collections);
         if (PinBridge.Read(text, data) != 42 || data[1] != 65530) throw new Exception("native pinning corrupted managed data");
         if (Volatile.Read(ref collections) <= before) throw new Exception("no compacting collection during native call");
+        ushort[] assigned = { 65535, 0 };
+        before = Volatile.Read(ref collections);
+        if (PinBridge.AssignedRead(text, assigned) != 42 || assigned[1] != 65530)
+            throw new Exception("default/assigned pin slots corrupted managed data");
+        if (Volatile.Read(ref collections) <= before) throw new Exception("no compacting collection during assigned native call");
+        ushort[] returned = { 65535, 0 };
+        before = Volatile.Read(ref collections);
+        if (PinBridge.ReturnedRead(text, returned) != 42 || returned[1] != 65530)
+            throw new Exception("returned string interior pointer lost its managed root");
+        if (Volatile.Read(ref collections) <= before) throw new Exception("no compacting collection during returned native call");
+        ref readonly char first = ref PinBridge.StringChars(text);
+        ref readonly char scoped = ref PinBridge.StringCharsInPinScope(text);
+        int[] elements = { 1, 99 };
+        ref int element = ref PinBridge.ArrayElement(elements, 1);
+        var owner = new InteriorFieldOwner();
+        ref int field = ref PinBridge.FieldElement(owner);
+        GC.Collect(2, GCCollectionMode.Forced, blocking: true, compacting: true);
+        if (first != 'c' || scoped != 'c' || element != 99 || field != 17)
+            throw new Exception("returned managed byref did not survive collection");
+        element = 42; field = 23;
+        if (elements[1] != 42 || owner.Value != 23) throw new Exception("returned heap byref lost its original storage");
         byte[] word = { 0x11, 0x22, 0x33, 0x44 };
         before = Volatile.Read(ref collections);
         if (PinBridge.Cast(word) != 0x88776655u || word[0] != 0x55 || word[3] != 0x88)
@@ -564,7 +592,17 @@ int Read(pin_ptr<int> value) { return *value; } int main() { return 0; }' 'restr
 int main() { int n = 1; for (pin_ptr<int> p = &n; n < 3; ++n) {} return 0; }' 'restricted to block-scoped locals'
   reject_case pointer-arithmetic 'extern "C" int* Raw(); int main() { int* value = Raw(); value++; return 0; }' 'unmanaged pointer arithmetic' --native-library cppcli-pinning.dll
   reject_case interior-return '#include <vcclr.h>
-interior_ptr<int> Escape() { int n = 1; return &n; } int main() { return 0; }' 'returning managed pointer intrinsics'
+interior_ptr<int> Escape() { int n = 1; return &n; } int main() { return 0; }' 'interior pointer return must refer directly to managed heap storage'
+  reject_case interior-parameter-copy-return '#include <vcclr.h>
+interior_ptr<int> Escape(int n) { return &n; } int main() { return 0; }' 'interior pointer return must refer directly to managed heap storage'
+  reject_case interior-alias-return '#include <vcclr.h>
+interior_ptr<int> Escape() { int n = 1; interior_ptr<int> alias = &n; return alias; } int main() { return 0; }' 'interior pointer return must refer directly to managed heap storage'
+  reject_case interior-value-field-return '#include <vcclr.h>
+public value class StackValue { public: int Field; }; interior_ptr<int> Escape() { StackValue value; return &value.Field; } int main() { return 0; }' 'interior pointer return must refer directly to managed heap storage'
+  reject_case interior-conditional-return '#include <vcclr.h>
+using namespace System; interior_ptr<int> Escape(array<Int32>^ values, bool choose) { int n = 1; return choose ? &values[0] : &n; } int main() { return 0; }' 'interior pointer return must refer directly to managed heap storage'
+  reject_case pin-return '#include <vcclr.h>
+pin_ptr<int> Escape() { int n = 1; return &n; } int main() { return 0; }' 'restricted to block-scoped locals'
   reject_case pin-implicit-reinterpret '#include <vcclr.h>
 using namespace System; void Bad(array<Byte>^ bytes) { pin_ptr<Byte> data = &bytes[0]; unsigned int* word = data; } int main() { return 0; }' 'no viable conversion'
   reject_case pin-static-const '#include <vcclr.h>

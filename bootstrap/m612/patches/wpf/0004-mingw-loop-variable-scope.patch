@@ -1,0 +1,8 @@
+--- a/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/CPP/DWriteWrapper/TextAnalyzer.cpp
++++ b/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/CPP/DWriteWrapper/TextAnalyzer.cpp
+@@ -184,3 +184,4 @@
+-        for (UINT32 i = 1; i < length; ++i)
++        UINT32 i;
++        for (i = 1; i < length; ++i)
+         {
+             classificationUtility->GetCharAttribute(

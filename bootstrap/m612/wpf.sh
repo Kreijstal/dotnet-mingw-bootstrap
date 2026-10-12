@@ -370,6 +370,22 @@ EOF
   timeout 30 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/PointerHandleCheck.dll")"
 }
 
+step_check_string_chars() {
+  initialize
+  local work=$build/string-chars-check
+  mkdir -p "$work"
+  /usr/bin/python3 "$here/tools/wpf-string-chars-check.py" "$source" "$work/StringChars.cpp"
+  bridge_compile "$(cygpath -m "$work/StringChars.cpp")" --target library --std c++14 \
+    --ilasm "$(cygpath -m /clang64/bin/ilasm-dotnet.exe)" -o "$(cygpath -m "$work/StringChars.dll")"
+  cp "$here/wpf-tests/StringChars.cs" "$work/Program.cs"
+  cat > "$work/StringCharsCheck.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="StringChars"><HintPath>StringChars.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$sdk/dotnet.exe" build "$(cygpath -m "$work/StringCharsCheck.csproj")" -c Release \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -v:q
+  timeout 30 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/StringCharsCheck.dll")"
+}
+
 step_check_font_version() {
   initialize
   local work=$build/font-version-check

@@ -133,7 +133,13 @@
     "Implicit boxing of source/imported managed value types into Object, including constructed generic value types and property-returned temporaries, preserves CLR copies and getter evaluation",
     "Closed source managed C++ class templates emit distinct ordinary CLR specialization types using canonical Clang identities; dependent primary templates and unreferenced members are omitted",
     "Out-of-line property definitions recognize template-id owners, including getter/setter bodies and virtual class inheritance",
-    "Imported value equality/inequality operators bind real CLR operator slots, including IntPtr, UIntPtr and Guid; metadata boxing conversions do not determine equality"
+    "Imported value equality/inequality operators bind real CLR operator slots, including IntPtr, UIntPtr and Guid; metadata boxing conversions do not determine equality",
+    "Fundamental keyword static scopes map common integral/floating spellings to explicitly selected CLR primitive facades using the native target widths",
+    "Successive managed indexed-property brackets resolve each completed getter before indexing its returned array, retaining single receiver/index evaluation",
+    "Default primitive pin_ptr locals and direct block-local assignment from tracked addresses or nullptr retain pinned slots and lexical finally cleanup",
+    "Explicit reinterpret_cast to spelled unmanaged pointer types invokes the pin conversion intrinsic while preserving element const checks and pinned roots",
+    "Primitive interior_ptr returns from direct string character, managed array element and reference-class field addresses emit real CLR byref returns; return paths through pin cleanup retain the returned root",
+    "Original WPF GetPtrToStringChars method compiles and survives compacting GC with Unicode and empty strings"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -152,7 +158,7 @@
     "WPF DirectWriteForwarder and System.Printing are not compiled by this frontend yet",
     "Value classes currently exclude nested types, bases/interfaces, virtual methods, native pointer fields and custom zero-argument constructors",
     "Boxing covers explicit safe_cast to Object and implicit boxing into Object or matching selected value-class handles; handle upcasts, primitive boxes, constrained dispatch and boxed operator overloads remain incomplete",
-    "Tracking references exclude constructors, fields and byref returns; pin_ptr is limited to initialized primitive block locals, and interior_ptr to primitive addresses/read dereferences; managed pointer assignments, unmanaged pointer arithmetic and intrinsic returns are not implemented",
+    "Tracking references exclude constructors, fields and tracking-reference returns; pin_ptr is restricted to primitive block locals and direct local assignments; general pointer operations, interior assignments and unmanaged pointer arithmetic remain unsupported",
     "Layout attributes currently appear individually before managed declarations; inherited layout types, bitfields and general custom attributes remain unsupported",
     "CLI enum operations currently cover comparisons, explicit casts and bitwise OR/AND/XOR/complement; additive/increment/compound enum operators remain incomplete",
     "Switch initializers and GNU case ranges are rejected; switch labels cannot enter generated protected/pinned scopes",
@@ -166,10 +172,12 @@
     "Imported base chains must be explicitly selected; nonempty parameter-array expansion, optional imported arguments remain unsupported",
     "Imported static property facades expose public accessors only; protected accessors require their original method names and retain Clang access checks",
     "Parameter arrays currently support omission and explicit arrays only; source ParamArray declarations and expansion of individual arguments remain unsupported",
-    "Primitive static scope support currently requires the generated annotated System alias and explicitly selected metadata type; user-defined numeric typedef chains and raw builtin keyword scopes remain unsupported",
+    "Primitive static scopes require explicitly selected metadata types; annotated System aliases and common builtin keyword spellings are supported, while user typedef chains, arbitrary keyword ordering and long double remain unsupported",
     "Primitive facades expose static methods and literals only; general primitive instance methods/boxing and imported String/null literal constants remain unsupported",
     "Ordinary global functions from different C++ namespaces currently share IL names; equal-name/signature collisions remain unsupported",
     "Functional String literal constructor adaptation currently covers parenthesized managed value construction; list/direct initialization, user native string buffers and general managed reference literal conversion remain incomplete",
-    "Closed C++ managed templates remain an initial subset: CLR generic declarations, general partial/nested specialization forms, template static fields and unused property accessor metadata remain incomplete"
+    "Closed C++ managed templates remain an initial subset: CLR generic declarations, general partial/nested specialization forms, template static fields and unused property accessor metadata remain incomplete",
+    "Interior returns currently require direct proven managed heap addresses; local pointer aliases, forwarding calls, byref parameters and native/stack addresses are rejected rather than analyzed for escape safety",
+    "Pin reinterpret_cast adaptation currently requires an explicit pointer declarator; arbitrary typedef pointer targets and general native reinterpretation remain unsupported"
   ]
 }

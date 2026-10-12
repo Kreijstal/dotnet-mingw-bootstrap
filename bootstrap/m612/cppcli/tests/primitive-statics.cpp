@@ -11,6 +11,13 @@ namespace NativeClassShadow {
 }
 public ref class PrimitiveStatics abstract sealed {
 public:
+    static int KeywordLong() { return long::MaxValue; }
+    static int KeywordInt() { return int::MaxValue; }
+    static unsigned int KeywordUnsignedLong() { return unsigned long::MaxValue; }
+    static long long KeywordWide() { return long long::MaxValue; }
+    static unsigned long long KeywordUnsignedWide() { return unsigned long long::MaxValue; }
+    static float KeywordFloat() { return float::MinValue; }
+    static double KeywordDouble() { return double::MinValue; }
     static double Minimum() { return System::Double::MinValue; }
     static double Maximum() { return Double::MaxValue; }
     static double Epsilon() { return Sys::Double::Epsilon; }

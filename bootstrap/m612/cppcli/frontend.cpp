@@ -8,6 +8,7 @@
 #include <clang/AST/TypeLoc.h>
 #include <clang/AST/Mangle.h>
 #include <clang/Basic/Version.h>
+#include <clang/Basic/TargetInfo.h>
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Frontend/FrontendPluginRegistry.h>
 #include <clang/Lex/Lexer.h>
@@ -416,6 +417,41 @@ protected:
                 append("} } finally { __cli_each_dispose(" + enumerator + "); } }");
                 tokens.erase(tokens.begin()+pos, tokens.begin()+end+1);
                 tokens.insert(tokens.begin()+pos, replacement.begin(), replacement.end());
+            }
+            // Fundamental keyword scopes have no identifier to shadow. Map
+            // their native target widths to the corresponding selected CLR
+            // primitive alias, leaving ordinary declarations unchanged.
+            const std::set<std::string> keyword_types = {"signed", "unsigned", "short", "long", "int", "char", "wchar_t", "bool", "float", "double"};
+            for (size_t pos = 0; pos < tokens.size(); ++pos) {
+                if (!keyword_types.count(tokens[pos].text) || (pos && keyword_types.count(tokens[pos-1].text))) continue;
+                size_t end = pos; std::string spelling;
+                while (end < tokens.size() && keyword_types.count(tokens[end].text)) { if (!spelling.empty()) spelling += " "; spelling += tokens[end++].text; }
+                if (end >= tokens.size() || tokens[end].text != "::") continue;
+                std::string managed;
+                bool is_unsigned = spelling.rfind("unsigned", 0) == 0;
+                auto plain = spelling;
+                if (plain.rfind("unsigned ", 0) == 0) plain.erase(0, 9);
+                else if (plain.rfind("signed ", 0) == 0) plain.erase(0, 7);
+                if ((is_unsigned || spelling.rfind("signed ", 0) == 0) &&
+                    plain != "char" && plain != "short" && plain != "short int" && plain != "int" &&
+                    plain != "long" && plain != "long int" && plain != "long long" && plain != "long long int") continue;
+                if (plain == "long" || plain == "long int") managed = ci.getTarget().getLongWidth() == 64 ? "Int64" : "Int32";
+                else if (plain == "long long" || plain == "long long int") managed = "Int64";
+                else if (plain == "int" || plain == "signed" || plain == "unsigned") managed = "Int32";
+                else if (plain == "short" || plain == "short int") managed = "Int16";
+                else if (plain == "char") managed = is_unsigned ? "Byte" : spelling.rfind("signed ", 0) == 0 || ci.getLangOpts().CharIsSigned ? "SByte" : "Byte";
+                else if (plain == "wchar_t") managed = ci.getTarget().getWCharWidth() == 16 ? "Char" : "Int32";
+                else if (plain == "bool") managed = "Boolean";
+                else if (plain == "float") managed = "Single";
+                else if (plain == "double") managed = "Double";
+                if (is_unsigned && managed.rfind("Int", 0) == 0) managed.insert(0, "U");
+                else if (is_unsigned && managed == "SByte") managed = "Byte";
+                if (managed.empty()) continue;
+                std::vector<Lexeme> replacement;
+                append_fragment(replacement, "::System::" + managed, tokens[pos], sm, ci.getLangOpts());
+                tokens.erase(tokens.begin()+pos, tokens.begin()+end);
+                tokens.insert(tokens.begin()+pos, replacement.begin(), replacement.end());
+                pos += replacement.size()-1;
             }
             for (size_t pos = tokens.size(); pos-- > 0;) {
                 if (tokens[pos].text != "delegate") continue;
@@ -1254,6 +1290,29 @@ class Emitter {
         return spec->getTemplateArgs()[0].getAsType();
     }
     bool pinned(QualType t) const { return record_annotated(t->getAsCXXRecordDecl(), "cli.pin"); }
+    bool heap_interior_return(const Expr* original) const {
+        const Expr* e = strip(original)->IgnoreParenImpCasts();
+        if (pinned(e->getType())) return false;
+        if (auto* construction = dyn_cast<CXXConstructExpr>(e))
+            return !interior_element(construction->getType()).isNull() && construction->getNumArgs() == 1 &&
+                heap_interior_return(construction->getArg(0));
+        if (auto* call = dyn_cast<CallExpr>(e)) {
+            auto* callee = call->getDirectCallee();
+            return callee && annotated(callee, "cli.string.chars");
+        }
+        if (auto* conditional = dyn_cast<ConditionalOperator>(e))
+            return heap_interior_return(conditional->getTrueExpr()) && heap_interior_return(conditional->getFalseExpr());
+        auto* address = dyn_cast<UnaryOperator>(e);
+        if (!address || address->getOpcode() != UO_AddrOf) return false;
+        auto* location = strip(address->getSubExpr())->IgnoreParenImpCasts();
+        if (array_subscript(location)) return true;
+        if (auto* member = dyn_cast<MemberExpr>(location)) {
+            auto* owner = handle_target(member->getBase()->getType());
+            return isa<FieldDecl>(member->getMemberDecl()) && owner && record_annotated(owner, "cli.ref") &&
+                !record_annotated(owner, "cli.value");
+        }
+        return false;
+    }
     int64_t layout_constant(const Decl* d, llvm::StringRef name, int64_t fallback) const {
         const AnnotateAttr* found = nullptr;
         for (auto* attr : d->specific_attrs<AnnotateAttr>()) if (attr->getAnnotation() == name) {
@@ -1503,8 +1562,11 @@ class Emitter {
             if (!reference.isNull()) {
                 if (reference.getType()->isRValueReferenceType()) throw std::runtime_error("rvalue reference signatures are not enabled yet");
                 SourceLocation sigil = sm.getSpellingLoc(reference.getSigilLoc());
-                if (sigil.isValid() && sm.isWrittenInMainFile(sigil) && *sm.getCharacterData(sigil) != '%')
-                    throw std::runtime_error("native '&' references are not supported in managed declarations; use a '%' tracking reference");
+                if (sigil.isValid() && sm.isWrittenInMainFile(sigil) && *sm.getCharacterData(sigil) != '%') {
+                    auto source = sm.getPresumedLoc(reference.getSigilLoc());
+                    throw std::runtime_error((source.isValid() ? std::string(source.getFilename()) + ":" + std::to_string(source.getLine()) + ": " : "") +
+                        "native '&' references are not supported in managed declarations; use a '%' tracking reference");
+                }
             }
             auto pointer = loc.getAs<PointerTypeLoc>();
             if (pointer.isNull()) continue;
@@ -1865,6 +1927,16 @@ class Emitter {
             op("callvirt instance char& modreq([System.Runtime]System.Runtime.InteropServices.InAttribute) [System.Runtime]System.String::GetPinnableReference()", 1, 1);
             return;
         }
+        if (auto* method = dyn_cast<CXXMethodDecl>(f); method && pinned(context.getCanonicalTagType(method->getParent()))) {
+            if (auto* assignment = dyn_cast<CXXOperatorCallExpr>(c); assignment && assignment->getOperator() == OO_Equal) {
+                auto* lhs = dyn_cast<DeclRefExpr>(assignment->getArg(0)->IgnoreParenImpCasts());
+                auto* variable = lhs ? dyn_cast<VarDecl>(lhs->getDecl()) : nullptr;
+                if (assignment->getNumArgs() != 2 || !variable || !variable->hasLocalStorage() || !pinned(variable->getType()))
+                    fail(c, "pin assignment requires a block-local pin variable");
+                expr(assignment->getArg(1)); op("dup", 1, 2);
+                op("stloc " + std::to_string(locals.at(variable)), 1); return;
+            }
+        }
         if (auto* method = dyn_cast<CXXMethodDecl>(f); method && !interior_element(context.getCanonicalTagType(method->getParent())).isNull()) {
             const Expr* receiver = nullptr;
             if (auto* member = dyn_cast<CXXMemberCallExpr>(c)) receiver = member->getImplicitObjectArgument();
@@ -2182,6 +2254,7 @@ class Emitter {
         if (auto* c = dyn_cast<CallExpr>(e)) { call(c); return; }
         if (auto* c = dyn_cast<CXXConstructExpr>(e)) {
             if (!interior_element(c->getType()).isNull()) {
+                if (!c->getNumArgs() && pinned(c->getType())) { op("ldc.i4.0", 0, 1); op("conv.u", 1, 1); return; }
                 if (c->getNumArgs() != 1) fail(c, "managed pointer construction requires one address");
                 auto* arg = strip(c->getArg(0))->IgnoreParenImpCasts();
                 if (isa<CXXNullPtrLiteralExpr>(arg)) { op("ldc.i4.0", 0, 1); op("conv.u", 1, 1); }
@@ -2356,6 +2429,9 @@ class Emitter {
             }
         } else if (auto* r = dyn_cast<ReturnStmt>(s)) {
             if (finally_depth) fail(s, "return cannot leave a finally handler");
+            if (!interior_element(current->getReturnType()).isNull() &&
+                (!r->getRetValue() || !heap_interior_return(r->getRetValue())))
+                fail(s, "interior pointer return must refer directly to managed heap storage; local aliases and stack addresses cannot escape");
             if (r->getRetValue()) expr(r->getRetValue());
             if (exception_depth) {
                 if (return_label.empty()) return_label = label();
@@ -2522,6 +2598,7 @@ class Emitter {
             std::string result = type(f->getReturnType());
             op(result == "int64" || result == "uint64" ? "ldc.i8 0" : result == "float32" ? "ldc.r4 0" : result == "float64" ? "ldc.r8 0" :
                handle_target(f->getReturnType()) ? "ldnull" : "ldc.i4.0", 0, 1);
+            if (!interior_element(f->getReturnType()).isNull()) op("conv.u", 1, 1);
             op("ret", 1);
         } // Unreachable for correctly-returning non-void functions except main.
         if (!return_label.empty()) {
@@ -2574,7 +2651,7 @@ public:
             if (is_interface(base->getParent()) && method->getAccess() != AS_public) throw std::runtime_error("implicit interface implementations must be public");
         }
         if (f->getReturnType()->isReferenceType()) throw std::runtime_error("returning tracking references is not enabled yet");
-        if (!interior_element(f->getReturnType()).isNull()) throw std::runtime_error("returning managed pointer intrinsics is not enabled yet");
+        if (pinned(f->getReturnType())) throw std::runtime_error("pin_ptr is restricted to block-scoped locals");
         validate_declarator(f->getTypeSourceInfo());
         for (auto* p : f->parameters()) validate_declarator(p->getTypeSourceInfo());
         if (f->getType()->isDependentType() || f->getTemplatedKind() == FunctionDecl::TK_FunctionTemplate)

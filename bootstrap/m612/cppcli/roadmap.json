@@ -69,7 +69,11 @@
         "source/imported managed value boxing to Object, generic property temporaries and value instance receiver copies",
         "closed C++ managed class template specializations with ordinary CLR identity and referenced methods",
         "out-of-line property accessors after constructed template owners",
-        "imported value equality/inequality using original CLR metadata slots"
+        "imported value equality/inequality using original CLR metadata slots",
+        "target-width-aware fundamental keyword static scopes with explicit CLR primitive selection",
+        "nested imported indexer getter results with managed arrays and single receiver/index evaluation",
+        "default primitive pinned locals and direct assignments/reset with lexical pin cleanup",
+        "direct managed-heap interior pointer returns with CLR byref signatures and stack-escape rejection"
       ],
       "remaining": [
         "implicit boxing into interfaces, primitive boxes and boxed-handle conversions",
@@ -81,7 +85,7 @@
         "full CLI semantic analysis and metadata type discovery",
         "for each with unbraced bodies, tracking-reference variables and value/native enumerators"
       ],
-      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values test-tracking test-pinning test-boxed-values test-static-fields test-static-properties test-nativeints test-layout test-switch test-generics test-indexers test-named-overrides test-each test-com test-delegates test-type-tokens test-constructors test-paramarrays test-primitive-statics test-guid-object-boxing test-managed-templates"
+      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values test-tracking test-pinning test-boxed-values test-static-fields test-static-properties test-nativeints test-layout test-switch test-generics test-indexers test-named-overrides test-each test-com test-delegates test-type-tokens test-constructors test-paramarrays test-primitive-statics test-guid-object-boxing test-managed-templates test-nested-indexers"
     },
     {
       "stage": 4,
@@ -94,7 +98,8 @@
         "explicit pinned primitive-buffer pointer casts retaining CLR pins",
         "native MinGW COM object called through generated CLI interfaces, including BOOL/uint64/pointer marshalling and HRESULT handling",
         "generated delegate invoked through a native function pointer on the source-built CoreCLR",
-        "native-to-managed COM interface callback through the generated source class"
+        "native-to-managed COM interface callback through the generated source class",
+        "explicit pin reinterpret_cast to spelled native pointer targets with const checking and moving-GC validation"
       ],
       "remaining": [
         "native layouts, complete pointer operations and automatic marshalling",
@@ -130,7 +135,10 @@
         "original WPF font version initialization and parsing block compiled and checked under a non-invariant current culture; primitive static errors removed from the full bridge gate",
         "full bridge gate advanced through original FontFile Guid literal initialization and LocalizedStrings Current-to-Object boxing; OverflowException metadata selected",
         "WPF dependent-base handle references qualified for standard Clang template lookup",
-        "unchanged NativePointerCriticalHandle constructor and accessor definitions compiled and checked with actual unmanaged addresses and CoreCLR CriticalHandle disposal"
+        "unchanged NativePointerCriticalHandle constructor and accessor definitions compiled and checked with actual unmanaged addresses and CoreCLR CriticalHandle disposal",
+        "standard loop variable scope patch for original WPF TextAnalyzer classification",
+        "complete upstream DirectWrite amalgamation passes Clang parsing and Sema; IL collection remains blocked at a native reference boundary",
+        "original WPF GetPtrToStringChars helper compiled with CLR char byref return and Unicode/empty-string compacting-GC checks"
       ]
     }
   ]
