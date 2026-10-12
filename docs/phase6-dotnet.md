@@ -1779,8 +1779,9 @@ Managed type tokens/reliability metadata and the associated imports now pass
 upcasts, String constructor literals, imported static properties and Action binding
 (see §23). Omitted parameter arrays and Factory's actual dispatcher scheduling
 expression now compile and execute (see §24). Primitive static members and WPF
-font-version parsing now pass (see §25). The full gate next fails on Guid literal
-construction in FontFile.cpp; native operations also remain unsupported. Native record
+font-version parsing now pass (see §25). Guid literal construction and managed
+value-to-Object boxing now pass (see §26). The full gate next fails on out-of-line
+generic properties in NativePointerWrapper.cpp; native operations remain unsupported. Native record
 emission, managed class templates, callbacks, finalizers and automatic native
 partitioning also remain outside its supported subset.
 The same compiler failure can be reproduced with `wpf.sh bridge-gate`; it
@@ -2840,3 +2841,72 @@ packaging and current Greenshot remain unfinished. The new features are developm
 frontend changes; installed compiler packages remain unchanged. Logs, IL and generated
 probe sources are archived in `tmp/wpf8-support/validation/primitive-statics-20261012`
 on the local build host.
+
+
+## 26. Functional Guid construction and managed value boxing into Object
+
+The next 2026-10-12 continuation handles parenthesized functional managed value
+construction after Clang resolves the actual target type. For a value record with
+an available String-pointer constructor parameter at that argument position,
+the private parser converts a literal through the existing String marker before
+normal constructor overload resolution. This fixes FontFile.cpp's original
+`System::Guid("b2d9f3ec-c9fe-4a11-a2ec-d86208f7c0a2")` expression. Narrow and wide
+literals and namespace aliases work. Native classes or functions named Guid do
+not undergo this conversion, and constructor access checks remain Clang checks.
+List/direct initialization and general native character buffers remain unsupported.
+
+Source and imported value declarations now carry a separate C++ facade conversion
+to System.Object. The backend emits CLR box for the concrete value type, including
+constructed generic TypeSpecs; it emits no native conversion method. A value-type
+instance receiver is loaded from its managed address before boxing. A boxed value
+receiver already has object identity and can reuse its existing box. This does not
+add general primitive/interface boxing or implicit upcasts from typed boxed handles.
+The original LocalizedStrings.Current2 getter's `return Current;` now passes Sema
+with its KeyValuePair<CultureInfo,String> value property.
+
+`cppcli.sh test-guid-object-boxing` verifies Guid values and invalid-input
+FormatException behavior, a source value constructor with String and bool overloads,
+Unicode, native constructor/function literal lookup in unevaluated expressions,
+and rejection of a private value constructor. Its C# consumer verifies that two
+box operations produce distinct objects, mutation of the source value does not
+change an existing box, and instance methods box the current value from a managed
+address. A generic Current/Current2 property fixture verifies the actual CLR
+KeyValuePair type, one getter evaluation, reference-field values and survival after
+GC. The property fixture supplies data; it does not claim to compile the complete
+upstream nested enumerator or all of LocalizedStrings.cpp.
+
+The WPF driver also imports the actual OverflowException type used by
+LocalizedStrings. NativePointerWrapper out-of-line generic properties, class
+methods/templates and native lifetime operations remain separate unfinished work.
+
+Validation on win11:
+
+```sh
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh \
+  test-guid-object-boxing test-boxed-values test-values test-generics
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh \
+  test-guid-object-boxing test-constructors test-boxed-values
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  WPF_CPPCLI_BUILD=/home/topkek/dotnetboot/m612/build/cppcli \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh bridge-gate
+```
+
+The rebuild and focused checks pass; C# consumer builds have zero warnings/errors,
+and the generic C++ static-field facade warnings remain. The final full bridge
+still fails and retains its diagnostics. Its first errors are now
+NativePointerWrapper.cpp:16/22, parsing IsInvalid::get and Value::get after a
+constructed generic owner. Later errors include dependent CriticalHandle fields,
+additional stream/math imports, indexed calls and native operations. Guid literal,
+OverflowException and Current-to-Object errors are absent. This is additional
+compiler support, not a completed native bridge implementation or package: the
+count remains one complete body of the 21 included by DirectWriteForwarder.cpp.
+System.Printing, higher WPF assemblies, full native export coverage, protocol/version
+matching, WindowsDesktop packaging and current Greenshot remain unfinished.
+Changes are development frontend changes; installed compiler packages are unchanged.
+Logs and generated IL are archived in
+`tmp/wpf8-support/validation/guid-object-boxing-20261012` on the local build host.

@@ -518,7 +518,7 @@ protected:
                 size_t open = i + 3;
                 while (open < tokens.size() && tokens[open].text != "{" && tokens[open].text != ";") ++open;
                 if (open == tokens.size() || tokens[open].text != "{") continue;
-                if (tokens[i].text == "value") value_defaults[open] = "public: __attribute__((annotate(\"cli.value.zero\"))) " + name + "() {} __attribute__((annotate(\"cli.box\"))) operator " + name + "*() const; " + (tokens[i+1].text == "struct" ? "public:" : "private:");
+                if (tokens[i].text == "value") value_defaults[open] = "public: __attribute__((annotate(\"cli.value.zero\"))) " + name + "() {} __attribute__((annotate(\"cli.box\"))) operator " + name + "*() const; __attribute__((annotate(\"cli.box.object\"))) operator ::System::Object*() const; " + (tokens[i+1].text == "struct" ? "public:" : "private:");
                 int depth = 1;
                 bool member_begin = true;
                 std::string access = tokens[i].text == "interface" || tokens[i + 1].text == "struct" ? "public" : "private";
@@ -1816,6 +1816,19 @@ class Emitter {
             if (member) { expr(member->getImplicitObjectArgument()); return; }
             if (auto* opcall = dyn_cast<CXXOperatorCallExpr>(c); opcall && opcall->getOperator() == OO_Arrow) { expr(opcall->getArg(0)); return; }
             fail(c, "unsupported static property operation");
+        }
+        if (annotated(f, "cli.box.object")) {
+            auto* member = dyn_cast<CXXMemberCallExpr>(c);
+            auto* method = dyn_cast<CXXMethodDecl>(f);
+            auto* target = handle_target(c->getType());
+            if (!member || !method || !record_annotated(method->getParent(), "cli.value") || !target ||
+                record_name(target) != "[System.Runtime]'System.Object'") fail(c, "invalid value-to-Object boxing conversion");
+            auto* value = strip(member->getImplicitObjectArgument());
+            if (value->getType()->isPointerType()) {
+                if (!isa<CXXThisExpr>(value->IgnoreParenImpCasts())) { expr(value); return; }
+                emit_receiver(value); op("ldobj valuetype " + record_name(method->getParent()), 1, 1);
+            } else expr(value);
+            op("box valuetype " + record_name(method->getParent()), 1, 1); return;
         }
         if (annotated(f, "cli.box")) {
             auto* member = dyn_cast<CXXMemberCallExpr>(c);

@@ -75,6 +75,23 @@ template<> struct SystemTrait<float> {}; int main() { return 0; }' 'cannot be sp
   reject_case missing-return 'using namespace System; int broken() { int n = 0; } int main() { return broken(); }' 'does not return'
   log "PASS test-core: Clang parsing, metadata overloads, control flow, macros/includes, Unicode, negative checks"
 }
+step_test-guid-object-boxing() {
+  log "Functional managed String constructors and value-to-Object boxing"
+  local refs=("$CPPCLI_SDK"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
+  local args=(--type System.Guid --type System.Globalization.CultureInfo --type 'System.Collections.Generic.KeyValuePair`2'
+    --reference "$(cygpath -m "${refs[-1]}/System.Globalization.dll")" --reference "$(cygpath -m "${refs[-1]}/System.Collections.dll")")
+  compile "$(cygpath -m "$src/tests/guid-object-boxing.cpp")" --target library "${args[@]}" -o "$(cygpath -m "$testdir/guid-object-boxing.dll")"
+  mkdir -p "$testdir/guid-object-consumer"
+  cp "$src/tests/GuidObjectBoxingConsumer.cs" "$testdir/guid-object-consumer/Program.cs"
+  cat > "$testdir/guid-object-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="guid-object-boxing"><HintPath>../guid-object-boxing.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/guid-object-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/guid-object-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case value-ctor-private 'using namespace System; public value class C { C(String^ text) {} }; int main() { C value = C("private"); return 0; }' 'private constructor'
+  log "PASS test-guid-object-boxing: typed constructors, CLR copies, Object identity and generic property boxing"
+}
 step_test-primitive-statics() {
   log "Primitive static members from source-built metadata"
   local refs=("$CPPCLI_SDK"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)

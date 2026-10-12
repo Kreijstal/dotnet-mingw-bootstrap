@@ -128,7 +128,9 @@
     "Imported ParamArrayAttribute permits omitted rank-one arrays in methods/constructors, emitting fresh empty CLR arrays and preserving ordinary overload preference and explicit/null arrays",
     "Primitive alias static scope lookup uses Clang name resolution and selected metadata facades, preserving qualified/unqualified aliases, namespace aliases and native class/enum shadowing",
     "Imported numeric and Char literal fields emit CLR constants without static storage; Single/Double constants retain exact metadata bits including NaN, infinity and subnormal values",
-    "Imported primitive static methods including Double.TryParse/IsFinite and Int32.TryParse preserve original CLR ownership and tracking-reference parameters"
+    "Imported primitive static methods including Double.TryParse/IsFinite and Int32.TryParse preserve original CLR ownership and tracking-reference parameters",
+    "Functional managed value construction adapts literal String arguments after Clang resolves the actual managed type and preserves native constructor/function lookup",
+    "Implicit boxing of source/imported managed value types into Object, including constructed generic value types and property-returned temporaries, preserves CLR copies and getter evaluation"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -143,10 +145,10 @@
     "Managed arrays currently require rank one; no aggregate initializers or covariance",
     "Managed destructors/finalizers, covariance metadata and managed operator metadata are explicitly rejected",
     "Native bridges require extern-C scalars or unmanaged pointers; bool/automatic marshalling, callbacks and automatic native partitioning are not enabled",
-    "Implicit boxing into Object/interfaces/primitive boxes and multi-translation-unit linking remain unimplemented",
+    "Implicit primitive/interface boxing and multi-translation-unit linking remain unimplemented",
     "WPF DirectWriteForwarder and System.Printing are not compiled by this frontend yet",
     "Value classes currently exclude nested types, bases/interfaces, virtual methods, native pointer fields and custom zero-argument constructors",
-    "Boxing covers explicit safe_cast to Object and implicit boxing into matching selected value-class handles; handle upcasts, primitive boxes, constrained dispatch and boxed operator overloads remain incomplete",
+    "Boxing covers explicit safe_cast to Object and implicit boxing into Object or matching selected value-class handles; handle upcasts, primitive boxes, constrained dispatch and boxed operator overloads remain incomplete",
     "Tracking references exclude constructors, fields and byref returns; pin_ptr is limited to initialized primitive block locals, and interior_ptr to primitive addresses/read dereferences; managed pointer assignments, unmanaged pointer arithmetic and intrinsic returns are not implemented",
     "Layout attributes currently appear individually before managed declarations; inherited layout types, bitfields and general custom attributes remain unsupported",
     "CLI enum operations currently cover comparisons, explicit casts and bitwise OR/AND/XOR/complement; additive/increment/compound enum operators remain incomplete",
@@ -163,6 +165,7 @@
     "Parameter arrays currently support omission and explicit arrays only; source ParamArray declarations and expansion of individual arguments remain unsupported",
     "Primitive static scope support currently requires the generated annotated System alias and explicitly selected metadata type; user-defined numeric typedef chains and raw builtin keyword scopes remain unsupported",
     "Primitive facades expose static methods and literals only; general primitive instance methods/boxing and imported String/null literal constants remain unsupported",
-    "Ordinary global functions from different C++ namespaces currently share IL names; equal-name/signature collisions remain unsupported"
+    "Ordinary global functions from different C++ namespaces currently share IL names; equal-name/signature collisions remain unsupported",
+    "Functional String literal constructor adaptation currently covers parenthesized managed value construction; list/direct initialization, user native string buffers and general managed reference literal conversion remain incomplete"
   ]
 }

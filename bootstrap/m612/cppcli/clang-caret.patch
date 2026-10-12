@@ -226,3 +226,39 @@
 +    }
 +
 +    if (CLIPrimitiveScope) continue;
+@@ -1845,0 +1887,35 @@
++
++    // Adapt literal arguments only after Clang has resolved the actual
++    // managed value type. Native classes and same-named functions are untouched.
++    auto *Record = Actions.GetTypeFromParser(TypeRep)->getAsCXXRecordDecl();
++    if (Record && Record->getDefinition()) {
++      Record = Record->getDefinition();
++      bool ManagedValue = false;
++      for (const auto *Attr : Record->specific_attrs<AnnotateAttr>())
++        ManagedValue |= Attr->getAnnotation() == "cli.value";
++      if (ManagedValue) {
++        for (unsigned Index = 0; Index < Exprs.size(); ++Index) {
++          auto *Literal = dyn_cast<StringLiteral>(Exprs[Index]->IgnoreParenImpCasts());
++          if (!Literal) continue;
++          bool StringParameter = false;
++          for (const auto *Ctor : Record->ctors()) {
++            if (Ctor->getNumParams() < Exprs.size() || Ctor->getMinRequiredArguments() > Exprs.size() || Index >= Ctor->getNumParams()) continue;
++            auto Parameter = Ctor->getParamDecl(Index)->getType();
++            auto *Target = Parameter->isPointerType() ? Parameter->getPointeeType()->getAsCXXRecordDecl() : nullptr;
++            StringParameter |= Target && Target->getQualifiedNameAsString() == "System::String";
++          }
++          if (!StringParameter) continue;
++          CXXScopeSpec Global;
++          Global.MakeGlobal(Actions.Context, Literal->getBeginLoc());
++          UnqualifiedId Name;
++          Name.setIdentifier(&PP.getIdentifierTable().get("__cli_literal"), Literal->getBeginLoc());
++          ExprResult Function = Actions.ActOnIdExpression(getCurScope(), Global, SourceLocation(), Name, true, false);
++          if (Function.isInvalid()) return ExprError();
++          Expr *Argument = Exprs[Index];
++          ExprResult Converted = Actions.ActOnCallExpr(getCurScope(), Function.get(), Literal->getBeginLoc(),
++              MultiExprArg(&Argument, 1), Literal->getEndLoc());
++          if (Converted.isInvalid()) return ExprError();
++          Exprs[Index] = Converted.get();
++        }
++      }
++    }

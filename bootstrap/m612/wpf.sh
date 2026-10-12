@@ -134,7 +134,7 @@ step_bridge_gate() {
     --type System.Runtime.InteropServices.ClassInterfaceAttribute --type System.Runtime.InteropServices.ClassInterfaceType \
     --type System.Runtime.InteropServices.ComVisibleAttribute \
     --type System.Diagnostics.Debug \
-    --type System.Type --type System.RuntimeTypeHandle --type System.ArgumentOutOfRangeException \
+    --type System.Type --type System.RuntimeTypeHandle --type System.ArgumentOutOfRangeException --type System.OverflowException \
     --type System.Runtime.InteropServices.ComTypes.FILETIME --type System.Threading.Thread \
     --type System.Windows.Threading.Dispatcher --type System.Windows.Threading.DispatcherOperation \
     --type System.Action \

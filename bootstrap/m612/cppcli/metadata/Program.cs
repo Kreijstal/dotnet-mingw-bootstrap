@@ -426,8 +426,10 @@ static class Program
             if (t.Name == "System.String") w.WriteLine("String(const char*); String(const wchar_t*);");
             if (t.Kind == "value" && !t.Methods.Any(m => m.Name == ".ctor" && m.Parameters.Length == 0 && m.Supported))
                 w.WriteLine("__attribute__((annotate(\"cli.value.zero\"))) " + name + "() {}");
-            if (t.Kind == "value")
+            if (t.Kind == "value") {
                 w.WriteLine("__attribute__((annotate(\"cli.box\"))) operator " + name + "*() const;");
+                w.WriteLine("__attribute__((annotate(\"cli.box.object\"))) operator ::System::Object*() const;");
+            }
             foreach (var f in t.Fields ?? Array.Empty<CliField>()) if (f.Supported) {
                 if (f.Constant != null) w.WriteLine(f.Access + ": __attribute__((annotate(\"cli.import.constant:" + Escape(f.Id) + "\"))) static constexpr " + f.Type.Cpp + " " + f.Name + " = " + f.Constant.Cpp + ";");
                 else w.WriteLine(f.Access + ": __attribute__((annotate(\"cli.import.field:" + Escape(f.Id) + "\"))) " + (f.ReadOnly ? "__attribute__((annotate(\"cli.readonly\"))) " : "") + (f.Static ? "static " : "") + f.Type.Cpp + " " + f.Name + ";");
