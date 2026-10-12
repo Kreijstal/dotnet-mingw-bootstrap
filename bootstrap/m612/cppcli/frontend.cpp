@@ -459,6 +459,17 @@ protected:
                     if (tokens[j].text == "{") ++depth;
                     else if (tokens[j].text == "}") { --depth; if (depth == 1) member_begin = true; }
                     else if (depth == 1 && tokens[j].text == ";") member_begin = true;
+                    else if (depth == 1 && tokens[j].text == "[") {
+                        int brackets = 1; size_t end = j+1;
+                        for (; end < tokens.size() && brackets; ++end) {
+                            if (tokens[end].text == "[") ++brackets;
+                            else if (tokens[end].text == "]") --brackets;
+                            class_context[end] = name; class_access[end] = access;
+                            class_depth[end] = 1; class_interface[end] = tokens[i].text == "interface";
+                        }
+                        if (brackets) throw std::runtime_error("unterminated managed member attribute or array bound");
+                        j = end-1;
+                    }
                     else if (depth == 1 && tokens[j].text == "(" && j && tokens[j - 1].kind == tok::identifier) {
                         size_t end = j + 1; int parentheses = 1; bool string_parameter = false;
                         while (end < tokens.size() && parentheses) {
@@ -583,6 +594,74 @@ protected:
                 }
                 begin = close+1;
             }
+            std::map<size_t, std::string> interop_attributes, interop_types;
+            std::map<size_t, size_t> interop_ends;
+            std::set<size_t> interop_closes;
+            auto interop_name = [](std::string name) {
+                if (llvm::StringRef(name).ends_with("Attribute")) name.resize(name.size()-9);
+                return name == "ComImport" || name == "Guid" || name == "InterfaceType" || name == "PreserveSig" ||
+                    name == "In" || name == "Out" || name == "MarshalAs" ? name : std::string();
+            };
+            for (size_t begin = 0; begin+2 < tokens.size(); ++begin) {
+                if (tokens[begin].text != "[" || tokens[begin+1].text == "[" || layout_attribute_ends.count(begin)) continue;
+                if (begin) {
+                    auto previous = tokens[begin-1].text;
+                    if (previous != "{" && previous != "}" && previous != ";" && previous != "(" && previous != "," && previous != ":" &&
+                        previous != "public" && previous != "private" && previous != "protected" && previous != "internal" && previous != "static" && previous != "virtual" &&
+                        !(previous == "]" && interop_closes.count(begin-1))) continue;
+                }
+                size_t first = begin+1;
+                while (first+2 < tokens.size() && tokens[first+1].text == "::") first += 2;
+                if (interop_name(tokens[first].text).empty()) continue;
+                size_t close = matching(begin, "[", "]"), cursor = begin+1;
+                std::string attributes; bool type_attribute = false, member_attribute = false;
+                std::set<std::string> seen_attributes;
+                while (cursor < close) {
+                    size_t name = cursor;
+                    std::string qualifier;
+                    while (name+2 < close && tokens[name+1].text == "::") { qualifier += tokens[name].text + "::"; name += 2; }
+                    if (!qualifier.empty() && qualifier != "System::Runtime::InteropServices::" && qualifier != "Runtime::InteropServices::" && qualifier != "InteropServices::")
+                        throw std::runtime_error(tokens[begin].file + ":" + std::to_string(tokens[begin].line) + ": unsupported interop attribute namespace: " + qualifier);
+                    auto attr = interop_name(tokens[name].text);
+                    if (attr.empty() || !seen_attributes.insert(attr).second) throw std::runtime_error("unsupported or duplicate interop attribute");
+                    cursor = name+1;
+                    std::string argument;
+                    if (cursor < close && tokens[cursor].text == "(") {
+                        auto end = matching(cursor, "(", ")");
+                        int depth = 0;
+                        for (size_t j = cursor+1; j < end; ++j) {
+                            if (tokens[j].text == "," && !depth) throw std::runtime_error("interop attributes currently take one positional argument");
+                            if (tokens[j].text == "(") ++depth;
+                            else if (tokens[j].text == ")") --depth;
+                            argument += tokens[j].text + " ";
+                        }
+                        cursor = end+1;
+                    }
+                    bool takes_argument = attr == "Guid" || attr == "InterfaceType" || attr == "MarshalAs";
+                    if (takes_argument == argument.empty()) throw std::runtime_error("wrong interop attribute argument count: " + attr);
+                    bool on_type = attr == "ComImport" || attr == "Guid" || attr == "InterfaceType";
+                    type_attribute |= on_type; member_attribute |= !on_type;
+                    auto marker = attr == "ComImport" ? "cli.com.import" : attr == "Guid" ? "cli.com.guid" : attr == "InterfaceType" ? "cli.com.interface" :
+                        attr == "PreserveSig" ? "cli.preservesig" : attr == "In" ? "cli.param.in" : attr == "Out" ? "cli.param.out" : "cli.param.marshal";
+                    attributes += ", annotate(" + quote(marker) + (argument.empty() ? "" : ", " + (attr == "Guid" ? argument : "static_cast<int>(" + argument + ")")) + ")";
+                    if (cursor < close) {
+                        if (tokens[cursor].text != ",") throw std::runtime_error("unsupported interop attribute arguments");
+                        ++cursor;
+                    }
+                }
+                if (type_attribute && member_attribute) throw std::runtime_error("interop attribute list mixes type and member targets");
+                interop_ends[begin] = close;
+                interop_closes.insert(close);
+                if (type_attribute) {
+                    size_t record = close+1;
+                    while (record < tokens.size() && tokens[record].text == "[") record = matching(record, "[", "]")+1;
+                    if (record < tokens.size() && (tokens[record].text == "public" || tokens[record].text == "private")) ++record;
+                    if (record+1 >= tokens.size() || (tokens[record].text != "interface" && tokens[record].text != "ref" && tokens[record].text != "value") ||
+                        (tokens[record+1].text != "class" && tokens[record+1].text != "struct")) throw std::runtime_error("interop type attributes must precede a managed type");
+                    interop_types[record] += attributes;
+                } else interop_attributes[begin] = "__attribute__((" + attributes.substr(2) + "))";
+                begin = close;
+            }
             for (size_t begin = 0; begin + 1 < tokens.size(); ++begin) {
                 if (tokens[begin].text != "try" || tokens[begin + 1].text != "{") continue;
                 size_t end = matching(begin + 1, "{", "}") + 1;
@@ -652,6 +731,11 @@ protected:
             std::map<std::pair<std::string, std::string>, std::string> indexed_facades;
             for (size_t i = 0; i < tokens.size(); ++i) {
                 auto& t = tokens[i];
+                if (interop_ends.count(i)) {
+                    if (interface_virtual.count(i)) emit(t, "virtual");
+                    if (interop_attributes.count(i)) emit(t, interop_attributes[i]);
+                    i = interop_ends[i]; continue;
+                }
                 if (layout_attribute_ends.count(i)) {
                     if (layout_fields.count(i)) {
                         if (class_access[i] == "internal") emit(t, "__attribute__((annotate(\"cli.access:assembly\")))");
@@ -788,6 +872,10 @@ protected:
                     } else {
                         int depth = 1;
                         for (size_t j = open + 1; j + 1 < end; ++j) {
+                            if (interop_ends.count(j)) {
+                                if (interop_attributes.count(j)) emit(tokens[j], interop_attributes[j]);
+                                j = interop_ends[j]; continue;
+                            }
                             if (class_interface[i] && depth == 1 && tokens[j].text == ";") emit(tokens[j], "= 0");
                             if (class_interface[i] && depth == 1 && tokens[j].text == "{")
                                 throw std::runtime_error("interface property accessors require declarations without bodies");
@@ -834,6 +922,7 @@ protected:
                     bool interface = t.text == "interface", value = t.text == "value";
                     std::string attributes = value ? "annotate(\"cli.value\")" : "annotate(\"cli.ref\")";
                     if (layouts.count(i)) attributes += layouts[i];
+                    if (interop_types.count(i)) attributes += interop_types[i];
                     if (i && (tokens[i-1].text == "public" || tokens[i-1].text == "private")) attributes += ", annotate(\"cli.visibility:" + tokens[i-1].text + "\")";
                     if (interface) attributes += ", annotate(\"cli.interface\"), annotate(\"cli.abstract\")";
                     size_t end = i + 3;
@@ -938,6 +1027,7 @@ class Emitter {
         if (type->isPointerType()) {
             auto* r = type->getPointeeType()->getAsCXXRecordDecl();
             if (!r) return nullptr;
+            if (!record_annotation(r, "cli.nativeint:").empty()) return nullptr;
             auto* definition = r->getDefinition();
             if (record_annotated(r, "cli.ref") || record_annotated(r, "cli.value") || !record_annotation(r, "cli.external:").empty() ||
                 (definition && (annotated(definition, "cli.ref") || !annotation(definition, "cli.external:").empty()))) return r;
@@ -993,6 +1083,62 @@ class Emitter {
         auto kind = layout_constant(r, "cli.layout", record_annotated(r, "cli.value") ? 0 : 3);
         if (kind != 0 && kind != 2 && kind != 3) throw std::runtime_error("invalid StructLayout LayoutKind");
         return kind;
+    }
+    std::string guid_attribute(const Decl* d) const {
+        const AnnotateAttr* found = nullptr;
+        for (auto* attr : d->specific_attrs<AnnotateAttr>()) if (attr->getAnnotation() == "cli.com.guid") {
+            if (found) throw std::runtime_error("duplicate GuidAttribute");
+            found = attr;
+        }
+        if (!found) return {};
+        const Expr* argument = found->args_size() == 1 ? (*found->args_begin())->IgnoreParenImpCasts() : nullptr;
+        while (auto* constant = dyn_cast_or_null<ConstantExpr>(argument)) argument = constant->getSubExpr()->IgnoreParenImpCasts();
+        auto* value = dyn_cast_or_null<StringLiteral>(argument);
+        if (!value || !value->isOrdinary()) throw std::runtime_error("GuidAttribute requires an ordinary string literal");
+        auto guid = value->getString().str();
+        if (guid.size() != 36) throw std::runtime_error("GuidAttribute requires a canonical GUID");
+        for (size_t i = 0; i < guid.size(); ++i) {
+            bool dash = i == 8 || i == 13 || i == 18 || i == 23;
+            if (dash ? guid[i] != '-' : std::string("0123456789abcdefABCDEF").find(guid[i]) == std::string::npos)
+                throw std::runtime_error("GuidAttribute requires a canonical GUID");
+        }
+        return guid;
+    }
+    void validate_interop_attributes(const Decl* d, unsigned target) const {
+        std::set<std::string> seen;
+        for (auto* attr : d->specific_attrs<AnnotateAttr>()) {
+            auto name = attr->getAnnotation();
+            unsigned expected = name.starts_with("cli.com.") ? 1 : name == "cli.preservesig" ? 2 : name.starts_with("cli.param.") ? 3 : 0;
+            if (!expected) continue;
+            if (expected != target) throw std::runtime_error("interop attribute applied to an unsupported declaration target");
+            if (!seen.insert(name.str()).second) throw std::runtime_error("duplicate interop attribute");
+        }
+    }
+    std::string parameter_signature(const ParmVarDecl* p) const {
+        validate_interop_attributes(p, 3);
+        std::string result = annotated(p, "cli.param.in") ? "[in] " : "";
+        if (annotated(p, "cli.param.out")) result += "[out] ";
+        result += type(p->getType());
+        if (annotated(p, "cli.param.marshal")) {
+            static const std::map<int64_t, std::string> native_types = {
+                {2,"bool"}, {3,"int8"}, {4,"unsigned int8"}, {5,"int16"}, {6,"unsigned int16"},
+                {7,"int32"}, {8,"unsigned int32"}, {9,"int64"}, {10,"unsigned int64"}, {11,"float32"}, {12,"float64"},
+                {25,"iunknown"}, {26,"idispatch"}, {28,"interface"}, {31,"int"}, {32,"unsigned int"}
+            };
+            auto value = layout_constant(p, "cli.param.marshal", -1);
+            auto found = native_types.find(value);
+            if (found == native_types.end()) throw std::runtime_error("unsupported MarshalAs unmanaged type");
+            result += " marshal(" + found->second + ")";
+        }
+        return result;
+    }
+    std::string attribute_constructor(const std::string& name, const std::vector<std::string>& parameters) const {
+        for (const auto& entry : metadata.methods) {
+            const auto& method = entry.second;
+            if (method.owner == name && method.name == ".ctor" && method.parameters == parameters)
+                return imported_signature(method);
+        }
+        throw std::runtime_error("select the interop attribute type and constructor dependencies: " + name);
     }
     std::string record_name(const CXXRecordDecl* record) const {
         std::string ext = record_annotation(record, "cli.external:");
@@ -1098,6 +1244,7 @@ class Emitter {
         }
         if (t->isPointerType()) {
             auto element = t->getPointeeType();
+            if (auto* r = value_target(element); r && !record_annotation(r, "cli.nativeint:").empty()) return type(element) + "*";
             if (element->isRecordType()) return "native unsigned int"; // Opaque native handle; no layout is claimed.
             return type(element) + "*";
         }
@@ -1127,6 +1274,11 @@ class Emitter {
             auto pointer = loc.getAs<PointerTypeLoc>();
             if (pointer.isNull()) continue;
             SourceLocation star = sm.getSpellingLoc(pointer.getStarLoc());
+            if (auto* r = value_target(pointer.getType()->getPointeeType()); r && !record_annotation(r, "cli.nativeint:").empty()) {
+                if (star.isValid() && sm.isWrittenInMainFile(star) && *sm.getCharacterData(star) == '^')
+                    throw std::runtime_error("boxed native integers are not enabled yet");
+                continue;
+            }
             if (!handle_target(pointer.getType())) continue;
             if (star.isValid() && sm.isWrittenInMainFile(star) && *sm.getCharacterData(star) == '*')
                 throw std::runtime_error("native '*' pointers to managed reference classes are not supported; declare a '^' handle");
@@ -1616,6 +1768,8 @@ class Emitter {
             if (f->getParamDecl(i)->getType()->isReferenceType()) address(c->getArg(i)); else expr(c->getArg(i));
         }
         std::string id = annotation(f, "cli.import:");
+        if (id.empty() && !native_function(f) && !seen.count(f->getCanonicalDecl()))
+            fail(c, "calling a function without an emitted definition; native calls require a separately compiled bridge: " + f->getQualifiedNameAsString());
         std::string sig;
         if (!id.empty()) {
             auto imported = metadata.methods.find(id);
@@ -1870,6 +2024,7 @@ class Emitter {
         if (auto* ds = dyn_cast<DeclStmt>(s)) for (auto* d : ds->decls()) {
             auto* v = dyn_cast<VarDecl>(d);
             if (!v || v->isStaticLocal()) fail(s, "unsupported local declaration");
+            validate_interop_attributes(v, 0);
             type(v->getType());
             validate_declarator(v->getTypeSourceInfo());
             locals.emplace(v, locals.size());
@@ -2092,6 +2247,9 @@ public:
     Emitter(CompilerInstance& compiler, const Metadata& md) : ci(compiler), context(ci.getASTContext()), metadata(md) {}
     bool VisitFunctionDecl(FunctionDecl* f) {
         auto* method = dyn_cast<CXXMethodDecl>(f);
+        if (ci.getSourceManager().isInSystemHeader(f->getLocation()) &&
+            !(method && (record_annotated(method->getParent(), "cli.ref") || record_annotated(method->getParent(), "cli.value"))) && !native_function(f)) return true;
+        validate_interop_attributes(f, 2);
         if (annotated(f, "cli.cctor") && (!method || !method->isStatic() || method->getNumParams() || !method->getReturnType()->isVoidType() || is_interface(method->getParent())))
             throw std::runtime_error("invalid or unsupported managed static constructor");
         if (annotated(f, "cli.field.offset")) throw std::runtime_error("FieldOffset requires a managed instance field");
@@ -2121,6 +2279,14 @@ public:
     }
     bool VisitCXXRecordDecl(CXXRecordDecl* r) {
         if (r->isThisDeclarationADefinition() && (annotated(r, "cli.ref") || annotated(r, "cli.value")) && !annotated(r, "cli.array") && annotation(r,"cli.external:").empty()) {
+            validate_interop_attributes(r, 1);
+            guid_attribute(r);
+            if (annotated(r, "cli.com.import") && (!is_interface(r) || guid_attribute(r).empty()))
+                throw std::runtime_error("ComImport currently requires an interface with a GuidAttribute");
+            if (annotated(r, "cli.com.interface")) {
+                auto mode = layout_constant(r, "cli.com.interface", -1);
+                if (!is_interface(r) || mode < 0 || mode > 3) throw std::runtime_error("invalid InterfaceTypeAttribute target or value");
+            }
             if (!is_interface(r) && !annotated(r, "cli.abstract") && !r->isAbstract()) {
                 std::set<const CXXRecordDecl*> checked;
                 std::function<void(const CXXRecordDecl*)> validate_slots = [&](const CXXRecordDecl* base) {
@@ -2163,6 +2329,7 @@ public:
                     throw std::runtime_error("layout on inherited managed classes is not enabled yet");
             }
             for (auto* field : r->fields()) {
+                validate_interop_attributes(field, 0);
                 auto offset = layout_constant(field, "cli.field.offset", -1);
                 if (layout == 2 && !annotated(field, "cli.field.offset")) throw std::runtime_error("explicit layout requires FieldOffset on every instance field");
                 if (annotated(field, "cli.field.offset") && (layout != 2 || offset < 0 || offset > INT32_MAX)) throw std::runtime_error("FieldOffset requires explicit layout and a nonnegative Int32 offset");
@@ -2195,9 +2362,10 @@ public:
     }
     void collect(DeclContext* scope) {
         for (auto* decl : scope->decls()) {
+            if (!isa<FunctionDecl>(decl) && !isa<CXXRecordDecl>(decl)) validate_interop_attributes(decl, 0);
             if (auto* f = dyn_cast<FunctionDecl>(decl)) VisitFunctionDecl(f);
             else if (auto* r = dyn_cast<CXXRecordDecl>(decl)) {
-                if (r->isThisDeclarationADefinition()) { VisitCXXRecordDecl(r); collect(r); }
+                if (r->isThisDeclarationADefinition() && (record_annotated(r, "cli.ref") || record_annotated(r, "cli.value") || !record_annotation(r, "cli.external:").empty())) { VisitCXXRecordDecl(r); collect(r); }
             } else if (auto* ns = dyn_cast<NamespaceDecl>(decl)) collect(ns);
             else if (auto* linkage = dyn_cast<LinkageSpecDecl>(decl)) collect(linkage);
             else if (auto* tmpl = dyn_cast<FunctionTemplateDecl>(decl)) {
@@ -2254,7 +2422,7 @@ public:
             if (native_function(f)) {
                 il << "  .method public hidebysig static pinvokeimpl(" << quote(native_library) << " as " << quote(f->getNameAsString())
                    << " cdecl) " << type(f->getReturnType()) << " '" << f->getNameAsString() << "'(";
-                for (unsigned j = 0; j < f->getNumParams(); ++j) { if (j) il << ", "; il << type(f->getParamDecl(j)->getType()); }
+                for (unsigned j = 0; j < f->getNumParams(); ++j) { if (j) il << ", "; il << parameter_signature(f->getParamDecl(j)); }
                 il << ") cil managed preservesig {}\n"; return;
             }
             std::string flags;
@@ -2267,8 +2435,8 @@ public:
             il << "  .method " << (cctor || (isa<CXXMethodDecl>(f) && f->getAccess() == AS_private) ? "private" : f->getAccess() == AS_protected ? "family" : annotation(f, "cli.access:") == "assembly" ? "assembly" : "public") << " hidebysig " << flags
                << (cctor || isa<CXXConstructorDecl>(f) ? "specialname rtspecialname " : !annotation(f, "cli.accessor:").empty() ? "specialname " : "") << (body.instance ? "instance " : "static ")
                << type(f->getReturnType()) << " '" << body.name << "'(";
-            for (unsigned j = 0; j < f->getNumParams(); ++j) { if (j) il << ", "; il << type(f->getParamDecl(j)->getType()); }
-            il << ") cil managed {\n";
+            for (unsigned j = 0; j < f->getNumParams(); ++j) { if (j) il << ", "; il << parameter_signature(f->getParamDecl(j)); }
+            il << ") cil managed " << (annotated(f, "cli.preservesig") ? "preservesig " : "") << "{\n";
             if (f->getNameAsString() == "main" && body.owner.empty() && options.target == "exe") il << "    .entrypoint\n";
             if (method) for (auto* target : named_overrides(method)) il << "    .override method " << signature(target) << "\n";
             if (method && method->isPureVirtual()) { il << "  }\n"; return; }
@@ -2295,13 +2463,26 @@ public:
             il << ".class " << (annotation(r, "cli.visibility:") == "private" ? "private " : "public ") << (is_interface(r) ? "interface abstract " :
                 std::string(layout == 2 ? "explicit " : layout == 0 ? "sequential " : "auto ") + (charset == 3 ? "unicode " : charset == 4 ? "autochar " : "ansi "))
                << (!is_interface(r) && (annotated(r, "cli.abstract") || r->isAbstract()) ? "abstract " : "")
-               << ((annotated(r, "cli.sealed") || annotated(r, "cli.value")) ? "sealed " : "") << record_name(r);
+               << ((annotated(r, "cli.sealed") || annotated(r, "cli.value")) ? "sealed " : "") << (annotated(r, "cli.com.import") ? "import " : "") << record_name(r);
             if (!is_interface(r)) il << " extends " << (annotated(r, "cli.value") ? "[System.Runtime]System.ValueType" : parent ? record_token(parent) : "[System.Runtime]System.Object");
             bool first_interface = true;
             for (auto& base : r->bases()) if (is_interface(base.getType()->getAsCXXRecordDecl())) {
                 il << (first_interface ? " implements " : ", ") << record_token(base.getType()->getAsCXXRecordDecl()); first_interface = false;
             }
             il << " {\n";
+            if (auto guid = guid_attribute(r); !guid.empty()) {
+                static const char hex[] = "0123456789abcdef";
+                il << "  .custom " << attribute_constructor("System.Runtime.InteropServices.GuidAttribute", {"string"}) << " = (01 00 24 ";
+                for (unsigned char ch : guid) il << hex[ch >> 4] << hex[ch & 15] << ' ';
+                il << "00 00)\n";
+            }
+            if (annotated(r, "cli.com.interface")) {
+                auto value = layout_constant(r, "cli.com.interface", -1);
+                auto owner = metadata.types.find("System.Runtime.InteropServices.ComInterfaceType");
+                if (owner == metadata.types.end()) throw std::runtime_error("select ComInterfaceType metadata for InterfaceTypeAttribute");
+                auto parameter = "valuetype " + assembly_reference(owner->second) + "'System.Runtime.InteropServices.ComInterfaceType'";
+                il << "  .custom " << attribute_constructor("System.Runtime.InteropServices.InterfaceTypeAttribute", {parameter}) << " = (01 00 0" << value << " 00 00 00 00 00)\n";
+            }
             for (auto* member : r->decls()) if (auto* property = dyn_cast<MSPropertyDecl>(member); property && property->getNameAsString() == "__cli_default")
                 il << "  .custom instance void [System.Runtime]System.Reflection.DefaultMemberAttribute::.ctor(string) = (01 00 04 49 74 65 6d 00 00)\n";
             if (annotated(r, "cli.layout.Pack")) il << "  .pack " << layout_constant(r, "cli.layout.Pack", 0) << "\n";

@@ -124,6 +124,9 @@ step_bridge_gate() {
     --type System.Collections.IEnumerator --type System.IDisposable \
     --type System.Runtime.InteropServices.StructLayoutAttribute --type System.Runtime.InteropServices.LayoutKind \
     --type System.Runtime.InteropServices.FieldOffsetAttribute \
+    --type System.Runtime.InteropServices.ComInterfaceType --type System.Runtime.InteropServices.UnmanagedType \
+    --type System.Runtime.InteropServices.GuidAttribute --type System.Runtime.InteropServices.InterfaceTypeAttribute \
+    --type System.Diagnostics.Debug \
     --reference "$(cygpath -m "$core_ref/System.Threading.dll")" \
     --reference "$(cygpath -m "$core_ref/System.Runtime.InteropServices.dll")" \
     --reference "$(cygpath -m "$core_ref/System.Net.Requests.dll")" \
@@ -134,6 +137,7 @@ step_bridge_gate() {
     -D '__field_bcount(x)=_Field_size_bytes_(x)' -D '__field_ecount(x)=_Field_size_(x)' \
     -D '__field_range(low,high)=_Field_range_(low,high)' -D '__deref_out_range(low,high)=_Deref_out_range_(low,high)' \
     -D '__success(x)=_Success_(x)' \
+    -D '__out=_Out_' -D '__deref_out_bcount(x)=_Outptr_result_bytebuffer_(x)' \
     -D "WINDOWS_BASE_DLL=\"$(cygpath -m "$build/lib/WindowsBase.dll")\"" \
     -D PRESENTATION_CORE=1 -D _CLR_NETCORE=1 -o "$(cygpath -m "$build/DirectWriteForwarder.il")" \
     > "$build/directwrite-gate.log" 2>&1 || {
@@ -208,8 +212,7 @@ step_check_font_source() {
   local original=$source/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/CPP/DWriteWrapper/IFontSource.h
   mkdir -p "$work"
   cat > "$work/FontSource.cpp" <<EOF
-// Same macro used by Windows headers; the probe only emits the managed header.
-#define interface struct
+#include <windows.h>
 #include "$(cygpath -m "$original")"
 public ref class FontSourceHeaderMarker abstract sealed {};
 EOF
@@ -224,6 +227,34 @@ EOF
   "$sdk/dotnet.exe" build "$(cygpath -m "$work/FontSourceCheck.csproj")" -c Release \
     --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -v:q
   timeout 30 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/FontSourceCheck.dll")"
+}
+
+step_check_com_interfaces() {
+  initialize
+  local work=$build/com-interfaces-check
+  local original=$source/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/CPP/DWriteWrapper
+  local core_refs=("$sdk"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
+  local core_ref=${core_refs[-1]}
+  mkdir -p "$work"
+  cat > "$work/ComInterfaces.cpp" <<EOF
+#include <dwrite.h>
+#include "$(cygpath -m "$original/DWriteInterfaces.h")"
+#include "$(cygpath -m "$original/IClassification.h")"
+public ref class WpfComHeaderMarker abstract sealed {};
+EOF
+  bridge_compile "$(cygpath -m "$work/ComInterfaces.cpp")" --target library --std c++14 \
+    --ilasm "$(cygpath -m /clang64/bin/ilasm-dotnet.exe)" \
+    --reference "$(cygpath -m "$core_ref/System.Runtime.InteropServices.dll")" --type System.IntPtr \
+    --type System.Runtime.InteropServices.ComInterfaceType --type System.Runtime.InteropServices.UnmanagedType \
+    --type System.Runtime.InteropServices.GuidAttribute --type System.Runtime.InteropServices.InterfaceTypeAttribute \
+    -o "$(cygpath -m "$work/ComInterfaces.dll")"
+  cp "$here/wpf-tests/ComInterfaces.cs" "$work/Program.cs"
+  cat > "$work/ComInterfacesCheck.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="ComInterfaces"><HintPath>ComInterfaces.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$sdk/dotnet.exe" build "$(cygpath -m "$work/ComInterfacesCheck.csproj")" -c Release \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -v:q
+  timeout 30 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/ComInterfacesCheck.dll")"
 }
 
 step_check_localized_copy() {

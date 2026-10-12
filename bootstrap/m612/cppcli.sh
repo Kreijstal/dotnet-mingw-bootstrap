@@ -628,6 +628,32 @@ EOF
   reject_case indexer-two-indices 'public ref class C { public: property int default[int,int] { int get(int x, int y) { return 0; } } }; int main() { return 0; }' 'require one index parameter'
   log "PASS test-indexers: source/imported CLR indexers and compound evaluation"
 }
+step_test-com() {
+  log "COM import/GUID/interface metadata and native MinGW marshalling"
+  local refs=("$CPPCLI_SDK"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
+  local args=(--type System.IntPtr --type System.Runtime.InteropServices.ComInterfaceType --type System.Runtime.InteropServices.UnmanagedType
+    --type System.Runtime.InteropServices.GuidAttribute --type System.Runtime.InteropServices.InterfaceTypeAttribute
+    --reference "$(cygpath -m "${refs[-1]}/System.Runtime.InteropServices.dll")")
+  compile "$(cygpath -m "$src/tests/com.cpp")" --target library "${args[@]}" -o "$(cygpath -m "$testdir/com.dll")"
+  mkdir -p "$testdir/com-consumer"
+  /clang64/bin/clang++.exe -std=c++17 -O2 -shared "$src/tests/com-native.cpp" -luuid -o "$testdir/com-consumer/com-probe-native.dll"
+  cp "$src/tests/ComConsumer.cs" "$testdir/com-consumer/Program.cs"
+  cat > "$testdir/com-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><AllowUnsafeBlocks>true</AllowUnsafeBlocks><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="com"><HintPath>../com.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/com-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  cp "$testdir/com-consumer/com-probe-native.dll" "$testdir/com-consumer/bin/Debug/net8.0/"
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/com-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case com-bad-guid '[Guid("invalid")] public interface class I {}; int main() { return 0; }' 'canonical GUID' "${args[@]}"
+  reject_case com-no-guid '[ComImport] public interface class I {}; int main() { return 0; }' 'interface with a GuidAttribute' "${args[@]}"
+  reject_case com-bad-mode '[InterfaceType(99)] public interface class I {}; int main() { return 0; }' 'invalid InterfaceType' "${args[@]}"
+  reject_case com-bad-marshal 'public interface class I { void F([MarshalAs(99)] int x); }; int main() { return 0; }' 'unsupported MarshalAs' "${args[@]}"
+  reject_case com-duplicate '[ComImport][ComImport][Guid("138EF579-12A0-4B01-8913-675542958CBD")] public interface class I {}; int main() { return 0; }' 'duplicate interop' "${args[@]}"
+  reject_case com-member-target 'public ref class C { public: [In] int F() { return 0; } }; int main() { return 0; }' 'unsupported declaration target' "${args[@]}"
+  reject_case com-boxed-nativeint 'using namespace System; public ref class C { public: static void F(IntPtr^ value) {} }; int main() { return 0; }' 'boxed native integers' "${args[@]}"
+  log "PASS test-com: actual COM interface dispatch, native BOOL/uint64 and HRESULT preservation/translation"
+}
 step_test-each() {
   log "For each collection/array iteration with real CLR finally cleanup"
   mkdir -p "$testdir/each-fixture" "$testdir/each-consumer"

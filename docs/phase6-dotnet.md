@@ -1772,7 +1772,8 @@ packaged frontend stopped at included-header `#using` and missing `vcclr.h`.
 The development frontend now handles these, boxed value handles, static fields
 and managed metric layouts (see §13–16). Default indexed properties, named imported-interface overrides and interface
 property declarations are now supported (see §18). The full upstream translation
-unit now parses `for each` (see §19) and still fails on COM attributes. Native record
+unit now parses `for each` (see §19) and COM interface attributes (see §20).
+It still fails on native struct visibility, delegates and remaining imports. Native record
 emission, managed class templates, callbacks, finalizers and automatic native
 partitioning also remain outside its supported subset.
 The same compiler failure can be reproduced with `wpf.sh bridge-gate`; it
@@ -2339,3 +2340,98 @@ System.Printing and higher-level WPF assemblies, missing PresentationNative
 exports and WindowsDesktop packaging remain unfinished. Current Greenshot
 cannot yet be packaged on this WPF stack, and the installed frontend package
 still predates these development changes.
+
+
+## 20. DirectWrite COM declaration metadata and actual MinGW COM calls
+
+The next 2026-10-12 continuation implements the interop attributes used by
+WPF's DirectWrite interface mirrors. ComImport produces the CLR type import
+flag; Guid and InterfaceType produce actual custom-attribute blobs;
+PreserveSig produces the method implementation flag; In/Out and supported
+MarshalAs parameter declarations produce Param/FieldMarshal metadata.
+Attribute arguments are parsed by Clang and enum constants are evaluated by
+Sema. The emitter resolves attribute constructor references from the selected
+metadata rather than guessing the owning assembly: GuidAttribute and
+InterfaceTypeAttribute belong to System.Runtime.InteropServices in this SDK.
+
+Grouped lists, Attribute suffixes, qualified names and the Runtime::InteropServices
+form used by LocalizedStrings are accepted. Duplicate attributes, unsupported
+targets, malformed GUIDs, unsupported interface modes and marshal kinds are
+rejected. Ordinary array indexing with an element named Out remains ordinary
+indexing. The supported forms are intentionally limited: GUIDs must be
+canonical ordinary literals, ComImport currently requires an interface and
+GUID, and marshal attributes accept one positional argument. General custom
+attributes, coclass activation, return/field marshal descriptors, named marshal
+options and broader namespace aliases remain pending.
+
+The emitter now treats IntPtr*/UIntPtr* as unmanaged native-integer pointers.
+Previously they were mistaken for typed value boxes; IntPtr^/UIntPtr^ are now
+explicitly rejected until their boxed representation is supported. Native
+record pointers keep the existing opaque native-address representation, with
+further pointer indirection retained; this does not implement native layout or
+native object operations. Native SDK record methods and inline functions are
+excluded from managed IL collection. Calls to unavailable native functions
+fail with an explicit bridge requirement, rather than producing missing method
+references. Automatic native partitioning remains unfinished.
+
+`cppcli.sh test-com` builds a genuine MinGW native COM object with IUnknown and
+two interface vtables. The generated CLI interfaces call it from C# on the
+source-built CoreCLR. The checks verify its GUID/interface/import metadata,
+64-bit unsigned input, a noncanonical nonzero four-byte BOOL output, IntPtr*
+address output, unchanged S_FALSE/failing HRESULTs with PreserveSig, normal
+retval translation and the CLR's UnauthorizedAccessException mapping for
+E_ACCESSDENIED without PreserveSig. All native references are released and the
+native live-object count returns to zero. The generated Out parameter is also
+consumed with C# out syntax. This exercises native calls in addition to metadata
+reflection; no prebuilt COM test assembly or native DLL is used.
+
+`wpf.sh check-com-interfaces` compiles the complete unchanged DWriteInterfaces.h
+and IClassification.h against MinGW's actual dwrite.h/Windows headers. Its
+CoreCLR check verifies all four GUIDs, eight preserved abstract COM methods,
+U8/U4/BOOL marshal descriptors, In/Out flags, void**/UInt64*/IntPtr* and opaque
+native interface pointer signatures, plus the private managed classification
+callback's six boolean byrefs. `check-font-source` now includes windows.h
+rather than defining its macro in a minimal context; its unchanged upstream
+interfaces also pass. These are declaration/metadata checks, not completion of
+DirectWrite's native callbacks or the full assembly.
+
+The full bridge driver now selects the source-built interop attribute types,
+enums and Debug type. Legacy __out/__deref_out_bcount SAL annotations are mapped
+to MinGW's _Out_/_Outptr_result_bytebuffer_ definitions. This preserves the
+source analysis annotations; CLI Out metadata comes from the separate managed
+attributes.
+
+Validation on win11:
+
+```sh
+MSYSTEM=CLANG64 bash -l -c "/clang64/bin/cmake.exe --build /home/topkek/dotnetboot/m612/build/cppcli --target cli_ast -j2"
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh \
+  test-com test-interop test-core test-layout test-indexers test-nativeints
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-com test-generics test-each
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  WPF_CPPCLI_BUILD=/home/topkek/dotnetboot/m612/build/cppcli \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh \
+  check-com-interfaces check-font-source
+```
+
+All listed focused checks pass, and pinning/compacting-GC checks also passed
+before the native-integer pointer adjustment. The final test-com and upstream
+interface checks were rerun after the last emitter change. Managed builds have
+zero warnings/errors; generic static-field facade warnings remain. Results
+include `real MinGW COM metadata/marshalling/HRESULT checks OK`,
+`upstream WPF COM/classification interface metadata OK` and
+`upstream WPF IFontSource interfaces OK`. Logs and emitted interface IL are
+retained under `/home/kreijstal/tmp/wpf8-support/validation/com-20261012`.
+
+The complete `wpf.sh bridge-gate` still exits nonzero. It advances past COM
+attribute declarations and now reports native `private struct` declarations
+in CharAttribute.h/TextItemizer.h, missing List/IList imports and delegates in
+TextAnalyzer.h, along with additional legacy SAL and internal-member lowering
+work. Complete native partitioning/callbacks/finalizers, System.Printing,
+PresentationCore/PresentationFramework, missing PresentationNative exports,
+rendered WPF validation and WindowsDesktop packaging remain unfinished.
+Current Greenshot is not packaged. The installed frontend remains the older
+release; these checks use the development frontend explicitly.

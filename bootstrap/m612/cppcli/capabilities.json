@@ -98,7 +98,14 @@
     "Clang-selected GetEnumerator/MoveNext/get_Current methods retain CLR method and generic type identities via unevaluated helper declarations",
     "Enumerator cleanup uses real CLR finally and IDisposable dispatch, including break, early return and exceptions",
     "For each value copies, primitive unboxing/reference casts and numeric safe_cast identity/width conversions",
-    "Unchanged upstream WPF LocalizedStrings CopyTo method compiles and runs with CultureInfo/String pairs, offsets and exception cleanup"
+    "Unchanged upstream WPF LocalizedStrings CopyTo method compiles and runs with CultureInfo/String pairs, offsets and exception cleanup",
+    "ComImport interface flags, Guid and InterfaceType custom metadata, and PreserveSig method implementation flags",
+    "Leading grouped/qualified interop attributes and In/Out parameter flags with selected scalar/interface MarshalAs descriptors",
+    "Interop attribute constructor references resolve against source-built metadata assembly identities",
+    "Native IntPtr/UIntPtr pointer signatures remain unmanaged pointers; boxed native integer forms are explicitly rejected",
+    "Unused native SDK record methods/inline functions are excluded from IL collection; unavailable native calls require an explicit bridge",
+    "Real MinGW COM round trips validate uint64, Windows BOOL, IntPtr pointer output, HRESULT preservation/translation and reference release",
+    "Unchanged WPF DirectWrite COM mirror and classification interface headers compile with actual MinGW Windows/DirectWrite headers"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -123,6 +130,8 @@
     "Switch initializers and GNU case ranges are rejected; switch labels cannot enter generated protected/pinned scopes",
     "Source-defined static constructors currently cover ref/value classes in one translation unit; interface static constructors remain unsupported",
     "Imported generic nested types remain unsupported; indexed compound updates used as values are unsupported; static template-field facades can produce native definition warnings",
-    "For each currently requires braced bodies and managed array/reference-enumerator handles; MoveNext currently requires bool; tracking-reference variables and value/native enumerators remain unsupported"
+    "For each currently requires braced bodies and managed array/reference-enumerator handles; MoveNext currently requires bool; tracking-reference variables and value/native enumerators remain unsupported",
+    "Interop attributes remain a selected subset: canonical literal GUIDs, imported interfaces, zero/one positional arguments and selected parameter marshal kinds; coclass activation, field/return marshal metadata, named marshal options and general custom attributes remain unsupported",
+    "Native SDK calls are not automatically partitioned; native record pointers remain opaque native addresses, and native integer boxes remain unsupported"
   ]
 }

@@ -49,7 +49,9 @@
         "one-parameter default/named indexed properties and matched overloads with CLR property metadata",
         "single named imported-interface method/accessor overrides and preserved private/final methods",
         "interface property accessor declarations and Windows interface macro protection",
-        "for each over managed arrays/reference enumerators, CLR finally cleanup and typed element conversions"
+        "for each over managed arrays/reference enumerators, CLR finally cleanup and typed element conversions",
+        "COM import/GUID/interface type metadata, PreserveSig and selected parameter marshal descriptors",
+        "unmanaged native integer pointers and native SDK declaration filtering"
       ],
       "remaining": [
         "implicit boxing into Object/interfaces, primitive boxes and boxed-handle conversions",
@@ -61,7 +63,7 @@
         "full CLI semantic analysis and metadata type discovery",
         "for each with unbraced bodies, tracking-reference variables and value/native enumerators"
       ],
-      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values test-tracking test-pinning test-boxed-values test-static-fields test-static-properties test-nativeints test-layout test-switch test-generics test-indexers test-named-overrides test-each"
+      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values test-tracking test-pinning test-boxed-values test-static-fields test-static-properties test-nativeints test-layout test-switch test-generics test-indexers test-named-overrides test-each test-com"
     },
     {
       "stage": 4,
@@ -71,7 +73,8 @@
         "P/Invoke metadata and C# interoperability checks",
         "raw unmanaged pointers and pinned primitive/string buffers",
         "real DirectWrite factory/font enumeration and pinned family-name buffer probe",
-        "explicit pinned primitive-buffer pointer casts retaining CLR pins"
+        "explicit pinned primitive-buffer pointer casts retaining CLR pins",
+        "native MinGW COM object called through generated CLI interfaces, including BOOL/uint64/pointer marshalling and HRESULT handling"
       ],
       "remaining": [
         "native layouts, complete pointer operations and automatic marshalling",
@@ -79,7 +82,7 @@
         "real mixed-mode PE and native-to-managed thunks",
         "MinGW ijwhost port"
       ],
-      "validation": "cppcli.sh test-interop test-pinning; wpf.sh check-directwrite-bridge"
+      "validation": "cppcli.sh test-interop test-pinning; wpf.sh check-directwrite-bridge; cppcli.sh test-com"
     },
     {
       "stage": 5,
@@ -96,7 +99,8 @@
         "unchanged font-simulation conversion bodies with real Flags metadata and MinGW enum values",
         "complete DirectWrite Sema gate advanced through real generic collection imports and generic base parsing",
         "unchanged upstream IFontSource interfaces compiled with abstract property metadata and Windows macro protection",
-        "unchanged LocalizedStrings CopyTo method compiled and checked with value pairs, Unicode, array offsets and exceptional cleanup"
+        "unchanged LocalizedStrings CopyTo method compiled and checked with value pairs, Unicode, array offsets and exceptional cleanup",
+        "unchanged WPF COM mirror/classification interface headers compiled with the actual Windows/DirectWrite SDK declarations"
       ]
     }
   ]
