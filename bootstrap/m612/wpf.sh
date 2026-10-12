@@ -66,6 +66,48 @@ step_foundations() {
   done
 }
 
+step_build_presentation_tasks() {
+  step_prepare_bridges
+  build_assembly PresentationBuildTasks
+}
+
+step_check_presentation_tasks() {
+  local work=$build/presentation-tasks-check
+  mkdir -p "$work/tasks" "$work/obj"
+  cp "$build/lib/PresentationBuildTasks.dll" "$work/tasks/"
+  cp "$oob/System.CodeDom.dll" "$oob/System.Reflection.MetadataLoadContext.dll" "$work/tasks/"
+  cp "$here/wpf-tests/MarkupView.xaml" "$work/"
+  /usr/bin/python3 - "$work" "$build/lib" "$sdk" <<'PY'
+from pathlib import Path
+import subprocess,sys,xml.etree.ElementTree as E
+work,lib,sdk=map(Path,sys.argv[1:])
+def win(p): return subprocess.check_output(['cygpath','-m',str(p.resolve())],text=True).strip()
+root=E.Element('Project',DefaultTargets='CompileMarkup')
+E.SubElement(root,'UsingTask',TaskName='Microsoft.Build.Tasks.Windows.MarkupCompilePass1',AssemblyFile=win(work/'tasks/PresentationBuildTasks.dll'))
+E.SubElement(root,'UsingTask',TaskName='Microsoft.Build.Tasks.Windows.ResourcesGenerator',AssemblyFile=win(work/'tasks/PresentationBuildTasks.dll'))
+items=E.SubElement(root,'ItemGroup')
+refs={path.stem:path for path in (sdk/'packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0').glob('*.dll')}
+if not refs: raise SystemExit('Missing source-built net8.0 reference pack')
+for name in ('WindowsBase','System.Xaml','PresentationCore','PresentationFramework','ReachFramework','DirectWriteForwarder','UIAutomationTypes','UIAutomationProvider'):
+    refs[name]=lib/(name+'.dll')
+for path in refs.values(): E.SubElement(items,'Reference',Include=win(path))
+E.SubElement(items,'Page',Include=win(work/'MarkupView.xaml'))
+target=E.SubElement(root,'Target',Name='CompileMarkup')
+task=E.SubElement(target,'MarkupCompilePass1',Language='C#',LanguageSourceExtension='.cs',OutputPath=win(work/'obj')+'/',OutputType='Library',AssemblyName='PresentationFrameworkCheck',RootNamespace='Bootstrap',PageMarkup='@(Page)',References='@(Reference)',XamlDebuggingInformation='false',AlwaysCompileMarkupFilesInSeparateDomain='false')
+for prop in ('GeneratedBamlFiles','GeneratedCodeFiles'):
+    E.SubElement(task,'Output',TaskParameter=prop,ItemName=prop)
+E.SubElement(target,'Error',Condition="'@(GeneratedBamlFiles)' == ''",Text='No BAML generated')
+E.SubElement(target,'Error',Condition="'@(GeneratedCodeFiles)' == ''",Text='No C# generated')
+E.SubElement(target,'ResourcesGenerator',ResourceFiles='@(GeneratedBamlFiles)',OutputPath=win(work/'obj')+'/',OutputResourcesFile=win(work/'obj/PresentationFrameworkCheck.g.resources'))
+E.SubElement(target,'Message',Importance='high',Text='Source WPF markup compiler generated @(GeneratedBamlFiles) and @(GeneratedCodeFiles)')
+E.ElementTree(root).write(work/'MarkupCheck.proj',encoding='utf-8')
+PY
+  "$sdk/dotnet.exe" msbuild "$(cygpath -m "$work/MarkupCheck.proj")" -nologo -v:minimal
+  test -s "$work/obj/MarkupView.baml"
+  test -s "$work/obj/MarkupView.g.cs"
+  test -s "$work/obj/PresentationFrameworkCheck.g.resources"
+}
+
 step_native_win32() {
   /clang64/bin/clang++.exe -O2 -shared "$here/wpf-native/PresentationNativeWin32.cpp" \
     -o "$build/lib/PresentationNative_cor3.dll" -luser32 -lgdi32
@@ -74,6 +116,54 @@ step_native_win32() {
 step_inventory() {
   /usr/bin/python3 "$here/tools/wpfnative-inventory.py" "$source" "$build/lib/PresentationNative_cor3.dll" \
     "$build/native-coverage.json"
+}
+
+step_prepare_gfx() {
+  local root=$build/gfx-source
+  local gfx=$root/src/Microsoft.DotNet.Wpf/src/WpfGfx
+  local port=$here/wpf-native/gfx
+  if [ ! -d "$gfx" ]; then
+    mkdir -p "$(dirname "$gfx")"
+    cp -r "$source/src/Microsoft.DotNet.Wpf/src/WpfGfx" "$source/src/Microsoft.DotNet.Wpf/src/Shared" "$(dirname "$gfx")/"
+  fi
+  local patchfile
+  for patchfile in "$port"/000*.patch; do
+    if ! patch --batch --dry-run -R -p1 -d "$root" -i "$patchfile" >/dev/null 2>&1; then
+      patch --batch -p1 -d "$root" -i "$patchfile"
+    fi
+  done
+  [ -f "$gfx/core/hw/Shaders.rc.upstream" ] || mv "$gfx/core/hw/Shaders.rc" "$gfx/core/hw/Shaders.rc.upstream"
+  cmp -s "$port/CMakeLists.txt" "$gfx/CMakeLists.txt" || cp "$port/CMakeLists.txt" "$gfx/"
+  mkdir -p "$gfx/mingw/codeanalysis"
+  local input
+  for input in NativeVersion.rc wpf_mingw_compat.h wpfgfx_mingw_compat.h winnt.h wpp_stub.h dllcrt_alias.cpp wpfgfx_mingw_shims.cpp fxasm.py gendef.py; do
+    cmp -s "$port/$input" "$gfx/mingw/$input" || cp "$port/$input" "$gfx/mingw/"
+  done
+  cmp -s "$port/sourceannotations.h" "$gfx/mingw/codeanalysis/sourceannotations.h" || cp "$port/sourceannotations.h" "$gfx/mingw/codeanalysis/"
+}
+
+step_build_gfx() {
+  step_prepare_gfx
+  local gfx=$build/gfx-source/src/Microsoft.DotNet.Wpf/src/WpfGfx
+  CC=/clang64/bin/clang.exe CXX=/clang64/bin/clang++.exe \
+    /clang64/bin/cmake.exe -S "$gfx" -B "$build/gfx-build" -GNinja \
+      -DCMAKE_BUILD_TYPE=Release -DWPF_VERSION="$version"
+  /clang64/bin/cmake.exe --build "$build/gfx-build" --parallel "${WPF_JOBS:-4}"
+  cp "$build/gfx-build/wpfgfx_cor3.dll" "$build/lib/"
+}
+
+step_check_gfx() {
+  local gfx=$build/gfx-source/src/Microsoft.DotNet.Wpf/src/WpfGfx
+  local port=$here/wpf-native/gfx
+  /clang64/bin/python.exe "$port/fxasm.py" --check "$gfx/core/hw/Shaders.rc.upstream" \
+    Text11A="$gfx/core/hw/shaders/hlslTextShaders11A.fx" \
+    Text11L="$gfx/core/hw/shaders/hlslTextShaders11L.fx" \
+    Text20A="$gfx/core/hw/shaders/hlslTextShaders20A.fx" \
+    Text20L="$gfx/core/hw/shaders/hlslTextShaders20L.fx"
+  /clang64/bin/clang.exe -O2 "$port/exporttest.c" -o "$build/gfx-exporttest.exe"
+  "$build/gfx-exporttest.exe" "$build/lib/wpfgfx_cor3.dll" "$build/gfx-build/gen/wpfgfx.def"
+  /clang64/bin/clang.exe -O2 "$port/gfxtest.c" -I "$gfx/include" -o "$build/gfx-test.exe"
+  "$build/gfx-test.exe" "$build/lib/wpfgfx_cor3.dll"
 }
 
 bridge_compile() {
@@ -125,7 +215,15 @@ step_bridge_gate() {
   local core_ref=${core_refs[-1]}
   # Include the actual startup unit so its factory lookup is an emitted
   # definition in the same CLR module, rather than an unresolved C++ extern.
+  # Replay the version fields from Wpf.Cpp.targets' generated AssemblyInfo.
+  cat > "$build/DirectWriteAssemblyInfo.cpp" <<EOF
+using namespace System::Reflection;
+[assembly:AssemblyVersion("$version.0")];
+[assembly:AssemblyFileVersion("$version.0")];
+[assembly:AssemblyInformationalVersion("$version")];
+EOF
   cat > "$build/DirectWriteForwarderCombined.cpp" <<EOF
+#include "$(cygpath -m "$build/DirectWriteAssemblyInfo.cpp")"
 #include "$(cygpath -m "$cpp/DirectWriteForwarder.cpp")"
 #include "$(cygpath -m "$cpp/../main.cpp")"
 #include "$(cygpath -m "$cpp/../OtherAssemblyAttrs.cpp")"
@@ -168,6 +266,7 @@ EOF
     --type System.ComponentModel.Win32Exception --type System.Runtime.InteropServices.ExternalException --type System.SystemException \
     --type System.Reflection.Assembly --type System.Runtime.CompilerServices.DependencyAttribute --type System.Runtime.CompilerServices.LoadHint \
     --type System.Runtime.CompilerServices.InternalsVisibleToAttribute \
+    --type System.Reflection.AssemblyFileVersionAttribute --type System.Reflection.AssemblyInformationalVersionAttribute \
     --type System.Windows.Threading.Dispatcher --type System.Windows.Threading.DispatcherOperation \
     --type System.Action --type System.Math --type System.Runtime.InteropServices.GCHandle --type System.Runtime.InteropServices.GCHandleType \
     --reference "$(cygpath -m "$core_ref/System.Threading.dll")" \
@@ -252,6 +351,46 @@ PY
     --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -v:q
   cp "$build/lib/PresentationNative_cor3.dll" "$build/lib/wpf-dwrite-loader.dll" "$build/lib/wpf-subsetter.dll" "$work/bin/Release/net8.0/"
   timeout 60 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/PresentationCoreCheck.dll")"
+}
+
+step_build_reach_framework() {
+  initialize
+  /usr/bin/python3 "$here/tools/wpfgraph.py" "$source" "$build" "$sdk" "$oob" "$build/keys" ReachFramework/ReachFramework.csproj
+}
+
+step_build_presentation_framework() {
+  initialize
+  /usr/bin/python3 "$here/tools/wpfgraph.py" "$source" "$build" "$sdk" "$oob" "$build/keys" PresentationFramework/PresentationFramework.csproj
+}
+step_check_presentation_framework() {
+  initialize
+  local work=$build/presentation-framework-check
+  mkdir -p "$work"
+  cp "$here/wpf-tests/PresentationFramework.cs" "$work/Program.cs"
+  /usr/bin/python3 - "$work" "$build/lib" "$oob" "$build/presentation-tasks-check/obj" <<'PY'
+from pathlib import Path
+import subprocess,sys,xml.etree.ElementTree as E
+work,lib,oob,markup=map(Path,sys.argv[1:])
+def win(p): return subprocess.check_output(['cygpath','-m',str(p.resolve())],text=True).strip()
+root=E.Element('Project',Sdk='Microsoft.NET.Sdk');pg=E.SubElement(root,'PropertyGroup')
+for key,value in {'TargetFramework':'net8.0','OutputType':'Exe','UseAppHost':'false','EnableNETAnalyzers':'false','NuGetAudit':'false','UseSharedCompilation':'false'}.items(): E.SubElement(pg,key).text=value
+items=E.SubElement(root,'ItemGroup')
+for name in ('PresentationFramework','ReachFramework','PresentationCore','DirectWriteForwarder','WindowsBase','System.Xaml','System.Windows.Input.Manipulations','UIAutomationTypes','UIAutomationProvider'):
+    item=E.SubElement(items,'Reference',Include=name);E.SubElement(item,'HintPath').text=win(lib/(name+'.dll'))
+for file in sorted(oob.glob('*.dll')):
+    item=E.SubElement(items,'Reference',Include=file.stem);E.SubElement(item,'HintPath').text=win(file)
+for file in (markup/'MarkupView.g.cs',markup/'PresentationFrameworkCheck.g.resources'):
+    if not file.is_file(): raise SystemExit('Run check-presentation-tasks first: '+str(file))
+E.SubElement(items,'Compile',Include=win(markup/'MarkupView.g.cs'))
+item=E.SubElement(items,'EmbeddedResource',Include=win(markup/'PresentationFrameworkCheck.g.resources'))
+E.SubElement(item,'LogicalName').text='PresentationFrameworkCheck.g.resources'
+E.ElementTree(root).write(work/'PresentationFrameworkCheck.csproj',encoding='utf-8')
+PY
+  "$sdk/dotnet.exe" build "$(cygpath -m "$work/PresentationFrameworkCheck.csproj")" -c Release \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -v:q
+  cp "$build/lib/PresentationNative_cor3.dll" "$build/lib/wpf-dwrite-loader.dll" "$build/lib/wpf-subsetter.dll" "$work/bin/Release/net8.0/"
+  cp "$build/lib/wpfgfx_cor3.dll" "$work/bin/Release/net8.0/"
+  timeout 60 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/PresentationFrameworkCheck.dll")"
 }
 
 step_native_dwrite_loader() {

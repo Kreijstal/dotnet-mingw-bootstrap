@@ -13,6 +13,10 @@ class Check {
     static object Get(object target,string name)=>target.GetType().GetProperty(name,All).GetValue(target);
     static void Main() {
         var assembly=Assembly.Load("DirectWriteForwarder");
+        if(assembly.GetName().Version!=new Version(8,0,0,0) ||
+           assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version!="8.0.0.0" ||
+           assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion!="8.0.0")
+            throw new Exception("source WPF assembly/file/informational version metadata missing");
         var friend=assembly.GetCustomAttributesData().Single(a=>a.AttributeType.FullName=="System.Runtime.CompilerServices.InternalsVisibleToAttribute");
         if(!((string)friend.ConstructorArguments[0].Value).StartsWith("PresentationCore, PublicKey=",StringComparison.Ordinal)) throw new Exception("upstream PresentationCore friend identity missing");
         var forwarded=assembly.GetForwardedTypes().Single(t=>t.FullName=="System.Windows.Media.TextFormattingMode");

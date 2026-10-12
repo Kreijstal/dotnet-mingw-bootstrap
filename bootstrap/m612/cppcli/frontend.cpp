@@ -690,18 +690,22 @@ protected:
                 while (name+2 < tokens.size() && tokens[name+1].text == "::") name += 2;
                 auto attribute = tokens[name].text;
                 if (llvm::StringRef(attribute).ends_with("Attribute")) attribute.resize(attribute.size()-9);
-                if (attribute != "InternalsVisibleTo" && attribute != "TypeForwardedTo") continue;
+                const std::set<std::string> version_strings = {"AssemblyVersion", "AssemblyFileVersion", "AssemblyInformationalVersion",
+                    "AssemblyTitle", "AssemblyDescription", "AssemblyDefaultAlias", "AssemblyCompany", "AssemblyProduct", "AssemblyCopyright"};
+                bool reflection_string = version_strings.count(attribute);
+                if (attribute != "InternalsVisibleTo" && attribute != "TypeForwardedTo" && !reflection_string) continue;
                 std::string qualifier;
                 for (size_t i = begin+3; i < name; ++i) qualifier += tokens[i].text;
-                if (!qualifier.empty() && qualifier != "System::Runtime::CompilerServices::")
+                if (!qualifier.empty() && qualifier != (reflection_string ? "System::Reflection::" : "System::Runtime::CompilerServices::"))
                     throw std::runtime_error("unsupported qualified assembly attribute name");
                 if (class_depth[begin] || tokens[name+1].text != "(") throw std::runtime_error("assembly attributes require namespace scope and one argument");
                 size_t close = matching(name+1,"(",")");
                 if (tokens[close+1].text != "]") throw std::runtime_error("supported assembly attributes must appear individually");
                 std::string marker = "__cpp_cli_assembly_attribute_" + std::to_string(begin), declaration;
-                if (attribute == "InternalsVisibleTo") {
-                    if (close != name+3 || !tok::isStringLiteral(tokens[name+2].kind)) throw std::runtime_error("InternalsVisibleTo requires one literal assembly identity");
-                    declaration = "extern int " + marker + " __attribute__((annotate(\"cli.assembly.friend\", " + tokens[name+2].text + ")));";
+                if (attribute == "InternalsVisibleTo" || reflection_string) {
+                    if (close != name+3 || !tok::isStringLiteral(tokens[name+2].kind)) throw std::runtime_error(attribute + " requires one literal assembly identity or metadata string");
+                    std::string annotation = reflection_string ? "cli.assembly.string:" + attribute : "cli.assembly.friend";
+                    declaration = "extern int " + marker + " __attribute__((annotate(" + quote(annotation) + ", " + tokens[name+2].text + ")));";
                 } else {
                     // The earlier ::typeid pass has already made this a
                     // __cli_typeid<ResolvedType>() intrinsic token sequence.
@@ -1275,6 +1279,7 @@ class Emitter {
     bool return_slot_set = false;
     std::vector<FunctionIR> ir;
     std::vector<std::string> assembly_friends;
+    std::map<std::string, std::string> assembly_strings;
     std::map<std::string, std::string> assembly_forwards;
     mutable std::map<std::string, const CXXRecordDecl*> native_records;
     std::vector<std::string> temporary_types;
@@ -3952,6 +3957,13 @@ public:
     void collect(DeclContext* scope) {
         for (auto* decl : scope->decls()) {
             if (auto* variable = dyn_cast<VarDecl>(decl)) {
+                for (auto* attribute : variable->specific_attrs<AnnotateAttr>()) if (attribute->getAnnotation().starts_with("cli.assembly.string:")) {
+                    auto* literal = attribute->args_size() == 1 ? dyn_cast<StringLiteral>((*attribute->args_begin())->IgnoreParenImpCasts()) : nullptr;
+                    if (!literal || (!literal->isOrdinary() && !literal->isUTF8()) || literal->getString().contains('\0'))
+                        throw std::runtime_error("assembly metadata requires a UTF-8 literal without embedded nulls");
+                    auto name = attribute->getAnnotation().drop_front(std::string("cli.assembly.string:").size()).str();
+                    if (!assembly_strings.emplace(name,literal->getString().str()).second) throw std::runtime_error("duplicate assembly metadata attribute: " + name);
+                }
                 for (auto* attribute : variable->specific_attrs<AnnotateAttr>()) if (attribute->getAnnotation() == "cli.assembly.friend") {
                     auto* literal = attribute->args_size() == 1 ? dyn_cast<StringLiteral>((*attribute->args_begin())->IgnoreParenImpCasts()) : nullptr;
                     if (!literal || (!literal->isOrdinary() && !literal->isUTF8()) || literal->getString().empty() || literal->getString().contains('\0'))
@@ -4029,6 +4041,20 @@ public:
         if (!entry && options.target == "exe") throw std::runtime_error("missing global int main() entry point");
         std::ostringstream il;
         il << metadata.externs << ".assembly '" << options.assembly << "' {";
+        if (auto version = assembly_strings.find("AssemblyVersion"); version != assembly_strings.end()) {
+            std::vector<unsigned> components;
+            std::string component;
+            for (char ch : version->second + ".") {
+                if (ch == '.') {
+                    if (component.empty() || component.size() > 5 || std::stoul(component) > 65534)
+                        throw std::runtime_error("AssemblyVersion requires four numeric components in 0..65534");
+                    components.push_back(std::stoul(component)); component.clear();
+                } else if (ch >= '0' && ch <= '9') component += ch;
+                else throw std::runtime_error("AssemblyVersion requires four numeric components in 0..65534");
+            }
+            if (components.size() != 4) throw std::runtime_error("AssemblyVersion requires four numeric components in 0..65534");
+            il << " .ver " << components[0] << ':' << components[1] << ':' << components[2] << ':' << components[3];
+        }
         if (!options.public_key.empty()) {
             if (options.public_key.size() % 2 || options.public_key.find_first_not_of("0123456789abcdefABCDEF") != std::string::npos)
                 throw std::runtime_error("invalid assembly public key");
@@ -4036,19 +4062,23 @@ public:
             for (size_t i = 0; i < options.public_key.size(); i += 2) il << options.public_key.substr(i, 2) << ' ';
             il << ") .hash algorithm 0x8004";
         }
-        for (const auto& friend_name : assembly_friends) {
+        auto emit_string_attribute = [&](const std::string& type_name, const std::string& text) {
             std::vector<unsigned char> bytes{1,0};
-            auto length = friend_name.size();
+            auto length = text.size();
             if (length > 0x1fffffff) throw std::runtime_error("assembly friend identity is too long");
             if (length <= 0x7f) bytes.push_back(length);
             else if (length <= 0x3fff) { bytes.push_back(0x80 | (length >> 8)); bytes.push_back(length & 255); }
             else { bytes.push_back(0xc0 | (length >> 24)); bytes.push_back((length >> 16)&255); bytes.push_back((length >> 8)&255); bytes.push_back(length & 255); }
-            bytes.insert(bytes.end(),friend_name.begin(),friend_name.end()); bytes.push_back(0); bytes.push_back(0);
-            il << "\n  .custom " << attribute_constructor("System.Runtime.CompilerServices.InternalsVisibleToAttribute", {"string"}) << " = (";
+            bytes.insert(bytes.end(),text.begin(),text.end()); bytes.push_back(0); bytes.push_back(0);
+            il << "\n  .custom " << attribute_constructor(type_name, {"string"}) << " = (";
             const char* hex = "0123456789abcdef";
             for (auto byte : bytes) il << hex[byte >> 4] << hex[byte & 15] << ' ';
             il << ")\n";
-        }
+        };
+        for (const auto& friend_name : assembly_friends)
+            emit_string_attribute("System.Runtime.CompilerServices.InternalsVisibleToAttribute", friend_name);
+        for (const auto& [name,text] : assembly_strings) if (name != "AssemblyVersion")
+            emit_string_attribute("System.Reflection." + name + "Attribute", text);
         il << " }\n.module '" << options.assembly << ".dll'\n";
         for (const auto& [name, owner] : assembly_forwards)
             il << ".class extern forwarder '" << name << "' { .assembly extern '" << owner << "' }\n";

@@ -1,0 +1,248 @@
+From 310c5041c00ab636f025fca5c812892a75e1b339 Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Thu, 8 Oct 2026 11:10:55 +0200
+Subject: [PATCH 1/6] wpfgfx: make friend functions and dependent-base names
+ visible
+
+MSVC finds functions that are only declared as friends by ordinary name
+lookup, accepts 'friend static', and looks names up in dependent base
+classes from declarations.  Declare the scan-op friends at namespace
+scope, drop 'static' from friend declarations, restate CRectF's
+BaseMILRectType, make the brush allocators protected so LocalMILObject<>'s
+virtual destructor can reach operator delete, and select TRect_'s body with
+a trait instead of a class-scope __if_exists (which clang ignores for
+dependent names).
+---
+ .../src/WpfGfx/core/api/api_brush.h           | 10 ++++----
+ .../src/WpfGfx/core/common/Rect.h             | 24 +++++++++++++++----
+ .../src/WpfGfx/core/hw/d3dswapchainwithswdc.h |  2 +-
+ .../src/WpfGfx/core/sw/bilinearspan.h         | 22 +++++++++++++++--
+ .../src/WpfGfx/core/sw/brushspan.h            | 10 ++++++++
+ .../src/WpfGfx/core/sw/swlib/aarasterizer.cpp | 15 +++++++++++-
+ 6 files changed, 70 insertions(+), 13 deletions(-)
+
+diff --git a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/api/api_brush.h b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/api/api_brush.h
+index cfebe4f..2a11447 100644
+--- a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/api/api_brush.h
++++ b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/api/api_brush.h
+@@ -55,7 +55,7 @@ protected:
+     CMILBrushSolid(__in_ecount_opt(1) CMILFactory *pFactory = NULL);
+     virtual ~CMILBrushSolid();
+ 
+-private:
++protected: // derived LocalMILObject<> needs operator delete for its virtual dtor
+     DECLARE_METERHEAP_ALLOC(ProcessHeap, Mt(CMILBrushSolid));
+ 
+ public:
+@@ -113,7 +113,7 @@ protected:
+     CMILBrushLinearGradient(__in_ecount_opt(1) CMILFactory *pFactory = NULL);
+     virtual ~CMILBrushLinearGradient();
+ 
+-private:
++protected: // derived LocalMILObject<> needs operator delete for its virtual dtor
+     // Create should be used to instantiate this object, not operator new.
+     DECLARE_METERHEAP_ALLOC(ProcessHeap, Mt(CMILBrushLinearGradient));
+ 
+@@ -168,7 +168,7 @@ protected:
+     CMILBrushRadialGradient(__in_ecount_opt(1) CMILFactory *pFactory = NULL);
+     virtual ~CMILBrushRadialGradient();
+ 
+-private:
++protected: // derived LocalMILObject<> needs operator delete for its virtual dtor
+     // Create should be used to instantiate this object, not operator new.
+     DECLARE_METERHEAP_ALLOC(ProcessHeap, Mt(CMILBrushRadialGradient));
+ 
+@@ -269,7 +269,7 @@ protected:
+     CMILBrushBitmap(OPTIONAL CMILFactory *pFactory = NULL);
+     virtual ~CMILBrushBitmap();
+ 
+-private:
++protected: // derived LocalMILObject<> needs operator delete for its virtual dtor
+ 
+     // Create should be used to instantiate this object, not operator new.
+     DECLARE_METERHEAP_ALLOC(ProcessHeap, Mt(CMILBrushBitmap));
+@@ -517,7 +517,7 @@ protected:
+     CMILBrushShaderEffect(__in CMilEffectDuce *pShaderEffect);
+     ~CMILBrushShaderEffect() override;
+ 
+-private:
++protected: // derived LocalMILObject<> needs operator delete for its virtual dtor
+     DECLARE_METERHEAP_ALLOC(ProcessHeap, Mt(CMILBrushShaderEffect));
+ 
+ public:
+diff --git a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/common/Rect.h b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/common/Rect.h
+index d7af860..df4eff8 100644
+--- a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/common/Rect.h
++++ b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/common/Rect.h
+@@ -33,11 +33,17 @@
+ //
+ //-----------------------------------------------------------------------------
+ 
+-template <typename TBaseMILRect, typename Space>
++// Whether TBaseMILRect is one of the TMilRect_ wrappers (declares
++// HasBaseType).  MSVC's build selects the class body with a class-scope
++// __if_exists, which clang cannot evaluate for dependent names.
++template <typename T, typename = void>
++struct TRect_HasBaseType { static const bool value = false; };
++template <typename T>
++struct TRect_HasBaseType<T, decltype(&T::HasBaseType, void())> { static const bool value = true; };
++
++template <typename TBaseMILRect, typename Space, bool = TRect_HasBaseType<TBaseMILRect>::value>
+ class TRect_ : public TBaseMILRect
+ {
+-  __if_exists (TBaseMILRect::HasBaseType)
+-  {
+ protected:
+ 
+     //+------------------------------------------------------------------------
+@@ -177,8 +183,13 @@ public:
+         return reinterpret_cast<const TRect_ *>(base);
+     }
+ 
+-  }
++};
+ 
++// Without HasBaseType the class is empty (the __if_exists block above was
++// skipped for such bases).
++template <typename TBaseMILRect, typename Space>
++class TRect_<TBaseMILRect, Space, false> : public TBaseMILRect
++{
+ };
+ 
+ 
+@@ -199,6 +210,11 @@ public:
+ template <typename Space> 
+ class CRectF : public TRect_<CMilRectF, Space>
+ {
++protected:
++    // Also declared by the base; restated because names from a dependent
++    // base class are not found in declarations outside MSVC.
++    typedef CMilRectF BaseMILRectType;
++
+ public:
+ 
+     //=========================================================================
+diff --git a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/hw/d3dswapchainwithswdc.h b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/hw/d3dswapchainwithswdc.h
+index 60ec94c..4cb59c9 100644
+--- a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/hw/d3dswapchainwithswdc.h
++++ b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/hw/d3dswapchainwithswdc.h
+@@ -25,7 +25,7 @@
+ 
+ class CD3DSwapChainWithSwDC : public CD3DSwapChain
+ {
+-    friend static HRESULT CD3DSwapChain::Create(
++    friend HRESULT CD3DSwapChain::Create(
+         __inout_ecount(1) CD3DResourceManager *pResourceManager,
+         __inout_ecount(1) IDirect3DSwapChain9 *pID3DSwapChain9,
+         UINT BackBufferCount,
+diff --git a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/sw/bilinearspan.h b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/sw/bilinearspan.h
+index dc926f2..f6a9ae2 100644
+--- a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/sw/bilinearspan.h
++++ b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/sw/bilinearspan.h
+@@ -41,6 +41,16 @@ MtExtern(CMaskAlphaSpan_scRGB);
+ *
+ **************************************************************************/
+ 
++// Friend functions of the classes below that are also named outside of
++// them; a friend declaration alone does not make a name visible to
++// ordinary lookup outside MSVC.
++VOID FASTCALL ConstantAlpha_32bppPARGB(const PipelineParams *, const ScanOpParams *);
++VOID FASTCALL ConstantAlpha_32bppRGB(const PipelineParams *, const ScanOpParams *);
++VOID FASTCALL MaskAlpha_32bppPARGB_32bppPARGB(const PipelineParams *, const ScanOpParams *);
++VOID FASTCALL MaskAlpha_32bppRGB_32bppPARGB(const PipelineParams *, const ScanOpParams *);
++VOID FASTCALL ConstantAlpha_128bppPABGR(const PipelineParams *, const ScanOpParams *);
++VOID FASTCALL MaskAlpha_128bppPABGR_128bppPABGR(const PipelineParams *, const ScanOpParams *);
++
+ template <class TColor>
+ class CResampleSpan : public CColorSource
+ {
+@@ -448,6 +458,14 @@ public:
+ *
+ **************************************************************************/
+ 
++// The *_Slow helpers below are static functions in bilinearspan.cpp;
++// declare them first so the friend declarations refer to them
++// ('friend static' is an MSVC extension).
++static VOID MIL_FORCEINLINE ConstantAlpha_32bppPARGB_or_32bppRGB_Slow(
++    const PipelineParams *, const ScanOpParams *, bool);
++static VOID MIL_FORCEINLINE MaskAlpha_32bpp_Slow_32bppPARGB(
++    const PipelineParams *, const ScanOpParams *, bool fHasAlpha);
++
+ class CConstantAlphaSpan : public COwnedOSD
+ {
+ public:
+@@ -464,7 +482,7 @@ public:
+ 
+ private:
+     // Don't call, this is the implementation of above functions
+-    friend static VOID MIL_FORCEINLINE ConstantAlpha_32bppPARGB_or_32bppRGB_Slow(
++    friend VOID MIL_FORCEINLINE ConstantAlpha_32bppPARGB_or_32bppRGB_Slow(
+         const PipelineParams *, const ScanOpParams *, bool);
+ 
+     INT m_nAlpha;
+@@ -503,7 +521,7 @@ public:
+ 
+ private:
+     // Implementation for more specific functions
+-    friend static VOID MIL_FORCEINLINE MaskAlpha_32bpp_Slow_32bppPARGB(
++    friend VOID MIL_FORCEINLINE MaskAlpha_32bpp_Slow_32bppPARGB(
+         const PipelineParams *,
+         const ScanOpParams *,
+         bool fHasAlpha
+diff --git a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/sw/brushspan.h b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/sw/brushspan.h
+index eb8fdc8..5f313c3 100644
+--- a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/sw/brushspan.h
++++ b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/sw/brushspan.h
+@@ -36,6 +36,16 @@ MtExtern(CShaderEffectBrushSpan);
+ //      CColorSource implementation that emits a constant color
+ //
+ //------------------------------------------------------------------------------
++// The classes below return these friend functions from GetScanOp();
++// friend declarations alone do not make them visible to ordinary name
++// lookup outside MSVC.
++VOID FASTCALL ColorSource_Constant_32bppPARGB(const PipelineParams *, const ScanOpParams *);
++VOID FASTCALL ColorSource_LinearGradient_32bppPARGB(const PipelineParams *, const ScanOpParams *);
++VOID FASTCALL ColorSource_LinearGradient_32bppPARGB_MMX(const PipelineParams *, const ScanOpParams *);
++VOID FASTCALL ColorSource_RadialGradient_32bppPARGB(const PipelineParams *, const ScanOpParams *);
++VOID FASTCALL ColorSource_FocalGradient_32bppPARGB(const PipelineParams *, const ScanOpParams *);
++VOID FASTCALL ColorSource_ShaderEffect_32bppPARGB(const PipelineParams *, const ScanOpParams *);
++
+ class CConstantColorBrushSpan : public CColorSource
+ {
+ public:
+diff --git a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/sw/swlib/aarasterizer.cpp b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/sw/swlib/aarasterizer.cpp
+index 142e10f..fad347d 100644
+--- a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/sw/swlib/aarasterizer.cpp
++++ b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/sw/swlib/aarasterizer.cpp
+@@ -256,6 +256,19 @@ AssertActiveListOrder(
+ //  Synopsis:  Antialised filler state.
+ //
+ 
++// Friend functions of the classes below that are also named outside of
++// them; a friend declaration alone does not make a name visible to
++// ordinary lookup outside MSVC.
++VOID FASTCALL ScalePPAACoverage_128bppPRGBA(const PipelineParams *, const ScanOpParams *);
++VOID FASTCALL ScalePPAACoverage_32bppPBGRA(const PipelineParams *, const ScanOpParams *);
++// static in this file; declared so the friend declaration below refers to it
++// ('friend static' is an MSVC extension)
++static VOID MIL_FORCEINLINE ScalePPAACoverage_32bppPBGRA_Out_Slow(
++    const PipelineParams *, const ScanOpParams *, bool, bool);
++VOID FASTCALL ScalePPAACoverage_32bppBGR(const PipelineParams *, const ScanOpParams *);
++VOID FASTCALL ScalePPAACoverage_Complement_32bppBGR(const PipelineParams *, const ScanOpParams *);
++VOID FASTCALL ScalePPAACoverage_Complement_32bppBGRA(const PipelineParams *, const ScanOpParams *);
++
+ class CAntialiasedFiller : public OpSpecificData
+ {
+ private:
+@@ -297,7 +310,7 @@ private:
+     // Non-complement    PBGRA             BGR
+     //
+     // In all cases the output is PBGRA.
+-    friend static VOID MIL_FORCEINLINE ScalePPAACoverage_32bppPBGRA_Out_Slow(
++    friend VOID MIL_FORCEINLINE ScalePPAACoverage_32bppPBGRA_Out_Slow(
+         __in_ecount(1) const PipelineParams *pPP,
+         __in_ecount(1) const ScanOpParams *pSOP,
+         bool fHasAlpha,
+-- 
+2.55.0
+

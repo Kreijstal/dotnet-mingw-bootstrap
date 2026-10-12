@@ -1,0 +1,259 @@
+From 9a49214d876190f0d9a273203ea57e9fff5541cd Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Thu, 8 Oct 2026 11:10:55 +0200
+Subject: [PATCH 2/6] wpfgfx: use standard template specialization and
+ instantiation syntax
+
+- define static members of class template specializations with
+  template<> and through the class that declares them (MILRect.cpp,
+  rtutils.cpp) or as a member of the primary template (DpiUtil.h)
+- replace class-scope explicit specializations by overloads
+  (shader_compiler_xm.hpp)
+- declare explicit specializations before their first use, and cast
+  T** to const T** explicitly (hwvertexbuffer.cpp)
+- 'template class X<T>;' for explicit instantiations, and instantiate
+  CalcProjectedBounds<PageInPixels>, which another file uses
+- add missing 'typename' (d3dglyphpainter.cpp)
+- no class-qualified constructor names inside the class
+  (HwVertexBuffer.h, scanpipelinebuilder.hpp)
+---
+ .../DirectXLayer/XMath/shader_compiler_xm.hpp  | 18 ++++++------------
+ .../src/WpfGfx/common/shared/DpiUtil.h         |  2 +-
+ .../src/WpfGfx/common/shared/MILRect.cpp       | 12 ++++++------
+ .../src/WpfGfx/core/common/3dutils.cpp         | 11 ++++++-----
+ .../src/WpfGfx/core/common/rtutils.cpp         |  4 ++--
+ .../src/WpfGfx/core/hw/HwVertexBuffer.h        |  2 +-
+ .../src/WpfGfx/core/hw/d3dglyphpainter.cpp     |  4 ++--
+ .../core/hw/hw3dgeometrystreambuffer.cpp       |  4 ++--
+ .../src/WpfGfx/core/hw/hwvertexbuffer.cpp      |  9 ++++++++-
+ .../core/sw/swlib/scanpipelinebuilder.hpp      |  2 +-
+ 10 files changed, 35 insertions(+), 33 deletions(-)
+
+diff --git a/src/Microsoft.DotNet.Wpf/src/WpfGfx/common/DirectXLayer/XMath/shader_compiler_xm.hpp b/src/Microsoft.DotNet.Wpf/src/WpfGfx/common/DirectXLayer/XMath/shader_compiler_xm.hpp
+index 2d54500..c74b8d2 100644
+--- a/src/Microsoft.DotNet.Wpf/src/WpfGfx/common/DirectXLayer/XMath/shader_compiler_xm.hpp
++++ b/src/Microsoft.DotNet.Wpf/src/WpfGfx/common/DirectXLayer/XMath/shader_compiler_xm.hpp
+@@ -116,13 +116,10 @@ namespace dxlayer
+ 
+         // Returns the name of the highest high-level shader language(HLSL) pixel-shader 
+         // profile supported by a given device.
+-        template<typename ID3DDevice>
+-        static std::string get_pixel_shader_profile_name(ID3DDevice* pD3DDevice);
+ 
+-        // Specialization of get_pixel_shader_profile_name with 
+-        // ID3DDevice = IDirect3DDevice9
+-        template<>
+-        inline static std::string get_pixel_shader_profile_name<IDirect3DDevice9>(
++        // Overload of get_pixel_shader_profile_name for IDirect3DDevice9 (an
++        // explicit specialization at class scope is an MSVC extension)
++        inline static std::string get_pixel_shader_profile_name(
+             IDirect3DDevice9* pD3DDevice)
+         {
+             // We will query D3DCAPS9 to identify the best supported
+@@ -189,13 +186,10 @@ namespace dxlayer
+ 
+         // Returns the name of the highest high-level shader language(HLSL) vertex-shader 
+         // profile supported by a given device.
+-        template<typename ID3DDevice>
+-        static std::string get_vertex_shader_profile_name(ID3DDevice* pD3DDevice);
+ 
+-        // Specialization of get_vertex_shader_profile_name with 
+-        // ID3DDevice = IDirect3DDevice9
+-        template<>
+-        static std::string get_vertex_shader_profile_name<IDirect3DDevice9>(
++        // Overload of get_vertex_shader_profile_name for IDirect3DDevice9 (an
++        // explicit specialization at class scope is an MSVC extension)
++        static std::string get_vertex_shader_profile_name(
+             IDirect3DDevice9* pD3DDevice)
+         {
+             // We will query D3DCAPS9 to identify the best supported
+diff --git a/src/Microsoft.DotNet.Wpf/src/WpfGfx/common/shared/DpiUtil.h b/src/Microsoft.DotNet.Wpf/src/WpfGfx/common/shared/DpiUtil.h
+index cd23cde..8d8896a 100644
+--- a/src/Microsoft.DotNet.Wpf/src/WpfGfx/common/shared/DpiUtil.h
++++ b/src/Microsoft.DotNet.Wpf/src/WpfGfx/common/shared/DpiUtil.h
+@@ -211,7 +211,7 @@ namespace wpf
+             }
+         };
+ 
+-        const char* DpiUtilT<void>::user32_dll = "user32.dll";
++        template<typename T> const char* DpiUtilT<T>::user32_dll = "user32.dll";
+         typedef DpiUtilT<void> DpiUtil;
+ 
+         /// <summary>
+diff --git a/src/Microsoft.DotNet.Wpf/src/WpfGfx/common/shared/MILRect.cpp b/src/Microsoft.DotNet.Wpf/src/WpfGfx/common/shared/MILRect.cpp
+index e4428c2..9ca94a7 100644
+--- a/src/Microsoft.DotNet.Wpf/src/WpfGfx/common/shared/MILRect.cpp
++++ b/src/Microsoft.DotNet.Wpf/src/WpfGfx/common/shared/MILRect.cpp
+@@ -13,38 +13,38 @@
+ // C4356: 'TMilRect<TBase,TBaseRect,unique>::sc_rcEmpty' : static data member cannot be initialized via derived class
+ #pragma warning(disable:4356)
+ 
+-const CMilRectF::Rect_t CMilRectF::sc_rcEmpty(
++template<> const CMilRectF::Rect_t CMilRectF::Rect_t::sc_rcEmpty(
+     0, 0,
+     0, 0,
+     LTRB_Parameters
+     );
+ 
+-const CMilRectF::Rect_t CMilRectF::sc_rcInfinite(
++template<> const CMilRectF::Rect_t CMilRectF::Rect_t::sc_rcInfinite(
+     -FLT_MAX, -FLT_MAX,
+      FLT_MAX,  FLT_MAX,
+     LTRB_Parameters
+     );
+ 
+ 
+-const CMilRectL::Rect_t CMilRectL::sc_rcEmpty(
++template<> const CMilRectL::Rect_t CMilRectL::Rect_t::sc_rcEmpty(
+     0, 0,
+     0, 0,
+     LTRB_Parameters
+     );
+ 
+-const CMilRectL::Rect_t CMilRectL::sc_rcInfinite(
++template<> const CMilRectL::Rect_t CMilRectL::Rect_t::sc_rcInfinite(
+     -LONG_MAX-1, -LONG_MAX-1,
+     LONG_MAX, LONG_MAX,
+     LTRB_Parameters
+     );
+ 
+-const CMilRectU::Rect_t CMilRectU::sc_rcEmpty(
++template<> const CMilRectU::Rect_t CMilRectU::Rect_t::sc_rcEmpty(
+     0, 0,
+     0, 0,
+     LTRB_Parameters
+     );
+ 
+-const CMilRectU::Rect_t CMilRectU::sc_rcInfinite(
++template<> const CMilRectU::Rect_t CMilRectU::Rect_t::sc_rcInfinite(
+     0, 0,
+     ULONG_MAX, ULONG_MAX,
+     LTRB_Parameters
+diff --git a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/common/3dutils.cpp b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/common/3dutils.cpp
+index 761aed3..4b90f4c 100644
+--- a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/common/3dutils.cpp
++++ b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/common/3dutils.cpp
+@@ -878,8 +878,9 @@ DegToRadF(double angleInDeg)
+     return static_cast<float>(angleInRadians);
+ }
+ 
+-
+-
+-
+-
+-
++// The template is defined only in this file but also used by
++// core/sw/swlib/boundsrt.cpp, so instantiate it explicitly.
++template void CalcProjectedBounds<CoordinateSpace::PageInPixels>(
++    const CMatrix<CoordinateSpace::Local3D,CoordinateSpace::PageInPixels> &,
++    const CMilPointAndSize3F *,
++    CRectF<CoordinateSpace::PageInPixels> *);
+diff --git a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/common/rtutils.cpp b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/common/rtutils.cpp
+index fa275a7..471225b 100644
+--- a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/common/rtutils.cpp
++++ b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/common/rtutils.cpp
+@@ -25,13 +25,13 @@
+ //
+ //-----------------------------------------------------------------------------
+ 
+-const CMILSurfaceRect::Rect_t CMILSurfaceRect::sc_rcEmpty(
++template<> const CMILSurfaceRect::Rect_t CMILSurfaceRect::Rect_t::sc_rcEmpty(
+     0, 0,
+     0, 0,
+     LTRB_Parameters
+     );
+ 
+-const CMILSurfaceRect::Rect_t CMILSurfaceRect::sc_rcInfinite(
++template<> const CMILSurfaceRect::Rect_t CMILSurfaceRect::Rect_t::sc_rcInfinite(
+     SURFACE_RECT_MIN, SURFACE_RECT_MIN,
+     SURFACE_RECT_MAX, SURFACE_RECT_MAX,
+     LTRB_Parameters
+diff --git a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/hw/HwVertexBuffer.h b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/hw/HwVertexBuffer.h
+index b3b11a7..b91300d 100644
+--- a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/hw/HwVertexBuffer.h
++++ b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/hw/HwVertexBuffer.h
+@@ -769,7 +769,7 @@ public:
+ 
+ protected:
+ 
+-    CHwVertexBuffer::Builder()
++    Builder()
+     {
+         m_mvfIn = MILVFAttrNone;
+ 
+diff --git a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/hw/d3dglyphpainter.cpp b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/hw/d3dglyphpainter.cpp
+index 9cbb1cd..244d8d3 100644
+--- a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/hw/d3dglyphpainter.cpp
++++ b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/hw/d3dglyphpainter.cpp
+@@ -514,11 +514,11 @@ CD3DGlyphRunPainter::TDrawRectangle()
+ 
+     TVertex* vertices = NULL;
+ 
+-    TVertex::buffer *pBuffer;
++    typename TVertex::buffer *pBuffer;
+     IFC(m_pDevice->StartPrimitive(&pBuffer));
+     IFC(pBuffer->GetNewVertices(
+         4,
+-        (TVertex::base **)&vertices
++        (typename TVertex::base **)&vertices
+         ));
+ 
+     vertices[0].Set(m_xMin, m_yMin, &m_data);
+diff --git a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/hw/hw3dgeometrystreambuffer.cpp b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/hw/hw3dgeometrystreambuffer.cpp
+index 6cd7e41..1630549 100644
+--- a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/hw/hw3dgeometrystreambuffer.cpp
++++ b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/hw/hw3dgeometrystreambuffer.cpp
+@@ -1463,8 +1463,8 @@ Cleanup:
+ }
+ 
+ // Forcing the compiler to generate code to avoid linker errors...
+-template CHw3DGeometryRenderer<DWORD>;
+-template CHw3DGeometryRenderer<vector3>;
++template class CHw3DGeometryRenderer<DWORD>;
++template class CHw3DGeometryRenderer<vector3>;
+ 
+ 
+ 
+diff --git a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/hw/hwvertexbuffer.cpp b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/hw/hwvertexbuffer.cpp
+index 0747393..0d47c9c 100644
+--- a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/hw/hwvertexbuffer.cpp
++++ b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/hw/hwvertexbuffer.cpp
+@@ -77,6 +77,13 @@
+ 
+ #include "precomp.hpp"
+ 
++// Explicit specializations defined further down; they must be declared
++// before their first use (MSVC does not enforce that).
++template <> MilVertexFormat CHwTVertexBuffer<CD3DVertexXYZDUV2>::Builder::GetOutVertexFormat();
++template <> MilVertexFormat CHwTVertexBuffer<CD3DVertexXYZDUV8>::Builder::GetOutVertexFormat();
++template <> MilVertexFormat CHwTVertexBuffer<CD3DVertexXYZDUV6>::Builder::GetOutVertexFormat();
++template <> MilVertexFormat CHwTVertexBuffer<CD3DVertexXYZNDSUV4>::Builder::GetOutVertexFormat();
++
+ MtDefine(CHwTVertexBuffer_Builder, MILRender, "CHwTVertexBuffer<TVertex>::Builder");
+ 
+ ExternTag(tagWireframe);
+@@ -2702,7 +2709,7 @@ CHwTVertexBuffer<TVertex>::Builder::TransferAndOrExpandVerticesInline(
+     // Create a reference to the pointer that will be used for input vertices.
+     // A reference is used make the compiler only track a single pointer
+     // through this routine in the pIn == pOut case as an optimization.
+-    TVertex const * &pInputVertex = *(fInputOutputAreSameBuffer ? &pOutputVertex : &pInputVertex_);
++    TVertex const * &pInputVertex = *(fInputOutputAreSameBuffer ? (TVertex const **)&pOutputVertex : &pInputVertex_);
+ 
+     //
+     // Set the diffuse color and components we need for fast blending
+diff --git a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/sw/swlib/scanpipelinebuilder.hpp b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/sw/swlib/scanpipelinebuilder.hpp
+index d25ff5f..3a7b912 100644
+--- a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/sw/swlib/scanpipelinebuilder.hpp
++++ b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/sw/swlib/scanpipelinebuilder.hpp
+@@ -120,7 +120,7 @@ class CScanPipelineRendering::Builder2
+ {
+ public:
+ 
+-    CScanPipelineRendering::Builder2(
++    Builder2(
+         __in_ecount(1) CScanPipelineRendering *pSP,
+         __in_ecount(1) CSPIntermediateBuffers *pIntermediateBuffers
+         );
+-- 
+2.55.0
+

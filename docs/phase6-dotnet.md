@@ -4007,3 +4007,118 @@ PresentationNative still has the previously measured 38/139 required exports,
 with 101 text/paragraph/natural-language exports absent; gfx/PenImc version and
 protocol matching also remains open. The complete source/rendered-window/package
 objective is not achieved, and no WPF package is installed by this checkpoint.
+
+## 39. WPF assembly versions and the PresentationFramework source graph
+
+The next 2026-10-13 continuation emits source-derived assembly version metadata
+for DirectWriteForwarder. Namespace-scope System.Reflection string attributes
+now emit verified CLR attribute constructors and UTF-8 values; AssemblyVersion
+sets the actual assembly `.ver`. The supported version syntax has exactly four
+numeric components in 0..65534, with wildcard/range/duplicate negatives. The WPF
+driver mirrors the upstream Wpf.Cpp.targets generated version source: assembly
+and file versions 8.0.0.0 and informational version 8.0.0. Reflection verifies
+those values, the complete bridge checks pass again, and PresentationCore
+rebuilds and passes its real-font runtime check against that versioned bridge.
+
+`tools/wpfgraph.py` builds the upstream C# ProjectReference graph, including the
+projects in Microsoft.DotNet.Wpf/cycle-breakers and System.Printing/ref. These
+compile-only reference assemblies retain the actual upstream assembly names,
+versions and public keys, stay in their individual build directories, and are
+never copied into the runtime library directory. `tools/wpfplan.py` records the
+resolved dependency/source map and supports explicit projects and reference-only
+output. This breaks the original printing/ReachFramework/PresentationFramework/
+PresentationUI compilation cycles without substituting runtime implementations.
+
+Real ReachFramework builds from **285 source inputs** with zero warnings/errors.
+Real PresentationFramework builds from **1,345 inputs** with four warnings and
+zero errors. Together with the previous foundations and PresentationCore, this
+is **3,587 C# implementation inputs**, plus **30 compile-only reference inputs**.
+The first PresentationFramework consumer compiles with zero warnings/errors,
+but runtime child insertion fails because wpfgfx_cor3.dll is absent. Control
+construction before that operation is not a completed control/XAML/window proof.
+
+Validation on win11:
+
+```sh
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh \
+  build test-assembly-versions test-assembly-attributes
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  WPF_CPPCLI_BUILD=/home/topkek/dotnetboot/m612/build/cppcli \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh \
+  build-directwrite check-directwrite-assembly \
+  build-presentation-core check-presentation-core
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh build-reach-framework
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh build-presentation-framework
+```
+
+All listed commands pass. System.Printing's implementation, remaining desktop
+assemblies, complete native text coverage, generated themes, framework packs and
+WindowsDesktop packaging remain open. No completed WPF package is claimed.
+
+## 40. WPF 8 native compositor, rendered pixels and XAML build tasks
+
+The WPF 8 compositor now builds with the MinGW graphics port carried in
+`wpf-native/gfx` (provenance and limitations are recorded in its README).
+All six graphics patches apply cleanly to the original v8.0.0 source. The
+driver builds a private WpfGfx/Shared copy and regenerates shaders using the
+text assembler and trusted MSYS2 vkd3d. The source version resource is 8.0.0;
+the handshake test includes the actual WPF 8 protocol header. Its Ninja graph
+has **466 C/C++ compilation inputs**. Every one of the **106 upstream exports**
+resolves, correct/incorrect protocol handshakes behave as expected, and shader
+tokens/resources validate. The inherited port disables WPP tracing and does
+not implement SEH-to-C++ exception translation; these paths remain limitations.
+
+The PresentationFramework runtime consumer now passes actual Button/StackPanel
+child insertion and dependency properties, parses source XAML, and loads all
+**3,248 CLR types**. It lays out a Canvas/Rectangle and uses RenderTargetBitmap
+to render a 120x80 bitmap through the compositor. A copied interior pixel is
+verified as opaque red before a real PNG encoder writes source-wpf-render.png.
+This is a real raster-rendering proof, not yet a shown WPF application window
+or a complete desktop package. The partial PresentationNative text exports
+remain unchanged.
+
+PresentationBuildTasks compiles from **96 source inputs** and one resource,
+bringing implementation C# scope to **3,683 inputs**. The planner uses the
+already source-built SDK's MSBuild references and OOB CodeDom/MetadataLoadContext.
+For the net8.0 markup compiler, source patch 0007 selects System.Runtime as its
+metadata core assembly because the source reference pack's mscorlib facade
+does not forward System.Void. The consumer selects one reference per assembly,
+replacing the empty core-pack WindowsBase facade with actual source WPF
+WindowsBase. The real MarkupCompilePass1 task then generates MarkupView.baml
+and MarkupView.g.cs, including a named Rectangle field, from source XAML.
+
+The real ResourcesGenerator task packages that BAML into the consumer's
+`.g.resources`. The consumer compiles the generated C# and embeds those
+resources, calls the generated InitializeComponent, and checks the connected
+Rectangle field, dimensions and red brush. Compiled BAML loading, text XAML,
+control behavior, all CLR types and shape/background pixels pass together.
+
+Validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh \
+  build-presentation-tasks check-presentation-tasks
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh \
+  build-gfx check-gfx check-presentation-tasks check-presentation-framework
+```
+
+The source task build and full markup/rendering check pass; the runtime consumer
+has zero warnings/errors. Native builds retain upstream/MinGW warning noise.
+Preparation now copies only changed port files, and generated CMake header/RC
+content is written only when changed, to avoid unnecessary native recompilation.
+Logs, source manifests, generated markup, DLLs and the verified PNG are archived
+under `tmp/wpf8-support/validation/gfx-markup-20261013` on the local host.
+
+System.Printing implementation, complete native text exports, generated themes,
+remaining desktop assemblies, SDK/targeting/runtime packs, a shown application
+window and installed WPF packaging still require work. The goal remains active.

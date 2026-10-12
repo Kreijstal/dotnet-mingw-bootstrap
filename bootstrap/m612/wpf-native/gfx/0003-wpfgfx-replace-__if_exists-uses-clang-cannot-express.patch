@@ -1,0 +1,126 @@
+From 1c0cf109b3ace89be72a5df86dd81799e8b596a6 Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Thu, 8 Oct 2026 11:10:55 +0200
+Subject: [PATCH 3/6] wpfgfx: replace __if_exists uses clang cannot express
+
+MSVC's __if_exists blocks do not open a scope and may appear inside an
+argument list.  Declare the variables used after the blocks up front in
+CRadialGradientBrushSpan::GenerateColors, and pick the optional
+sc_rg_*_Data / sc_fLoopable of the HLSL shader fragments with overloads
+on global placeholder declarations.
+---
+ .../WpfGfx/core/hw/HwHLSLShaderFragments.cpp  | 41 +++++++++++--------
+ .../src/WpfGfx/core/sw/swlib/brushspan.cpp    | 22 ++++++----
+ 2 files changed, 37 insertions(+), 26 deletions(-)
+
+diff --git a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/hw/HwHLSLShaderFragments.cpp b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/hw/HwHLSLShaderFragments.cpp
+index 71c61a4..760c50d 100644
+--- a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/hw/HwHLSLShaderFragments.cpp
++++ b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/hw/HwHLSLShaderFragments.cpp
+@@ -53,6 +53,26 @@ const PixelShaderFunction g_NullPixelShaderFunction
+ );
+ 
+ 
++//
++// The *_END macros pass a fragment's optional sc_rg_*_Data / sc_fLoopable
++// when the fragment's namespace declares them.  MSVC selects them with
++// __if_exists inside the argument list; portably, fall back to these
++// global placeholders, which the fragment's own declarations hide.
++//
++struct NoShaderFragmentValue {};
++static const NoShaderFragmentValue sc_rg_VS_Data = {};
++static const NoShaderFragmentValue sc_rg_PS_Data = {};
++static const NoShaderFragmentValue sc_fLoopable = {};
++
++template <typename T, size_t N>
++constexpr UINT ShaderFragmentDataCount(const T (&)[N]) { return static_cast<UINT>(N); }
++constexpr UINT ShaderFragmentDataCount(const NoShaderFragmentValue &) { return 0; }
++template <typename T, size_t N>
++constexpr const T *ShaderFragmentDataPtr(const T (&rg)[N]) { return rg; }
++constexpr const FunctionConstDataParameter *ShaderFragmentDataPtr(const NoShaderFragmentValue &) { return NULL; }
++constexpr bool ShaderFragmentLoopable(bool fLoopable) { return fLoopable; }
++constexpr bool ShaderFragmentLoopable(const NoShaderFragmentValue &) { return false; }
++
+ #define DEFINE_SHADER_FUNCTION(name)  \
+ namespace name \
+ {
+@@ -73,18 +93,8 @@ namespace name \
+     (                                               \
+         sc_szBody, sizeof(sc_szBody),       \
+         ARRAYSIZE(sc_rg_VS_Inputs), sc_rg_VS_Inputs,  \
+-        __if_exists(sc_rg_VS_Data) { \
+-        ARRAYSIZE(sc_rg_VS_Data)  , sc_rg_VS_Data,     \
+-        }\
+-        __if_not_exists(sc_rg_VS_Data) { \
+-        0, NULL,     \
+-        }\
+-        __if_exists(sc_fLoopable) { \
+-        sc_fLoopable \
+-        }\
+-        __if_not_exists(sc_fLoopable) { \
+-        false \
+-        }\
++        ShaderFragmentDataCount(sc_rg_VS_Data), ShaderFragmentDataPtr(sc_rg_VS_Data), \
++        ShaderFragmentLoopable(sc_fLoopable) \
+     );                                              \
+ }
+ 
+@@ -101,12 +111,7 @@ namespace name \
+     (                                               \
+         sc_szBody, sizeof(sc_szBody),       \
+         ARRAYSIZE(sc_rg_PS_Inputs), sc_rg_PS_Inputs,  \
+-        __if_exists(sc_rg_PS_Data) { \
+-        ARRAYSIZE(sc_rg_PS_Data)  , sc_rg_PS_Data     \
+-        }\
+-        __if_not_exists(sc_rg_PS_Data) { \
+-        0, NULL     \
+-        }\
++        ShaderFragmentDataCount(sc_rg_PS_Data), ShaderFragmentDataPtr(sc_rg_PS_Data) \
+     );                                              \
+ }
+ 
+diff --git a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/sw/swlib/brushspan.cpp b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/sw/swlib/brushspan.cpp
+index 8e7f749..4d17954 100644
+--- a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/sw/swlib/brushspan.cpp
++++ b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/sw/swlib/brushspan.cpp
+@@ -956,23 +956,29 @@ CRadialGradientBrushSpan::GenerateColors(
+     // Given our start point in device space, figure out the corresponding
+     // normalized brush point and then the texel(s).
+ 
++    // MSVC's __if_exists does not open a scope and the loop below uses these
++    // variables; clang's does, so declare them up front.
++    typedef typename std::conditional<std::is_same<TPlatform, TypeSSE>::value,
++                                      CXmmFloat, FLOAT>::type TReal;
++    TReal rXIncrement, rYIncrement, rXPositionHPC, rYPositionHPC;
++
+     __if_exists(TPlatform::SSE)
+     {
+-        CXmmFloat rXIncrement = m_rM11;
+-        CXmmFloat rYIncrement = m_rM12;
++        rXIncrement = m_rM11;
++        rYIncrement = m_rM12;
+ 
+         CXmmFloat x(nX), y(nY);
+ 
+-        CXmmFloat rXPositionHPC = x * rXIncrement + y * m_rM21 + m_rDx;
+-        CXmmFloat rYPositionHPC = x * rYIncrement + y * m_rM22 + m_rDy;
++        rXPositionHPC = x * rXIncrement + y * m_rM21 + m_rDx;
++        rYPositionHPC = x * rYIncrement + y * m_rM22 + m_rDy;
+     }
+     __if_not_exists(TPlatform::SSE)
+     {
+-        FLOAT rXIncrement = m_rM11;
+-        FLOAT rYIncrement = m_rM12;
++        rXIncrement = m_rM11;
++        rYIncrement = m_rM12;
+ 
+-        FLOAT rXPositionHPC = nX * rXIncrement + nY * m_rM21 + m_rDx;
+-        FLOAT rYPositionHPC = nX * rYIncrement + nY * m_rM22 + m_rDy;
++        rXPositionHPC = nX * rXIncrement + nY * m_rM21 + m_rDx;
++        rYPositionHPC = nX * rYIncrement + nY * m_rM22 + m_rDy;
+     }
+             
+     //
+-- 
+2.55.0
+

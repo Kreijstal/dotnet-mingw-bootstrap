@@ -1,0 +1,16 @@
+--- a/src/Microsoft.DotNet.Wpf/src/Shared/System/Windows/Markup/ReflectionHelper.cs
++++ b/src/Microsoft.DotNet.Wpf/src/Shared/System/Windows/Markup/ReflectionHelper.cs
+@@ -44,7 +44,13 @@
+ 
+         // MetadataLoadContext core assembly name, also used by GetMscorlibType() to provide
+         // reflection types at markup compile time
++#if PBTCOMPILER && NETCOREAPP
++        // The source-built net8.0 contract defines core types in System.Runtime.
++        // Its mscorlib compatibility facade does not forward System.Void.
++        internal const string MscorlibReflectionAssemblyName = "System.Runtime";
++#else
+         internal const string MscorlibReflectionAssemblyName = "mscorlib";
++#endif
+ 
+ #if PBTCOMPILER
+         // System.Reflection.MetadataLoadContext instance

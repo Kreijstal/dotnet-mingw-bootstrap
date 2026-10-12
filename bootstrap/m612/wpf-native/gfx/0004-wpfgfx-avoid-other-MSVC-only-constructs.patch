@@ -1,0 +1,223 @@
+From d636e371b003ae38be4152019fcedcc2925c7c85 Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Thu, 8 Oct 2026 11:10:55 +0200
+Subject: [PATCH 4/6] wpfgfx: avoid other MSVC-only constructs
+
+- two user-defined conversions in copy-initialization (pshader.cpp,
+  BlurEffect.cpp): initialize C_u32x4 from C_u32 explicitly
+- pure specifier '= NULL' (PopulationSink.h)
+- reinterpret_cast in a constant expression (etwtrace.h)
+- std::exception(const char *) (dxlcommon.hpp)
+- implicit XMFLOAT3 from const float * (vector3_xm.hpp)
+- '[ ## a' token pasting (waffler.cpp)
+- WCHAR as unsigned short (/Zc:wchar_t-) and a typedef C_ASSERT that
+  collides with mingw-w64's (fxjit Types.h, warpplatform.h)
+- global placement operator new redeclared without noexcept (MemUtils.h)
+---
+ .../common/DirectXLayer/XMath/vector3_xm.hpp       |  8 +++++++-
+ .../common/DirectXLayer/interfaces/dxlcommon.hpp   |  9 ++++++++-
+ .../src/WpfGfx/common/shared/etwtrace.h            |  2 +-
+ .../src/WpfGfx/core/fxjit/PixelShader/pshader.cpp  |  8 ++++----
+ .../src/WpfGfx/core/fxjit/Public/Types.h           |  4 ++++
+ .../src/WpfGfx/core/fxjit/Public/warpplatform.h    |  5 +++++
+ .../src/WpfGfx/core/geometry/PopulationSink.h      | 14 +++++++-------
+ .../src/WpfGfx/core/hw/waffler.cpp                 |  2 +-
+ .../src/WpfGfx/core/resources/BlurEffect.cpp       |  2 +-
+ .../src/WpfGfx/shared/util/UtilLib/MemUtils.h      |  2 ++
+ 10 files changed, 40 insertions(+), 16 deletions(-)
+
+diff --git a/src/Microsoft.DotNet.Wpf/src/WpfGfx/common/DirectXLayer/XMath/vector3_xm.hpp b/src/Microsoft.DotNet.Wpf/src/WpfGfx/common/DirectXLayer/XMath/vector3_xm.hpp
+index 3ca982e..de698bb 100644
+--- a/src/Microsoft.DotNet.Wpf/src/WpfGfx/common/DirectXLayer/XMath/vector3_xm.hpp
++++ b/src/Microsoft.DotNet.Wpf/src/WpfGfx/common/DirectXLayer/XMath/vector3_xm.hpp
+@@ -160,8 +160,14 @@ namespace dxlayer
+             size_t num_vertices,
+             unsigned long stride)
+         {
++            // XMFLOAT3's constructor from const float* is explicit in current
++            // DirectXMath, so vector::assign(first, last) cannot convert
+             std::vector<DirectX::XMFLOAT3> pts;
+-            pts.assign(points, points + num_vertices);
++            pts.reserve(num_vertices);
++            for (size_t i = 0; i < num_vertices; i++)
++            {
++                pts.emplace_back(static_cast<const float*>(points[i]));
++            }
+ 
+             DirectX::BoundingBox box;
+             DirectX::BoundingBox::CreateFromPoints(box, num_vertices,pts.data() , static_cast<size_t>(stride));
+diff --git a/src/Microsoft.DotNet.Wpf/src/WpfGfx/common/DirectXLayer/interfaces/dxlcommon.hpp b/src/Microsoft.DotNet.Wpf/src/WpfGfx/common/DirectXLayer/interfaces/dxlcommon.hpp
+index 6d396dd..94d3515 100644
+--- a/src/Microsoft.DotNet.Wpf/src/WpfGfx/common/DirectXLayer/interfaces/dxlcommon.hpp
++++ b/src/Microsoft.DotNet.Wpf/src/WpfGfx/common/DirectXLayer/interfaces/dxlcommon.hpp
+@@ -155,6 +155,8 @@ namespace dxlayer
+     {
+     private:
+         winerror error;
++        // std::exception(const char*) is an MSVC extension
++        const char* message = nullptr;
+     public:
+         inline dxlayer_exception(const winerror& error) 
+             : error(error), std::exception() {}
+@@ -163,7 +165,12 @@ namespace dxlayer
+             : error(dxerror()), std::exception() {}
+ 
+         inline dxlayer_exception(const char* message)
+-            : error(dxerror()), std::exception(message) {}
++            : error(dxerror()), std::exception(), message(message) {}
++
++        inline const char* what() const noexcept override
++        {
++            return message != nullptr ? message : std::exception::what();
++        }
+ 
+         inline const winerror& get_error() const
+         {
+diff --git a/src/Microsoft.DotNet.Wpf/src/WpfGfx/common/shared/etwtrace.h b/src/Microsoft.DotNet.Wpf/src/WpfGfx/common/shared/etwtrace.h
+index 65612fb..7258bf6 100644
+--- a/src/Microsoft.DotNet.Wpf/src/WpfGfx/common/shared/etwtrace.h
++++ b/src/Microsoft.DotNet.Wpf/src/WpfGfx/common/shared/etwtrace.h
+@@ -23,7 +23,7 @@
+ class CETWTraceProvider
+ {
+   public:
+-    static const TRACEHANDLE INVALID_TRACEHANDLE_VALUE = reinterpret_cast<TRACEHANDLE>(INVALID_HANDLE_VALUE);
++    static const TRACEHANDLE INVALID_TRACEHANDLE_VALUE = static_cast<TRACEHANDLE>(static_cast<LONG_PTR>(-1)); // (TRACEHANDLE)INVALID_HANDLE_VALUE
+     
+     CETWTraceProvider(GUID guidProvider,
+                   __in_ecount(cGuids) TRACE_GUID_REGISTRATION *pguidTrace,
+diff --git a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/fxjit/PixelShader/pshader.cpp b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/fxjit/PixelShader/pshader.cpp
+index f7de5b3..5d6e7a1 100644
+--- a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/fxjit/PixelShader/pshader.cpp
++++ b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/fxjit/PixelShader/pshader.cpp
+@@ -475,10 +475,10 @@ SampleTexture(
+                 C_u32 v1Offset = v1Coordinate*uWidth;
+ 
+                 // Store the sample 32-bit uint as a 4x32 integer vector: 0000 0000 0000 argb
+-                C_u32x4 uSampleUV = *((pTextureVars->m_pTextureSource.AsP_u8() + vOffset).AsP_u32() + uCoordinate);
+-                C_u32x4 uSampleU1V = *((pTextureVars->m_pTextureSource.AsP_u8() + vOffset).AsP_u32() + u1Coordinate);
+-                C_u32x4 uSampleUV1 = *((pTextureVars->m_pTextureSource.AsP_u8() + v1Offset).AsP_u32() + uCoordinate);
+-                C_u32x4 uSampleU1V1 = *((pTextureVars->m_pTextureSource.AsP_u8() + v1Offset).AsP_u32() + u1Coordinate);
++                C_u32x4 uSampleUV(C_u32(*((pTextureVars->m_pTextureSource.AsP_u8() + vOffset).AsP_u32() + uCoordinate)));
++                C_u32x4 uSampleU1V(C_u32(*((pTextureVars->m_pTextureSource.AsP_u8() + vOffset).AsP_u32() + u1Coordinate)));
++                C_u32x4 uSampleUV1(C_u32(*((pTextureVars->m_pTextureSource.AsP_u8() + v1Offset).AsP_u32() + uCoordinate)));
++                C_u32x4 uSampleU1V1(C_u32(*((pTextureVars->m_pTextureSource.AsP_u8() + v1Offset).AsP_u32() + u1Coordinate)));
+ 
+                 // Interleave to get 0000 0000 aarr ggbb
+                 uSampleUV = uSampleUV.AsC_u8x16().InterleaveLow(uSampleUV.AsC_u8x16());
+diff --git a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/fxjit/Public/Types.h b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/fxjit/Public/Types.h
+index c003aa1..8060cb7 100644
+--- a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/fxjit/Public/Types.h
++++ b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/fxjit/Public/Types.h
+@@ -23,7 +23,11 @@ typedef __int16 INT16;
+ typedef __int32 INT32;
+ typedef __int64 INT64;
+ 
++#ifdef _MSC_VER // built with /Zc:wchar_t-, where wchar_t is unsigned short
+ typedef unsigned short WCHAR;
++#else
++typedef wchar_t WCHAR;
++#endif
+ 
+ typedef unsigned __int8  UINT8 ;
+ typedef unsigned __int16 UINT16;
+diff --git a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/fxjit/Public/warpplatform.h b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/fxjit/Public/warpplatform.h
+index d6d3928..daa6a68 100644
+--- a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/fxjit/Public/warpplatform.h
++++ b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/fxjit/Public/warpplatform.h
+@@ -20,7 +20,12 @@
+ #pragma warning(disable:4127)          // constant conditional
+ 
+ #undef C_ASSERT                        // Only defined in Winnt.h (SIMDJit doesn't include)
++#if defined(__cplusplus) && !defined(_MSC_VER)
++// mingw-w64's winnt.h already declared __C_ASSERT__ as an array object
++#define C_ASSERT(e) static_assert((e), #e)
++#else
+ #define C_ASSERT(e) typedef char __C_ASSERT__[(e)?1:-1]
++#endif
+ 
+ #ifndef NO_DEFAULT
+ #define NO_DEFAULT __assume(0)
+diff --git a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/geometry/PopulationSink.h b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/geometry/PopulationSink.h
+index 7d4503d..343d42f 100644
+--- a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/geometry/PopulationSink.h
++++ b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/geometry/PopulationSink.h
+@@ -43,27 +43,27 @@ public:
+     }
+ 
+     virtual HRESULT StartFigure(
+-        __in_ecount(1) const GpPointR &pt) = NULL;
++        __in_ecount(1) const GpPointR &pt) = 0;
+             // Figure's first point
+ 
+     virtual HRESULT AddLine(
+-        __in_ecount(1) const GpPointR &ptNew) = NULL;
++        __in_ecount(1) const GpPointR &ptNew) = 0;
+             // The line segment's endpoint
+ 
+     virtual HRESULT AddCurve(
+-        __in_ecount(3) const GpPointR *ptNew) = NULL;
++        __in_ecount(3) const GpPointR *ptNew) = 0;
+             // The last 3 Bezier points of the curve (we already have the first one)
+ 
+-    virtual void SetCurrentVertexSmooth(bool val) = NULL;
++    virtual void SetCurrentVertexSmooth(bool val) = 0;
+ 
+-    virtual void SetStrokeState(bool val) = NULL;
++    virtual void SetStrokeState(bool val) = 0;
+ 
+     virtual HRESULT EndFigure(
+-        bool fClosed) = NULL;
++        bool fClosed) = 0;
+             // =true if the figure is closed
+ 
+     virtual void SetFillMode(
+-        MilFillMode::Enum eFillMode) = NULL;
++        MilFillMode::Enum eFillMode) = 0;
+             // The mode that defines the fill set
+ };
+ 
+diff --git a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/hw/waffler.cpp b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/hw/waffler.cpp
+index d41cb81..f321502 100644
+--- a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/hw/waffler.cpp
++++ b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/hw/waffler.cpp
+@@ -263,7 +263,7 @@ HRESULT TriangleWaffler<T>::AddTriangle(
+              
+ #define EDGE(a,b,o)                                                     \
+         T e##a##b##o;                                                   \
+-        SplitEdge(s[##a],v##a,s[##b],v##b,static_cast<float>(i+o),e##a##b##o) \
++        SplitEdge(s[a],v##a,s[b],v##b,static_cast<float>(i+o),e##a##b##o) \
+ 
+         switch (configuration)
+         {
+diff --git a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/resources/BlurEffect.cpp b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/resources/BlurEffect.cpp
+index f660070..784e1cb 100644
+--- a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/resources/BlurEffect.cpp
++++ b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/resources/BlurEffect.cpp
+@@ -2228,7 +2228,7 @@ C_u32x4
+ CMilBlurEffectDuce::Sample(P_u32 pSampleSource)
+ {
+     // Convert to a 4x32 integer vector 0000 0000 0000 argb
+-    C_u32x4 u4Sample = *pSampleSource;
++    C_u32x4 u4Sample((C_u32)*pSampleSource);
+ 
+     // Interleave to get 0000 0000 aarr ggbb
+     u4Sample = u4Sample.AsC_u8x16().InterleaveLow(u4Sample.AsC_u8x16());
+diff --git a/src/Microsoft.DotNet.Wpf/src/WpfGfx/shared/util/UtilLib/MemUtils.h b/src/Microsoft.DotNet.Wpf/src/WpfGfx/shared/util/UtilLib/MemUtils.h
+index 86eb215..e4dcb39 100644
+--- a/src/Microsoft.DotNet.Wpf/src/WpfGfx/shared/util/UtilLib/MemUtils.h
++++ b/src/Microsoft.DotNet.Wpf/src/WpfGfx/shared/util/UtilLib/MemUtils.h
+@@ -211,8 +211,10 @@ inline void __cdecl operator delete[](void *pv);
+ //  }
+ 
+ // Placement new - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
++#ifdef _MSC_VER // elsewhere <new> declares it (noexcept)
+ _Ret_notnull_ _Post_writable_byte_size_(cb) _Post_satisfies_(return == pv)
+ inline __bcount(cb) void * __cdecl operator new(size_t cb, _Writable_bytes_(cb) void * pv);
++#endif
+ 
+ // Per class new/delete override macros - - - - - - - - - - - - - - - - - - - -
+ 
+-- 
+2.55.0
+

@@ -194,7 +194,11 @@
     "Namespace-scope InternalsVisibleTo string attributes emit CLR assembly custom attributes with compressed UTF-8 serialization; imported named TypeForwardedTo targets emit actual exported-type forwarders; the original WPF OtherAssemblyAttrs.cpp compiles unchanged",
     "Complete combined WPF DirectWriteForwarder source, managed startup and upstream other assembly attributes produce a real source-built ilasm DLL; CLR loads all 85 types and prepares all eligible method bodies, real native factory/COM loader registration and font-family/font/face/file behavior pass",
     "A public-signed C# PresentationCore peer with the actual upstream public key compiles and calls original internal DirectWriteForwarder APIs; its WindowsBase TextFormattingMode type forwarder resolves correctly",
-    "PresentationCore builds from 1337 source inputs against the complete bridge; CLR loads its 2290 types and real font-family/GlyphTypeface resolution plus glyph metadata and matrix/point operations pass"
+    "PresentationCore builds from 1337 source inputs against the complete bridge; CLR loads its 2290 types and real font-family/GlyphTypeface resolution plus glyph metadata and matrix/point operations pass",
+    "Namespace-scope System.Reflection string assembly metadata emits source-verified CLR custom attributes; AssemblyVersion emits the actual assembly identity version, with duplicate/range/wildcard rejection and UTF-8 runtime checks",
+    "ReachFramework builds from 285 C# inputs and PresentationFramework from 1345; upstream dependency-cycle reference projects compile separately and are never copied into the runtime library directory",
+    "WPF 8 native compositor builds from the MinGW graphics port; all 106 exports resolve, source protocol handshakes and embedded shader checks pass; actual PresentationFramework controls/XAML/type loading and verified pixel/PNG rendering execute on the source-built runtime",
+    "PresentationBuildTasks compiles from 96 source inputs; the real markup compiler produces BAML and generated C# against source-built WPF and .NET references; original ResourcesGenerator packages BAML, and the generated InitializeComponent loads it and connects named fields on the source-built WPF runtime"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -210,7 +214,7 @@
     "User finalizer declarations, value/interface destructors, covariance metadata and managed operator metadata remain unsupported",
     "Native bridges require extern-C scalars or unmanaged pointers; bool/automatic marshalling, callbacks and automatic native partitioning are not enabled",
     "Implicit primitive/interface boxing and multi-translation-unit linking remain unimplemented",
-    "The WPF DirectWriteForwarder assembly is compiled and has CLR/native font runtime proofs; System.Printing, PresentationFramework, WPF build tasks, full native rendering/text coverage and WindowsDesktop packaging remain incomplete",
+    "The WPF DirectWriteForwarder assembly is compiled and has CLR/native font runtime proofs; System.Printing implementation, remaining desktop assemblies, WPF build tasks, full native rendering/text coverage and WindowsDesktop packaging remain incomplete",
     "Value classes currently exclude bases/interfaces, virtual methods, native pointer fields and custom zero-argument constructors",
     "Boxing covers explicit safe_cast to Object and implicit boxing into Object or matching selected value-class handles; handle upcasts, primitive boxes, constrained dispatch and boxed operator overloads remain incomplete",
     "Tracking references exclude constructors, fields and tracking-reference returns; pin_ptr is restricted to primitive block locals and direct local assignments; general intrinsic pointer operations and interior assignments remain incomplete; arithmetic on explicitly spelled native pointers is supported for complete scalar/pointer/trivial POD or GC-free value elements",
@@ -253,8 +257,8 @@
     "Const native String facades currently cover single UTF-16/narrow character pointers; other constructor forms require a matching supported metadata signature; narrow pointer decoding follows the source-built CLR constructor rather than custom translation",
     "The original FontFile component test has focused dependencies; the separate complete DirectWriteForwarder build now includes actual Common/DWriteTypeConverter bodies, but rendering, higher WPF assemblies and packaging still need broader integration",
     "Native bitfields require little-endian 8-bit bytes, integral/enum storage up to 64 bits and at most 64 covered bits without excess declared padding width; volatile bitfields currently require byte-sized allocation units; bitfield-address/native-reference temporaries remain unsupported",
-    "Assembly attribute support covers individual namespace-scope InternalsVisibleTo literal identities and imported non-nested/non-generic named type forwarders; general assembly attributes, nested/generic forwarders, and legacy NGEN Dependency attributes remain incomplete",
-    "The complete DirectWriteForwarder assembly currently has the default emitted assembly version; upstream version/file metadata and broader packaging identity still need integration; CLR JIT preparation proves body validity but does not execute every path",
+    "Assembly attributes cover individual namespace-scope InternalsVisibleTo literal identities, imported non-nested/non-generic named type forwarders and selected System.Reflection string metadata; AssemblyVersion requires four numeric components in 0..65534; general attributes, nested/generic forwarders and legacy NGEN Dependency attributes remain incomplete",
+    "Complete DirectWriteForwarder assembly/version/file/informational metadata now match WPF 8.0.0 source-build settings; broader packaging identity still needs integration; CLR JIT preparation proves body validity but does not execute every path",
     "PresentationCore runtime checks cover CLR type loading, matrix/point operations and DirectWrite-backed fonts/glyph metadata; they do not prove a rendered WPF window or cover the missing native text exports"
   ]
 }

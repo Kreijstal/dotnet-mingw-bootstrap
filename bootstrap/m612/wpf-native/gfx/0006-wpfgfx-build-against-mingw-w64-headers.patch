@@ -1,0 +1,51 @@
+From 249ca3c5467faa0f2e968cb5bbc09e294d3d1f97 Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Thu, 8 Oct 2026 11:10:55 +0200
+Subject: [PATCH 6/6] wpfgfx: build against mingw-w64 headers
+
+- mingw-w64's <wmp.h> already defines the WMP IIDs under INITGUID, so
+  do not also include the MIDL-generated crescent/wmpdll_i.c
+- use the compiler's _InterlockedCompareExchange64 instead of declaring
+  the MSVC _np variant
+---
+ src/Microsoft.DotNet.Wpf/src/WpfGfx/core/av/precomp.hpp  | 2 ++
+ src/Microsoft.DotNet.Wpf/src/WpfGfx/core/uce/apifunc.cpp | 2 ++
+ 2 files changed, 4 insertions(+)
+
+diff --git a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/av/precomp.hpp b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/av/precomp.hpp
+index 3789e3f..82110d6 100644
+--- a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/av/precomp.hpp
++++ b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/av/precomp.hpp
+@@ -47,7 +47,9 @@
+ #define EC_COMPLETE                         0x01
+ 
+ #include <wmprealestate.h>
++#ifndef __MINGW32__ // mingw-w64's <wmp.h> already defines these IIDs (DEFINE_GUID under INITGUID)
+ #include <crescent\wmpdll_i.c>
++#endif
+ #include <strmif.h>
+ #include <oleauto.h>
+ #include <stdio.h>
+diff --git a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/uce/apifunc.cpp b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/uce/apifunc.cpp
+index 791e9bf..422313b 100644
+--- a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/uce/apifunc.cpp
++++ b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/uce/apifunc.cpp
+@@ -1042,6 +1042,7 @@ MilGlyphRun_ReleasePathGeometryData(
+ //------------------------------------------------------------------------------
+ 
+ // Definition for _InterlockedCompareExchange64 from intrin.h
++#ifdef _MSC_VER // mingw-w64's <intrin.h>/<winnt.h> provide the intrinsic
+ extern "C" {
+ #if defined(_M_AMD64)
+ __int64 _InterlockedCompareExchange64_np(__int64 volatile *, __int64, __int64);
+@@ -1050,6 +1051,7 @@ __int64 _InterlockedCompareExchange64_np(__int64 volatile *, __int64, __int64);
+ __int64 _InterlockedCompareExchange64(__int64 volatile *, __int64, __int64);
+ #endif
+ }
++#endif
+ 
+ LONGLONG WINAPI
+ GetNextPerfElementId()
+-- 
+2.55.0
+

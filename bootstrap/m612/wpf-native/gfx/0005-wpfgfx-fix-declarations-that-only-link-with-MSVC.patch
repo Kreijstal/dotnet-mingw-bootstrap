@@ -1,0 +1,86 @@
+From 5f8ba33ddad81c94b94fdab24022412a0a50337f Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Thu, 8 Oct 2026 11:10:55 +0200
+Subject: [PATCH 5/6] wpfgfx: fix declarations that only link with MSVC
+
+- interface methods declared without PURE (wgx_render.h): MSVC's
+  novtable interfaces never need their vtable, other compilers emit a
+  reference to it
+- CDesktopRenderTarget::TransitionToState was __forceinline but defined
+  in desktoprt.cpp and called from desktophwndrt.cpp
+---
+ .../src/WpfGfx/core/meta/desktoprt.cpp                    | 2 +-
+ src/Microsoft.DotNet.Wpf/src/WpfGfx/core/meta/desktoprt.h | 3 ++-
+ src/Microsoft.DotNet.Wpf/src/WpfGfx/include/wgx_render.h  | 8 ++++----
+ 3 files changed, 7 insertions(+), 6 deletions(-)
+
+diff --git a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/meta/desktoprt.cpp b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/meta/desktoprt.cpp
+index 83d4d56..5e69c0c 100644
+--- a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/meta/desktoprt.cpp
++++ b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/meta/desktoprt.cpp
+@@ -1186,7 +1186,7 @@ Cleanup:
+ //      Set new state (Validate in debug)
+ //
+ //------------------------------------------------------------------------------
+-MIL_FORCEINLINE void
++void
+ CDesktopRenderTarget::TransitionToState(
+     enum State eNewState
+ #if DBG
+diff --git a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/meta/desktoprt.h b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/meta/desktoprt.h
+index a003bdf..7f01d2e 100644
+--- a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/meta/desktoprt.h
++++ b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/meta/desktoprt.h
+@@ -79,7 +79,8 @@ protected:
+         );
+ 
+     enum State;
+-    MIL_FORCEINLINE void TransitionToState(
++    // not inline: also called from desktophwndrt.cpp
++    void TransitionToState(
+         enum State eNewState
+ #if DBG
+         , const char *pszMethod = NULL
+diff --git a/src/Microsoft.DotNet.Wpf/src/WpfGfx/include/wgx_render.h b/src/Microsoft.DotNet.Wpf/src/WpfGfx/include/wgx_render.h
+index 28e151d..06e9fa0 100644
+--- a/src/Microsoft.DotNet.Wpf/src/WpfGfx/include/wgx_render.h
++++ b/src/Microsoft.DotNet.Wpf/src/WpfGfx/include/wgx_render.h
+@@ -211,7 +211,7 @@ DECLARE_INTERFACE_(IMILCoreFactory, IUnknown)
+         __in bool fReturnCommonMinimum,
+         __out_ecount(1) ULONG *pulDisplayUniqueness,
+         __out_ecount(1) MilGraphicsAccelerationCaps *pCaps
+-        );
++        ) PURE;
+ 
+     // Bitmap Render Target
+ 
+@@ -817,7 +817,7 @@ DECLARE_INTERFACE_(IMILMedia, IUnknown)
+ 
+     STDMETHOD(NeedUIFrameUpdate)(
+         THIS_
+-        );
++        ) PURE;
+ 
+     STDMETHOD(Shutdown)(
+         THIS_
+@@ -839,7 +839,7 @@ DECLARE_INTERFACE_(IMILWmpFactory, IUnknown)
+ {
+     STDMETHOD(CreateWmpOcx)(
+         __deref_out_ecount(1) IWMPPlayer **ppIWMPPlayer
+-        );
++        ) PURE;
+ };
+ 
+ /*=========================================================================*\
+@@ -854,7 +854,7 @@ DECLARE_INTERFACE_(IMILEventProxy, IUnknown)
+     STDMETHOD(RaiseEvent)(
+         __in_bcount(cb) BYTE *pb,
+         __in ULONG cb
+-        );
++        ) PURE;
+ };
+ 
+ /*=========================================================================*\
+-- 
+2.55.0
+

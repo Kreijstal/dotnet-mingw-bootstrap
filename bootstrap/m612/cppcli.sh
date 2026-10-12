@@ -533,6 +533,32 @@ step_test-assembly-attributes() {
   reject_case assembly-forward-native 'struct Native { int Value; }; [assembly: System::Runtime::CompilerServices::TypeForwardedTo(Native::typeid)]; int main() { return 0; }' 'TypeForwardedTo currently requires an imported'
   reject_case assembly-attribute-qualifier '[assembly: Custom::InternalsVisibleTo("Peer")]; int main() { return 0; }' 'unsupported qualified assembly attribute name'
 }
+step_test-assembly-versions() {
+  compile "$(cygpath -m "$src/tests/assembly-versions.cpp")" --target library \
+    --type System.Reflection.AssemblyFileVersionAttribute --type System.Reflection.AssemblyInformationalVersionAttribute \
+    --type System.Reflection.AssemblyTitleAttribute -o "$(cygpath -m "$testdir/assembly-versions.dll")"
+  mkdir -p "$testdir/assembly-versions-consumer"
+  cat > "$testdir/assembly-versions-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="assembly-versions"><HintPath>../assembly-versions.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  cat > "$testdir/assembly-versions-consumer/Program.cs" <<'EOF'
+using System;
+using System.Reflection;
+var assembly=typeof(VersionedAssembly).Assembly;
+if(assembly.GetName().Version!=new Version(1,2,3,4) ||
+   assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version!="7.8.9.10" ||
+   assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion!="0.3+source λ" ||
+   assembly.GetCustomAttribute<AssemblyTitleAttribute>()?.Title!="Source-only C++/CLI" || VersionedAssembly.Answer()!=42)
+    throw new Exception("incorrect source assembly identity/string attributes");
+Console.WriteLine("source assembly version, file/informational/title metadata and UTF-8 serialization OK");
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/assembly-versions-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/assembly-versions-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case assembly-version-bad '[assembly:System::Reflection::AssemblyVersion("1.2.*.4")]; int main() { return 0; }' 'AssemblyVersion requires four numeric components'
+  reject_case assembly-version-range '[assembly:System::Reflection::AssemblyVersion("1.2.65535.4")]; int main() { return 0; }' 'AssemblyVersion requires four numeric components'
+  reject_case assembly-version-duplicate '[assembly:System::Reflection::AssemblyVersion("1.2.3.4")]; [assembly:System::Reflection::AssemblyVersion("1.2.3.4")]; int main() { return 0; }' 'duplicate assembly metadata attribute'
+}
 step_test-native-bitfields() {
   /clang64/bin/clang++.exe -std=c++17 -shared -O2 "$src/tests/native-bitfields-native.cpp" -o "$testdir/cppcli-native-bitfields.dll"
   run_case native-bitfields "$src/tests/native-bitfields.cpp" 'native bitfields: SDK layout, signed/cross-byte masks, narrow results, neighbor preservation, updates, volatile byte units and GC OK' \
