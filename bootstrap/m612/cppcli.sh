@@ -442,6 +442,27 @@ EOF
   reject_case native-exception 'int main() { try { throw 1; } catch (int value) { return value; } }' 'only managed handle'
   reject_case rethrow-outside-catch 'int main() { throw; }' 'rethrow requires'
 }
+step_test-native-allocation() {
+  /clang64/bin/clang++.exe -std=c++17 -shared -O2 "$src/tests/native-allocation-native.cpp" -o "$testdir/cppcli-native-allocation.dll"
+  run_case native-allocation "$src/tests/native-allocation.cpp" 'native scalar/POD allocation, UCRT ownership transfer, erased/null deletion, GC and initializer exceptions OK' \
+    --native-library cppcli-native-allocation.dll --type System.GC --type System.InvalidOperationException
+  reject_case native-new-array 'int main() { int* values = new int[2]; delete[] values; return 0; }' 'native allocation currently requires a single'
+  reject_case native-new-nontrivial 'struct Native { Native() {} int Value; }; int main() { Native* value = new Native(); return 0; }' 'cannot execute a nontrivial native constructor'
+  reject_case native-new-custom '#include <cstddef>
+struct Native { static void* operator new(std::size_t); int Value; }; int main() { Native* value = new Native(); return 0; }' 'custom native allocation operators'
+  reject_case native-new-nested-side-effect 'int Init() { return 42; } int Consume(int value, int* pointer) { delete pointer; return value; } int main() { return Consume(1, new int(Init())); }' 'side-effectful initializer requires an empty evaluation stack'
+}
+step_test-native-com() {
+  /clang64/bin/clang++.exe -std=c++17 -shared -O2 "$src/tests/com-native.cpp" "$src/tests/native-com-extended.cpp" -luuid -o "$testdir/cppcli-native-com.dll"
+  run_case native-com "$src/tests/native-com.cpp" 'native COM vtable dispatch, inheritance, GUID reference, HRESULT, outputs and receiver evaluation OK' \
+    --native-library cppcli-native-com.dll --type System.Guid
+  reject_case native-com-bool '#include <windows.h>
+#include <unknwn.h>
+struct IFlag : IUnknown { virtual bool Flag() = 0; }; int main() { IFlag* value = nullptr; return value->Flag(); }' 'native COM return values require a scalar'
+  reject_case native-com-byvalue '#include <windows.h>
+#include <unknwn.h>
+struct POD { int Value; }; struct IArg : IUnknown { virtual int Call(POD value) = 0; }; int main() { IArg* receiver = nullptr; POD value = {1}; return receiver->Call(value); }' 'native COM signatures require scalars'
+}
 step_test-sdk-constants() {
   run_case sdk-constants "$src/tests/sdk-constants.cpp" $'3\n9223372036854775813\n9'
   reject_case sdk-dynamic-operator '#include <windows.h>

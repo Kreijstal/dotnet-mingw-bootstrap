@@ -114,7 +114,10 @@
         "opt-in x64 MinGW COFF import archive bindings for lazily selected Windows API calls",
         "native POD aggregate/field/address lowering, single receiver evaluation and preserved pack pragmas with real native ABI checks",
         "Native import archive binding also selects explicitly DLL-imported declarations in user headers",
-        "Clang constexpr evaluation handles provably side-effect-free constant SDK integer/enum calls; no runtime native execution or ignored dynamic calls"
+        "Clang constexpr evaluation handles provably side-effect-free constant SDK integer/enum calls; no runtime native execution or ignored dynamic calls",
+        "Clang-derived Windows x64 IUnknown-chain vtable dispatch with raw unmanaged calli and native ABI validation including mixed floating/integer register and stack arguments",
+        "UCRT-backed native single scalar/POD allocation/deletion and initializer exception cleanup through the source-built NativeMemory API",
+        "Closed managed template unused instance property definitions instantiated before CLR metadata emission"
       ],
       "remaining": [
         "native layouts, complete pointer operations and automatic marshalling",
@@ -122,7 +125,7 @@
         "real mixed-mode PE and native-to-managed thunks",
         "MinGW ijwhost port"
       ],
-      "validation": "cppcli.sh test-interop test-pinning; wpf.sh check-directwrite-bridge; cppcli.sh test-com; cppcli.sh test-windows-api test-native-fields test-native-storage test-value-pointers"
+      "validation": "cppcli.sh test-interop test-pinning; wpf.sh check-directwrite-bridge; cppcli.sh test-com; cppcli.sh test-windows-api test-native-fields test-native-storage test-value-pointers; cppcli.sh test-native-com test-native-allocation; wpf.sh check-native-com check-native-cleanup"
     },
     {
       "stage": 5,
@@ -164,7 +167,10 @@
         "WPF /clr:initLocals-compatible zero-at-entry declarations, including method-entry rather than loop-reentry initialization",
         "Real upstream TrueType subsetting port: 14 native implementation inputs, thread-safe initialization, explicit source-built C ABI and complete managed wrapper; reduced real Arial from 1045720 to 317024 bytes with outlines/checksum/Windows font loading/concurrency/error checks",
         "Font-simulation probe now uses complete trusted MinGW dwrite.h and its actual constexpr flag operators",
-        "Full bridge passes the native subsetter and constant native enum flags; next IL gate is IUnknown::Release in NativePointerWrapper.cpp:35"
+        "Full bridge passes the native subsetter and constant native enum flags; next IL gate is IUnknown::Release in NativePointerWrapper.cpp:35",
+        "real DirectWrite native COM dispatch over SDK interface slots and pinned Unicode buffers, independently compared to native Clang calls",
+        "complete original NativePointerWrapper.cpp and header with original IUnknown release and erased native deletion checked through CriticalHandle disposal and pointer getter reflection",
+        "full WPF gate passes IUnknown::Release and native delete; next unsupported type is the DWrite factory function pointer prototype"
       ]
     }
   ]

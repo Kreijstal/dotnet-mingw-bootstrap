@@ -83,8 +83,9 @@ def main():
     packs = sorted((sdk / "packs/Microsoft.NETCore.App.Ref").glob("*/ref/net8.0"))
     if not packs:
         ap.error("source-built SDK lacks the net8.0 reference pack")
-    references = [packs[-1] / n for n in ["System.Runtime.dll", "System.Console.dll", "System.Runtime.CompilerServices.VisualC.dll"]]
+    references = [packs[-1] / n for n in ["System.Runtime.dll", "System.Console.dll", "System.Runtime.CompilerServices.VisualC.dll", "System.Runtime.InteropServices.dll"]]
     references += [r.resolve() for r in a.reference]
+    references = list(dict.fromkeys(r.resolve() for r in references))
     types = sorted(set(["System.Object", "System.String", "System.Console", "System.IntPtr", "System.UIntPtr"] + a.type))
     runtime_frameworks = [{"name": "Microsoft.NETCore.App", "version": "8.0.0"}]
     reference_directories = [packs[-1]]

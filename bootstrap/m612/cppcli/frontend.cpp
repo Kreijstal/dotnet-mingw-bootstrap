@@ -8,6 +8,7 @@
 #include <clang/AST/TypeLoc.h>
 #include <clang/AST/Mangle.h>
 #include <clang/AST/RecordLayout.h>
+#include <clang/AST/VTableBuilder.h>
 #include <clang/Basic/Version.h>
 #include <clang/Basic/TargetInfo.h>
 #include <clang/Frontend/CompilerInstance.h>
@@ -2216,9 +2217,73 @@ class Emitter {
         op(operation, 2, 1);
         if (b->getOpcode() == BO_NE || b->getOpcode() == BO_GE || b->getOpcode() == BO_LE) { op("ldc.i4.0", 0, 1); op("ceq", 2, 1); }
     }
+    bool native_com_interface(const CXXRecordDecl* original) const {
+        auto* record = original ? original->getDefinition() : nullptr;
+        if (!record || record_annotated(record, "cli.ref") || record_annotated(record, "cli.value") ||
+            !record->isPolymorphic() || !record->field_empty() || record->getNumBases() > 1 || record->getNumVBases()) return false;
+        for (auto* method : record->methods()) if (method->isVirtual() && (!method->isPureVirtual() || isa<CXXDestructorDecl>(method))) return false;
+        if (!record->getNumBases())
+            return record->getQualifiedNameAsString() == "IUnknown" && ci.getSourceManager().isInSystemHeader(record->getLocation());
+        auto& base = *record->bases_begin();
+        auto* parent = base.getType()->getAsCXXRecordDecl();
+        return parent && native_com_interface(parent) &&
+            context.getASTRecordLayout(record).getBaseClassOffset(parent).isZero();
+    }
+    std::string native_com_parameter(const ParmVarDecl* parameter) const {
+        auto t = parameter->getType();
+        if (t->isReferenceType()) {
+            auto element = t->getPointeeType();
+            if (!element->isArithmeticType() && !element->isEnumeralType() && !native_pod(element))
+                throw std::runtime_error("native COM references require native scalar or POD storage");
+            return "native unsigned int";
+        }
+        if (t->isEnumeralType()) return numeric_type(t);
+        if ((!t->isIntegerType() && !t->isRealFloatingType() && !t->isPointerType()) || t->isBooleanType() ||
+            (handle_target(t) && native_value_pointer(parameter).isNull()))
+            throw std::runtime_error("native COM signatures require scalars or unmanaged pointers; automatic marshalling is not supported");
+        return declared_type(parameter);
+    }
+    void native_com_call(const CXXMemberCallExpr* call, const CXXMethodDecl* method) {
+        if (!context.getTargetInfo().getTriple().isOSWindows() || context.getTargetInfo().getTriple().getArch() != llvm::Triple::x86_64 ||
+            context.getTargetInfo().getPointerWidth(LangAS::Default) != 64)
+            fail(call, "native COM dispatch currently requires Windows x64");
+        auto* callee = dyn_cast<MemberExpr>(call->getCallee()->IgnoreParenImpCasts());
+        if (!callee || callee->hasQualifier()) fail(call, "native COM dispatch requires an unqualified virtual call");
+        if (method->isVariadic()) fail(call, "variadic native COM dispatch is unsupported");
+        auto convention = method->getType()->castAs<FunctionType>()->getCallConv();
+        if (convention != CC_C && convention != CC_Win64) fail(call, "native COM dispatch requires the platform Windows ABI");
+        auto result = method->getReturnType();
+        if (!result->isVoidType() && ((!result->isIntegerType() && !result->isRealFloatingType() && !result->isPointerType() && !result->isEnumeralType()) ||
+            result->isBooleanType() || handle_target(result))) fail(call, "native COM return values require a scalar or unmanaged pointer");
+        auto* tables = context.getVTableContext();
+        uint64_t slot;
+        if (tables->isMicrosoft()) {
+            auto location = cast<MicrosoftVTableContext>(tables)->getMethodVFTableLocation(GlobalDecl(method));
+            if (!location.VFPtrOffset.isZero() || location.VBTableIndex) fail(call, "native COM dispatch excludes secondary or virtual-base vtables");
+            slot = location.Index;
+        } else slot = cast<ItaniumVTableContext>(tables)->getMethodVTableIndex(GlobalDecl(method));
+        unsigned receiver = temporary("native unsigned int");
+        expr(call->getImplicitObjectArgument()); op("stloc " + std::to_string(receiver), 1);
+        op("ldloc " + std::to_string(receiver), 0, 1);
+        std::string signature = "native unsigned int";
+        for (unsigned i = 0; i < call->getNumArgs(); ++i) {
+            auto* parameter = method->getParamDecl(i);
+            signature += ", " + native_com_parameter(parameter);
+            if (parameter->getType()->isReferenceType()) native_address(call->getArg(i));
+            else pointer_value(call->getArg(i), parameter);
+        }
+        op("ldloc " + std::to_string(receiver), 0, 1); op("ldind.i", 1, 1);
+        native_offset(slot * 8); op("ldind.i", 1, 1);
+        op("calli unmanaged stdcall " + (result->isEnumeralType() ? numeric_type(result) : declared_type(method)) + "(" + signature + ")",
+           call->getNumArgs() + 2, result->isVoidType() ? 0 : 1);
+    }
     void call(const CallExpr* c) {
         auto* f = c->getDirectCallee();
         if (!f) fail(c, "indirect calls are not supported yet");
+        if (auto* member = dyn_cast<CXXMemberCallExpr>(c); member && member->getMethodDecl()->isVirtual() &&
+            native_com_interface(member->getMethodDecl()->getParent())) {
+            native_com_call(member, member->getMethodDecl()); return;
+        }
         // Clang can prove constexpr SDK calls without executing native code.
         // Require side-effect-free integer evaluation; dynamic calls still need
         // an emitted body or an explicit native binding.
@@ -2509,6 +2574,63 @@ class Emitter {
     }
     void expr(const Expr* original) {
         const Expr* e = strip(original);
+        if (auto* allocation = dyn_cast<CXXNewExpr>(e)) {
+            auto element = allocation->getAllocatedType();
+            if (allocation->isArray() || allocation->getNumPlacementArgs() ||
+                (!element->isArithmeticType() && !element->isEnumeralType() && !(element->isPointerType() && !handle_target(element)) && !native_pod(element)))
+                fail(allocation, "native allocation currently requires a single scalar or trivial native POD; arrays, placement and native objects need a native implementation");
+            auto* allocator = allocation->getOperatorNew();
+            if (!allocator || !allocator->isReplaceableGlobalAllocationFunction() || allocator->hasBody() ||
+                (!allocator->isImplicit() && !ci.getSourceManager().isInSystemHeader(allocator->getLocation())))
+                fail(allocation, "custom native allocation operators require a native implementation");
+            if (context.getTypeAlignInChars(element).getQuantity() > 8)
+                fail(allocation, "native allocation exceeds supported scalar/POD alignment");
+            unsigned pointer = temporary("void*");
+            op("ldc.i8 " + std::to_string(context.getTypeSizeInChars(element).getQuantity()), 0, 1); op("conv.u", 1, 1);
+            op("call void* [System.Runtime.InteropServices]System.Runtime.InteropServices.NativeMemory::Alloc(native unsigned int)", 1, 1);
+            op("stloc " + std::to_string(pointer), 1);
+            if (auto* initializer = allocation->getInitializer()) {
+                if (!initializer->HasSideEffects(context)) {
+                    op("ldloc " + std::to_string(pointer), 0, 1); expr(initializer); op("stobj " + type(element), 2);
+                    op("ldloc " + std::to_string(pointer), 0, 1); return;
+                }
+                if (stack) fail(allocation, "native allocation with a side-effectful initializer requires an empty evaluation stack");
+                unsigned initialized = temporary("bool");
+                auto done = label(), cleanup_done = label();
+                op("ldc.i4.0", 0, 1); op("stloc " + std::to_string(initialized), 1);
+                code << "    .try {\n"; ++exception_depth;
+                op("ldloc " + std::to_string(pointer), 0, 1); expr(initializer); op("stobj " + type(element), 2);
+                op("ldc.i4.1", 0, 1); op("stloc " + std::to_string(initialized), 1);
+                op("leave " + done); --exception_depth;
+                code << "    } finally {\n";
+                op("ldloc " + std::to_string(initialized), 0, 1); op("brtrue " + cleanup_done, 1);
+                op("ldloc " + std::to_string(pointer), 0, 1); op("call void [System.Runtime.InteropServices]System.Runtime.InteropServices.NativeMemory::Free(void*)", 1);
+                mark(cleanup_done); op("endfinally"); code << "    }\n"; mark(done);
+            }
+            op("ldloc " + std::to_string(pointer), 0, 1); return;
+        }
+        if (isa<CXXScalarValueInitExpr>(e) || isa<ImplicitValueInitExpr>(e)) {
+            auto value = e->getType();
+            auto token = type(value);
+            if (native_pod(value)) {
+                auto slot = temporary(token);
+                op("ldloca " + std::to_string(slot), 0, 1); op("initobj " + token, 1);
+                op("ldloc " + std::to_string(slot), 0, 1);
+            } else if (value->isPointerType() && !handle_target(value)) { op("ldc.i4.0", 0, 1); op("conv.u", 1, 1); }
+            else if (value->isRealFloatingType()) op(token == "float32" ? "ldc.r4 0" : "ldc.r8 0", 0, 1);
+            else if (value->isIntegerType() || value->isEnumeralType()) op(context.getTypeSize(value) > 32 ? "ldc.i8 0" : "ldc.i4.0", 0, 1);
+            else fail(e, "unsupported value initialization");
+            return;
+        }
+        if (auto* cast = dyn_cast<CastExpr>(e); cast &&
+            (cast->getCastKind() == CK_DerivedToBase || cast->getCastKind() == CK_UncheckedDerivedToBase) &&
+            cast->getType()->isPointerType() && cast->getSubExpr()->getType()->isPointerType() &&
+            native_com_interface(cast->getType()->getPointeeType()->getAsCXXRecordDecl()) &&
+            native_com_interface(cast->getSubExpr()->getType()->getPointeeType()->getAsCXXRecordDecl())) {
+            // The supported COM interface chain has one nonvirtual base at
+            // offset zero, so the already type-checked upcast preserves bits.
+            expr(cast->getSubExpr()); return;
+        }
         if (auto* unary = dyn_cast<UnaryOperator>(e); unary && unary->getOpcode() == UO_Deref && !native_value_pointer(unary->getSubExpr()).isNull()) {
             expr(unary->getSubExpr()); op("ldobj " + type(unary->getType()), 1, 1); return;
         }
@@ -2529,6 +2651,17 @@ class Emitter {
             native_address(unary->getSubExpr()); return;
         }
         if (auto* deletion = dyn_cast<CXXDeleteExpr>(e)) {
+            auto argument = deletion->getArgument()->getType();
+            if (argument->isPointerType() && !handle_target(argument)) {
+                auto element = argument->getPointeeType();
+                if (deletion->isArrayForm() || (!element->isVoidType() && !element->isArithmeticType() && !element->isEnumeralType() && !(element->isPointerType() && !handle_target(element)) && !native_pod(element)))
+                    fail(deletion, "native deletion requires a single scalar, trivial native POD or erased void pointer; arrays and native objects need a native implementation");
+                auto* deallocator = deletion->getOperatorDelete();
+                if (!deallocator || !deallocator->isReplaceableGlobalAllocationFunction() || deallocator->hasBody() ||
+                    (!deallocator->isImplicit() && !ci.getSourceManager().isInSystemHeader(deallocator->getLocation())))
+                    fail(deletion, "custom native deletion operators require a native implementation");
+                expr(deletion->getArgument()); op("call void [System.Runtime.InteropServices]System.Runtime.InteropServices.NativeMemory::Free(void*)", 1); return;
+            }
             if (deletion->isArrayForm() || !handle_target(deletion->getArgument()->getType()) || !native_value_pointer(deletion->getArgument()).isNull())
                 fail(e, "native deletion and delete[] require a native implementation; managed delete requires a single handle");
             dispose_handle(deletion->getArgument()); return;
@@ -2543,7 +2676,7 @@ class Emitter {
                 return;
             }
             expr(c->getSubExpr());
-            if (c->getCastKind() == CK_PointerToBoolean && !native_value_pointer(c->getSubExpr()).isNull()) {
+            if (c->getCastKind() == CK_PointerToBoolean && (!handle_target(c->getSubExpr()->getType()) || !native_value_pointer(c->getSubExpr()).isNull())) {
                 op("ldc.i4.0", 0, 1); op("conv.u", 1, 1); op("ceq", 2, 1); op("ldc.i4.0", 0, 1); op("ceq", 2, 1); return;
             }
             if (c->getCastKind() == CK_PointerToBoolean && handle_target(c->getSubExpr()->getType())) {
@@ -3208,6 +3341,21 @@ public:
             for (auto* member : r->decls()) if (auto* property = dyn_cast<MSPropertyDecl>(member))
                 if (!native_value_pointer(property->getType(), property->getTypeSourceInfo()).isNull())
                     throw std::runtime_error("native value-pointer properties are not supported yet");
+            // A CLR property must name actual accessor methods even when C++
+            // never calls it. Instantiate those closed-template definitions
+            // before collecting method bodies, rather than emitting dangling
+            // property references for otherwise unused accessors.
+            if (isa<ClassTemplateSpecializationDecl>(r)) {
+                for (auto* member : r->decls()) if (auto* property = dyn_cast<MSPropertyDecl>(member)) {
+                    for (auto* method : r->methods()) {
+                        auto* name = method->getIdentifier();
+                        if (!name || (name != property->getGetterId() && name != property->getSetterId()) ||
+                            method->hasBody() || method->isPureVirtual() || !annotation(method, "cli.import:").empty()) continue;
+                        ci.getSema().InstantiateFunctionDefinition(method->getLocation(), method, true, true);
+                        if (ci.getDiagnostics().hasErrorOccurred()) throw std::runtime_error("Clang rejected a closed managed template property definition");
+                    }
+                }
+            }
             for (auto* method : r->methods()) if (annotated(method, "cli.cctor") && !method->hasBody())
                 throw std::runtime_error("managed static constructor requires a definition in this translation unit");
             if (record_annotated(r, "cli.value")) {

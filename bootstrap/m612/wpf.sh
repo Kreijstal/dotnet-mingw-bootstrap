@@ -180,6 +180,60 @@ step_bridge_gate() {
     }
 }
 
+step_check_native_cleanup() {
+  initialize
+  local work=$build/native-cleanup-check
+  local original=$source/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/CPP/DWriteWrapper
+  local core_refs=("$sdk"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
+  local core_ref=${core_refs[-1]}
+  mkdir -p "$work"
+  cp "$original/NativePointerWrapper.cpp" "$original/NativePointerWrapper.h" "$work/"
+  printf '#include <windows.h>\n#include <vcclr.h>\nusing namespace System;\n' > "$work/Common.h"
+  cat > "$work/NativeCleanup.cpp" <<'EOF'
+#include "NativePointerWrapper.cpp"
+using namespace MS::Internal::Text::TextInterface::Generics;
+public ref class WpfNativeCleanup abstract sealed {
+public:
+    static System::Runtime::InteropServices::CriticalHandle^ Com(System::IntPtr pointer) {
+        return gcnew NativeIUnknownWrapper<IUnknown>(static_cast<IUnknown*>(pointer.ToPointer()));
+    }
+    static System::Runtime::InteropServices::CriticalHandle^ Pod() {
+        return gcnew NativePointerWrapper<_GUID>(new _GUID());
+    }
+    static System::Runtime::InteropServices::CriticalHandle^ Empty() {
+        return gcnew NativePointerWrapper<_GUID>(static_cast<_GUID*>(nullptr));
+    }
+};
+EOF
+  bridge_compile "$(cygpath -m "$work/NativeCleanup.cpp")" --target library --std c++14 \
+    --ilasm "$(cygpath -m /clang64/bin/ilasm-dotnet.exe)" \
+    --type System.Runtime.InteropServices.CriticalHandle --type System.Runtime.ConstrainedExecution.CriticalFinalizerObject \
+    --type System.Runtime.ConstrainedExecution.Cer --type System.Runtime.ConstrainedExecution.Consistency \
+    --type System.Runtime.ConstrainedExecution.ReliabilityContractAttribute \
+    --reference "$(cygpath -m "$core_ref/System.Runtime.InteropServices.dll")" -o "$(cygpath -m "$work/NativeCleanup.dll")"
+  cmp "$original/NativePointerWrapper.cpp" "$work/NativePointerWrapper.cpp"
+  cmp "$original/NativePointerWrapper.h" "$work/NativePointerWrapper.h"
+  /clang64/bin/clang++.exe -std=c++17 -shared -O2 "$here/cppcli/tests/com-native.cpp" -luuid -o "$work/native-cleanup-probe.dll"
+  cp "$here/wpf-tests/NativeCleanup.cs" "$work/Program.cs"
+  cat > "$work/NativeCleanupCheck.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="NativeCleanup"><HintPath>NativeCleanup.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$sdk/dotnet.exe" build "$(cygpath -m "$work/NativeCleanupCheck.csproj")" -c Release \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -v:q
+  cp "$work/native-cleanup-probe.dll" "$work/bin/Release/net8.0/"
+  timeout 30 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/NativeCleanupCheck.dll")"
+}
+
+step_check_native_com() {
+  local work=$build/native-com-check
+  mkdir -p "$work"
+  /clang64/bin/clang++.exe -std=c++17 -O2 -shared "$here/wpf-native/DirectWriteBridge.cpp" -ldwrite -o "$work/wpf-directwrite-native.dll"
+  bridge_compile "$(cygpath -m "$here/wpf-tests/NativeComDirectWrite.cpp")" --std c++14 \
+    --ilasm "$(cygpath -m /clang64/bin/ilasm-dotnet.exe)" --type System.GC \
+    --native-library wpf-directwrite-native.dll -o "$(cygpath -m "$work/NativeComDirectWrite.dll")"
+  timeout 30 "$sdk/dotnet.exe" "$(cygpath -m "$work/NativeComDirectWrite.dll")"
+}
+
 step_check_directwrite_bridge() {
   initialize
   local work=$build/directwrite-check

@@ -1794,7 +1794,10 @@ is compiled and checked against actual registry timestamps. The TrueType
 subsetter now builds from its actual upstream algorithm into a native DLL, with
 a checked managed split bridge (§33). Clang-proven side-effect-free SDK constexpr
 integer calls also pass, including MinGW's constant enum flag operator. IL
-emission next fails at IUnknown::Release in NativePointerWrapper.cpp:35.
+IUnknown dispatch and scalar/POD native allocation/deletion now pass (§34),
+including the original NativePointerWrapper.cpp cleanup methods. IL collection
+next fails at the DWrite factory function-pointer prototype, which remains
+unsupported.
 General native record operations, open managed
 generics, callbacks, finalizers and automatic native
 partitioning also remain outside its supported subset.
@@ -3504,3 +3507,90 @@ foundation inputs remain compiled, and no complete WPF package is produced.
 Changes remain in the development build. Logs, import/ABI manifests, native DLL,
 patched sources and emitted IL are archived under
 `tmp/wpf8-support/validation/native-subsetter-20261012` on the local host.
+
+## 34. Native COM dispatch, native heap values and original handle cleanup
+
+The 2026-10-12 continuation implements raw native COM virtual calls on Windows
+x64. The supported interface shape is an IUnknown-rooted single nonvirtual
+base chain at offset zero, with no instance fields and pure virtual methods.
+Clang's ABI vtable context supplies the selected method slot. The emitter
+evaluates the receiver once, passes native scalar/pointer arguments and native
+POD/scalar references, reads the function pointer from that vtable, and emits
+unmanaged `calli`. HRESULT values stay unmodified; this path does not create an
+RCW or automatically marshal arguments. Zero-offset interface upcasts and raw
+native-pointer boolean conversions retain the actual address. Bool returns,
+by-value record signatures, variadic methods, arbitrary native class dispatch,
+secondary/virtual-base vtables and non-x64 Windows remain unsupported.
+
+The native COM test uses actual Clang-built interfaces/objects and checks inherited
+IUnknown slots, AddRef/Release counts, GUID reference input, pointer/BOOL outputs,
+negative HRESULT preservation and single receiver evaluation. Another interface
+checks a double result with mixed float/double/64-bit integer arguments extending
+past the register argument slots, plus a void return with an output pointer.
+`wpf.sh check-native-com` calls actual DirectWrite factory, collection, family
+and localized-string interfaces through generated calli. It enumerates 81 font
+families and compares a Unicode name with independently compiled native SDK calls
+after compacting GC, using CLR-pinned character buffers.
+
+Native single scalar/trivial-POD allocation and deletion now use the source-built
+NativeMemory API, whose Windows implementation calls UCRT malloc/free. The correct
+reference identity is System.Runtime.InteropServices; the driver includes that
+source-built facade by default and deduplicates reference paths. Clang supplies
+the allocation size and resolved initializer. Value initialization, native field
+access after GC, erased void-pointer cleanup and null deletion are checked.
+The native test verifies the UCRT allocation with `_msize` and transfers ownership
+in both directions between generated CLR code and real C++ new/delete. Custom
+operators, native arrays/delete[], placement new, nontrivial objects/destructors,
+managed-value heap storage and alignment above eight bytes remain unsupported.
+Side-effectful initializers at an empty evaluation stack use CLR finally cleanup
+if initialization throws; nested expressions with an occupied evaluation stack
+are explicitly rejected until their stack preservation is implemented. Ordinary
+constant/trivial initialization can appear in constructor arguments.
+
+The complete original NativePointerWrapper.cpp and header compile byte for byte
+in `wpf.sh check-native-cleanup`, with a focused Common.h dependency context.
+Its actual NativeIUnknownWrapper<IUnknown> and NativePointerWrapper<_GUID>
+specializations now execute both original ReleaseHandle bodies. The consumer
+checks COM object counts, newly allocated GUID ownership, invalid/closed state,
+32 repeated disposal cycles, compacting GC and double Dispose without a second
+release. This check exposed a separate metadata bug: an unused closed-template
+property getter was declared in CLR property metadata without an emitted method.
+The frontend now asks Clang to instantiate instance property accessor definitions
+before collecting those closed source-template bodies. Reflection invokes the
+original Value getter before and after cleanup even though no C++ call uses it.
+
+Validation on win11:
+
+```sh
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh \
+  test-native-com test-native-allocation test-managed-templates test-value-pointers test-com
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-native-allocation
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  WPF_CPPCLI_BUILD=/home/topkek/dotnetboot/m612/build/cppcli \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh \
+  check-native-cleanup check-native-com bridge-gate
+```
+
+The frontend build and focused/regression checks pass. The original cleanup
+component retains its one upstream void-delete warning; the allocation test
+retains two such warnings, and C# check builds report zero warnings/errors.
+The complete bridge gate still exits 1 after three warnings. Its next error is
+the unsupported native DWrite factory function-pointer type
+`long (enum DWRITE_FACTORY_TYPE, const struct _GUID &, struct IUnknown **)`.
+IUnknown::Release and erased native deletion are no longer the gate failures.
+
+Full implementation-body evidence is now **four of the 21 directly included
+DirectWrite bodies**, with NativePointerWrapper.cpp joining the previous three
+components. The 14 nested native subsetter inputs and 620 C# foundation inputs
+remain built. This remains development frontend work: no complete
+DirectWriteForwarder/System.Printing assembly, WPF framework or WindowsDesktop
+package is produced. Function pointers/native callbacks, further native object
+boundaries, remaining startup units, higher WPF, native-export coverage and
+desktop packaging remain open. Logs, original cleanup sources, emitted IL and
+native test artifacts are archived under
+`tmp/wpf8-support/validation/native-com-cleanup-20261012` on the local host.
