@@ -819,7 +819,7 @@ protected:
                 std::string type, primary;
                 for (size_t j = i + 1; j < end && tokens[j].text != "<"; ++j)
                     if (tokens[j].kind == tok::identifier) primary = tokens[j].text;
-                for (size_t j = i + 1; j < end; ++j) type += tokens[j].text;
+                for (size_t j = i + 1; j < end; ++j) type += tokens[j].text + " ";
                 if (!default_allocation && managed_string_constructors.count(primary)) {
                     // Mark only immediate literal arguments of this constructor;
                     // literals inside nested native calls keep their native type.
@@ -892,8 +892,22 @@ protected:
                     emit(t, "__attribute__((annotate(\"cli.access:assembly\")))");
                 if (t.text == "internal" && class_depth[i] == 1 && i + 1 < tokens.size() && tokens[i+1].text == ":") { emit(t, "public"); continue; }
                 if (i >= 2 && tokens[i-1].text == "::" && i + 2 < tokens.size() && tokens[i+1].text == "::" &&
-                    (tokens[i+2].text == "get" || tokens[i+2].text == "set") && property_names.count({tokens[i-2].text, t.text})) {
-                    emit(t, tokens[i+2].text + "_" + (t.text == "default" ? "Item" : t.text)); i += 2; continue;
+                    (tokens[i+2].text == "get" || tokens[i+2].text == "set")) {
+                    size_t owner = i-2;
+                    if (tokens[owner].text == ">" || tokens[owner].text == ">>") {
+                        int angles = 0;
+                        for (size_t pos = owner+1; pos-- > 0;) {
+                            if (tokens[pos].text == ">") ++angles;
+                            else if (tokens[pos].text == ">>") angles += 2;
+                            else if (tokens[pos].text == "<" && --angles == 0) {
+                                if (pos) owner = pos-1;
+                                break;
+                            }
+                        }
+                    }
+                    if (property_names.count({tokens[owner].text, t.text})) {
+                        emit(t, tokens[i+2].text + "_" + (t.text == "default" ? "Item" : t.text)); i += 2; continue;
+                    }
                 }
                 if (t.text == "static" && i + 1 < tokens.size() && tokens[i+1].text == "property") continue;
                 if (t.text == "virtual" && i + 1 < tokens.size() && tokens[i+1].text == "property") continue;
@@ -1142,6 +1156,7 @@ class Emitter {
     std::vector<CXXRecordDecl*> records;
     std::vector<EnumDecl*> enums;
     std::set<const FunctionDecl*> seen;
+    std::set<const CXXRecordDecl*> seen_records;
     std::map<const VarDecl*, unsigned> locals;
     std::map<const ParmVarDecl*, unsigned> parameters;
     std::ostringstream code;
@@ -1373,7 +1388,15 @@ class Emitter {
             }
             return result;
         }
-        if (isa<ClassTemplateSpecializationDecl>(record)) throw std::runtime_error("source-defined managed class template emission is not enabled yet");
+        if (auto* specialization = dyn_cast<ClassTemplateSpecializationDecl>(record)) {
+            if (record->isDependentContext()) throw std::runtime_error("dependent managed template cannot be emitted as a CLR type");
+            if (!record_annotated(record, "cli.ref") && !record_annotated(record, "cli.value"))
+                throw std::runtime_error("native C++ class template is not a managed type");
+            std::unique_ptr<MangleContext> mangler(context.createMangleContext());
+            std::string identity; llvm::raw_string_ostream out(identity);
+            mangler->mangleCanonicalTypeName(context.getCanonicalTagType(specialization), out);
+            return "'__cpp_cli_template_" + identity + "'";
+        }
         if (!record_annotated(record, "cli.ref") && !record_annotated(record, "cli.value"))
             throw std::runtime_error("native C++ class is not a managed type: " + record->getQualifiedNameAsString());
         std::string name = record->getQualifiedNameAsString();
@@ -2523,6 +2546,7 @@ class Emitter {
 public:
     Emitter(CompilerInstance& compiler, const Metadata& md) : ci(compiler), context(ci.getASTContext()), metadata(md) {}
     bool VisitFunctionDecl(FunctionDecl* f) {
+        if (f->isDependentContext() || f->getType()->isDependentType()) return true;
         auto* method = dyn_cast<CXXMethodDecl>(f);
         if (method && record_annotated(method->getParent(), "cli.delegate")) return true;
         if (ci.getSourceManager().isInSystemHeader(f->getLocation()) &&
@@ -2559,6 +2583,8 @@ public:
         return true;
     }
     bool VisitCXXRecordDecl(CXXRecordDecl* r) {
+        if (r->isDependentContext()) return true;
+        if (r->isThisDeclarationADefinition() && !seen_records.insert(r->getCanonicalDecl()).second) return true;
         if (r->isThisDeclarationADefinition() && (annotated(r, "cli.ref") || annotated(r, "cli.value")) && !annotated(r, "cli.array") && annotation(r,"cli.external:").empty()) {
             if (auto* invoke = delegate_invoke(r)) {
                 for (auto* attr : r->specific_attrs<AnnotateAttr>()) if (attr->getAnnotation().starts_with("cli.com."))
@@ -2669,6 +2695,16 @@ public:
             else if (auto* tmpl = dyn_cast<FunctionTemplateDecl>(decl)) {
                 if (llvm::StringRef(tmpl->getNameAsString()).starts_with("__cli_")) continue;
                 for (auto* specialization : tmpl->specializations()) if (specialization->isUsed()) VisitFunctionDecl(specialization);
+            }
+            else if (auto* tmpl = dyn_cast<ClassTemplateDecl>(decl)) {
+                // C++ managed templates emit closed ordinary CLR types.
+                // Primary templates and uninstantiated members have no IL body.
+                for (auto* specialization : tmpl->specializations())
+                    if (!specialization->isDependentContext() && specialization->isThisDeclarationADefinition() &&
+                        (record_annotated(specialization, "cli.ref") || record_annotated(specialization, "cli.value")) &&
+                        record_annotation(specialization, "cli.external:").empty()) {
+                        VisitCXXRecordDecl(specialization); collect(specialization);
+                    }
             }
             else if (auto* enumeration = dyn_cast<EnumDecl>(decl)) {
                 if (enumeration->isThisDeclarationADefinition() && annotated(enumeration, "cli.enum") && annotation(enumeration, "cli.external:").empty()) {

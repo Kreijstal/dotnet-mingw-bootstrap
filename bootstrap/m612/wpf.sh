@@ -119,7 +119,7 @@ step_bridge_gate() {
     --type System.Runtime.ConstrainedExecution.CriticalFinalizerObject \
     --type System.Runtime.ConstrainedExecution.Cer --type System.Runtime.ConstrainedExecution.Consistency \
     --type System.Runtime.ConstrainedExecution.ReliabilityContractAttribute --type System.Globalization.CultureInfo \
-    --type System.NotSupportedException --type System.NotImplementedException --type System.IO.UnmanagedMemoryStream --type MS.Internal.Invariant \
+    --type System.NotSupportedException --type System.NotImplementedException --type System.IO.Stream --type System.IO.UnmanagedMemoryStream --type MS.Internal.Invariant \
     --type 'System.Collections.Generic.IDictionary`2' --type 'System.Collections.Generic.ICollection`1' \
     --type 'System.Collections.Generic.IEnumerable`1' --type 'System.Collections.Generic.IEnumerator`1' \
     --type 'System.Collections.Generic.KeyValuePair`2' --type System.Collections.IEnumerable \
@@ -137,7 +137,7 @@ step_bridge_gate() {
     --type System.Type --type System.RuntimeTypeHandle --type System.ArgumentOutOfRangeException --type System.OverflowException \
     --type System.Runtime.InteropServices.ComTypes.FILETIME --type System.Threading.Thread \
     --type System.Windows.Threading.Dispatcher --type System.Windows.Threading.DispatcherOperation \
-    --type System.Action \
+    --type System.Action --type System.Math --type System.Runtime.InteropServices.GCHandle --type System.Runtime.InteropServices.GCHandleType \
     --reference "$(cygpath -m "$core_ref/System.Threading.dll")" \
     --reference "$(cygpath -m "$core_ref/System.Threading.Thread.dll")" \
     --reference "$(cygpath -m "$core_ref/System.Collections.dll")" \
@@ -348,6 +348,26 @@ EOF
   "$sdk/dotnet.exe" build "$(cygpath -m "$work/FontSimulationsCheck.csproj")" -c Release \
     --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -v:q
   timeout 30 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/FontSimulationsCheck.dll")"
+}
+
+step_check_pointer_handle() {
+  initialize
+  local work=$build/pointer-handle-check
+  local core_refs=("$sdk"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
+  local core_ref=${core_refs[-1]}
+  mkdir -p "$work"
+  /usr/bin/python3 "$here/tools/wpf-pointer-handle-check.py" "$source" "$work/PointerHandle.cpp"
+  bridge_compile "$(cygpath -m "$work/PointerHandle.cpp")" --target library --std c++14 \
+    --ilasm "$(cygpath -m /clang64/bin/ilasm-dotnet.exe)" --type System.IntPtr \
+    --type System.Runtime.InteropServices.CriticalHandle --type System.Runtime.ConstrainedExecution.CriticalFinalizerObject \
+    --reference "$(cygpath -m "$core_ref/System.Runtime.InteropServices.dll")" -o "$(cygpath -m "$work/PointerHandle.dll")"
+  cp "$here/wpf-tests/PointerHandle.cs" "$work/Program.cs"
+  cat > "$work/PointerHandleCheck.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="PointerHandle"><HintPath>PointerHandle.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$sdk/dotnet.exe" build "$(cygpath -m "$work/PointerHandleCheck.csproj")" -c Release \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -v:q
+  timeout 30 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/PointerHandleCheck.dll")"
 }
 
 step_check_font_version() {

@@ -1780,9 +1780,10 @@ upcasts, String constructor literals, imported static properties and Action bind
 (see §23). Omitted parameter arrays and Factory's actual dispatcher scheduling
 expression now compile and execute (see §24). Primitive static members and WPF
 font-version parsing now pass (see §25). Guid literal construction and managed
-value-to-Object boxing now pass (see §26). The full gate next fails on out-of-line
-generic properties in NativePointerWrapper.cpp; native operations remain unsupported. Native record
-emission, managed class templates, callbacks, finalizers and automatic native
+value-to-Object boxing now pass (see §26). Closed C++ managed templates and their
+out-of-line properties now pass (see §27). The full gate next fails on primitive
+keyword static scope in FontFileStream.cpp. Native record emission, open managed
+generics, callbacks, finalizers and automatic native
 partitioning also remain outside its supported subset.
 The same compiler failure can be reproduced with `wpf.sh bridge-gate`; it
 retains the original Clang diagnostics in `build/directwrite-gate.log`.
@@ -2910,3 +2911,82 @@ matching, WindowsDesktop packaging and current Greenshot remain unfinished.
 Changes are development frontend changes; installed compiler packages are unchanged.
 Logs and generated IL are archived in
 `tmp/wpf8-support/validation/guid-object-boxing-20261012` on the local build host.
+
+
+## 27. Closed C++ managed templates and WPF pointer-handle properties
+
+The 2026-10-12 continuation fixes accessor translation after a constructed
+owner such as NativePointerCriticalHandle<T>::IsInvalid::get. Balanced template
+angles select the class declaration's property name, and Clang still parses the
+complete owner and checks the accessor definition. The allocation adapter also
+preserves token separation in template argument types such as long long.
+
+The backend collects completed source-managed class template specializations,
+skips dependent primary declarations, and assigns each closed type a distinct
+canonical Clang identity in the CLR type name. Referenced methods and property
+accessors keep their concrete signatures and ordinary virtual/class behavior.
+These are compile-time C++ templates emitted as ordinary CLR types, as described
+by [Microsoft's managed-template documentation](https://learn.microsoft.com/en-us/cpp/extensions/windows-runtime-and-managed-templates-cpp-component-extensions?view=msvc-170).
+They do not add open CLR generic declarations or permit runtime specialization
+from another assembly. General partial/nested specialization forms, template
+static fields and unused property accessor metadata remain incomplete.
+
+`0003-mingw-dependent-members.patch` qualifies inherited handle references with
+this-> in NativeIUnknownWrapper<T>/NativePointerWrapper<T>. This preserves the
+source operations while making dependent-base lookup explicit for standard Clang.
+It does not implement their native Release/delete operations or finalizers.
+The metadata facade also provides equality/inequality friends for supported
+imported value operator slots, preventing IntPtr comparison from considering
+boxing conversions. The emitted call targets the original CLR op_Equality or
+op_Inequality rather than pointer/object identity.
+
+`cppcli.sh test-managed-templates` creates int and long long specializations,
+checks distinct nongeneric CLR identities through C# reflection, invokes real
+out-of-line getters/setters, verifies inherited virtual dispatch and confirms
+an unreferenced method is absent. The equality fixture compares signed/unsigned
+pointer-sized values above Int32 and Guid values through real CLR slots.
+
+`tools/wpf-pointer-handle-check.py` copies the original NativePointerCriticalHandle
+class template and all three constructor/accessor definitions into a probe. A
+separate concrete subclass supplies a counted managed release operation; native
+IUnknown release and native deletion are not substituted or claimed complete.
+The C# consumer uses real unmanaged memory, verifies the pointer round-trip,
+int-pointer property metadata, the IsInvalid base slot, nongeneric specialized
+base identity and exactly-once CriticalHandle disposal, including the invalid
+zero-pointer case.
+
+Validation on win11:
+
+```sh
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh \
+  test-managed-templates test-properties test-static-properties test-generics test-nativeints
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-managed-templates
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  WPF_CPPCLI_BUILD=/home/topkek/dotnetboot/m612/build/cppcli \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-pointer-handle
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  WPF_CPPCLI_BUILD=/home/topkek/dotnetboot/m612/build/cppcli \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh bridge-gate
+```
+
+The focused checks pass with zero managed build warnings/errors, retaining the
+known generic C++ static-field facade warnings. The WPF check prints
+`upstream WPF pointer handle constructor/accessors and CLR cleanup OK`.
+The driver now selects Stream, Math and GCHandle metadata required by later
+bridge bodies. The final full bridge gate still returns nonzero, first at
+FontFileStream.cpp:50, long::MaxValue (keyword primitive static scope); following
+errors include nested indexed calls and pin-pointer lifetime/conversion forms.
+NativePointerWrapper property/dependent-name and missing Stream.Close/Math/GCHandle
+errors are absent. No additional complete bridge source body or WPF package is
+claimed: one of the 21 included implementation bodies remains fully verified.
+Full native partitioning/lifetimes, System.Printing, higher WPF, native exports,
+version/protocol matching, WindowsDesktop packaging and current Greenshot remain
+unfinished. New features remain development frontend changes. Logs, generated
+source and IL are archived in `tmp/wpf8-support/validation/closed-templates-20261012`
+on the local build host.

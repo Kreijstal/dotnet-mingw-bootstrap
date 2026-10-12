@@ -66,7 +66,10 @@
         "selected imported numeric/Char literal fields with exact floating bits and no CLR storage",
         "primitive static methods and numeric TryParse tracking-reference calls",
         "Clang-resolved functional value constructors with contextual String literals, including Guid narrow/wide literals",
-        "source/imported managed value boxing to Object, generic property temporaries and value instance receiver copies"
+        "source/imported managed value boxing to Object, generic property temporaries and value instance receiver copies",
+        "closed C++ managed class template specializations with ordinary CLR identity and referenced methods",
+        "out-of-line property accessors after constructed template owners",
+        "imported value equality/inequality using original CLR metadata slots"
       ],
       "remaining": [
         "implicit boxing into interfaces, primitive boxes and boxed-handle conversions",
@@ -78,7 +81,7 @@
         "full CLI semantic analysis and metadata type discovery",
         "for each with unbraced bodies, tracking-reference variables and value/native enumerators"
       ],
-      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values test-tracking test-pinning test-boxed-values test-static-fields test-static-properties test-nativeints test-layout test-switch test-generics test-indexers test-named-overrides test-each test-com test-delegates test-type-tokens test-constructors test-paramarrays test-primitive-statics test-guid-object-boxing"
+      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values test-tracking test-pinning test-boxed-values test-static-fields test-static-properties test-nativeints test-layout test-switch test-generics test-indexers test-named-overrides test-each test-com test-delegates test-type-tokens test-constructors test-paramarrays test-primitive-statics test-guid-object-boxing test-managed-templates"
     },
     {
       "stage": 4,
@@ -125,7 +128,9 @@
         "WPF bridge gate uses Unicode Windows APIs, resolving CreateFileA versus pinned wide-string mismatch",
         "unchanged Factory dispatcher lookup and BeginInvoke expression compiled and executed through source-built WindowsBase after GC, with asynchronous completion and thread-affinity checks",
         "original WPF font version initialization and parsing block compiled and checked under a non-invariant current culture; primitive static errors removed from the full bridge gate",
-        "full bridge gate advanced through original FontFile Guid literal initialization and LocalizedStrings Current-to-Object boxing; OverflowException metadata selected"
+        "full bridge gate advanced through original FontFile Guid literal initialization and LocalizedStrings Current-to-Object boxing; OverflowException metadata selected",
+        "WPF dependent-base handle references qualified for standard Clang template lookup",
+        "unchanged NativePointerCriticalHandle constructor and accessor definitions compiled and checked with actual unmanaged addresses and CoreCLR CriticalHandle disposal"
       ]
     }
   ]

@@ -1,0 +1,24 @@
+--- a/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/CPP/DWriteWrapper/NativePointerWrapper.cpp
++++ b/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/CPP/DWriteWrapper/NativePointerWrapper.cpp
+@@ -32,8 +32,8 @@
+     template <class T>
+     __declspec(noinline) bool NativeIUnknownWrapper<T>::ReleaseHandle()
+     {
+-        ((IUnknown*)handle.ToPointer())->Release();
+-        handle = IntPtr::Zero;
++        ((IUnknown*)this->handle.ToPointer())->Release();
++        this->handle = IntPtr::Zero;
+         return true;
+     }
+ 
+@@ -45,8 +45,8 @@
+     template <class T>
+     __declspec(noinline) bool NativePointerWrapper<T>::ReleaseHandle()
+     {
+-        delete handle.ToPointer();
+-        handle = IntPtr::Zero;
++        delete this->handle.ToPointer();
++        this->handle = IntPtr::Zero;
+         return true;
+     }
+ 

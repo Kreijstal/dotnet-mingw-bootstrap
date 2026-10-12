@@ -75,6 +75,33 @@ template<> struct SystemTrait<float> {}; int main() { return 0; }' 'cannot be sp
   reject_case missing-return 'using namespace System; int broken() { int n = 0; } int main() { return broken(); }' 'does not return'
   log "PASS test-core: Clang parsing, metadata overloads, control flow, macros/includes, Unicode, negative checks"
 }
+step_test-managed-templates() {
+  log "Closed managed C++ class templates and generic-owner property definitions"
+  compile "$(cygpath -m "$src/tests/managed-templates.cpp")" --target library -o "$(cygpath -m "$testdir/managed-templates.dll")"
+  mkdir -p "$testdir/managed-template-consumer"
+  cp "$src/tests/ManagedTemplatesConsumer.cs" "$testdir/managed-template-consumer/Program.cs"
+  cat > "$testdir/managed-template-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="managed-templates"><HintPath>../managed-templates.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/managed-template-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/managed-template-consumer/bin/Debug/net8.0/consumer.dll")"
+  cat > "$testdir/value-equality.cpp" <<'EOF'
+using namespace System;
+int main() {
+    IntPtr left = IntPtr(5000000002LL), right = IntPtr(5000000002LL), other = IntPtr(3);
+    Console::WriteLine(left == right); Console::WriteLine(left == other); Console::WriteLine(left != other);
+    UIntPtr high = UIntPtr(0xffffffffffffffffULL), same = UIntPtr(0xffffffffffffffffULL), zero = UIntPtr(0U);
+    Console::WriteLine(high == same); Console::WriteLine(high == zero); Console::WriteLine(high != zero);
+    Guid first = Guid("b2d9f3ec-c9fe-4a11-a2ec-d86208f7c0a2"), second = Guid("b2d9f3ec-c9fe-4a11-a2ec-d86208f7c0a2");
+    Guid different = Guid("b2d9f3ec-c9fe-4a11-a2ec-d86208f7c0a3");
+    Console::WriteLine(first == second); Console::WriteLine(first == different);
+    return 0;
+}
+EOF
+  run_case value-equality "$testdir/value-equality.cpp" $'True\nFalse\nTrue\nTrue\nFalse\nTrue\nTrue\nFalse' --type System.Guid
+  log "PASS test-managed-templates: ordinary CLR specializations and real accessor/virtual calls"
+}
 step_test-guid-object-boxing() {
   log "Functional managed String constructors and value-to-Object boxing"
   local refs=("$CPPCLI_SDK"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)

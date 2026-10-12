@@ -480,6 +480,16 @@ static class Program
                     else w.WriteLine((m.Static ? "static " : "") + m.Return.Cpp + " " + cppMethod + "(" + omittedParameters + ");");
                 }
             }
+            if (t.Kind == "value" && !primitiveFacade) {
+                foreach (var m in t.Methods.Where(m => m.Supported && m.Static && m.Return.Il == "bool" &&
+                    (m.Name == "op_Equality" || m.Name == "op_Inequality") && m.Parameters.Length == 2 &&
+                    m.Parameters.All(p => p.Cpp == t.Cpp))) {
+                    // A hidden friend lets Clang select the real CLR equality
+                    // slot instead of considering facade boxing conversions.
+                    w.WriteLine("__attribute__((annotate(\"cli.import:" + Escape(m.Id) + "\"))) friend bool operator" +
+                        (m.Name == "op_Equality" ? "==" : "!=") + "(" + string.Join(", ", m.Parameters.Select(p => p.Cpp)) + ");");
+                }
+            }
             var propertyFacades = new Dictionary<string, string>();
             foreach (var p in t.Properties.Where(p => p.Supported))
             {

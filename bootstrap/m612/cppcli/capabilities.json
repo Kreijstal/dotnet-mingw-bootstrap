@@ -130,7 +130,10 @@
     "Imported numeric and Char literal fields emit CLR constants without static storage; Single/Double constants retain exact metadata bits including NaN, infinity and subnormal values",
     "Imported primitive static methods including Double.TryParse/IsFinite and Int32.TryParse preserve original CLR ownership and tracking-reference parameters",
     "Functional managed value construction adapts literal String arguments after Clang resolves the actual managed type and preserves native constructor/function lookup",
-    "Implicit boxing of source/imported managed value types into Object, including constructed generic value types and property-returned temporaries, preserves CLR copies and getter evaluation"
+    "Implicit boxing of source/imported managed value types into Object, including constructed generic value types and property-returned temporaries, preserves CLR copies and getter evaluation",
+    "Closed source managed C++ class templates emit distinct ordinary CLR specialization types using canonical Clang identities; dependent primary templates and unreferenced members are omitted",
+    "Out-of-line property definitions recognize template-id owners, including getter/setter bodies and virtual class inheritance",
+    "Imported value equality/inequality operators bind real CLR operator slots, including IntPtr, UIntPtr and Guid; metadata boxing conversions do not determine equality"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -166,6 +169,7 @@
     "Primitive static scope support currently requires the generated annotated System alias and explicitly selected metadata type; user-defined numeric typedef chains and raw builtin keyword scopes remain unsupported",
     "Primitive facades expose static methods and literals only; general primitive instance methods/boxing and imported String/null literal constants remain unsupported",
     "Ordinary global functions from different C++ namespaces currently share IL names; equal-name/signature collisions remain unsupported",
-    "Functional String literal constructor adaptation currently covers parenthesized managed value construction; list/direct initialization, user native string buffers and general managed reference literal conversion remain incomplete"
+    "Functional String literal constructor adaptation currently covers parenthesized managed value construction; list/direct initialization, user native string buffers and general managed reference literal conversion remain incomplete",
+    "Closed C++ managed templates remain an initial subset: CLR generic declarations, general partial/nested specialization forms, template static fields and unused property accessor metadata remain incomplete"
   ]
 }
