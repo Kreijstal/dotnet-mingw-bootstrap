@@ -1774,8 +1774,9 @@ and managed metric layouts (see §13–16). Default indexed properties, named im
 property declarations are now supported (see §18). The full upstream translation
 unit now parses `for each` (see §19) and COM interface attributes (see §20).
 Native declaration visibility and text-analysis delegates are now supported (see §21).
-The full build still fails in Factory on type tokens/reliability attributes and
-remaining imports. Native record
+Managed type tokens/reliability metadata and the associated imports now pass
+(see §22). The full Factory build still fails on constructor access, Object
+conversions and native operations. Native record
 emission, managed class templates, callbacks, finalizers and automatic native
 partitioning also remain outside its supported subset.
 The same compiler failure can be reproduced with `wpf.sh bridge-gate`; it
@@ -2529,3 +2530,78 @@ Native/managed partitioning, finalizers, System.Printing, higher WPF assemblies,
 missing PresentationNative exports, rendered-window validation, WindowsDesktop
 packaging and current Greenshot remain unfinished. Development checks still
 use WPF_CPPCLI_BUILD; the installed frontend package predates these features.
+
+
+## 22. Managed type tokens and the Factory reliability accessor
+
+The following 2026-10-12 continuation implements managed T::typeid. Its CLI
+qualified type spelling is converted into a type-template operand; Clang
+resolves the actual type and rejects expression operands. The emitter generates
+ldtoken followed by Type.GetTypeFromHandle, retaining constructed generic,
+value/reference/enum and array/pointer identities. It does not synthesize
+native C++ record/enum RTTI metadata. Undefined source records are rejected;
+ordinary native typeid(expr) is not rewritten by this CLI-only path.
+
+`cppcli.sh test-type-tokens` compares the resulting Type objects with C# typeof
+for source classes/value structs/enums, String, primitive integer widths,
+aliased arrays/pointers and nested List constructions. It rejects expression
+operands, incomplete source types and native class operands. The expanded COM
+check calls Marshal.GetComInterfaceForObject from generated CLI code using
+IManagedCallback::typeid, then invokes the resulting interface pointer from the
+native MinGW DLL. This verifies WPF's type-token COM pattern at runtime.
+
+ReliabilityContract declarations now retain both enum arguments in typed
+annotations, with Clang checking/evaluating the constants. The emitted custom
+attribute resolves the actual source-built constructor and enum assembly
+identities. Method/accessor targets and enum ranges are checked; invalid type
+targets are rejected rather than ignored. The check inspects both static-method
+and CriticalHandle getter contracts on CoreCLR. This preserves metadata and
+does not provide a new runtime constrained-execution-region guarantee.
+
+`tools/wpf-factory-token-check.py` retains Factory.h's exact IsInvalid property
+declaration, including its ReliabilityContract and pragma lines, and the
+unchanged Factory.cpp getter body. A probe supplies the CriticalHandle base and
+native factory pointer field, and renames only the enclosing test class. The
+runtime check validates the real getter behavior, its inherited virtual slot
+and both reliability values. This compiles the original getter component, not
+all of Factory.cpp or DirectWriteForwarder.
+
+The full bridge driver now supplies the source-built Type/RuntimeTypeHandle,
+FILETIME, Thread, Dispatcher/DispatcherOperation and Action definitions, the
+Thread assembly and Dictionary generic definition. This exposes the correct
+Marshal COM overload and advances the complete source gate past the previous
+missing type namespaces and reliability/typeid declarations.
+
+Validation on win11:
+
+```sh
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build
+MSYSTEM=CLANG64 bash -l -c "/clang64/bin/cmake.exe --build /home/topkek/dotnetboot/m612/build/cppcli --target cli_ast -j2"
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh \
+  test-type-tokens test-com test-properties test-static-properties test-generics
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  WPF_CPPCLI_BUILD=/home/topkek/dotnetboot/m612/build/cppcli \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-factory-tokens
+```
+
+The focused rebuild and checks pass. Managed builds have zero warnings/errors;
+the C# check suppresses the framework's SYSLIB0004 reliability deprecation
+warning, and the existing C++ generic static-field facade warnings remain.
+Results include `CLR managed type tokens and reliability metadata OK`,
+`real MinGW COM metadata/marshalling/HRESULT checks OK` and
+`upstream WPF Factory IsInvalid/reliability accessor OK`. Logs, the original
+getter probe and emitted IL are retained under
+`/home/kreijstal/tmp/wpf8-support/validation/type-tokens-20261012`.
+
+The full `wpf.sh bridge-gate` still fails. It now reports the private Factory
+constructor through the allocation facade, Object conversions for imported
+bases/interface-only source classes, contextual String constructor arguments
+and additional native pointer/lifetime work. Fixing those is still necessary
+for the full bridge. Source-defined managed class templates, native partitioning,
+System.Printing, higher WPF assemblies, missing PresentationNative exports,
+rendered-window validation, WindowsDesktop packaging and current Greenshot
+remain unfinished. The installed frontend still predates this development
+build, selected explicitly with WPF_CPPCLI_BUILD.

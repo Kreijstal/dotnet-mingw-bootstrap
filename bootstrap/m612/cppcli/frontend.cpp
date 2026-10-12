@@ -433,6 +433,38 @@ protected:
                 tokens.insert(tokens.begin()+begin, replacement.begin(), replacement.end());
                 pos = begin;
             }
+            // ::typeid is a CLI type operand, unlike native typeid(expr).
+            // Rewrite only its qualified type spelling; Clang resolves T.
+            for (size_t pos = tokens.size(); pos-- > 0;) {
+                if (tokens[pos].text != "typeid" || pos < 2 || tokens[pos-1].text != "::") continue;
+                auto atom_begin = [&](size_t end) {
+                    if (tokens[end].text != ">" && tokens[end].text != ">>") return end;
+                    int angles = 0;
+                    for (size_t begin = end+1; begin-- > 0;) {
+                        if (tokens[begin].text == ">") ++angles;
+                        else if (tokens[begin].text == ">>") angles += 2;
+                        else if (tokens[begin].text == "<") --angles;
+                        if (!angles) {
+                            if (!begin || tokens[begin-1].kind != tok::identifier) throw std::runtime_error("unsupported managed typeid operand");
+                            return begin-1;
+                        }
+                    }
+                    throw std::runtime_error("unterminated managed typeid template operand");
+                };
+                size_t begin = atom_begin(pos-2);
+                while (begin >= 2 && tokens[begin-1].text == "::" && (tokens[begin-2].kind == tok::identifier || tokens[begin-2].text == ">" || tokens[begin-2].text == ">>"))
+                    begin = atom_begin(begin-2);
+                if (begin && tokens[begin-1].text == "::") --begin;
+                static const std::set<std::string> builtin = {"unsigned", "signed", "long", "short", "int", "char", "double"};
+                if (builtin.count(tokens[begin].text)) while (begin && builtin.count(tokens[begin-1].text)) --begin;
+                std::vector<Lexeme> replacement;
+                append_fragment(replacement, "__cli_typeid<", tokens[pos], sm, ci.getLangOpts());
+                replacement.insert(replacement.end(), tokens.begin()+begin, tokens.begin()+pos-1);
+                append_fragment(replacement, ">()", tokens[pos], sm, ci.getLangOpts());
+                tokens.erase(tokens.begin()+begin, tokens.begin()+pos+1);
+                tokens.insert(tokens.begin()+begin, replacement.begin(), replacement.end());
+                pos = begin;
+            }
             // Only managed declarations and allocation markers are rewritten.
             // Expressions/statements remain C++ and are parsed by Clang later.
             for (size_t i = 0; i + 2 < tokens.size(); ++i)
@@ -623,13 +655,39 @@ protected:
             std::map<size_t, std::string> interop_attributes, interop_types;
             std::map<size_t, size_t> interop_ends;
             std::set<size_t> interop_closes;
+            for (size_t begin = 0; begin+3 < tokens.size(); ++begin) {
+                if (tokens[begin].text != "[") continue;
+                size_t name = begin+1;
+                while (name+2 < tokens.size() && tokens[name+1].text == "::") name += 2;
+                if (tokens[name].text != "ReliabilityContract" && tokens[name].text != "ReliabilityContractAttribute") continue;
+                if (tokens[name+1].text != "(") throw std::runtime_error("ReliabilityContract requires two enum arguments");
+                auto end = matching(name+1, "(", ")");
+                if (end+1 >= tokens.size() || tokens[end+1].text != "]") throw std::runtime_error("ReliabilityContract must appear individually");
+                size_t next = end+2;
+                if (next < tokens.size() && (tokens[next].text == "public" || tokens[next].text == "private")) ++next;
+                if (next < tokens.size() && (tokens[next].text == "ref" || tokens[next].text == "value" || tokens[next].text == "interface" || tokens[next].text == "class" || tokens[next].text == "struct"))
+                    throw std::runtime_error("ReliabilityContract applied to an unsupported declaration target");
+                std::vector<std::string> arguments(1); int depth = 0;
+                for (size_t j = name+2; j < end; ++j) {
+                    if (tokens[j].text == "," && !depth) arguments.emplace_back();
+                    else {
+                        arguments.back() += tokens[j].text + " ";
+                        if (tokens[j].text == "(") ++depth;
+                        else if (tokens[j].text == ")") --depth;
+                    }
+                }
+                if (arguments.size() != 2 || arguments[0].empty() || arguments[1].empty()) throw std::runtime_error("ReliabilityContract requires two enum arguments");
+                interop_ends[begin] = end+1; interop_closes.insert(end+1);
+                interop_attributes[begin] = "__attribute__((annotate(\"cli.reliability\", static_cast<int>(" + arguments[0] + "), static_cast<int>(" + arguments[1] + "))))";
+                begin = end+1;
+            }
             auto interop_name = [](std::string name) {
                 if (llvm::StringRef(name).ends_with("Attribute")) name.resize(name.size()-9);
                 return name == "ComImport" || name == "Guid" || name == "InterfaceType" || name == "ClassInterface" || name == "ComVisible" || name == "PreserveSig" ||
                     name == "In" || name == "Out" || name == "MarshalAs" ? name : std::string();
             };
             for (size_t begin = 0; begin+2 < tokens.size(); ++begin) {
-                if (tokens[begin].text != "[" || tokens[begin+1].text == "[" || layout_attribute_ends.count(begin)) continue;
+                if (tokens[begin].text != "[" || tokens[begin+1].text == "[" || layout_attribute_ends.count(begin) || interop_ends.count(begin)) continue;
                 if (begin) {
                     auto previous = tokens[begin-1].text;
                     if (previous != "{" && previous != "}" && previous != ";" && previous != "(" && previous != "," && previous != ":" &&
@@ -1152,7 +1210,7 @@ class Emitter {
         std::set<std::string> seen;
         for (auto* attr : d->specific_attrs<AnnotateAttr>()) {
             auto name = attr->getAnnotation();
-            unsigned expected = name.starts_with("cli.com.") ? 1 : name == "cli.preservesig" ? 2 : name.starts_with("cli.param.") ? 3 : 0;
+            unsigned expected = name.starts_with("cli.com.") ? 1 : (name == "cli.preservesig" || name == "cli.reliability") ? 2 : name.starts_with("cli.param.") ? 3 : 0;
             if (name == "cli.com.visible" && target == 2) expected = 2;
             if (!expected) continue;
             if (expected != target) throw std::runtime_error("interop attribute applied to an unsupported declaration target");
@@ -1184,6 +1242,45 @@ class Emitter {
                 return imported_signature(method);
         }
         throw std::runtime_error("select the interop attribute type and constructor dependencies: " + name);
+    }
+    std::string imported_value_type(const std::string& name) const {
+        auto found = metadata.types.find(name);
+        if (found == metadata.types.end()) throw std::runtime_error("select attribute enum dependency: " + name);
+        return "valuetype " + assembly_reference(found->second) + "'" + name + "'";
+    }
+    std::pair<int64_t, int64_t> reliability_contract(const Decl* d) const {
+        const AnnotateAttr* found = nullptr;
+        for (auto* attr : d->specific_attrs<AnnotateAttr>()) if (attr->getAnnotation() == "cli.reliability") {
+            if (found) throw std::runtime_error("duplicate ReliabilityContractAttribute");
+            found = attr;
+        }
+        if (!found || found->args_size() != 2) throw std::runtime_error("ReliabilityContract requires two arguments");
+        if (!isa<FunctionDecl>(d)) throw std::runtime_error("ReliabilityContract currently requires a method or accessor");
+        auto argument = found->args_begin(); int64_t values[2];
+        for (unsigned i = 0; i < 2; ++i, ++argument) {
+            Expr::EvalResult result;
+            if (!(*argument)->EvaluateAsInt(result, context) || !result.Val.getInt().isSignedIntN(64)) throw std::runtime_error("ReliabilityContract arguments must be constant enum values");
+            values[i] = result.Val.getInt().getSExtValue();
+        }
+        if (values[0] < 0 || values[0] > 3 || values[1] < 0 || values[1] > 2) throw std::runtime_error("invalid ReliabilityContract enum value");
+        return {values[0], values[1]};
+    }
+    std::string type_token(QualType t) const {
+        if (auto* target = handle_target(t)) {
+            if (!array_element(target).isNull()) return type(t);
+            if (!target->getDefinition() && record_annotation(target, "cli.external:").empty()) throw std::runtime_error("incomplete managed typeid operand");
+            return record_token(target);
+        }
+        if (auto* record = t->getAsCXXRecordDecl()) {
+            if (!record->getDefinition() && record_annotation(record, "cli.external:").empty()) throw std::runtime_error("incomplete managed typeid operand");
+            if (!record_annotation(record, "cli.nativeint:").empty()) return type(t);
+            return record_token(record);
+        }
+        if (auto* enumeration = t->getAs<EnumType>()) {
+            if (!annotated(enumeration->getDecl(), "cli.enum") && annotation(enumeration->getDecl(), "cli.external:").empty()) throw std::runtime_error("native enum typeid metadata is not enabled yet");
+        }
+        if (t->isPointerType() && t->getPointeeType()->isRecordType()) throw std::runtime_error("native record typeid metadata is not enabled yet");
+        return type(t);
     }
     std::string record_name(const CXXRecordDecl* record) const {
         std::string ext = record_annotation(record, "cli.external:");
@@ -1685,6 +1782,13 @@ class Emitter {
         if (f->getNameAsString() == "__cli_literal") {
             if (c->getNumArgs() != 1 || !isa<StringLiteral>(c->getArg(0)->IgnoreParenImpCasts())) fail(c, "invalid string literal marker");
             expr(c->getArg(0)); return;
+        }
+        if (f->getNameAsString() == "__cli_typeid") {
+            auto* arguments = f->getTemplateSpecializationArgs();
+            if (c->getNumArgs() || !arguments || arguments->size() != 1 || arguments->get(0).getKind() != TemplateArgument::Type)
+                fail(c, "managed typeid requires a type operand");
+            op("ldtoken " + type_token(arguments->get(0).getAsType()), 0, 1);
+            op("call class [System.Runtime]System.Type [System.Runtime]System.Type::GetTypeFromHandle(valuetype [System.Runtime]System.RuntimeTypeHandle)", 1, 1); return;
         }
         if (llvm::StringRef(f->getNameAsString()).starts_with("__cli_each_")) {
             if (!c->getNumArgs()) fail(c, "enumeration intrinsic lacks a receiver");
@@ -2330,6 +2434,7 @@ public:
         if (ci.getSourceManager().isInSystemHeader(f->getLocation()) &&
             !(method && (record_annotated(method->getParent(), "cli.ref") || record_annotated(method->getParent(), "cli.value"))) && !native_function(f)) return true;
         validate_interop_attributes(f, 2);
+        if (annotated(f, "cli.reliability")) reliability_contract(f);
         if (annotated(f, "cli.com.visible") && layout_constant(f, "cli.com.visible", -1) != 0 && layout_constant(f, "cli.com.visible", -1) != 1)
             throw std::runtime_error("ComVisibleAttribute requires a boolean value");
         if (annotated(f, "cli.cctor") && (!method || !method->isStatic() || method->getNumParams() || !method->getReturnType()->isVoidType() || is_interface(method->getParent())))
@@ -2536,6 +2641,12 @@ public:
                << type(f->getReturnType()) << " '" << body.name << "'(";
             for (unsigned j = 0; j < f->getNumParams(); ++j) { if (j) il << ", "; il << parameter_signature(f->getParamDecl(j)); }
             il << ") cil managed " << (annotated(f, "cli.preservesig") ? "preservesig " : "") << "{\n";
+            if (annotated(f, "cli.reliability")) {
+                auto values = reliability_contract(f);
+                il << "  .custom " << attribute_constructor("System.Runtime.ConstrainedExecution.ReliabilityContractAttribute", {
+                    imported_value_type("System.Runtime.ConstrainedExecution.Consistency"), imported_value_type("System.Runtime.ConstrainedExecution.Cer")})
+                   << " = (01 00 0" << values.first << " 00 00 00 0" << values.second << " 00 00 00 00 00)\n";
+            }
             if (annotated(f, "cli.com.visible"))
                 il << "  .custom " << attribute_constructor("System.Runtime.InteropServices.ComVisibleAttribute", {"bool"}) << " = (01 00 0" << layout_constant(f, "cli.com.visible", -1) << " 00 00)\n";
             if (f->getNameAsString() == "main" && body.owner.empty() && options.target == "exe") il << "    .entrypoint\n";

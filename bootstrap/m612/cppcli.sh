@@ -628,6 +628,50 @@ EOF
   reject_case indexer-two-indices 'public ref class C { public: property int default[int,int] { int get(int x, int y) { return 0; } } }; int main() { return 0; }' 'require one index parameter'
   log "PASS test-indexers: source/imported CLR indexers and compound evaluation"
 }
+step_test-type-tokens() {
+  log "Managed type tokens, closed generics and reliability accessor metadata"
+  local refs=("$CPPCLI_SDK"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
+  local args=(--type System.Type --type System.RuntimeTypeHandle --type 'System.Collections.Generic.List`1'
+    --type System.Runtime.InteropServices.CriticalHandle --type System.IntPtr
+    --type System.Runtime.ConstrainedExecution.Consistency --type System.Runtime.ConstrainedExecution.Cer
+    --type System.Runtime.ConstrainedExecution.ReliabilityContractAttribute
+    --reference "$(cygpath -m "${refs[-1]}/System.Collections.dll")" --reference "$(cygpath -m "${refs[-1]}/System.Runtime.InteropServices.dll")")
+  compile "$(cygpath -m "$src/tests/type-tokens.cpp")" --target library "${args[@]}" -o "$(cygpath -m "$testdir/type-tokens.dll")"
+  compile "$(cygpath -m "$src/tests/reliability.cpp")" --target library "${args[@]}" -o "$(cygpath -m "$testdir/reliability.dll")"
+  mkdir -p "$testdir/type-token-consumer"
+  cat > "$testdir/type-token-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="type-tokens"><HintPath>../type-tokens.dll</HintPath></Reference><Reference Include="reliability"><HintPath>../reliability.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  cat > "$testdir/type-token-consumer/Program.cs" <<'EOF'
+using System;
+using System.Collections.Generic;
+using System.Reflection;
+using System.Runtime.ConstrainedExecution;
+if (TypeTokens.Source() != typeof(TokenMarker) || TypeTokens.Value() != typeof(TokenValue) || TypeTokens.Mode() != typeof(TokenMode) ||
+    TypeTokens.Text() != typeof(string) || TypeTokens.Integer() != typeof(int) || TypeTokens.Wide() != typeof(ulong) ||
+    TypeTokens.Array() != typeof(int[]) || TypeTokens.Pointer() != typeof(float).MakePointerType() ||
+    TypeTokens.Generic() != typeof(List<string>) || TypeTokens.Nested() != typeof(List<List<int>>))
+    throw new Exception("managed type token identity mismatch");
+var getter = typeof(ReliableHandle).GetProperty("IsInvalid").GetMethod;
+var contract = getter.GetCustomAttribute<ReliabilityContractAttribute>();
+if (contract.ConsistencyGuarantee != Consistency.WillNotCorruptState || contract.Cer != Cer.Success || !getter.IsVirtual ||
+    !new ReliableHandle().IsInvalid || ReliableHandle.Read() != 42)
+    throw new Exception("factory-shaped reliability accessor metadata/dispatch failed");
+contract = typeof(ReliableHandle).GetMethod("Read").GetCustomAttribute<ReliabilityContractAttribute>();
+if (contract.ConsistencyGuarantee != Consistency.MayCorruptInstance || contract.Cer != Cer.MayFail)
+    throw new Exception("static reliability metadata lost");
+Console.WriteLine("CLR managed type tokens and reliability metadata OK");
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/type-token-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -p:NoWarn=SYSLIB0004
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/type-token-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case type-token-expression 'int main() { int value = 0; value::typeid; return 0; }' 'template parameter' "${args[@]}"
+  reject_case type-token-incomplete 'ref class Forward; int main() { Forward::typeid; return 0; }' 'incomplete managed typeid' "${args[@]}"
+  reject_case type-token-native 'class Native {}; int main() { Native::typeid; return 0; }' 'native C++ class is not a managed type' "${args[@]}"
+  reject_case reliability-unknown 'public ref class C { public: [ReliabilityContract(99,0)] static int F() { return 0; } }; int main() { return 0; }' 'ReliabilityContract' "${args[@]}"
+  reject_case reliability-target '[ReliabilityContract(0,0)] public ref class C {}; int main() { return 0; }' 'unsupported declaration target' "${args[@]}"
+  log "PASS test-type-tokens: CLR Type identity, generic/array/pointer operands and reliability attributes"
+}
 step_test-delegates() {
   log "CLR delegate metadata, method binding and native-to-managed invocation"
   local args=(--type System.Delegate --type System.MulticastDelegate --type System.InvalidOperationException)
@@ -654,7 +698,7 @@ EOF
 step_test-com() {
   log "COM import/GUID/interface metadata and native MinGW marshalling"
   local refs=("$CPPCLI_SDK"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
-  local args=(--type System.IntPtr --type System.Runtime.InteropServices.ComInterfaceType --type System.Runtime.InteropServices.UnmanagedType
+  local args=(--type System.IntPtr --type System.Type --type System.RuntimeTypeHandle --type System.Runtime.InteropServices.Marshal --type System.Runtime.InteropServices.ComInterfaceType --type System.Runtime.InteropServices.UnmanagedType
     --type System.Runtime.InteropServices.GuidAttribute --type System.Runtime.InteropServices.InterfaceTypeAttribute
     --type System.Runtime.InteropServices.ClassInterfaceType --type System.Runtime.InteropServices.ClassInterfaceAttribute --type System.Runtime.InteropServices.ComVisibleAttribute
     --reference "$(cygpath -m "${refs[-1]}/System.Runtime.InteropServices.dll")")

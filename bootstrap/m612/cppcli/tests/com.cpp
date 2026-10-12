@@ -31,3 +31,7 @@ public ref class ManagedCallback : IManagedCallback {
 public:
     [ComVisible(true)] virtual int Value(int input) { return input + 10; }
 };
+public ref class ComTypeTokens abstract sealed {
+public:
+    static IntPtr Interface(Object^ value) { return Marshal::GetComInterfaceForObject(value, IManagedCallback::typeid); }
+};

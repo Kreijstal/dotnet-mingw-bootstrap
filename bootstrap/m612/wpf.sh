@@ -122,6 +122,7 @@ step_bridge_gate() {
     --type 'System.Collections.Generic.IEnumerable`1' --type 'System.Collections.Generic.IEnumerator`1' \
     --type 'System.Collections.Generic.KeyValuePair`2' --type System.Collections.IEnumerable \
     --type 'System.Collections.Generic.List`1' --type 'System.Collections.Generic.IList`1' \
+    --type 'System.Collections.Generic.Dictionary`2' \
     --type System.Delegate --type System.MulticastDelegate \
     --type System.Collections.IEnumerator --type System.IDisposable \
     --type System.Runtime.InteropServices.StructLayoutAttribute --type System.Runtime.InteropServices.LayoutKind \
@@ -131,7 +132,12 @@ step_bridge_gate() {
     --type System.Runtime.InteropServices.ClassInterfaceAttribute --type System.Runtime.InteropServices.ClassInterfaceType \
     --type System.Runtime.InteropServices.ComVisibleAttribute \
     --type System.Diagnostics.Debug \
+    --type System.Type --type System.RuntimeTypeHandle --type System.ArgumentOutOfRangeException \
+    --type System.Runtime.InteropServices.ComTypes.FILETIME --type System.Threading.Thread \
+    --type System.Windows.Threading.Dispatcher --type System.Windows.Threading.DispatcherOperation \
+    --type System.Action \
     --reference "$(cygpath -m "$core_ref/System.Threading.dll")" \
+    --reference "$(cygpath -m "$core_ref/System.Threading.Thread.dll")" \
     --reference "$(cygpath -m "$core_ref/System.Collections.dll")" \
     --reference "$(cygpath -m "$core_ref/System.Runtime.InteropServices.dll")" \
     --reference "$(cygpath -m "$core_ref/System.Net.Requests.dll")" \
@@ -234,6 +240,27 @@ EOF
   "$sdk/dotnet.exe" build "$(cygpath -m "$work/FontSourceCheck.csproj")" -c Release \
     --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -v:q
   timeout 30 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/FontSourceCheck.dll")"
+}
+
+step_check_factory_tokens() {
+  initialize
+  local work=$build/factory-token-check
+  local core_refs=("$sdk"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
+  local core_ref=${core_refs[-1]}
+  mkdir -p "$work"
+  /clang64/bin/python.exe "$here/tools/wpf-factory-token-check.py" "$(cygpath -m "$source")" "$(cygpath -m "$work/FactoryTokens.cpp")"
+  bridge_compile "$(cygpath -m "$work/FactoryTokens.cpp")" --target library --std c++14 \
+    --ilasm "$(cygpath -m /clang64/bin/ilasm-dotnet.exe)" --reference "$(cygpath -m "$core_ref/System.Runtime.InteropServices.dll")" \
+    --type System.Runtime.InteropServices.CriticalHandle --type System.IntPtr \
+    --type System.Runtime.ConstrainedExecution.Consistency --type System.Runtime.ConstrainedExecution.Cer \
+    --type System.Runtime.ConstrainedExecution.ReliabilityContractAttribute -o "$(cygpath -m "$work/FactoryTokens.dll")"
+  cp "$here/wpf-tests/FactoryTokens.cs" "$work/Program.cs"
+  cat > "$work/FactoryTokensCheck.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit><NoWarn>SYSLIB0004</NoWarn></PropertyGroup><ItemGroup><Reference Include="FactoryTokens"><HintPath>FactoryTokens.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$sdk/dotnet.exe" build "$(cygpath -m "$work/FactoryTokensCheck.csproj")" -c Release \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -v:q
+  timeout 30 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/FactoryTokensCheck.dll")"
 }
 
 step_check_delegates() {

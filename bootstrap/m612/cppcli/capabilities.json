@@ -114,7 +114,12 @@
     "Raw addresses of primitive/unmanaged-pointer locals use ldloca/conv.u for synchronous pointer output arguments",
     "Native declaration public/private prefixes become retained visibility annotations without changing native C++ fields/layout",
     "Internal static-field initializer lowering restores a valid C++ access label while retaining CLR assembly visibility",
-    "Unchanged WPF text-analysis delegates and native CharAttribute header compile; nine-argument/pointer-output invocation runs on CoreCLR"
+    "Unchanged WPF text-analysis delegates and native CharAttribute header compile; nine-argument/pointer-output invocation runs on CoreCLR",
+    "Managed T::typeid resolves through Clang template type arguments and emits ldtoken/Type.GetTypeFromHandle",
+    "Runtime Type identity for source reference/value/enum types, imported references, primitives, aliases, arrays, pointers and closed generic types",
+    "ReliabilityContract method/accessor metadata preserves two Clang-checked enum constants and resolves its real constructor dependencies",
+    "Factory-style Marshal.GetComInterfaceForObject(object, Interface::typeid) creates a real COM callback pointer verified by native dispatch",
+    "Unchanged upstream WPF Factory IsInvalid getter body and reliability accessor declaration compile and run in a CriticalHandle probe"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -142,6 +147,7 @@
     "For each currently requires braced bodies and managed array/reference-enumerator handles; MoveNext currently requires bool; tracking-reference variables and value/native enumerators remain unsupported",
     "Interop attributes remain a selected subset: canonical literal GUIDs, imported interfaces, zero/one positional arguments and selected parameter marshal kinds; coclass activation, field/return marshal metadata, named marshal options and general custom attributes remain unsupported",
     "Native SDK calls are not automatically partitioned; native record pointers remain opaque native addresses, and native integer boxes remain unsupported",
-    "Delegate support currently excludes nested/generic declarations, open-instance/value-instance binding, source combine/remove expressions and general delegate attributes; imported delegates can be invoked but do not have source binding facades"
+    "Delegate support currently excludes nested/generic declarations, open-instance/value-instance binding, source combine/remove expressions and general delegate attributes; imported delegates can be invoked but do not have source binding facades",
+    "Managed typeid does not emit native record/enum RTTI metadata and rejects undefined source records; ReliabilityContract currently covers individual method/accessor attributes, with no added runtime CER guarantee"
   ]
 }

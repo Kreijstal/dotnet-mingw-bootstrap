@@ -54,7 +54,9 @@
         "unmanaged native integer pointers and native SDK declaration filtering",
         "source delegates with CLR runtime methods, static/bound/virtual binding and invocation",
         "ClassInterface/ComVisible metadata for source COM callback classes/methods",
-        "native declaration visibility syntax and internal static initializer access restoration"
+        "native declaration visibility syntax and internal static initializer access restoration",
+        "managed typeid tokens for supported types and closed generic/array/pointer Type identity",
+        "ReliabilityContract method/accessor custom metadata"
       ],
       "remaining": [
         "implicit boxing into Object/interfaces, primitive boxes and boxed-handle conversions",
@@ -66,7 +68,7 @@
         "full CLI semantic analysis and metadata type discovery",
         "for each with unbraced bodies, tracking-reference variables and value/native enumerators"
       ],
-      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values test-tracking test-pinning test-boxed-values test-static-fields test-static-properties test-nativeints test-layout test-switch test-generics test-indexers test-named-overrides test-each test-com test-delegates"
+      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values test-tracking test-pinning test-boxed-values test-static-fields test-static-properties test-nativeints test-layout test-switch test-generics test-indexers test-named-overrides test-each test-com test-delegates test-type-tokens"
     },
     {
       "stage": 4,
@@ -106,7 +108,8 @@
         "unchanged upstream IFontSource interfaces compiled with abstract property metadata and Windows macro protection",
         "unchanged LocalizedStrings CopyTo method compiled and checked with value pairs, Unicode, array offsets and exceptional cleanup",
         "unchanged WPF COM mirror/classification interface headers compiled with the actual Windows/DirectWrite SDK declarations",
-        "unchanged WPF text-analysis delegate declarations and native CharAttribute constants compiled and checked at runtime"
+        "unchanged WPF text-analysis delegate declarations and native CharAttribute constants compiled and checked at runtime",
+        "original WPF Factory IsInvalid getter and reliability declaration compiled; COM callback type tokens checked through native dispatch"
       ]
     }
   ]

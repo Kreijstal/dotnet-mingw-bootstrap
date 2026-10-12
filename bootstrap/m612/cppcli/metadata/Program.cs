@@ -317,6 +317,7 @@ static class Program
                 WriteClass(header, t, false, parent != null, interfaces);
             }
             foreach (var t in types) Define(t);
+            if (types.Any(t => t.Name == "System.Type")) header.WriteLine("template<class T> ::System::Type* __cli_typeid();");
             header.WriteLine("namespace cli { template<class T, int Rank> class __attribute__((annotate(\"cli.ref\"), annotate(\"cli.array\"))) array : public System::Object { public: static_assert(Rank == 1, \"only rank-one managed arrays are supported\"); explicit array(int); T& operator[](int); int get_Length(); __declspec(property(get=get_Length)) int Length; }; } using cli::array;");
             // Unevaluated calls retain Clang's selected member in DecltypeType.
             // The emitter uses that selection for the real CLR member reference.

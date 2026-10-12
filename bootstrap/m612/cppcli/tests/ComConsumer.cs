@@ -44,7 +44,7 @@ if (typeof(ManagedCallback).GetCustomAttribute<ClassInterfaceAttribute>().Value 
     !typeof(ManagedCallback).GetMethod("Value").GetCustomAttribute<ComVisibleAttribute>().Value)
     throw new Exception("COM export class metadata lost");
 var managed = new ManagedCallback();
-IntPtr callback = Marshal.GetComInterfaceForObject(managed, typeof(IManagedCallback));
+IntPtr callback = ComTypeTokens.Interface(managed);
 try { if (Native.Managed(callback, 32) != 42) throw new Exception("native-to-managed COM interface dispatch failed"); }
 finally { Marshal.Release(callback); }
 GC.KeepAlive(managed);
