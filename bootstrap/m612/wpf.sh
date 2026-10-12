@@ -128,6 +128,7 @@ step_bridge_gate() {
   cat > "$build/DirectWriteForwarderCombined.cpp" <<EOF
 #include "$(cygpath -m "$cpp/DirectWriteForwarder.cpp")"
 #include "$(cygpath -m "$cpp/../main.cpp")"
+#include "$(cygpath -m "$cpp/../OtherAssemblyAttrs.cpp")"
 EOF
   bridge_compile "$(cygpath -m "$build/DirectWriteForwarderCombined.cpp")" --std c++14 --target library --emit il \
     --native-import "$(cygpath -m /clang64/lib/libadvapi32.a)" \
@@ -166,6 +167,7 @@ EOF
     --type System.AppDomain --type System.EventHandler --type System.EventArgs --type System.DllNotFoundException \
     --type System.ComponentModel.Win32Exception --type System.Runtime.InteropServices.ExternalException --type System.SystemException \
     --type System.Reflection.Assembly --type System.Runtime.CompilerServices.DependencyAttribute --type System.Runtime.CompilerServices.LoadHint \
+    --type System.Runtime.CompilerServices.InternalsVisibleToAttribute \
     --type System.Windows.Threading.Dispatcher --type System.Windows.Threading.DispatcherOperation \
     --type System.Action --type System.Math --type System.Runtime.InteropServices.GCHandle --type System.Runtime.InteropServices.GCHandleType \
     --reference "$(cygpath -m "$core_ref/System.Threading.dll")" \
@@ -190,6 +192,66 @@ EOF
       cat "$build/directwrite-gate.log"
       die "The frontend cannot compile the upstream DirectWriteForwarder bridge yet"
     }
+}
+
+step_build_directwrite() {
+  step_bridge_gate
+  /clang64/bin/ilasm-dotnet.exe "$(cygpath -m "$build/DirectWriteForwarder.il")" -dll -quiet -nologo \
+    "-output=$(cygpath -m "$build/lib/DirectWriteForwarder.dll")"
+}
+
+step_check_directwrite_assembly() {
+  initialize
+  [ -s "$build/lib/DirectWriteForwarder.dll" ] || step_build_directwrite
+  local work=$build/directwrite-assembly-check
+  local peer=$build/directwrite-friend-check
+  mkdir -p "$work"
+  mkdir -p "$peer"
+  cp "$here/wpf-tests/DirectWriteFriend.cs" "$peer/Probe.cs"
+  cat > "$peer/Friend.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><AssemblyName>PresentationCore</AssemblyName><PublicSign>true</PublicSign><SignAssembly>true</SignAssembly><AssemblyOriginatorKeyFile>../keys/MSShared.snk</AssemblyOriginatorKeyFile><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="DirectWriteForwarder"><HintPath>../lib/DirectWriteForwarder.dll</HintPath></Reference><Reference Include="WindowsBase"><HintPath>../lib/WindowsBase.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$sdk/dotnet.exe" build "$(cygpath -m "$peer/Friend.csproj")" -c Release \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -v:q
+  cp "$here/wpf-tests/DirectWriteAssembly.cs" "$work/Program.cs"
+  cat > "$work/DirectWriteAssemblyCheck.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="DirectWriteForwarder"><HintPath>../lib/DirectWriteForwarder.dll</HintPath></Reference><Reference Include="WindowsBase"><HintPath>../lib/WindowsBase.dll</HintPath></Reference><Reference Include="System.IO.Packaging"><HintPath>System.IO.Packaging.dll</HintPath></Reference><Reference Include="PresentationCore"><HintPath>../directwrite-friend-check/bin/Release/net8.0/PresentationCore.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  cp "$oob/System.IO.Packaging.dll" "$work/System.IO.Packaging.dll"
+  "$sdk/dotnet.exe" build "$(cygpath -m "$work/DirectWriteAssemblyCheck.csproj")" -c Release \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -v:q
+  cp "$build/lib/wpf-dwrite-loader.dll" "$build/lib/wpf-subsetter.dll" "$work/bin/Release/net8.0/"
+  timeout 60 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/DirectWriteAssemblyCheck.dll")"
+}
+
+step_build_presentation_core() {
+  [ -s "$build/lib/DirectWriteForwarder.dll" ] || step_build_directwrite
+  build_assembly PresentationCore
+}
+
+step_check_presentation_core() {
+  initialize
+  local work=$build/presentation-core-check
+  mkdir -p "$work"
+  cp "$here/wpf-tests/PresentationCore.cs" "$work/Program.cs"
+  /usr/bin/python3 - "$work" "$build/lib" "$oob" <<'PY'
+from pathlib import Path
+import subprocess,sys,xml.etree.ElementTree as E
+work,lib,oob=map(Path,sys.argv[1:])
+def win(p): return subprocess.check_output(['cygpath','-m',str(p.resolve())],text=True).strip()
+root=E.Element('Project',Sdk='Microsoft.NET.Sdk');pg=E.SubElement(root,'PropertyGroup')
+for key,value in {'TargetFramework':'net8.0','OutputType':'Exe','UseAppHost':'false','EnableNETAnalyzers':'false','NuGetAudit':'false','UseSharedCompilation':'false'}.items(): E.SubElement(pg,key).text=value
+items=E.SubElement(root,'ItemGroup')
+for name in ('PresentationCore','DirectWriteForwarder','WindowsBase','System.Xaml','System.Windows.Input.Manipulations','UIAutomationTypes','UIAutomationProvider'):
+    item=E.SubElement(items,'Reference',Include=name);E.SubElement(item,'HintPath').text=win(lib/(name+'.dll'))
+for file in sorted(oob.glob('*.dll')):
+    item=E.SubElement(items,'Reference',Include=file.stem);E.SubElement(item,'HintPath').text=win(file)
+E.ElementTree(root).write(work/'PresentationCoreCheck.csproj',encoding='utf-8')
+PY
+  "$sdk/dotnet.exe" build "$(cygpath -m "$work/PresentationCoreCheck.csproj")" -c Release \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -v:q
+  cp "$build/lib/PresentationNative_cor3.dll" "$build/lib/wpf-dwrite-loader.dll" "$build/lib/wpf-subsetter.dll" "$work/bin/Release/net8.0/"
+  timeout 60 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/PresentationCoreCheck.dll")"
 }
 
 step_native_dwrite_loader() {
@@ -353,6 +415,67 @@ EOF
     --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -v:q
   cp "$work/font-file-probe.dll" "$work/bin/Release/net8.0/"
   timeout 30 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/FontFileZeroCheck.dll")"
+}
+
+step_check_shaping_bits() {
+  local work=$build/shaping-bits-check
+  local original=$source/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/CPP/DWriteWrapper/TextAnalyzer.cpp
+  mkdir -p "$work"
+  python3 - "$original" "$work/ShapingLoopOriginal.inc" <<'PY'
+import pathlib, sys
+source=pathlib.Path(sys.argv[1]).read_bytes()
+assignment=source.index(b'pfCanGlyphAlone[i] = (((DWRITE_SHAPING_TEXT_PROPERTIES*)textProps)[i].isShapedAlone')
+start=source.rfind(b'                        for (UINT32 i = 0; i < textLength; ++i)',0,assignment)
+end=source.index(b'                        }',assignment)+len(b'                        }')
+assert start>=0
+pathlib.Path(sys.argv[2]).write_bytes(source[start:end])
+assert pathlib.Path(sys.argv[2]).read_bytes()==source[start:end]
+PY
+  cp "$here/wpf-tests/ShapingBits.cpp" "$work/"
+  /clang64/bin/clang++.exe -std=c++17 -O2 -shared "$here/wpf-native/ShapingBitsProbe.cpp" -ldwrite -o "$work/wpf-shaping-bits.dll"
+  bridge_compile "$(cygpath -m "$work/ShapingBits.cpp")" --std c++14 --type System.GC \
+    --ilasm "$(cygpath -m /clang64/bin/ilasm-dotnet.exe)" --native-library wpf-shaping-bits.dll -o "$(cygpath -m "$work/ShapingBits.dll")"
+  timeout 30 "$sdk/dotnet.exe" "$(cygpath -m "$work/ShapingBits.dll")"
+}
+
+step_check_range_nodes() {
+  initialize
+  local work=$build/range-nodes-check
+  local original=$source/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/CPP/DWriteWrapper
+  local core_refs=("$sdk"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
+  local core_ref=${core_refs[-1]}
+  mkdir -p "$work"
+  python3 - "$original" "$work" <<'PY'
+import pathlib, sys
+source,work=map(pathlib.Path,sys.argv[1:])
+header=(source/'TextItemizer.h').read_bytes()
+start=header.index(b'    template<class T>')
+end=header.index(b'    [ClassInterface',start)
+node=header[start:end]
+(work/'RangeNodeOriginal.inc').write_bytes(node)
+body=(source/'TextItemizer.cpp').read_bytes()
+start=body.index(b'    TextItemizer::TextItemizer(')
+end=body.index(b'    __declspec(noinline) IList<Span^>^ TextItemizer::Itemize(',start)
+first=body[start:end]
+start=body.index(b'    void TextItemizer::SetIsDigit(')
+end=body.index(b'}}}}//MS::Internal::Text::TextInterface',start)
+last=body[start:end]
+(work/'RangeMethodsOriginal.inc').write_bytes(first+last)
+assert (work/'RangeNodeOriginal.inc').read_bytes()==node
+assert (work/'RangeMethodsOriginal.inc').read_bytes()==first+last
+PY
+  cp "$here/wpf-tests/RangeNodes.cpp" "$work/"
+  bridge_compile "$(cygpath -m "$work/RangeNodes.cpp")" --target library --std c++14 \
+    --ilasm "$(cygpath -m /clang64/bin/ilasm-dotnet.exe)" --type System.GC --type System.UInt32 --type System.Math \
+    --type System.InvalidOperationException --type 'System.Collections.Generic.List`1' \
+    --reference "$(cygpath -m "$core_ref/System.Collections.dll")" -o "$(cygpath -m "$work/RangeNodes.dll")"
+  cp "$here/wpf-tests/RangeNodes.cs" "$work/Program.cs"
+  cat > "$work/RangeNodesCheck.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="RangeNodes"><HintPath>RangeNodes.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$sdk/dotnet.exe" build "$(cygpath -m "$work/RangeNodesCheck.csproj")" -c Release \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -v:q
+  timeout 45 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/RangeNodesCheck.dll")"
 }
 
 step_check_original_font_file() {

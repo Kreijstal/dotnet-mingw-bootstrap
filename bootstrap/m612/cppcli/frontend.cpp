@@ -683,6 +683,37 @@ protected:
                 }
                 throw std::runtime_error("unterminated managed exception region");
             };
+            std::map<size_t, std::pair<size_t, std::string>> assembly_attributes;
+            for (size_t begin = 0; begin + 6 < tokens.size(); ++begin) {
+                if (tokens[begin].text != "[" || tokens[begin+1].text != "assembly" || tokens[begin+2].text != ":") continue;
+                size_t name = begin+3;
+                while (name+2 < tokens.size() && tokens[name+1].text == "::") name += 2;
+                auto attribute = tokens[name].text;
+                if (llvm::StringRef(attribute).ends_with("Attribute")) attribute.resize(attribute.size()-9);
+                if (attribute != "InternalsVisibleTo" && attribute != "TypeForwardedTo") continue;
+                std::string qualifier;
+                for (size_t i = begin+3; i < name; ++i) qualifier += tokens[i].text;
+                if (!qualifier.empty() && qualifier != "System::Runtime::CompilerServices::")
+                    throw std::runtime_error("unsupported qualified assembly attribute name");
+                if (class_depth[begin] || tokens[name+1].text != "(") throw std::runtime_error("assembly attributes require namespace scope and one argument");
+                size_t close = matching(name+1,"(",")");
+                if (tokens[close+1].text != "]") throw std::runtime_error("supported assembly attributes must appear individually");
+                std::string marker = "__cpp_cli_assembly_attribute_" + std::to_string(begin), declaration;
+                if (attribute == "InternalsVisibleTo") {
+                    if (close != name+3 || !tok::isStringLiteral(tokens[name+2].kind)) throw std::runtime_error("InternalsVisibleTo requires one literal assembly identity");
+                    declaration = "extern int " + marker + " __attribute__((annotate(\"cli.assembly.friend\", " + tokens[name+2].text + ")));";
+                } else {
+                    // The earlier ::typeid pass has already made this a
+                    // __cli_typeid<ResolvedType>() intrinsic token sequence.
+                    if (close < name+8 || tokens[name+2].text != "__cli_typeid" || tokens[name+3].text != "<" ||
+                        tokens[close-3].text != ">" || tokens[close-2].text != "(" || tokens[close-1].text != ")")
+                        throw std::runtime_error("TypeForwardedTo requires an imported named type::typeid");
+                    std::string type;
+                    for (size_t i = name+4; i < close-3; ++i) type += tokens[i].text + " ";
+                    declaration = "extern " + type + marker + " __attribute__((annotate(\"cli.assembly.forward\")));";
+                }
+                assembly_attributes[begin] = {close+1, declaration}; begin = close+1;
+            }
             // Layout attributes are CLI metadata, not native Clang record
             // attributes. Keep their arguments as expressions so Clang checks
             // names/types and evaluates constants; never infer native layout.
@@ -935,6 +966,9 @@ protected:
             std::map<std::pair<std::string, std::string>, std::string> indexed_facades;
             for (size_t i = 0; i < tokens.size(); ++i) {
                 auto& t = tokens[i];
+                if (auto attribute = assembly_attributes.find(i); attribute != assembly_attributes.end()) {
+                    emit(t, attribute->second.second); i = attribute->second.first; continue;
+                }
                 if (interop_ends.count(i)) {
                     if (interface_virtual.count(i)) emit(t, "virtual");
                     if (interop_attributes.count(i)) emit(t, interop_attributes[i]);
@@ -1240,6 +1274,8 @@ class Emitter {
     std::string return_label;
     bool return_slot_set = false;
     std::vector<FunctionIR> ir;
+    std::vector<std::string> assembly_friends;
+    std::map<std::string, std::string> assembly_forwards;
     mutable std::map<std::string, const CXXRecordDecl*> native_records;
     std::vector<std::string> temporary_types;
     std::map<const OpaqueValueExpr*, unsigned> opaque_values;
@@ -1944,9 +1980,9 @@ class Emitter {
     bool native_field(const FieldDecl* field) const {
         return field && native_pod(context.getCanonicalTagType(field->getParent()));
     }
-    uint64_t native_field_offset(const FieldDecl* field, const Expr* where) const {
-        if (field->isBitField()) fail(where, "native POD bitfield operations are not enabled yet");
-        if (field->getType()->isArrayType()) fail(where, "native POD array field operations are not enabled yet");
+    uint64_t native_field_offset(const FieldDecl* field, const Expr* where, bool array_address = false) const {
+        if (field->isBitField()) fail(where, "native bitfields have no independently addressable native storage");
+        if (field->getType()->isArrayType() && !array_address) fail(where, "native POD whole-array field operations require element-wise access");
         auto* record = cast<CXXRecordDecl>(field->getParent());
         auto bits = context.getASTRecordLayout(record).getFieldOffset(field->getFieldIndex());
         if (bits % context.getCharWidth()) fail(where, "native POD field is not byte-aligned");
@@ -1956,9 +1992,9 @@ class Emitter {
         if (!offset) return;
         op("ldc.i8 " + std::to_string(offset), 0, 1); op("conv.u", 1, 1); op("add", 2, 1);
     }
-    void native_field_address(const MemberExpr* member) {
+    void native_field_address(const MemberExpr* member, bool array_address = false) {
         auto* field = cast<FieldDecl>(member->getMemberDecl());
-        auto offset = native_field_offset(field, member);
+        auto offset = native_field_offset(field, member, array_address);
         if (member->isArrow()) expr(member->getBase());
         else native_address(member->getBase());
         native_offset(offset);
@@ -1970,6 +2006,77 @@ class Emitter {
     void native_field_store(const FieldDecl* field) {
         if (field->getType().isVolatileQualified()) op("volatile.");
         op("unaligned. 1"); op("stobj " + type(field->getType()), 2);
+    }
+    struct NativeBits { uint64_t offset, mask; unsigned shift, width, bytes; bool sign, boolean, vol; };
+    NativeBits native_bits(const FieldDecl* field) const {
+        auto* record = cast<CXXRecordDecl>(field->getParent());
+        auto offset = context.getASTRecordLayout(record).getFieldOffset(field->getFieldIndex());
+        unsigned width = field->getBitWidthValue(), shift = offset % 8;
+        auto scalar = field->getType();
+        if (auto* enumeration = scalar->getAs<EnumType>()) scalar = enumeration->getDecl()->getIntegerType();
+        if (context.getCharWidth() != 8 || !ci.getTarget().isLittleEndian() || !width || width > 64 ||
+            context.getTypeSize(scalar) > 64 || width > context.getTypeSize(scalar) || shift + width > 64)
+            throw std::runtime_error("native bitfields require little-endian integral storage with at most 64 covered bits and no excess padding width");
+        unsigned bytes = (shift + width + 7) / 8;
+        bool vol = field->getType().isVolatileQualified();
+        if (vol && (context.getTypeSize(scalar) != 8 || bytes != 1))
+            throw std::runtime_error("volatile native bitfields currently require byte-sized allocation units");
+        return {offset / 8, width == 64 ? UINT64_MAX : (uint64_t(1) << width) - 1,
+                shift, width, bytes, scalar->isSignedIntegerType(), scalar->isBooleanType(), vol};
+    }
+    unsigned native_bitfield_location(const MemberExpr* member) {
+        auto bits = native_bits(cast<FieldDecl>(member->getMemberDecl()));
+        unsigned pointer = temporary("native unsigned int");
+        if (member->isArrow()) expr(member->getBase()); else native_address(member->getBase());
+        native_offset(bits.offset); op("stloc " + std::to_string(pointer), 1); return pointer;
+    }
+    void native_bitfield_normalize(const FieldDecl* field, const NativeBits& bits) {
+        op("ldc.i8 " + std::to_string(static_cast<int64_t>(bits.mask)), 0, 1); op("and", 2, 1);
+        if (bits.boolean) {
+            op("ldc.i8 0", 0, 1); op("ceq", 2, 1); op("ldc.i4.0", 0, 1); op("ceq", 2, 1);
+        } else {
+            if (bits.sign && bits.width < 64) {
+                op("ldc.i4 " + std::to_string(64 - bits.width), 0, 1); op("shl", 2, 1);
+                op("ldc.i4 " + std::to_string(64 - bits.width), 0, 1); op("shr", 2, 1);
+            }
+            numeric_conversion(field->getType());
+        }
+    }
+    void native_bitfield_load(const FieldDecl* field, unsigned pointer) {
+        auto bits = native_bits(field);
+        op("ldc.i8 0", 0, 1);
+        for (unsigned i = 0; i < bits.bytes; ++i) {
+            op("ldloc " + std::to_string(pointer), 0, 1); native_offset(i);
+            if (bits.vol) op("volatile.");
+            op("ldind.u1", 1, 1); op("conv.u8", 1, 1);
+            if (i) { op("ldc.i4 " + std::to_string(8 * i), 0, 1); op("shl", 2, 1); }
+            op("or", 2, 1);
+        }
+        if (bits.shift) { op("ldc.i4 " + std::to_string(bits.shift), 0, 1); op("shr.un", 2, 1); }
+        native_bitfield_normalize(field, bits);
+    }
+    unsigned native_bitfield_store(const FieldDecl* field, unsigned pointer, unsigned value) {
+        auto bits = native_bits(field);
+        unsigned result = temporary(type(field->getType())), shifted = temporary("uint64");
+        op("ldloc " + std::to_string(value), 0, 1); op("conv.u8", 1, 1);
+        native_bitfield_normalize(field, bits); op("stloc " + std::to_string(result), 1);
+        op("ldloc " + std::to_string(result), 0, 1); op("conv.u8", 1, 1);
+        op("ldc.i8 " + std::to_string(static_cast<int64_t>(bits.mask)), 0, 1); op("and", 2, 1);
+        if (bits.shift) { op("ldc.i4 " + std::to_string(bits.shift), 0, 1); op("shl", 2, 1); }
+        op("stloc " + std::to_string(shifted), 1);
+        uint64_t occupied = bits.mask << bits.shift;
+        for (unsigned i = 0; i < bits.bytes; ++i) {
+            unsigned mask = (occupied >> (8 * i)) & 255;
+            op("ldloc " + std::to_string(pointer), 0, 1); native_offset(i); op("dup", 1, 2);
+            if (bits.vol) op("volatile.");
+            op("ldind.u1", 1, 1); op("ldc.i4 " + std::to_string(255 ^ mask), 0, 1); op("and", 2, 1);
+            op("ldloc " + std::to_string(shifted), 0, 1);
+            if (i) { op("ldc.i4 " + std::to_string(8 * i), 0, 1); op("shr.un", 2, 1); }
+            op("conv.u1", 1, 1); op("ldc.i4 " + std::to_string(mask), 0, 1); op("and", 2, 1); op("or", 2, 1);
+            if (bits.vol) op("volatile.");
+            op("stind.i1", 2);
+        }
+        return result;
     }
     void address(const Expr* original) {
         const Expr* e = strip(original)->IgnoreParenImpCasts();
@@ -2299,6 +2406,10 @@ class Emitter {
             unsigned slot = temporary(declared_type(field));
             op("stloc " + std::to_string(slot), 1);
             if (native_field(field)) {
+                if (field->isBitField()) {
+                    unsigned result = native_bitfield_store(field, native_bitfield_location(member), slot);
+                    if (retain) op("ldloc " + std::to_string(result), 0, 1); return;
+                }
                 native_field_address(member); op("ldloc " + std::to_string(slot), 0, 1); native_field_store(field);
                 if (retain) op("ldloc " + std::to_string(slot), 0, 1);
                 return;
@@ -2400,6 +2511,12 @@ class Emitter {
                 if (!field) fail(b, "compound assignment target is not an instance field");
                 if (annotated(field, "cli.readonly")) fail(b, "readonly imported fields cannot be assigned");
                 if (native_field(field)) {
+                    if (field->isBitField()) {
+                        unsigned pointer = native_bitfield_location(member), value = temporary(type(field->getType()));
+                        native_bitfield_load(field, pointer); apply(); op("stloc " + std::to_string(value), 1);
+                        unsigned result = native_bitfield_store(field, pointer, value);
+                        op("ldloc " + std::to_string(result), 0, 1); return;
+                    }
                     unsigned pointer = temporary("native unsigned int"), result = temporary(type(field->getType()));
                     native_field_address(member); op("stloc " + std::to_string(pointer), 1);
                     op("ldloc " + std::to_string(pointer), 0, 1); native_field_load(field); apply();
@@ -3051,6 +3168,15 @@ class Emitter {
             auto* conversion_call = dyn_cast<CXXMemberCallExpr>(strip(c->getSubExpr()));
             auto* conversion_method = conversion_call ? dyn_cast_or_null<CXXMethodDecl>(conversion_call->getDirectCallee()) : nullptr;
             bool static_property_conversion = conversion_method && record_annotated(conversion_method->getParent(), "cli.static.property.proxy");
+            if (c->getCastKind() == CK_ArrayToPointerDecay) {
+                auto* member = dyn_cast<MemberExpr>(strip(c->getSubExpr())->IgnoreParenImpCasts());
+                if (member && native_field(dyn_cast<FieldDecl>(member->getMemberDecl()))) {
+                    // Native inline arrays occupy their containing record's
+                    // bytes. Decay takes that field address, never a CLR array
+                    // object or a copy of the enclosing POD.
+                    native_field_address(member, true); return;
+                }
+            }
             if (c->getCastKind() == CK_NullToPointer) {
                 if (handle_target(c->getType())) op("ldnull", 0, 1);
                 else { op("ldc.i4.0", 0, 1); op("conv.u", 1, 1); }
@@ -3107,7 +3233,11 @@ class Emitter {
         if (auto* member = dyn_cast<MemberExpr>(e)) {
             auto* field = dyn_cast<FieldDecl>(member->getMemberDecl());
             if (!field) fail(e, "unsupported managed member expression");
-            if (native_field(field)) { native_field_address(member); native_field_load(field); return; }
+            if (native_field(field)) {
+                if (field->isBitField()) native_bitfield_load(field, native_bitfield_location(member));
+                else { native_field_address(member); native_field_load(field); }
+                return;
+            }
             emit_receiver(member->getBase()); op("ldfld " + field_signature(field), 1, 1); return;
         }
         if (auto* d = dyn_cast<DeclRefExpr>(e)) { load_decl(d->getDecl(), e); return; }
@@ -3173,6 +3303,13 @@ class Emitter {
                 if (index >= semantic->getNumInits()) break;
                 auto* value = semantic->getInit(index++);
                 if (isa<ImplicitValueInitExpr>(value)) continue; // initobj already zeroed this field.
+                if (field->isBitField()) {
+                    auto bits = native_bits(field);
+                    unsigned pointer = temporary("native unsigned int"), input = temporary(type(field->getType()));
+                    expr(value); op("stloc " + std::to_string(input), 1);
+                    op("ldloca " + std::to_string(slot), 0, 1); op("conv.u", 1, 1); native_offset(bits.offset);
+                    op("stloc " + std::to_string(pointer), 1); native_bitfield_store(field, pointer, input); continue;
+                }
                 auto offset = native_field_offset(field, init);
                 op("ldloca " + std::to_string(slot), 0, 1); op("conv.u", 1, 1); native_offset(offset);
                 expr(value); native_field_store(field);
@@ -3309,6 +3446,16 @@ class Emitter {
                     auto* field = dyn_cast<FieldDecl>(member->getMemberDecl());
                     if (!field) fail(u, "increment target is not an instance field");
                     if (native_field(field)) {
+                        if (field->isBitField()) {
+                            auto token = type(field->getType());
+                            unsigned pointer = native_bitfield_location(member), old = temporary(token), value = temporary(token);
+                            native_bitfield_load(field, pointer); op("stloc " + std::to_string(old), 1);
+                            op("ldloc " + std::to_string(old), 0, 1);
+                            op(numeric_type(field->getType()) == "int64" || numeric_type(field->getType()) == "uint64" ? "ldc.i8 1" : "ldc.i4.1", 0, 1);
+                            op(u->isIncrementOp() ? "add" : "sub", 2, 1); op("stloc " + std::to_string(value), 1);
+                            unsigned result = native_bitfield_store(field, pointer, value);
+                            op("ldloc " + std::to_string(u->isPostfix() ? old : result), 0, 1); return;
+                        }
                         auto ft = type(field->getType());
                         unsigned pointer = temporary("native unsigned int"), old = temporary(ft), result = temporary(ft);
                         native_field_address(member); op("stloc " + std::to_string(pointer), 1);
@@ -3804,6 +3951,24 @@ public:
     }
     void collect(DeclContext* scope) {
         for (auto* decl : scope->decls()) {
+            if (auto* variable = dyn_cast<VarDecl>(decl)) {
+                for (auto* attribute : variable->specific_attrs<AnnotateAttr>()) if (attribute->getAnnotation() == "cli.assembly.friend") {
+                    auto* literal = attribute->args_size() == 1 ? dyn_cast<StringLiteral>((*attribute->args_begin())->IgnoreParenImpCasts()) : nullptr;
+                    if (!literal || (!literal->isOrdinary() && !literal->isUTF8()) || literal->getString().empty() || literal->getString().contains('\0'))
+                        throw std::runtime_error("InternalsVisibleTo requires a nonempty UTF-8 assembly identity");
+                    assembly_friends.push_back(literal->getString().str());
+                }
+                if (annotated(variable, "cli.assembly.forward")) {
+                    auto t = variable->getType();
+                    std::string external;
+                    if (auto* enumeration = t->getAs<EnumType>()) external = annotation(enumeration->getDecl(), "cli.external:");
+                    else if (auto* record = t->getAsCXXRecordDecl(); record && !isa<ClassTemplateSpecializationDecl>(record)) external = record_annotation(record, "cli.external:");
+                    auto separator = external.find('|');
+                    if (separator == std::string::npos || external.find('+') != std::string::npos || external.find('`') != std::string::npos)
+                        throw std::runtime_error("TypeForwardedTo currently requires an imported non-nested non-generic named type");
+                    assembly_forwards[external.substr(separator+1)] = external.substr(0,separator);
+                }
+            }
             if (!isa<FunctionDecl>(decl) && !isa<CXXRecordDecl>(decl)) validate_interop_attributes(decl, 0);
             if (auto* f = dyn_cast<FunctionDecl>(decl)) VisitFunctionDecl(f);
             else if (auto* r = dyn_cast<CXXRecordDecl>(decl)) {
@@ -3871,7 +4036,22 @@ public:
             for (size_t i = 0; i < options.public_key.size(); i += 2) il << options.public_key.substr(i, 2) << ' ';
             il << ") .hash algorithm 0x8004";
         }
+        for (const auto& friend_name : assembly_friends) {
+            std::vector<unsigned char> bytes{1,0};
+            auto length = friend_name.size();
+            if (length > 0x1fffffff) throw std::runtime_error("assembly friend identity is too long");
+            if (length <= 0x7f) bytes.push_back(length);
+            else if (length <= 0x3fff) { bytes.push_back(0x80 | (length >> 8)); bytes.push_back(length & 255); }
+            else { bytes.push_back(0xc0 | (length >> 24)); bytes.push_back((length >> 16)&255); bytes.push_back((length >> 8)&255); bytes.push_back(length & 255); }
+            bytes.insert(bytes.end(),friend_name.begin(),friend_name.end()); bytes.push_back(0); bytes.push_back(0);
+            il << "\n  .custom " << attribute_constructor("System.Runtime.CompilerServices.InternalsVisibleToAttribute", {"string"}) << " = (";
+            const char* hex = "0123456789abcdef";
+            for (auto byte : bytes) il << hex[byte >> 4] << hex[byte & 15] << ' ';
+            il << ")\n";
+        }
         il << " }\n.module '" << options.assembly << ".dll'\n";
+        for (const auto& [name, owner] : assembly_forwards)
+            il << ".class extern forwarder '" << name << "' { .assembly extern '" << owner << "' }\n";
         if (!native_library.empty()) il << ".module extern '" << native_library << "'\n";
         std::set<std::string> system_libraries;
         for (auto* function : selected_native_imports) system_libraries.insert(native_imports.at(function->getNameAsString()).library);

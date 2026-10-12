@@ -181,7 +181,12 @@
         "Native pointer arithmetic now preserves Clang native strides, signed offsets/differences, address ordering and single-evaluation updates; GC-free value pointers instead use actual CLR sizeof, verified with a 32-byte explicit layout",
         "No-op REFIID/native reference casts preserve stable native referent addresses; actual source-metadata String character-pointer constructors replace the next FontFile literal-only restriction",
         "Complete original FontFile.cpp/header runtime proof increases whole directly included body coverage to five of 21; original GUID initialization, Analyze, Unicode path, metadata/friend access, original cleanup and GC pass against native DirectWrite",
-        "Original FontFace glyph-index/table-copy/embedding-rights methods also pass real native DirectWrite oracle checks; combined full bridge passes FontFace/FontFile and stops at TextItemizer.cpp:30 native inline array field access"
+        "Original FontFace glyph-index/table-copy/embedding-rights methods also pass real native DirectWrite oracle checks; combined full bridge passes FontFace/FontFile and stops at TextItemizer.cpp:30 native inline array field access",
+        "Native inline array fields and bounded integral bitfields pass native SDK/packed/signed/update layout checks; original WPF range merging and real DirectWrite shaped-alone output loops pass under GC",
+        "Complete DirectWriteForwarder combined source now generates IL and assembles a DLL, covering all 21 directly included implementation bodies plus ported startup and original other assembly attributes; CLR loads 85 types and prepares eligible managed bodies",
+        "Original OtherAssemblyAttrs.cpp now emits PresentationCore InternalsVisibleTo and the WindowsBase TextFormattingMode forwarder; a matching signed C# peer validates compile/runtime friend access",
+        "Complete bridge factory/managed COM loader registration, system font collection, family/font/face/file, native Unicode path and embedding-rights runtime checks pass",
+        "PresentationCore builds from 1337 source inputs and loads 2290 types; real Arial/GlyphTypeface/glyph metadata and matrix/point checks pass; PresentationFramework, printing, WPF SDK/tasks, native coverage and packaging remain open"
       ]
     }
   ]

@@ -3884,3 +3884,126 @@ packaging remain incomplete, and this development frontend is not a new
 installed WPF package. Original component sources, generated IL/metadata, native
 probes and logs are archived under
 `tmp/wpf8-support/validation/pointer-arithmetic-font-file-20261013` on the local host.
+
+## 38. Complete DirectWrite bridge and source-built PresentationCore
+
+The 2026-10-13 continuation passes the remaining DirectWrite IL gates. All
+**21 directly included implementation bodies** now compile together with the
+ported managed startup and the original OtherAssemblyAttrs.cpp. Source-built
+ilasm assembles the full DirectWriteForwarder.dll, CLR loads its **85 types**,
+and RuntimeHelpers.PrepareMethod succeeds for **283 eligible managed method
+bodies**, including global helpers. Native import declarations and abstract
+interface methods have no managed body and are excluded. This validates CLR
+body/metadata resolution; it does not execute every path.
+
+Native one-dimensional inline POD array fields now decay to their actual Clang
+byte offset inside the containing record. Indexed scalar/pointer/POD reads,
+stores, addresses and updates reuse native indexing and preserve the original
+storage. Packed offsets, 64-bit values, volatile elements, copy isolation,
+receiver/index single evaluation, sizeof and GC match an independently compiled
+native oracle. Whole-array field initialization and multidimensional array
+strides remain unsupported.
+
+Integral native bitfields now use Clang's bit offsets and bounded byte spans
+for read/write, compound operations, pre/post updates and aggregate initialization.
+Unsigned masks, signed extension and stored-width normalization preserve result
+values and neighboring bits. Runtime/native comparison covers a packed 10-byte
+record with 19/17/28-bit fields, cross-byte boundaries, signed overflow/truncation,
+a one-byte 3/5-bit record, bool fields and volatile byte fields. Exact SDK
+DWRITE_SHAPING_TEXT_PROPERTIES bits and raw two-byte representation match native
+Clang. The implementation requires little-endian 8-bit bytes, integral/enum
+storage up to 64 bits, at most 64 covered bits and no excess padding width;
+volatile fields currently require byte-sized allocation units. Independently
+addressing bitfields/native-reference temporaries remains rejected.
+
+The range-node probe extracts the original DWriteTextAnalysisNode definition and
+TextItemizer constructor/GetNextSmallestPos/SetIsDigit method bytes. It uses
+native script/number linked nodes and actual managed generic digit lists, and
+verifies ordering, ties, cursor/index progression, empty/exhausted sentinels and
+repeated GC. This is a focused-method proof, not the complete TextItemizer runtime
+API. A second probe uses actual native DirectWrite AnalyzeScript/GetGlyphs on a
+real system font and the text "office". The exact original WPF shaped-alone loop
+reads the returned bitfields and agrees with an independent native reader after
+GC. Unused native analysis-sink callbacks return E_NOTIMPL and are not called;
+no native WPF text export is fabricated.
+
+Namespace-scope InternalsVisibleTo attributes now retain literal UTF-8 identities
+through Clang annotations and emit real CLR assembly custom attributes with
+compressed SerString lengths. Imported named TypeForwardedTo targets retain
+Clang type resolution and emit real exported-type forwarders. Individual
+canonical/unqualified attributes are supported; arbitrary assembly attributes,
+nested/generic forwarders and legacy NGEN Dependency attributes remain incomplete.
+The complete original OtherAssemblyAttrs.cpp supplies the PresentationCore
+public-key friend identity and WindowsBase TextFormattingMode forwarder. A
+source-built, public-signed C# peer named PresentationCore compiles direct calls
+to the bridge's internal APIs and executes them successfully. This peer is a
+validation assembly, not the actual PresentationCore build below.
+
+The complete bridge runtime check registers its original managed COM font-file
+and collection loaders with a real DirectWrite factory, retrieves 81 system font
+families, reads a Unicode ordinal family name, creates a font/face, reads glyph
+count and OS/2 embedding rights, retrieves the owned first font file and copies
+its actual native Unicode path. The path exists on disk, and face/file repeated
+disposal and forced GC pass. The check also verifies the assembly friend attribute
+and resolves its forwarded TextFormattingMode to actual source-built WindowsBase.
+
+PresentationCore then builds from **1,337 C# source inputs** against the complete
+bridge and existing source-only dependencies. Its **2,290 CLR types** load. The
+runtime test verifies matrix/point transformation, actual Arial FontFamily and
+Typeface resolution, nonempty GlyphTypeface glyph count and character-to-glyph
+metadata. It does not create or render a WPF window. The previous 620 foundation
+inputs bring the compiled C# scope to 1,957 inputs; the 14 nested native subsetter
+inputs remain built separately.
+
+Validation on win11:
+
+```sh
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh \
+  build test-native-bitfields test-native-inline-arrays test-native-fields
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh \
+  test-native-arrays test-pointer-arithmetic test-compound test-native-storage
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh \
+  test-assembly-attributes test-native-bitfields test-native-inline-arrays test-native-fields
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  WPF_CPPCLI_BUILD=/home/topkek/dotnetboot/m612/build/cppcli \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh \
+  check-range-nodes check-shaping-bits bridge-gate
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  WPF_CPPCLI_BUILD=/home/topkek/dotnetboot/m612/build/cppcli \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh \
+  build-directwrite check-directwrite-assembly
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  WPF_CPPCLI_BUILD=/home/topkek/dotnetboot/m612/build/cppcli \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-directwrite-assembly
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  WPF_CPPCLI_BUILD=/home/topkek/dotnetboot/m612/build/cppcli \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh \
+  build-presentation-core check-presentation-core
+```
+
+The frontend rebuild, focused/regression/native oracle checks, full bridge gate,
+ilasm assembly, signed friend client and CLR/runtime checks pass. The full
+bridge retains its upstream path/endif/erased-delete and legacy NGEN attribute
+warnings. PresentationCore's first source build has 36 warnings and zero errors;
+its runtime consumer has zero warnings/errors. Logs and source/IL/DLL/metadata
+artifacts are archived under
+`tmp/wpf8-support/validation/full-directwrite-presentation-core-20261013` on the
+local host.
+
+The bridge currently uses the default emitted assembly version; upstream
+version/file metadata still needs packaging integration. System.Printing,
+PresentationFramework, remaining desktop assemblies, XAML SDK/build tasks,
+reference/framework packs and WindowsDesktop packaging remain incomplete.
+PresentationNative still has the previously measured 38/139 required exports,
+with 101 text/paragraph/natural-language exports absent; gfx/PenImc version and
+protocol matching also remains open. The complete source/rendered-window/package
+objective is not achieved, and no WPF package is installed by this checkpoint.

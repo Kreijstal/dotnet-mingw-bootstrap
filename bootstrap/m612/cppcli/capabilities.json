@@ -186,7 +186,15 @@
     "No-op explicit native reference casts preserve referent addresses while recursively retaining stable-storage checks; casts of movable managed fields remain rejected",
     "Native UTF-16/narrow String constructor facades bind to verified source-built metadata constructors; selected imported String constructors also emit real newobj signatures; Unicode surrogate pairs, native buffer copy ownership, null and pointer slices are tested",
     "Complete unchanged WPF FontFile.cpp/header compile in focused dependencies with its original static GUID constructor, original ToGUID helper, Analyze Out metadata and real WindowsBase as_friend/public-key access; native font paths match an independent DirectWrite oracle and survive original buffer cleanup and GC",
-    "Original WPF FontFace GetArrayOfGlyphIndices, TryGetFontTable and ReadFontEmbeddingRights method bytes execute against actual DirectWrite glyphs/tables/rights, including native pointer pins, absent tables and native buffer indexing"
+    "Original WPF FontFace GetArrayOfGlyphIndices, TryGetFontTable and ReadFontEmbeddingRights method bytes execute against actual DirectWrite glyphs/tables/rights, including native pointer pins, absent tables and native buffer indexing",
+    "Native one-dimensional inline POD array fields decay to their Clang byte offsets without copying the containing record; packed scalar/pointer/POD strides, element addresses/stores/updates, volatile elements, receiver/index evaluation and GC match a native oracle",
+    "Native integral bitfield reads/writes, compound updates, increments and aggregate initialization use Clang bit offsets with bounded byte spans, signed extension, stored-width result normalization and preservation of neighboring bits",
+    "Real MinGW DWRITE_SHAPING_TEXT_PROPERTIES fields match native byte layout; the original WPF shaped-alone loop consumes properties from actual DirectWrite AnalyzeScript/GetGlyphs and matches an independent native reader across GC",
+    "Original WPF DWriteTextAnalysisNode definitions and TextItemizer constructor/GetNextSmallestPos/SetIsDigit methods run with actual managed generic lists and native linked nodes; merge ties, exhaustion, empty sentinel and GC pass",
+    "Namespace-scope InternalsVisibleTo string attributes emit CLR assembly custom attributes with compressed UTF-8 serialization; imported named TypeForwardedTo targets emit actual exported-type forwarders; the original WPF OtherAssemblyAttrs.cpp compiles unchanged",
+    "Complete combined WPF DirectWriteForwarder source, managed startup and upstream other assembly attributes produce a real source-built ilasm DLL; CLR loads all 85 types and prepares all eligible method bodies, real native factory/COM loader registration and font-family/font/face/file behavior pass",
+    "A public-signed C# PresentationCore peer with the actual upstream public key compiles and calls original internal DirectWriteForwarder APIs; its WindowsBase TextFormattingMode type forwarder resolves correctly",
+    "PresentationCore builds from 1337 source inputs against the complete bridge; CLR loads its 2290 types and real font-family/GlyphTypeface resolution plus glyph metadata and matrix/point operations pass"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -202,7 +210,7 @@
     "User finalizer declarations, value/interface destructors, covariance metadata and managed operator metadata remain unsupported",
     "Native bridges require extern-C scalars or unmanaged pointers; bool/automatic marshalling, callbacks and automatic native partitioning are not enabled",
     "Implicit primitive/interface boxing and multi-translation-unit linking remain unimplemented",
-    "WPF DirectWriteForwarder and System.Printing are not compiled by this frontend yet",
+    "The WPF DirectWriteForwarder assembly is compiled and has CLR/native font runtime proofs; System.Printing, PresentationFramework, WPF build tasks, full native rendering/text coverage and WindowsDesktop packaging remain incomplete",
     "Value classes currently exclude bases/interfaces, virtual methods, native pointer fields and custom zero-argument constructors",
     "Boxing covers explicit safe_cast to Object and implicit boxing into Object or matching selected value-class handles; handle upcasts, primitive boxes, constrained dispatch and boxed operator overloads remain incomplete",
     "Tracking references exclude constructors, fields and tracking-reference returns; pin_ptr is restricted to primitive block locals and direct local assignments; general intrinsic pointer operations and interior assignments remain incomplete; arithmetic on explicitly spelled native pointers is supported for complete scalar/pointer/trivial POD or GC-free value elements",
@@ -227,7 +235,7 @@
     "Interior returns currently require direct proven managed heap addresses; local pointer aliases, forwarding calls, byref parameters and native/stack addresses are rejected rather than analyzed for escape safety",
     "Pin reinterpret_cast adaptation currently requires an explicit pointer declarator; arbitrary typedef pointer targets and general native reinterpretation remain unsupported",
     "Native reference support covers source parameters/locals with primitive or proven GC-free value storage and no-op casts of proven stable referents; native reference returns, implicit stack-field/temporary bindings, general lifetime analysis and imported native reference signatures remain incomplete",
-    "Native records provide trivial storage/copy and heap arrays with alignment up to 8 bytes; bitfield/array field operations, placement allocation, nontrivial constructors/destructors, general native bases/vtables and larger alignment remain unsupported",
+    "Native records support trivial storage/copy, heap arrays, inline one-dimensional field indexing and integral bitfields with alignment up to 8 bytes; whole-array field initialization, multidimensional array strides, placement allocation, nontrivial constructors/destructors, general native bases/vtables and larger alignment remain unsupported",
     "Native storage types use generated canonical CLR identities; general metadata visibility/import compatibility with other C++/CLI compilers is not yet implemented",
     "Destructor support requires explicit source bodies in ref classes; defaulted destructors, explicit Dispose/Finalize conflicts, stack-semantics RAII and automatic nontrivial member cleanup remain unsupported",
     "Managed deletion supports single handles; native delete[] supports trivial scalar/pointer/POD arrays; placement/custom allocation operators, nontrivial native construction/destruction and full mixed-mode cleanup remain incomplete",
@@ -243,6 +251,10 @@
     "WPF managed startup is an explicit source port from the native CModuleInitialize/atexit workaround; it initializes before the first factory lookup, uses CLR shutdown handlers and retains the original loader methods, while legacy NGEN dependency attributes remain unimplemented",
     "Native pointer arithmetic excludes void/function/incomplete/array/nontrivial element strides; it preserves caller ownership and does not add bounds checks or pin arbitrary movable managed storage",
     "Const native String facades currently cover single UTF-16/narrow character pointers; other constructor forms require a matching supported metadata signature; narrow pointer decoding follows the source-built CLR constructor rather than custom translation",
-    "The original FontFile component test supplies focused Common declarations and an unused converter-header placeholder; it does not prove complete Common/DWriteTypeConverter/System.Printing or WPF assembly builds; current combined gate stops at TextItemizer.cpp native inline array fields"
+    "The original FontFile component test has focused dependencies; the separate complete DirectWriteForwarder build now includes actual Common/DWriteTypeConverter bodies, but rendering, higher WPF assemblies and packaging still need broader integration",
+    "Native bitfields require little-endian 8-bit bytes, integral/enum storage up to 64 bits and at most 64 covered bits without excess declared padding width; volatile bitfields currently require byte-sized allocation units; bitfield-address/native-reference temporaries remain unsupported",
+    "Assembly attribute support covers individual namespace-scope InternalsVisibleTo literal identities and imported non-nested/non-generic named type forwarders; general assembly attributes, nested/generic forwarders, and legacy NGEN Dependency attributes remain incomplete",
+    "The complete DirectWriteForwarder assembly currently has the default emitted assembly version; upstream version/file metadata and broader packaging identity still need integration; CLR JIT preparation proves body validity but does not execute every path",
+    "PresentationCore runtime checks cover CLR type loading, matrix/point operations and DirectWrite-backed fonts/glyph metadata; they do not prove a rendered WPF window or cover the missing native text exports"
   ]
 }

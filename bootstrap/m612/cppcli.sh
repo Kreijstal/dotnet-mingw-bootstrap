@@ -523,11 +523,27 @@ int main() { int value = 0; return SdkIntegerConstant(++value); }' 'without an e
 step_test-init-locals() {
   run_case init-locals "$src/tests/init-locals.cpp" $'0\n6'
 }
+step_test-native-inline-arrays() {
+  /clang64/bin/clang++.exe -std=c++17 -shared -O2 "$src/tests/native-inline-arrays-native.cpp" -o "$testdir/cppcli-inline-arrays.dll"
+  run_case native-inline-arrays "$src/tests/native-inline-arrays.cpp" 'native inline arrays: packed offsets, scalar/pointer/POD strides, volatile updates, decay, copy, single evaluation and GC OK' \
+    --native-library cppcli-inline-arrays.dll --type System.GC
+}
+step_test-assembly-attributes() {
+  reject_case assembly-friend-nonliteral '[assembly: System::Runtime::CompilerServices::InternalsVisibleTo(42)]; int main() { return 0; }' 'InternalsVisibleTo requires one literal assembly identity'
+  reject_case assembly-forward-native 'struct Native { int Value; }; [assembly: System::Runtime::CompilerServices::TypeForwardedTo(Native::typeid)]; int main() { return 0; }' 'TypeForwardedTo currently requires an imported'
+  reject_case assembly-attribute-qualifier '[assembly: Custom::InternalsVisibleTo("Peer")]; int main() { return 0; }' 'unsupported qualified assembly attribute name'
+}
+step_test-native-bitfields() {
+  /clang64/bin/clang++.exe -std=c++17 -shared -O2 "$src/tests/native-bitfields-native.cpp" -o "$testdir/cppcli-native-bitfields.dll"
+  run_case native-bitfields "$src/tests/native-bitfields.cpp" 'native bitfields: SDK layout, signed/cross-byte masks, narrow results, neighbor preservation, updates, volatile byte units and GC OK' \
+    --native-library cppcli-native-bitfields.dll --type System.GC
+  reject_case native-bitfield-wide-volatile 'struct Native { volatile unsigned Value:3; }; int main() { Native value; return value.Value; }' 'volatile native bitfields currently require byte-sized allocation units'
+}
 step_test-native-fields() {
   /clang64/bin/clang++.exe -std=c++17 -fms-extensions -shared -O2 -DCPPCLI_NATIVE_BUILD "$src/tests/native-fields-native.cpp" -o "$testdir/cppcli-native-fields.dll"
   run_case native-fields "$src/tests/native-fields.cpp" 'native POD aggregate, packed nested fields, addresses and single evaluation OK' --native-library cppcli-native-fields.dll
-  reject_case native-bitfield 'struct Native { unsigned Value:3; }; int main() { Native value = {}; return value.Value; }' 'native POD bitfield operations'
-  reject_case native-array-field 'struct Native { int Values[2]; }; int main() { Native value = {{1, 2}}; return 0; }' 'native POD array field operations'
+  reject_case native-bitfield-reference 'struct Native { unsigned Value:3; }; unsigned Read(const unsigned& value) { return value; } int main() { Native value; return Read(value.Value); }' 'native bitfields have no independently addressable native storage'
+  reject_case native-array-field-init 'struct Native { int Values[2]; }; int main() { Native value = {{1, 2}}; return 0; }' 'native POD whole-array field operations'
 }
 step_test-windows-api() {
   log "MinGW import archives -> lazy Windows API P/Invoke bindings"
