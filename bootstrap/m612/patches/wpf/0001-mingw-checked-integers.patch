@@ -1,21 +1,11 @@
 --- a/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/CPP/TrueTypeSubsetter/TtfDelta/intsafe_private_copy.h
 +++ b/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/CPP/TrueTypeSubsetter/TtfDelta/intsafe_private_copy.h
-@@ -4,6 +4,12 @@
- 
- #ifndef __INTSAFE_PRIVATE_COPY_H
- #define __INTSAFE_PRIVATE_COPY_H
+@@ -6,0 +7,6 @@
 +
 +#if defined(__MINGW32__)
 +// MinGW provides the same checked operations and overflow sentinels.
 +// Avoid redefining them with the obsolete MSVC-only SAL annotations.
 +#include <intsafe.h>
 +#else
- 
- // The following code is copied from intsafe.h since we needed to mark them
- // as SecurityCritical because they have unverfiable code and we could not
-@@ -138,4 +144,5 @@
-     
-     return hr;
- }
+@@ -140,0 +147 @@
 +#endif // !__MINGW32__
- #endif //__INTSAFE_PRIVATE_COPY_H
