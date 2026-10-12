@@ -31,6 +31,7 @@ record CliClass(string Assembly, string Name, string Cpp, string Kind, string Ba
     public CliType? BaseType { get; init; }
     public CliType[] InterfaceTypes { get; init; } = Array.Empty<CliType>();
     public string DefaultMember { get; init; } = "";
+    public bool NativeStorageSafe { get; init; }
 }
 record CliAssembly(string Name, string Version, string Token);
 record CliAccess(string Assembly, string PublicKey, string[] Friends);
@@ -114,6 +115,28 @@ sealed class SignatureTypes : ISignatureTypeProvider<CliType, object?>
 
 static class Program
 {
+    static bool NativeStorageSafe(MetadataReader r, TypeDefinition definition, HashSet<string>? visiting = null)
+    {
+        visiting ??= new();
+        string name = FullName(r, definition);
+        if (!visiting.Add(name) || definition.GetGenericParameters().Count != 0) return false;
+        bool Safe(CliType t) {
+            if (t.Kind == "primitive" || t.Kind == "pointer") return true;
+            if (t.Kind != "value") return false;
+            if (t.Name is "System.IntPtr" or "System.UIntPtr") return true;
+            foreach (var handle in r.TypeDefinitions) {
+                var nested = r.GetTypeDefinition(handle);
+                if (FullName(r, nested) == t.Name) return NativeStorageSafe(r, nested, visiting);
+            }
+            return false; // Unresolved external/generic layouts are not proof of GC-free storage.
+        }
+        bool result = definition.GetFields().All(handle => {
+            var field = r.GetFieldDefinition(handle);
+            return (field.Attributes & FieldAttributes.Static) != 0 || Safe(field.DecodeSignature(new SignatureTypes(), null));
+        });
+        visiting.Remove(name);
+        return result;
+    }
     public static string FullName(MetadataReader r, TypeDefinition d)
     {
         string ns = r.GetString(d.Namespace), name = r.GetString(d.Name);
@@ -321,7 +344,8 @@ static class Program
                     }
                     var interfaceTypes = td.GetInterfaceImplementations().Select(ih => SignatureTypes.EntityType(r, r.GetInterfaceImplementation(ih).Interface)).ToArray();
                     types.Add(new CliClass(assembly, name, SignatureTypes.CppName(name), baseName == "System.ValueType" ? "value" : (td.Attributes & TypeAttributes.Interface) != 0 ? "interface" : "ref", baseName, methods.ToArray(), properties.ToArray(),
-                        interfaceTypes.Where(t => t.Kind != "unsupported").Select(t => t.Name).ToArray(), Fields: fields) { GenericArity = genericArity, BaseType = baseType, InterfaceTypes = interfaceTypes, DefaultMember = defaultMember });
+                        interfaceTypes.Where(t => t.Kind != "unsupported").Select(t => t.Name).ToArray(), Fields: fields) { GenericArity = genericArity, BaseType = baseType, InterfaceTypes = interfaceTypes, DefaultMember = defaultMember,
+                            NativeStorageSafe = baseName == "System.ValueType" && NativeStorageSafe(r, td) });
                 }
             }
             var found = types.Select(t => t.Name).ToHashSet(StringComparer.Ordinal);
@@ -410,6 +434,7 @@ static class Program
         w.Write("class __attribute__((annotate(\"cli.external:" + Escape(t.Assembly + "|" + t.Name) + "\")" +
             (t.Kind == "interface" ? ", annotate(\"cli.interface\")" : t.Kind == "value" ? ", annotate(\"cli.value\")" : "") +
             (t.Name == "System.IntPtr" ? ", annotate(\"cli.nativeint:signed\")" : t.Name == "System.UIntPtr" ? ", annotate(\"cli.nativeint:unsigned\")" : "") +
+            (t.NativeStorageSafe ? ", annotate(\"cli.native.storage.safe\")" : "") +
             (t.Base == "System.MulticastDelegate" ? ", annotate(\"cli.delegate\")" : "") + ")) " + name);
         if (forward) w.Write("; ");
         else

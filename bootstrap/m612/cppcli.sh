@@ -511,6 +511,45 @@ EOF
   reject_case layout-negative-size "$prefix"'[StructLayout(LayoutKind::Sequential, Size=-1)] public value struct Bad { int Value; }; int main() { return 0; }' 'Size must be a nonnegative' "${layout_args[@]}"
   log "PASS test-layout: explicit/sequential CLR layout, overlapping fields, pack, size and charset"
 }
+step_test-native-storage() {
+  log "Native references and Clang-sized GC-free POD storage"
+  mkdir -p "$testdir/native-storage-fields"
+  cat > "$testdir/native-storage-fields/Api.cs" <<'EOF'
+namespace FieldsApi {
+public struct WithHiddenValue { private long value; public WithHiddenValue(long value) { this.value = value; } public long Read() => value; }
+public struct WithHiddenReference { private object value; public WithHiddenReference(object value) { this.value = value; } public object Read() => value; }
+}
+EOF
+  cat > "$testdir/native-storage-fields/FieldsApi.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><EnableNETAnalyzers>false</EnableNETAnalyzers></PropertyGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/native-storage-fields/FieldsApi.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -p:NuGetAudit=false
+  local fields=$testdir/native-storage-fields/bin/Debug/net8.0/FieldsApi.dll
+  /clang64/bin/clang++.exe -std=c++17 -shared -O2 "$src/tests/native-storage-native.cpp" -o "$testdir/cppcli-native-storage.dll"
+  compile "$(cygpath -m "$src/tests/native-storage.cpp")" --target library --native-library cppcli-native-storage.dll \
+    --reference "$(cygpath -m "$fields")" --type FieldsApi.WithHiddenValue \
+    --type System.Guid --type System.GC -o "$(cygpath -m "$testdir/native-storage.dll")"
+  mkdir -p "$testdir/native-storage-consumer"
+  cp "$src/tests/NativeStorageConsumer.cs" "$testdir/native-storage-consumer/Program.cs"
+  cat > "$testdir/native-storage-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers></PropertyGroup><ItemGroup><Reference Include="native-storage"><HintPath>../native-storage.dll</HintPath></Reference><Reference Include="FieldsApi"><HintPath>../native-storage-fields/bin/Debug/net8.0/FieldsApi.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/native-storage-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -p:NuGetAudit=false
+  cp "$testdir/cppcli-native-storage.dll" "$testdir/native-storage-consumer/bin/Debug/net8.0/"
+  cp "$fields" "$testdir/native-storage-consumer/bin/Debug/net8.0/"
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/native-storage-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case native-reference-array 'using namespace System; void Change(int& value) { value = 1; } void Bad(array<Int32>^ values) { Change(values[0]); } int main() { return 0; }' 'native reference cannot bind to movable managed storage'
+  reject_case native-reference-alias-array 'using NativeIntRef = int&; using namespace System; void Change(NativeIntRef value) { value = 1; } void Bad(array<Int32>^ values) { Change(values[0]); } int main() { return 0; }' 'native reference cannot bind to movable managed storage'
+  reject_case native-reference-field 'public ref class Owner { public: int Value; }; void Change(int& value) { value = 1; } void Bad(Owner^ value) { Change(value->Value); } int main() { return 0; }' 'native reference cannot bind to movable managed storage'
+  reject_case native-reference-tracking 'void Change(int& value) { value = 1; } void Bad(int% value) { Change(value); } int main() { return 0; }' 'native reference cannot bind to movable managed storage'
+  reject_case native-reference-gc-value 'public value class HasReference { public: System::String^ Text; }; void Bad(HasReference& value) {} int main() { return 0; }' 'native references require a primitive or proven GC-free value/native layout'
+  reject_case native-reference-hidden-gc 'void Bad(FieldsApi::WithHiddenReference& value) {} int main() { return 0; }' 'native references require a primitive or proven GC-free value/native layout' --reference "$(cygpath -m "$fields")" --type FieldsApi.WithHiddenReference
+  reject_case native-record-nontrivial 'struct Native { Native() {} int Value; }; Native Read() { return Native(); } int main() { return 0; }' 'native POD storage cannot execute a nontrivial native constructor'
+  reject_case native-record-overaligned 'struct alignas(16) Native { int Value; }; Native Read() { Native value; return value; } int main() { return 0; }' 'native POD layout exceeds supported CLR size/alignment'
+  log "PASS test-native-storage: native pointer reference metadata, stack/pinned bindings and real GUID byte layout"
+}
 step_test-pinning() {
   log "CLR pinned locals and moving-GC interior pointers across MinGW native calls"
   /clang64/bin/clang++.exe -std=c++17 -shared -O2 "$src/tests/pinning-native.cpp" -o "$testdir/cppcli-pinning.dll"
@@ -1227,7 +1266,7 @@ using namespace System;
 int main() { int n = 5; Example::Tracking::Change(n); Console::WriteLine(n); return 0; }
 EOF
   run_case tracking-reference "$testdir/tracking-reference.cpp" 8 --type Example.Tracking --type Example.Coordinate
-  reject_case native-reference 'void f(int& n) {} int main() { return 0; }' "native '&' references"
+  reject_case native-reference 'public ref class Owner { public: int Value; }; void f(int& n) {} void Bad(Owner^ owner) { f(owner->Value); } int main() { return 0; }' 'native reference cannot bind to movable managed storage'
   reject_case reference-return 'int% f(int% n) { return n; } int main() { return 0; }' 'returning tracking references'
 }
 for step in $steps; do "step_$step"; done

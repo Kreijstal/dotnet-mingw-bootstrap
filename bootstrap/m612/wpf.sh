@@ -370,6 +370,25 @@ EOF
   timeout 30 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/PointerHandleCheck.dll")"
 }
 
+step_check_native_guid() {
+  initialize
+  local work=$build/native-guid-check
+  mkdir -p "$work"
+  /usr/bin/python3 "$here/tools/wpf-native-guid-check.py" "$source" "$work/NativeGuid.cpp"
+  /clang64/bin/clang++.exe -std=c++14 -O2 -shared "$here/cppcli/tests/native-storage-native.cpp" -o "$work/wpf-guid-native.dll"
+  bridge_compile "$(cygpath -m "$work/NativeGuid.cpp")" --target library --std c++14 \
+    --ilasm "$(cygpath -m /clang64/bin/ilasm-dotnet.exe)" --type System.Guid --type System.GC \
+    --native-library wpf-guid-native.dll -o "$(cygpath -m "$work/NativeGuid.dll")"
+  cp "$here/wpf-tests/NativeGuid.cs" "$work/Program.cs"
+  cat > "$work/NativeGuidCheck.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="NativeGuid"><HintPath>NativeGuid.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$sdk/dotnet.exe" build "$(cygpath -m "$work/NativeGuidCheck.csproj")" -c Release \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -v:q
+  cp "$work/wpf-guid-native.dll" "$work/bin/Release/net8.0/"
+  timeout 30 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/NativeGuidCheck.dll")"
+}
+
 step_check_string_chars() {
   initialize
   local work=$build/string-chars-check

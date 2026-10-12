@@ -73,7 +73,9 @@
         "target-width-aware fundamental keyword static scopes with explicit CLR primitive selection",
         "nested imported indexer getter results with managed arrays and single receiver/index evaluation",
         "default primitive pinned locals and direct assignments/reset with lexical pin cleanup",
-        "direct managed-heap interior pointer returns with CLR byref signatures and stack-escape rejection"
+        "direct managed-heap interior pointer returns with CLR byref signatures and stack-escape rejection",
+        "source native reference parameter/local metadata with unmanaged pointer storage and stable binding checks",
+        "GC-free imported value reference classification includes private metadata fields"
       ],
       "remaining": [
         "implicit boxing into interfaces, primitive boxes and boxed-handle conversions",
@@ -85,7 +87,7 @@
         "full CLI semantic analysis and metadata type discovery",
         "for each with unbraced bodies, tracking-reference variables and value/native enumerators"
       ],
-      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values test-tracking test-pinning test-boxed-values test-static-fields test-static-properties test-nativeints test-layout test-switch test-generics test-indexers test-named-overrides test-each test-com test-delegates test-type-tokens test-constructors test-paramarrays test-primitive-statics test-guid-object-boxing test-managed-templates test-nested-indexers"
+      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values test-tracking test-pinning test-boxed-values test-static-fields test-static-properties test-nativeints test-layout test-switch test-generics test-indexers test-named-overrides test-each test-com test-delegates test-type-tokens test-constructors test-paramarrays test-primitive-statics test-guid-object-boxing test-managed-templates test-nested-indexers test-native-storage"
     },
     {
       "stage": 4,
@@ -99,7 +101,9 @@
         "native MinGW COM object called through generated CLI interfaces, including BOOL/uint64/pointer marshalling and HRESULT handling",
         "generated delegate invoked through a native function pointer on the source-built CoreCLR",
         "native-to-managed COM interface callback through the generated source class",
-        "explicit pin reinterpret_cast to spelled native pointer targets with const checking and moving-GC validation"
+        "explicit pin reinterpret_cast to spelled native pointer targets with const checking and moving-GC validation",
+        "opaque trivial native POD storage with Clang size/alignment, by-value returns and native buffer copy/store",
+        "system SDK declarations excluded from user split-DLL P/Invoke collection"
       ],
       "remaining": [
         "native layouts, complete pointer operations and automatic marshalling",
@@ -138,7 +142,8 @@
         "unchanged NativePointerCriticalHandle constructor and accessor definitions compiled and checked with actual unmanaged addresses and CoreCLR CriticalHandle disposal",
         "standard loop variable scope patch for original WPF TextAnalyzer classification",
         "complete upstream DirectWrite amalgamation passes Clang parsing and Sema; IL collection remains blocked at a native reference boundary",
-        "original WPF GetPtrToStringChars helper compiled with CLR char byref return and Unicode/empty-string compacting-GC checks"
+        "original WPF GetPtrToStringChars helper compiled with CLR char byref return and Unicode/empty-string compacting-GC checks",
+        "unchanged WPF ToGUID native-reference and GUID-return helper compiled and validated against real Windows GUID bytes and alignment"
       ]
     }
   ]

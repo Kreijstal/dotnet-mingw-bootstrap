@@ -139,7 +139,12 @@
     "Default primitive pin_ptr locals and direct block-local assignment from tracked addresses or nullptr retain pinned slots and lexical finally cleanup",
     "Explicit reinterpret_cast to spelled unmanaged pointer types invokes the pin conversion intrinsic while preserving element const checks and pinned roots",
     "Primitive interior_ptr returns from direct string character, managed array element and reference-class field addresses emit real CLR byref returns; return paths through pin cleanup retain the returned root",
-    "Original WPF GetPtrToStringChars method compiles and survives compacting GC with Unicode and empty strings"
+    "Original WPF GetPtrToStringChars method compiles and survives compacting GC with Unicode and empty strings",
+    "Source native lvalue-reference parameters/locals emit typed unmanaged pointers with IsImplicitlyDereferenced optional metadata, preserving the distinction from CLR tracking byrefs",
+    "Native reference binding accepts proven stack variables, forwarded native references, raw native dereferences and pinned primitive storage; movable heap/tracking aliases are rejected",
+    "Imported value storage is classified from all instance metadata fields, including private fields, before accepting a native reference",
+    "Trivial standard-layout GC-free native records use opaque CLR sequential value storage with Clang size/alignment and NativeCppClass metadata, including by-value returns and copy/indirect assignments",
+    "Original WPF ToGUID helper compiles unchanged and produces all 16 expected Windows GUID bytes at a native MinGW boundary"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -166,7 +171,7 @@
     "Imported generic nested types remain unsupported; indexed compound updates used as values are unsupported; static template-field facades can produce native definition warnings",
     "For each currently requires braced bodies and managed array/reference-enumerator handles; MoveNext currently requires bool; tracking-reference variables and value/native enumerators remain unsupported",
     "Interop attributes remain a selected subset: canonical literal GUIDs, imported interfaces, zero/one positional arguments and selected parameter marshal kinds; coclass activation, field/return marshal metadata, named marshal options and general custom attributes remain unsupported",
-    "Native SDK calls are not automatically partitioned; native record pointers remain opaque native addresses, and native integer boxes remain unsupported",
+    "Native SDK calls are not automatically partitioned; native record pointers remain opaque native addresses, and native integer boxes remain unsupported; system SDK declarations are excluded from user-DLL P/Invoke selection",
     "Delegate support currently excludes nested/generic declarations, open-instance/value-instance binding, source combine/remove expressions and general delegate attributes; imported binding requires an available supported Invoke signature; open-instance and value-instance binding remain unsupported",
     "Managed typeid does not emit native record/enum RTTI metadata and rejects undefined source records; ReliabilityContract currently covers individual method/accessor attributes, with no added runtime CER guarantee",
     "Imported base chains must be explicitly selected; nonempty parameter-array expansion, optional imported arguments remain unsupported",
@@ -178,6 +183,9 @@
     "Functional String literal constructor adaptation currently covers parenthesized managed value construction; list/direct initialization, user native string buffers and general managed reference literal conversion remain incomplete",
     "Closed C++ managed templates remain an initial subset: CLR generic declarations, general partial/nested specialization forms, template static fields and unused property accessor metadata remain incomplete",
     "Interior returns currently require direct proven managed heap addresses; local pointer aliases, forwarding calls, byref parameters and native/stack addresses are rejected rather than analyzed for escape safety",
-    "Pin reinterpret_cast adaptation currently requires an explicit pointer declarator; arbitrary typedef pointer targets and general native reinterpretation remain unsupported"
+    "Pin reinterpret_cast adaptation currently requires an explicit pointer declarator; arbitrary typedef pointer targets and general native reinterpretation remain unsupported",
+    "Native reference support covers source parameters/locals with primitive or proven GC-free value storage; native reference returns, implicit stack-field/temporary bindings, general lifetime analysis and imported native reference signatures remain incomplete",
+    "Native records currently provide opaque trivial storage/copy with alignment up to 8 bytes; field access, native allocation/deletion, nontrivial constructors/destructors, native bases/vtables and larger alignment remain unsupported",
+    "Native storage types use generated canonical CLR identities; general metadata visibility/import compatibility with other C++/CLI compilers is not yet implemented"
   ]
 }

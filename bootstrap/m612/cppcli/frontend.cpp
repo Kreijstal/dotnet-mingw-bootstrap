@@ -7,6 +7,7 @@
 #include <clang/AST/ExprCXX.h>
 #include <clang/AST/TypeLoc.h>
 #include <clang/AST/Mangle.h>
+#include <clang/AST/RecordLayout.h>
 #include <clang/Basic/Version.h>
 #include <clang/Basic/TargetInfo.h>
 #include <clang/Frontend/CompilerInstance.h>
@@ -1207,6 +1208,7 @@ class Emitter {
     std::string return_label;
     bool return_slot_set = false;
     std::vector<FunctionIR> ir;
+    mutable std::map<std::string, const CXXRecordDecl*> native_records;
     std::vector<std::string> temporary_types;
     std::map<const OpaqueValueExpr*, unsigned> opaque_values;
 
@@ -1290,6 +1292,68 @@ class Emitter {
         return spec->getTemplateArgs()[0].getAsType();
     }
     bool pinned(QualType t) const { return record_annotated(t->getAsCXXRecordDecl(), "cli.pin"); }
+    bool native_reference(const VarDecl* variable) const {
+        if (!variable->getType()->isLValueReferenceType() || !variable->getTypeSourceInfo()) return false;
+        // Imported CLR byrefs use native C++ reference syntax in the facade,
+        // but remain managed byrefs. Source sigils retain their original kind.
+        if (auto* parameter = dyn_cast<ParmVarDecl>(variable))
+            if (auto* function = dyn_cast<FunctionDecl>(parameter->getDeclContext()); function && !annotation(function, "cli.import:").empty()) return false;
+        auto& sm = ci.getSourceManager();
+        std::function<bool(const TypeSourceInfo*)> source_kind = [&](const TypeSourceInfo* info) {
+            if (!info) return false;
+            for (TypeLoc loc = info->getTypeLoc(); !loc.isNull(); loc = loc.getNextTypeLoc()) {
+                auto reference = loc.getAs<ReferenceTypeLoc>();
+                if (!reference.isNull()) {
+                    auto sigil = sm.getSpellingLoc(reference.getSigilLoc());
+                    return sigil.isValid() && sm.isWrittenInMainFile(sigil) && *sm.getCharacterData(sigil) == '&';
+                }
+                auto alias = loc.getAs<TypedefTypeLoc>();
+                if (!alias.isNull()) return source_kind(alias.getTypePtr()->getDecl()->getTypeSourceInfo());
+            }
+            return false;
+        };
+        return source_kind(variable->getTypeSourceInfo());
+    }
+    bool native_storage(QualType t, std::set<const CXXRecordDecl*> visiting = {}) const {
+        t = t.getCanonicalType();
+        if (t->isArithmeticType() || t->isEnumeralType()) return true;
+        if (t->isPointerType()) return !handle_target(t);
+        if (auto* array = context.getAsConstantArrayType(t)) return native_storage(array->getElementType(), visiting);
+        auto* r = t->getAsCXXRecordDecl();
+        if (!r) return false;
+        if (record_annotated(r, "cli.pin") || record_annotated(r, "cli.interior") || record_annotated(r, "cli.array") ||
+            record_annotated(r, "cli.static.property.proxy")) return false;
+        if (record_annotated(r, "cli.value") && !record_annotation(r, "cli.external:").empty())
+            return record_annotated(r, "cli.native.storage.safe");
+        r = r->getDefinition();
+        if (!r || !visiting.insert(r).second || r->getNumBases() || r->isPolymorphic()) return false;
+        if (!record_annotated(r, "cli.value") && (record_annotated(r, "cli.ref") || !r->isTriviallyCopyable() || !r->isStandardLayout())) return false;
+        for (auto* field : r->fields()) if (!native_storage(field->getType(), visiting)) return false;
+        return true;
+    }
+    bool native_pod(QualType t) const {
+        auto* r = t->getAsCXXRecordDecl();
+        return r && !record_annotated(r, "cli.value") && !record_annotated(r, "cli.ref") &&
+            record_annotation(r, "cli.external:").empty() && native_storage(t);
+    }
+    std::string native_record_type(QualType t) const {
+        auto* r = t->getAsCXXRecordDecl()->getDefinition();
+        const auto& layout = context.getASTRecordLayout(r);
+        auto size = layout.getSize().getQuantity(), alignment = layout.getAlignment().getQuantity();
+        if (size < 1 || size > INT32_MAX || alignment > 8) throw std::runtime_error("native POD layout exceeds supported CLR size/alignment");
+        std::unique_ptr<MangleContext> mangler(context.createMangleContext());
+        std::string identity; llvm::raw_string_ostream out(identity);
+        mangler->mangleCanonicalTypeName(context.getCanonicalTagType(r), out);
+        std::string name = "'__cpp_cli_native_" + identity + "'";
+        native_records.emplace(name, r);
+        return "valuetype " + name;
+    }
+    std::string variable_type(const VarDecl* variable) const {
+        if (!native_reference(variable)) return type(variable->getType());
+        auto element = variable->getType()->getPointeeType();
+        if (!native_storage(element)) throw std::runtime_error("native references require a primitive or proven GC-free value/native layout");
+        return type(element) + "* modopt([System.Runtime.CompilerServices.VisualC]System.Runtime.CompilerServices.IsImplicitlyDereferenced)";
+    }
     bool heap_interior_return(const Expr* original) const {
         const Expr* e = strip(original)->IgnoreParenImpCasts();
         if (pinned(e->getType())) return false;
@@ -1365,7 +1429,7 @@ class Emitter {
         validate_interop_attributes(p, 3);
         std::string result = annotated(p, "cli.param.in") ? "[in] " : "";
         if (annotated(p, "cli.param.out")) result += "[out] ";
-        result += type(p->getType());
+        result += variable_type(p);
         if (annotated(p, "cli.param.marshal")) {
             static const std::map<int64_t, std::string> native_types = {
                 {2,"bool"}, {3,"int8"}, {4,"unsigned int8"}, {5,"int16"}, {6,"unsigned int16"},
@@ -1512,6 +1576,7 @@ class Emitter {
             return type(decl->getIntegerType());
         }
         if (auto* r = value_target(t)) return "valuetype " + record_name(r);
+        if (native_pod(t)) return native_record_type(t);
         if (t->isVoidType()) return "void";
         if (t->isBooleanType()) return "bool";
         if (t->isSpecificBuiltinType(BuiltinType::Char16) ||
@@ -1562,11 +1627,8 @@ class Emitter {
             if (!reference.isNull()) {
                 if (reference.getType()->isRValueReferenceType()) throw std::runtime_error("rvalue reference signatures are not enabled yet");
                 SourceLocation sigil = sm.getSpellingLoc(reference.getSigilLoc());
-                if (sigil.isValid() && sm.isWrittenInMainFile(sigil) && *sm.getCharacterData(sigil) != '%') {
-                    auto source = sm.getPresumedLoc(reference.getSigilLoc());
-                    throw std::runtime_error((source.isValid() ? std::string(source.getFilename()) + ":" + std::to_string(source.getLine()) + ": " : "") +
-                        "native '&' references are not supported in managed declarations; use a '%' tracking reference");
-                }
+                if (sigil.isValid() && sm.isWrittenInMainFile(sigil) && *sm.getCharacterData(sigil) != '%' && *sm.getCharacterData(sigil) != '&')
+                    throw std::runtime_error("unrecognized CLI reference declarator");
             }
             auto pointer = loc.getAs<PointerTypeLoc>();
             if (pointer.isNull()) continue;
@@ -1624,7 +1686,7 @@ class Emitter {
         std::string sig = (method && !method->isStatic() ? "instance " : "") + result + " " + owner + "'" + name + "'(";
         for (unsigned i = 0; i < f->getNumParams(); ++i) {
             if (i) sig += ", ";
-            sig += type(f->getParamDecl(i)->getType());
+            sig += variable_type(f->getParamDecl(i));
         }
         return sig + ")";
     }
@@ -1727,6 +1789,26 @@ class Emitter {
         else if (auto* r = boxed_target(e->getType())) { expr(e); op("unbox " + record_token(r), 1, 1); }
         else expr(e); // this on a value class is already a managed address.
     }
+    void native_address(const Expr* original) {
+        const Expr* e = strip(original)->IgnoreParenImpCasts();
+        if (auto* reference = dyn_cast<DeclRefExpr>(e)) {
+            auto* variable = dyn_cast<VarDecl>(reference->getDecl());
+            if (variable && variable->hasLocalStorage() && (!variable->getType()->isReferenceType() || native_reference(variable))) {
+                address(e); op("conv.u", 1, 1); return;
+            }
+        }
+        if (auto* dereference = dyn_cast<UnaryOperator>(e); dereference && dereference->getOpcode() == UO_Deref &&
+            dereference->getSubExpr()->getType()->isPointerType() && !handle_target(dereference->getSubExpr()->getType())) {
+            expr(dereference->getSubExpr()); return;
+        }
+        if (auto* operation = dyn_cast<CXXOperatorCallExpr>(e); operation && operation->getOperator() == OO_Star) {
+            auto* method = dyn_cast_or_null<CXXMethodDecl>(operation->getDirectCallee());
+            if (method && pinned(context.getCanonicalTagType(method->getParent()))) {
+                expr(operation->getArg(0)); op("conv.u", 1, 1); return;
+            }
+        }
+        fail(e, "native reference cannot bind to movable managed storage or an unproven alias; use a tracking reference or pin");
+    }
     std::string receiver_type(const FieldDecl* field) const {
         auto* parent = cast<CXXRecordDecl>(field->getParent());
         return record_annotated(parent, "cli.value") ? "valuetype " + record_name(parent) + "&" : "class " + record_name(parent);
@@ -1776,6 +1858,14 @@ class Emitter {
     }
     void store(const Expr* target, bool retain) {
         target = target->IgnoreParenImpCasts();
+        if (auto* dereference = dyn_cast<UnaryOperator>(target); dereference && dereference->getOpcode() == UO_Deref &&
+            !handle_target(dereference->getSubExpr()->getType())) {
+            unsigned slot = temporary(type(target->getType()));
+            op("stloc " + std::to_string(slot), 1); expr(dereference->getSubExpr()); op("ldloc " + std::to_string(slot), 0, 1);
+            op("stobj " + type(target->getType()), 2);
+            if (retain) op("ldloc " + std::to_string(slot), 0, 1);
+            return;
+        }
         if (auto* subscript = array_subscript(target)) {
             unsigned result = temporary(type(subscript->getType())); op("stloc " + std::to_string(result), 1);
             auto slots = capture_array(subscript); load_array_location(slots); op("ldloc " + std::to_string(result), 0, 1);
@@ -2018,7 +2108,7 @@ class Emitter {
         }
         if (auto* opcall = dyn_cast<CXXOperatorCallExpr>(c)) {
             if (opcall->getOperator() == OO_Arrow) { expr(opcall->getArg(0)); return; }
-            if (opcall->getOperator() == OO_Equal && opcall->getNumArgs() == 2 && (handle_target(opcall->getArg(0)->getType()) || value_target(opcall->getArg(0)->getType()))) {
+            if (opcall->getOperator() == OO_Equal && opcall->getNumArgs() == 2 && (handle_target(opcall->getArg(0)->getType()) || value_target(opcall->getArg(0)->getType()) || native_pod(opcall->getArg(0)->getType()))) {
                 expr(opcall->getArg(1)); store(opcall->getArg(0), true); return;
             }
         }
@@ -2125,7 +2215,8 @@ class Emitter {
             emit_receiver(member->getImplicitObjectArgument());
         }
         for (unsigned i = 0; i < c->getNumArgs(); ++i) {
-            if (f->getParamDecl(i)->getType()->isReferenceType()) address(c->getArg(i)); else expr(c->getArg(i));
+            if (native_reference(f->getParamDecl(i))) native_address(c->getArg(i));
+            else if (f->getParamDecl(i)->getType()->isReferenceType()) address(c->getArg(i)); else expr(c->getArg(i));
         }
         std::string id = annotation(f, "cli.import:");
         bool delegate_call = m && delegate_invoke(m->getParent()) == m;
@@ -2253,6 +2344,14 @@ class Emitter {
         }
         if (auto* c = dyn_cast<CallExpr>(e)) { call(c); return; }
         if (auto* c = dyn_cast<CXXConstructExpr>(e)) {
+            if (native_pod(c->getType())) {
+                if (!c->getConstructor()->isTrivial()) fail(c, "native POD storage cannot execute a nontrivial native constructor");
+                if (c->getConstructor()->isCopyOrMoveConstructor() && c->getNumArgs() == 1) { expr(c->getArg(0)); return; }
+                if (c->getNumArgs()) fail(c, "native POD storage only supports trivial default/copy construction");
+                unsigned slot = temporary(type(c->getType()));
+                op("ldloca " + std::to_string(slot), 0, 1); op("initobj " + type(c->getType()), 1);
+                op("ldloc " + std::to_string(slot), 0, 1); return;
+            }
             if (!interior_element(c->getType()).isNull()) {
                 if (!c->getNumArgs() && pinned(c->getType())) { op("ldc.i4.0", 0, 1); op("conv.u", 1, 1); return; }
                 if (c->getNumArgs() != 1) fail(c, "managed pointer construction requires one address");
@@ -2296,7 +2395,7 @@ class Emitter {
                 if (variable && !annotation(variable, "cli.import.constant:").empty())
                     fail(u, "imported literals have no addressable CLR storage");
                 if (variable && variable->hasLocalStorage() &&
-                    (element->isArithmeticType() || (element->isPointerType() && !handle_target(element)))) {
+                    (element->isArithmeticType() || native_pod(element) || (element->isPointerType() && !handle_target(element)))) {
                     address(u->getSubExpr()); op("conv.u", 1, 1); return;
                 }
             }
@@ -2398,7 +2497,7 @@ class Emitter {
             auto* v = dyn_cast<VarDecl>(d);
             if (!v || v->isStaticLocal()) fail(s, "unsupported local declaration");
             validate_interop_attributes(v, 0);
-            type(v->getType());
+            variable_type(v);
             validate_declarator(v->getTypeSourceInfo());
             locals.emplace(v, locals.size());
         }
@@ -2425,7 +2524,8 @@ class Emitter {
             for (auto* decl : d->decls()) {
                 auto* v = cast<VarDecl>(decl);
                 if (!v->hasInit()) fail(s, "uninitialized locals are not supported yet");
-                if (v->getType()->isReferenceType()) address(v->getInit()); else expr(v->getInit()); op("stloc " + std::to_string(locals.at(v)), 1);
+                if (native_reference(v)) native_address(v->getInit());
+                else if (v->getType()->isReferenceType()) address(v->getInit()); else expr(v->getInit()); op("stloc " + std::to_string(locals.at(v)), 1);
             }
         } else if (auto* r = dyn_cast<ReturnStmt>(s)) {
             if (finally_depth) fail(s, "return cannot leave a finally handler");
@@ -2528,7 +2628,8 @@ class Emitter {
         if (stack != before) fail(s, "internal IL stack mismatch at statement boundary");
     }
     bool native_function(const FunctionDecl* f) const {
-        return !native_library.empty() && f->isExternC() && !isa<CXXMethodDecl>(f) && !f->hasBody() && f->isUsed();
+        return !native_library.empty() && f->isExternC() && !isa<CXXMethodDecl>(f) && !f->hasBody() && f->isUsed() &&
+            !ci.getSourceManager().isInSystemHeader(f->getLocation());
     }
     void validate_native_signature(const FunctionDecl* f) const {
         auto valid = [&](QualType t, bool result) {
@@ -2590,9 +2691,9 @@ class Emitter {
         }
         statement(f->getBody());
         if (f->getReturnType()->isVoidType()) op("ret");
-        else if (value_target(f->getReturnType())) {
+        else if (value_target(f->getReturnType()) || native_pod(f->getReturnType())) {
             unsigned slot = temporary(type(f->getReturnType()));
-            op("ldloca " + std::to_string(slot), 0, 1); op("initobj " + record_token(value_target(f->getReturnType())), 1);
+            op("ldloca " + std::to_string(slot), 0, 1); op("initobj " + type(f->getReturnType()), 1);
             op("ldloc " + std::to_string(slot), 0, 1); op("ret", 1);
         } else {
             std::string result = type(f->getReturnType());
@@ -2611,7 +2712,7 @@ class Emitter {
         for (auto& entry : locals) ordered[entry.second] = entry.first;
         for (unsigned i = 0; i < ordered.size(); ++i) {
             if (i) declarations += ", ";
-            declarations += "[" + std::to_string(i) + "] " + type(ordered[i]->getType()) + (pinned(ordered[i]->getType()) ? " pinned" : "") + " 'local" + std::to_string(i) + "'";
+            declarations += "[" + std::to_string(i) + "] " + variable_type(ordered[i]) + (pinned(ordered[i]->getType()) ? " pinned" : "") + " 'local" + std::to_string(i) + "'";
         }
         for (unsigned i = 0; i < temporary_types.size(); ++i) {
             if (!declarations.empty()) declarations += ", ";
@@ -2711,7 +2812,7 @@ public:
                             for (auto& parent : owner->bases()) if (!is_interface(parent.getType()->getAsCXXRecordDecl())) find_implementation(parent.getType()->getAsCXXRecordDecl());
                         };
                         find_implementation(r);
-                        if (!implemented) throw std::runtime_error("concrete managed class is missing interface slot: " + imported->second.owner + "::" + imported->second.name);
+                        if (!implemented) throw std::runtime_error("concrete managed class is missing interface slot: " + imported->second.owner + "::" + imported->second.name + " in " + r->getQualifiedNameAsString());
                     }
                     for (auto& parent : base->bases()) validate_slots(parent.getType()->getAsCXXRecordDecl());
                 };
@@ -2797,6 +2898,7 @@ public:
         collect(context.getTranslationUnitDecl());
         bool entry = false;
         for (auto* f : functions) {
+            for (auto* parameter : f->parameters()) variable_type(parameter);
             if (f->getNameAsString() == "main") {
                 if (isa<CXXMethodDecl>(f) || f->getNumParams() != 0 || type(f->getReturnType()) != "int32")
                     throw std::runtime_error("entry point must be global int main()");
@@ -2816,6 +2918,13 @@ public:
         }
         il << " }\n.module '" << options.assembly << ".dll'\n";
         if (!native_library.empty()) il << ".module extern '" << native_library << "'\n";
+        for (const auto& entry : native_records) {
+            const auto& layout = context.getASTRecordLayout(entry.second);
+            il << ".class public sequential ansi sealed " << entry.first << " extends [System.Runtime]System.ValueType {\n"
+               << "  .pack " << layout.getAlignment().getQuantity() << "\n  .size " << layout.getSize().getQuantity() << "\n"
+               << "  .custom instance void [System.Runtime.CompilerServices.VisualC]System.Runtime.CompilerServices.NativeCppClassAttribute::.ctor() = (01 00 00 00)\n"
+               << "  .field private uint" << layout.getAlignment().getQuantity() * 8 << " '__storage'\n}\n";
+        }
         auto emit_static_initializers = [&](const CXXRecordDecl* r) {
             for (auto* method : r->methods()) {
                 auto name = annotation(method, "cli.static.init:");

@@ -1784,8 +1784,10 @@ value-to-Object boxing now pass (see §26). Closed C++ managed templates and the
 out-of-line properties now pass (see §27). Fundamental keyword static scopes,
 nested indexers, default/assigned pins and direct managed-heap interior returns
 now pass (see §28). The complete amalgamation passes Clang parsing and Sema;
-IL collection next fails at the native Guid reference in Common.h's ToGUID.
-Native record emission, open managed
+Native Guid references and opaque trivial native record copies now pass (see
+§29). IL collection next fails at the missing IDisposable.Dispose slot in
+LocalizedStringsEnumerator, whose source destructor is not yet lowered.
+General native record operations, open managed
 generics, callbacks, finalizers and automatic native
 partitioning also remain outside its supported subset.
 The same compiler failure can be reproduced with `wpf.sh bridge-gate`; it
@@ -3074,3 +3076,92 @@ remain open. These are development frontend changes, not a new installed
 compiler or WPF package. Logs, generated helper source and IL are archived in
 `tmp/wpf8-support/validation/keyword-index-pins-returns-20261012` on the local
 build host.
+
+## 29. Native reference metadata and WPF's original GUID conversion
+
+The next 2026-10-12 continuation compiles the original Common.h ToGUID helper
+without changing its System::Guid& parameter or native _GUID return. Source
+native reference parameters and locals, including reference type aliases, now
+use typed unmanaged pointers with
+IsImplicitlyDereferenced optional metadata. Tracking references and imported
+CLR byref facades retain their managed byref representation. This follows the
+native-reference encoding in [ECMA-372 §33.1.5.5](https://www.ecma-international.org/wp-content/uploads/ECMA-372_1st_edition_december_2005.pdf).
+
+Binding a native reference requires stable storage: a stack local/value
+parameter, a forwarded native reference, an unmanaged dereference or a pinned
+primitive dereference. Movable managed fields/array elements and unproven
+tracking-reference aliases are rejected. Referenced values must have proven
+GC-free storage. The metadata reader checks every instance field, including
+private fields omitted from the C++ facade; unresolved external/generic field
+layouts are rejected conservatively. A private-long imported struct passes,
+while an imported struct with a private object field is rejected. Native
+reference returns, general lifetime analysis, stack-field/temporary bindings,
+imported native-reference signatures and overloaded %/& distinctions remain
+incomplete.
+
+Trivial standard-layout native records can now use opaque sequential CLR value
+storage. Clang supplies the size/alignment; the emitted storage uses .size,
+.pack, an alignment-sized scalar field and NativeCppClassAttribute. Native
+members are not exposed as managed fields. Primitive alignment up to eight
+bytes is supported, with larger alignment rejected. This uses the native
+value-storage representation described in ECMA-372 §34.8, with generated
+canonical type identities rather than cross-compiler metadata compatibility.
+Trivial default/copy construction, by-value returns and indirect copy/store
+work; nontrivial constructors, native field access, allocation/deletion and
+native vtables are still unsupported. System SDK declarations are excluded
+from selection as user-DLL P/Invokes, so unrelated SDK inline references do not
+create imports into the wrong split DLL. Actual native SDK calls still require
+implemented native partitioning or explicit bridges.
+
+`cppcli.sh test-native-storage` checks stack reference mutation through a call
+that collects, forwarding/local aliases, native references to pinned array
+storage, imported private-field classification, GUID value copies and indirect
+assignment. A real MinGW DLL checks the native address alignment and all 16
+Windows GUID bytes. C# reflection verifies the unmanaged Guid pointer plus
+modifier, sequential native value identity, pack, size and NativeCppClass flag.
+Negative checks cover movable heap/tracking bindings, hidden GC fields,
+nontrivial constructors and unsupported alignment.
+
+`wpf.sh check-native-guid` stages the original ToGUID declaration/body from
+Common.h in a public probe type. It verifies the actual result against the
+Windows GUID bytes after collection and rejects an incorrect GUID. This is
+another real helper component, not an additional complete source file or the
+full native FontFile initializer.
+
+Validation on win11:
+
+```sh
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build
+MSYSTEM=CLANG64 bash -l -c "/clang64/bin/cmake.exe --build /home/topkek/dotnetboot/m612/build/cppcli --target cli_ast -j2"
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh \
+  test-native-storage test-tracking test-pinning test-values test-interop
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-native-storage test-com
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-native-storage test-tracking
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  WPF_CPPCLI_BUILD=/home/topkek/dotnetboot/m612/build/cppcli \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-native-guid bridge-gate
+```
+
+The metadata reader and frontend rebuilds pass. Focused checks report zero
+managed build warnings/errors; the upstream helper prints `original WPF ToGUID
+helper and Windows GUID bytes OK`. The final full bridge gate still exits 1,
+with 39 upstream/native C++ warnings. Its first error now names the missing
+System.IDisposable::Dispose slot in
+MS::Internal::Text::TextInterface::LocalizedStrings::LocalizedStringsEnumerator.
+That nested enumerator declares ~LocalizedStringsEnumerator() {}; the compiler
+must generate the actual IDisposable/destructor behavior rather than omit the
+interface validation. General managed destructors/finalizers and the remaining
+native operations also remain open.
+
+No complete DirectWriteForwarder assembly or WPF package is produced. Full-file
+evidence remains one of its 21 included bodies, with 620 compiled C# foundation
+inputs. System.Printing, higher WPF, missing native exports, native version and
+protocol matching and WindowsDesktop packaging remain unfinished. New features
+are development frontend changes. Logs, generated original-helper source and
+IL are archived in `tmp/wpf8-support/validation/native-guid-storage-20261012`
+on the local build host.
