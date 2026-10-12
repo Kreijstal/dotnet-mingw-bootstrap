@@ -75,19 +75,22 @@
         "default primitive pinned locals and direct assignments/reset with lexical pin cleanup",
         "direct managed-heap interior pointer returns with CLR byref signatures and stack-escape rejection",
         "source native reference parameter/local metadata with unmanaged pointer storage and stable binding checks",
-        "GC-free imported value reference classification includes private metadata fields"
+        "GC-free imported value reference classification includes private metadata fields",
+        "source ref-class destructor disposal pattern and exception-safe source/imported base cleanup",
+        "managed delete and explicit destruction through CLR IDisposable dispatch",
+        "genuine nested source ref/value type metadata, private outer access and nested value GC storage"
       ],
       "remaining": [
         "implicit boxing into interfaces, primitive boxes and boxed-handle conversions",
         "generic declarations/methods, constraints/variance and nested generic types",
         "events, extended delegate forms and indexed-property forms",
-        "destructors/finalizers and deterministic cleanup",
+        "finalizers, full stack/member cleanup and extended destructor forms",
         "extended tracking references, nonprimitive pinning and managed pointer operations",
         "general attributes/interface static constructors/multiple translation units",
         "full CLI semantic analysis and metadata type discovery",
         "for each with unbraced bodies, tracking-reference variables and value/native enumerators"
       ],
-      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values test-tracking test-pinning test-boxed-values test-static-fields test-static-properties test-nativeints test-layout test-switch test-generics test-indexers test-named-overrides test-each test-com test-delegates test-type-tokens test-constructors test-paramarrays test-primitive-statics test-guid-object-boxing test-managed-templates test-nested-indexers test-native-storage"
+      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values test-tracking test-pinning test-boxed-values test-static-fields test-static-properties test-nativeints test-layout test-switch test-generics test-indexers test-named-overrides test-each test-com test-delegates test-type-tokens test-constructors test-paramarrays test-primitive-statics test-guid-object-boxing test-managed-templates test-nested-indexers test-native-storage test-destructors"
     },
     {
       "stage": 4,
@@ -143,7 +146,9 @@
         "standard loop variable scope patch for original WPF TextAnalyzer classification",
         "complete upstream DirectWrite amalgamation passes Clang parsing and Sema; IL collection remains blocked at a native reference boundary",
         "original WPF GetPtrToStringChars helper compiled with CLR char byref return and Unicode/empty-string compacting-GC checks",
-        "unchanged WPF ToGUID native-reference and GUID-return helper compiled and validated against real Windows GUID bytes and alignment"
+        "unchanged WPF ToGUID native-reference and GUID-return helper compiled and validated against real Windows GUID bytes and alignment",
+        "original LocalizedStrings nested enumerator and both getter bodies run with CLR IDisposable, boxing and compacting-GC checks",
+        "full bridge passes missing enumerator Dispose slots and nested FontFaceCacheEntry collection; next IL gate is native GlyphMetrics value pointers"
       ]
     }
   ]

@@ -1785,8 +1785,9 @@ out-of-line properties now pass (see §27). Fundamental keyword static scopes,
 nested indexers, default/assigned pins and direct managed-heap interior returns
 now pass (see §28). The complete amalgamation passes Clang parsing and Sema;
 Native Guid references and opaque trivial native record copies now pass (see
-§29). IL collection next fails at the missing IDisposable.Dispose slot in
-LocalizedStringsEnumerator, whose source destructor is not yet lowered.
+§29). Source destructor disposal and genuine nested ref/value metadata now pass
+(§30), including the original LocalizedStringsEnumerator and its getters.
+IL collection next fails at GlyphMetrics* in FontFace::GetDesignGlyphMetrics.
 General native record operations, open managed
 generics, callbacks, finalizers and automatic native
 partitioning also remain outside its supported subset.
@@ -3165,3 +3166,89 @@ protocol matching and WindowsDesktop packaging remain unfinished. New features
 are development frontend changes. Logs, generated original-helper source and
 IL are archived in `tmp/wpf8-support/validation/native-guid-storage-20261012`
 on the local build host.
+
+## 30. Source destructors, CLR nesting and WPF enumerator execution
+
+The next 2026-10-12 continuation lowers source ref-class destructors through the
+CLR dispose pattern. The original body is emitted as a private '~T' helper;
+Dispose(bool) is protected and virtual, with a public sealed IDisposable entry
+point when needed. Successful disposal calls GC.SuppressFinalize. Destructors
+alone do not introduce a Finalize method. Source-derived cleanup runs the base
+Dispose(bool) in a real finally region, including when the original body
+throws. Imported virtual dispose patterns and parameterless IDisposable base
+patterns are also called appropriately; unrelated methods named Dispose are
+not adopted as cleanup. This implements the relevant initial forms of
+[ECMA-372 §34.7.13](https://www.ecma-international.org/wp-content/uploads/ECMA-372_1st_edition_december_2005.pdf).
+
+Managed delete and explicit destructor calls evaluate the handle once, use a
+runtime IDisposable cast and call the interface slot when available. Null
+handles are harmless; native delete/delete[] remain rejected. No once-only
+state is added: repeated disposal follows the original destructor's own body
+and guards. Explicit Dispose/Finalize declarations that conflict with generated
+cleanup, defaulted destructors and value/interface destructors are rejected.
+User !T finalizers, full stack-semantics RAII and nontrivial member/native
+cleanup remain unfinished. The System.Object metadata facade uses a potentially
+throwing native surrogate destructor, avoiding a false C++ noexcept restriction
+on managed destructor exceptions; it never supplies a native implementation.
+
+Source nested ref/value classes now emit genuine nested CLR declarations and
+slash-qualified member/type identities. Access to an enclosing class's private
+fields/properties therefore retains CLR access rights. Nested value storage
+and GC fields are checked after a compacting collection. The value-constructor
+adapter also distinguishes ~T() from a zero-argument constructor. Imported
+nested types and general nested generic/delegate forms remain unsupported.
+
+`cppcli.sh test-destructors` verifies C# IDisposable calls, managed delete and
+explicit destructor dispatch, single receiver evaluation, null handles,
+derived/base order, base cleanup after an exception, imported MemoryStream
+closure, parameterless base cleanup and exclusion of unrelated Dispose(bool)
+methods. It checks real nested private access, nested value GC storage,
+Dispose(bool) visibility/virtual metadata, absence of an introduced finalizer,
+Dispose(false) behavior and suppression of an inherited C# finalizer.
+
+`tools/wpf-enumerator-check.py` retains the complete original
+LocalizedStringsEnumerator declaration and both Current getter bodies. Its
+owner supplies managed culture/string arrays and private accessors; the
+original LocalizedErrorMsgs component supplies error properties. The probe
+uses no replacement enumerator or added source Dispose method. The C# check
+verifies generic/nongeneric Current, real value boxing, two locale/Unicode
+pairs after compacting GC, not-started/end exceptions, Reset, repeated empty
+disposal and nested declaring-type/IDisposable metadata. This validates the
+original nested component, not all of LocalizedStrings.cpp or DirectWrite.
+
+Validation on win11:
+
+```sh
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build
+MSYSTEM=CLANG64 bash -l -c "/clang64/bin/cmake.exe --build /home/topkek/dotnetboot/m612/build/cppcli --target cli_ast -j2"
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh \
+  test-destructors test-virtuals test-values test-managed-templates
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-destructors
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  WPF_CPPCLI_BUILD=/home/topkek/dotnetboot/m612/build/cppcli \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-enumerator bridge-gate
+```
+
+The source-built metadata reader/frontend rebuild and all focused checks pass.
+Managed builds have zero warnings/errors, with the existing C++ interface
+missing-override warning retained in the virtual fixture. The WPF check prints
+`original WPF nested enumerator, getters, boxing and IDisposable cleanup OK`.
+The final full bridge gate exits 1 after the same 39 upstream/native C++
+warnings. Missing enumerator Dispose slots and the FontFaceCacheEntry nested
+value rejection are gone. The next error is FontFace.cpp:137, the GlyphMetrics*
+parameter of GetDesignGlyphMetrics. Native pointers to GC-free managed value
+storage need distinct handling from boxed '^' value handles; removing the
+pointer declaration check alone would not provide that distinction.
+
+No complete bridge assembly or WPF package is produced. Full implementation
+file evidence remains one of 21 DirectWrite bodies; 620 foundation C# inputs
+remain compiled. Finalizers, native value pointers/allocation/partitioning,
+System.Printing, higher WPF, missing native exports, version/protocol matching
+and WindowsDesktop packaging remain open. New features are development
+frontend changes. Logs, emitted IL and original-enumerator probe sources are
+archived in `tmp/wpf8-support/validation/destructors-enumerator-20261012` on the
+local build host.

@@ -601,7 +601,8 @@ protected:
                             }
                             ++end;
                         }
-                        if (tokens[i].text == "value" && tokens[j-1].text == name && end == j+2 && (j < 2 || tokens[j-2].text != "static"))
+                        if (tokens[i].text == "value" && tokens[j-1].text == name && end == j+2 &&
+                            (j < 2 || (tokens[j-2].text != "static" && tokens[j-2].text != "~")))
                             throw std::runtime_error("user-defined zero-argument value constructors are not supported; default storage is zero initialized");
                         if (string_parameter) {
                             if (tokens[j-1].text == name) managed_string_constructors[name].insert(string_parameters.begin(), string_parameters.end());
@@ -1292,6 +1293,48 @@ class Emitter {
         return spec->getTemplateArgs()[0].getAsType();
     }
     bool pinned(QualType t) const { return record_annotated(t->getAsCXXRecordDecl(), "cli.pin"); }
+    const CXXDestructorDecl* source_destructor(const CXXRecordDecl* record) const {
+        if (!record || !record->getDefinition() || !record_annotation(record, "cli.external:").empty()) return nullptr;
+        auto* destructor = record->getDefinition()->getDestructor();
+        return destructor && !destructor->isImplicit() && !destructor->isDeleted() ? destructor : nullptr;
+    }
+    struct DisposeBase {
+        const CXXRecordDecl* owner = nullptr;
+        const CXXMethodDecl* method = nullptr;
+        bool generated = false;
+        bool boolean = false;
+    };
+    bool implements_disposable(const CXXRecordDecl* record, std::set<const CXXRecordDecl*> visiting = {}) const {
+        if (!record || !visiting.insert(record->getCanonicalDecl()).second) return false;
+        if (source_destructor(record) || llvm::StringRef(record_annotation(record, "cli.external:")).ends_with("|System.IDisposable")) return true;
+        auto* definition = record->getDefinition();
+        if (!definition) return false;
+        for (auto& base : definition->bases()) if (implements_disposable(base.getType()->getAsCXXRecordDecl(), visiting)) return true;
+        return false;
+    }
+    DisposeBase dispose_base(const CXXRecordDecl* record) const {
+        DisposeBase simple;
+        for (auto* parent = class_base(record); parent; parent = class_base(parent)) {
+            if (source_destructor(parent)) return {parent, nullptr, true, true};
+            if (!implements_disposable(parent)) continue;
+            for (auto* method : parent->methods()) {
+                if (method->getNameAsString() != "Dispose" || method->isStatic() || !method->getReturnType()->isVoidType()) continue;
+                if (method->getNumParams() == 1 && method->getParamDecl(0)->getType()->isBooleanType() &&
+                    method->isVirtual() && !method->hasAttr<FinalAttr>() && method->getAccess() != AS_private)
+                    return {parent, method, false, true};
+                if (!method->getNumParams() && method->getAccess() == AS_public && !simple.owner)
+                    simple = {parent, method, false, false};
+            }
+        }
+        return simple;
+    }
+    void dispose_handle(const Expr* value) {
+        unsigned slot = temporary("class [System.Runtime]System.IDisposable");
+        expr(value); op("isinst [System.Runtime]System.IDisposable", 1, 1); op("stloc " + std::to_string(slot), 1);
+        auto done = label(); op("ldloc " + std::to_string(slot), 0, 1); op("brfalse " + done, 1);
+        op("ldloc " + std::to_string(slot), 0, 1); op("callvirt instance void [System.Runtime]System.IDisposable::Dispose()", 1);
+        mark(done);
+    }
     bool native_reference(const VarDecl* variable) const {
         if (!variable->getType()->isLValueReferenceType() || !variable->getTypeSourceInfo()) return false;
         // Imported CLR byrefs use native C++ reference syntax in the facade,
@@ -1511,6 +1554,7 @@ class Emitter {
             }
             return result;
         }
+        std::string name;
         if (auto* specialization = dyn_cast<ClassTemplateSpecializationDecl>(record)) {
             if (record->isDependentContext()) throw std::runtime_error("dependent managed template cannot be emitted as a CLR type");
             if (!record_annotated(record, "cli.ref") && !record_annotated(record, "cli.value"))
@@ -1518,13 +1562,18 @@ class Emitter {
             std::unique_ptr<MangleContext> mangler(context.createMangleContext());
             std::string identity; llvm::raw_string_ostream out(identity);
             mangler->mangleCanonicalTypeName(context.getCanonicalTagType(specialization), out);
-            return "'__cpp_cli_template_" + identity + "'";
+            name = "'__cpp_cli_template_" + identity + "'";
+        } else if (isa<CXXRecordDecl>(record->getDeclContext())) {
+            name = "'" + record->getNameAsString() + "'";
+        } else {
+            name = record->getQualifiedNameAsString();
+            for (size_t at; (at = name.find("::")) != std::string::npos;) name.replace(at, 2, ".");
+            name = "'" + name + "'";
         }
         if (!record_annotated(record, "cli.ref") && !record_annotated(record, "cli.value"))
             throw std::runtime_error("native C++ class is not a managed type: " + record->getQualifiedNameAsString());
-        std::string name = record->getQualifiedNameAsString();
-        for (size_t at; (at = name.find("::")) != std::string::npos;) name.replace(at, 2, ".");
-        return "'" + name + "'";
+        if (auto* parent = dyn_cast<CXXRecordDecl>(record->getDeclContext())) return record_name(parent) + "/" + name;
+        return name;
     }
     std::string record_token(const CXXRecordDecl* record) const {
         return (isa<ClassTemplateSpecializationDecl>(record) && !record_annotation(record, "cli.external:").empty() ?
@@ -1639,8 +1688,11 @@ class Emitter {
                 continue;
             }
             if (!handle_target(pointer.getType())) continue;
-            if (star.isValid() && sm.isWrittenInMainFile(star) && *sm.getCharacterData(star) == '*')
-                throw std::runtime_error("native '*' pointers to managed reference classes are not supported; declare a '^' handle");
+            if (star.isValid() && sm.isWrittenInMainFile(star) && *sm.getCharacterData(star) == '*') {
+                auto source = sm.getPresumedLoc(pointer.getStarLoc());
+                throw std::runtime_error((source.isValid() ? std::string(source.getFilename()) + ":" + std::to_string(source.getLine()) + ": " : "") +
+                    "native '*' pointers to managed reference/value classes are not supported: " + pointer.getType().getAsString() + "; declare a '^' handle or use a native storage bridge");
+            }
         }
     }
     std::string field_signature(const FieldDecl* f) const {
@@ -1976,6 +2028,12 @@ class Emitter {
     void call(const CallExpr* c) {
         auto* f = c->getDirectCallee();
         if (!f) fail(c, "indirect calls are not supported yet");
+        if (isa<CXXDestructorDecl>(f)) {
+            auto* member = dyn_cast<CXXMemberCallExpr>(c);
+            if (!member || !handle_target(member->getImplicitObjectArgument()->getType()))
+                fail(c, "explicit destruction currently requires a managed handle receiver");
+            dispose_handle(member->getImplicitObjectArgument()); return;
+        }
         if (annotated(f, "cli.cctor")) fail(c, "managed static constructors cannot be called directly");
         if (auto* method = dyn_cast<CXXMethodDecl>(f); method && record_annotated(method->getParent(), "cli.static.property.proxy")) {
             if (auto* opcall = dyn_cast<CXXOperatorCallExpr>(c); opcall && opcall->getOperator() == OO_Equal) {
@@ -2238,6 +2296,11 @@ class Emitter {
     }
     void expr(const Expr* original) {
         const Expr* e = strip(original);
+        if (auto* deletion = dyn_cast<CXXDeleteExpr>(e)) {
+            if (deletion->isArrayForm() || !handle_target(deletion->getArgument()->getType()))
+                fail(e, "native deletion and delete[] require a native implementation; managed delete requires a single handle");
+            dispose_handle(deletion->getArgument()); return;
+        }
         if (auto* c = dyn_cast<ImplicitCastExpr>(e)) {
             auto* conversion_call = dyn_cast<CXXMemberCallExpr>(strip(c->getSubExpr()));
             auto* conversion_method = conversion_call ? dyn_cast_or_null<CXXMethodDecl>(conversion_call->getDirectCallee()) : nullptr;
@@ -2743,10 +2806,11 @@ public:
         if (f->isImplicit() && method && annotated(method->getParent(), "cli.abstract") && annotated(method->getParent(), "cli.sealed")) return true;
         if ((f->isImplicit() && !(isa<CXXConstructorDecl>(f) && cast<CXXConstructorDecl>(f)->isDefaultConstructor())) || (!f->doesThisDeclarationHaveABody() && !(method && method->isPureVirtual()) && !native_function(f)) || llvm::StringRef(f->getNameAsString()).starts_with("__cli_")) return true;
         if (auto* m = dyn_cast<CXXMethodDecl>(f)) if (!record_annotation(m->getParent(), "cli.external:").empty()) return true;
-        if (isa<CXXDestructorDecl>(f)) throw std::runtime_error("managed destructors/finalizers are not enabled yet");
+        if (isa<CXXDestructorDecl>(f) && (!method || !record_annotated(method->getParent(), "cli.ref") || is_interface(method->getParent())))
+            throw std::runtime_error("destructors currently require source ref classes; value/interface destructor lowering remains unsupported");
         if (method && f->isOverloadedOperator()) throw std::runtime_error("managed operator metadata is not enabled yet");
         if (method) named_overrides(method);
-        if (method) for (auto* base : method->overridden_methods()) {
+        if (method && !isa<CXXDestructorDecl>(f)) for (auto* base : method->overridden_methods()) {
             if (type(method->getReturnType()) != type(base->getReturnType())) throw std::runtime_error("covariant managed return metadata is not enabled yet");
             if (!is_interface(base->getParent()) && !method->hasAttr<OverrideAttr>()) throw std::runtime_error("managed class overrides require an explicit override specifier");
             if (is_interface(base->getParent()) && method->getAccess() != AS_public) throw std::runtime_error("implicit interface implementations must be public");
@@ -2801,6 +2865,8 @@ public:
                         if (imported == metadata.methods.end() || !imported->second.is_abstract || imported->second.is_static) continue;
                         bool implemented = false;
                         std::function<void(const CXXRecordDecl*)> find_implementation = [&](const CXXRecordDecl* owner) {
+                            if (source_destructor(owner) && imported->second.owner == "System.IDisposable" &&
+                                imported->second.name == "Dispose" && expected->getNumParams() == 0) implemented = true;
                             for (auto* method : owner->methods()) for (auto* target : named_overrides(method))
                                 implemented |= target->getCanonicalDecl() == expected->getCanonicalDecl();
                             for (auto* method : owner->methods()) if (method->getNameAsString() == imported->second.name && method->isVirtual() &&
@@ -2819,6 +2885,12 @@ public:
                 for (auto& base : r->bases()) validate_slots(base.getType()->getAsCXXRecordDecl());
             }
             auto layout = layout_kind(r);
+            if (auto* destructor = source_destructor(r)) {
+                if (!record_annotated(r, "cli.ref") || is_interface(r)) throw std::runtime_error("destructors currently require source ref classes");
+                if (!destructor->hasBody() || destructor->isDefaulted()) throw std::runtime_error("managed destructor requires an explicit source body");
+                for (auto* method : r->methods()) if (method->getNameAsString() == "Dispose" || method->getNameAsString() == "Finalize")
+                    throw std::runtime_error("managed destructor conflicts with an explicit Dispose/Finalize declaration");
+            }
             auto pack = layout_constant(r, "cli.layout.Pack", 0), size = layout_constant(r, "cli.layout.Size", 0);
             auto charset = layout_constant(r, "cli.layout.CharSet", 1);
             if (pack < 0 || pack > 128 || (pack && (pack & (pack-1)))) throw std::runtime_error("StructLayout Pack must be zero or a power of two up to 128");
@@ -2842,7 +2914,6 @@ public:
             for (auto* method : r->methods()) if (annotated(method, "cli.cctor") && !method->hasBody())
                 throw std::runtime_error("managed static constructor requires a definition in this translation unit");
             if (record_annotated(r, "cli.value")) {
-                if (isa<CXXRecordDecl>(r->getDeclContext())) throw std::runtime_error("nested managed value types are not enabled yet");
                 if (r->getNumBases() || r->isPolymorphic()) throw std::runtime_error("value types with bases or virtual methods are not enabled yet");
                 for (auto* field : r->fields()) if (field->getType()->isPointerType() && !handle_target(field->getType())) throw std::runtime_error("native pointer fields in value types are not enabled yet");
             }
@@ -2946,13 +3017,14 @@ public:
                 il << ") cil managed preservesig {}\n"; return;
             }
             std::string flags;
-            if (method && method->isVirtual()) {
+            bool destructor = isa<CXXDestructorDecl>(f);
+            if (method && method->isVirtual() && !destructor) {
                 bool class_override = false;
                 for (auto* base : method->overridden_methods()) if (!is_interface(base->getParent())) class_override = true;
                 flags = "virtual " + std::string(class_override ? "" : "newslot ") + (method->isPureVirtual() ? "abstract " : "");
                 if (method->hasAttr<FinalAttr>()) flags += "final ";
             }
-            il << "  .method " << (cctor || (isa<CXXMethodDecl>(f) && f->getAccess() == AS_private) ? "private" : f->getAccess() == AS_protected ? "family" : annotation(f, "cli.access:") == "assembly" ? "assembly" : "public") << " hidebysig " << flags
+            il << "  .method " << (destructor || cctor || (isa<CXXMethodDecl>(f) && f->getAccess() == AS_private) ? "private" : f->getAccess() == AS_protected ? "family" : annotation(f, "cli.access:") == "assembly" ? "assembly" : "public") << " hidebysig " << flags
                << (cctor || isa<CXXConstructorDecl>(f) ? "specialname rtspecialname " : !annotation(f, "cli.accessor:").empty() ? "specialname " : "") << (body.instance ? "instance " : "static ")
                << type(f->getReturnType()) << " '" << body.name << "'(";
             for (unsigned j = 0; j < f->getNumParams(); ++j) { if (j) il << ", "; il << parameter_signature(f->getParamDecl(j)); }
@@ -2985,7 +3057,43 @@ public:
             }
             il << "}\n";
         }
-        for (auto* r : records) {
+        auto emit_cleanup = [&](const CXXRecordDecl* r) {
+            auto* destructor = source_destructor(r);
+            if (!destructor) return;
+            auto base = dispose_base(r);
+            bool inherited_entry = false;
+            for (auto* parent = class_base(r); parent; parent = class_base(parent)) {
+                inherited_entry |= source_destructor(parent) != nullptr;
+                for (auto* method : parent->methods()) inherited_entry |= method->getNameAsString() == "Dispose" &&
+                    !method->isStatic() && !method->getNumParams() && method->getReturnType()->isVoidType() && method->getAccess() == AS_public;
+            }
+            if (!base.boolean || !inherited_entry) {
+                il << "  .method public hidebysig newslot virtual final instance void Dispose() cil managed {\n"
+                   << "    .override method instance void [System.Runtime]System.IDisposable::Dispose()\n    .maxstack 2\n"
+                   << "    ldarg.0\n    ldc.i4.1\n    callvirt instance void " << record_token(r) << "::Dispose(bool)\n"
+                   << "    ldarg.0\n    call void [System.Runtime]System.GC::SuppressFinalize(object)\n    ret\n  }\n";
+            }
+            il << "  .method family hidebysig virtual " << (base.boolean ? "" : "newslot ")
+               << "instance void Dispose(bool marshal(unsigned int8)) cil managed {\n    .maxstack 2\n"
+               << "    ldarg.1\n    brfalse DISPOSE_FALSE\n";
+            if (base.owner) il << "    .try {\n";
+            il << "    ldarg.0\n    call " << signature(destructor) << "\n";
+            if (base.owner) {
+                il << "    leave DISPOSE_DONE\n    } finally {\n    ldarg.0\n";
+                if (base.boolean) il << "    ldc.i4.1\n";
+                il << "    call " << (base.generated ? "instance void " + record_token(base.owner) + "::Dispose(bool)" : signature(base.method))
+                   << "\n    endfinally\n    }\nDISPOSE_DONE:\n";
+            }
+            il << "    ret\nDISPOSE_FALSE:\n    ldarg.0\n";
+            if (base.boolean) {
+                il << "    ldc.i4.0\n    call " << (base.generated ? "instance void " + record_token(base.owner) + "::Dispose(bool)" : signature(base.method)) << "\n";
+            } else {
+                auto* parent = class_base(r);
+                il << "    call instance void " << (parent ? record_token(parent) : "[System.Runtime]System.Object") << "::Finalize()\n";
+            }
+            il << "    ret\n  }\n";
+        };
+        std::function<void(const CXXRecordDecl*)> emit_record = [&](const CXXRecordDecl* r) {
             if (auto* invoke = delegate_invoke(r)) {
                 il << ".class " << (annotation(r, "cli.visibility:") == "private" ? "private" : "public") << " auto ansi sealed " << record_name(r)
                    << " extends [System.Runtime]System.MulticastDelegate {\n"
@@ -2993,18 +3101,28 @@ public:
                    << "  .method public hidebysig newslot virtual instance " << type(invoke->getReturnType()) << " Invoke(";
                 for (unsigned j = 0; j < invoke->getNumParams(); ++j) { if (j) il << ", "; il << parameter_signature(invoke->getParamDecl(j)); }
                 il << ") runtime managed {}\n}\n";
-                continue;
+                return;
             }
             auto* parent = class_base(r);
             auto layout = layout_kind(r), charset = layout_constant(r, "cli.layout.CharSet", 1);
-            il << ".class " << (annotation(r, "cli.visibility:") == "private" ? "private " : "public ") << (is_interface(r) ? "interface abstract " :
+            auto* enclosing = dyn_cast<CXXRecordDecl>(r->getDeclContext());
+            auto name = record_name(r);
+            if (enclosing) name = name.substr(record_name(enclosing).size() + 1);
+            auto visibility = enclosing ? (r->getAccess() == AS_private ? "nested private " : r->getAccess() == AS_protected ? "nested family " : "nested public ") :
+                (annotation(r, "cli.visibility:") == "private" ? "private " : "public ");
+            il << ".class " << visibility << (is_interface(r) ? "interface abstract " :
                 std::string(layout == 2 ? "explicit " : layout == 0 ? "sequential " : "auto ") + (charset == 3 ? "unicode " : charset == 4 ? "autochar " : "ansi "))
                << (!is_interface(r) && (annotated(r, "cli.abstract") || r->isAbstract()) ? "abstract " : "")
-               << ((annotated(r, "cli.sealed") || annotated(r, "cli.value")) ? "sealed " : "") << (annotated(r, "cli.com.import") ? "import " : "") << record_name(r);
+               << ((annotated(r, "cli.sealed") || annotated(r, "cli.value")) ? "sealed " : "") << (annotated(r, "cli.com.import") ? "import " : "") << name;
             if (!is_interface(r)) il << " extends " << (annotated(r, "cli.value") ? "[System.Runtime]System.ValueType" : parent ? record_token(parent) : "[System.Runtime]System.Object");
             bool first_interface = true;
             for (auto& base : r->bases()) if (is_interface(base.getType()->getAsCXXRecordDecl())) {
                 il << (first_interface ? " implements " : ", ") << record_token(base.getType()->getAsCXXRecordDecl()); first_interface = false;
+            }
+            if (source_destructor(r)) {
+                bool explicit_disposable = false;
+                for (auto& base : r->bases()) explicit_disposable |= record_annotation(base.getType()->getAsCXXRecordDecl(), "cli.external:") == "System.Runtime|System.IDisposable";
+                if (!explicit_disposable) il << (first_interface ? " implements " : ", ") << "[System.Runtime]System.IDisposable";
             }
             il << " {\n";
             if (auto guid = guid_attribute(r); !guid.empty()) {
@@ -3055,6 +3173,7 @@ public:
                 emit_static_initializers(r); il << "    ret\n  }\n";
             }
             for (size_t i = 0; i < functions.size(); ++i) if (ir[i].owner == record_name(r)) emit_function(i);
+            emit_cleanup(r);
             for (auto* member : r->decls()) if (auto* property = dyn_cast<VarDecl>(member); property && !annotation(property, "cli.static.property:").empty()) {
                 auto names = annotation(property, "cli.static.property:"); auto bar = names.find('|');
                 il << "  .property " << type(property->getType()) << " '" << property->getNameAsString() << "'() {\n";
@@ -3107,8 +3226,10 @@ public:
                     il << "  }\n";
                 }
             }
+            for (auto* child : records) if (child->getDeclContext() == r) emit_record(child);
             il << "}\n";
-        }
+        };
+        for (auto* r : records) if (!isa<CXXRecordDecl>(r->getDeclContext())) emit_record(r);
         for (size_t i = 0; i < functions.size(); ++i) if (ir[i].owner.empty()) emit_function(i);
         return il.str();
     }

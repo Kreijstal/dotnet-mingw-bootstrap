@@ -370,6 +370,29 @@ EOF
   timeout 30 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/PointerHandleCheck.dll")"
 }
 
+step_check_enumerator() {
+  initialize
+  local work=$build/enumerator-check
+  local core_refs=("$sdk"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
+  local core_ref=${core_refs[-1]}
+  mkdir -p "$work"
+  /clang64/bin/python.exe "$here/tools/wpf-enumerator-check.py" "$(cygpath -m "$source")" "$(cygpath -m "$work/Enumerator.cpp")"
+  bridge_compile "$(cygpath -m "$work/Enumerator.cpp")" --target library --std c++14 \
+    --ilasm "$(cygpath -m /clang64/bin/ilasm-dotnet.exe)" \
+    --type System.Threading.Monitor --type System.InvalidOperationException --type System.Globalization.CultureInfo \
+    --type 'System.Collections.Generic.IEnumerator`1' --type 'System.Collections.Generic.KeyValuePair`2' \
+    --type System.Collections.IEnumerator --type System.IDisposable \
+    --reference "$(cygpath -m "$core_ref/System.Threading.dll")" \
+    --reference "$(cygpath -m "$core_ref/System.Globalization.dll")" -o "$(cygpath -m "$work/Enumerator.dll")"
+  cp "$here/wpf-tests/Enumerator.cs" "$work/Program.cs"
+  cat > "$work/EnumeratorCheck.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="Enumerator"><HintPath>Enumerator.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$sdk/dotnet.exe" build "$(cygpath -m "$work/EnumeratorCheck.csproj")" -c Release \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -v:q
+  timeout 30 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/EnumeratorCheck.dll")"
+}
+
 step_check_native_guid() {
   initialize
   local work=$build/native-guid-check

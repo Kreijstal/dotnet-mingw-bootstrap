@@ -385,7 +385,7 @@ EOF
   reject_case sealed-override 'public ref class B { public: virtual int Read() sealed { return 1; } }; public ref class D : B { public: virtual int Read() override { return 2; } }; int main() { return 0; }' 'final'
   reject_case implicit-class-override 'public ref class B { public: virtual int Read() { return 1; } }; public ref class D : B { public: virtual int Read() { return 2; } }; int main() { return 0; }' 'explicit override'
   reject_case qualified-abstract 'public ref class B { public: virtual int Read() abstract; }; public ref class D : B { public: virtual int Read() override { return B::Read(); } }; int main() { return 0; }' 'cannot target an abstract'
-  reject_case destructor 'public ref class B { public: ~B() {} }; int main() { return 0; }' 'destructors/finalizers'
+  reject_case destructor 'public value class B { public: ~B() {} }; int main() { return 0; }' 'destructors currently require source ref classes'
   reject_case sealed-base 'public ref class B sealed {}; public ref class D : B {}; int main() { return 0; }' 'final'
 }
 step_test-arrays() {
@@ -510,6 +510,23 @@ EOF
   reject_case layout-unknown-kind "$prefix"'[StructLayout(LayoutKind::Missing)] public value struct Bad { int Value; }; int main() { return 0; }' 'Missing' "${layout_args[@]}"
   reject_case layout-negative-size "$prefix"'[StructLayout(LayoutKind::Sequential, Size=-1)] public value struct Bad { int Value; }; int main() { return 0; }' 'Size must be a nonnegative' "${layout_args[@]}"
   log "PASS test-layout: explicit/sequential CLR layout, overlapping fields, pack, size and charset"
+}
+step_test-destructors() {
+  log "Managed destructor dispose pattern, base cleanup and nested CLR identity"
+  compile "$(cygpath -m "$src/tests/destructors.cpp")" --target library --type System.InvalidOperationException \
+    --type System.IO.MemoryStream --type System.IO.Stream --type System.IDisposable -o "$(cygpath -m "$testdir/destructors.dll")"
+  mkdir -p "$testdir/destructors-consumer"
+  cp "$src/tests/DestructorsConsumer.cs" "$testdir/destructors-consumer/Program.cs"
+  cat > "$testdir/destructors-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers></PropertyGroup><ItemGroup><Reference Include="destructors"><HintPath>../destructors.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/destructors-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -p:NuGetAudit=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/destructors-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case destructor-conflict 'public ref class B { public: ~B() {} void Dispose() {} }; int main() { return 0; }' 'destructor conflicts with an explicit Dispose/Finalize'
+  reject_case destructor-defaulted 'public ref class B { public: ~B() = default; }; int main() { return 0; }' 'destructor requires an explicit source body'
+  reject_case delete-native 'int main() { int* value = nullptr; delete value; return 0; }' 'native deletion and delete'
+  log "PASS test-destructors: IDisposable dispatch, exception-safe base cleanup and genuine nested types"
 }
 step_test-native-storage() {
   log "Native references and Clang-sized GC-free POD storage"

@@ -144,7 +144,12 @@
     "Native reference binding accepts proven stack variables, forwarded native references, raw native dereferences and pinned primitive storage; movable heap/tracking aliases are rejected",
     "Imported value storage is classified from all instance metadata fields, including private fields, before accepting a native reference",
     "Trivial standard-layout GC-free native records use opaque CLR sequential value storage with Clang size/alignment and NativeCppClass metadata, including by-value returns and copy/indirect assignments",
-    "Original WPF ToGUID helper compiles unchanged and produces all 16 expected Windows GUID bytes at a native MinGW boundary"
+    "Original WPF ToGUID helper compiles unchanged and produces all 16 expected Windows GUID bytes at a native MinGW boundary",
+    "Source ref-class destructors emit private body helpers, virtual Dispose(bool), public sealed IDisposable entry points and successful-disposal finalizer suppression",
+    "Derived/source and imported disposal patterns retain dynamic dispatch and finally-protected base cleanup when a destructor throws; unrelated Dispose methods are excluded",
+    "Managed delete and explicit destructor calls evaluate the receiver once and use runtime IDisposable dispatch with null/non-disposable no-op behavior",
+    "Source nested ref/value classes emit genuine nested CLR metadata and slash-qualified member/type identities, preserving nested access to outer private members",
+    "Original WPF localized-string nested enumerator and both Current getters compile and run, including real IDisposable metadata, nongeneric boxing, Reset and compacting GC"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -157,11 +162,11 @@
     "Interface-only implicit Object bases require directly recognized interface names; aliases and unresolved qualified source names still require an explicit Object base; interface-handle Object conversions remain incomplete",
     "Interface methods and property accessors require declarations without bodies; named overrides cover one imported-interface target; source-interface renamed methods, target lists and class-target overrides remain unsupported",
     "Managed arrays currently require rank one; no aggregate initializers or covariance",
-    "Managed destructors/finalizers, covariance metadata and managed operator metadata are explicitly rejected",
+    "User finalizer declarations, value/interface destructors, covariance metadata and managed operator metadata remain unsupported",
     "Native bridges require extern-C scalars or unmanaged pointers; bool/automatic marshalling, callbacks and automatic native partitioning are not enabled",
     "Implicit primitive/interface boxing and multi-translation-unit linking remain unimplemented",
     "WPF DirectWriteForwarder and System.Printing are not compiled by this frontend yet",
-    "Value classes currently exclude nested types, bases/interfaces, virtual methods, native pointer fields and custom zero-argument constructors",
+    "Value classes currently exclude bases/interfaces, virtual methods, native pointer fields and custom zero-argument constructors",
     "Boxing covers explicit safe_cast to Object and implicit boxing into Object or matching selected value-class handles; handle upcasts, primitive boxes, constrained dispatch and boxed operator overloads remain incomplete",
     "Tracking references exclude constructors, fields and tracking-reference returns; pin_ptr is restricted to primitive block locals and direct local assignments; general pointer operations, interior assignments and unmanaged pointer arithmetic remain unsupported",
     "Layout attributes currently appear individually before managed declarations; inherited layout types, bitfields and general custom attributes remain unsupported",
@@ -186,6 +191,9 @@
     "Pin reinterpret_cast adaptation currently requires an explicit pointer declarator; arbitrary typedef pointer targets and general native reinterpretation remain unsupported",
     "Native reference support covers source parameters/locals with primitive or proven GC-free value storage; native reference returns, implicit stack-field/temporary bindings, general lifetime analysis and imported native reference signatures remain incomplete",
     "Native records currently provide opaque trivial storage/copy with alignment up to 8 bytes; field access, native allocation/deletion, nontrivial constructors/destructors, native bases/vtables and larger alignment remain unsupported",
-    "Native storage types use generated canonical CLR identities; general metadata visibility/import compatibility with other C++/CLI compilers is not yet implemented"
+    "Native storage types use generated canonical CLR identities; general metadata visibility/import compatibility with other C++/CLI compilers is not yet implemented",
+    "Destructor support requires explicit source bodies in ref classes; defaulted destructors, explicit Dispose/Finalize conflicts, stack-semantics RAII and automatic nontrivial member cleanup remain unsupported",
+    "Managed deletion supports single handles; native delete/delete[], native allocation and full cleanup/mixed-mode semantics remain incomplete",
+    "Nested source ref/value metadata is supported, but imported nested types, general nested generic forms and nested delegates remain incomplete"
   ]
 }

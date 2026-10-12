@@ -447,7 +447,7 @@ static class Program
             if (interfaces != null && t.Kind != "value") bases.AddRange(interfaces.Select(i => "virtual " + i.Cpp.TrimEnd('*')));
             if (bases.Count != 0) w.Write(" : " + string.Join(", ", bases.Select(b => "public " + b)));
             w.WriteLine(" { public:");
-            if (t.Name == "System.Object") w.WriteLine("virtual ~Object() = default;");
+            if (t.Name == "System.Object") w.WriteLine("virtual ~Object() noexcept(false) = default;");
             if (t.Name == "System.String") w.WriteLine("String(const char*); String(const wchar_t*);");
             if (t.Kind == "value" && !t.Methods.Any(m => m.Name == ".ctor" && m.Parameters.Length == 0 && m.Supported))
                 w.WriteLine("__attribute__((annotate(\"cli.value.zero\"))) " + name + "() {}");
