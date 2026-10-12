@@ -628,11 +628,35 @@ EOF
   reject_case indexer-two-indices 'public ref class C { public: property int default[int,int] { int get(int x, int y) { return 0; } } }; int main() { return 0; }' 'require one index parameter'
   log "PASS test-indexers: source/imported CLR indexers and compound evaluation"
 }
+step_test-delegates() {
+  log "CLR delegate metadata, method binding and native-to-managed invocation"
+  local args=(--type System.Delegate --type System.MulticastDelegate --type System.InvalidOperationException)
+  compile "$(cygpath -m "$src/tests/delegates.cpp")" --target library "${args[@]}" -o "$(cygpath -m "$testdir/delegates.dll")"
+  mkdir -p "$testdir/delegate-consumer"
+  /clang64/bin/clang++.exe -std=c++17 -O2 -shared "$src/tests/delegate-native.cpp" -o "$testdir/delegate-consumer/delegate-native.dll"
+  cp "$src/tests/DelegateConsumer.cs" "$testdir/delegate-consumer/Program.cs"
+  cat > "$testdir/delegate-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><AllowUnsafeBlocks>true</AllowUnsafeBlocks><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="delegates"><HintPath>../delegates.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/delegate-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  cp "$testdir/delegate-consumer/delegate-native.dll" "$testdir/delegate-consumer/bin/Debug/net8.0/"
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/delegate-consumer/bin/Debug/net8.0/consumer.dll")"
+  cat > "$testdir/delegate-reference.cpp" <<'EOF'
+#using "delegates.dll"
+using namespace System;
+int main() { Scalar^ value = DelegateBridge::Static(); Console::WriteLine(value(21)); return 0; }
+EOF
+  run_case delegate-reference "$testdir/delegate-reference.cpp" '42' --type Scalar --type DelegateBridge "${args[@]}"
+  reject_case delegate-missing-method 'public delegate int D(int); public ref class C { public: static int F(int); }; int main() { D^ d = gcnew D(&C::F); return 0; }' 'delegate target has no emitted definition' "${args[@]}"
+  log "PASS test-delegates: CLR construction, virtual slots, multicast, signatures, GC and native callbacks"
+}
 step_test-com() {
   log "COM import/GUID/interface metadata and native MinGW marshalling"
   local refs=("$CPPCLI_SDK"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
   local args=(--type System.IntPtr --type System.Runtime.InteropServices.ComInterfaceType --type System.Runtime.InteropServices.UnmanagedType
     --type System.Runtime.InteropServices.GuidAttribute --type System.Runtime.InteropServices.InterfaceTypeAttribute
+    --type System.Runtime.InteropServices.ClassInterfaceType --type System.Runtime.InteropServices.ClassInterfaceAttribute --type System.Runtime.InteropServices.ComVisibleAttribute
     --reference "$(cygpath -m "${refs[-1]}/System.Runtime.InteropServices.dll")")
   compile "$(cygpath -m "$src/tests/com.cpp")" --target library "${args[@]}" -o "$(cygpath -m "$testdir/com.dll")"
   mkdir -p "$testdir/com-consumer"

@@ -121,13 +121,18 @@ step_bridge_gate() {
     --type 'System.Collections.Generic.IDictionary`2' --type 'System.Collections.Generic.ICollection`1' \
     --type 'System.Collections.Generic.IEnumerable`1' --type 'System.Collections.Generic.IEnumerator`1' \
     --type 'System.Collections.Generic.KeyValuePair`2' --type System.Collections.IEnumerable \
+    --type 'System.Collections.Generic.List`1' --type 'System.Collections.Generic.IList`1' \
+    --type System.Delegate --type System.MulticastDelegate \
     --type System.Collections.IEnumerator --type System.IDisposable \
     --type System.Runtime.InteropServices.StructLayoutAttribute --type System.Runtime.InteropServices.LayoutKind \
     --type System.Runtime.InteropServices.FieldOffsetAttribute \
     --type System.Runtime.InteropServices.ComInterfaceType --type System.Runtime.InteropServices.UnmanagedType \
     --type System.Runtime.InteropServices.GuidAttribute --type System.Runtime.InteropServices.InterfaceTypeAttribute \
+    --type System.Runtime.InteropServices.ClassInterfaceAttribute --type System.Runtime.InteropServices.ClassInterfaceType \
+    --type System.Runtime.InteropServices.ComVisibleAttribute \
     --type System.Diagnostics.Debug \
     --reference "$(cygpath -m "$core_ref/System.Threading.dll")" \
+    --reference "$(cygpath -m "$core_ref/System.Collections.dll")" \
     --reference "$(cygpath -m "$core_ref/System.Runtime.InteropServices.dll")" \
     --reference "$(cygpath -m "$core_ref/System.Net.Requests.dll")" \
     --reference "$(cygpath -m "$core_ref/System.Globalization.dll")" \
@@ -138,6 +143,8 @@ step_bridge_gate() {
     -D '__field_range(low,high)=_Field_range_(low,high)' -D '__deref_out_range(low,high)=_Deref_out_range_(low,high)' \
     -D '__success(x)=_Success_(x)' \
     -D '__out=_Out_' -D '__deref_out_bcount(x)=_Outptr_result_bytebuffer_(x)' \
+    -D '__deref_inout_ecount(x)=_Inout_updates_(x)' -D '__inout_ecount(x)=_Inout_updates_(x)' \
+    -D '__in_ecount(x)=_In_reads_(x)' -D '__out_ecount(x)=_Out_writes_(x)' \
     -D "WINDOWS_BASE_DLL=\"$(cygpath -m "$build/lib/WindowsBase.dll")\"" \
     -D PRESENTATION_CORE=1 -D _CLR_NETCORE=1 -o "$(cygpath -m "$build/DirectWriteForwarder.il")" \
     > "$build/directwrite-gate.log" 2>&1 || {
@@ -227,6 +234,23 @@ EOF
   "$sdk/dotnet.exe" build "$(cygpath -m "$work/FontSourceCheck.csproj")" -c Release \
     --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -v:q
   timeout 30 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/FontSourceCheck.dll")"
+}
+
+step_check_delegates() {
+  initialize
+  local work=$build/delegates-check
+  mkdir -p "$work"
+  /clang64/bin/python.exe "$here/tools/wpf-delegates-check.py" "$(cygpath -m "$source")" "$(cygpath -m "$work/Delegates.cpp")"
+  bridge_compile "$(cygpath -m "$work/Delegates.cpp")" --target library --std c++14 \
+    --ilasm "$(cygpath -m /clang64/bin/ilasm-dotnet.exe)" --type System.Delegate --type System.MulticastDelegate \
+    --type System.InvalidOperationException -o "$(cygpath -m "$work/Delegates.dll")"
+  cp "$here/wpf-tests/Delegates.cs" "$work/Program.cs"
+  cat > "$work/DelegatesCheck.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><AllowUnsafeBlocks>true</AllowUnsafeBlocks><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="Delegates"><HintPath>Delegates.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$sdk/dotnet.exe" build "$(cygpath -m "$work/DelegatesCheck.csproj")" -c Release \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -v:q
+  timeout 30 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/DelegatesCheck.dll")"
 }
 
 step_check_com_interfaces() {

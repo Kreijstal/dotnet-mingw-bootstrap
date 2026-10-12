@@ -1773,7 +1773,9 @@ The development frontend now handles these, boxed value handles, static fields
 and managed metric layouts (see §13–16). Default indexed properties, named imported-interface overrides and interface
 property declarations are now supported (see §18). The full upstream translation
 unit now parses `for each` (see §19) and COM interface attributes (see §20).
-It still fails on native struct visibility, delegates and remaining imports. Native record
+Native declaration visibility and text-analysis delegates are now supported (see §21).
+The full build still fails in Factory on type tokens/reliability attributes and
+remaining imports. Native record
 emission, managed class templates, callbacks, finalizers and automatic native
 partitioning also remain outside its supported subset.
 The same compiler failure can be reproduced with `wpf.sh bridge-gate`; it
@@ -2435,3 +2437,95 @@ PresentationCore/PresentationFramework, missing PresentationNative exports,
 rendered WPF validation and WindowsDesktop packaging remain unfinished.
 Current Greenshot is not packaged. The installed frontend remains the older
 release; these checks use the development frontend explicitly.
+
+
+## 21. WPF delegate declarations, invocation and callback checks
+
+The next 2026-10-12 continuation adds source delegates. Their declarations are
+lowered into annotated C++ facades; Clang parses the actual return/parameter
+types and resolves typed static or instance method binding. The resulting CLR
+type is sealed and derives from MulticastDelegate. Its standard constructor
+(object, native int) and Invoke method use runtime-managed implementation flags.
+Binding emits ldftn for static/global/nonvirtual methods or ldvirtftn for virtual
+instance slots. Reference targets and exact supported signatures are checked.
+
+The private Clang parser now recognizes calls on marked delegate handles and
+asks Sema to resolve Invoke before parsing/checking the argument list. Native
+function-pointer syntax keeps its existing path. Metadata imports mark delegate
+types so a second CLI assembly can invoke an imported source delegate. C# can
+construct, call, combine and remove the generated delegate types using CLR
+multicast behavior. Source combine/remove expressions, nested/generic delegate
+declarations, open/value-instance binding and general delegate attributes remain
+pending; imported delegates can be invoked but lack source binding facades.
+
+ClassInterface and type/method ComVisible attributes now emit actual custom
+metadata, resolving their constructor scopes from the source-built reference
+assemblies. The expanded COM test obtains an interface pointer for a generated
+managed class and calls it from a native MinGW vtable. Thus it checks a COM
+callback in addition to the prior native COM object calls. Automatic native
+partitioning and the full DirectWrite callback implementation remain unfinished.
+
+Native public/private declaration prefixes are lowered into retained native
+visibility annotations, leaving the C++ record/template body intact. They do
+not create managed objects or implement native record layout/operations.
+Internal static field initialization now restores public C++ access after its
+helper body while preserving assembly visibility in the CLR annotations.
+Raw address-taking is supported for primitive/unmanaged-pointer locals with
+ldloca/conv.u; managed object/field address exposure and unmanaged pointer
+arithmetic remain outside this subset.
+
+`cppcli.sh test-delegates` verifies static/global/bound/virtual method identity,
+normal and explicit Invoke syntax, byref/String/void/raw-pointer signatures,
+null/throw behavior, GC target retention, C# multicast/remove behavior and
+reflection of runtime methods/private delegate visibility. It also invokes an
+imported source delegate from a second CLI assembly. A native MinGW DLL invokes
+a generated delegate's real CoreCLR function-pointer thunk after compacting GC,
+with the delegate rooted until the native call returns. An undefined target
+method is rejected.
+
+`wpf.sh check-delegates` retains all four unchanged private declarations from
+TextAnalyzer.h in their original namespace. Its probe invokes callbacks created
+by C# using the actual generated private delegate types, checks the nine
+CreateTextAnalysisSource arguments (UTF-16 text, booleans, integers and native
+pointers), and verifies a void** output. The other three callbacks preserve raw
+pointer results. It also includes the unchanged CharAttribute.h and verifies
+its native private-struct enum constants. This checks delegate declarations and
+invocation, not the complete TextAnalyzer implementation or native text pipeline.
+
+The full bridge driver now imports List/IList, Delegate/MulticastDelegate and
+COM export attribute dependencies, including System.Collections.dll. Remaining
+legacy counted SAL forms are mapped to MinGW's corresponding annotations.
+
+Validation on win11:
+
+```sh
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build
+MSYSTEM=CLANG64 bash -l -c "/clang64/bin/cmake.exe --build /home/topkek/dotnetboot/m612/build/cppcli --target cli_ast -j2"
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh \
+  test-delegates test-com test-each test-static-fields test-static-properties test-adapter-gate
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-delegates test-pinning test-interop
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  WPF_CPPCLI_BUILD=/home/topkek/dotnetboot/m612/build/cppcli \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-delegates
+```
+
+All focused checks pass. The final delegate/COM tests and upstream WPF probe
+were rerun after the last emitter change. Managed builds have zero warnings and
+errors. Results include `CLR delegate construction/invocation/GC/native callback
+OK`, `real MinGW COM metadata/marshalling/HRESULT checks OK` and
+`upstream WPF text-analysis delegates OK`. Logs, the unchanged declaration probe
+and emitted IL are retained under
+`/home/kreijstal/tmp/wpf8-support/validation/delegates-20261012`.
+
+The complete bridge gate still exits nonzero. Its next diagnostics occur in
+Factory.h/Factory.cpp: missing DispatcherOperation and FILETIME imports,
+ReliabilityContract attribute handling, managed ::typeid tokens and Marshal
+GetComInterfaceForObject discovery, followed by native lifetime/pointer work.
+Native/managed partitioning, finalizers, System.Printing, higher WPF assemblies,
+missing PresentationNative exports, rendered-window validation, WindowsDesktop
+packaging and current Greenshot remain unfinished. Development checks still
+use WPF_CPPCLI_BUILD; the installed frontend package predates these features.

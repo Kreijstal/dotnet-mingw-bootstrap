@@ -22,3 +22,12 @@ public:
     static void Set([Runtime::InteropServices::Out] int% value) { value = 42; }
     static int Indexed() { array<int>^ values = gcnew array<int>(2); int Out = 1; values[Out] = 42; return values[Out]; }
 };
+[Guid("93BC7292-311D-45C9-A5EC-1405C49081F3"), InterfaceType(ComInterfaceType::InterfaceIsIUnknown), ComVisible(true)]
+public interface class IManagedCallback {
+    [PreserveSig] int Value(int input);
+};
+[ClassInterface(ClassInterfaceType::None), ComVisible(true)]
+public ref class ManagedCallback : IManagedCallback {
+public:
+    [ComVisible(true)] virtual int Value(int input) { return input + 10; }
+};

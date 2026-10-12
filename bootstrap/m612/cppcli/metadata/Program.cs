@@ -349,7 +349,8 @@ static class Program
         }
         w.Write("class __attribute__((annotate(\"cli.external:" + Escape(t.Assembly + "|" + t.Name) + "\")" +
             (t.Kind == "interface" ? ", annotate(\"cli.interface\")" : t.Kind == "value" ? ", annotate(\"cli.value\")" : "") +
-            (t.Name == "System.IntPtr" ? ", annotate(\"cli.nativeint:signed\")" : t.Name == "System.UIntPtr" ? ", annotate(\"cli.nativeint:unsigned\")" : "") + ")) " + name);
+            (t.Name == "System.IntPtr" ? ", annotate(\"cli.nativeint:signed\")" : t.Name == "System.UIntPtr" ? ", annotate(\"cli.nativeint:unsigned\")" : "") +
+            (t.Base == "System.MulticastDelegate" ? ", annotate(\"cli.delegate\")" : "") + ")) " + name);
         if (forward) w.Write("; ");
         else
         {

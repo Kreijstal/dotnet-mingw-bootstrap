@@ -183,6 +183,18 @@ void report(CompilerInstance& ci, SourceLocation loc, const std::string& message
 }
 
 struct Lexeme { std::string text, file; unsigned line; tok::TokenKind kind; bool system; };
+void append_fragment(std::vector<Lexeme>& destination, const std::string& source, const Lexeme& anchor, SourceManager& sm, const LangOptions& lang) {
+    auto file = sm.createFileID(llvm::MemoryBuffer::getMemBufferCopy(source + "\n", "<cli-fragment>"));
+    auto data = sm.getBufferData(file);
+    Lexer lexer(sm.getLocForStartOfFile(file), lang, data.begin(), data.begin(), data.end());
+    Token token;
+    while (!lexer.LexFromRawLexer(token)) {
+        auto lexeme = anchor;
+        lexeme.text = Lexer::getSpelling(token, sm, lang);
+        lexeme.kind = token.is(tok::raw_identifier) ? tok::identifier : token.getKind();
+        destination.push_back(std::move(lexeme));
+    }
+}
 // Raw lexing protects CLI keywords and directives. Clang's preprocessor owns
 // include lookup, macro expansion, conditional directives and pragma-once IDs.
 std::string shim_using(SourceManager& sm, FileID file, const LangOptions& lang) {
@@ -380,18 +392,7 @@ protected:
                 auto anchor = tokens[pos];
                 std::vector<Lexeme> replacement;
                 auto append = [&](const std::string& source) {
-                    // Raw lexing signals end-of-buffer on the final token.
-                    // A trailing newline keeps each fragment's last token.
-                    auto file = sm.createFileID(llvm::MemoryBuffer::getMemBufferCopy(source + "\n", "<cli-for-each>"));
-                    auto data = sm.getBufferData(file);
-                    Lexer lexer(sm.getLocForStartOfFile(file), ci.getLangOpts(), data.begin(), data.begin(), data.end());
-                    Token token;
-                    while (!lexer.LexFromRawLexer(token)) {
-                        auto lexeme = anchor;
-                        lexeme.text = Lexer::getSpelling(token, sm, ci.getLangOpts());
-                        lexeme.kind = token.is(tok::raw_identifier) ? tok::identifier : token.getKind();
-                        replacement.push_back(std::move(lexeme));
-                    }
+                    append_fragment(replacement, source, anchor, sm, ci.getLangOpts());
                 };
                 auto append_tokens = [&](size_t first, size_t last) { replacement.insert(replacement.end(), tokens.begin()+first, tokens.begin()+last); };
                 auto enumerator = "__cli_each_enumerator_" + std::to_string(each_id);
@@ -406,6 +407,31 @@ protected:
                 append("} } finally { __cli_each_dispose(" + enumerator + "); } }");
                 tokens.erase(tokens.begin()+pos, tokens.begin()+end+1);
                 tokens.insert(tokens.begin()+pos, replacement.begin(), replacement.end());
+            }
+            for (size_t pos = tokens.size(); pos-- > 0;) {
+                if (tokens[pos].text != "delegate") continue;
+                size_t open = pos+1;
+                while (open < tokens.size() && tokens[open].text != "(" && tokens[open].text != ";" && tokens[open].text != "{") ++open;
+                if (open < pos+3 || open == tokens.size() || tokens[open].text != "(" || tokens[open-1].kind != tok::identifier)
+                    throw std::runtime_error("delegate requires an ordinary function declaration");
+                auto close = balance(open, "(", ")");
+                if (close+1 >= tokens.size() || tokens[close+1].text != ";") throw std::runtime_error("delegate declarations require a semicolon");
+                auto name = tokens[open-1].text;
+                auto anchor = tokens[pos];
+                std::string result, parameters;
+                for (size_t j = pos+1; j+1 < open; ++j) result += tokens[j].text + " ";
+                for (size_t j = open+1; j < close; ++j) parameters += tokens[j].text + " ";
+                size_t begin = pos;
+                std::string visibility = "private";
+                if (pos && (tokens[pos-1].text == "public" || tokens[pos-1].text == "private")) { visibility = tokens[pos-1].text; --begin; }
+                std::vector<Lexeme> replacement;
+                append_fragment(replacement, visibility + " ref class " + name + " __cli_delegate sealed : System::MulticastDelegate { public: " +
+                    "using _cli_signature = " + result + "(" + parameters + "); " + name + "(_cli_signature*); " +
+                    "template<class T, class C> " + name + "(T*, " + result + " (C::*)(" + parameters + ")); " +
+                    result + " Invoke(" + parameters + "); };", anchor, sm, ci.getLangOpts());
+                tokens.erase(tokens.begin()+begin, tokens.begin()+close+2);
+                tokens.insert(tokens.begin()+begin, replacement.begin(), replacement.end());
+                pos = begin;
             }
             // Only managed declarations and allocation markers are rewritten.
             // Expressions/statements remain C++ and are parsed by Clang later.
@@ -599,7 +625,7 @@ protected:
             std::set<size_t> interop_closes;
             auto interop_name = [](std::string name) {
                 if (llvm::StringRef(name).ends_with("Attribute")) name.resize(name.size()-9);
-                return name == "ComImport" || name == "Guid" || name == "InterfaceType" || name == "PreserveSig" ||
+                return name == "ComImport" || name == "Guid" || name == "InterfaceType" || name == "ClassInterface" || name == "ComVisible" || name == "PreserveSig" ||
                     name == "In" || name == "Out" || name == "MarshalAs" ? name : std::string();
             };
             for (size_t begin = 0; begin+2 < tokens.size(); ++begin) {
@@ -637,11 +663,18 @@ protected:
                         }
                         cursor = end+1;
                     }
-                    bool takes_argument = attr == "Guid" || attr == "InterfaceType" || attr == "MarshalAs";
+                    bool takes_argument = attr == "Guid" || attr == "InterfaceType" || attr == "ClassInterface" || attr == "ComVisible" || attr == "MarshalAs";
                     if (takes_argument == argument.empty()) throw std::runtime_error("wrong interop attribute argument count: " + attr);
-                    bool on_type = attr == "ComImport" || attr == "Guid" || attr == "InterfaceType";
+                    bool on_type = attr == "ComImport" || attr == "Guid" || attr == "InterfaceType" || attr == "ClassInterface";
+                    if (attr == "ComVisible") {
+                        size_t next = close+1;
+                        while (next < tokens.size() && tokens[next].text == "[") next = matching(next, "[", "]")+1;
+                        if (next < tokens.size() && (tokens[next].text == "public" || tokens[next].text == "private")) ++next;
+                        on_type = next < tokens.size() && (tokens[next].text == "ref" || tokens[next].text == "value" || tokens[next].text == "interface");
+                    }
                     type_attribute |= on_type; member_attribute |= !on_type;
                     auto marker = attr == "ComImport" ? "cli.com.import" : attr == "Guid" ? "cli.com.guid" : attr == "InterfaceType" ? "cli.com.interface" :
+                        attr == "ClassInterface" ? "cli.com.class" : attr == "ComVisible" ? "cli.com.visible" :
                         attr == "PreserveSig" ? "cli.preservesig" : attr == "In" ? "cli.param.in" : attr == "Out" ? "cli.param.out" : "cli.param.marshal";
                     attributes += ", annotate(" + quote(marker) + (argument.empty() ? "" : ", " + (attr == "Guid" ? argument : "static_cast<int>(" + argument + ")")) + ")";
                     if (cursor < close) {
@@ -657,7 +690,7 @@ protected:
                     while (record < tokens.size() && tokens[record].text == "[") record = matching(record, "[", "]")+1;
                     if (record < tokens.size() && (tokens[record].text == "public" || tokens[record].text == "private")) ++record;
                     if (record+1 >= tokens.size() || (tokens[record].text != "interface" && tokens[record].text != "ref" && tokens[record].text != "value") ||
-                        (tokens[record+1].text != "class" && tokens[record+1].text != "struct")) throw std::runtime_error("interop type attributes must precede a managed type");
+                        (tokens[record+1].text != "class" && tokens[record+1].text != "struct")) throw std::runtime_error(tokens[begin].file + ":" + std::to_string(tokens[begin].line) + ": interop type attributes must precede a managed type");
                     interop_types[record] += attributes;
                 } else interop_attributes[begin] = "__attribute__((" + attributes.substr(2) + "))";
                 begin = close;
@@ -795,7 +828,7 @@ protected:
                             if (tokens[j].text == "safe_cast") { emit(tokens[j], "__cli_safe_cast"); continue; }
                             emit(tokens[j], tokens[j].text);
                         }
-                        emit(tokens[end], "; } " + class_access[i] + ":");
+                        emit(tokens[end], "; } " + (class_access[i] == "internal" ? "public" : class_access[i]) + ":");
                         i = end; continue;
                     }
                 }
@@ -917,6 +950,10 @@ protected:
                 if ((t.text == "public" || t.text == "private") && i + 2 < tokens.size() &&
                     (tokens[i + 1].text == "ref" || tokens[i + 1].text == "interface" || tokens[i + 1].text == "value") &&
                     (tokens[i + 2].text == "class" || tokens[i + 2].text == "struct")) continue;
+                if ((t.text == "public" || t.text == "private") && i+2 < tokens.size() &&
+                    (tokens[i+1].text == "class" || tokens[i+1].text == "struct") && tokens[i+2].kind == tok::identifier && class_depth[i] == 0) {
+                    emit(t, tokens[i+1].text + " __attribute__((annotate(\"cli.native.visibility:" + t.text + "\")))"); ++i; continue;
+                }
                 if ((t.text == "ref" || t.text == "interface" || t.text == "value") && i + 2 < tokens.size() &&
                     (tokens[i + 1].text == "class" || tokens[i + 1].text == "struct")) {
                     bool interface = t.text == "interface", value = t.text == "value";
@@ -926,8 +963,8 @@ protected:
                     if (i && (tokens[i-1].text == "public" || tokens[i-1].text == "private")) attributes += ", annotate(\"cli.visibility:" + tokens[i-1].text + "\")";
                     if (interface) attributes += ", annotate(\"cli.interface\"), annotate(\"cli.abstract\")";
                     size_t end = i + 3;
-                    while (end < tokens.size() && (tokens[end].text == "abstract" || tokens[end].text == "sealed")) {
-                        attributes += ", annotate(\"cli." + tokens[end].text + "\")";
+                    while (end < tokens.size() && (tokens[end].text == "abstract" || tokens[end].text == "sealed" || tokens[end].text == "__cli_delegate")) {
+                        attributes += ", annotate(\"cli." + (tokens[end].text == "__cli_delegate" ? "delegate" : tokens[end].text) + "\")";
                         ++end;
                     }
                     emit(t, std::string(interface || tokens[i + 1].text == "struct" ? "struct" : "class") + " __attribute__((" + attributes + ")) " + tokens[i + 2].text);
@@ -1042,6 +1079,13 @@ class Emitter {
         auto* r = handle_target(type);
         return r && record_annotated(r, "cli.value") ? r : nullptr;
     }
+    const CXXMethodDecl* delegate_invoke(const CXXRecordDecl* record) const {
+        if (!record_annotated(record, "cli.delegate")) return nullptr;
+        auto* definition = record->getDefinition();
+        if (!definition) throw std::runtime_error("incomplete delegate type");
+        for (auto* method : definition->methods()) if (method->getNameAsString() == "Invoke") return method;
+        throw std::runtime_error("delegate lacks an Invoke signature");
+    }
     QualType array_element(const CXXRecordDecl* r) const {
         if (!record_annotated(r, "cli.array")) return {};
         auto* specialization = dyn_cast<ClassTemplateSpecializationDecl>(r);
@@ -1109,6 +1153,7 @@ class Emitter {
         for (auto* attr : d->specific_attrs<AnnotateAttr>()) {
             auto name = attr->getAnnotation();
             unsigned expected = name.starts_with("cli.com.") ? 1 : name == "cli.preservesig" ? 2 : name.starts_with("cli.param.") ? 3 : 0;
+            if (name == "cli.com.visible" && target == 2) expected = 2;
             if (!expected) continue;
             if (expected != target) throw std::runtime_error("interop attribute applied to an unsupported declaration target");
             if (!seen.insert(name.str()).second) throw std::runtime_error("duplicate interop attribute");
@@ -1714,6 +1759,30 @@ class Emitter {
         if (f->getNameAsString() == "__cli_new") {
             auto* target = handle_target(c->getType());
             if (!target) fail(c, "allocation marker has no managed type");
+            if (auto* invoke = delegate_invoke(target)) {
+                if (c->getNumArgs() != 1 && c->getNumArgs() != 2) fail(c, "delegate construction requires a method and optional target");
+                auto* address = c->getArg(c->getNumArgs()-1)->IgnoreParenImpCasts();
+                if (auto* unary = dyn_cast<UnaryOperator>(address); unary && unary->getOpcode() == UO_AddrOf) address = unary->getSubExpr()->IgnoreParenImpCasts();
+                auto* reference = dyn_cast<DeclRefExpr>(address);
+                auto* function = reference ? dyn_cast<FunctionDecl>(reference->getDecl()) : nullptr;
+                if (!function) fail(c, "delegate binding requires a named managed method");
+                auto* method = dyn_cast<CXXMethodDecl>(function);
+                bool instance = method && !method->isStatic();
+                if (instance != (c->getNumArgs() == 2)) fail(c, "delegate target does not match static/instance method binding");
+                if (type(function->getReturnType()) != type(invoke->getReturnType()) || function->getNumParams() != invoke->getNumParams()) fail(c, "delegate method signature mismatch");
+                for (unsigned i = 0; i < function->getNumParams(); ++i)
+                    if (type(function->getParamDecl(i)->getType()) != type(invoke->getParamDecl(i)->getType())) fail(c, "delegate method parameter signature mismatch");
+                if (instance) {
+                    auto* owner = handle_target(c->getArg(0)->getType());
+                    if (!owner || record_annotated(owner, "cli.value") || (owner->getCanonicalDecl() != method->getParent()->getCanonicalDecl() && !owner->isDerivedFrom(method->getParent())))
+                        fail(c, "delegate instance target requires a compatible managed reference class");
+                    expr(c->getArg(0));
+                    if (method->isVirtual()) { op("dup", 1, 2); op("ldvirtftn " + signature(function), 1, 1); }
+                    else op("ldftn " + signature(function), 0, 1);
+                } else { op("ldnull", 0, 1); op("ldftn " + signature(function), 0, 1); }
+                if (annotation(function, "cli.import:").empty() && !seen.count(function->getCanonicalDecl())) fail(c, "delegate target has no emitted definition");
+                op("newobj instance void " + record_token(target) + "::.ctor(object, native int)", 2, 1); return;
+            }
             if (is_interface(target)) fail(c, "cannot allocate a managed interface");
             QualType element = array_element(target);
             if (!element.isNull()) {
@@ -1768,7 +1837,8 @@ class Emitter {
             if (f->getParamDecl(i)->getType()->isReferenceType()) address(c->getArg(i)); else expr(c->getArg(i));
         }
         std::string id = annotation(f, "cli.import:");
-        if (id.empty() && !native_function(f) && !seen.count(f->getCanonicalDecl()))
+        bool delegate_call = m && delegate_invoke(m->getParent()) == m;
+        if (id.empty() && !native_function(f) && !seen.count(f->getCanonicalDecl()) && !delegate_call)
             fail(c, "calling a function without an emitted definition; native calls require a separately compiled bridge: " + f->getQualifiedNameAsString());
         std::string sig;
         if (!id.empty()) {
@@ -1776,7 +1846,7 @@ class Emitter {
             if (imported == metadata.methods.end()) fail(c, "imported member is absent from metadata");
             sig = imported_signature(imported->second, m);
         } else {
-            if (!f->hasBody() && !(m && m->isPureVirtual()) && !native_function(f)) fail(c, "calling a function without an emitted definition");
+            if (!f->hasBody() && !(m && m->isPureVirtual()) && !native_function(f) && !delegate_call) fail(c, "calling a function without an emitted definition");
             sig = signature(f);
         }
         bool qualified = false;
@@ -1927,6 +1997,15 @@ class Emitter {
             expr(arg); return;
         }
         if (auto* u = dyn_cast<UnaryOperator>(e)) {
+            if (u->getOpcode() == UO_AddrOf && u->getType()->isPointerType() && !handle_target(u->getType())) {
+                auto* reference = dyn_cast<DeclRefExpr>(u->getSubExpr()->IgnoreParenImpCasts());
+                auto* variable = reference ? dyn_cast<VarDecl>(reference->getDecl()) : nullptr;
+                auto element = u->getSubExpr()->getType();
+                if (variable && variable->hasLocalStorage() &&
+                    (element->isArithmeticType() || (element->isPointerType() && !handle_target(element)))) {
+                    address(u->getSubExpr()); op("conv.u", 1, 1); return;
+                }
+            }
             if (u->getOpcode() == UO_Deref && boxed_target(u->getSubExpr()->getType())) {
                 auto value_type = "valuetype " + record_name(boxed_target(u->getSubExpr()->getType()));
                 if (isa<CXXThisExpr>(u->getSubExpr()->IgnoreParenImpCasts())) { op("ldarg.0", 0, 1); op("ldobj " + value_type, 1, 1); }
@@ -2247,9 +2326,12 @@ public:
     Emitter(CompilerInstance& compiler, const Metadata& md) : ci(compiler), context(ci.getASTContext()), metadata(md) {}
     bool VisitFunctionDecl(FunctionDecl* f) {
         auto* method = dyn_cast<CXXMethodDecl>(f);
+        if (method && record_annotated(method->getParent(), "cli.delegate")) return true;
         if (ci.getSourceManager().isInSystemHeader(f->getLocation()) &&
             !(method && (record_annotated(method->getParent(), "cli.ref") || record_annotated(method->getParent(), "cli.value"))) && !native_function(f)) return true;
         validate_interop_attributes(f, 2);
+        if (annotated(f, "cli.com.visible") && layout_constant(f, "cli.com.visible", -1) != 0 && layout_constant(f, "cli.com.visible", -1) != 1)
+            throw std::runtime_error("ComVisibleAttribute requires a boolean value");
         if (annotated(f, "cli.cctor") && (!method || !method->isStatic() || method->getNumParams() || !method->getReturnType()->isVoidType() || is_interface(method->getParent())))
             throw std::runtime_error("invalid or unsupported managed static constructor");
         if (annotated(f, "cli.field.offset")) throw std::runtime_error("FieldOffset requires a managed instance field");
@@ -2279,6 +2361,15 @@ public:
     }
     bool VisitCXXRecordDecl(CXXRecordDecl* r) {
         if (r->isThisDeclarationADefinition() && (annotated(r, "cli.ref") || annotated(r, "cli.value")) && !annotated(r, "cli.array") && annotation(r,"cli.external:").empty()) {
+            if (auto* invoke = delegate_invoke(r)) {
+                for (auto* attr : r->specific_attrs<AnnotateAttr>()) if (attr->getAnnotation().starts_with("cli.com."))
+                    throw std::runtime_error("interop attributes on delegate declarations are not enabled yet");
+                if (isa<CXXRecordDecl>(r->getDeclContext()) || isa<ClassTemplateSpecializationDecl>(r)) throw std::runtime_error("nested/generic delegate declarations are not enabled yet");
+                if (invoke->isVariadic() || invoke->getReturnType()->isReferenceType()) throw std::runtime_error("variadic/byref-return delegates are not enabled yet");
+                type(invoke->getReturnType()); validate_declarator(invoke->getTypeSourceInfo());
+                for (auto* p : invoke->parameters()) { parameter_signature(p); validate_declarator(p->getTypeSourceInfo()); }
+                records.push_back(r); return true;
+            }
             validate_interop_attributes(r, 1);
             guid_attribute(r);
             if (annotated(r, "cli.com.import") && (!is_interface(r) || guid_attribute(r).empty()))
@@ -2286,6 +2377,14 @@ public:
             if (annotated(r, "cli.com.interface")) {
                 auto mode = layout_constant(r, "cli.com.interface", -1);
                 if (!is_interface(r) || mode < 0 || mode > 3) throw std::runtime_error("invalid InterfaceTypeAttribute target or value");
+            }
+            if (annotated(r, "cli.com.class")) {
+                auto mode = layout_constant(r, "cli.com.class", -1);
+                if (is_interface(r) || record_annotated(r, "cli.value") || mode < 0 || mode > 2) throw std::runtime_error("invalid ClassInterfaceAttribute target or value");
+            }
+            if (annotated(r, "cli.com.visible")) {
+                auto value = layout_constant(r, "cli.com.visible", -1);
+                if (value != 0 && value != 1) throw std::runtime_error("ComVisibleAttribute requires a boolean value");
             }
             if (!is_interface(r) && !annotated(r, "cli.abstract") && !r->isAbstract()) {
                 std::set<const CXXRecordDecl*> checked;
@@ -2437,6 +2536,8 @@ public:
                << type(f->getReturnType()) << " '" << body.name << "'(";
             for (unsigned j = 0; j < f->getNumParams(); ++j) { if (j) il << ", "; il << parameter_signature(f->getParamDecl(j)); }
             il << ") cil managed " << (annotated(f, "cli.preservesig") ? "preservesig " : "") << "{\n";
+            if (annotated(f, "cli.com.visible"))
+                il << "  .custom " << attribute_constructor("System.Runtime.InteropServices.ComVisibleAttribute", {"bool"}) << " = (01 00 0" << layout_constant(f, "cli.com.visible", -1) << " 00 00)\n";
             if (f->getNameAsString() == "main" && body.owner.empty() && options.target == "exe") il << "    .entrypoint\n";
             if (method) for (auto* target : named_overrides(method)) il << "    .override method " << signature(target) << "\n";
             if (method && method->isPureVirtual()) { il << "  }\n"; return; }
@@ -2458,6 +2559,15 @@ public:
             il << "}\n";
         }
         for (auto* r : records) {
+            if (auto* invoke = delegate_invoke(r)) {
+                il << ".class " << (annotation(r, "cli.visibility:") == "private" ? "private" : "public") << " auto ansi sealed " << record_name(r)
+                   << " extends [System.Runtime]System.MulticastDelegate {\n"
+                   << "  .method public hidebysig specialname rtspecialname instance void .ctor(object, native int) runtime managed {}\n"
+                   << "  .method public hidebysig newslot virtual instance " << type(invoke->getReturnType()) << " Invoke(";
+                for (unsigned j = 0; j < invoke->getNumParams(); ++j) { if (j) il << ", "; il << parameter_signature(invoke->getParamDecl(j)); }
+                il << ") runtime managed {}\n}\n";
+                continue;
+            }
             auto* parent = class_base(r);
             auto layout = layout_kind(r), charset = layout_constant(r, "cli.layout.CharSet", 1);
             il << ".class " << (annotation(r, "cli.visibility:") == "private" ? "private " : "public ") << (is_interface(r) ? "interface abstract " :
@@ -2483,6 +2593,14 @@ public:
                 auto parameter = "valuetype " + assembly_reference(owner->second) + "'System.Runtime.InteropServices.ComInterfaceType'";
                 il << "  .custom " << attribute_constructor("System.Runtime.InteropServices.InterfaceTypeAttribute", {parameter}) << " = (01 00 0" << value << " 00 00 00 00 00)\n";
             }
+            if (annotated(r, "cli.com.class")) {
+                auto owner = metadata.types.find("System.Runtime.InteropServices.ClassInterfaceType");
+                if (owner == metadata.types.end()) throw std::runtime_error("select ClassInterfaceType metadata");
+                auto parameter = "valuetype " + assembly_reference(owner->second) + "'System.Runtime.InteropServices.ClassInterfaceType'";
+                il << "  .custom " << attribute_constructor("System.Runtime.InteropServices.ClassInterfaceAttribute", {parameter}) << " = (01 00 0" << layout_constant(r, "cli.com.class", -1) << " 00 00 00 00 00)\n";
+            }
+            if (annotated(r, "cli.com.visible"))
+                il << "  .custom " << attribute_constructor("System.Runtime.InteropServices.ComVisibleAttribute", {"bool"}) << " = (01 00 0" << layout_constant(r, "cli.com.visible", -1) << " 00 00)\n";
             for (auto* member : r->decls()) if (auto* property = dyn_cast<MSPropertyDecl>(member); property && property->getNameAsString() == "__cli_default")
                 il << "  .custom instance void [System.Runtime]System.Reflection.DefaultMemberAttribute::.ctor(string) = (01 00 04 49 74 65 6d 00 00)\n";
             if (annotated(r, "cli.layout.Pack")) il << "  .pack " << layout_constant(r, "cli.layout.Pack", 0) << "\n";

@@ -44,3 +44,7 @@ public:
 };
 extern "C" __declspec(dllexport) void* create_probe() { return static_cast<IProbe*>(new Probe()); }
 extern "C" __declspec(dllexport) int live_probes() { return live; }
+struct IManagedCallback : IUnknown { virtual int STDMETHODCALLTYPE Value(int input) = 0; };
+extern "C" __declspec(dllexport) int call_managed_callback(void* callback, int value) {
+    return static_cast<IManagedCallback*>(callback)->Value(value);
+}

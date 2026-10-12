@@ -39,10 +39,21 @@ try {
     if (wrapper != null) Marshal.FinalReleaseComObject(wrapper);
 }
 if (Native.Live() != 0) throw new Exception("native COM reference leak");
+if (typeof(ManagedCallback).GetCustomAttribute<ClassInterfaceAttribute>().Value != ClassInterfaceType.None ||
+    !typeof(ManagedCallback).GetCustomAttribute<ComVisibleAttribute>().Value ||
+    !typeof(ManagedCallback).GetMethod("Value").GetCustomAttribute<ComVisibleAttribute>().Value)
+    throw new Exception("COM export class metadata lost");
+var managed = new ManagedCallback();
+IntPtr callback = Marshal.GetComInterfaceForObject(managed, typeof(IManagedCallback));
+try { if (Native.Managed(callback, 32) != 42) throw new Exception("native-to-managed COM interface dispatch failed"); }
+finally { Marshal.Release(callback); }
+GC.KeepAlive(managed);
 Console.WriteLine("real MinGW COM metadata/marshalling/HRESULT checks OK");
 static class Native {
     [DllImport("com-probe-native.dll", EntryPoint="create_probe", CallingConvention=CallingConvention.Cdecl)]
     public static extern IntPtr Create();
     [DllImport("com-probe-native.dll", EntryPoint="live_probes", CallingConvention=CallingConvention.Cdecl)]
     public static extern int Live();
+    [DllImport("com-probe-native.dll", EntryPoint="call_managed_callback", CallingConvention=CallingConvention.Cdecl)]
+    public static extern int Managed(IntPtr callback, int value);
 }

@@ -51,19 +51,22 @@
         "interface property accessor declarations and Windows interface macro protection",
         "for each over managed arrays/reference enumerators, CLR finally cleanup and typed element conversions",
         "COM import/GUID/interface type metadata, PreserveSig and selected parameter marshal descriptors",
-        "unmanaged native integer pointers and native SDK declaration filtering"
+        "unmanaged native integer pointers and native SDK declaration filtering",
+        "source delegates with CLR runtime methods, static/bound/virtual binding and invocation",
+        "ClassInterface/ComVisible metadata for source COM callback classes/methods",
+        "native declaration visibility syntax and internal static initializer access restoration"
       ],
       "remaining": [
         "implicit boxing into Object/interfaces, primitive boxes and boxed-handle conversions",
         "generic declarations/methods, constraints/variance and nested generic types",
-        "delegates/events and extended indexed-property forms",
+        "events, extended delegate forms and indexed-property forms",
         "destructors/finalizers and deterministic cleanup",
         "extended tracking references, nonprimitive pinning and managed pointer operations",
         "general attributes/interface static constructors/multiple translation units",
         "full CLI semantic analysis and metadata type discovery",
         "for each with unbraced bodies, tracking-reference variables and value/native enumerators"
       ],
-      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values test-tracking test-pinning test-boxed-values test-static-fields test-static-properties test-nativeints test-layout test-switch test-generics test-indexers test-named-overrides test-each test-com"
+      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values test-tracking test-pinning test-boxed-values test-static-fields test-static-properties test-nativeints test-layout test-switch test-generics test-indexers test-named-overrides test-each test-com test-delegates"
     },
     {
       "stage": 4,
@@ -74,7 +77,9 @@
         "raw unmanaged pointers and pinned primitive/string buffers",
         "real DirectWrite factory/font enumeration and pinned family-name buffer probe",
         "explicit pinned primitive-buffer pointer casts retaining CLR pins",
-        "native MinGW COM object called through generated CLI interfaces, including BOOL/uint64/pointer marshalling and HRESULT handling"
+        "native MinGW COM object called through generated CLI interfaces, including BOOL/uint64/pointer marshalling and HRESULT handling",
+        "generated delegate invoked through a native function pointer on the source-built CoreCLR",
+        "native-to-managed COM interface callback through the generated source class"
       ],
       "remaining": [
         "native layouts, complete pointer operations and automatic marshalling",
@@ -100,7 +105,8 @@
         "complete DirectWrite Sema gate advanced through real generic collection imports and generic base parsing",
         "unchanged upstream IFontSource interfaces compiled with abstract property metadata and Windows macro protection",
         "unchanged LocalizedStrings CopyTo method compiled and checked with value pairs, Unicode, array offsets and exceptional cleanup",
-        "unchanged WPF COM mirror/classification interface headers compiled with the actual Windows/DirectWrite SDK declarations"
+        "unchanged WPF COM mirror/classification interface headers compiled with the actual Windows/DirectWrite SDK declarations",
+        "unchanged WPF text-analysis delegate declarations and native CharAttribute constants compiled and checked at runtime"
       ]
     }
   ]
