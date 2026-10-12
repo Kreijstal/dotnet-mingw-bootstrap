@@ -1778,8 +1778,9 @@ Managed type tokens/reliability metadata and the associated imports now pass
 (see §22). The full gate now passes Factory's private constructor access, concrete Object
 upcasts, String constructor literals, imported static properties and Action binding
 (see §23). Omitted parameter arrays and Factory's actual dispatcher scheduling
-expression now compile and execute (see §24). The full gate next fails on
-System.Double static members in Font.cpp; native operations also remain unsupported. Native record
+expression now compile and execute (see §24). Primitive static members and WPF
+font-version parsing now pass (see §25). The full gate next fails on Guid literal
+construction in FontFile.cpp; native operations also remain unsupported. Native record
 emission, managed class templates, callbacks, finalizers and automatic native
 partitioning also remain outside its supported subset.
 The same compiler failure can be reproduced with `wpf.sh bridge-gate`; it
@@ -2759,3 +2760,83 @@ bodies, and the full DirectWriteForwarder/System.Printing bridges, higher WPF,
 complete native exports, version/protocol checks, WindowsDesktop packaging and
 current Greenshot remain unfinished. Logs and the generated probe/IL are archived
 under `tmp/wpf8-support/validation/paramarrays-20261012` on the local build host.
+
+
+## 25. Primitive static scopes, literal metadata and WPF font version parsing
+
+The following 2026-10-12 continuation imports selected System primitive types
+without replacing their C++ scalar aliases. Their generated aliases carry a
+facade annotation. The private ParseExprCXX parser hook first performs ordinary
+Clang lookup, including namespace qualification and using declarations. Only a
+resolved annotated alias selects its facade record for static scope lookup.
+Native classes, enums and variables named Int32 continue through normal Clang
+lookup instead of a spelling-based rewrite. The facade emits static methods and
+constants using the original CLR type identity; declarations remain native
+scalar types. Namespace aliases also work. Arbitrary user typedef chains and
+raw keyword scopes such as double:: remain outside this subset.
+
+The scope replacement uses a fresh well-formed location buffer via MakeTrivial.
+Clang 22's [scope builder implementation](https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-22.1.8/clang/lib/AST/NestedNameSpecifier.cpp)
+requires an empty builder for Make; appending a type buffer to the existing
+namespace buffer caused an initial parser crash and was corrected. All four
+modified parser files still start from the checksum-pinned upstream sources.
+
+The metadata reader now retains selected numeric/Char literal fields. It stores
+integer values and floating-point bit patterns, emits constexpr declarations for
+Clang's checks, and emits CLR ldc instructions for reads rather than ldsfld.
+Single/Double declarations use builtin bit casts and IL float32/float64 hexadecimal
+operands, preserving NaN sign/payload, infinities, subnormals and signed limits.
+These literals have no CLR field storage: writes are rejected by Clang and address
+requests by the emitter. String/null literal fields remain excluded. Imported
+primitive instance methods and boxing are not added by this change.
+
+`cppcli.sh test-primitive-statics` checks exact Double/Single bits, signed and
+unsigned 8/16/32/64-bit limits, Char.MaxValue, namespace aliases, native enum/class
+shadowing, Double.TryParse/IsFinite and Int32.TryParse. The out parameter is a real
+tracking reference, including the zero result after a failed parse. Negative
+checks reject writes, addresses, missing members and a local value shadowing a
+primitive alias. The fixture exposed an existing unrelated limitation: ordinary
+global functions in different C++ namespaces share IL names, so equal-name/signature
+collisions still fail; the native-shadow probes use distinct global function names.
+
+`tools/wpf-font-version-check.py` copies Font.cpp's exact MinValue initialization
+and its complete version-string length/Substring/TryParse/fallback block. A probe
+supplies the input string and returns the parsed value; it does not implement
+font lookup, cached flags or the rest of Font.cpp. The C# consumer sets CurrentCulture
+to de-DE and verifies decimal and exponential invariant parsing, invalid/comma
+fallbacks, the short-string case and the initial double.MinValue sentinel.
+
+Validation on win11:
+
+```sh
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh \
+  test-primitive-statics test-core test-generics test-type-tokens
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-primitive-statics
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  WPF_CPPCLI_BUILD=/home/topkek/dotnetboot/m612/build/cppcli \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-font-version
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  WPF_CPPCLI_BUILD=/home/topkek/dotnetboot/m612/build/cppcli \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh bridge-gate
+```
+
+The rebuild and focused checks pass; managed consumer builds report zero warnings
+and errors, and the WPF check prints `upstream WPF font version parsing OK`.
+The generic C++ static-field facade warnings remain. The final complete bridge
+gate still returns nonzero. Primitive static/limit/NumberStyles errors are gone;
+its first error is FontFile.cpp:16, functional-style Guid construction from a String
+literal. Later errors include an OverflowException import, KeyValuePair-to-Object
+boxing, out-of-line generic wrapper properties, additional imports and native
+operations. No complete new bridge implementation file or WPF package is claimed:
+one of the 21 included implementation bodies remains fully verified. System.Printing,
+higher WPF, complete native exports, version/protocol matching, desktop framework/SDK
+packaging and current Greenshot remain unfinished. The new features are development
+frontend changes; installed compiler packages remain unchanged. Logs, IL and generated
+probe sources are archived in `tmp/wpf8-support/validation/primitive-statics-20261012`
+on the local build host.

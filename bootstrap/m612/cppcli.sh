@@ -75,6 +75,28 @@ template<> struct SystemTrait<float> {}; int main() { return 0; }' 'cannot be sp
   reject_case missing-return 'using namespace System; int broken() { int n = 0; } int main() { return broken(); }' 'does not return'
   log "PASS test-core: Clang parsing, metadata overloads, control flow, macros/includes, Unicode, negative checks"
 }
+step_test-primitive-statics() {
+  log "Primitive static members from source-built metadata"
+  local refs=("$CPPCLI_SDK"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
+  local args=(--type System.Double --type System.Single --type System.Char --type System.Int32 --type System.UInt32
+    --type System.Int64 --type System.UInt64 --type System.SByte --type System.Byte --type System.Int16 --type System.UInt16
+    --type System.Type --type System.Globalization.NumberStyles --type System.Globalization.CultureInfo --type System.IFormatProvider
+    --reference "$(cygpath -m "${refs[-1]}/System.Globalization.dll")")
+  compile "$(cygpath -m "$src/tests/primitive-statics.cpp")" --target library "${args[@]}" -o "$(cygpath -m "$testdir/primitive-statics.dll")"
+  mkdir -p "$testdir/primitive-statics-consumer"
+  cp "$src/tests/PrimitiveStaticsConsumer.cs" "$testdir/primitive-statics-consumer/Program.cs"
+  cat > "$testdir/primitive-statics-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="primitive-statics"><HintPath>../primitive-statics.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/primitive-statics-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/primitive-statics-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case primitive-write 'using namespace System; int main() { Int32::MaxValue = 0; return 0; }' 'const-qualified' "${args[@]}"
+  reject_case primitive-address 'using namespace System; int main() { const double* pointer = &Double::MinValue; return 0; }' 'no addressable CLR storage' "${args[@]}"
+  reject_case primitive-unknown 'using namespace System; int main() { return Int32::Missing; }' 'no member named' "${args[@]}"
+  reject_case primitive-value-shadow 'using namespace System; int main() { int Int32 = 0; return Int32::MaxValue; }' 'not a class' "${args[@]}"
+  log "PASS test-primitive-statics: exact literal bits, scalar aliases, CLR methods and native lookup"
+}
 step_test-paramarrays() {
   log "Imported ParamArray metadata and omitted-array CLR calls"
   mkdir -p "$testdir/paramarray-fixture"

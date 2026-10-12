@@ -125,7 +125,10 @@
     "Implicit Object bases for source classes whose directly named bases are known CLI interfaces, preserving CLR Object identity and interface dispatch",
     "Imported nonindexed static properties expose public accessors and bind real getter/setter metadata, including Thread.CurrentThread and CultureInfo.InvariantCulture",
     "Typed source method binding to selected imported delegates, including System.Action and delegates from a second CLI assembly",
-    "Imported ParamArrayAttribute permits omitted rank-one arrays in methods/constructors, emitting fresh empty CLR arrays and preserving ordinary overload preference and explicit/null arrays"
+    "Imported ParamArrayAttribute permits omitted rank-one arrays in methods/constructors, emitting fresh empty CLR arrays and preserving ordinary overload preference and explicit/null arrays",
+    "Primitive alias static scope lookup uses Clang name resolution and selected metadata facades, preserving qualified/unqualified aliases, namespace aliases and native class/enum shadowing",
+    "Imported numeric and Char literal fields emit CLR constants without static storage; Single/Double constants retain exact metadata bits including NaN, infinity and subnormal values",
+    "Imported primitive static methods including Double.TryParse/IsFinite and Int32.TryParse preserve original CLR ownership and tracking-reference parameters"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -155,8 +158,11 @@
     "Native SDK calls are not automatically partitioned; native record pointers remain opaque native addresses, and native integer boxes remain unsupported",
     "Delegate support currently excludes nested/generic declarations, open-instance/value-instance binding, source combine/remove expressions and general delegate attributes; imported binding requires an available supported Invoke signature; open-instance and value-instance binding remain unsupported",
     "Managed typeid does not emit native record/enum RTTI metadata and rejects undefined source records; ReliabilityContract currently covers individual method/accessor attributes, with no added runtime CER guarantee",
-    "Imported base chains must be explicitly selected; nonempty parameter-array expansion, optional imported arguments and primitive static members such as Double.MinValue remain unsupported",
+    "Imported base chains must be explicitly selected; nonempty parameter-array expansion, optional imported arguments remain unsupported",
     "Imported static property facades expose public accessors only; protected accessors require their original method names and retain Clang access checks",
-    "Parameter arrays currently support omission and explicit arrays only; source ParamArray declarations and expansion of individual arguments remain unsupported"
+    "Parameter arrays currently support omission and explicit arrays only; source ParamArray declarations and expansion of individual arguments remain unsupported",
+    "Primitive static scope support currently requires the generated annotated System alias and explicitly selected metadata type; user-defined numeric typedef chains and raw builtin keyword scopes remain unsupported",
+    "Primitive facades expose static methods and literals only; general primitive instance methods/boxing and imported String/null literal constants remain unsupported",
+    "Ordinary global functions from different C++ namespaces currently share IL names; equal-name/signature collisions remain unsupported"
   ]
 }

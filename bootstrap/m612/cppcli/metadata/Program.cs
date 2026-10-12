@@ -17,7 +17,11 @@ record CliMethod(string Id, string Name, bool Static, CliType Return, CliType[] 
                  bool Supported, int GenericArity, bool Virtual, bool Abstract, bool Final, string Access) {
     public bool ParamArray { get; init; }
 }
-record CliField(string Name, CliType Type, bool Supported, string Access, bool Static, bool ReadOnly, string Id);
+record CliConstant(string Il, string Cpp);
+record CliField(string Name, CliType Type, bool Supported, string Access, bool Static, bool ReadOnly, string Id) {
+    public CliConstant? Constant { get; init; }
+    public bool Literal { get; init; }
+}
 record CliEnumMember(string Name, string Value);
 record CliProperty(string Name, CliType Type, string Getter, string Setter, bool Static, bool Supported) {
     public CliType[] Parameters { get; init; } = Array.Empty<CliType>();
@@ -119,6 +123,44 @@ static class Program
     static string Escape(string s) => s.Replace("\\", "\\\\").Replace("\"", "\\\"");
     static string AssemblyReference(string name) => name.Contains('.') && name.All(c => char.IsAsciiLetterOrDigit(c) || c == '_' || c == '.') ? "[" + name + "]" : "['" + name.Replace("\\", "\\\\").Replace("'", "\\'") + "']";
     static bool ValidName(string s) => s.Length > 0 && (char.IsLetter(s[0]) || s[0] == '_') && s.All(c => char.IsLetterOrDigit(c) || c == '_');
+    static readonly Dictionary<string, string> PrimitiveAliases = new() {
+        ["SByte"]="signed char", ["Byte"]="unsigned char", ["Int16"]="short", ["UInt16"]="unsigned short",
+        ["Int32"]="int", ["UInt32"]="unsigned int", ["Int64"]="long long", ["UInt64"]="unsigned long long",
+        ["Boolean"]="bool", ["Char"]="wchar_t", ["Single"]="float", ["Double"]="double"
+    };
+    static CliConstant? ReadConstant(MetadataReader r, ConstantHandle handle)
+    {
+        if (handle.IsNil) return null;
+        var constant = r.GetConstant(handle); var blob = r.GetBlobReader(constant.Value);
+        var culture = System.Globalization.CultureInfo.InvariantCulture;
+        string opcode = "ldc.i4 ", value, cpp;
+        switch (constant.TypeCode) {
+            case ConstantTypeCode.Boolean: value = blob.ReadByte() == 0 ? "0" : "1"; cpp = value; break;
+            case ConstantTypeCode.Char: value = blob.ReadUInt16().ToString(culture); cpp = value; break;
+            case ConstantTypeCode.SByte: value = blob.ReadSByte().ToString(culture); cpp = value; break;
+            case ConstantTypeCode.Byte: value = blob.ReadByte().ToString(culture); cpp = value; break;
+            case ConstantTypeCode.Int16: value = blob.ReadInt16().ToString(culture); cpp = value; break;
+            case ConstantTypeCode.UInt16: value = blob.ReadUInt16().ToString(culture); cpp = value; break;
+            case ConstantTypeCode.Int32: value = blob.ReadInt32().ToString(culture); cpp = value == "-2147483648" ? "(-2147483647 - 1)" : value; break;
+            case ConstantTypeCode.UInt32: value = blob.ReadUInt32().ToString(culture); cpp = value + "U"; break;
+            case ConstantTypeCode.Int64: value = blob.ReadInt64().ToString(culture); opcode = "ldc.i8 "; cpp = value == "-9223372036854775808" ? "(-9223372036854775807LL - 1)" : value + "LL"; break;
+            case ConstantTypeCode.UInt64: value = blob.ReadUInt64().ToString(culture); opcode = "ldc.i8 "; cpp = value + "ULL"; break;
+            case ConstantTypeCode.Single: {
+                uint bits = blob.ReadUInt32();
+                opcode = "ldc.r4 "; value = "float32(0x" + bits.ToString("X8",culture) + ")";
+                cpp = "__builtin_bit_cast(float, 0x" + bits.ToString("X8",culture) + "U)";
+                break;
+            }
+            case ConstantTypeCode.Double: {
+                ulong bits = blob.ReadUInt64();
+                opcode = "ldc.r8 "; value = "float64(0x" + bits.ToString("X16",culture) + ")";
+                cpp = "__builtin_bit_cast(double, 0x" + bits.ToString("X16",culture) + "ULL)";
+                break;
+            }
+            default: return null;
+        }
+        return new(opcode + value, cpp);
+    }
     static string AttributeType(MetadataReader r, EntityHandle ctor)
     {
         var owner = ctor.Kind == HandleKind.MemberReference ? r.GetMemberReference((MemberReferenceHandle)ctor).Parent :
@@ -243,9 +285,12 @@ static class Program
                     var baseType = td.BaseType.IsNil ? null : SignatureTypes.EntityType(r, td.BaseType);
                     string baseName = baseType?.Name ?? "";
                     var fields = td.GetFields().Select(fh => (Handle: fh, Field: r.GetFieldDefinition(fh)))
-                        .Where(f => MemberAccess((MethodAttributes)(int)(f.Field.Attributes & FieldAttributes.FieldAccessMask), friend).Length != 0 && (f.Field.Attributes & FieldAttributes.Literal) == 0)
+                        .Where(f => MemberAccess((MethodAttributes)(int)(f.Field.Attributes & FieldAttributes.FieldAccessMask), friend).Length != 0)
                         .Select(f => new CliField(r.GetString(f.Field.Name), f.Field.DecodeSignature(new SignatureTypes(), null), ValidName(r.GetString(f.Field.Name)), MemberAccess((MethodAttributes)(int)(f.Field.Attributes & FieldAttributes.FieldAccessMask), friend), (f.Field.Attributes & FieldAttributes.Static) != 0, (f.Field.Attributes & FieldAttributes.InitOnly) != 0,
-                            assembly + ":" + System.Reflection.Metadata.Ecma335.MetadataTokens.GetToken(f.Handle).ToString("x8"))).ToArray();
+                            assembly + ":" + System.Reflection.Metadata.Ecma335.MetadataTokens.GetToken(f.Handle).ToString("x8")) {
+                                Constant = (f.Field.Attributes & FieldAttributes.Literal) != 0 ? ReadConstant(r, f.Field.GetDefaultValue()) : null,
+                                Literal = (f.Field.Attributes & FieldAttributes.Literal) != 0
+                            }).Where(f => !f.Literal || f.Constant != null).ToArray();
                     if (baseName == "System.Enum") {
                         CliType? underlying = null;
                         var members = new List<CliEnumMember>();
@@ -315,7 +360,8 @@ static class Program
             header.WriteLine("template<class T, class A> T __cli_safe_cast(A); template<class T, class A> T __cli_dynamic_cast(A);");
             header.WriteLine("template<class T> class __attribute__((annotate(\"cli.static.property.proxy\"))) __cli_static_property { public: operator T() const; T operator->() const; __cli_static_property& operator=(T); };");
             header.WriteLine("System::String* __cli_literal(const char*); System::String* __cli_literal(const wchar_t*);");
-            header.WriteLine("namespace System { using SByte = signed char; using Byte = unsigned char; using Int16 = short; using UInt16 = unsigned short; using Int32 = int; using UInt32 = unsigned int; using Int64 = long long; using UInt64 = unsigned long long; using Boolean = bool; using Char = wchar_t; using Single = float; using Double = double; }");
+            foreach (var alias in PrimitiveAliases)
+                header.WriteLine("namespace System { using " + alias.Key + " __attribute__((annotate(\"cli.primitive.facade:__cli_primitive_" + alias.Key + "\"))) = " + alias.Value + "; }");
             foreach (var t in types) WriteClass(header, t, true);
             var emitted = new HashSet<string>();
             void Define(CliClass t)
@@ -350,6 +396,8 @@ static class Program
         string[] parts = t.Name.Split('.');
         foreach (string ns in parts.SkipLast(1)) w.Write("namespace " + ns + " { ");
         string name = parts[^1].Split('`')[0];
+        bool primitiveFacade = parts.Length == 2 && parts[0] == "System" && PrimitiveAliases.ContainsKey(name);
+        if (primitiveFacade) name = "__cli_primitive_" + name;
         if (t.GenericArity != 0) w.Write("template<" + string.Join(", ", Enumerable.Range(0, t.GenericArity).Select(i => "class __cli_T" + i)) + "> ");
         if (t.Kind == "enum") {
             w.Write("enum class __attribute__((annotate(\"cli.enum\"), annotate(\"cli.external:" + Escape(t.Assembly + "|" + t.Name) + "\"))) " + name + " : " + t.Underlying!.Cpp);
@@ -380,7 +428,10 @@ static class Program
                 w.WriteLine("__attribute__((annotate(\"cli.value.zero\"))) " + name + "() {}");
             if (t.Kind == "value")
                 w.WriteLine("__attribute__((annotate(\"cli.box\"))) operator " + name + "*() const;");
-            foreach (var f in t.Fields ?? Array.Empty<CliField>()) if (f.Supported) w.WriteLine(f.Access + ": __attribute__((annotate(\"cli.import.field:" + Escape(f.Id) + "\"))) " + (f.ReadOnly ? "__attribute__((annotate(\"cli.readonly\"))) " : "") + (f.Static ? "static " : "") + f.Type.Cpp + " " + f.Name + ";");
+            foreach (var f in t.Fields ?? Array.Empty<CliField>()) if (f.Supported) {
+                if (f.Constant != null) w.WriteLine(f.Access + ": __attribute__((annotate(\"cli.import.constant:" + Escape(f.Id) + "\"))) static constexpr " + f.Type.Cpp + " " + f.Name + " = " + f.Constant.Cpp + ";");
+                else w.WriteLine(f.Access + ": __attribute__((annotate(\"cli.import.field:" + Escape(f.Id) + "\"))) " + (f.ReadOnly ? "__attribute__((annotate(\"cli.readonly\"))) " : "") + (f.Static ? "static " : "") + f.Type.Cpp + " " + f.Name + ";");
+            }
             if (t.Base == "System.MulticastDelegate") {
                 var invoke = t.Methods.FirstOrDefault(m => m.Name == "Invoke" && m.Supported && !m.Static);
                 if (invoke != null) {
@@ -393,7 +444,7 @@ static class Program
             }
             var overloads = t.Methods.Where(m => m.Supported).GroupBy(m => m.Name + "(" + string.Join(", ", m.Parameters.Select(p => p.Cpp)) + ")").ToDictionary(g => g.Key, g => g.Count());
             var seen = new HashSet<string>();
-            foreach (var m in t.Methods.Where(m => m.Supported))
+            foreach (var m in t.Methods.Where(m => m.Supported && (!primitiveFacade || m.Static)))
             {
                 // These nongeneric enumeration slots conflict by return type
                 // with generic slots. Their CLR virtual/abstract metadata stays

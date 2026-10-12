@@ -109,6 +109,7 @@ step_bridge_gate() {
   local core_ref=${core_refs[-1]}
   bridge_compile "$(cygpath -m "$cpp/DirectWriteForwarder.cpp")" --std c++14 --target library --emit il \
     --public-key "$(cygpath -m "$build/keys/MSShared.snk")" \
+    --type System.Double --type System.Int32 --type System.UInt32 --type System.IFormatProvider --type System.Globalization.NumberStyles \
     --type System.DateTime --type System.Threading.Monitor --type System.Security.SecurityCriticalAttribute \
     --type System.Uri --type System.IO.FileFormatException --type System.IntPtr --type System.Runtime.InteropServices.Marshal \
     --type System.Guid --type System.Exception --type System.IO.FileNotFoundException \
@@ -347,6 +348,27 @@ EOF
   "$sdk/dotnet.exe" build "$(cygpath -m "$work/FontSimulationsCheck.csproj")" -c Release \
     --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -v:q
   timeout 30 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/FontSimulationsCheck.dll")"
+}
+
+step_check_font_version() {
+  initialize
+  local work=$build/font-version-check
+  local core_refs=("$sdk"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
+  local core_ref=${core_refs[-1]}
+  mkdir -p "$work"
+  /usr/bin/python3 "$here/tools/wpf-font-version-check.py" "$source" "$work/FontVersion.cpp"
+  bridge_compile "$(cygpath -m "$work/FontVersion.cpp")" --target library --std c++14 \
+    --ilasm "$(cygpath -m /clang64/bin/ilasm-dotnet.exe)" \
+    --type System.Double --type System.Type --type System.IFormatProvider \
+    --type System.Globalization.NumberStyles --type System.Globalization.CultureInfo \
+    --reference "$(cygpath -m "$core_ref/System.Globalization.dll")" -o "$(cygpath -m "$work/FontVersion.dll")"
+  cp "$here/wpf-tests/FontVersion.cs" "$work/Program.cs"
+  cat > "$work/FontVersionCheck.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="FontVersion"><HintPath>FontVersion.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$sdk/dotnet.exe" build "$(cygpath -m "$work/FontVersionCheck.csproj")" -c Release \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -v:q
+  timeout 30 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/FontVersionCheck.dll")"
 }
 
 step_check_factory_dispatcher() {

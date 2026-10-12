@@ -107,7 +107,7 @@ struct ImportedMethod {
     bool is_static;
     bool is_abstract;
 };
-struct ImportedField { std::string assembly, owner, name, type; };
+struct ImportedField { std::string assembly, owner, name, type, constant; };
 struct Metadata {
     std::map<std::string, ImportedMethod> methods;
     std::map<std::string, ImportedField> fields;
@@ -159,7 +159,8 @@ struct Metadata {
             if (auto* fields_list = c.getArray("Fields")) for (auto& field : *fields_list) {
                 auto& f = *field.getAsObject();
                 if (!f.getBoolean("Supported").value_or(false)) continue;
-                fields.emplace(f.getString("Id")->str(), ImportedField{assembly, name, f.getString("Name")->str(), f.getObject("Type")->getString("Il")->str()});
+                auto* constant = f.getObject("Constant");
+                fields.emplace(f.getString("Id")->str(), ImportedField{assembly, name, f.getString("Name")->str(), f.getObject("Type")->getString("Il")->str(), constant ? constant->getString("Il")->str() : ""});
             }
         }
     }
@@ -1605,6 +1606,7 @@ class Emitter {
             if (auto* p = dyn_cast<ParmVarDecl>(d->getDecl())) op(std::string(p->getType()->isReferenceType() ? "ldarg " : "ldarga ") + std::to_string(parameters.at(p)), 0, 1);
             else if (auto* v = dyn_cast<VarDecl>(d->getDecl())) {
                 if (annotated(v, "cli.readonly")) fail(e, "readonly imported fields cannot be passed by writable reference");
+                if (!annotation(v, "cli.import.constant:").empty()) fail(e, "imported literals have no addressable CLR storage");
                 if (v->isStaticDataMember()) op("ldsflda " + static_field_signature(v), 0, 1);
                 else op(std::string(v->getType()->isReferenceType() ? "ldloc " : "ldloca ") + std::to_string(locals.at(v)), 0, 1);
             }
@@ -1651,6 +1653,12 @@ class Emitter {
         }
         if (auto* p = dyn_cast<ParmVarDecl>(d)) { op("ldarg " + std::to_string(parameters.at(p)), 0, 1); if (p->getType()->isReferenceType()) op("ldobj " + type(p->getType()->getPointeeType()), 1, 1); return; }
         if (auto* v = dyn_cast<VarDecl>(d)) {
+            auto literal = annotation(v, "cli.import.constant:");
+            if (!literal.empty()) {
+                auto found = metadata.fields.find(literal);
+                if (found == metadata.fields.end() || found->second.constant.empty()) fail(at, "imported literal is absent from metadata");
+                op(found->second.constant, 0, 1); return;
+            }
             if (!annotation(v, "cli.static.property:").empty()) { op("call " + signature(static_property_method(v, false)), 0, 1); return; }
             if (v->isStaticDataMember()) { op("ldsfld " + static_field_signature(v), 0, 1); return; }
             auto it = locals.find(v);
@@ -2176,6 +2184,8 @@ class Emitter {
                 auto* reference = dyn_cast<DeclRefExpr>(u->getSubExpr()->IgnoreParenImpCasts());
                 auto* variable = reference ? dyn_cast<VarDecl>(reference->getDecl()) : nullptr;
                 auto element = u->getSubExpr()->getType();
+                if (variable && !annotation(variable, "cli.import.constant:").empty())
+                    fail(u, "imported literals have no addressable CLR storage");
                 if (variable && variable->hasLocalStorage() &&
                     (element->isArithmeticType() || (element->isPointerType() && !handle_target(element)))) {
                     address(u->getSubExpr()); op("conv.u", 1, 1); return;
