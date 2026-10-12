@@ -40,7 +40,8 @@
         "typed managed value boxes with implicit boxing, allocation, mutation and metadata import",
         "static fields, CLR type initializers, static properties and out-of-line accessors",
         "internal members and nonpublic managed type identities",
-        "pointer-sized IntPtr/UIntPtr and primitive pointer metadata imports"
+        "pointer-sized IntPtr/UIntPtr and primitive pointer metadata imports",
+        "managed explicit/sequential layout with field offsets, pack, size and charset"
       ],
       "remaining": [
         "implicit boxing into Object/interfaces, primitive boxes and boxed-handle conversions",
@@ -51,7 +52,7 @@
         "attributes/source-defined static constructors/multiple translation units",
         "full CLI semantic analysis and metadata type discovery"
       ],
-      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values test-tracking test-pinning test-boxed-values test-static-fields test-static-properties test-nativeints"
+      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values test-tracking test-pinning test-boxed-values test-static-fields test-static-properties test-nativeints test-layout"
     },
     {
       "stage": 4,
@@ -60,7 +61,8 @@
         "extern-C scalar bridge to a separate MinGW g++ DLL",
         "P/Invoke metadata and C# interoperability checks",
         "raw unmanaged pointers and pinned primitive/string buffers",
-        "real DirectWrite factory/font enumeration and pinned family-name buffer probe"
+        "real DirectWrite factory/font enumeration and pinned family-name buffer probe",
+        "explicit pinned primitive-buffer pointer casts retaining CLR pins"
       ],
       "remaining": [
         "native layouts, complete pointer operations and automatic marshalling",
@@ -72,7 +74,7 @@
     },
     {
       "stage": 5,
-      "status": "upstream LocalizedErrorMsgs component compiled; complete bridges remain pending",
+      "status": "upstream localized messages and metrics types compiled; complete bridges remain pending",
       "remaining": [
         "compile DirectWriteForwarder",
         "compile System.Printing",
@@ -80,7 +82,8 @@
       ],
       "implemented": [
         "WPF source patch for MinGW checked integers and DirectWrite UUID namespace declarations",
-        "upstream localized error messages compiled and checked on source-built CoreCLR"
+        "upstream localized error messages compiled and checked on source-built CoreCLR",
+        "upstream font/glyph metric types with preserved layout and native DirectWrite glyph ABI checks"
       ]
     }
   ]

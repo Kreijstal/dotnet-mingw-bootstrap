@@ -1,8 +1,16 @@
 #include <vcclr.h>
 using namespace System;
 extern "C" int NativePinned(const wchar_t*, unsigned short*);
+extern "C" int NativePinnedWord(unsigned int*);
 public ref class PinBridge {
 public:
+    static unsigned int Cast(array<Byte>^ bytes) {
+        pin_ptr<Byte> data = &bytes[0];
+        unsigned int* word = (unsigned int*)data;
+        unsigned int before = *word;
+        if (before != 0x44332211u || NativePinnedWord(word) != 42) return 0;
+        return *static_cast<unsigned int*>(data);
+    }
     static int Read(String^ text, array<UInt16>^ values) {
         pin_ptr<const wchar_t> chars = PtrToStringChars(text);
         pin_ptr<UInt16> data = &values[0];

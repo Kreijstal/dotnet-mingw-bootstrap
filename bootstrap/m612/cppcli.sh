@@ -329,6 +329,47 @@ EOF
   reject_case native-variadic 'extern "C" int NativePrint(int value, ...); int main() { return NativePrint(1, 2); }' 'non-variadic' --native-library cppcli-native.dll
   reject_case unbound-native 'extern "C" int NativeSum(int, int); int main() { return NativeSum(1, 2); }' 'without an emitted definition'
 }
+step_test-layout() {
+  log "CLR layout metadata and field offsets"
+  local refs=("$CPPCLI_SDK"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
+  local layout_args=(--type System.Runtime.InteropServices.LayoutKind --type System.Runtime.InteropServices.CharSet
+    --reference "$(cygpath -m "${refs[-1]}/System.Runtime.InteropServices.dll")")
+  compile "$(cygpath -m "$src/tests/layout.cpp")" --target library "${layout_args[@]}" -o "$(cygpath -m "$testdir/layout.dll")"
+  mkdir -p "$testdir/layout-consumer"
+  cat > "$testdir/layout-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers></PropertyGroup><ItemGroup><Reference Include="layout"><HintPath>../layout.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  cat > "$testdir/layout-consumer/Program.cs" <<'EOF'
+using System;
+using System.Runtime.InteropServices;
+if (!typeof(LayoutUnion).IsExplicitLayout || Marshal.SizeOf<LayoutUnion>() != 16 || Marshal.OffsetOf<LayoutUnion>("Tail").ToInt32() != 8)
+    throw new Exception("explicit value layout lost");
+if (LayoutChecks.UnionValue(0x3f800000) != 1.0f) throw new Exception("overlapping fields lost");
+if (!typeof(PackedLayout).IsLayoutSequential || Marshal.SizeOf<PackedLayout>() != 12 || Marshal.OffsetOf<PackedLayout>("Value").ToInt32() != 1 ||
+    typeof(PackedLayout).StructLayoutAttribute.Pack != 1 || typeof(PackedLayout).StructLayoutAttribute.CharSet != CharSet.Unicode)
+    throw new Exception("sequential pack, size or charset lost");
+var obj = new LayoutObject { Value = 21, Tail = -2 };
+if (!typeof(LayoutObject).IsExplicitLayout || Marshal.OffsetOf<LayoutObject>("Tail").ToInt32() != 8 || obj.Doubled != 42 || obj.Tail != -2)
+    throw new Exception("explicit reference layout lost");
+if (!typeof(LayoutObject).GetField("Secret", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).IsAssembly)
+    throw new Exception("internal field visibility lost through layout attribute");
+Console.WriteLine("CLR layout metadata OK");
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/layout-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -p:NuGetAudit=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/layout-consumer/bin/Debug/net8.0/consumer.dll")"
+  local prefix='using namespace System::Runtime::InteropServices; '
+  reject_case layout-missing-offset "$prefix"'[StructLayout(LayoutKind::Explicit)] public value struct Bad { int Value; }; int main() { return 0; }' 'requires FieldOffset' "${layout_args[@]}"
+  reject_case layout-negative-offset "$prefix"'[StructLayout(LayoutKind::Explicit)] public value struct Bad { [FieldOffset(-1)] int Value; }; int main() { return 0; }' 'nonnegative Int32 offset' "${layout_args[@]}"
+  reject_case layout-sequential-offset "$prefix"'[StructLayout(LayoutKind::Sequential)] public value struct Bad { [FieldOffset(0)] int Value; }; int main() { return 0; }' 'FieldOffset requires explicit layout' "${layout_args[@]}"
+  reject_case layout-static-offset "$prefix"'[StructLayout(LayoutKind::Explicit)] public value struct Bad { [FieldOffset(0)] static int Value; }; int main() { return 0; }' 'requires a managed instance field' "${layout_args[@]}"
+  reject_case layout-pack "$prefix"'[StructLayout(LayoutKind::Sequential, Pack=3)] public value struct Bad { int Value; }; int main() { return 0; }' 'Pack must be zero' "${layout_args[@]}"
+  reject_case layout-unknown-constant "$prefix"'[StructLayout(LayoutKind::Explicit)] public value struct Bad { [FieldOffset(Missing)] int Value; }; int main() { return 0; }' 'undeclared identifier' "${layout_args[@]}"
+  reject_case layout-runtime-offset "$prefix"'int Position() { return 0; } [StructLayout(LayoutKind::Explicit)] public value struct Bad { [FieldOffset(Position())] int Value; }; int main() { return 0; }' 'constant expression' "${layout_args[@]}"
+  reject_case layout-unknown-kind "$prefix"'[StructLayout(LayoutKind::Missing)] public value struct Bad { int Value; }; int main() { return 0; }' 'Missing' "${layout_args[@]}"
+  reject_case layout-negative-size "$prefix"'[StructLayout(LayoutKind::Sequential, Size=-1)] public value struct Bad { int Value; }; int main() { return 0; }' 'Size must be a nonnegative' "${layout_args[@]}"
+  log "PASS test-layout: explicit/sequential CLR layout, overlapping fields, pack, size and charset"
+}
 step_test-pinning() {
   log "CLR pinned locals and moving-GC interior pointers across MinGW native calls"
   /clang64/bin/clang++.exe -std=c++17 -shared -O2 "$src/tests/pinning-native.cpp" -o "$testdir/cppcli-pinning.dll"
@@ -361,6 +402,11 @@ try {
         int before = Volatile.Read(ref collections);
         if (PinBridge.Read(text, data) != 42 || data[1] != 65530) throw new Exception("native pinning corrupted managed data");
         if (Volatile.Read(ref collections) <= before) throw new Exception("no compacting collection during native call");
+        byte[] word = { 0x11, 0x22, 0x33, 0x44 };
+        before = Volatile.Read(ref collections);
+        if (PinBridge.Cast(word) != 0x88776655u || word[0] != 0x55 || word[3] != 0x88)
+            throw new Exception("pinned byte to native word cast failed");
+        if (Volatile.Read(ref collections) <= before) throw new Exception("no compacting collection during cast native call");
         if (PinBridge.Early(text) != 'c' || PinBridge.Alias(new[] { 1, 99 }) != 99) throw new Exception("managed pointer read failed");
         try { PinBridge.Fail(text); throw new Exception("missing pinned-scope exception"); }
         catch (InvalidOperationException) { }
@@ -385,6 +431,10 @@ int main() { int n = 1; for (pin_ptr<int> p = &n; n < 3; ++n) {} return 0; }' 'r
   reject_case pointer-arithmetic 'extern "C" int* Raw(); int main() { int* value = Raw(); value++; return 0; }' 'unmanaged pointer arithmetic' --native-library cppcli-pinning.dll
   reject_case interior-return '#include <vcclr.h>
 interior_ptr<int> Escape() { int n = 1; return &n; } int main() { return 0; }' 'returning managed pointer intrinsics'
+  reject_case pin-implicit-reinterpret '#include <vcclr.h>
+using namespace System; void Bad(array<Byte>^ bytes) { pin_ptr<Byte> data = &bytes[0]; unsigned int* word = data; } int main() { return 0; }' 'no viable conversion'
+  reject_case pin-static-const '#include <vcclr.h>
+using namespace System; void Bad(String^ text) { pin_ptr<const wchar_t> data = PtrToStringChars(text); char* raw = static_cast<char*>(data); } int main() { return 0; }' 'cannot discard element const'
   log "PASS test-pinning: Unicode strings and mutable arrays survive concurrent compacting GC in native calls"
 }
 step_test-enums() {

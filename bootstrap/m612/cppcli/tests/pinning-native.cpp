@@ -8,3 +8,10 @@ extern "C" __declspec(dllexport) int NativePinned(const wchar_t* chars, unsigned
     values[1] = 65530;
     return 42;
 }
+extern "C" __declspec(dllexport) int NativePinnedWord(unsigned int* value) {
+    if (*value != 0x44332211u) return -1;
+    Sleep(150);
+    if (*value != 0x44332211u) return -2;
+    *value = 0x88776655u;
+    return 42;
+}

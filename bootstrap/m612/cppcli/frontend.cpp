@@ -421,6 +421,55 @@ protected:
                 }
                 throw std::runtime_error("unterminated managed exception region");
             };
+            // Layout attributes are CLI metadata, not native Clang record
+            // attributes. Keep their arguments as expressions so Clang checks
+            // names/types and evaluates constants; never infer native layout.
+            std::map<size_t, std::string> layouts, layout_fields;
+            std::map<size_t, size_t> layout_attribute_ends;
+            for (size_t begin = 0; begin + 3 < tokens.size(); ++begin) {
+                if (tokens[begin].text != "[" || tokens[begin+1].text == "[") continue;
+                size_t name = begin + 1;
+                while (name + 2 < tokens.size() && tokens[name+1].text == "::") name += 2;
+                auto attr = tokens[name].text;
+                bool layout = attr == "StructLayout" || attr == "StructLayoutAttribute";
+                bool offset = attr == "FieldOffset" || attr == "FieldOffsetAttribute";
+                if ((!layout && !offset) || tokens[name+1].text != "(") continue;
+                size_t close = matching(name+1, "(", ")");
+                if (close+1 >= tokens.size() || tokens[close+1].text != "]") throw std::runtime_error("layout attributes must appear individually");
+                std::vector<std::string> args;
+                size_t start = name+2; int depth = 0;
+                for (size_t j = start; j <= close; ++j) {
+                    if (j == close || (tokens[j].text == "," && !depth)) {
+                        std::string arg;
+                        for (size_t k = start; k < j; ++k) arg += tokens[k].text + " ";
+                        if (arg.empty()) throw std::runtime_error("layout attributes require a constant argument");
+                        args.push_back(arg); start = j+1;
+                    } else if (tokens[j].text == "(" || tokens[j].text == "[") ++depth;
+                    else if (tokens[j].text == ")" || tokens[j].text == "]") --depth;
+                }
+                layout_attribute_ends[begin] = close+1;
+                if (offset) {
+                    if (class_depth[begin] != 1 || args.size() != 1) throw std::runtime_error("FieldOffset requires one argument on a managed instance field");
+                    layout_fields[begin] = "__attribute__((annotate(\"cli.field.offset\", " + args[0] + ")))";
+                } else {
+                    size_t record = close+2;
+                    if (record < tokens.size() && (tokens[record].text == "public" || tokens[record].text == "private")) ++record;
+                    if (record+1 >= tokens.size() || (tokens[record].text != "ref" && tokens[record].text != "value") ||
+                        (tokens[record+1].text != "class" && tokens[record+1].text != "struct")) throw std::runtime_error("StructLayout must precede a managed class or struct");
+                    std::string attrs = ", annotate(\"cli.layout\", " + args[0] + ")";
+                    std::set<std::string> named;
+                    for (size_t a = 1; a < args.size(); ++a) {
+                        auto equal = args[a].find('=');
+                        std::string key = equal == std::string::npos ? "" : args[a].substr(0, equal);
+                        key.erase(std::remove(key.begin(), key.end(), ' '), key.end());
+                        if ((key != "Pack" && key != "Size" && key != "CharSet") || !named.insert(key).second)
+                            throw std::runtime_error("unsupported or duplicate StructLayout named argument");
+                        attrs += ", annotate(\"cli.layout." + key + "\", " + args[a].substr(equal+1) + ")";
+                    }
+                    if (!layouts.emplace(record, attrs).second) throw std::runtime_error("duplicate StructLayout attribute");
+                }
+                begin = close+1;
+            }
             for (size_t begin = 0; begin + 1 < tokens.size(); ++begin) {
                 if (tokens[begin].text != "try" || tokens[begin + 1].text != "{") continue;
                 size_t end = matching(begin + 1, "{", "}") + 1;
@@ -462,6 +511,13 @@ protected:
             std::set<std::pair<std::string, std::string>> property_names;
             for (size_t i = 0; i < tokens.size(); ++i) {
                 auto& t = tokens[i];
+                if (layout_attribute_ends.count(i)) {
+                    if (layout_fields.count(i)) {
+                        if (class_access[i] == "internal") emit(t, "__attribute__((annotate(\"cli.access:assembly\")))");
+                        emit(t, layout_fields[i]);
+                    }
+                    i = layout_attribute_ends[i]; continue;
+                }
                 if (value_defaults.count(i)) { emit(t, "{ " + value_defaults[i]); continue; }
                 if (cli_structural.count(i)) { emit(t, cli_structural[i]); continue; }
                 if (interface_virtual.count(i)) emit(t, "virtual");
@@ -580,6 +636,7 @@ protected:
                     (tokens[i + 1].text == "class" || tokens[i + 1].text == "struct")) {
                     bool interface = t.text == "interface", value = t.text == "value";
                     std::string attributes = value ? "annotate(\"cli.value\")" : "annotate(\"cli.ref\")";
+                    if (layouts.count(i)) attributes += layouts[i];
                     if (i && (tokens[i-1].text == "public" || tokens[i-1].text == "private")) attributes += ", annotate(\"cli.visibility:" + tokens[i-1].text + "\")";
                     if (interface) attributes += ", annotate(\"cli.interface\"), annotate(\"cli.abstract\")";
                     size_t end = i + 3;
@@ -719,6 +776,23 @@ class Emitter {
         return spec->getTemplateArgs()[0].getAsType();
     }
     bool pinned(QualType t) const { return record_annotated(t->getAsCXXRecordDecl(), "cli.pin"); }
+    int64_t layout_constant(const Decl* d, llvm::StringRef name, int64_t fallback) const {
+        const AnnotateAttr* found = nullptr;
+        for (auto* attr : d->specific_attrs<AnnotateAttr>()) if (attr->getAnnotation() == name) {
+            if (found) throw std::runtime_error("duplicate CLI layout metadata");
+            found = attr;
+        }
+        if (!found) return fallback;
+        Expr::EvalResult result;
+        if (found->args_size() != 1 || !(*found->args_begin())->EvaluateAsInt(result, context) ||
+            !result.Val.getInt().isSignedIntN(64)) throw std::runtime_error("CLI layout argument must be an integer constant");
+        return result.Val.getInt().getSExtValue();
+    }
+    int64_t layout_kind(const CXXRecordDecl* r) const {
+        auto kind = layout_constant(r, "cli.layout", record_annotated(r, "cli.value") ? 0 : 3);
+        if (kind != 0 && kind != 2 && kind != 3) throw std::runtime_error("invalid StructLayout LayoutKind");
+        return kind;
+    }
     std::string record_name(const CXXRecordDecl* record) const {
         std::string ext = annotation(record, "cli.external:");
         if (ext.empty() && record->getDefinition()) ext = annotation(record->getDefinition(), "cli.external:");
@@ -1138,7 +1212,11 @@ class Emitter {
             else if (auto* operation = dyn_cast<CXXOperatorCallExpr>(c)) receiver = operation->getArg(0);
             if (!receiver) fail(c, "managed pointer operation lacks a receiver");
             expr(receiver);
-            if (isa<CXXConversionDecl>(method) && pinned(receiver->getType())) op("conv.u", 1, 1);
+            if (isa<CXXConversionDecl>(method) && pinned(receiver->getType()) && c->getType()->isPointerType() && !handle_target(c->getType())) {
+                if (interior_element(receiver->getType()).isConstQualified() && !c->getType()->getPointeeType().isConstQualified())
+                    fail(c, "pin_ptr cast cannot discard element const qualification");
+                op("conv.u", 1, 1);
+            }
             else if (method->getOverloadedOperator() == OO_Star) op("ldobj " + type(interior_element(receiver->getType())), 1, 1);
             else fail(c, "unsupported managed pointer operation");
             return;
@@ -1449,6 +1527,14 @@ class Emitter {
         }
         if (auto* c = dyn_cast<ExplicitCastExpr>(e)) {
             if (c->getCastKind() == CK_ConstructorConversion && value_target(c->getType())) { expr(c->getSubExpr()); return; }
+            if (c->getCastKind() == CK_UserDefinedConversion && c->getType()->isPointerType() && !handle_target(c->getType())) {
+                auto* conversion = dyn_cast<CXXMemberCallExpr>(strip(c->getSubExpr()));
+                auto* method = conversion ? dyn_cast_or_null<CXXConversionDecl>(conversion->getDirectCallee()) : nullptr;
+                if (!method || !record_annotated(method->getParent(), "cli.pin")) fail(c, "explicit native pointer conversion requires a pin_ptr intrinsic");
+                expr(c->getSubExpr()); return;
+            }
+            if (c->getCastKind() == CK_BitCast && c->getType()->isPointerType() && !handle_target(c->getType()) &&
+                c->getSubExpr()->getType()->isPointerType() && !handle_target(c->getSubExpr()->getType())) { expr(c->getSubExpr()); return; }
             if (handle_target(c->getType())) {
                 const Expr* source = strip(c->getSubExpr());
                 if (auto* ctor = dyn_cast<CXXConstructExpr>(source)) {
@@ -1672,6 +1758,7 @@ public:
     Emitter(CompilerInstance& compiler, const Metadata& md) : ci(compiler), context(ci.getASTContext()), metadata(md) {}
     bool VisitFunctionDecl(FunctionDecl* f) {
         auto* method = dyn_cast<CXXMethodDecl>(f);
+        if (annotated(f, "cli.field.offset")) throw std::runtime_error("FieldOffset requires a managed instance field");
         if (annotated(f, "cli.value.zero")) return true;
         if (isa<CXXConstructorDecl>(f)) for (auto* parameter : f->parameters())
             if (parameter->getType()->isReferenceType() && !f->isImplicit()) throw std::runtime_error("tracking references in constructors are not enabled yet");
@@ -1697,6 +1784,26 @@ public:
     }
     bool VisitCXXRecordDecl(CXXRecordDecl* r) {
         if (r->isThisDeclarationADefinition() && (annotated(r, "cli.ref") || annotated(r, "cli.value")) && !annotated(r, "cli.array") && annotation(r,"cli.external:").empty()) {
+            auto layout = layout_kind(r);
+            auto pack = layout_constant(r, "cli.layout.Pack", 0), size = layout_constant(r, "cli.layout.Size", 0);
+            auto charset = layout_constant(r, "cli.layout.CharSet", 1);
+            if (pack < 0 || pack > 128 || (pack && (pack & (pack-1)))) throw std::runtime_error("StructLayout Pack must be zero or a power of two up to 128");
+            if (size < 0 || size > INT32_MAX) throw std::runtime_error("StructLayout Size must be a nonnegative Int32");
+            if (charset < 1 || charset > 4) throw std::runtime_error("invalid StructLayout CharSet");
+            if (layout != 3) {
+                if (is_interface(r)) throw std::runtime_error("layout on interfaces is not enabled yet");
+                for (auto& base : r->bases()) if (!is_interface(base.getType()->getAsCXXRecordDecl()) &&
+                    record_name(base.getType()->getAsCXXRecordDecl()) != "[System.Runtime]'System.Object'")
+                    throw std::runtime_error("layout on inherited managed classes is not enabled yet");
+            }
+            for (auto* field : r->fields()) {
+                auto offset = layout_constant(field, "cli.field.offset", -1);
+                if (layout == 2 && !annotated(field, "cli.field.offset")) throw std::runtime_error("explicit layout requires FieldOffset on every instance field");
+                if (annotated(field, "cli.field.offset") && (layout != 2 || offset < 0 || offset > INT32_MAX)) throw std::runtime_error("FieldOffset requires explicit layout and a nonnegative Int32 offset");
+                if (layout != 3 && field->isBitField()) throw std::runtime_error("managed layout bitfields are not enabled yet");
+            }
+            for (auto* member : r->decls()) if (auto* field = dyn_cast<VarDecl>(member); field && annotated(field, "cli.field.offset"))
+                throw std::runtime_error("FieldOffset requires a managed instance field");
             if (record_annotated(r, "cli.value")) {
                 if (isa<CXXRecordDecl>(r->getDeclContext())) throw std::runtime_error("nested managed value types are not enabled yet");
                 if (r->getNumBases() || r->isPolymorphic()) throw std::runtime_error("value types with bases or virtual methods are not enabled yet");
@@ -1802,7 +1909,9 @@ public:
         }
         for (auto* r : records) {
             auto* parent = class_base(r);
-            il << ".class " << (annotation(r, "cli.visibility:") == "private" ? "private " : "public ") << (is_interface(r) ? "interface abstract " : "auto ansi ")
+            auto layout = layout_kind(r), charset = layout_constant(r, "cli.layout.CharSet", 1);
+            il << ".class " << (annotation(r, "cli.visibility:") == "private" ? "private " : "public ") << (is_interface(r) ? "interface abstract " :
+                std::string(layout == 2 ? "explicit " : layout == 0 ? "sequential " : "auto ") + (charset == 3 ? "unicode " : charset == 4 ? "autochar " : "ansi "))
                << (!is_interface(r) && (annotated(r, "cli.abstract") || r->isAbstract()) ? "abstract " : "")
                << ((annotated(r, "cli.sealed") || annotated(r, "cli.value")) ? "sealed " : "") << record_name(r);
             if (!is_interface(r)) il << " extends " << (annotated(r, "cli.value") ? "[System.Runtime]System.ValueType" : parent ? record_name(parent) : "[System.Runtime]System.Object");
@@ -1811,8 +1920,14 @@ public:
                 il << (first_interface ? " implements " : ", ") << record_name(base.getType()->getAsCXXRecordDecl()); first_interface = false;
             }
             il << " {\n";
-            for (auto* field : r->fields()) il << "  .field " << (field->getAccess() == AS_private ? "private " : field->getAccess() == AS_protected ? "family " : annotation(field, "cli.access:") == "assembly" ? "assembly " : "public ")
-                << type(field->getType()) << " '" << field->getNameAsString() << "'\n";
+            if (annotated(r, "cli.layout.Pack")) il << "  .pack " << layout_constant(r, "cli.layout.Pack", 0) << "\n";
+            if (annotated(r, "cli.layout.Size")) il << "  .size " << layout_constant(r, "cli.layout.Size", 0) << "\n";
+            for (auto* field : r->fields()) {
+                il << "  .field ";
+                if (layout == 2) il << '[' << layout_constant(field, "cli.field.offset", -1) << "] ";
+                il << (field->getAccess() == AS_private ? "private " : field->getAccess() == AS_protected ? "family " : annotation(field, "cli.access:") == "assembly" ? "assembly " : "public ")
+                    << type(field->getType()) << " '" << field->getNameAsString() << "'\n";
+            }
             std::map<std::string, const VarDecl*> static_fields;
             for (auto* member : r->decls()) if (auto* field = dyn_cast<VarDecl>(member); field && field->isStaticDataMember()) {
                 if (!annotation(field, "cli.static.property:").empty()) continue;

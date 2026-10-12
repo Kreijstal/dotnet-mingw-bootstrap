@@ -1769,10 +1769,11 @@ SDK/shared-framework files are modified by these foundation checks.
 The next build gate is `DirectWriteForwarder`: planning PresentationCore stops
 with `Build WPF dependency first: DirectWriteForwarder`. The initial
 packaged frontend stopped at included-header `#using` and missing `vcclr.h`.
-The development frontend now handles these (see §13), but the full upstream
-translation unit still fails on boxed value handles, managed static fields and
-additional metadata imports. Managed class templates, callbacks, finalizers and
-automatic native partitioning also remain outside its supported subset.
+The development frontend now handles these, boxed value handles, static fields
+and managed metric layouts (see §13–15). The full upstream translation unit
+still fails on managed enum operations and additional imports. Native record
+emission, managed class templates, callbacks, finalizers and automatic native
+partitioning also remain outside its supported subset.
 The same compiler failure can be reproduced with `wpf.sh bridge-gate`; it
 retains the original Clang diagnostics in `build/directwrite-gate.log`.
 The System.Printing bridge, higher-level managed libraries, WPF build tasks and
@@ -1983,3 +1984,63 @@ upstream gate diagnostics remain in `build/directwrite-gate.log`.
 No full WPF shared framework, WindowsDesktop SDK or Greenshot package is
 claimed. The goal remains building and packaging the complete source-only WPF
 stack, then current Greenshot.
+
+## 15. WPF metric layouts and explicit pinned-buffer casts
+
+The next 2026-10-12 continuation added `StructLayout`/`FieldOffset` support to
+the development frontend. Attribute arguments remain expressions checked and
+evaluated by Clang. The IL backend emits actual CLI explicit/sequential layout,
+field offsets, packing, size and charset; managed value types now default to
+sequential layout. It rejects missing or misplaced offsets, invalid sizes and
+packing, and nonconstant arguments. Layout attributes preserve internal field
+visibility. General custom attributes, layout inheritance and bitfields remain
+unfinished. These rules follow the documented [StructLayout semantics](https://learn.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.structlayoutattribute)
+and [required explicit offsets](https://learn.microsoft.com/en-us/cpp/error-messages/compiler-errors-2/compiler-error-c3272?view=msvc-170).
+
+`wpf.sh check-metrics-layout` compiles the unchanged upstream `FontMetrics.h`
+and `GlyphMetrics.h`, using standard fixed-width aliases for the Windows scalar
+types. The consumer checks their actual nonpublic class/value-type identities,
+all declared offsets, and the upstream Baseline/LineSpacing calculations.
+The glyph structure is also marshalled into a native MinGW DLL compiled against
+`dwrite.h`: every offset and its 28-byte size match `DWRITE_GLYPH_METRICS`, and
+native code reads all seven signed/unsigned values correctly. FontMetrics has
+the offsets declared upstream and is converted field by field in the upstream
+converter; this check does not claim its raw layout matches DWRITE_FONT_METRICS.
+Result: `upstream WPF font/glyph layout OK: native glyph size 28`, with zero
+managed build warnings/errors.
+
+The `vcclr.h` pin intrinsic also accepts explicit C-style/static casts to native
+pointer types. The emitter preserves the actual pinned CLR local and converts
+its address, without creating a native pin object. New tests reinterpret pinned
+bytes as a native UInt32, read and modify the word in a native DLL during forced
+compacting collections, then observe the updated bytes. Unrelated implicit
+pointer conversions and casts discarding element const qualification are
+rejected. This implements the [documented pin-pointer cast pattern](https://learn.microsoft.com/en-us/cpp/extensions/pin-ptr-cpp-cli?view=msvc-170);
+direct reinterpret_cast on the surrogate and other pointer operations remain
+outside the implemented subset.
+
+Validation on win11:
+
+```sh
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-layout test-pinning
+
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  WPF_CPPCLI_BUILD=/home/topkek/dotnetboot/m612/build/cppcli \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh \
+  check-metrics-layout check-localized-messages check-directwrite-bridge
+```
+
+The layout and pinning checks passed. The affected value, boxed-value, instance
+property, virtual, static-field and static-property suites also passed after
+the layout change. Rebuilds use `cmake --build ... --target cli_ast -j2`;
+the pin-header change additionally used `cppcli.sh build` to copy that header.
+The full `wpf.sh bridge-gate` still returns nonzero. Its metadata imports now
+include Guid, the needed exception types, layout types, Point and
+TextFormattingMode from the already source-built WindowsBase. Remaining first
+errors concern managed enum bitwise/conversion semantics; complete native
+record interop and automatic partitioning are still required after Sema.
+The installed compiler package remains the older build. No complete WPF,
+WindowsDesktop or Greenshot package has been produced; the separate 101 missing
+PresentationNative exports remain unchanged.

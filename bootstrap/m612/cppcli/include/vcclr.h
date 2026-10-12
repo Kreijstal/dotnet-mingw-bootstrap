@@ -16,6 +16,9 @@ public:
     pin_ptr(interior_ptr<T>);
     pin_ptr(decltype(nullptr));
     operator T*() const;
+    // Explicit pointer reinterpretation is a CLI intrinsic. Keeping it
+    // explicit prevents unrelated pointer types from matching native overloads.
+    template<class U> explicit operator U*() const;
     T& operator*() const;
 };
 }
