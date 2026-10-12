@@ -60,7 +60,16 @@
     "Pinned string characters and managed array elements passed as raw pointers to split native DLLs",
     "Pin scopes clear pinned slots in CLR finally regions, including early returns and exceptions",
     "Concurrent compacting-GC validation during native UTF-16 string reads and array mutation",
-    "Selectable C++14/17/20 source language modes (C++17 default)"
+    "Selectable C++14/17/20 source language modes (C++17 default)",
+    "Implicit boxing of selected managed value classes into typed CLR box handles, with ValueType/IsBoxed optional modifiers",
+    "Boxed value fields/methods mutate the original CLR box, with aliasing, null and GC checks",
+    "gcnew value constructors/defaults allocate boxed values; typed-box metadata imports preserve the boxed element",
+    "Managed static fields and ordered CLR .cctor initialization, including concurrent access and failed initialization",
+    "Non-indexed static properties with inline/out-of-line accessors and C# metadata interoperability",
+    "Assembly visibility for internal members and nonpublic top-level classes",
+    "Imported IntPtr/UIntPtr are pointer-sized CLR native integers, including primitive pointer signatures and readonly static fields",
+    "CLR operator overloads differing only in return type retain distinct annotated metadata declarations",
+    "Upstream WPF LocalizedErrorMsgs source compiles and runs with Unicode strings and monitor locking"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -69,16 +78,16 @@
     "No CLI generics, delegates, events yet",
     "No mixed-mode PE output or ijwhost integration yet",
     "Unsupported AST nodes are errors; this is not a conforming general C++/CLI compiler",
-    "Properties currently cover non-indexed instance members; indexed and static properties are not enabled",
+    "Properties cover non-indexed instance and static members; indexed/static auto-properties and static compound updates are not implemented",
     "Interface surrogates use C++ abstract bases; interface-only classes need an explicit Object base for Object upcasts",
     "Interface declarations currently permit ordinary method declarations only; named/explicit interface implementations are not enabled",
     "Managed arrays currently require rank one; no aggregate initializers or covariance",
     "Managed destructors/finalizers, covariance metadata and managed operator metadata are explicitly rejected",
     "Native bridges require extern-C scalars or unmanaged pointers; bool/automatic marshalling, callbacks and automatic native partitioning are not enabled",
-    "Implicit boxing, static field initialization and multi-translation-unit linking are not implemented",
+    "Implicit boxing into Object/interfaces/primitive boxes, source-defined static constructors and multi-translation-unit linking remain unimplemented",
     "WPF DirectWriteForwarder and System.Printing are not compiled by this frontend yet",
     "Value classes currently exclude nested types, bases/interfaces, virtual methods, native pointer fields and custom zero-argument constructors",
-    "Boxing currently uses explicit safe_cast to Object; boxed value handles, constrained dispatch and implicit boxing are not implemented",
+    "Boxing covers explicit safe_cast to Object and implicit boxing into matching selected value-class handles; handle upcasts, primitive boxes, constrained dispatch and boxed operator overloads remain incomplete",
     "Tracking references exclude constructors, fields and byref returns; pin_ptr is limited to initialized primitive block locals, and interior_ptr to primitive addresses/read dereferences; managed pointer assignments, unmanaged pointer arithmetic and intrinsic returns are not implemented"
   ]
 }

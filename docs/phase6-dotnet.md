@@ -1883,3 +1883,103 @@ The complete diagnostics are retained in `~/wpfboot/build/directwrite-gate.log`.
 Full DirectWriteForwarder and System.Printing, complete WPF/WindowsDesktop and
 Greenshot packaging remain unfinished. The separate PresentationNative export
 and native gfx/PenImc version issues in §12 still apply.
+
+
+## 14. Upstream bridge boxing, static state and native integers
+
+The 2026-10-12 continuation moved the full DirectWriteForwarder build past
+boxed `DateTime`, managed static lock initialization, internal access labels,
+static properties, native integer imports and MinGW DirectWrite UUID namespace
+failures. Full WPF is still not packaged or verified: the bridges and the
+independent native requirements in §12 remain incomplete.
+
+The frontend now supports implicit boxing of a selected managed value class
+into its matching `T^` handle and `gcnew T(...)` boxed allocation. Boxes retain
+CLR object identity; field and method updates use `unbox` addresses rather than
+copying the payload. `*box` reads a value copy. Value-class `this` remains a
+managed address. Signature metadata uses `System.ValueType` with the concrete
+value type and `IsBoxed` optional modifiers, and the reader preserves these
+when importing another generated assembly. This is consistent with the
+[documented CLR modifier purpose](https://learn.microsoft.com/en-us/dotnet/api/system.runtime.compilerservices.isboxed?view=net-10.0).
+Boxing into Object/interfaces without `safe_cast`, primitive boxes, general
+boxed-handle upcasts and constrained dispatch still need work. Native `*`
+pointers to managed value classes remain rejected in emitted CLI declarations.
+
+Managed static field initializers lower into ordered CLR `.cctor` calls, with
+real static field loads/stores/addresses. The runtime handles concurrent first
+access and failed type initialization. Non-indexed static properties have real
+CLR getters/setters, including out-of-line `Class::Property::get/set` source
+definitions. Namespace-private types emit nonpublic type identities; internal
+members emit assembly access. Indexed/static auto-properties, compound static
+property updates, source-defined static constructors and general CLI attributes
+remain unimplemented.
+
+Metadata imports now represent `IntPtr`/`UIntPtr` as pointer-sized CLR native
+integers with corresponding C++ value declarations. The driver imports these
+core types by default. Primitive pointer signatures, such as `IntPtr(void*)`
+and `ToPointer()`, are imported without automatic marshalling. Imported static
+fields retain readonly checks; readonly value receivers use defensive copies.
+CLR operator overloads that differ only by return type keep distinct annotated
+metadata declarations instead of colliding as C++ methods. General C++ operator
+syntax binding for these imports still requires work. Assembly references with
+hyphenated names are quoted in emitted IL, including optional modifiers.
+
+Two WPF v8.0.0 source patches are applied idempotently by
+`wpf.sh prepare-bridges`:
+
+- `0001-mingw-checked-integers.patch` uses MinGW's existing checked integer
+  operations for the four functions copied from Microsoft's intsafe header.
+  The check verifies successful results, overflow HRESULTs and failure sentinels
+  for addition, conversion, multiplication and subtraction.
+- `0002-mingw-dwrite-namespace.patch` includes MinGW's DirectWrite header at
+  global scope so its UUID template specializations are in the correct namespace.
+  The original MSVC include path is retained for non-MinGW builds.
+
+`wpf.sh bridge-gate` now supplies the source-built threading/interoperability
+reference assemblies and System.IO.Packaging, the latter providing the
+FileFormatException forwarded by WindowsBase. Current first Sema failures are
+missing Guid/exception/layout metadata imports and the cast from pinned byte
+storage to a native GUID pointer in `DWriteWrapper/Common.h`. Native record
+layout, attributes, templates, callbacks and automatic native partitioning are
+still needed; the full upstream amalgamation deliberately returns nonzero.
+
+Focused checks added to `cppcli.sh`:
+
+```sh
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh \
+  test-boxed-values test-static-fields test-static-properties test-nativeints
+```
+
+All passed on the source-built CoreCLR. These checks cover the real WPF
+`DateTime::FromFileTimeUtc(...)->Ticks` pattern, boxing copy/alias semantics,
+mutable box methods and fields, null and GC behavior, C# reflection/consumption,
+a second C++/CLI assembly importing typed boxes, parallel static initialization,
+initialization failure caching, private/internal visibility, pointer-sized API
+signatures, unmanaged memory allocation/free and Marshal.Copy into managed bytes.
+The rebuilt metadata tool and native plugin passed, and all 17 frontend suites
+passed after the native integer changes. Later modifier/assembly-quoting changes
+were validated with boxed-library imports and the affected import suites.
+
+The actual upstream `LocalizedErrorMsgs.cpp` and header now compile through the
+frontend, without rewriting their class bodies. `wpf.sh check-localized-messages`
+wraps them with a small public check facade, then validates Unicode roundtrips,
+concurrent Monitor-protected access, nonpublic type identity, assembly-level
+accessors and the CLR type initializer. This is a real compiled component of
+DirectWriteForwarder; it does not establish completion of the entire bridge.
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  WPF_CPPCLI_BUILD=/home/topkek/dotnetboot/m612/build/cppcli \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh \
+  check-checked-integers check-localized-messages check-directwrite-bridge
+```
+
+Results: `WPF checked integers OK`, `upstream WPF LocalizedErrorMsgs OK`, and
+`DirectWrite bridge OK: 81 families; first family Arial`. Managed check builds
+had zero warnings/errors. Outputs remain in `~/wpfboot/build`; the complete
+upstream gate diagnostics remain in `build/directwrite-gate.log`.
+No full WPF shared framework, WindowsDesktop SDK or Greenshot package is
+claimed. The goal remains building and packaging the complete source-only WPF
+stack, then current Greenshot.

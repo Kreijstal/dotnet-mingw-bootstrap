@@ -36,18 +36,22 @@
         "tracking references in parameters and local aliases, with CLR byref metadata",
         "primitive pin_ptr locals with CLR pinned storage and lexical finally cleanup",
         "primitive interior_ptr locals and string-character addresses",
-        "default gcnew allocation without constructor parentheses"
+        "default gcnew allocation without constructor parentheses",
+        "typed managed value boxes with implicit boxing, allocation, mutation and metadata import",
+        "static fields, CLR type initializers, static properties and out-of-line accessors",
+        "internal members and nonpublic managed type identities",
+        "pointer-sized IntPtr/UIntPtr and primitive pointer metadata imports"
       ],
       "remaining": [
-        "implicit boxing and boxed value handles",
+        "implicit boxing into Object/interfaces, primitive boxes and boxed-handle conversions",
         "CLI generics",
         "delegates/events/indexers",
         "destructors/finalizers and deterministic cleanup",
         "extended tracking references, nonprimitive pinning and managed pointer operations",
-        "attributes/static initialization/multiple translation units",
+        "attributes/source-defined static constructors/multiple translation units",
         "full CLI semantic analysis and metadata type discovery"
       ],
-      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values test-tracking test-pinning"
+      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values test-tracking test-pinning test-boxed-values test-static-fields test-static-properties test-nativeints"
     },
     {
       "stage": 4,
@@ -68,11 +72,15 @@
     },
     {
       "stage": 5,
-      "status": "working DirectWrite subset probe; upstream bridges still pending",
+      "status": "upstream LocalizedErrorMsgs component compiled; complete bridges remain pending",
       "remaining": [
         "compile DirectWriteForwarder",
         "compile System.Printing",
         "integrate source-built WPF/WindowsDesktop and exercise real applications"
+      ],
+      "implemented": [
+        "WPF source patch for MinGW checked integers and DirectWrite UUID namespace declarations",
+        "upstream localized error messages compiled and checked on source-built CoreCLR"
       ]
     }
   ]

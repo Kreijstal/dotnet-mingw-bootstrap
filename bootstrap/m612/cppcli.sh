@@ -125,7 +125,7 @@ EOF
   reject_case bad-downcast 'using namespace System; public ref class Base {}; public ref class Derived : Base {}; int main() { Base^ b = gcnew Base(); Derived^ d = b; return 0; }' 'cannot initialize'
   reject_case private-field 'using namespace System; public ref class Box { int hidden; }; int main() { Box^ b = gcnew Box(); b->hidden = 1; return 0; }' 'private member'
   reject_case native-managed-pointer 'using namespace System; public ref class Box {}; int main() { Box* b = gcnew Box(); return 0; }' "native '\*' pointers"
-  reject_case boxed-value-handle 'public value struct Point { int X; }; int main() { Point^ boxed = nullptr; return 0; }' 'boxed value handles'
+  reject_case native-value-pointer 'public value struct Point { int X; }; int main() { Point* native = nullptr; return 0; }' "native '\*' pointers"
   reject_case missing-default-constructor 'public ref class B { public: B(int value) {} }; public ref class D : B {}; int main() { D^ d = gcnew D(); return 0; }' 'no matching function'
   reject_case missing-imported-constructor 'using namespace System; int main() { Console^ c = gcnew Console(); return 0; }' 'no public metadata constructor'
   log "PASS test-objects: managed identity and Clang constructor/member checking"
@@ -446,6 +446,126 @@ int main() { Object^ p = safe_cast<Object^>(1); try { double d = safe_cast<doubl
 EOF
   run_case boxing-exceptions "$testdir/boxing-exceptions.cpp" $'1\n2' --type System.InvalidCastException --type System.NullReferenceException
   reject_case value-base 'public value struct Bad : System::Object {}; int main() { return 0; }' 'value types with bases'
+}
+step_test-boxed-values() {
+  log "Boxed value handles, alias/mutation semantics and WPF DateTime pattern"
+  run_case boxed-values "$src/tests/boxed-values.cpp" $'4\n7\n9\n12\n12\n0\n5\nnull box OK\n504911232000000000' \
+    --type System.DateTime --type System.GC --type System.NullReferenceException
+  mkdir -p "$testdir/boxed-consumer"
+  cat > "$testdir/boxed-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers></PropertyGroup><ItemGroup><Reference Include="boxed-values"><HintPath>../boxed-values.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  cat > "$testdir/boxed-consumer/Program.cs" <<'EOF'
+using System;
+using System.Linq;
+using Example;
+ValueType box = Boxes.Make(6);
+if (box is not BoxPoint point || point.X != 6 || Boxes.Read(box) != 6) throw new Exception("incorrect box identity");
+Boxes.Move(box);
+if (((BoxPoint)box).X != 8 || Boxes.Read(box) != 8) throw new Exception("boxed mutation copied the value");
+var api = typeof(Boxes).GetMethod("Make");
+var modifiers = api.ReturnParameter.GetOptionalCustomModifiers();
+if (api.ReturnType != typeof(ValueType) || !modifiers.Contains(typeof(BoxPoint)) || !modifiers.Any(t => t.FullName == "System.Runtime.CompilerServices.IsBoxed"))
+    throw new Exception("missing typed-box metadata");
+if (Boxes.FileTime(0) != DateTime.FromFileTimeUtc(0).Ticks) throw new Exception("incorrect imported DateTime boxing");
+Console.WriteLine("boxed API metadata and C# calls OK");
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/boxed-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -p:NuGetAudit=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/boxed-consumer/bin/Debug/net8.0/consumer.dll")"
+  cat > "$testdir/boxed-reference.cpp" <<'EOF'
+#using "boxed-values.dll"
+using namespace System;
+int main() { Example::BoxPoint^ value = Example::Boxes::Make(6); Example::Boxes::Move(value); Console::WriteLine(Example::Boxes::Read(value)); return 0; }
+EOF
+  run_case boxed-reference "$testdir/boxed-reference.cpp" '8' --type Example.Boxes --type Example.BoxPoint
+  reject_case wrong-typed-box 'public value struct A { int X; }; public value struct B { int X; }; int main() { A value; B^ box = value; return 0; }' 'no viable conversion'
+  log "PASS test-boxed-values: CLR boxes, field/method mutation and imported value boxing"
+}
+step_test-static-fields() {
+  log "Managed static fields and CLR type-initializer ordering/locking/failure"
+  compile "$(cygpath -m "$src/tests/static-fields.cpp")" --target library --std c++14 \
+    --type System.InvalidOperationException -o "$(cygpath -m "$testdir/static-fields.dll")"
+  mkdir -p "$testdir/static-consumer"
+  cat > "$testdir/static-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers></PropertyGroup><ItemGroup><Reference Include="static-fields"><HintPath>../static-fields.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  cat > "$testdir/static-consumer/Program.cs" <<'EOF'
+using System;
+using System.Reflection;
+using System.Threading.Tasks;
+using Example;
+var locks = new object[32];
+Parallel.For(0, locks.Length, i => { locks[i] = State.Lock(); if (State.Read() != 42) throw new Exception("incorrect initialization order"); });
+foreach (var value in locks) if (!ReferenceEquals(value, locks[0])) throw new Exception("static initializer ran repeatedly");
+State.Increment();
+if (State.Read() != 43 || typeof(State).TypeInitializer == null) throw new Exception("static field byref or cctor metadata failed");
+if (!typeof(State).GetField("_seed", BindingFlags.Static | BindingFlags.NonPublic).IsPrivate) throw new Exception("static field visibility lost");
+for (int i = 0; i < 2; ++i) {
+    try { Failing.Read(); throw new Exception("failed initializer did not poison the type"); }
+    catch (TypeInitializationException e) when (e.InnerException is InvalidOperationException) { }
+}
+Console.WriteLine("static fields and CLR initialization OK");
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/static-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -p:NuGetAudit=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/static-consumer/bin/Debug/net8.0/consumer.dll")" > "$testdir/static-consumer.stdout"
+  tr -d '\r' < "$testdir/static-consumer.stdout" > "$testdir/static-consumer.actual"
+  printf '%s\n' 'initialize once' 'static fields and CLR initialization OK' > "$testdir/static-consumer.expected"
+  cmp "$testdir/static-consumer.expected" "$testdir/static-consumer.actual"
+  cat "$testdir/static-consumer.actual"
+  log "PASS test-static-fields: ordered CLR .cctor and private static storage"
+}
+step_test-static-properties() {
+  log "Static CLI properties, out-of-line accessors and assembly visibility"
+  run_case static-properties "$src/tests/static-properties.cpp" $'40\n42\n11'
+  mkdir -p "$testdir/static-property-consumer"
+  cat > "$testdir/static-property-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers></PropertyGroup><ItemGroup><Reference Include="static-properties"><HintPath>../static-properties.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  cat > "$testdir/static-property-consumer/Program.cs" <<'EOF'
+using System;
+using System.Reflection;
+using Example;
+if (StaticProperties.Value != 40 || StaticProperties.Text != "static text") throw new Exception("incorrect static property metadata");
+StaticProperties.Value = 99;
+if (StaticProperties.Value != 99 || StaticProperties.ReadInternal() != 99) throw new Exception("static setter lost storage");
+var internalType = typeof(StaticProperties).Assembly.GetType("Example.InternalState");
+if (internalType.IsPublic || !internalType.GetMethod("Read", BindingFlags.Static | BindingFlags.NonPublic).IsAssembly ||
+    !internalType.GetProperty("Value", BindingFlags.Static | BindingFlags.NonPublic).GetMethod.IsAssembly)
+    throw new Exception("internal type/accessor visibility lost");
+Console.WriteLine("static properties and internal visibility OK");
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/static-property-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -p:NuGetAudit=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/static-property-consumer/bin/Debug/net8.0/consumer.dll")"
+  log "PASS test-static-properties: C# access to real CLR static properties"
+}
+step_test-nativeints() {
+  log "CLR native integers, primitive pointer metadata and WPF Marshal.Copy pattern"
+  local references=("$CPPCLI_SDK"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
+  run_case nativeints "$src/tests/nativeints.cpp" $'5000000002\n0\n8721' --type System.Runtime.InteropServices.Marshal \
+    --reference "$(cygpath -m "${references[-1]}/System.Runtime.InteropServices.dll")"
+  mkdir -p "$testdir/nativeint-consumer"
+  cat > "$testdir/nativeint-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers></PropertyGroup><ItemGroup><Reference Include="nativeints"><HintPath>../nativeints.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  cat > "$testdir/nativeint-consumer/Program.cs" <<'EOF'
+using System;
+if (NativeInts.Make(5000000002L) != new IntPtr(5000000002L) || NativeInts.Bits(new IntPtr(-7)) != -7 || NativeInts.Zero() != IntPtr.Zero || NativeInts.Copy() != 8721)
+    throw new Exception("native integer ABI or Marshal.Copy failed");
+if (NativeInts.Unsigned(0xffffffffffffffffUL) != new UIntPtr(0xffffffffffffffffUL) || NativeInts.UnsignedBits(new UIntPtr(5000000002UL)) != 5000000002UL)
+    throw new Exception("unsigned native integer width lost");
+var api = typeof(NativeInts);
+if (api.GetMethod("Make").ReturnType != typeof(IntPtr) || api.GetMethod("Bits").GetParameters()[0].ParameterType != typeof(IntPtr))
+    throw new Exception("native integer signature width/type lost");
+Console.WriteLine("native integer API metadata OK");
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/nativeint-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -p:NuGetAudit=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/nativeint-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case readonly-imported-static 'using namespace System; int main() { IntPtr::Zero = IntPtr(1); return 0; }' 'readonly imported fields cannot be assigned'
+  log "PASS test-nativeints: pointer-sized signatures and native memory copying"
 }
 step_test-tracking() {
   run_case tracking "$src/tests/tracking.cpp" $'8\n10\n23\n5\n6\nTrue\n2' --type System.GC

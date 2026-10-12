@@ -8,10 +8,12 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 
-record CliType(string Il, string Cpp, string Kind, string Name = "");
+record CliType(string Il, string Cpp, string Kind, string Name = "") {
+    public string[] Modifiers { get; init; } = Array.Empty<string>();
+}
 record CliMethod(string Id, string Name, bool Static, CliType Return, CliType[] Parameters,
                  bool Supported, int GenericArity, bool Virtual, bool Abstract, bool Final, string Access);
-record CliField(string Name, CliType Type, bool Supported, string Access);
+record CliField(string Name, CliType Type, bool Supported, string Access, bool Static, bool ReadOnly);
 record CliEnumMember(string Name, string Value);
 record CliProperty(string Name, CliType Type, string Getter, string Setter, bool Static, bool Supported);
 record CliClass(string Assembly, string Name, string Cpp, string Kind, string Base, CliMethod[] Methods, CliProperty[] Properties, string[] Interfaces, CliType? Underlying = null, CliEnumMember[]? EnumMembers = null, CliField[]? Fields = null);
@@ -45,8 +47,8 @@ sealed class SignatureTypes : ISignatureTypeProvider<CliType, object?>
         PrimitiveTypeCode.UInt64 => new("uint64", "unsigned long long", "primitive"),
         PrimitiveTypeCode.Single => new("float32", "float", "primitive"),
         PrimitiveTypeCode.Double => new("float64", "double", "primitive"),
-        PrimitiveTypeCode.IntPtr => new("native int", "__INTPTR_TYPE__", "primitive"),
-        PrimitiveTypeCode.UIntPtr => new("native unsigned int", "__UINTPTR_TYPE__", "primitive"),
+        PrimitiveTypeCode.IntPtr => new("native int", "::System::IntPtr", "value", "System.IntPtr"),
+        PrimitiveTypeCode.UIntPtr => new("native unsigned int", "::System::UIntPtr", "value", "System.UIntPtr"),
         PrimitiveTypeCode.String => Named("System.String", false),
         PrimitiveTypeCode.Object => Named("System.Object", false),
         _ => Unsupported(type.ToString())
@@ -68,12 +70,22 @@ sealed class SignatureTypes : ISignatureTypeProvider<CliType, object?>
         new(t.Il + "[]", "::cli::array<" + t.Cpp + ">*", "array", t.Name);
     public CliType GetArrayType(CliType t, ArrayShape s) => new(t.Il + "[... ]", "", "unsupported", t.Name);
     public CliType GetByReferenceType(CliType t) => t.Kind == "unsupported" ? t : new(t.Il + "&", t.Cpp + "&", "byref", t.Name);
-    public CliType GetPointerType(CliType t) => new(t.Il + "*", "", "unsupported", t.Name + "*");
+    public CliType GetPointerType(CliType t) => t.Kind == "primitive" ? new(t.Il + "*", t.Cpp + "*", "pointer") : new(t.Il + "*", "", "unsupported", t.Name + "*");
     public CliType GetGenericInstantiation(CliType t, ImmutableArray<CliType> a) => new(t.Il, "", "unsupported", t.Name);
     public CliType GetGenericMethodParameter(object? c, int i) => new("!!" + i, "", "unsupported");
     public CliType GetGenericTypeParameter(object? c, int i) => new("!" + i, "", "unsupported");
     public CliType GetFunctionPointerType(MethodSignature<CliType> s) => new("", "", "unsupported");
-    public CliType GetModifiedType(CliType m, CliType t, bool required) => required ? new(t.Il, "", "unsupported") : t;
+    public CliType GetModifiedType(CliType m, CliType t, bool required) {
+        if (required) return new(t.Il, "", "unsupported");
+        var modifiers = t.Modifiers.Append(m.Name).ToArray();
+        if ((t.Name == "System.ValueType" || t.Kind == "boxed") && modifiers.Contains("System.Runtime.CompilerServices.IsBoxed")) {
+            var valueName = modifiers.FirstOrDefault(n => n != "System.Runtime.CompilerServices.IsBoxed");
+            if (valueName != null)
+                return new("class [System.Runtime]System.ValueType modopt('" + valueName + "') modopt([System.Runtime.CompilerServices.VisualC]System.Runtime.CompilerServices.IsBoxed)",
+                    CppName(valueName) + "*", "boxed", valueName) { Modifiers = modifiers };
+        }
+        return t with { Modifiers = modifiers };
+    }
     public CliType GetPinnedType(CliType t) => new(t.Il, "", "unsupported");
 }
 
@@ -86,6 +98,7 @@ static class Program
         return (ns.Length == 0 ? "" : ns + ".") + name;
     }
     static string Escape(string s) => s.Replace("\\", "\\\\").Replace("\"", "\\\"");
+    static string AssemblyReference(string name) => name.All(c => char.IsAsciiLetterOrDigit(c) || c == '_' || c == '.') ? "[" + name + "]" : "['" + name.Replace("\\", "\\\\").Replace("'", "\\'") + "']";
     static bool ValidName(string s) => s.Length > 0 && (char.IsLetter(s[0]) || s[0] == '_') && s.All(c => char.IsLetterOrDigit(c) || c == '_');
     static string AttributeType(MetadataReader r, EntityHandle ctor)
     {
@@ -200,8 +213,8 @@ static class Program
                     else if (!td.BaseType.IsNil && td.BaseType.Kind == HandleKind.TypeDefinition)
                         baseName = FullName(r, r.GetTypeDefinition((TypeDefinitionHandle)td.BaseType));
                     var fields = td.GetFields().Select(fh => r.GetFieldDefinition(fh))
-                        .Where(f => MemberAccess((MethodAttributes)(int)(f.Attributes & FieldAttributes.FieldAccessMask), friend).Length != 0 && (f.Attributes & FieldAttributes.Static) == 0)
-                        .Select(f => new CliField(r.GetString(f.Name), f.DecodeSignature(new SignatureTypes(), null), ValidName(r.GetString(f.Name)), MemberAccess((MethodAttributes)(int)(f.Attributes & FieldAttributes.FieldAccessMask), friend))).ToArray();
+                        .Where(f => MemberAccess((MethodAttributes)(int)(f.Attributes & FieldAttributes.FieldAccessMask), friend).Length != 0 && (f.Attributes & FieldAttributes.Literal) == 0)
+                        .Select(f => new CliField(r.GetString(f.Name), f.DecodeSignature(new SignatureTypes(), null), ValidName(r.GetString(f.Name)), MemberAccess((MethodAttributes)(int)(f.Attributes & FieldAttributes.FieldAccessMask), friend), (f.Attributes & FieldAttributes.Static) != 0, (f.Attributes & FieldAttributes.InitOnly) != 0)).ToArray();
                     if (baseName == "System.Enum") {
                         CliType? underlying = null;
                         var members = new List<CliEnumMember>();
@@ -244,11 +257,11 @@ static class Program
             var found = types.Select(t => t.Name).ToHashSet(StringComparer.Ordinal);
             if (!wanted.IsSubsetOf(found)) throw new Exception("reference metadata lacks: " + string.Join(", ", wanted.Except(found)));
             // Cross-type signatures may refer to types we haven't imported yet.
-            bool Available(CliType t) => t.Kind == "primitive" || ((t.Kind == "ref" || t.Kind == "value") && found.Contains(t.Name)) || ((t.Kind == "array" || t.Kind == "byref") && (t.Name.Length == 0 || found.Contains(t.Name)));
+            bool Available(CliType t) => t.Kind == "primitive" || t.Kind == "pointer" || ((t.Kind == "ref" || t.Kind == "value" || t.Kind == "boxed") && found.Contains(t.Name)) || ((t.Kind == "array" || t.Kind == "byref") && (t.Name.Length == 0 || found.Contains(t.Name)));
             CliType Qualified(CliType t)
             {
                 var owner = types.FirstOrDefault(c => c.Name == t.Name);
-                return owner == null ? t : t with { Il = t.Il.Replace("'" + t.Name + "'", "[" + owner.Assembly + "]'" + t.Name + "'") };
+                return owner == null ? t : t with { Il = t.Il.Replace("'" + t.Name + "'", AssemblyReference(owner.Assembly) + "'" + t.Name + "'") };
             }
             types = types.Select(t => t with { Fields = t.Fields?.Select(f => f with { Type = Qualified(f.Type), Supported = f.Supported && Available(f.Type) }).ToArray(), Methods = t.Methods.Select(m => m with {
                 Supported = m.Supported && Available(m.Return) && m.Parameters.All(Available),
@@ -265,6 +278,7 @@ static class Program
             header.WriteLine("[[noreturn]] void __cli_end_finally();");
             header.WriteLine("template<class T, class... A> auto __cli_new(A... args) -> decltype(T(args...), (T*)nullptr); ");
             header.WriteLine("template<class T, class A> T __cli_safe_cast(A); template<class T, class A> T __cli_dynamic_cast(A);");
+            header.WriteLine("template<class T> class __attribute__((annotate(\"cli.static.property.proxy\"))) __cli_static_property { public: operator T() const; T operator->() const; __cli_static_property& operator=(T); };");
             header.WriteLine("System::String* __cli_literal(const char*); System::String* __cli_literal(const wchar_t*);");
             header.WriteLine("namespace System { using SByte = signed char; using Byte = unsigned char; using Int16 = short; using UInt16 = unsigned short; using Int32 = int; using UInt32 = unsigned int; using Int64 = long long; using UInt64 = unsigned long long; using Boolean = bool; using Char = wchar_t; using Single = float; using Double = double; }");
             foreach (var t in types) WriteClass(header, t, true);
@@ -300,7 +314,8 @@ static class Program
             w.WriteLine(); return;
         }
         w.Write("class __attribute__((annotate(\"cli.external:" + Escape(t.Assembly + "|" + t.Name) + "\")" +
-            (t.Kind == "interface" ? ", annotate(\"cli.interface\")" : t.Kind == "value" ? ", annotate(\"cli.value\")" : "") + ")) " + name);
+            (t.Kind == "interface" ? ", annotate(\"cli.interface\")" : t.Kind == "value" ? ", annotate(\"cli.value\")" : "") +
+            (t.Name == "System.IntPtr" ? ", annotate(\"cli.nativeint:signed\")" : t.Name == "System.UIntPtr" ? ", annotate(\"cli.nativeint:unsigned\")" : "") + ")) " + name);
         if (forward) w.Write("; ");
         else
         {
@@ -313,17 +328,23 @@ static class Program
             if (t.Name == "System.String") w.WriteLine("String(const char*); String(const wchar_t*);");
             if (t.Kind == "value" && !t.Methods.Any(m => m.Name == ".ctor" && m.Parameters.Length == 0 && m.Supported))
                 w.WriteLine("__attribute__((annotate(\"cli.value.zero\"))) " + name + "() {}");
-            foreach (var f in t.Fields ?? Array.Empty<CliField>()) if (f.Supported) w.WriteLine(f.Access + ": " + f.Type.Cpp + " " + f.Name + ";");
+            if (t.Kind == "value")
+                w.WriteLine("__attribute__((annotate(\"cli.box\"))) operator " + name + "*() const;");
+            foreach (var f in t.Fields ?? Array.Empty<CliField>()) if (f.Supported) w.WriteLine(f.Access + ": " + (f.ReadOnly ? "__attribute__((annotate(\"cli.readonly\"))) " : "") + (f.Static ? "static " : "") + f.Type.Cpp + " " + f.Name + ";");
+            var overloads = t.Methods.Where(m => m.Supported).GroupBy(m => m.Name + "(" + string.Join(", ", m.Parameters.Select(p => p.Cpp)) + ")").ToDictionary(g => g.Key, g => g.Count());
             var seen = new HashSet<string>();
             foreach (var m in t.Methods.Where(m => m.Supported))
             {
                 string parameters = string.Join(", ", m.Parameters.Select(p => p.Cpp));
                 // C++ cannot distinguish overloads that collapse to the same surrogate signature.
                 string signature = m.Name + "(" + parameters + ")";
-                if (!seen.Add(signature)) throw new Exception("surrogate overload collision: " + t.Name + "::" + signature);
+                string cppMethod = m.Name;
+                if (overloads[signature] > 1 && m.Name.StartsWith("op_", StringComparison.Ordinal))
+                    cppMethod = "_cli_metadata_" + m.Name + "_" + m.Id.Split(':')[1];
+                else if (!seen.Add(signature)) throw new Exception("surrogate overload collision: " + t.Name + "::" + signature);
                 w.Write(m.Access + ": __attribute__((annotate(\"cli.import:" + Escape(m.Id) + "\"))) ");
                 if (m.Name == ".ctor") w.WriteLine(name + "(" + parameters + ");");
-                else w.WriteLine((m.Static ? "static " : m.Virtual && t.Kind != "value" ? "virtual " : "") + m.Return.Cpp + " " + m.Name + "(" + parameters + ")" +
+                else w.WriteLine((m.Static ? "static " : m.Virtual && t.Kind != "value" ? "virtual " : "") + m.Return.Cpp + " " + cppMethod + "(" + parameters + ")" +
                     (m.Final && t.Kind != "value" ? " final" : "") + (m.Abstract && t.Kind != "value" ? " = 0" : "") + ";");
             }
             foreach (var p in t.Properties.Where(p => p.Supported))

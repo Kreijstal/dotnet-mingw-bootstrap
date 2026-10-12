@@ -71,6 +71,12 @@ std::string quote(const std::string& s) {
     }
     return result + "\"";
 }
+std::string assembly_reference(const std::string& name) {
+    if (name.find_first_not_of("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_.") == std::string::npos) return "[" + name + "]";
+    std::string escaped;
+    for (char c : name) { if (c == '\\' || c == '\'') escaped += '\\'; escaped += c; }
+    return "['" + escaped + "']";
+}
 std::string read_file(const std::string& path) {
     auto buffer = llvm::MemoryBuffer::getFile(path);
     if (!buffer) throw std::runtime_error("cannot read " + path);
@@ -337,6 +343,8 @@ protected:
             // Find only CLI class/member declaration boundaries. Clang still
             // parses parameter expressions, default arguments and method bodies.
             std::vector<std::string> class_context(tokens.size()), class_access(tokens.size());
+            std::vector<unsigned> class_depth(tokens.size());
+            std::set<size_t> member_starts;
             std::set<size_t> interface_virtual, interface_pure;
             std::map<size_t, std::string> value_defaults;
             for (size_t i = 0; i + 2 < tokens.size(); ++i) {
@@ -345,15 +353,22 @@ protected:
                 size_t open = i + 3;
                 while (open < tokens.size() && tokens[open].text != "{" && tokens[open].text != ";") ++open;
                 if (open == tokens.size() || tokens[open].text != "{") continue;
-                if (tokens[i].text == "value") value_defaults[open] = "public: __attribute__((annotate(\"cli.value.zero\"))) " + name + "() {} " + (tokens[i+1].text == "struct" ? "public:" : "private:");
+                if (tokens[i].text == "value") value_defaults[open] = "public: __attribute__((annotate(\"cli.value.zero\"))) " + name + "() {} __attribute__((annotate(\"cli.box\"))) operator " + name + "*() const; " + (tokens[i+1].text == "struct" ? "public:" : "private:");
                 int depth = 1;
+                bool member_begin = true;
                 std::string access = tokens[i].text == "interface" || tokens[i + 1].text == "struct" ? "public" : "private";
                 for (size_t j = open + 1; j < tokens.size() && depth; ++j) {
-                    if (depth == 1 && j + 1 < tokens.size() && tokens[j + 1].text == ":" &&
-                        (tokens[j].text == "public" || tokens[j].text == "private" || tokens[j].text == "protected")) access = tokens[j].text;
+                    bool access_label = depth == 1 && j + 1 < tokens.size() && tokens[j + 1].text == ":" &&
+                        (tokens[j].text == "public" || tokens[j].text == "private" || tokens[j].text == "protected" || tokens[j].text == "internal");
+                    if (access_label) { access = tokens[j].text; member_begin = false; }
+                    else if (depth == 1 && tokens[j].text == ":" && j > open + 1 &&
+                        (tokens[j-1].text == "public" || tokens[j-1].text == "private" || tokens[j-1].text == "protected" || tokens[j-1].text == "internal")) member_begin = true;
+                    else if (depth == 1 && member_begin && tokens[j].text != "}" && tokens[j].text != ";") { member_starts.insert(j); member_begin = false; }
                     class_context[j] = name; class_access[j] = access;
+                    class_depth[j] = depth;
                     if (tokens[j].text == "{") ++depth;
-                    else if (tokens[j].text == "}") --depth;
+                    else if (tokens[j].text == "}") { --depth; if (depth == 1) member_begin = true; }
+                    else if (depth == 1 && tokens[j].text == ";") member_begin = true;
                     else if (depth == 1 && tokens[j].text == "(" && j && tokens[j - 1].kind == tok::identifier) {
                         size_t end = j + 1; int parentheses = 1; bool string_parameter = false;
                         while (end < tokens.size() && parentheses) {
@@ -444,12 +459,47 @@ protected:
                 i = end - 1;
                 return true;
             };
+            std::set<std::pair<std::string, std::string>> property_names;
             for (size_t i = 0; i < tokens.size(); ++i) {
                 auto& t = tokens[i];
                 if (value_defaults.count(i)) { emit(t, "{ " + value_defaults[i]); continue; }
                 if (cli_structural.count(i)) { emit(t, cli_structural[i]); continue; }
                 if (interface_virtual.count(i)) emit(t, "virtual");
                 if (interface_pure.count(i)) emit(t, "= 0");
+                if (member_starts.count(i) && class_access[i] == "internal") emit(t, "__attribute__((annotate(\"cli.access:assembly\")))");
+                if (t.text == "internal" && class_depth[i] == 1 && i + 1 < tokens.size() && tokens[i+1].text == ":") { emit(t, "public"); continue; }
+                if (i >= 2 && tokens[i-1].text == "::" && i + 2 < tokens.size() && tokens[i+1].text == "::" &&
+                    (tokens[i+2].text == "get" || tokens[i+2].text == "set") && property_names.count({tokens[i-2].text, t.text})) {
+                    emit(t, tokens[i+2].text + "_" + t.text); i += 2; continue;
+                }
+                if (t.text == "static" && i + 1 < tokens.size() && tokens[i+1].text == "property") continue;
+                if (t.text == "static" && class_depth[i] == 1) {
+                    size_t equal = i + 1, end = equal;
+                    while (equal < tokens.size() && tokens[equal].text != "=" && tokens[equal].text != ";" && tokens[equal].text != "(" && tokens[equal].text != "{") ++equal;
+                    if (equal < tokens.size() && tokens[equal].text == "=" && tokens[equal - 1].kind == tok::identifier) {
+                        end = equal + 1;
+                        unsigned parentheses = 0, braces = 0, brackets = 0;
+                        for (; end < tokens.size(); ++end) {
+                            auto text = tokens[end].text;
+                            if (text == ";" && !parentheses && !braces && !brackets) break;
+                            if (text == "(") ++parentheses; else if (text == ")") --parentheses;
+                            if (text == "{") ++braces; else if (text == "}") --braces;
+                            if (text == "[") ++brackets; else if (text == "]") --brackets;
+                        }
+                        if (end == tokens.size()) throw std::runtime_error("unterminated managed static initializer");
+                        std::string field = tokens[equal - 1].text, field_type;
+                        for (size_t j = i + 1; j + 1 < equal; ++j) field_type += tokens[j].text + " ";
+                        emit(t, std::string(class_access[i] == "internal" ? "__attribute__((annotate(\"cli.access:assembly\"))) " : "") + "static " + field_type + field + "; private: static " + field_type +
+                            " __attribute__((annotate(\"cli.static.init:" + field + "\"))) _cli_init_" + field + "() { return");
+                        for (size_t j = equal + 1; j < end; ++j) {
+                            if (adapt_allocation(j)) continue;
+                            if (tokens[j].text == "safe_cast") { emit(tokens[j], "__cli_safe_cast"); continue; }
+                            emit(tokens[j], tokens[j].text);
+                        }
+                        emit(tokens[end], "; } " + class_access[i] + ":");
+                        i = end; continue;
+                    }
+                }
                 if (!class_context[i].empty() && t.text == "abstract" && i && tokens[i - 1].text == ")") { emit(t, "= 0"); continue; }
                 if (!class_context[i].empty() && t.text == "sealed" && i && (tokens[i - 1].text == ")" || tokens[i - 1].text == "override")) { emit(t, "final"); continue; }
                 if ((t.text == "public" || t.text == "private") && i + 3 < tokens.size() && tokens[i + 1].text == "enum" &&
@@ -463,6 +513,9 @@ protected:
                         (tokens[name + 1].text == "{" || tokens[name + 1].text == ";"))) ++name;
                     if (name + 1 == tokens.size()) throw std::runtime_error("unsupported property declarator");
                     std::string property = tokens[name].text, property_type;
+                    property_names.insert({class_context[i], property});
+                    bool is_static = i && tokens[i-1].text == "static";
+                    std::string access_attribute = class_access[i] == "internal" ? "__attribute__((annotate(\"cli.access:assembly\"))) " : "";
                     for (size_t j = i + 1; j < name; ++j) property_type += tokens[j].text + " ";
                     size_t end = name + 1; bool getter = false, setter = false;
                     if (tokens[end].text == "{") {
@@ -481,14 +534,18 @@ protected:
                     if (getter) attribute += "get=get_" + property;
                     if (getter && setter) attribute += ",";
                     if (setter) attribute += "put=set_" + property;
-                    emit(t, attribute + ")) " + property_type + property + ";");
+                    if (is_static) emit(t, "static __attribute__((annotate(\"cli.static.property:" + std::string(getter ? "get_" + property : "") + "|" + (setter ? "set_" + property : "") + "\"))) __cli_static_property<" + property_type + "> " + property + ";");
+                    else emit(t, attribute + ")) " + property_type + property + ";");
                     if (tokens[name + 1].text == ";") {
+                        if (is_static) throw std::runtime_error("static auto-properties are not enabled yet");
                         emit(t, "private: " + property_type + " __cli_backing_" + property + "; " + class_access[i] + ":");
                         emit(t, property_type + " __attribute__((annotate(\"cli.accessor:get\"))) get_" + property + "() { return __cli_backing_" + property + "; }");
                         emit(t, "void __attribute__((annotate(\"cli.accessor:set\"))) set_" + property + "(" + property_type + " value) { __cli_backing_" + property + " = value; }");
                     } else {
                         int depth = 1;
                         for (size_t j = name + 2; j + 1 < end; ++j) {
+                            if (is_static && depth == 1 && (tokens[j-1].text == "{" || tokens[j-1].text == "}" || tokens[j-1].text == ";" || tokens[j-1].text == ":") &&
+                                tokens[j].text != "private" && tokens[j].text != "public" && tokens[j].text != "protected") emit(tokens[j], "static " + access_attribute);
                             if (cli_structural.count(j)) {
                                 emit(tokens[j], cli_structural[j]);
                                 if (tokens[j].text == "}") --depth;
@@ -497,7 +554,7 @@ protected:
                             if (adapt_allocation(j)) continue;
                             if (tokens[j].text == "safe_cast") { emit(tokens[j], "__cli_safe_cast"); continue; }
                             if (depth == 1 && j + 1 < end && tokens[j + 1].text == "(" && (tokens[j].text == "get" || tokens[j].text == "set"))
-                                emit(tokens[j], "__attribute__((annotate(\"cli.accessor:" + tokens[j].text + "\"))) " + tokens[j].text + "_" + property);
+                                emit(tokens[j], access_attribute + "__attribute__((annotate(\"cli.accessor:" + tokens[j].text + "\"))) " + tokens[j].text + "_" + property);
                             else if (tok::isStringLiteral(tokens[j].kind) && call_context[j] && j > 0 && j + 1 < tokens.size() &&
                                 (tokens[j - 1].text == "(" || tokens[j - 1].text == ",") &&
                                 (tokens[j + 1].text == ")" || tokens[j + 1].text == ",")) emit(tokens[j], "__cli_literal(" + tokens[j].text + ")");
@@ -523,6 +580,7 @@ protected:
                     (tokens[i + 1].text == "class" || tokens[i + 1].text == "struct")) {
                     bool interface = t.text == "interface", value = t.text == "value";
                     std::string attributes = value ? "annotate(\"cli.value\")" : "annotate(\"cli.ref\")";
+                    if (i && (tokens[i-1].text == "public" || tokens[i-1].text == "private")) attributes += ", annotate(\"cli.visibility:" + tokens[i-1].text + "\")";
                     if (interface) attributes += ", annotate(\"cli.interface\"), annotate(\"cli.abstract\")";
                     size_t end = i + 3;
                     while (end < tokens.size() && (tokens[end].text == "abstract" || tokens[end].text == "sealed")) {
@@ -621,9 +679,9 @@ class Emitter {
     const CXXRecordDecl* handle_target(QualType type) const {
         if (type->isPointerType()) {
             auto* r = type->getPointeeType()->getAsCXXRecordDecl();
-            if (!r || record_annotated(r, "cli.value")) return nullptr;
+            if (!r) return nullptr;
             auto* definition = r->getDefinition();
-            if (record_annotated(r, "cli.ref") || !annotation(r, "cli.external:").empty() ||
+            if (record_annotated(r, "cli.ref") || record_annotated(r, "cli.value") || !annotation(r, "cli.external:").empty() ||
                 (definition && (annotated(definition, "cli.ref") || !annotation(definition, "cli.external:").empty()))) return r;
             return nullptr;
         }
@@ -631,6 +689,10 @@ class Emitter {
         auto* spec = dyn_cast_or_null<ClassTemplateSpecializationDecl>(rec);
         if (!spec || spec->getSpecializedTemplate()->getName() != "__cli_handle") return nullptr;
         return spec->getTemplateArgs()[0].getAsType()->getAsCXXRecordDecl();
+    }
+    const CXXRecordDecl* boxed_target(QualType type) const {
+        auto* r = handle_target(type);
+        return r && record_annotated(r, "cli.value") ? r : nullptr;
     }
     QualType array_element(const CXXRecordDecl* r) const {
         if (!record_annotated(r, "cli.array")) return {};
@@ -649,13 +711,20 @@ class Emitter {
             throw std::runtime_error("managed pointer intrinsics currently require primitive elements");
         return element;
     }
+    QualType static_property_element(QualType t) const {
+        auto* r = t->getAsCXXRecordDecl();
+        if (!r || !record_annotated(r, "cli.static.property.proxy")) return {};
+        auto* spec = dyn_cast<ClassTemplateSpecializationDecl>(r);
+        if (!spec || spec->getTemplateArgs().size() != 1) throw std::runtime_error("invalid static property intrinsic");
+        return spec->getTemplateArgs()[0].getAsType();
+    }
     bool pinned(QualType t) const { return record_annotated(t->getAsCXXRecordDecl(), "cli.pin"); }
     std::string record_name(const CXXRecordDecl* record) const {
         std::string ext = annotation(record, "cli.external:");
         if (ext.empty() && record->getDefinition()) ext = annotation(record->getDefinition(), "cli.external:");
         if (!ext.empty()) {
             auto bar = ext.find('|');
-            return "[" + ext.substr(0, bar) + "]'" + ext.substr(bar + 1) + "'";
+            return assembly_reference(ext.substr(0, bar)) + "'" + ext.substr(bar + 1) + "'";
         }
         if (!record_annotated(record, "cli.ref") && !record_annotated(record, "cli.value"))
             throw std::runtime_error("native C++ class is not a managed type: " + record->getQualifiedNameAsString());
@@ -667,7 +736,7 @@ class Emitter {
         std::string ext = annotation(enumeration, "cli.external:");
         if (ext.empty() && enumeration->getDefinition()) ext = annotation(enumeration->getDefinition(), "cli.external:");
         if (!ext.empty()) {
-            auto bar = ext.find('|'); return "[" + ext.substr(0, bar) + "]'" + ext.substr(bar + 1) + "'";
+            auto bar = ext.find('|'); return assembly_reference(ext.substr(0, bar)) + "'" + ext.substr(bar + 1) + "'";
         }
         std::string name = enumeration->getQualifiedNameAsString();
         for (size_t at; (at = name.find("::")) != std::string::npos;) name.replace(at, 2, ".");
@@ -697,8 +766,11 @@ class Emitter {
     }
     std::string type(QualType t) const {
         t = t.getCanonicalType();
+        if (auto element = static_property_element(t); !element.isNull()) return type(element);
         if (auto element = interior_element(t); !element.isNull()) return type(element) + "&";
         if (t->isLValueReferenceType()) return type(t->getPointeeType()) + "&";
+        if (auto* r = value_target(t); r && !annotation(r, "cli.nativeint:").empty())
+            return annotation(r, "cli.nativeint:") == "unsigned" ? "native unsigned int" : "native int";
         if (auto* enumeration = t->getAs<EnumType>()) {
             auto* decl = enumeration->getDecl();
             if (annotated(decl, "cli.enum") || (decl->getDefinition() && annotated(decl->getDefinition(), "cli.enum")))
@@ -721,6 +793,8 @@ class Emitter {
             return bits == 32 ? "float32" : "float64";
         }
         if (auto* r = handle_target(t)) {
+            if (record_annotated(r, "cli.value"))
+                return "class [System.Runtime]System.ValueType modopt(" + record_name(r) + ") modopt([System.Runtime.CompilerServices.VisualC]System.Runtime.CompilerServices.IsBoxed)";
             QualType element = array_element(r);
             if (!element.isNull()) return type(element) + "[]";
             std::string name = record_name(r);
@@ -759,9 +833,6 @@ class Emitter {
             auto pointer = loc.getAs<PointerTypeLoc>();
             if (pointer.isNull()) continue;
             SourceLocation star = sm.getSpellingLoc(pointer.getStarLoc());
-            if (star.isValid() && sm.isWrittenInMainFile(star) && *sm.getCharacterData(star) == '^' &&
-                value_target(pointer.getType()->getPointeeType()))
-                throw std::runtime_error("boxed value handles are not enabled yet");
             if (!handle_target(pointer.getType())) continue;
             if (star.isValid() && sm.isWrittenInMainFile(star) && *sm.getCharacterData(star) == '*')
                 throw std::runtime_error("native '*' pointers to managed reference classes are not supported; declare a '^' handle");
@@ -771,6 +842,20 @@ class Emitter {
         auto* parent = dyn_cast<CXXRecordDecl>(f->getParent());
         if (!parent) throw std::runtime_error("field has no managed parent");
         return type(f->getType()) + " " + record_name(parent) + "::'" + f->getNameAsString() + "'";
+    }
+    std::string static_field_signature(const VarDecl* f) const {
+        if (!f->isStaticDataMember()) throw std::runtime_error("static storage requires a managed class field");
+        return type(f->getType()) + " " + record_name(cast<CXXRecordDecl>(f->getDeclContext())) + "::'" + f->getNameAsString() + "'";
+    }
+    const CXXMethodDecl* static_property_method(const VarDecl* property, bool write) const {
+        auto names = annotation(property, "cli.static.property:");
+        auto bar = names.find('|');
+        if (bar == std::string::npos) throw std::runtime_error("invalid static property declaration");
+        auto name = write ? names.substr(bar+1) : names.substr(0,bar);
+        if (name.empty()) throw std::runtime_error(write ? "static property has no setter" : "static property has no getter");
+        auto* owner = cast<CXXRecordDecl>(property->getDeclContext());
+        for (auto* method : owner->methods()) if (method->getNameAsString() == name) return method;
+        throw std::runtime_error("static property accessor was not declared: " + name);
     }
     std::string method_name(const FunctionDecl* f) const {
         if (isa<CXXConstructorDecl>(f)) return ".ctor";
@@ -796,7 +881,7 @@ class Emitter {
         return sig + ")";
     }
     std::string imported_signature(const ImportedMethod& m) const {
-        std::string sig = (m.is_static ? "" : "instance ") + m.result + " [" + m.assembly + "]'" + m.owner + "'::'" + m.name + "'(";
+        std::string sig = (m.is_static ? "" : "instance ") + m.result + " " + assembly_reference(m.assembly) + "'" + m.owner + "'::'" + m.name + "'(";
         for (size_t i = 0; i < m.parameters.size(); ++i) { if (i) sig += ", "; sig += m.parameters[i]; }
         return sig + ")";
     }
@@ -822,15 +907,26 @@ class Emitter {
     }
     void address(const Expr* original) {
         const Expr* e = strip(original)->IgnoreParenImpCasts();
+        if (auto* unary = dyn_cast<UnaryOperator>(e); unary && unary->getOpcode() == UO_Deref && boxed_target(unary->getSubExpr()->getType())) {
+            auto* r = boxed_target(unary->getSubExpr()->getType());
+            if (isa<CXXThisExpr>(unary->getSubExpr()->IgnoreParenImpCasts())) op("ldarg.0", 0, 1);
+            else { expr(unary->getSubExpr()); op("unbox " + record_name(r), 1, 1); }
+            return;
+        }
         if (auto* d = dyn_cast<DeclRefExpr>(e)) {
             if (auto* p = dyn_cast<ParmVarDecl>(d->getDecl())) op(std::string(p->getType()->isReferenceType() ? "ldarg " : "ldarga ") + std::to_string(parameters.at(p)), 0, 1);
-            else if (auto* v = dyn_cast<VarDecl>(d->getDecl())) op(std::string(v->getType()->isReferenceType() ? "ldloc " : "ldloca ") + std::to_string(locals.at(v)), 0, 1);
+            else if (auto* v = dyn_cast<VarDecl>(d->getDecl())) {
+                if (annotated(v, "cli.readonly")) fail(e, "readonly imported fields cannot be passed by writable reference");
+                if (v->isStaticDataMember()) op("ldsflda " + static_field_signature(v), 0, 1);
+                else op(std::string(v->getType()->isReferenceType() ? "ldloc " : "ldloca ") + std::to_string(locals.at(v)), 0, 1);
+            }
             else fail(e, "value address requires a local or parameter");
             return;
         }
         if (auto* member = dyn_cast<MemberExpr>(e)) {
             auto* field = dyn_cast<FieldDecl>(member->getMemberDecl());
             if (!field) fail(e, "value address requires an instance field");
+            if (annotated(field, "cli.readonly")) fail(e, "readonly imported fields cannot be passed by writable reference");
             emit_receiver(member->getBase()); op("ldflda " + field_signature(field), 1, 1); return;
         }
         if (auto* subscript = array_subscript(e)) {
@@ -841,7 +937,19 @@ class Emitter {
         expr(e); op("stloc " + std::to_string(slot), 1); op("ldloca " + std::to_string(slot), 0, 1);
     }
     void emit_receiver(const Expr* e) {
-        if (value_target(e->getType())) address(e);
+        if (value_target(e->getType())) {
+            auto* at = strip(e)->IgnoreParenImpCasts();
+            const ValueDecl* field = nullptr;
+            if (auto* d = dyn_cast<DeclRefExpr>(at)) field = d->getDecl();
+            else if (auto* member = dyn_cast<MemberExpr>(at)) field = member->getMemberDecl();
+            if (field && annotated(field, "cli.readonly")) {
+                auto slot = temporary(type(e->getType()));
+                expr(e); op("stloc " + std::to_string(slot), 1); op("ldloca " + std::to_string(slot), 0, 1);
+            } else address(e);
+        }
+        else if (isa<CXXThisExpr>(strip(e)->IgnoreParenImpCasts()) && isa<CXXMethodDecl>(current) &&
+                 record_annotated(cast<CXXMethodDecl>(current)->getParent(), "cli.value")) op("ldarg.0", 0, 1);
+        else if (auto* r = boxed_target(e->getType())) { expr(e); op("unbox " + record_name(r), 1, 1); }
         else expr(e); // this on a value class is already a managed address.
     }
     std::string receiver_type(const FieldDecl* field) const {
@@ -855,6 +963,8 @@ class Emitter {
         }
         if (auto* p = dyn_cast<ParmVarDecl>(d)) { op("ldarg " + std::to_string(parameters.at(p)), 0, 1); if (p->getType()->isReferenceType()) op("ldobj " + type(p->getType()->getPointeeType()), 1, 1); return; }
         if (auto* v = dyn_cast<VarDecl>(d)) {
+            if (!annotation(v, "cli.static.property:").empty()) { op("call " + signature(static_property_method(v, false)), 0, 1); return; }
+            if (v->isStaticDataMember()) { op("ldsfld " + static_field_signature(v), 0, 1); return; }
             auto it = locals.find(v);
             if (it == locals.end()) fail(at, "global/static storage is not supported yet");
             op("ldloc " + std::to_string(it->second), 0, 1); if (v->getType()->isReferenceType()) op("ldobj " + type(v->getType()->getPointeeType()), 1, 1); return;
@@ -895,6 +1005,7 @@ class Emitter {
         if (auto* member = dyn_cast<MemberExpr>(target)) {
             auto* field = dyn_cast<FieldDecl>(member->getMemberDecl());
             if (!field) fail(target, "assignment target is not an instance field");
+            if (annotated(field, "cli.readonly")) fail(target, "readonly imported fields cannot be assigned");
             unsigned slot = temporary(type(field->getType()));
             op("stloc " + std::to_string(slot), 1);
             emit_receiver(member->getBase()); op("ldloc " + std::to_string(slot), 0, 1);
@@ -904,6 +1015,7 @@ class Emitter {
         }
         auto* d = dyn_cast<DeclRefExpr>(target);
         if (!d) fail(target, "assignment target is not a local or parameter");
+        if (annotated(d->getDecl(), "cli.readonly")) fail(target, "readonly imported fields cannot be assigned");
         if (d->getDecl()->getType()->isReferenceType()) {
             unsigned slot = temporary(type(d->getType()));
             op("stloc " + std::to_string(slot), 1); address(d); op("ldloc " + std::to_string(slot), 0, 1);
@@ -913,7 +1025,10 @@ class Emitter {
         }
         if (retain) op("dup", 1, 2);
         if (auto* p = dyn_cast<ParmVarDecl>(d->getDecl())) op("starg " + std::to_string(parameters.at(p)), 1);
-        else if (auto* v = dyn_cast<VarDecl>(d->getDecl())) op("stloc " + std::to_string(locals.at(v)), 1);
+        else if (auto* v = dyn_cast<VarDecl>(d->getDecl())) {
+            if (v->isStaticDataMember()) op("stsfld " + static_field_signature(v), 1);
+            else op("stloc " + std::to_string(locals.at(v)), 1);
+        }
         else fail(target, "unsupported assignment target");
     }
     void binary(const BinaryOperator* b) {
@@ -990,6 +1105,27 @@ class Emitter {
     void call(const CallExpr* c) {
         auto* f = c->getDirectCallee();
         if (!f) fail(c, "indirect calls are not supported yet");
+        if (auto* method = dyn_cast<CXXMethodDecl>(f); method && record_annotated(method->getParent(), "cli.static.property.proxy")) {
+            if (auto* opcall = dyn_cast<CXXOperatorCallExpr>(c); opcall && opcall->getOperator() == OO_Equal) {
+                auto* reference = dyn_cast<DeclRefExpr>(strip(opcall->getArg(0))->IgnoreParenImpCasts());
+                auto* property = reference ? dyn_cast<VarDecl>(reference->getDecl()) : nullptr;
+                if (!property) fail(c, "static property assignment lacks a qualified property");
+                unsigned slot = temporary(type(opcall->getArg(1)->getType()));
+                expr(opcall->getArg(1)); op("stloc " + std::to_string(slot), 1); op("ldloc " + std::to_string(slot), 0, 1);
+                op("call " + signature(static_property_method(property, true)), 1);
+                op("ldloc " + std::to_string(slot), 0, 1); return;
+            }
+            auto* member = dyn_cast<CXXMemberCallExpr>(c);
+            if (member) { expr(member->getImplicitObjectArgument()); return; }
+            if (auto* opcall = dyn_cast<CXXOperatorCallExpr>(c); opcall && opcall->getOperator() == OO_Arrow) { expr(opcall->getArg(0)); return; }
+            fail(c, "unsupported static property operation");
+        }
+        if (annotated(f, "cli.box")) {
+            auto* member = dyn_cast<CXXMemberCallExpr>(c);
+            if (!member || !boxed_target(c->getType())) fail(c, "invalid implicit boxing conversion");
+            auto* value = member->getImplicitObjectArgument();
+            expr(value); op("box valuetype " + record_name(boxed_target(c->getType())), 1, 1); return;
+        }
         if (annotated(f, "cli.string.chars")) {
             if (c->getNumArgs() != 1 || type(c->getArg(0)->getType()) != "string") fail(c, "PtrToStringChars requires a String handle");
             expr(c->getArg(0));
@@ -1035,7 +1171,7 @@ class Emitter {
             bool safe = f->getNameAsString() == "__cli_safe_cast";
             QualType source_type = c->getArg(0)->getType();
             if (safe && target && boxable(source_type)) {
-                if (record_name(target) != "[System.Runtime]'System.Object'") fail(c, "boxing currently requires an Object handle target");
+                if (target != value_target(source_type) && record_name(target) != "[System.Runtime]'System.Object'") fail(c, "boxing requires the matching value handle or an Object handle target");
                 expr(c->getArg(0)); op("box " + type(source_type), 1, 1); return;
             }
             if (safe && boxable(c->getType()) && handle_target(source_type)) {
@@ -1074,6 +1210,12 @@ class Emitter {
             };
             if (auto* trailing = dyn_cast<DecltypeType>(f->getReturnType().getTypePtr())) find_constructor(trailing->getUnderlyingExpr());
             if (!selected) fail(c, "allocation has no Clang-resolved managed constructor");
+            if (record_annotated(target, "cli.value") && annotated(selected, "cli.value.zero")) {
+                auto value_type = "valuetype " + record_name(target);
+                unsigned slot = temporary(value_type);
+                op("ldloca " + std::to_string(slot), 0, 1); op("initobj " + record_name(target), 1);
+                op("ldloc " + std::to_string(slot), 0, 1); op("box " + value_type, 1, 1); return;
+            }
             if (!annotation(target, "cli.external:").empty() && annotation(selected, "cli.import:").empty())
                 fail(c, "imported class has no public metadata constructor");
             if (selected->getNumParams() != c->getNumArgs()) fail(c, "default constructor arguments are not supported yet");
@@ -1082,6 +1224,7 @@ class Emitter {
                 expr(c->getArg(i));
             }
             op("newobj " + signature(selected), c->getNumArgs(), 1);
+            if (record_annotated(target, "cli.value")) op("box valuetype " + record_name(target), 1, 1);
             return;
         }
         auto* m = dyn_cast<CXXMethodDecl>(f);
@@ -1112,6 +1255,9 @@ class Emitter {
     void expr(const Expr* original) {
         const Expr* e = strip(original);
         if (auto* c = dyn_cast<ImplicitCastExpr>(e)) {
+            auto* conversion_call = dyn_cast<CXXMemberCallExpr>(strip(c->getSubExpr()));
+            auto* conversion_method = conversion_call ? dyn_cast_or_null<CXXMethodDecl>(conversion_call->getDirectCallee()) : nullptr;
+            bool static_property_conversion = conversion_method && record_annotated(conversion_method->getParent(), "cli.static.property.proxy");
             if (c->getCastKind() == CK_NullToPointer) {
                 if (handle_target(c->getType())) op("ldnull", 0, 1);
                 else { op("ldc.i4.0", 0, 1); op("conv.u", 1, 1); }
@@ -1126,7 +1272,7 @@ class Emitter {
                 numeric_conversion(c->getType());
             } else if (c->getCastKind() != CK_LValueToRValue && c->getCastKind() != CK_NoOp && c->getCastKind() != CK_ArrayToPointerDecay && c->getCastKind() != CK_FunctionToPointerDecay &&
                        !(c->getCastKind() == CK_ConstructorConversion && (handle_target(c->getType()) || !interior_element(c->getType()).isNull())) &&
-                       !(c->getCastKind() == CK_UserDefinedConversion && c->getType()->isPointerType()) &&
+                       !(c->getCastKind() == CK_UserDefinedConversion && (c->getType()->isPointerType() || static_property_conversion)) &&
                        !(c->getCastKind() == CK_BitCast && c->getType()->isPointerType() && !handle_target(c->getType())) &&
                        !((c->getCastKind() == CK_DerivedToBase || c->getCastKind() == CK_UncheckedDerivedToBase || c->getCastKind() == CK_NullToPointer) && handle_target(c->getType())))
                 fail(c, std::string("unsupported implicit conversion: ") + c->getCastKindName());
@@ -1159,6 +1305,7 @@ class Emitter {
         if (isa<CXXThisExpr>(e)) {
             auto* method = dyn_cast<CXXMethodDecl>(current);
             if (!method || method->isStatic()) fail(e, "this outside a managed instance method");
+            if (record_annotated(method->getParent(), "cli.value")) fail(e, "value-class this is a managed address, not a boxed handle");
             op("ldarg.0", 0, 1); return;
         }
         if (auto* member = dyn_cast<MemberExpr>(e)) {
@@ -1248,6 +1395,12 @@ class Emitter {
             expr(arg); return;
         }
         if (auto* u = dyn_cast<UnaryOperator>(e)) {
+            if (u->getOpcode() == UO_Deref && boxed_target(u->getSubExpr()->getType())) {
+                auto value_type = "valuetype " + record_name(boxed_target(u->getSubExpr()->getType()));
+                if (isa<CXXThisExpr>(u->getSubExpr()->IgnoreParenImpCasts())) { op("ldarg.0", 0, 1); op("ldobj " + value_type, 1, 1); }
+                else { expr(u->getSubExpr()); op("unbox.any " + value_type, 1, 1); }
+                return;
+            }
             if (u->getOpcode() == UO_Deref && !handle_target(u->getSubExpr()->getType())) {
                 expr(u->getSubExpr()); op("ldobj " + type(u->getType()), 1, 1); return;
             }
@@ -1295,6 +1448,7 @@ class Emitter {
             return;
         }
         if (auto* c = dyn_cast<ExplicitCastExpr>(e)) {
+            if (c->getCastKind() == CK_ConstructorConversion && value_target(c->getType())) { expr(c->getSubExpr()); return; }
             if (handle_target(c->getType())) {
                 const Expr* source = strip(c->getSubExpr());
                 if (auto* ctor = dyn_cast<CXXConstructExpr>(source)) {
@@ -1624,7 +1778,7 @@ public:
                 flags = "virtual " + std::string(class_override ? "" : "newslot ") + (method->isPureVirtual() ? "abstract " : "");
                 if (method->hasAttr<FinalAttr>()) flags += "final ";
             }
-            il << "  .method " << (isa<CXXMethodDecl>(f) && f->getAccess() == AS_private ? "private" : f->getAccess() == AS_protected ? "family" : "public") << " hidebysig " << flags
+            il << "  .method " << (isa<CXXMethodDecl>(f) && f->getAccess() == AS_private ? "private" : f->getAccess() == AS_protected ? "family" : annotation(f, "cli.access:") == "assembly" ? "assembly" : "public") << " hidebysig " << flags
                << (isa<CXXConstructorDecl>(f) ? "specialname rtspecialname " : !annotation(f, "cli.accessor:").empty() ? "specialname " : "") << (body.instance ? "instance " : "static ")
                << type(f->getReturnType()) << " '" << body.name << "'(";
             for (unsigned j = 0; j < f->getNumParams(); ++j) { if (j) il << ", "; il << type(f->getParamDecl(j)->getType()); }
@@ -1648,7 +1802,7 @@ public:
         }
         for (auto* r : records) {
             auto* parent = class_base(r);
-            il << ".class public " << (is_interface(r) ? "interface abstract " : "auto ansi ")
+            il << ".class " << (annotation(r, "cli.visibility:") == "private" ? "private " : "public ") << (is_interface(r) ? "interface abstract " : "auto ansi ")
                << (!is_interface(r) && (annotated(r, "cli.abstract") || r->isAbstract()) ? "abstract " : "")
                << ((annotated(r, "cli.sealed") || annotated(r, "cli.value")) ? "sealed " : "") << record_name(r);
             if (!is_interface(r)) il << " extends " << (annotated(r, "cli.value") ? "[System.Runtime]System.ValueType" : parent ? record_name(parent) : "[System.Runtime]System.Object");
@@ -1657,9 +1811,35 @@ public:
                 il << (first_interface ? " implements " : ", ") << record_name(base.getType()->getAsCXXRecordDecl()); first_interface = false;
             }
             il << " {\n";
-            for (auto* field : r->fields()) il << "  .field " << (field->getAccess() == AS_private ? "private " : field->getAccess() == AS_protected ? "family " : "public ")
+            for (auto* field : r->fields()) il << "  .field " << (field->getAccess() == AS_private ? "private " : field->getAccess() == AS_protected ? "family " : annotation(field, "cli.access:") == "assembly" ? "assembly " : "public ")
                 << type(field->getType()) << " '" << field->getNameAsString() << "'\n";
+            std::map<std::string, const VarDecl*> static_fields;
+            for (auto* member : r->decls()) if (auto* field = dyn_cast<VarDecl>(member); field && field->isStaticDataMember()) {
+                if (!annotation(field, "cli.static.property:").empty()) continue;
+                if (field->getType()->isReferenceType() || !interior_element(field->getType()).isNull()) throw std::runtime_error("managed pointer static fields are not enabled yet");
+                validate_declarator(field->getTypeSourceInfo());
+                static_fields.emplace(field->getNameAsString(), field);
+                il << "  .field " << (field->getAccess() == AS_private ? "private " : field->getAccess() == AS_protected ? "family " : annotation(field, "cli.access:") == "assembly" ? "assembly " : "public ")
+                    << "static " << type(field->getType()) << " '" << field->getNameAsString() << "'\n";
+            }
+            bool cctor = false;
+            for (auto* method : r->methods()) {
+                auto field_name = annotation(method, "cli.static.init:");
+                if (field_name.empty()) continue;
+                auto field = static_fields.find(field_name);
+                if (field == static_fields.end() || type(field->second->getType()) != type(method->getReturnType())) throw std::runtime_error("invalid static field initializer");
+                if (!cctor) { il << "  .method private hidebysig specialname rtspecialname static void .cctor() cil managed {\n    .maxstack 1\n"; cctor = true; }
+                il << "    call " << signature(method) << "\n    stsfld " << static_field_signature(field->second) << "\n";
+            }
+            if (cctor) il << "    ret\n  }\n";
             for (size_t i = 0; i < functions.size(); ++i) if (ir[i].owner == record_name(r)) emit_function(i);
+            for (auto* member : r->decls()) if (auto* property = dyn_cast<VarDecl>(member); property && !annotation(property, "cli.static.property:").empty()) {
+                auto names = annotation(property, "cli.static.property:"); auto bar = names.find('|');
+                il << "  .property " << type(property->getType()) << " '" << property->getNameAsString() << "'() {\n";
+                if (bar) il << "    .get " << signature(static_property_method(property, false)) << "\n";
+                if (bar + 1 < names.size()) il << "    .set " << signature(static_property_method(property, true)) << "\n";
+                il << "  }\n";
+            }
             for (auto* member : r->decls()) if (auto* property = dyn_cast<MSPropertyDecl>(member)) {
                 il << "  .property instance " << type(property->getType()) << " '" << property->getNameAsString() << "'() {\n";
                 for (auto* method : r->methods()) {

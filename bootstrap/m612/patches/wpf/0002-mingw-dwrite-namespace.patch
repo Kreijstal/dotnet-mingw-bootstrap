@@ -1,0 +1,13 @@
+--- a/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/CPP/DWriteWrapper/Common.h
++++ b/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/CPP/DWriteWrapper/Common.h
+@@ -7,6 +7,10 @@
+ 
+ #include "precomp.hxx"
+ #include <vcclr.h>
++#if defined(__MINGW32__)
++// MinGW UUID template specializations must live in their global namespace.
++#include <DWrite.h>
++#endif
+ 
+ using namespace System::Security;
+ 

@@ -1,0 +1,21 @@
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+using namespace System;
+namespace Example {
+public ref class State abstract sealed {
+    static Object^ _lock = gcnew Object();
+    static int _seed = MakeSeed();
+    static int _next = _seed + 2;
+    static int MakeSeed() { Console::WriteLine("initialize once"); return 40; }
+public:
+    static Object^ Lock() { return _lock; }
+    static int Read() { return _next; }
+    static void Change(int% value) { value += 1; }
+    static void Increment() { Change(_next); }
+};
+public ref class Failing abstract sealed {
+    static int _value = Fail();
+    static int Fail() { throw gcnew InvalidOperationException(); }
+public:
+    static int Read() { return _value; }
+};
+}

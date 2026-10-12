@@ -85,12 +85,35 @@ bridge_compile() {
   "${compiler[@]}" "$@"
 }
 
+step_prepare_bridges() {
+  local patchfile
+  for patchfile in "$here"/patches/wpf/*.patch; do
+    if ! patch --dry-run -R -p1 -d "$source" -i "$patchfile" >/dev/null 2>&1; then
+      patch -p1 -d "$source" -i "$patchfile"
+    fi
+  done
+}
+
+step_check_checked_integers() {
+  step_prepare_bridges
+  local inc=$source/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/CPP/TrueTypeSubsetter/TtfDelta
+  /clang64/bin/clang++.exe -std=c++14 -O2 "$here/wpf-tests/CheckedIntegers.cpp" -I "$inc" -o "$build/checked-integers.exe"
+  "$build/checked-integers.exe"
+}
+
 step_bridge_gate() {
+  step_prepare_bridges
   local cpp=$source/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/CPP
   local shared=$source/src/Microsoft.DotNet.Wpf/src/Shared/inc
+  local core_refs=("$sdk"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
+  local core_ref=${core_refs[-1]}
   bridge_compile "$(cygpath -m "$cpp/DirectWriteForwarder.cpp")" --std c++14 --target library --emit il \
     --public-key "$(cygpath -m "$build/keys/MSShared.snk")" \
-    --type System.DateTime \
+    --type System.DateTime --type System.Threading.Monitor --type System.Security.SecurityCriticalAttribute \
+    --type System.Uri --type System.IO.FileFormatException --type System.IntPtr --type System.Runtime.InteropServices.Marshal \
+    --reference "$(cygpath -m "$core_ref/System.Threading.dll")" \
+    --reference "$(cygpath -m "$core_ref/System.Runtime.InteropServices.dll")" \
+    --reference "$(cygpath -m "$oob/System.IO.Packaging.dll")" \
     --reference "$(cygpath -m "$build/lib/WindowsBase.dll")" -I "$(cygpath -m "$shared")" \
     -I "$(cygpath -m "$cpp/..")" -I "$(cygpath -m "$cpp/TrueTypeSubsetter")" \
     -D '__field_bcount(x)=_Field_size_bytes_(x)' -D '__field_ecount(x)=_Field_size_(x)' \
@@ -121,6 +144,47 @@ EOF
     --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -v:q
   cp "$work/wpf-directwrite-native.dll" "$work/bin/Release/net8.0/"
   timeout 30 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/DirectWriteCheck.dll")"
+}
+
+step_check_localized_messages() {
+  initialize
+  local work=$build/localized-messages-check
+  local original=$source/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/CPP/DWriteWrapper/LocalizedErrorMsgs.cpp
+  local core_refs=("$sdk"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
+  local core_ref=${core_refs[-1]}
+  mkdir -p "$work"
+  cat > "$work/LocalizedMessages.cpp" <<EOF
+using namespace System;
+#include "$(cygpath -m "$original")"
+public ref class WpfLocalizedMessages abstract sealed {
+public:
+  static String^ Read() { return MS::Internal::Text::TextInterface::LocalizedErrorMsgs::EnumeratorNotStarted; }
+  static void Write(String^ text) { MS::Internal::Text::TextInterface::LocalizedErrorMsgs::EnumeratorNotStarted = text; }
+};
+EOF
+  bridge_compile "$(cygpath -m "$work/LocalizedMessages.cpp")" --target library --std c++14 \
+    --ilasm "$(cygpath -m /clang64/bin/ilasm-dotnet.exe)" --type System.Threading.Monitor \
+    --reference "$(cygpath -m "$core_ref/System.Threading.dll")" -o "$(cygpath -m "$work/LocalizedMessages.dll")"
+  cat > "$work/LocalizedMessagesCheck.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="LocalizedMessages"><HintPath>LocalizedMessages.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  cat > "$work/Program.cs" <<'EOF'
+using System;
+using System.Reflection;
+using System.Threading.Tasks;
+if (WpfLocalizedMessages.Read() != null) throw new Exception("unexpected initial error message");
+WpfLocalizedMessages.Write("café 東京 😀");
+if (WpfLocalizedMessages.Read() != "café 東京 😀") throw new Exception("Unicode message roundtrip failed");
+Parallel.For(0, 64, i => { WpfLocalizedMessages.Write("message " + i); if (WpfLocalizedMessages.Read() == null) throw new Exception("concurrent message access failed"); });
+var type = typeof(WpfLocalizedMessages).Assembly.GetType("MS.Internal.Text.TextInterface.LocalizedErrorMsgs");
+var property = type.GetProperty("EnumeratorNotStarted", BindingFlags.Static | BindingFlags.NonPublic);
+if (type.IsPublic || type.TypeInitializer == null || !property.GetMethod.IsAssembly || !property.SetMethod.IsAssembly)
+    throw new Exception("upstream type/accessor visibility or initialization lost");
+Console.WriteLine("upstream WPF LocalizedErrorMsgs OK");
+EOF
+  "$sdk/dotnet.exe" build "$(cygpath -m "$work/LocalizedMessagesCheck.csproj")" -c Release \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -v:q
+  timeout 30 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/LocalizedMessagesCheck.dll")"
 }
 
 step_check_foundations() {
