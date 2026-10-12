@@ -76,17 +76,51 @@ step_inventory() {
     "$build/native-coverage.json"
 }
 
+bridge_compile() {
+  local compiler=(cli-clang)
+  if [ -n "${WPF_CPPCLI_BUILD:-}" ]; then
+    compiler=(/clang64/bin/python.exe "$(cygpath -m "$WPF_CPPCLI_BUILD/cli-clang")" \
+      --sdk "$(cygpath -m "$sdk")" --clang "$(cygpath -m /clang64/bin/clang++.exe)")
+  fi
+  "${compiler[@]}" "$@"
+}
+
 step_bridge_gate() {
   local cpp=$source/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/CPP
   local shared=$source/src/Microsoft.DotNet.Wpf/src/Shared/inc
-  cli-clang "$(cygpath -m "$cpp/DirectWriteForwarder.cpp")" --target library --emit il \
+  bridge_compile "$(cygpath -m "$cpp/DirectWriteForwarder.cpp")" --std c++14 --target library --emit il \
+    --public-key "$(cygpath -m "$build/keys/MSShared.snk")" \
+    --type System.DateTime \
     --reference "$(cygpath -m "$build/lib/WindowsBase.dll")" -I "$(cygpath -m "$shared")" \
+    -I "$(cygpath -m "$cpp/..")" -I "$(cygpath -m "$cpp/TrueTypeSubsetter")" \
+    -D '__field_bcount(x)=_Field_size_bytes_(x)' -D '__field_ecount(x)=_Field_size_(x)' \
+    -D '__field_range(low,high)=_Field_range_(low,high)' -D '__deref_out_range(low,high)=_Deref_out_range_(low,high)' \
+    -D '__success(x)=_Success_(x)' \
     -D "WINDOWS_BASE_DLL=\"$(cygpath -m "$build/lib/WindowsBase.dll")\"" \
     -D PRESENTATION_CORE=1 -D _CLR_NETCORE=1 -o "$(cygpath -m "$build/DirectWriteForwarder.il")" \
     > "$build/directwrite-gate.log" 2>&1 || {
       cat "$build/directwrite-gate.log"
       die "The frontend cannot compile the upstream DirectWriteForwarder bridge yet"
     }
+}
+
+step_check_directwrite_bridge() {
+  initialize
+  local work=$build/directwrite-check
+  mkdir -p "$work"
+  /clang64/bin/clang++.exe -std=c++17 -fms-extensions -shared -O2 "$here/wpf-native/DirectWriteBridge.cpp" \
+    -o "$work/wpf-directwrite-native.dll" -ldwrite
+  bridge_compile "$(cygpath -m "$here/wpf-tests/DirectWriteBridge.cpp")" --target library \
+    --ilasm "$(cygpath -m /clang64/bin/ilasm-dotnet.exe)" --native-library wpf-directwrite-native.dll \
+    -o "$(cygpath -m "$work/SourceDirectWriteBridge.dll")"
+  cp "$here/wpf-tests/DirectWriteBridge.cs" "$work/Program.cs"
+  cat > "$work/DirectWriteCheck.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="SourceDirectWriteBridge"><HintPath>SourceDirectWriteBridge.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$sdk/dotnet.exe" build "$(cygpath -m "$work/DirectWriteCheck.csproj")" -c Release \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -v:q
+  cp "$work/wpf-directwrite-native.dll" "$work/bin/Release/net8.0/"
+  timeout 30 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/DirectWriteCheck.dll")"
 }
 
 step_check_foundations() {

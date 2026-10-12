@@ -24,11 +24,13 @@ def main():
     ap.add_argument("-o", required=True, type=Path)
     ap.add_argument("-I", action="append", default=[])
     ap.add_argument("-D", action="append", default=[])
+    ap.add_argument("--std", choices=["c++14", "c++17", "c++20"], default="c++17", help="C++ language mode used by Clang (default: c++17)")
     ap.add_argument("--reference", action="append", default=[], type=Path)
     ap.add_argument("--type", action="append", default=[])
     ap.add_argument("--emit", choices=["il", "assembly"], default="assembly")
     ap.add_argument("--target", choices=["exe", "library"], default="exe")
     ap.add_argument("--assembly-name")
+    ap.add_argument("--public-key", type=Path, help="strong-name public-key blob for the emitted assembly identity (public signing only)")
     ap.add_argument("--framework", choices=["windowsforms"], help="reference the source-built Windows Forms pack and select its runtime framework")
     ap.add_argument("--native-library", default="", help="DLL supplying used extern-C functions through a split native bridge")
     ap.add_argument("--clang", default=os.environ.get("CPPCLI_CLANG", "clang++"))
@@ -71,6 +73,7 @@ def main():
     source = a.input.resolve()
     output = a.o.resolve()
     assembly_name = a.assembly_name or output.stem
+    public_key = a.public_key.read_bytes().hex() if a.public_key else ""
     if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_.-]*", assembly_name):
         ap.error("invalid assembly name")
     if a.native_library and not re.fullmatch(r"[A-Za-z0-9_.-]+\.dll", a.native_library):
@@ -84,7 +87,7 @@ def main():
     # LLVM's in-process crash recovery treats MinGW C++ exceptions raised by a
     # plugin as crashes before its local catch handler can run. Use a dedicated
     # cc1 process so unsupported input produces normal diagnostics.
-    common = [a.clang, "-fno-integrated-cc1", "-std=c++17", "-fms-extensions", "-Werror=return-type", "-x", "c++", "-fsyntax-only", "-I", source.parent]
+    common = [a.clang, "-fno-integrated-cc1", "-std=" + a.std, "-fms-extensions", "-Werror=return-type", "-x", "c++", "-fsyntax-only", "-I", source.parent, "-I", build / "include"]
     for inc in a.I:
         common += ["-I", str(Path(inc).resolve())]
     for define in a.D:
@@ -101,6 +104,7 @@ def main():
     shim, reference_file = work / "shim.cpp", work / "references.json"
     action("cli-shim", source, ["output=" + str(shim)])
     action("cli-references", shim, ["output=" + str(reference_file)])
+    friends = []
     for item in json.loads(reference_file.read_text(encoding="utf-8")):
         ref = Path(item["path"])
         candidates = [ref] if ref.is_absolute() else [Path(item["source"]).parent / ref] + [directory / ref for directory in reference_directories]
@@ -108,13 +112,17 @@ def main():
         if found is None:
             ap.error("#using assembly not found in source directory or source-built pack: " + item["path"])
         references.append(found)
+        if item.get("as_friend"):
+            friends.append(str(found))
     references = list({os.path.normcase(str(p.resolve())): p.resolve() for p in references}.values())
-    run([dotnet, metadata_tool.resolve(), manifest, header, ";".join(types), *references])
+    access_file = work / "access.json"
+    access_file.write_text(json.dumps({"Assembly": assembly_name, "PublicKey": public_key, "Friends": friends}), encoding="utf-8")
+    run([dotnet, metadata_tool.resolve(), manifest, header, ";".join(types), "--access", access_file, *references])
     # Never suppress Clang diagnostics to make a surrogate parse.
     action("cli-adapt", shim, ["metadata=" + str(manifest), "output=" + str(adapted)])
     action("cli-emit", adapted, ["metadata=" + str(manifest), "output=" + str(il),
                                  "evidence=" + str(work / "ast.json"),
-                                 "assembly=" + assembly_name, "target=" + a.target, "native-library=" + a.native_library], True)
+                                 "assembly=" + assembly_name, "public-key=" + public_key, "target=" + a.target, "native-library=" + a.native_library], True)
     if a.emit == "il":
         output.write_bytes(il.read_bytes())
     else:

@@ -12,8 +12,8 @@
     {
       "stage": 1,
       "status": "initial subset complete",
-      "result": "Clang preprocessing/parser/Sema, selected metadata imports, AST-to-IL emitter, executable/library driver",
-      "validation": "cppcli.sh test-core"
+      "result": "Clang preprocessing/parser/Sema, selected metadata imports, AST-to-IL emitter, executable/library driver; transitive header references, validated friend access/public-key output identities and system-header locations",
+      "validation": "cppcli.sh test-core test-references"
     },
     {
       "stage": 2,
@@ -33,37 +33,42 @@
         "managed enums and imported enum signatures",
         "managed value classes and value-copy/address semantics",
         "explicit boxing/unboxing and imported public value fields",
-        "tracking references in parameters and local aliases, with CLR byref metadata"
+        "tracking references in parameters and local aliases, with CLR byref metadata",
+        "primitive pin_ptr locals with CLR pinned storage and lexical finally cleanup",
+        "primitive interior_ptr locals and string-character addresses",
+        "default gcnew allocation without constructor parentheses"
       ],
       "remaining": [
         "implicit boxing and boxed value handles",
         "CLI generics",
         "delegates/events/indexers",
         "destructors/finalizers and deterministic cleanup",
-        "extended tracking references/pinning",
+        "extended tracking references, nonprimitive pinning and managed pointer operations",
         "attributes/static initialization/multiple translation units",
         "full CLI semantic analysis and metadata type discovery"
       ],
-      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values test-tracking"
+      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values test-tracking test-pinning"
     },
     {
       "stage": 4,
-      "status": "split scalar bridge implemented; mixed mode pending",
+      "status": "split scalar/pointer bridges implemented; mixed mode pending",
       "implemented": [
         "extern-C scalar bridge to a separate MinGW g++ DLL",
-        "P/Invoke metadata and C# interoperability checks"
+        "P/Invoke metadata and C# interoperability checks",
+        "raw unmanaged pointers and pinned primitive/string buffers",
+        "real DirectWrite factory/font enumeration and pinned family-name buffer probe"
       ],
       "remaining": [
-        "native pointers/layout/marshalling",
+        "native layouts, complete pointer operations and automatic marshalling",
         "callbacks and automatic native partitioning",
         "real mixed-mode PE and native-to-managed thunks",
         "MinGW ijwhost port"
       ],
-      "validation": "cppcli.sh test-interop"
+      "validation": "cppcli.sh test-interop test-pinning; wpf.sh check-directwrite-bridge"
     },
     {
       "stage": 5,
-      "status": "not implemented",
+      "status": "working DirectWrite subset probe; upstream bridges still pending",
       "remaining": [
         "compile DirectWriteForwarder",
         "compile System.Printing",

@@ -1767,11 +1767,12 @@ Outputs and source-item manifests remain under `~/wpfboot/build`; no installed
 SDK/shared-framework files are modified by these foundation checks.
 
 The next build gate is `DirectWriteForwarder`: planning PresentationCore stops
-with `Build WPF dependency first: DirectWriteForwarder`. Compiling the real
-upstream DirectWriteForwarder translation unit with the packaged frontend also
-fails: `#using WINDOWS_BASE_DLL as_friend` in included headers is not handled,
-and `vcclr.h` is missing. Its native pointers, managed class templates, cleanup,
-callbacks and other CLI features still exceed the frontend's supported subset.
+with `Build WPF dependency first: DirectWriteForwarder`. The initial
+packaged frontend stopped at included-header `#using` and missing `vcclr.h`.
+The development frontend now handles these (see §13), but the full upstream
+translation unit still fails on boxed value handles, managed static fields and
+additional metadata imports. Managed class templates, callbacks, finalizers and
+automatic native partitioning also remain outside its supported subset.
 The same compiler failure can be reproduced with `wpf.sh bridge-gate`; it
 retains the original Clang diagnostics in `build/directwrite-gate.log`.
 The System.Printing bridge, higher-level managed libraries, WPF build tasks and
@@ -1789,3 +1790,96 @@ will therefore not complete source-only WPF. The existing native gfx/PenImc
 packages are v10.0.12; their versions and rendering protocol must also be matched
 to the eventual managed framework before a rendered-window check or Greenshot
 package can be claimed.
+
+
+## 13. C++/CLI bridge prerequisites and a real DirectWrite probe
+
+On 2026-10-12 bridge work added these source-built frontend capabilities:
+
+- `#using` in transitively included headers. A Clang VFS wrapper raw-lexes only
+  the directive spelling, keeping file identities, include resolution, macro
+  paths, inactive conditional branches and source locations. Continued directive
+  names work; comments and literals are not rewritten. Its raw-lexer source
+  manager has independent diagnostics so subsequent include warnings remain valid.
+- `as_friend` imports with validated `InternalsVisibleTo` assembly names and full
+  public keys. Internal types/members are imported only for a declared friend;
+  private members remain inaccessible, and protected members retain Clang access
+  checks. `--public-key` emits the assembly's public-key identity, with no private
+  signing key. Signed friend calls were executed on source-built CoreCLR.
+  This follows the CLR access rules described in
+  [Microsoft's friend-assembly documentation](https://learn.microsoft.com/en-us/dotnet/api/system.runtime.compilerservices.internalsvisibletoattribute).
+- A source `include/vcclr.h` with intrinsic declarations for primitive
+  `pin_ptr`, `interior_ptr` and `PtrToStringChars`. The emitter gives pin locals
+  genuine CLR `T& pinned` storage and clears the slots in a lexical `finally`
+  region. Returns, exceptions, break and continue run this cleanup. String
+  addresses use `String.GetPinnableReference`; array addresses use `ldelema`.
+  Interior pointers use tracked CLR byrefs. These are not native pointer aliases.
+- Raw unmanaged pointer arguments/returns to split `extern "C"` native DLLs.
+  Pin-to-native conversion emits `conv.u` while retaining the actual pin local.
+  Automatic marshalling, unmanaged pointer arithmetic, managed callbacks,
+  nonprimitive pinning, managed pointer assignments and intrinsic returns are still
+  unsupported. Pin locals in for-initializers, pin parameters/returns and managed
+  pointer fields are rejected until their lifetimes can be handled.
+- Bare `gcnew Type` default allocation, resolved by Clang's constructor checking.
+  System-header line markers survive reparsing, so libc++ can specialize its
+  own restricted templates while identical user specializations are rejected.
+  `--std` selects C++14, C++17 (default) or C++20 preprocessing/parser mode.
+
+`cppcli.sh test-references` builds a public-signed C# friend library with the
+source SDK and calls its internal APIs from a generated C++/CLI assembly. It
+also rejects wrong names/keys, imports without friend access, private/protected
+access and trailing directive tokens. Header references include nested relative
+includes, pragma-once deduplication, a macro path, a continued directive name,
+inactive references and a diagnostic after header shimming.
+
+`cppcli.sh test-pinning` uses dynamically allocated Unicode strings and mutable
+UInt16 arrays. A native MinGW DLL reads their pointers, waits during concurrent
+forced compacting GC and mutates the array. The C# consumer checks the data and
+actual pinned-local/finally metadata. It also exercises interior-pointer reads
+across GC, early returns, exceptions and loop scope exits. Unsafe/unimplemented
+constructs produce diagnostics rather than an assembly.
+
+Exact development validation on win11:
+
+```sh
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh \
+  test-core test-objects test-references test-properties test-virtuals \
+  test-arrays test-exceptions test-interop test-enums test-values \
+  test-tracking test-adapter-gate test-pinning
+```
+
+All suites passed. The focused native rebuild was
+`/clang64/bin/cmake.exe --build /home/topkek/dotnetboot/m612/build/cppcli --target cli_ast -j2`;
+the metadata reader was rebuilt by `cppcli.sh build` with zero warnings/errors.
+
+`wpf.sh check-directwrite-bridge` builds `wpf-native/DirectWriteBridge.cpp` with
+MinGW Clang and `-ldwrite`, then compiles `wpf-tests/DirectWriteBridge.cpp` through
+this frontend. A C# consumer calls the resulting managed assembly on the source
+CoreCLR. It creates/releases a real DirectWrite factory, enumerates installed
+font families and reads a localized family name into a pinned managed Char
+array, checking required capacity, NUL termination and empty-array rejection.
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  WPF_CPPCLI_BUILD=/home/topkek/dotnetboot/m612/build/cppcli \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-directwrite-bridge
+```
+
+Result: zero warnings/errors; `DirectWrite bridge OK: 81 families; first family Arial`.
+The probe's assemblies/native DLL remain in `~/wpfboot/build/directwrite-check`.
+They are an incremental integration check, not a replacement with the upstream
+DirectWriteForwarder assembly/API identity, and are not installed or packaged.
+
+The same environment with `bridge-gate` compiles the real v8.0.0 amalgamation.
+It uses WindowsBase's MSShared public key, C++14 for the upstream legacy code,
+project include roots and maps five SAL1 spellings to the existing MinGW SAL2
+annotations. Preprocessing, friend validation and adaptation now complete.
+Clang parsing/Sema still returns nonzero: the first failure is the implicit
+boxed `System.DateTime^` assignment in `TrueTypeSubsetter/util2.cpp:27`; subsequent
+failures include managed static initialization and missing Threading imports.
+The complete diagnostics are retained in `~/wpfboot/build/directwrite-gate.log`.
+Full DirectWriteForwarder and System.Printing, complete WPF/WindowsDesktop and
+Greenshot packaging remain unfinished. The separate PresentationNative export
+and native gfx/PenImc version issues in §12 still apply.

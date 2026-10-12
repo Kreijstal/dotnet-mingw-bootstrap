@@ -10,12 +10,13 @@ using System.Text.Json;
 
 record CliType(string Il, string Cpp, string Kind, string Name = "");
 record CliMethod(string Id, string Name, bool Static, CliType Return, CliType[] Parameters,
-                 bool Supported, int GenericArity, bool Virtual, bool Abstract, bool Final);
-record CliField(string Name, CliType Type, bool Supported);
+                 bool Supported, int GenericArity, bool Virtual, bool Abstract, bool Final, string Access);
+record CliField(string Name, CliType Type, bool Supported, string Access);
 record CliEnumMember(string Name, string Value);
 record CliProperty(string Name, CliType Type, string Getter, string Setter, bool Static, bool Supported);
 record CliClass(string Assembly, string Name, string Cpp, string Kind, string Base, CliMethod[] Methods, CliProperty[] Properties, string[] Interfaces, CliType? Underlying = null, CliEnumMember[]? EnumMembers = null, CliField[]? Fields = null);
 record CliAssembly(string Name, string Version, string Token);
+record CliAccess(string Assembly, string PublicKey, string[] Friends);
 
 sealed class SignatureTypes : ISignatureTypeProvider<CliType, object?>
 {
@@ -86,6 +87,42 @@ static class Program
     }
     static string Escape(string s) => s.Replace("\\", "\\\\").Replace("\"", "\\\"");
     static bool ValidName(string s) => s.Length > 0 && (char.IsLetter(s[0]) || s[0] == '_') && s.All(c => char.IsLetterOrDigit(c) || c == '_');
+    static string AttributeType(MetadataReader r, EntityHandle ctor)
+    {
+        var owner = ctor.Kind == HandleKind.MemberReference ? r.GetMemberReference((MemberReferenceHandle)ctor).Parent :
+            ctor.Kind == HandleKind.MethodDefinition ? r.GetMethodDefinition((MethodDefinitionHandle)ctor).GetDeclaringType() : default;
+        if (owner.Kind == HandleKind.TypeDefinition) return FullName(r, r.GetTypeDefinition((TypeDefinitionHandle)owner));
+        if (owner.Kind == HandleKind.TypeReference) {
+            var type = r.GetTypeReference((TypeReferenceHandle)owner);
+            return r.GetString(type.Namespace) + "." + r.GetString(type.Name);
+        }
+        return "";
+    }
+    static void ValidateFriend(MetadataReader r, AssemblyDefinition assembly, CliAccess access)
+    {
+        byte[] outputKey = Convert.FromHexString(access.PublicKey);
+        foreach (var handle in assembly.GetCustomAttributes()) {
+            var attribute = r.GetCustomAttribute(handle);
+            if (AttributeType(r, attribute.Constructor) != "System.Runtime.CompilerServices.InternalsVisibleToAttribute") continue;
+            var blob = r.GetBlobReader(attribute.Value);
+            if (blob.ReadUInt16() != 1) throw new Exception("invalid InternalsVisibleTo attribute");
+            var identity = new AssemblyName(blob.ReadSerializedString() ?? "");
+            if (!string.Equals(identity.Name, access.Assembly, StringComparison.OrdinalIgnoreCase)) continue;
+            byte[] friendKey = identity.GetPublicKey() ?? Array.Empty<byte>();
+            if (!friendKey.AsSpan().SequenceEqual(outputKey)) continue;
+            if (r.GetBlobBytes(assembly.PublicKey).Length != 0 && friendKey.Length == 0) continue;
+            return;
+        }
+        throw new Exception("#using as_friend requires InternalsVisibleTo matching output assembly name and public key: " + access.Assembly);
+    }
+    static string MemberAccess(MethodAttributes attributes, bool friend) => (attributes & MethodAttributes.MemberAccessMask) switch {
+        MethodAttributes.Public => "public",
+        MethodAttributes.Family => "protected",
+        MethodAttributes.Assembly => friend ? "public" : "",
+        MethodAttributes.FamORAssem => friend ? "public" : "protected",
+        MethodAttributes.FamANDAssem => friend ? "protected" : "",
+        _ => ""
+    };
     public static int Main(string[] args)
     {
         try
@@ -95,13 +132,22 @@ static class Program
             var wanted = args[2].Split(';', StringSplitOptions.RemoveEmptyEntries).ToHashSet(StringComparer.Ordinal);
             var types = new List<CliClass>();
             var assemblies = new List<CliAssembly>();
-            foreach (var path in args.Skip(3))
+            int firstAssembly = 3;
+            var access = new CliAccess("", "", Array.Empty<string>());
+            if (args.Length > 4 && args[3] == "--access") {
+                access = JsonSerializer.Deserialize<CliAccess>(File.ReadAllText(args[4])) ?? throw new Exception("invalid access context");
+                firstAssembly = 5;
+            }
+            var friendPaths = access.Friends.Select(Path.GetFullPath).ToHashSet(OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
+            foreach (var path in args.Skip(firstAssembly))
             {
                 using var file = File.OpenRead(path);
                 using var pe = new PEReader(file);
                 var r = pe.GetMetadataReader();
                 var a = r.GetAssemblyDefinition();
                 string assembly = r.GetString(a.Name);
+                bool friend = friendPaths.Contains(Path.GetFullPath(path));
+                if (friend) ValidateFriend(r, a, access);
                 byte[] key = r.GetBlobBytes(a.PublicKey);
                 string token = key.Length == 0 ? "" : Convert.ToHexString(SHA1.HashData(key).TakeLast(8).Reverse().ToArray()).ToLowerInvariant();
                 assemblies.Add(new(assembly, a.Version.ToString(), token));
@@ -110,12 +156,15 @@ static class Program
                     var td = r.GetTypeDefinition(th);
                     string name = FullName(r, td);
                     if (!wanted.Contains(name)) continue;
+                    if ((td.Attributes & TypeAttributes.VisibilityMask) != TypeAttributes.Public && !friend)
+                        throw new Exception("imported type is internal; use #using as_friend with a matching InternalsVisibleTo: " + name);
                     if (name.Contains('`') || name.Contains('+')) throw new Exception("unsupported imported type: " + name);
                     var methods = new List<CliMethod>();
                     foreach (var mh in td.GetMethods())
                     {
                         var md = r.GetMethodDefinition(mh);
-                        if ((md.Attributes & MethodAttributes.MemberAccessMask) != MethodAttributes.Public) continue;
+                        string memberAccess = MemberAccess(md.Attributes, friend);
+                        if (memberAccess.Length == 0) continue;
                         string mn = r.GetString(md.Name);
                         var sig = md.DecodeSignature(new SignatureTypes(), null);
                         string id = assembly + ":" + System.Reflection.Metadata.Ecma335.MetadataTokens.GetToken(mh).ToString("x8");
@@ -125,7 +174,7 @@ static class Program
                         methods.Add(new(id, mn, (md.Attributes & MethodAttributes.Static) != 0,
                             sig.ReturnType, sig.ParameterTypes.ToArray(), supported, sig.GenericParameterCount,
                             (md.Attributes & MethodAttributes.Virtual) != 0, (md.Attributes & MethodAttributes.Abstract) != 0,
-                            (md.Attributes & MethodAttributes.Final) != 0));
+                            (md.Attributes & MethodAttributes.Final) != 0, memberAccess));
                     }
                     var properties = new List<CliProperty>();
                     foreach (var ph in td.GetProperties())
@@ -151,8 +200,8 @@ static class Program
                     else if (!td.BaseType.IsNil && td.BaseType.Kind == HandleKind.TypeDefinition)
                         baseName = FullName(r, r.GetTypeDefinition((TypeDefinitionHandle)td.BaseType));
                     var fields = td.GetFields().Select(fh => r.GetFieldDefinition(fh))
-                        .Where(f => (f.Attributes & FieldAttributes.FieldAccessMask) == FieldAttributes.Public && (f.Attributes & FieldAttributes.Static) == 0)
-                        .Select(f => new CliField(r.GetString(f.Name), f.DecodeSignature(new SignatureTypes(), null), ValidName(r.GetString(f.Name)))).ToArray();
+                        .Where(f => MemberAccess((MethodAttributes)(int)(f.Attributes & FieldAttributes.FieldAccessMask), friend).Length != 0 && (f.Attributes & FieldAttributes.Static) == 0)
+                        .Select(f => new CliField(r.GetString(f.Name), f.DecodeSignature(new SignatureTypes(), null), ValidName(r.GetString(f.Name)), MemberAccess((MethodAttributes)(int)(f.Attributes & FieldAttributes.FieldAccessMask), friend))).ToArray();
                     if (baseName == "System.Enum") {
                         CliType? underlying = null;
                         var members = new List<CliEnumMember>();
@@ -217,7 +266,7 @@ static class Program
             header.WriteLine("template<class T, class... A> auto __cli_new(A... args) -> decltype(T(args...), (T*)nullptr); ");
             header.WriteLine("template<class T, class A> T __cli_safe_cast(A); template<class T, class A> T __cli_dynamic_cast(A);");
             header.WriteLine("System::String* __cli_literal(const char*); System::String* __cli_literal(const wchar_t*);");
-            header.WriteLine("namespace System { using Int32 = int; using Int64 = long long; using Boolean = bool; }");
+            header.WriteLine("namespace System { using SByte = signed char; using Byte = unsigned char; using Int16 = short; using UInt16 = unsigned short; using Int32 = int; using UInt32 = unsigned int; using Int64 = long long; using UInt64 = unsigned long long; using Boolean = bool; using Char = wchar_t; using Single = float; using Double = double; }");
             foreach (var t in types) WriteClass(header, t, true);
             var emitted = new HashSet<string>();
             void Define(CliClass t)
@@ -264,7 +313,7 @@ static class Program
             if (t.Name == "System.String") w.WriteLine("String(const char*); String(const wchar_t*);");
             if (t.Kind == "value" && !t.Methods.Any(m => m.Name == ".ctor" && m.Parameters.Length == 0 && m.Supported))
                 w.WriteLine("__attribute__((annotate(\"cli.value.zero\"))) " + name + "() {}");
-            foreach (var f in t.Fields ?? Array.Empty<CliField>()) if (f.Supported) w.WriteLine(f.Type.Cpp + " " + f.Name + ";");
+            foreach (var f in t.Fields ?? Array.Empty<CliField>()) if (f.Supported) w.WriteLine(f.Access + ": " + f.Type.Cpp + " " + f.Name + ";");
             var seen = new HashSet<string>();
             foreach (var m in t.Methods.Where(m => m.Supported))
             {
@@ -272,7 +321,7 @@ static class Program
                 // C++ cannot distinguish overloads that collapse to the same surrogate signature.
                 string signature = m.Name + "(" + parameters + ")";
                 if (!seen.Add(signature)) throw new Exception("surrogate overload collision: " + t.Name + "::" + signature);
-                w.Write("__attribute__((annotate(\"cli.import:" + Escape(m.Id) + "\"))) ");
+                w.Write(m.Access + ": __attribute__((annotate(\"cli.import:" + Escape(m.Id) + "\"))) ");
                 if (m.Name == ".ctor") w.WriteLine(name + "(" + parameters + ");");
                 else w.WriteLine((m.Static ? "static " : m.Virtual && t.Kind != "value" ? "virtual " : "") + m.Return.Cpp + " " + m.Name + "(" + parameters + ")" +
                     (m.Final && t.Kind != "value" ? " final" : "") + (m.Abstract && t.Kind != "value" ? " = 0" : "") + ";");
@@ -282,7 +331,7 @@ static class Program
                 var accessors = new List<string>();
                 if (p.Getter.Length != 0) accessors.Add("get=" + p.Getter);
                 if (p.Setter.Length != 0) accessors.Add("put=" + p.Setter);
-                w.WriteLine("__declspec(property(" + string.Join(",", accessors) + ")) " + p.Type.Cpp + " " + p.Name + ";");
+                w.WriteLine("public: __declspec(property(" + string.Join(",", accessors) + ")) " + p.Type.Cpp + " " + p.Name + ";");
             }
             w.Write("}; ");
         }

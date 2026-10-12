@@ -17,6 +17,7 @@
 #include <llvm/Support/ConvertUTF.h>
 #include <llvm/Support/JSON.h>
 #include <llvm/Support/MemoryBuffer.h>
+#include <llvm/Support/VirtualFileSystem.h>
 #include <llvm/Support/raw_ostream.h>
 #include <algorithm>
 #include <fstream>
@@ -131,7 +132,7 @@ struct Metadata {
 
 struct Options {
     std::string metadata, output, evidence;
-    std::string assembly = "cli_program", target = "exe", native_library;
+    std::string assembly = "cli_program", target = "exe", native_library, public_key;
     bool parse(const CompilerInstance& ci, const std::vector<std::string>& args, bool require_metadata = true) {
         for (const auto& arg : args) {
             auto eq = arg.find('=');
@@ -143,6 +144,7 @@ struct Options {
             else if (key == "assembly") assembly = value;
             else if (key == "target") target = value;
             else if (key == "native-library") native_library = value;
+            else if (key == "public-key") public_key = value;
             else return false;
         }
         return (!require_metadata || !metadata.empty()) && !output.empty() && (target == "exe" || target == "library");
@@ -153,7 +155,80 @@ void report(CompilerInstance& ci, SourceLocation loc, const std::string& message
     ci.getDiagnostics().Report(loc, id) << message;
 }
 
-struct Lexeme { std::string text, file; unsigned line; tok::TokenKind kind; };
+struct Lexeme { std::string text, file; unsigned line; tok::TokenKind kind; bool system; };
+// Raw lexing only changes the directive name. Clang's preprocessor still owns
+// include lookup, macro expansion, conditional directives and pragma-once IDs.
+std::string shim_using(SourceManager& sm, FileID file, const LangOptions& lang) {
+    auto buffer = sm.getBufferData(file); auto start = sm.getLocForStartOfFile(file);
+    Lexer lexer(start, lang, buffer.begin(), buffer.begin(), buffer.end());
+    std::vector<std::pair<unsigned, unsigned>> replacements;
+    Token token;
+    while (!lexer.LexFromRawLexer(token)) {
+        if (token.is(tok::hash) && token.isAtStartOfLine()) {
+            Token name; lexer.LexFromRawLexer(name);
+            if (!name.isAtStartOfLine() && Lexer::getSpelling(name, sm, lang) == "using")
+                replacements.emplace_back(sm.getFileOffset(name.getLocation()), name.getLength());
+        }
+    }
+    std::string text = buffer.str();
+    for (auto it = replacements.rbegin(); it != replacements.rend(); ++it)
+        text.replace(it->first, it->second, "pragma cli_reference");
+    return text;
+}
+class UsingFile : public llvm::vfs::File {
+    llvm::vfs::Status info;
+    std::string contents;
+public:
+    UsingFile(llvm::vfs::Status status, std::string text) :
+        info(llvm::vfs::Status::copyWithNewSize(status, text.size())), contents(std::move(text)) {}
+    llvm::ErrorOr<llvm::vfs::Status> status() override { return info; }
+    llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>> getBuffer(const llvm::Twine& name, int64_t, bool, bool) override {
+        return llvm::MemoryBuffer::getMemBufferCopy(contents, name.str());
+    }
+    std::error_code close() override { return {}; }
+};
+class UsingFileSystem : public llvm::vfs::ProxyFileSystem {
+    CompilerInstance& ci;
+    std::map<std::string, std::string> cache;
+    std::set<std::string> unchanged;
+    const std::string* adapted(const llvm::Twine& path, const llvm::vfs::Status& info) {
+        if (!info.isRegularFile()) return nullptr;
+        auto key = path.str();
+        if (auto found = cache.find(key); found != cache.end()) return &found->second;
+        if (unchanged.count(key)) return nullptr;
+        unchanged.insert(key);
+        auto buffer = getUnderlyingFS().getBufferForFile(path);
+        if (!buffer) return nullptr;
+        auto bytes = (*buffer)->getBuffer();
+        if (bytes.find("using") == llvm::StringRef::npos && bytes.find('\\') == llvm::StringRef::npos) return nullptr;
+        // A separate source manager avoids changing the real translation unit's
+        // include ancestry and file IDs while raw lexing the intercepted buffer.
+        DiagnosticsEngine diagnostics(ci.getDiagnostics().getDiagnosticIDs(), ci.getDiagnosticOpts());
+        SourceManager sm(diagnostics, ci.getFileManager());
+        auto file = sm.createFileID(std::move(*buffer));
+        auto original = sm.getBufferData(file);
+        auto text = shim_using(sm, file, ci.getLangOpts());
+        if (text == original) return nullptr;
+        return &cache.emplace(std::move(key), std::move(text)).first->second;
+    }
+public:
+    explicit UsingFileSystem(CompilerInstance& compiler) :
+        ProxyFileSystem(compiler.getFileManager().getVirtualFileSystemPtr()), ci(compiler) {}
+    llvm::ErrorOr<llvm::vfs::Status> status(const llvm::Twine& path) override {
+        auto info = getUnderlyingFS().status(path);
+        if (info) if (auto* text = adapted(path, *info)) return llvm::vfs::Status::copyWithNewSize(*info, text->size());
+        return info;
+    }
+    llvm::ErrorOr<std::unique_ptr<llvm::vfs::File>> openFileForRead(const llvm::Twine& path) override {
+        auto info = getUnderlyingFS().status(path);
+        if (info) if (auto* text = adapted(path, *info))
+            return std::unique_ptr<llvm::vfs::File>(new UsingFile(*info, *text));
+        return getUnderlyingFS().openFileForRead(path);
+    }
+};
+void enable_header_using(CompilerInstance& ci) {
+    ci.getFileManager().setVirtualFileSystem(llvm::IntrusiveRefCntPtr<llvm::vfs::FileSystem>(new UsingFileSystem(ci)));
+}
 class ReferencePragma : public PragmaHandler {
     llvm::json::Array& references;
 public:
@@ -166,8 +241,15 @@ public:
             pp.getDiagnostics().Report(path.getLocation(), id); return;
         }
         auto loc = pp.getSourceManager().getPresumedLoc(first.getLocation());
+        Token suffix; pp.Lex(suffix);
+        bool as_friend = suffix.is(tok::identifier) && pp.getSpelling(suffix) == "as_friend";
+        if (as_friend) pp.Lex(suffix);
+        if (!suffix.is(tok::eod)) {
+            unsigned id = pp.getDiagnostics().getCustomDiagID(DiagnosticsEngine::Error, "C++/CLI: unexpected tokens after #using assembly path");
+            pp.getDiagnostics().Report(suffix.getLocation(), id); return;
+        }
         references.push_back(llvm::json::Object{{"path", text.substr(1, text.size() - 2)},
-            {"source", loc.isValid() ? loc.getFilename() : ""}});
+            {"source", loc.isValid() ? loc.getFilename() : ""}, {"as_friend", as_friend}});
     }
 };
 class ShimAction : public PluginASTAction {
@@ -179,19 +261,8 @@ protected:
         auto& ci = getCompilerInstance();
         try {
             auto& sm = ci.getSourceManager(); auto file = sm.getMainFileID();
-            auto buffer = sm.getBufferData(file); auto start = sm.getLocForStartOfFile(file);
-            Lexer lexer(start, ci.getLangOpts(), buffer.begin(), buffer.begin(), buffer.end());
-            std::vector<std::pair<unsigned, unsigned>> replacements;
-            Token token;
-            while (!lexer.LexFromRawLexer(token)) {
-                if (token.is(tok::hash) && token.isAtStartOfLine()) {
-                    Token name; lexer.LexFromRawLexer(name);
-                    if (Lexer::getSpelling(name, sm, ci.getLangOpts()) == "using")
-                        replacements.emplace_back(sm.getFileOffset(name.getLocation()), name.getLength());
-                }
-            }
-            std::string text = buffer.str();
-            for (auto it = replacements.rbegin(); it != replacements.rend(); ++it) text.replace(it->first, it->second, "pragma cli_reference");
+            auto start = sm.getLocForStartOfFile(file);
+            std::string text = shim_using(sm, file, ci.getLangOpts());
             text = "#line 1 " + quote(sm.getFilename(start).str()) + "\n" + text;
             write_file(options.output, text);
         } catch (const std::exception& e) { report(ci, {}, e.what()); }
@@ -206,6 +277,7 @@ protected:
         auto& ci = getCompilerInstance();
         try {
             auto& pp = ci.getPreprocessor(); llvm::json::Array references;
+            enable_header_using(ci);
             pp.AddPragmaHandler(new ReferencePragma(references));
             pp.EnterMainSourceFile(); Token token;
             do { pp.Lex(token); } while (!token.is(tok::eof));
@@ -226,6 +298,7 @@ protected:
             Metadata metadata;
             metadata.load(options.metadata);
             auto& pp = ci.getPreprocessor();
+            enable_header_using(ci);
             llvm::json::Array ignored_references;
             pp.AddPragmaHandler(new ReferencePragma(ignored_references));
             auto& sm = ci.getSourceManager();
@@ -237,7 +310,7 @@ protected:
                 if (token.is(tok::eof)) break;
                 auto loc = sm.getPresumedLoc(token.getLocation());
                 if (!loc.isValid()) throw std::runtime_error("token has no source location");
-                tokens.push_back({pp.getSpelling(token), loc.getFilename(), loc.getLine(), token.getKind()});
+                tokens.push_back({pp.getSpelling(token), loc.getFilename(), loc.getLine(), token.getKind(), sm.isInSystemHeader(token.getLocation())});
             }
             if (ci.getDiagnostics().hasErrorOccurred()) return;
             // Only managed declarations and allocation markers are rewritten.
@@ -247,10 +320,11 @@ protected:
             std::ostringstream out;
             std::string file;
             unsigned line = 0;
+            bool system = false;
             auto emit = [&](const Lexeme& at, const std::string& text) {
-                if (file != at.file || line != at.line) {
-                    out << "\n#line " << at.line << " " << quote(at.file) << "\n";
-                    file = at.file; line = at.line;
+                if (file != at.file || line != at.line || system != at.system) {
+                    out << "\n# " << at.line << " " << quote(at.file) << (at.system ? " 3" : "") << "\n";
+                    file = at.file; line = at.line; system = at.system;
                 }
                 out << text << " ";
             };
@@ -360,11 +434,13 @@ protected:
                     if (angles < 0 || (!angles && tokens[end].text != ">" && tokens[end].text != ">>" && tokens[end].kind != tok::identifier && tokens[end].text != "::")) break;
                     ++end;
                 }
-                if (end == i + 1 || end == tokens.size() || tokens[end].text != "(")
-                    throw std::runtime_error("gcnew currently requires a named type and parenthesized constructor arguments");
+                bool default_allocation = end < tokens.size() && !angles &&
+                    (tokens[end].text == ";" || tokens[end].text == "," || tokens[end].text == ")");
+                if (end == i + 1 || end == tokens.size() || (tokens[end].text != "(" && !default_allocation))
+                    throw std::runtime_error(t.file + ":" + std::to_string(t.line) + ": gcnew currently requires a named type and parenthesized constructor arguments");
                 std::string type;
                 for (size_t j = i + 1; j < end; ++j) type += tokens[j].text;
-                emit(t, "__cli_new<" + type + ">");
+                emit(t, "__cli_new<" + type + ">" + (default_allocation ? "()" : ""));
                 i = end - 1;
                 return true;
             };
@@ -477,7 +553,7 @@ protected:
                 // Keep ^ unchanged. Only the private Clang parser can resolve
                 // declarator/type context correctly after C++ scope lookup.
                 std::string next = i + 1 < tokens.size() ? tokens[i + 1].text : "";
-                if (((t.text == "generic" || t.text == "pin_ptr" || t.text == "interior_ptr") && next == "<") ||
+                if ((t.text == "generic" && next == "<") ||
                     ((t.text == "property" || t.text == "event") && (metadata.short_types.count(next) || next == "int" || next == "void")) ||
                     (t.text == "finally" && next == "{"))
                     throw std::runtime_error("unsupported managed construct: " + t.text);
@@ -563,6 +639,17 @@ class Emitter {
             throw std::runtime_error("only rank-one managed arrays are supported");
         return specialization->getTemplateArgs()[0].getAsType();
     }
+    QualType interior_element(QualType t) const {
+        auto* r = t->getAsCXXRecordDecl();
+        if (!r || (!record_annotated(r, "cli.pin") && !record_annotated(r, "cli.interior"))) return {};
+        auto* spec = dyn_cast<ClassTemplateSpecializationDecl>(r);
+        if (!spec || spec->getTemplateArgs().size() != 1) throw std::runtime_error("invalid managed pointer intrinsic");
+        auto element = spec->getTemplateArgs()[0].getAsType();
+        if (!element->isIntegerType() && !element->isRealFloatingType())
+            throw std::runtime_error("managed pointer intrinsics currently require primitive elements");
+        return element;
+    }
+    bool pinned(QualType t) const { return record_annotated(t->getAsCXXRecordDecl(), "cli.pin"); }
     std::string record_name(const CXXRecordDecl* record) const {
         std::string ext = annotation(record, "cli.external:");
         if (ext.empty() && record->getDefinition()) ext = annotation(record->getDefinition(), "cli.external:");
@@ -610,6 +697,7 @@ class Emitter {
     }
     std::string type(QualType t) const {
         t = t.getCanonicalType();
+        if (auto element = interior_element(t); !element.isNull()) return type(element) + "&";
         if (t->isLValueReferenceType()) return type(t->getPointeeType()) + "&";
         if (auto* enumeration = t->getAs<EnumType>()) {
             auto* decl = enumeration->getDecl();
@@ -640,6 +728,11 @@ class Emitter {
             if (name == "[System.Runtime]'System.Object'") return "object";
             return "class " + name;
         }
+        if (t->isPointerType()) {
+            auto element = t->getPointeeType();
+            if (element->isRecordType()) return "native unsigned int"; // Opaque native handle; no layout is claimed.
+            return type(element) + "*";
+        }
         throw std::runtime_error("unsupported CLI type: " + t.getAsString());
     }
     std::string reference_token(QualType t) const {
@@ -664,8 +757,12 @@ class Emitter {
                     throw std::runtime_error("native '&' references are not supported in managed declarations; use a '%' tracking reference");
             }
             auto pointer = loc.getAs<PointerTypeLoc>();
-            if (pointer.isNull() || !handle_target(pointer.getType())) continue;
+            if (pointer.isNull()) continue;
             SourceLocation star = sm.getSpellingLoc(pointer.getStarLoc());
+            if (star.isValid() && sm.isWrittenInMainFile(star) && *sm.getCharacterData(star) == '^' &&
+                value_target(pointer.getType()->getPointeeType()))
+                throw std::runtime_error("boxed value handles are not enabled yet");
+            if (!handle_target(pointer.getType())) continue;
             if (star.isValid() && sm.isWrittenInMainFile(star) && *sm.getCharacterData(star) == '*')
                 throw std::runtime_error("native '*' pointers to managed reference classes are not supported; declare a '^' handle");
         }
@@ -820,6 +917,10 @@ class Emitter {
         else fail(target, "unsupported assignment target");
     }
     void binary(const BinaryOperator* b) {
+        if ((b->getLHS()->getType()->isPointerType() || b->getRHS()->getType()->isPointerType()) &&
+            !handle_target(b->getLHS()->getType()) && !handle_target(b->getRHS()->getType()) &&
+            b->getOpcode() != BO_Assign && b->getOpcode() != BO_EQ && b->getOpcode() != BO_NE)
+            fail(b, "unmanaged pointer arithmetic and ordering are not enabled yet");
         if ((handle_target(b->getLHS()->getType()) || handle_target(b->getRHS()->getType())) &&
             b->getOpcode() != BO_Assign && b->getOpcode() != BO_EQ && b->getOpcode() != BO_NE)
             fail(b, "managed handle arithmetic and ordering are unsupported");
@@ -889,6 +990,23 @@ class Emitter {
     void call(const CallExpr* c) {
         auto* f = c->getDirectCallee();
         if (!f) fail(c, "indirect calls are not supported yet");
+        if (annotated(f, "cli.string.chars")) {
+            if (c->getNumArgs() != 1 || type(c->getArg(0)->getType()) != "string") fail(c, "PtrToStringChars requires a String handle");
+            expr(c->getArg(0));
+            op("callvirt instance char& modreq([System.Runtime]System.Runtime.InteropServices.InAttribute) [System.Runtime]System.String::GetPinnableReference()", 1, 1);
+            return;
+        }
+        if (auto* method = dyn_cast<CXXMethodDecl>(f); method && !interior_element(context.getCanonicalTagType(method->getParent())).isNull()) {
+            const Expr* receiver = nullptr;
+            if (auto* member = dyn_cast<CXXMemberCallExpr>(c)) receiver = member->getImplicitObjectArgument();
+            else if (auto* operation = dyn_cast<CXXOperatorCallExpr>(c)) receiver = operation->getArg(0);
+            if (!receiver) fail(c, "managed pointer operation lacks a receiver");
+            expr(receiver);
+            if (isa<CXXConversionDecl>(method) && pinned(receiver->getType())) op("conv.u", 1, 1);
+            else if (method->getOverloadedOperator() == OO_Star) op("ldobj " + type(interior_element(receiver->getType())), 1, 1);
+            else fail(c, "unsupported managed pointer operation");
+            return;
+        }
         if (auto* subscript = array_subscript(c)) {
             expr(array_receiver(subscript)); expr(subscript->getArg(1)); op("ldelem " + type(subscript->getType()), 2, 1); return;
         }
@@ -994,7 +1112,11 @@ class Emitter {
     void expr(const Expr* original) {
         const Expr* e = strip(original);
         if (auto* c = dyn_cast<ImplicitCastExpr>(e)) {
-            if (c->getCastKind() == CK_NullToPointer && handle_target(c->getType())) { op("ldnull", 0, 1); return; }
+            if (c->getCastKind() == CK_NullToPointer) {
+                if (handle_target(c->getType())) op("ldnull", 0, 1);
+                else { op("ldc.i4.0", 0, 1); op("conv.u", 1, 1); }
+                return;
+            }
             expr(c->getSubExpr());
             if (c->getCastKind() == CK_PointerToBoolean && handle_target(c->getSubExpr()->getType())) {
                 op("ldnull", 0, 1); op("ceq", 2, 1); op("ldc.i4.0", 0, 1); op("ceq", 2, 1); return;
@@ -1003,7 +1125,9 @@ class Emitter {
             else if (c->getCastKind() == CK_IntegralCast || c->getCastKind() == CK_IntegralToFloating || c->getCastKind() == CK_FloatingCast || c->getCastKind() == CK_FloatingToIntegral) {
                 numeric_conversion(c->getType());
             } else if (c->getCastKind() != CK_LValueToRValue && c->getCastKind() != CK_NoOp && c->getCastKind() != CK_ArrayToPointerDecay && c->getCastKind() != CK_FunctionToPointerDecay &&
-                       !(c->getCastKind() == CK_ConstructorConversion && handle_target(c->getType())) &&
+                       !(c->getCastKind() == CK_ConstructorConversion && (handle_target(c->getType()) || !interior_element(c->getType()).isNull())) &&
+                       !(c->getCastKind() == CK_UserDefinedConversion && c->getType()->isPointerType()) &&
+                       !(c->getCastKind() == CK_BitCast && c->getType()->isPointerType() && !handle_target(c->getType())) &&
                        !((c->getCastKind() == CK_DerivedToBase || c->getCastKind() == CK_UncheckedDerivedToBase || c->getCastKind() == CK_NullToPointer) && handle_target(c->getType())))
                 fail(c, std::string("unsupported implicit conversion: ") + c->getCastKindName());
             return;
@@ -1089,6 +1213,15 @@ class Emitter {
         }
         if (auto* c = dyn_cast<CallExpr>(e)) { call(c); return; }
         if (auto* c = dyn_cast<CXXConstructExpr>(e)) {
+            if (!interior_element(c->getType()).isNull()) {
+                if (c->getNumArgs() != 1) fail(c, "managed pointer construction requires one address");
+                auto* arg = strip(c->getArg(0))->IgnoreParenImpCasts();
+                if (isa<CXXNullPtrLiteralExpr>(arg)) { op("ldc.i4.0", 0, 1); op("conv.u", 1, 1); }
+                else if (!interior_element(arg->getType()).isNull()) expr(arg);
+                else if (auto* unary = dyn_cast<UnaryOperator>(arg); unary && unary->getOpcode() == UO_AddrOf) address(unary->getSubExpr());
+                else fail(c, "pin_ptr/interior_ptr requires a managed address, not an untracked native pointer");
+                return;
+            }
             if (value_target(c->getType())) {
                 if (annotated(c->getConstructor(), "cli.value.zero")) {
                     unsigned slot = temporary(type(c->getType()));
@@ -1115,8 +1248,12 @@ class Emitter {
             expr(arg); return;
         }
         if (auto* u = dyn_cast<UnaryOperator>(e)) {
+            if (u->getOpcode() == UO_Deref && !handle_target(u->getSubExpr()->getType())) {
+                expr(u->getSubExpr()); op("ldobj " + type(u->getType()), 1, 1); return;
+            }
             if (u->isIncrementDecrementOp()) {
                 if (handle_target(u->getSubExpr()->getType())) fail(u, "managed handles cannot be incremented");
+                if (u->getSubExpr()->getType()->isPointerType()) fail(u, "unmanaged pointer arithmetic and ordering are not enabled yet");
                 if (auto* subscript = array_subscript(u->getSubExpr())) {
                     auto slots = capture_array(subscript); load_array_location(slots);
                     std::string element = type(subscript->getType());
@@ -1202,7 +1339,20 @@ class Emitter {
     void statement(const Stmt* s) {
         if (!s || isa<NullStmt>(s)) return;
         int before = stack;
-        if (auto* block = dyn_cast<CompoundStmt>(s)) { for (auto* child : block->body()) statement(child); }
+        if (auto* block = dyn_cast<CompoundStmt>(s)) {
+            std::vector<const VarDecl*> pins;
+            for (auto* child : block->body()) if (auto* declarations = dyn_cast<DeclStmt>(child))
+                for (auto* d : declarations->decls()) if (auto* v = dyn_cast<VarDecl>(d); v && pinned(v->getType())) pins.push_back(v);
+            std::string done;
+            if (!pins.empty()) { done = label(); code << "    .try {\n"; ++exception_depth; }
+            for (auto* child : block->body()) statement(child);
+            if (!pins.empty()) {
+                op("leave " + done); --exception_depth;
+                code << "    } finally {\n";
+                for (auto* pin : pins) { op("ldc.i4.0", 0, 1); op("conv.u", 1, 1); op("stloc " + std::to_string(locals.at(pin)), 1); }
+                op("endfinally"); code << "    }\n"; mark(done);
+            }
+        }
         else if (auto* d = dyn_cast<DeclStmt>(s)) {
             for (auto* decl : d->decls()) {
                 auto* v = cast<VarDecl>(decl);
@@ -1278,8 +1428,8 @@ class Emitter {
     void validate_native_signature(const FunctionDecl* f) const {
         auto valid = [&](QualType t, bool result) {
             if (result && t->isVoidType()) return;
-            if ((!t->isIntegerType() && !t->isRealFloatingType()) || t->isBooleanType())
-                throw std::runtime_error("native bridge signatures currently require integer/floating scalars; bool and managed/pointer marshalling are not enabled");
+            if ((!t->isIntegerType() && !t->isRealFloatingType() && !t->isPointerType()) || t->isBooleanType() || handle_target(t))
+                throw std::runtime_error("native bridge signatures require scalars or unmanaged pointers; bool and managed/pointer marshalling are not enabled");
             type(t);
         };
         valid(f->getReturnType(), true);
@@ -1289,6 +1439,8 @@ class Emitter {
             throw std::runtime_error("native bridge requires a non-variadic extern-C function using the platform C ABI");
     }
     FunctionIR function(FunctionDecl* f) {
+        if (pinned(f->getReturnType())) throw std::runtime_error("pin_ptr is restricted to block-scoped locals");
+        for (auto* p : f->parameters()) if (pinned(p->getType())) throw std::runtime_error("pin_ptr is restricted to block-scoped locals");
         if (native_function(f)) {
             validate_native_signature(f);
             return {method_name(f), "", type(f->getReturnType()), false, 0, "", ""};
@@ -1301,6 +1453,17 @@ class Emitter {
         if (f->isVariadic()) throw std::runtime_error("variadic managed functions are unsupported");
         for (unsigned i = 0; i < f->getNumParams(); ++i) parameters[f->getParamDecl(i)] = i + unsigned(instance);
         collect_locals(f->getBody());
+        std::set<const VarDecl*> block_pins;
+        std::function<void(const Stmt*)> find_pins = [&](const Stmt* s) {
+            if (!s) return;
+            if (auto* block = dyn_cast<CompoundStmt>(s)) for (auto* child : block->body())
+                if (auto* declarations = dyn_cast<DeclStmt>(child)) for (auto* d : declarations->decls())
+                    if (auto* v = dyn_cast<VarDecl>(d); v && pinned(v->getType())) block_pins.insert(v);
+            for (auto* child : s->children()) find_pins(child);
+        };
+        find_pins(f->getBody());
+        for (auto& entry : locals) if (pinned(entry.first->getType()) && !block_pins.count(entry.first))
+            fail(f->getBody(), "pin_ptr is restricted to block-scoped locals");
         if (auto* constructor = dyn_cast<CXXConstructorDecl>(f)) {
             bool base_initialized = false;
             for (auto* init : constructor->inits()) {
@@ -1342,7 +1505,7 @@ class Emitter {
         for (auto& entry : locals) ordered[entry.second] = entry.first;
         for (unsigned i = 0; i < ordered.size(); ++i) {
             if (i) declarations += ", ";
-            declarations += "[" + std::to_string(i) + "] " + type(ordered[i]->getType()) + " 'local" + std::to_string(i) + "'";
+            declarations += "[" + std::to_string(i) + "] " + type(ordered[i]->getType()) + (pinned(ordered[i]->getType()) ? " pinned" : "") + " 'local" + std::to_string(i) + "'";
         }
         for (unsigned i = 0; i < temporary_types.size(); ++i) {
             if (!declarations.empty()) declarations += ", ";
@@ -1370,6 +1533,7 @@ public:
             if (is_interface(base->getParent()) && method->getAccess() != AS_public) throw std::runtime_error("implicit interface implementations must be public");
         }
         if (f->getReturnType()->isReferenceType()) throw std::runtime_error("returning tracking references is not enabled yet");
+        if (!interior_element(f->getReturnType()).isNull()) throw std::runtime_error("returning managed pointer intrinsics is not enabled yet");
         validate_declarator(f->getTypeSourceInfo());
         for (auto* p : f->parameters()) validate_declarator(p->getTypeSourceInfo());
         if (f->getType()->isDependentType() || f->getTemplatedKind() == FunctionDecl::TK_FunctionTemplate)
@@ -1389,7 +1553,7 @@ public:
             if (classes > 1 || (is_interface(r) && classes)) throw std::runtime_error("a managed class permits one class base and interfaces only");
             if (is_interface(r) && !r->field_empty()) throw std::runtime_error("interface instance fields are forbidden");
             for (const auto& base : r->bases()) record_name(base.getType()->getAsCXXRecordDecl());
-            for (auto* field : r->fields()) { if (field->getType()->isReferenceType()) throw std::runtime_error("tracking reference fields are not enabled yet"); type(field->getType()); validate_declarator(field->getTypeSourceInfo()); }
+            for (auto* field : r->fields()) { if (field->getType()->isReferenceType() || !interior_element(field->getType()).isNull()) throw std::runtime_error("tracking reference and managed pointer fields are not enabled yet"); type(field->getType()); validate_declarator(field->getTypeSourceInfo()); }
             if (!is_interface(r) && !(annotated(r, "cli.abstract") && annotated(r, "cli.sealed"))) {
                 auto* ctor = ci.getSema().LookupDefaultConstructor(r);
                 if (ctor && ctor->isImplicit() && !ctor->isDeleted() && !ctor->hasBody())
@@ -1434,7 +1598,15 @@ public:
         }
         if (!entry && options.target == "exe") throw std::runtime_error("missing global int main() entry point");
         std::ostringstream il;
-        il << metadata.externs << ".assembly '" << options.assembly << "' {}\n.module '" << options.assembly << ".dll'\n";
+        il << metadata.externs << ".assembly '" << options.assembly << "' {";
+        if (!options.public_key.empty()) {
+            if (options.public_key.size() % 2 || options.public_key.find_first_not_of("0123456789abcdefABCDEF") != std::string::npos)
+                throw std::runtime_error("invalid assembly public key");
+            il << " .publickey = (";
+            for (size_t i = 0; i < options.public_key.size(); i += 2) il << options.public_key.substr(i, 2) << ' ';
+            il << ") .hash algorithm 0x8004";
+        }
+        il << " }\n.module '" << options.assembly << ".dll'\n";
         if (!native_library.empty()) il << ".module extern '" << native_library << "'\n";
         auto emit_function = [&](size_t i) {
             auto* f = functions[i]; auto& body = ir[i];

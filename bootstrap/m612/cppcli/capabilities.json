@@ -24,7 +24,7 @@
     "Field updates evaluate side-effectful receivers exactly once",
     "Ordinary C++ function template instantiations with type and integral parameters",
     "Short-circuit logical operators and conditional expressions",
-    "Active quoted/angle #using directives in the primary source file",
+    "Active quoted/angle #using directives in main files and transitively included headers, including macro paths and continued directive names",
     "Importing and calling a source-built C++/CLI library",
     "Instance properties and auto-properties using Clang MSPropertyDecl/PseudoObjectExpr",
     "Property compound assignments preserve receiver/getter/setter evaluation order",
@@ -51,7 +51,16 @@
     "Private Clang parser distinguishes tracking-reference declarators (%) from ordinary remainder expressions",
     "CLR byref method parameters and local aliases to scalar/value/object locals, fields and array elements",
     "Imported byref signatures and C# ref parameter interoperability",
-    "Source-built Windows Forms framework selection with --framework windowsforms and a real generated C++/CLI Form window"
+    "Source-built Windows Forms framework selection with --framework windowsforms and a real generated C++/CLI Form window",
+    "Validated #using as_friend imports of internal types/members with exact output assembly name and full public-key identity",
+    "Public-key assembly identity emission and source-built CoreCLR friend-access checks; private/protected access remains enforced",
+    "Default gcnew allocation without parentheses uses Clang constructor resolution",
+    "System-header source markers preserved across token adaptation and reparsing",
+    "vcclr.h intrinsic declarations backed by CLR pinned locals and managed interior byrefs for primitive elements",
+    "Pinned string characters and managed array elements passed as raw pointers to split native DLLs",
+    "Pin scopes clear pinned slots in CLR finally regions, including early returns and exceptions",
+    "Concurrent compacting-GC validation during native UTF-16 string reads and array mutation",
+    "Selectable C++14/17/20 source language modes (C++17 default)"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -60,17 +69,16 @@
     "No CLI generics, delegates, events yet",
     "No mixed-mode PE output or ijwhost integration yet",
     "Unsupported AST nodes are errors; this is not a conforming general C++/CLI compiler",
-    "#using directives in included headers are not shimmed yet",
     "Properties currently cover non-indexed instance members; indexed and static properties are not enabled",
     "Interface surrogates use C++ abstract bases; interface-only classes need an explicit Object base for Object upcasts",
     "Interface declarations currently permit ordinary method declarations only; named/explicit interface implementations are not enabled",
     "Managed arrays currently require rank one; no aggregate initializers or covariance",
     "Managed destructors/finalizers, covariance metadata and managed operator metadata are explicitly rejected",
-    "Native bridges currently require extern-C scalar functions; no pointers, bool/string marshalling, callbacks or automatic native partitioning",
+    "Native bridges require extern-C scalars or unmanaged pointers; bool/automatic marshalling, callbacks and automatic native partitioning are not enabled",
     "Implicit boxing, static field initialization and multi-translation-unit linking are not implemented",
     "WPF DirectWriteForwarder and System.Printing are not compiled by this frontend yet",
     "Value classes currently exclude nested types, bases/interfaces, virtual methods, native pointer fields and custom zero-argument constructors",
     "Boxing currently uses explicit safe_cast to Object; boxed value handles, constrained dispatch and implicit boxing are not implemented",
-    "Tracking references currently exclude constructors, fields, byref returns, pinning and interior_ptr"
+    "Tracking references exclude constructors, fields and byref returns; pin_ptr is limited to initialized primitive block locals, and interior_ptr to primitive addresses/read dereferences; managed pointer assignments, unmanaged pointer arithmetic and intrinsic returns are not implemented"
   ]
 }

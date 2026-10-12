@@ -59,8 +59,12 @@ step_test-core() {
   run_case hello "$here/cli-poc/hello.cpp" 'Hello from C++/CLI through a GCC plugin!'
   run_case control "$src/tests/control.cpp" $'13\ncontrol OK\nUnicode: λ 😀'
   run_case macros "$src/tests/control.cpp" $'8\ncontrol OK\nUnicode: λ 😀' -D LIMIT=5
+  run_case language14 "$src/tests/control.cpp" $'13\ncontrol OK\nUnicode: λ 😀' --std c++14
   run_case overloads "$src/tests/overloads.cpp" $'5\n10\nFalse\ntext'
   run_case templates "$src/tests/templates.cpp" $'14\n5\n7'
+  run_case system-header "$src/tests/system-header.cpp" 'system header OK'
+  reject_case system-user-specialization '#include "system-header.hpp"
+template<> struct SystemTrait<float> {}; int main() { return 0; }' 'cannot be specialized' -I "$(cygpath -m "$src/tests")"
   run_case numeric "$src/tests/numeric.cpp" $'5000000002\n5000000004\nTrue\nFalse\nFalse\nFalse\nFalse\nTrue'
   reject_case handle-arithmetic 'public ref class Box {}; int main() { Box^ b = gcnew Box(); Box^ c = b + 1; return 0; }' 'managed handle arithmetic'
   reject_case handle-increment 'public ref class Box {}; int main() { Box^ b = gcnew Box(); ++b; return 0; }' 'handles cannot be incremented'
@@ -75,6 +79,12 @@ step_test-objects() {
   log "Managed constructors, fields, inheritance, handles and member calls"
   run_case objects "$src/tests/objects.cpp" $'8\n16\nTrue\nTrue\nTrue\nTrue\nFalse\ntyped literal\n1\n2'
   run_case evaluation "$src/tests/evaluation.cpp" $'receiver\n3\nreceiver\n3\nreceiver\n5\n5'
+  cat > "$testdir/default-gcnew.cpp" <<'EOF'
+using namespace System;
+public ref class DefaultBox { public: int Value = 23; };
+int main() { DefaultBox^ box = gcnew DefaultBox; Console::WriteLine(box->Value); return 0; }
+EOF
+  run_case default-gcnew "$testdir/default-gcnew.cpp" '23'
   compile "$(cygpath -m "$src/tests/library.cpp")" --target library -o "$(cygpath -m "$testdir/counter.dll")"
   mkdir -p "$testdir/consumer"
   cat > "$testdir/consumer/consumer.csproj" <<'EOF'
@@ -115,6 +125,7 @@ EOF
   reject_case bad-downcast 'using namespace System; public ref class Base {}; public ref class Derived : Base {}; int main() { Base^ b = gcnew Base(); Derived^ d = b; return 0; }' 'cannot initialize'
   reject_case private-field 'using namespace System; public ref class Box { int hidden; }; int main() { Box^ b = gcnew Box(); b->hidden = 1; return 0; }' 'private member'
   reject_case native-managed-pointer 'using namespace System; public ref class Box {}; int main() { Box* b = gcnew Box(); return 0; }' "native '\*' pointers"
+  reject_case boxed-value-handle 'public value struct Point { int X; }; int main() { Point^ boxed = nullptr; return 0; }' 'boxed value handles'
   reject_case missing-default-constructor 'public ref class B { public: B(int value) {} }; public ref class D : B {}; int main() { D^ d = gcnew D(); return 0; }' 'no matching function'
   reject_case missing-imported-constructor 'using namespace System; int main() { Console^ c = gcnew Console(); return 0; }' 'no public metadata constructor'
   log "PASS test-objects: managed identity and Clang constructor/member checking"
@@ -122,6 +133,74 @@ EOF
 step_test-adapter-gate() {
   log "Scope lookup must distinguish a shadowed managed type name from native XOR"
   run_case scope-xor "$src/tests/scope-xor.cpp" '4'
+}
+step_test-references() {
+  log "Included-header #using, macro paths, friend identity and CLR access checks"
+  mkdir -p "$testdir/friend-source" "$testdir/includes/nested"
+  /usr/bin/python3 - "$here/keys" "$testdir/friend-source" <<'PY'
+from pathlib import Path
+import sys
+key = bytes.fromhex(next(Path(sys.argv[1]).glob('MSShared-*.pubkey.hex')).read_text())
+dest = Path(sys.argv[2])
+(dest/'key.snk').write_bytes(key)
+(dest/'Api.cs').write_text('''using System.Runtime.CompilerServices;
+[assembly: InternalsVisibleTo("FriendBridge, PublicKey=''' + key.hex() + '''")]
+namespace FriendApi {
+internal class SecretApi { internal static int Read() => 40; }
+public class PublicApi { internal static int Extra() => 2; private static int Hidden() => 7; protected static int Protected() => 9; }
+}
+''')
+PY
+  cat > "$testdir/friend-source/FriendLibrary.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><EnableNETAnalyzers>false</EnableNETAnalyzers><SignAssembly>true</SignAssembly><PublicSign>true</PublicSign><AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile></PropertyGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/friend-source/FriendLibrary.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -p:NuGetAudit=false
+  cp "$testdir/friend-source/bin/Debug/net8.0/FriendLibrary.dll" "$testdir/"
+  cat > "$testdir/includes/nested/reference.hpp" <<'EOF'
+#pragma once
+#if 0
+#using "must-not-exist.dll" as_friend
+#endif
+/* #using "comment.dll" */
+// #using "comment2.dll"
+#us\
+ing FRIEND_DLL as_friend
+#warning header-reference-source-manager-check
+EOF
+  cat > "$testdir/includes/outer.hpp" <<'EOF'
+#pragma once
+#include "nested/reference.hpp"
+#include "nested/reference.hpp"
+EOF
+  cat > "$testdir/friend.cpp" <<'EOF'
+#include "includes/outer.hpp"
+using namespace System;
+int main() { Console::WriteLine(FriendApi::SecretApi::Read() + FriendApi::PublicApi::Extra()); return 0; }
+EOF
+  local friend_dll key
+  friend_dll=$(cygpath -m "$testdir/FriendLibrary.dll")
+  key=$(cygpath -m "$testdir/friend-source/key.snk")
+  run_case friend-bridge "$testdir/friend.cpp" '42' --assembly-name FriendBridge --public-key "$key" \
+    --type FriendApi.SecretApi --type FriendApi.PublicApi -D "FRIEND_DLL=\"$friend_dll\""
+  /usr/bin/python3 - "$testdir/friend-bridge.dll.work/references.json" <<'PY'
+import json, sys
+refs = json.load(open(sys.argv[1], encoding='utf-8'))
+assert len(refs) == 1 and refs[0]['as_friend'] and refs[0]['source'].replace('\\', '/').endswith('/includes/nested/reference.hpp'), refs
+PY
+  reject_case wrong-friend '#using "FriendLibrary.dll" as_friend
+int main() { return 0; }' 'InternalsVisibleTo matching output assembly name and public key' --public-key "$key"
+  reject_case wrong-friend-key '#using "FriendLibrary.dll" as_friend
+int main() { return 0; }' 'InternalsVisibleTo matching output assembly name and public key' --assembly-name FriendBridge
+  reject_case internal-without-friend '#using "FriendLibrary.dll"
+int main() { return 0; }' 'imported type is internal' --type FriendApi.SecretApi
+  reject_case friend-private '#using "FriendLibrary.dll" as_friend
+int main() { return FriendApi::PublicApi::Hidden(); }' 'no member named' --assembly-name FriendBridge --public-key "$key" --type FriendApi.PublicApi
+  reject_case friend-protected '#using "FriendLibrary.dll" as_friend
+int main() { return FriendApi::PublicApi::Protected(); }' 'protected member' --assembly-name FriendBridge --public-key "$key" --type FriendApi.PublicApi
+  reject_case using-suffix '#using "FriendLibrary.dll" nonsense
+int main() { return 0; }' 'unexpected tokens after #using'
+  log "PASS test-references: included directives and signed friend calls run on CoreCLR"
 }
 step_test-properties() {
   run_case properties "$src/tests/properties.cpp" $'set\nget\n4\nreceiver\nget\nset\nget\n6\n7\nproperty finally\n2'
@@ -249,6 +328,64 @@ EOF
   reject_case native-bool 'extern "C" bool NativeFlag(); int main() { NativeFlag(); return 0; }' 'bool and managed/pointer marshalling' --native-library cppcli-native.dll
   reject_case native-variadic 'extern "C" int NativePrint(int value, ...); int main() { return NativePrint(1, 2); }' 'non-variadic' --native-library cppcli-native.dll
   reject_case unbound-native 'extern "C" int NativeSum(int, int); int main() { return NativeSum(1, 2); }' 'without an emitted definition'
+}
+step_test-pinning() {
+  log "CLR pinned locals and moving-GC interior pointers across MinGW native calls"
+  /clang64/bin/clang++.exe -std=c++17 -shared -O2 "$src/tests/pinning-native.cpp" -o "$testdir/cppcli-pinning.dll"
+  compile "$(cygpath -m "$src/tests/pinning.cpp")" --target library --native-library cppcli-pinning.dll \
+    --type System.GC --type System.InvalidOperationException -o "$(cygpath -m "$testdir/pinning.dll")"
+  mkdir -p "$testdir/pinning-consumer"
+  cat > "$testdir/pinning-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers></PropertyGroup><ItemGroup><Reference Include="pinning"><HintPath>../pinning.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  cat > "$testdir/pinning-consumer/Program.cs" <<'EOF'
+using System;
+using System.Linq;
+using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
+var chars = "café 東京 😀".ToCharArray();
+int collections = 0;
+using var stop = new CancellationTokenSource();
+var collector = Task.Run(() => {
+    while (!stop.IsCancellationRequested) {
+        for (int j = 0; j < 128; ++j) GC.KeepAlive(new byte[4096]);
+        GC.Collect(2, GCCollectionMode.Forced, blocking: true, compacting: true);
+        Interlocked.Increment(ref collections);
+    }
+});
+try {
+    for (int i = 0; i < 5; ++i) {
+        var text = new string(chars); // No interned or permanently pinned literal.
+        ushort[] data = { 65535, 0 };
+        int before = Volatile.Read(ref collections);
+        if (PinBridge.Read(text, data) != 42 || data[1] != 65530) throw new Exception("native pinning corrupted managed data");
+        if (Volatile.Read(ref collections) <= before) throw new Exception("no compacting collection during native call");
+        if (PinBridge.Early(text) != 'c' || PinBridge.Alias(new[] { 1, 99 }) != 99) throw new Exception("managed pointer read failed");
+        try { PinBridge.Fail(text); throw new Exception("missing pinned-scope exception"); }
+        catch (InvalidOperationException) { }
+        if (PinBridge.Loop(new[] { 1, 2, 3 }) != 4) throw new Exception("pin scope loop control failed");
+    }
+} finally { stop.Cancel(); collector.GetAwaiter().GetResult(); }
+var body = typeof(PinBridge).GetMethod("Read").GetMethodBody();
+if (body.LocalVariables.Count(v => v.IsPinned) != 2 || !body.ExceptionHandlingClauses.Any(c => c.Flags == ExceptionHandlingClauseOptions.Finally))
+    throw new Exception("missing pinned locals or scope cleanup");
+Console.WriteLine("pinning and moving GC OK");
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/pinning-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -p:NuGetAudit=false
+  cp "$testdir/cppcli-pinning.dll" "$testdir/pinning-consumer/bin/Debug/net8.0/"
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/pinning-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case pin-native '#include <vcclr.h>
+int main() { int* raw = nullptr; pin_ptr<int> pin = raw; return 0; }' 'requires a managed address' --native-library cppcli-pinning.dll
+  reject_case pin-parameter '#include <vcclr.h>
+int Read(pin_ptr<int> value) { return *value; } int main() { return 0; }' 'restricted to block-scoped locals'
+  reject_case pin-for-scope '#include <vcclr.h>
+int main() { int n = 1; for (pin_ptr<int> p = &n; n < 3; ++n) {} return 0; }' 'restricted to block-scoped locals'
+  reject_case pointer-arithmetic 'extern "C" int* Raw(); int main() { int* value = Raw(); value++; return 0; }' 'unmanaged pointer arithmetic' --native-library cppcli-pinning.dll
+  reject_case interior-return '#include <vcclr.h>
+interior_ptr<int> Escape() { int n = 1; return &n; } int main() { return 0; }' 'returning managed pointer intrinsics'
+  log "PASS test-pinning: Unicode strings and mutable arrays survive concurrent compacting GC in native calls"
 }
 step_test-enums() {
   run_case enums "$src/tests/enums.cpp" $'2\n-5\n5000000002\n5\n1' --type System.DayOfWeek
