@@ -1852,6 +1852,12 @@ class Emitter {
             if (c->getNumArgs() != 1 || !isa<StringLiteral>(c->getArg(0)->IgnoreParenImpCasts())) fail(c, "invalid string literal marker");
             expr(c->getArg(0)); return;
         }
+        if (f->getNameAsString() == "__cli_empty_params") {
+            auto* target = handle_target(c->getType());
+            auto element = target ? array_element(target) : QualType();
+            if (c->getNumArgs() || element.isNull()) fail(c, "empty parameter-array marker requires a rank-one managed array result");
+            op("ldc.i4.0", 0, 1); op("newarr " + type(element), 1, 1); return;
+        }
         if (f->getNameAsString() == "__cli_typeid") {
             auto* arguments = f->getTemplateSpecializationArgs();
             if (c->getNumArgs() || !arguments || arguments->size() != 1 || arguments->get(0).getKind() != TemplateArgument::Type)

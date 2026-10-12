@@ -124,7 +124,8 @@
     "Contextual literal adaptation for directly named source/imported constructors preserves managed String overloads in ordinary bodies, accessors and static initializers",
     "Implicit Object bases for source classes whose directly named bases are known CLI interfaces, preserving CLR Object identity and interface dispatch",
     "Imported nonindexed static properties expose public accessors and bind real getter/setter metadata, including Thread.CurrentThread and CultureInfo.InvariantCulture",
-    "Typed source method binding to selected imported delegates, including System.Action and delegates from a second CLI assembly"
+    "Typed source method binding to selected imported delegates, including System.Action and delegates from a second CLI assembly",
+    "Imported ParamArrayAttribute permits omitted rank-one arrays in methods/constructors, emitting fresh empty CLR arrays and preserving ordinary overload preference and explicit/null arrays"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -154,7 +155,8 @@
     "Native SDK calls are not automatically partitioned; native record pointers remain opaque native addresses, and native integer boxes remain unsupported",
     "Delegate support currently excludes nested/generic declarations, open-instance/value-instance binding, source combine/remove expressions and general delegate attributes; imported binding requires an available supported Invoke signature; open-instance and value-instance binding remain unsupported",
     "Managed typeid does not emit native record/enum RTTI metadata and rejects undefined source records; ReliabilityContract currently covers individual method/accessor attributes, with no added runtime CER guarantee",
-    "Imported base chains must be explicitly selected; parameter-array expansion, optional imported arguments and primitive static members such as Double.MinValue remain unsupported",
-    "Imported static property facades expose public accessors only; protected accessors require their original method names and retain Clang access checks"
+    "Imported base chains must be explicitly selected; nonempty parameter-array expansion, optional imported arguments and primitive static members such as Double.MinValue remain unsupported",
+    "Imported static property facades expose public accessors only; protected accessors require their original method names and retain Clang access checks",
+    "Parameter arrays currently support omission and explicit arrays only; source ParamArray declarations and expansion of individual arguments remain unsupported"
   ]
 }

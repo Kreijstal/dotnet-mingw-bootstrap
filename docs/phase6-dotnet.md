@@ -1777,8 +1777,9 @@ Native declaration visibility and text-analysis delegates are now supported (see
 Managed type tokens/reliability metadata and the associated imports now pass
 (see §22). The full gate now passes Factory's private constructor access, concrete Object
 upcasts, String constructor literals, imported static properties and Action binding
-(see §23). It next fails on Dispatcher.BeginInvoke's omitted parameter array.
-Primitive static members and native operations also remain unsupported. Native record
+(see §23). Omitted parameter arrays and Factory's actual dispatcher scheduling
+expression now compile and execute (see §24). The full gate next fails on
+System.Double static members in Font.cpp; native operations also remain unsupported. Native record
 emission, managed class templates, callbacks, finalizers and automatic native
 partitioning also remain outside its supported subset.
 The same compiler failure can be reproduced with `wpf.sh bridge-gate`; it
@@ -2691,3 +2692,70 @@ version/protocol matching, WindowsDesktop packaging and current Greenshot remain
 unfinished. All new compiler features are in the development frontend; installed
 frontend packages are unchanged. Logs are archived under
 `tmp/wpf8-support/validation/factory-allocation-20261012` on the local build host.
+
+
+## 24. Imported empty parameter arrays and Factory dispatcher execution
+
+The next 2026-10-12 continuation reads ParamArrayAttribute from the imported
+method's final parameter and verifies that it is a rank-one array. The metadata
+facade retains the ordinary full-array declaration and adds a template declaration
+with a typed default expression for the omitted array. Clang selects the ordinary
+method when conversions are equal, while a more specific fixed parameter in a
+params form can still win. This avoids the Console.WriteLine(String) ambiguity
+that a default argument on the ordinary params declaration would introduce.
+Both declarations refer to the same original CLR method or constructor identity;
+no generic method is emitted for the template facade.
+
+The default expression emits length zero followed by newarr for the actual
+element type, so each omitted array is fresh and nonnull. Existing supplied arrays
+and explicit null arguments are passed through. Required ordinary array parameters
+remain required. Expansion of individual arguments, source params declarations
+and general imported optional arguments remain unsupported and are not claimed.
+
+`cppcli.sh test-paramarrays` builds a C# fixture with the source-built SDK and
+calls it through the frontend. It checks primitive/reference/String arrays,
+static/instance methods, constructor omission and explicit arrays, inherited
+virtual dispatch, null distinction, distinct empty arrays across calls, and both
+ordinary-overload preference and the more-specific params overload. Negative
+checks reject omission of an ordinary array and unsupported individual argument
+expansion. `test-core` verifies the Console overloads and existing preprocessing,
+control flow and primitive operations after this metadata facade change.
+
+`tools/wpf-dispatcher-check.py` copies Factory.cpp's original dispatcher lookup
+and its exact `_timeStampCacheCleanupOp = currentDispatcher->BeginInvoke(gcnew
+Action(CleanupTimeStampCache));` statement into a small probe. Its replacement
+callback records a count and thread ID; it does not claim to implement the font
+cache. `wpf.sh check-factory-dispatcher` compiles that expression against the
+source-built WindowsBase, then runs a C# consumer with the source-built CoreCLR
+and the existing PresentationNative Win32 subset. The consumer verifies that the
+operation initially remains pending, forces a GC cycle, pumps a real dispatcher
+frame, and checks completion once on the dispatcher thread. A repeated scheduling
+operation also completes. The offline project includes the source-built WindowsBase
+OOB dependency closure, including ConfigurationManager needed by its compatibility
+preferences; no Microsoft binary package is used.
+
+Validation on win11:
+
+```sh
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-paramarrays test-core
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  WPF_CPPCLI_BUILD=/home/topkek/dotnetboot/m612/build/cppcli \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-factory-dispatcher bridge-gate
+```
+
+The rebuild and focused checks pass, with zero managed build warnings/errors;
+the WPF consumer prints `upstream WPF Factory dispatcher scheduling OK`.
+The complete bridge gate still fails and deliberately returns nonzero: its first
+error is now Font.cpp:23, `System::Double::MinValue`, followed by primitive static
+methods, NumberStyles/imports, Guid literal construction, KeyValuePair boxing,
+generic out-of-line properties and native operations. Factory.cpp has no Clang
+errors in this gate, but no complete Factory implementation assembly is emitted.
+The complete-file count therefore remains one of the 21 included implementation
+bodies, and the full DirectWriteForwarder/System.Printing bridges, higher WPF,
+complete native exports, version/protocol checks, WindowsDesktop packaging and
+current Greenshot remain unfinished. Logs and the generated probe/IL are archived
+under `tmp/wpf8-support/validation/paramarrays-20261012` on the local build host.

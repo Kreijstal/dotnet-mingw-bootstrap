@@ -349,6 +349,42 @@ EOF
   timeout 30 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/FontSimulationsCheck.dll")"
 }
 
+step_check_factory_dispatcher() {
+  initialize
+  local work=$build/factory-dispatcher-check
+  local core_refs=("$sdk"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
+  local core_ref=${core_refs[-1]}
+  mkdir -p "$work"
+  /usr/bin/python3 "$here/tools/wpf-dispatcher-check.py" "$source" "$work/FactoryDispatch.cpp"
+  bridge_compile "$(cygpath -m "$work/FactoryDispatch.cpp")" --target library --std c++14 \
+    --ilasm "$(cygpath -m /clang64/bin/ilasm-dotnet.exe)" \
+    --type System.Delegate --type System.MulticastDelegate --type System.Action --type System.Threading.Thread \
+    --type System.Windows.Threading.Dispatcher --type System.Windows.Threading.DispatcherOperation \
+    --reference "$(cygpath -m "$core_ref/System.Threading.Thread.dll")" \
+    --reference "$(cygpath -m "$build/lib/WindowsBase.dll")" -o "$(cygpath -m "$work/FactoryDispatch.dll")"
+  cp "$here/wpf-tests/FactoryDispatch.cs" "$work/Program.cs"
+  /usr/bin/python3 - "$work" "$build/lib" "$oob" <<'PYDISPATCHPROJECT'
+from pathlib import Path
+import subprocess, sys, xml.etree.ElementTree as E
+work, lib, oob = map(Path, sys.argv[1:])
+def win(p): return subprocess.check_output(['cygpath','-m',str(p.resolve())],text=True).strip()
+root=E.Element('Project',Sdk='Microsoft.NET.Sdk'); pg=E.SubElement(root,'PropertyGroup')
+for key,value in {'TargetFramework':'net8.0','OutputType':'Exe','UseAppHost':'false','EnableNETAnalyzers':'false','NuGetAudit':'false','UseSharedCompilation':'false'}.items(): E.SubElement(pg,key).text=value
+items=E.SubElement(root,'ItemGroup')
+for name,path in [('FactoryDispatch',work/'FactoryDispatch.dll'),('WindowsBase',lib/'WindowsBase.dll')]:
+    item=E.SubElement(items,'Reference',Include=name); E.SubElement(item,'HintPath').text=win(path)
+for name in ('System.Security.Permissions','System.IO.Packaging','System.Configuration.ConfigurationManager',
+             'System.Security.Cryptography.Xml','System.Security.Cryptography.ProtectedData',
+             'System.Diagnostics.EventLog','System.Windows.Extensions'):
+    item=E.SubElement(items,'Reference',Include=name); E.SubElement(item,'HintPath').text=win(oob/(name+'.dll'))
+E.ElementTree(root).write(work/'FactoryDispatchCheck.csproj',encoding='unicode')
+PYDISPATCHPROJECT
+  "$sdk/dotnet.exe" build "$(cygpath -m "$work/FactoryDispatchCheck.csproj")" -c Release \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -v:q
+  cp "$build/lib/PresentationNative_cor3.dll" "$work/bin/Release/net8.0/"
+  timeout 30 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/FactoryDispatchCheck.dll")"
+}
+
 step_check_metrics_layout() {
   initialize
   local work=$build/metrics-layout-check

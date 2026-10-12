@@ -75,6 +75,24 @@ template<> struct SystemTrait<float> {}; int main() { return 0; }' 'cannot be sp
   reject_case missing-return 'using namespace System; int broken() { int n = 0; } int main() { return broken(); }' 'does not return'
   log "PASS test-core: Clang parsing, metadata overloads, control flow, macros/includes, Unicode, negative checks"
 }
+step_test-paramarrays() {
+  log "Imported ParamArray metadata and omitted-array CLR calls"
+  mkdir -p "$testdir/paramarray-fixture"
+  cp "$src/tests/ParamArrayFixture.cs" "$testdir/paramarray-fixture/Fixture.cs"
+  cat > "$testdir/paramarray-fixture/fixture.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><AssemblyName>paramarray-fixture</AssemblyName><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/paramarray-fixture/fixture.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  cp "$testdir/paramarray-fixture/bin/Debug/net8.0/paramarray-fixture.dll" "$testdir/"
+  cp "$src/tests/paramarrays.cpp" "$testdir/paramarrays.cpp"
+  run_case paramarrays "$testdir/paramarrays.cpp" $'0\n-1\n17\n33\n0\n29\n2\nTrue\nTrue\nTrue\nprefix\n40\n17\n29\n29' --type ParamArrayFixture
+  reject_case paramarray-required '#using "paramarray-fixture.dll"
+int main() { return ParamArrayFixture::Required(); }' 'too few arguments' --type ParamArrayFixture
+  reject_case paramarray-expanded '#using "paramarray-fixture.dll"
+int main() { return ParamArrayFixture::Numbers(1, 2, 3); }' 'no matching function' --type ParamArrayFixture
+  log "PASS test-paramarrays: omitted/fresh arrays, explicit/null arguments, constructor and virtual dispatch"
+}
 step_test-constructors() {
   log "Managed allocation resolves constructors in their source access context"
   local refs=("$CPPCLI_SDK"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)

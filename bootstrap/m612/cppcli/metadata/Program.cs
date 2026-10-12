@@ -14,7 +14,9 @@ record CliType(string Il, string Cpp, string Kind, string Name = "") {
     public CliType[] Arguments { get; init; } = Array.Empty<CliType>();
 }
 record CliMethod(string Id, string Name, bool Static, CliType Return, CliType[] Parameters,
-                 bool Supported, int GenericArity, bool Virtual, bool Abstract, bool Final, string Access);
+                 bool Supported, int GenericArity, bool Virtual, bool Abstract, bool Final, string Access) {
+    public bool ParamArray { get; init; }
+}
 record CliField(string Name, CliType Type, bool Supported, string Access, bool Static, bool ReadOnly, string Id);
 record CliEnumMember(string Name, string Value);
 record CliProperty(string Name, CliType Type, string Getter, string Setter, bool Static, bool Supported) {
@@ -211,10 +213,18 @@ static class Program
                             !((md.Attributes & MethodAttributes.Static) != 0 && (md.Attributes & MethodAttributes.Virtual) != 0) &&
                             sig.ReturnType.Kind != "unsupported" && sig.ParameterTypes.All(p => p.Kind != "unsupported") &&
                             (mn == ".ctor" || ValidName(mn));
+                        bool paramArray = false;
+                        foreach (var ph in md.GetParameters()) {
+                            var parameter = r.GetParameter(ph);
+                            if (!parameter.GetCustomAttributes().Any(ah => AttributeType(r, r.GetCustomAttribute(ah).Constructor) == "System.ParamArrayAttribute")) continue;
+                            if (parameter.SequenceNumber != sig.ParameterTypes.Length || parameter.SequenceNumber == 0 || sig.ParameterTypes[^1].Kind != "array")
+                                throw new Exception("ParamArrayAttribute requires the final rank-one array parameter: " + name + "::" + mn);
+                            paramArray = true;
+                        }
                         methods.Add(new(id, mn, (md.Attributes & MethodAttributes.Static) != 0,
                             sig.ReturnType, sig.ParameterTypes.ToArray(), supported, sig.GenericParameterCount,
                             (md.Attributes & MethodAttributes.Virtual) != 0, (md.Attributes & MethodAttributes.Abstract) != 0,
-                            (md.Attributes & MethodAttributes.Final) != 0, memberAccess));
+                            (md.Attributes & MethodAttributes.Final) != 0, memberAccess) { ParamArray = paramArray });
                     }
                     var properties = new List<CliProperty>();
                     foreach (var ph in td.GetProperties())
@@ -301,6 +311,7 @@ static class Program
             header.WriteLine("namespace cli { template<class T, int Rank = 1> class array; class __attribute__((annotate(\"cli.finally\"))) __finally_marker {}; }");
             header.WriteLine("[[noreturn]] void __cli_end_finally();");
             header.WriteLine("template<class T> T* __cli_alloc(T*);");
+            header.WriteLine("template<class T> cli::array<T>* __cli_empty_params();");
             header.WriteLine("template<class T, class A> T __cli_safe_cast(A); template<class T, class A> T __cli_dynamic_cast(A);");
             header.WriteLine("template<class T> class __attribute__((annotate(\"cli.static.property.proxy\"))) __cli_static_property { public: operator T() const; T operator->() const; __cli_static_property& operator=(T); };");
             header.WriteLine("System::String* __cli_literal(const char*); System::String* __cli_literal(const wchar_t*);");
@@ -402,6 +413,19 @@ static class Program
                 if (m.Name == ".ctor") w.WriteLine(name + "(" + parameters + ");");
                 else w.WriteLine((m.Static ? "static " : cppVirtual && t.Kind != "value" ? "virtual " : "") + m.Return.Cpp + " " + cppMethod + "(" + parameters + ")" +
                     (m.Final && cppVirtual && t.Kind != "value" ? " final" : "") + (m.Abstract && cppVirtual && t.Kind != "value" && t.Kind != "interface" ? " = 0" : "") + ";");
+                if (m.ParamArray) {
+                    var element = m.Parameters[^1].Element ?? throw new Exception("parameter array has no element type: " + t.Name + "::" + m.Name);
+                    string omittedParameters = string.Join(", ", m.Parameters.Select((p, i) => p.Cpp + " __cli_p" + i +
+                        (i == m.Parameters.Length - 1 ? " = __cli_empty_params<" + element.Cpp + ">()" : "")));
+                    // Keep the normal array overload. A template facade adds
+                    // omission without tying an equally good ordinary overload:
+                    // Clang prefers the ordinary method for equal conversions.
+                    // Virtual/abstract flags belong to the real declaration;
+                    // this facade binds the same CLR member identity.
+                    w.Write(m.Access + ": template<class __cli_params_default = void> __attribute__((annotate(\"cli.import:" + Escape(m.Id) + "\"))) ");
+                    if (m.Name == ".ctor") w.WriteLine(name + "(" + omittedParameters + ");");
+                    else w.WriteLine((m.Static ? "static " : "") + m.Return.Cpp + " " + cppMethod + "(" + omittedParameters + ");");
+                }
             }
             var propertyFacades = new Dictionary<string, string>();
             foreach (var p in t.Properties.Where(p => p.Supported))
