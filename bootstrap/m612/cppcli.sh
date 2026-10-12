@@ -442,6 +442,22 @@ EOF
   reject_case native-exception 'int main() { try { throw 1; } catch (int value) { return value; } }' 'only managed handle'
   reject_case rethrow-outside-catch 'int main() { throw; }' 'rethrow requires'
 }
+step_test-native-arrays() {
+  /clang64/bin/clang++.exe -std=c++17 -shared -O2 "$src/tests/native-arrays-native.cpp" -o "$testdir/cppcli-native-arrays.dll"
+  run_case native-arrays "$src/tests/native-arrays.cpp" 'native array allocation, zeroing, pointer/POD stride, address/store/updates, GC and delete[] OK' \
+    --native-library cppcli-native-arrays.dll --type System.GC --type System.OverflowException
+  reject_case native-array-ctor 'struct Native { Native() {} int Value; }; int main() { Native* values = new Native[2]; return 0; }' 'trivial constructor'
+}
+step_test-compound() {
+  run_case compound "$src/tests/compound.cpp" 'compound flags, promotion/narrowing, signedness, floats and single RHS/receiver/index/pointer evaluation OK'
+  reject_case compound-native-enum 'enum class Flags { Low=1, High=2 }; int main() { Flags flags=Flags::Low; flags |= Flags::High; return 0; }' 'invalid operands'
+  reject_case compound-mixed-enum 'public enum class First { Low=1 }; public enum class Second { High=2 }; int main() { First flags=First::Low; flags |= Second::High; return 0; }' 'invalid operands'
+  reject_case compound-const-enum 'public enum class Flags { Low=1, High=2 }; int main() { const Flags flags=Flags::Low; flags |= Flags::High; return 0; }' 'invalid operands'
+  reject_case compound-pointer 'int main() { int value=0; int* pointer=&value; pointer+=1; return 0; }' 'unmanaged pointer arithmetic'
+}
+step_test-native-pins() {
+  run_case pin-native "$src/tests/pin-native.cpp" 'native pointer pin initialization, const parameters, managed/native reassignment and GC OK' --type System.GC
+}
 step_test-function-pointers() {
   /clang64/bin/clang++.exe -std=c++17 -shared -O2 "$src/tests/function-pointers-native.cpp" -o "$testdir/cppcli-function-pointers.dll"
   run_case function-pointers "$src/tests/function-pointers.cpp" 'native function pointer storage, returns, single callee evaluation, mixed ABI, references and outputs OK' \
@@ -456,7 +472,7 @@ step_test-native-allocation() {
   /clang64/bin/clang++.exe -std=c++17 -shared -O2 "$src/tests/native-allocation-native.cpp" -o "$testdir/cppcli-native-allocation.dll"
   run_case native-allocation "$src/tests/native-allocation.cpp" 'native scalar/POD allocation, UCRT ownership transfer, erased/null deletion, GC and initializer exceptions OK' \
     --native-library cppcli-native-allocation.dll --type System.GC --type System.InvalidOperationException
-  reject_case native-new-array 'int main() { int* values = new int[2]; delete[] values; return 0; }' 'native allocation currently requires a single'
+  reject_case native-new-array-init 'int main() { int* values = new int[2]{1,2}; delete[] values; return 0; }' 'only empty value initialization'
   reject_case native-new-nontrivial 'struct Native { Native() {} int Value; }; int main() { Native* value = new Native(); return 0; }' 'cannot execute a nontrivial native constructor'
   reject_case native-new-custom '#include <cstddef>
 struct Native { static void* operator new(std::size_t); int Value; }; int main() { Native* value = new Native(); return 0; }' 'custom native allocation operators'
@@ -734,8 +750,7 @@ EOF
     --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -p:NuGetAudit=false
   cp "$testdir/cppcli-pinning.dll" "$testdir/pinning-consumer/bin/Debug/net8.0/"
   "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/pinning-consumer/bin/Debug/net8.0/consumer.dll")"
-  reject_case pin-native '#include <vcclr.h>
-int main() { int* raw = nullptr; pin_ptr<int> pin = raw; return 0; }' 'requires a managed address' --native-library cppcli-pinning.dll
+  step_test-native-pins
   reject_case pin-parameter '#include <vcclr.h>
 int Read(pin_ptr<int> value) { return *value; } int main() { return 0; }' 'restricted to block-scoped locals'
   reject_case pin-for-scope '#include <vcclr.h>

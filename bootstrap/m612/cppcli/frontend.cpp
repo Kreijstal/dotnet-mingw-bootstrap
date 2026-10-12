@@ -1324,6 +1324,12 @@ class Emitter {
         return spec->getTemplateArgs()[0].getAsType();
     }
     bool pinned(QualType t) const { return record_annotated(t->getAsCXXRecordDecl(), "cli.pin"); }
+    const Expr* interior_dereference(const Expr* expression) const {
+        auto* call = dyn_cast<CXXOperatorCallExpr>(expression->IgnoreParenImpCasts());
+        if (!call || call->getOperator() != OO_Star || call->getNumArgs() != 1 ||
+            interior_element(call->getArg(0)->getType()).isNull()) return nullptr;
+        return call->getArg(0);
+    }
     QualType native_value_pointer(QualType t, const TypeSourceInfo* info) const {
         if (!t->isPointerType() || !value_target(t->getPointeeType()) ||
             !record_annotation(value_target(t->getPointeeType()), "cli.nativeint:").empty() || !info) return {};
@@ -1713,8 +1719,14 @@ class Emitter {
     bool boxable(QualType t) const {
         return value_target(t) || t->isEnumeralType() || t->isIntegerType() || t->isRealFloatingType();
     }
-    void numeric_conversion(QualType t) {
+    void numeric_conversion(QualType t, QualType source = {}) {
         std::string target = numeric_type(t), instruction;
+        if (!source.isNull()) {
+            if (auto* enumeration = source->getAs<EnumType>()) source = enumeration->getDecl()->getIntegerType();
+            if (source->isUnsignedIntegerType() && (target == "float32" || target == "float64")) op("conv.r.un", 1, 1);
+            if (source->isIntegerType() && context.getTypeSize(source) < 64 && (target == "int64" || target == "uint64"))
+                op(source->isUnsignedIntegerType() ? "conv.u8" : "conv.i8", 1, 1);
+        }
         if (target == "int8") instruction = "conv.i1";
         else if (target == "uint8") instruction = "conv.u1";
         else if (target == "int16") instruction = "conv.i2";
@@ -1954,6 +1966,8 @@ class Emitter {
     }
     void address(const Expr* original) {
         const Expr* e = strip(original)->IgnoreParenImpCasts();
+        if (auto* pointer = interior_dereference(e)) { expr(pointer); return; }
+        if (auto* subscript = dyn_cast<ArraySubscriptExpr>(e)) { native_array_address(subscript); return; }
         if (auto* unary = dyn_cast<UnaryOperator>(e); unary && unary->getOpcode() == UO_Deref && !native_value_pointer(unary->getSubExpr()).isNull()) {
             expr(unary->getSubExpr()); return;
         }
@@ -2087,6 +2101,7 @@ class Emitter {
     }
     void native_address(const Expr* original) {
         const Expr* e = strip(original)->IgnoreParenImpCasts();
+        if (auto* subscript = dyn_cast<ArraySubscriptExpr>(e)) { native_array_address(subscript); return; }
         if (native_guid_address(e)) return;
         if (auto* member = dyn_cast<MemberExpr>(e); member && native_field(dyn_cast<FieldDecl>(member->getMemberDecl()))) {
             native_field_address(member); return;
@@ -2134,6 +2149,16 @@ class Emitter {
         }
         fail(at, "unsupported declaration reference");
     }
+    void native_array_address(const ArraySubscriptExpr* subscript) {
+        auto base = subscript->getBase()->getType();
+        auto element = subscript->getType();
+        if (!base->isPointerType() || handle_target(base) || !native_storage(element) || element->isArrayType() || element->isFunctionType())
+            fail(subscript, "native subscripting requires a scalar or POD element and an unmanaged pointer");
+        expr(subscript->getBase()); expr(subscript->getIdx());
+        op(subscript->getIdx()->getType()->isUnsignedIntegerType() ? "conv.u" : "conv.i", 1, 1);
+        op("ldc.i8 " + std::to_string(context.getTypeSizeInChars(element).getQuantity()), 0, 1);
+        op("conv.u", 1, 1); op("mul", 2, 1); op("add", 2, 1);
+    }
     const CXXOperatorCallExpr* array_subscript(const Expr* e) const {
         auto* call = dyn_cast<CXXOperatorCallExpr>(e->IgnoreParenImpCasts());
         if (!call || call->getOperator() != OO_Subscript || call->getNumArgs() != 2) return nullptr;
@@ -2158,6 +2183,22 @@ class Emitter {
     }
     void store(const Expr* target, bool retain) {
         target = target->IgnoreParenImpCasts();
+        if (auto* pointer = interior_dereference(target)) {
+            auto token = type(target->getType());
+            unsigned value = temporary(token); op("stloc " + std::to_string(value), 1);
+            expr(pointer); op("ldloc " + std::to_string(value), 0, 1);
+            if (pinned(pointer->getType()) || target->getType().isVolatileQualified()) op("volatile.");
+            op("stobj " + token, 2);
+            if (retain) op("ldloc " + std::to_string(value), 0, 1); return;
+        }
+        if (auto* subscript = dyn_cast<ArraySubscriptExpr>(target)) {
+            auto token = type(subscript->getType());
+            unsigned value = temporary(token); op("stloc " + std::to_string(value), 1);
+            native_array_address(subscript); op("ldloc " + std::to_string(value), 0, 1);
+            if (subscript->getType().isVolatileQualified()) op("volatile.");
+            op("unaligned. 1"); op("stobj " + token, 2);
+            if (retain) op("ldloc " + std::to_string(value), 0, 1); return;
+        }
         if (auto* dereference = dyn_cast<UnaryOperator>(target); dereference && dereference->getOpcode() == UO_Deref &&
             (!handle_target(dereference->getSubExpr()->getType()) || !native_value_pointer(dereference->getSubExpr()).isNull())) {
             unsigned slot = temporary(type(target->getType()));
@@ -2223,43 +2264,104 @@ class Emitter {
             if (declaration) pointer_value(b->getRHS(), declaration); else expr(b->getRHS());
             store(b->getLHS(), true); return;
         }
-        if (b->isCompoundAssignmentOp()) {
+        if (auto* compound = dyn_cast<CompoundAssignOperator>(b)) {
+            if (b->getLHS()->getType()->isPointerType())
+                fail(b, "unmanaged pointer arithmetic and ordering are not enabled yet");
+            auto computation = compound->getComputationResultType();
+            bool unsigned_operation = computation->isUnsignedIntegerType();
             std::string operation;
             switch (b->getOpcode()) {
                 case BO_AddAssign: operation = "add"; break;
                 case BO_SubAssign: operation = "sub"; break;
                 case BO_MulAssign: operation = "mul"; break;
+                case BO_DivAssign: operation = unsigned_operation ? "div.un" : "div"; break;
+                case BO_RemAssign: operation = unsigned_operation ? "rem.un" : "rem"; break;
+                case BO_AndAssign: operation = "and"; break;
+                case BO_OrAssign: operation = "or"; break;
+                case BO_XorAssign: operation = "xor"; break;
+                case BO_ShlAssign: operation = "shl"; break;
+                case BO_ShrAssign: operation = compound->getComputationLHSType()->isUnsignedIntegerType() ? "shr.un" : "shr"; break;
                 default: fail(b, "unsupported compound assignment");
             }
+            // C++17 sequences the RHS before the LHS; this order is also valid
+            // for earlier modes. Capture both inputs rather than re-evaluating
+            // a field receiver, array index, or native dereference during store.
+            unsigned rhs = temporary(expression_type(b->getRHS()));
+            expr(b->getRHS()); op("stloc " + std::to_string(rhs), 1);
+            auto apply = [&] {
+                numeric_conversion(compound->getComputationLHSType(), b->getLHS()->getType());
+                op("ldloc " + std::to_string(rhs), 0, 1);
+                if (b->getOpcode() == BO_ShlAssign || b->getOpcode() == BO_ShrAssign) op("conv.i4", 1, 1);
+                op(operation, 2, 1);
+                if (b->getLHS()->getType()->isBooleanType()) {
+                    op("ldc.i4.0", 0, 1); op("ceq", 2, 1); op("ldc.i4.0", 0, 1); op("ceq", 2, 1);
+                } else numeric_conversion(b->getLHS()->getType());
+            };
             if (auto* subscript = array_subscript(b->getLHS())) {
                 auto slots = capture_array(subscript); load_array_location(slots);
-                op("ldelem " + type(subscript->getType()), 2, 1); expr(b->getRHS()); op(operation, 2, 1);
+                op("ldelem " + type(subscript->getType()), 2, 1); apply();
                 unsigned result = temporary(type(subscript->getType())); op("stloc " + std::to_string(result), 1);
                 load_array_location(slots); op("ldloc " + std::to_string(result), 0, 1); op("stelem " + type(subscript->getType()), 3);
+                op("ldloc " + std::to_string(result), 0, 1); return;
+            }
+            if (auto* subscript = dyn_cast<ArraySubscriptExpr>(b->getLHS()->IgnoreParenImpCasts())) {
+                auto token = type(subscript->getType());
+                unsigned pointer = temporary("native unsigned int"), result = temporary(token);
+                native_array_address(subscript); op("stloc " + std::to_string(pointer), 1);
+                op("ldloc " + std::to_string(pointer), 0, 1);
+                if (subscript->getType().isVolatileQualified()) op("volatile.");
+                op("unaligned. 1"); op("ldobj " + token, 1, 1); apply(); op("stloc " + std::to_string(result), 1);
+                op("ldloc " + std::to_string(pointer), 0, 1); op("ldloc " + std::to_string(result), 0, 1);
+                if (subscript->getType().isVolatileQualified()) op("volatile.");
+                op("unaligned. 1"); op("stobj " + token, 2);
                 op("ldloc " + std::to_string(result), 0, 1); return;
             }
             if (auto* member = dyn_cast<MemberExpr>(b->getLHS()->IgnoreParenImpCasts())) {
                 auto* field = dyn_cast<FieldDecl>(member->getMemberDecl());
                 if (!field) fail(b, "compound assignment target is not an instance field");
+                if (annotated(field, "cli.readonly")) fail(b, "readonly imported fields cannot be assigned");
                 if (native_field(field)) {
                     unsigned pointer = temporary("native unsigned int"), result = temporary(type(field->getType()));
                     native_field_address(member); op("stloc " + std::to_string(pointer), 1);
-                    op("ldloc " + std::to_string(pointer), 0, 1); native_field_load(field);
-                    expr(b->getRHS()); op(operation, 2, 1); op("stloc " + std::to_string(result), 1);
+                    op("ldloc " + std::to_string(pointer), 0, 1); native_field_load(field); apply();
+                    op("stloc " + std::to_string(result), 1);
                     op("ldloc " + std::to_string(pointer), 0, 1); op("ldloc " + std::to_string(result), 0, 1);
                     native_field_store(field); op("ldloc " + std::to_string(result), 0, 1); return;
                 }
                 unsigned receiver = temporary(native_value_pointer(member->getBase()).isNull() ? receiver_type(field) : expression_type(member->getBase()));
                 unsigned result = temporary(type(field->getType()));
                 emit_receiver(member->getBase()); op("stloc " + std::to_string(receiver), 1);
-                op("ldloc " + std::to_string(receiver), 0, 1); op("ldfld " + field_signature(field), 1, 1);
-                expr(b->getRHS()); op(operation, 2, 1); op("stloc " + std::to_string(result), 1);
+                op("ldloc " + std::to_string(receiver), 0, 1); op("ldfld " + field_signature(field), 1, 1); apply();
+                op("stloc " + std::to_string(result), 1);
                 op("ldloc " + std::to_string(receiver), 0, 1); op("ldloc " + std::to_string(result), 0, 1);
-                op("stfld " + field_signature(field), 2); op("ldloc " + std::to_string(result), 0, 1);
-                return;
+                op("stfld " + field_signature(field), 2); op("ldloc " + std::to_string(result), 0, 1); return;
             }
-            expr(b->getLHS()); expr(b->getRHS());
-            op(operation, 2, 1); store(b->getLHS(), true); return;
+            auto* target = b->getLHS()->IgnoreParenImpCasts();
+            if (auto* receiver = interior_dereference(target)) {
+                auto token = type(target->getType());
+                unsigned pointer = temporary(token + "&"), result = temporary(token);
+                expr(receiver); op("stloc " + std::to_string(pointer), 1);
+                op("ldloc " + std::to_string(pointer), 0, 1);
+                if (pinned(receiver->getType()) || target->getType().isVolatileQualified()) op("volatile.");
+                op("ldobj " + token, 1, 1); apply(); op("stloc " + std::to_string(result), 1);
+                op("ldloc " + std::to_string(pointer), 0, 1); op("ldloc " + std::to_string(result), 0, 1);
+                if (pinned(receiver->getType()) || target->getType().isVolatileQualified()) op("volatile.");
+                op("stobj " + token, 2); op("ldloc " + std::to_string(result), 0, 1); return;
+            }
+            if (auto* dereference = dyn_cast<UnaryOperator>(target); dereference && dereference->getOpcode() == UO_Deref) {
+                unsigned pointer = temporary(expression_type(dereference->getSubExpr()));
+                unsigned result = temporary(type(target->getType()));
+                expr(dereference->getSubExpr()); op("stloc " + std::to_string(pointer), 1);
+                op("ldloc " + std::to_string(pointer), 0, 1);
+                if (target->getType().isVolatileQualified()) op("volatile.");
+                op("unaligned. 1"); op("ldobj " + type(target->getType()), 1, 1); apply();
+                op("stloc " + std::to_string(result), 1); op("ldloc " + std::to_string(pointer), 0, 1);
+                op("ldloc " + std::to_string(result), 0, 1);
+                if (target->getType().isVolatileQualified()) op("volatile.");
+                op("unaligned. 1"); op("stobj " + type(target->getType()), 2);
+                op("ldloc " + std::to_string(result), 0, 1); return;
+            }
+            expr(b->getLHS()); apply(); store(b->getLHS(), true); return;
         }
         if (b->getOpcode() == BO_LAnd || b->getOpcode() == BO_LOr) {
             int base = stack; auto short_path = label(), done = label();
@@ -2503,7 +2605,10 @@ class Emitter {
                     fail(c, "pin_ptr cast cannot discard element const qualification");
                 op("conv.u", 1, 1);
             }
-            else if (method->getOverloadedOperator() == OO_Star) op("ldobj " + type(interior_element(receiver->getType())), 1, 1);
+            else if (method->getOverloadedOperator() == OO_Star) {
+                if (pinned(receiver->getType()) || interior_element(receiver->getType()).isVolatileQualified()) op("volatile.");
+                op("ldobj " + type(interior_element(receiver->getType())), 1, 1);
+            }
             else fail(c, "unsupported managed pointer operation");
             return;
         }
@@ -2592,8 +2697,7 @@ class Emitter {
                     op(source == "int64" || source == "uint64" ? "ldc.i8 0" : source == "float32" ? "ldc.r4 0" : source == "float64" ? "ldc.r8 0" : "ldc.i4.0", 0, 1);
                     op("ceq", 2, 1); op("ldc.i4.0", 0, 1); op("ceq", 2, 1); return;
                 }
-                if (source_type->isUnsignedIntegerType() && c->getType()->isRealFloatingType()) op("conv.r.un", 1, 1);
-                numeric_conversion(c->getType()); return;
+                numeric_conversion(c->getType(), source_type); return;
             }
             if (safe && target && boxable(source_type)) {
                 if (target != value_target(source_type) && record_name(target) != "[System.Runtime]'System.Object'") fail(c, "boxing requires the matching value handle or an Object handle target");
@@ -2704,6 +2808,11 @@ class Emitter {
     }
     void expr(const Expr* original) {
         const Expr* e = strip(original);
+        if (auto* subscript = dyn_cast<ArraySubscriptExpr>(e)) {
+            native_array_address(subscript);
+            if (subscript->getType().isVolatileQualified()) op("volatile.");
+            op("unaligned. 1"); op("ldobj " + type(subscript->getType()), 1, 1); return;
+        }
         if (auto* trait = dyn_cast<UnaryExprOrTypeTraitExpr>(e)) {
             auto argument = trait->getTypeOfArgument();
             auto* record = argument->getAsCXXRecordDecl();
@@ -2724,15 +2833,39 @@ class Emitter {
         }
         if (auto* allocation = dyn_cast<CXXNewExpr>(e)) {
             auto element = allocation->getAllocatedType();
-            if (allocation->isArray() || allocation->getNumPlacementArgs() ||
+            if (allocation->getNumPlacementArgs() ||
                 (!element->isArithmeticType() && !element->isEnumeralType() && !(element->isPointerType() && !handle_target(element)) && !native_pod(element)))
-                fail(allocation, "native allocation currently requires a single scalar or trivial native POD; arrays, placement and native objects need a native implementation");
+                fail(allocation, "native allocation requires scalar or trivial native POD elements; placement and native objects need a native implementation");
             auto* allocator = allocation->getOperatorNew();
             if (!allocator || !allocator->isReplaceableGlobalAllocationFunction() || allocator->hasBody() ||
                 (!allocator->isImplicit() && !ci.getSourceManager().isInSystemHeader(allocator->getLocation())))
                 fail(allocation, "custom native allocation operators require a native implementation");
             if (context.getTypeAlignInChars(element).getQuantity() > 8)
                 fail(allocation, "native allocation exceeds supported scalar/POD alignment");
+            if (allocation->isArray()) {
+                auto count = allocation->getArraySize();
+                if (!count || !*count) fail(allocation, "native array allocation requires an explicit count");
+                if (auto* construct = allocation->getConstructExpr(); construct && !construct->getConstructor()->isTrivial())
+                    fail(allocation, "native POD array construction requires a trivial constructor");
+                bool zero = allocation->getInitializationStyle() != CXXNewInitializationStyle::None;
+                if (zero) {
+                    const Expr* initializer = strip(allocation->getInitializer());
+                    auto* list = dyn_cast_or_null<InitListExpr>(initializer);
+                    auto* construct = dyn_cast_or_null<CXXConstructExpr>(initializer);
+                    if (!isa_and_nonnull<CXXScalarValueInitExpr>(initializer) && !isa_and_nonnull<ImplicitValueInitExpr>(initializer) &&
+                        !(list && list->getNumInits() == 0) &&
+                        !(construct && construct->getConstructor()->isTrivial() && !construct->getNumArgs()))
+                        fail(allocation, "native array initialization currently supports only empty value initialization");
+                }
+                // Check signed bounds before Clang's implicit size_t conversion
+                // can turn a negative count into a huge unsigned allocation.
+                const Expr* bound = (*count)->IgnoreParenImpCasts();
+                expr(bound); op(bound->getType()->isUnsignedIntegerType() ? "conv.ovf.u.un" : "conv.ovf.u", 1, 1);
+                op("ldc.i8 " + std::to_string(context.getTypeSizeInChars(element).getQuantity()), 0, 1); op("conv.u", 1, 1);
+                op(std::string("call void* [System.Runtime.InteropServices]System.Runtime.InteropServices.NativeMemory::") +
+                   (zero ? "AllocZeroed" : "Alloc") + "(native unsigned int, native unsigned int)", 2, 1);
+                return;
+            }
             unsigned pointer = temporary("void*");
             op("ldc.i8 " + std::to_string(context.getTypeSizeInChars(element).getQuantity()), 0, 1); op("conv.u", 1, 1);
             op("call void* [System.Runtime.InteropServices]System.Runtime.InteropServices.NativeMemory::Alloc(native unsigned int)", 1, 1);
@@ -2802,8 +2935,9 @@ class Emitter {
             auto argument = deletion->getArgument()->getType();
             if (argument->isPointerType() && !handle_target(argument)) {
                 auto element = argument->getPointeeType();
-                if (deletion->isArrayForm() || (!element->isVoidType() && !element->isArithmeticType() && !element->isEnumeralType() && !(element->isPointerType() && !handle_target(element)) && !native_pod(element)))
-                    fail(deletion, "native deletion requires a single scalar, trivial native POD or erased void pointer; arrays and native objects need a native implementation");
+                if ((!element->isVoidType() && !element->isArithmeticType() && !element->isEnumeralType() && !(element->isPointerType() && !handle_target(element)) && !native_pod(element)) ||
+                    (deletion->isArrayForm() && element->isVoidType()))
+                    fail(deletion, "native deletion requires scalar or trivial native POD storage, or a single erased void pointer; nontrivial native objects need a native implementation");
                 auto* deallocator = deletion->getOperatorDelete();
                 if (!deallocator || !deallocator->isReplaceableGlobalAllocationFunction() || deallocator->hasBody() ||
                     (!deallocator->isImplicit() && !ci.getSourceManager().isInSystemHeader(deallocator->getLocation())))
@@ -2832,7 +2966,7 @@ class Emitter {
             }
             if (c->getCastKind() == CK_IntegralToBoolean) { op("ldc.i4.0", 0, 1); op("ceq", 2, 1); op("ldc.i4.0", 0, 1); op("ceq", 2, 1); }
             else if (c->getCastKind() == CK_IntegralCast || c->getCastKind() == CK_IntegralToFloating || c->getCastKind() == CK_FloatingCast || c->getCastKind() == CK_FloatingToIntegral) {
-                numeric_conversion(c->getType());
+                numeric_conversion(c->getType(), c->getSubExpr()->getType());
             } else if (c->getCastKind() != CK_LValueToRValue && c->getCastKind() != CK_NoOp && c->getCastKind() != CK_ArrayToPointerDecay && c->getCastKind() != CK_FunctionToPointerDecay &&
                        !(c->getCastKind() == CK_ConstructorConversion && (handle_target(c->getType()) || !interior_element(c->getType()).isNull())) &&
                        !(c->getCastKind() == CK_UserDefinedConversion && (c->getType()->isPointerType() || static_property_conversion)) &&
@@ -2963,6 +3097,12 @@ class Emitter {
                 if (isa<CXXNullPtrLiteralExpr>(arg)) { op("ldc.i4.0", 0, 1); op("conv.u", 1, 1); }
                 else if (!interior_element(arg->getType()).isNull()) expr(arg);
                 else if (auto* unary = dyn_cast<UnaryOperator>(arg); unary && unary->getOpcode() == UO_AddrOf) address(unary->getSubExpr());
+                else if (pinned(c->getType()) && arg->getType()->isPointerType() && !handle_target(arg->getType())) {
+                    // CLI pin_ptr is a superset of native pointers. The CLR
+                    // ignores unmanaged/stack addresses when scanning a pinned
+                    // byref; only addresses inside the GC heap pin an object.
+                    expr(arg);
+                }
                 else fail(c, "pin_ptr/interior_ptr requires a managed address, not an untracked native pointer");
                 return;
             }
@@ -2993,6 +3133,9 @@ class Emitter {
         }
         if (auto* u = dyn_cast<UnaryOperator>(e)) {
             if (u->getOpcode() == UO_AddrOf && u->getType()->isPointerType() && !handle_target(u->getType())) {
+                if (auto* subscript = dyn_cast<ArraySubscriptExpr>(u->getSubExpr()->IgnoreParenImpCasts())) {
+                    native_array_address(subscript); return;
+                }
                 if (auto* member = dyn_cast<MemberExpr>(u->getSubExpr()->IgnoreParenImpCasts()); member && native_field(dyn_cast<FieldDecl>(member->getMemberDecl()))) {
                     native_field_address(member); return;
                 }
@@ -3018,6 +3161,37 @@ class Emitter {
             if (u->isIncrementDecrementOp()) {
                 if (handle_target(u->getSubExpr()->getType())) fail(u, "managed handles cannot be incremented");
                 if (u->getSubExpr()->getType()->isPointerType()) fail(u, "unmanaged pointer arithmetic and ordering are not enabled yet");
+                if (auto* receiver = interior_dereference(u->getSubExpr())) {
+                    auto token = type(u->getSubExpr()->getType());
+                    unsigned pointer = temporary(token + "&"), old = temporary(token), result = temporary(token);
+                    expr(receiver); op("stloc " + std::to_string(pointer), 1);
+                    op("ldloc " + std::to_string(pointer), 0, 1);
+                    if (pinned(receiver->getType()) || u->getSubExpr()->getType().isVolatileQualified()) op("volatile.");
+                    op("ldobj " + token, 1, 1); op("stloc " + std::to_string(old), 1);
+                    op("ldloc " + std::to_string(old), 0, 1);
+                    op(token == "int64" || token == "uint64" ? "ldc.i8 1" : token == "float32" ? "ldc.r4 1" : token == "float64" ? "ldc.r8 1" : "ldc.i4.1", 0, 1);
+                    op(u->isIncrementOp() ? "add" : "sub", 2, 1); numeric_conversion(u->getSubExpr()->getType());
+                    op("stloc " + std::to_string(result), 1); op("ldloc " + std::to_string(pointer), 0, 1);
+                    op("ldloc " + std::to_string(result), 0, 1);
+                    if (pinned(receiver->getType()) || u->getSubExpr()->getType().isVolatileQualified()) op("volatile.");
+                    op("stobj " + token, 2); op("ldloc " + std::to_string(u->isPostfix() ? old : result), 0, 1); return;
+                }
+                if (auto* subscript = dyn_cast<ArraySubscriptExpr>(u->getSubExpr()->IgnoreParenImpCasts())) {
+                    auto token = type(subscript->getType());
+                    unsigned pointer = temporary("native unsigned int"), old = temporary(token), result = temporary(token);
+                    native_array_address(subscript); op("stloc " + std::to_string(pointer), 1);
+                    op("ldloc " + std::to_string(pointer), 0, 1);
+                    if (subscript->getType().isVolatileQualified()) op("volatile.");
+                    op("unaligned. 1"); op("ldobj " + token, 1, 1); op("stloc " + std::to_string(old), 1);
+                    op("ldloc " + std::to_string(old), 0, 1);
+                    op(token == "int64" || token == "uint64" ? "ldc.i8 1" : token == "float32" ? "ldc.r4 1" : token == "float64" ? "ldc.r8 1" : "ldc.i4.1", 0, 1);
+                    op(u->isIncrementOp() ? "add" : "sub", 2, 1); numeric_conversion(subscript->getType());
+                    op("stloc " + std::to_string(result), 1); op("ldloc " + std::to_string(pointer), 0, 1);
+                    op("ldloc " + std::to_string(result), 0, 1);
+                    if (subscript->getType().isVolatileQualified()) op("volatile.");
+                    op("unaligned. 1"); op("stobj " + token, 2);
+                    op("ldloc " + std::to_string(u->isPostfix() ? old : result), 0, 1); return;
+                }
                 if (auto* subscript = array_subscript(u->getSubExpr())) {
                     auto slots = capture_array(subscript); load_array_location(slots);
                     std::string element = type(subscript->getType());
@@ -3077,7 +3251,7 @@ class Emitter {
                 op("conv.u", 1, 1); return;
             }
             if (c->getCastKind() == CK_PointerToIntegral && (!handle_target(c->getSubExpr()->getType()) || !native_value_pointer(c->getSubExpr()).isNull())) {
-                expr(c->getSubExpr()); numeric_conversion(c->getType()); return;
+                expr(c->getSubExpr()); numeric_conversion(c->getType(), c->getSubExpr()->getType()); return;
             }
             if (c->getCastKind() == CK_ConstructorConversion && value_target(c->getType())) { expr(c->getSubExpr()); return; }
             if (c->getCastKind() == CK_UserDefinedConversion && c->getType()->isPointerType() && !handle_target(c->getType())) {
@@ -3099,7 +3273,7 @@ class Emitter {
                 expr(source); op(std::string(isa<CXXDynamicCastExpr>(c) ? "isinst " : "castclass ") + reference_token(c->getType()), 1, 1); return;
             }
             if (c->getCastKind() == CK_IntegralCast || c->getCastKind() == CK_IntegralToFloating || c->getCastKind() == CK_FloatingCast || c->getCastKind() == CK_FloatingToIntegral) {
-                expr(c->getSubExpr()); numeric_conversion(c->getType()); return;
+                expr(c->getSubExpr()); numeric_conversion(c->getType(), c->getSubExpr()->getType()); return;
             }
             if (c->getCastKind() != CK_NoOp) fail(c, "explicit conversions are not enabled yet");
             expr(c->getSubExpr()); return;

@@ -310,6 +310,45 @@ EOF
   timeout 30 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/NativeCleanupCheck.dll")"
 }
 
+step_check_font_file_zero() {
+  initialize
+  local work=$build/font-file-zero-check
+  local original=$source/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/CPP/DWriteWrapper
+  local core_refs=("$sdk"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
+  local core_ref=${core_refs[-1]}
+  mkdir -p "$work"
+  cp "$original/NativePointerWrapper.cpp" "$original/NativePointerWrapper.h" "$work/"
+  printf '#include <windows.h>\n#include <dwrite.h>\n#include <vcclr.h>\nusing namespace System;\n' > "$work/Common.h"
+  python3 - "$original/FontFace.cpp" "$work/FontFileZeroOriginal.inc" <<'PY'
+import pathlib, sys
+source = pathlib.Path(sys.argv[1]).read_bytes()
+start = source.index(b'    __declspec(noinline) FontFile^ FontFace::GetFileZero()')
+end = source.index(b'    __declspec(noinline) unsigned int FontFace::Index::get()', start)
+pathlib.Path(sys.argv[2]).write_bytes(source[start:end])
+assert pathlib.Path(sys.argv[2]).read_bytes() == source[start:end]
+PY
+  cp "$here/wpf-tests/FontFileZero.cpp" "$work/"
+  bridge_compile "$(cygpath -m "$work/FontFileZero.cpp")" --target library --std c++14 \
+    --ilasm "$(cygpath -m /clang64/bin/ilasm-dotnet.exe)" --native-library font-file-probe.dll \
+    --type System.Runtime.InteropServices.CriticalHandle --type System.Runtime.InteropServices.Marshal \
+    --type System.Runtime.ConstrainedExecution.CriticalFinalizerObject \
+    --type System.Runtime.ConstrainedExecution.Cer --type System.Runtime.ConstrainedExecution.Consistency \
+    --type System.Runtime.ConstrainedExecution.ReliabilityContractAttribute --type System.GC \
+    --type System.InvalidOperationException --type System.Exception \
+    --reference "$(cygpath -m "$core_ref/System.Runtime.InteropServices.dll")" -o "$(cygpath -m "$work/FontFileZero.dll")"
+  cmp "$original/NativePointerWrapper.cpp" "$work/NativePointerWrapper.cpp"
+  cmp "$original/NativePointerWrapper.h" "$work/NativePointerWrapper.h"
+  /clang64/bin/clang++.exe -std=c++17 -shared -O2 "$here/wpf-native/FontFileProbe.cpp" -ldwrite -o "$work/font-file-probe.dll"
+  cp "$here/wpf-tests/FontFileZero.cs" "$work/Program.cs"
+  cat > "$work/FontFileZeroCheck.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="FontFileZero"><HintPath>FontFileZero.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$sdk/dotnet.exe" build "$(cygpath -m "$work/FontFileZeroCheck.csproj")" -c Release \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -v:q
+  cp "$work/font-file-probe.dll" "$work/bin/Release/net8.0/"
+  timeout 30 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/FontFileZeroCheck.dll")"
+}
+
 step_check_native_com() {
   local work=$build/native-com-check
   mkdir -p "$work"

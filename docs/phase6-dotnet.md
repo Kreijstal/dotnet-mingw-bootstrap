@@ -3683,3 +3683,91 @@ metadata/units, higher WPF, native-export coverage and packaging remain open.
 Development logs, original/patched startup sources, loader import/ABI artifacts
 and generated IL are archived under
 `tmp/wpf8-support/validation/function-pointer-startup-20261012` on the local host.
+
+## 36. Compound flags, native arrays and native pointer pins
+
+The 2026-10-12 continuation passes the next three DirectWrite IL gates:
+Font.cpp flag compound assignments, FontFace::GetFileZero's native pointer-array
+allocation, and FontFace's native pointer parameters copied into pin_ptr locals.
+The combined original DirectWriteForwarder.cpp and ported main.cpp build now
+stops at FontFace.cpp:250, native pointer addition in ReadFontEmbeddingRights.
+
+All ten builtin scalar compound operations now use Clang's computation types,
+signed division/remainder/right shift, final destination narrowing and bool
+normalization. The emitter captures the RHS before the LHS location and captures
+field receivers, indices and pointer receivers once. CLI enum OR/AND/XOR
+compounds retain the original enum lvalue while Clang checks and promotes the
+underlying arithmetic. Native scoped enums, mixed CLI enum types, const enum
+lvalues and unmanaged pointer arithmetic remain rejected. Runtime tests cover
+byte wraparound, floats, unsigned high bits, mixed 32/64-bit computation,
+64-bit shift counts, explicit/safe_cast widening and observable evaluation order.
+Numeric conversions also preserve the source signedness when widening to
+64 bits or converting unsigned integers to floating point.
+
+Native scalar, unmanaged pointer and trivial POD arrays now allocate through
+the source-built NativeMemory Alloc/AllocZeroed APIs and delete[] through Free.
+Uninitialized and empty value-initialized arrays are supported; element stride
+comes from Clang's native layout. Indexed loads, stores, addresses, compound
+updates and increments preserve single evaluation and native memory prefixes.
+The native oracle checks a 16-byte POD stride, 64-bit field values and the real
+UCRT allocation size. Zeroed primitive/pointer storage, count/index evaluation,
+GC, zero-length arrays and cleanup pass. Negative signed bounds are checked
+before conversion to size_t and throw CLR OverflowException; allocation failure
+uses CLR OutOfMemoryException. These are CLR exceptions, not native C++ new
+exception ABI support. Nonempty array initialization, nontrivial native objects,
+placement/custom allocators, larger alignment and general array-field operations
+remain unsupported.
+
+Primitive pin_ptr locals now accept native pointer initializers, as allowed by
+the [C++/CLI pin_ptr specification](https://learn.microsoft.com/en-us/cpp/extensions/pin-ptr-cpp-cli?view=msvc-170).
+They retain CLR pinned-byref metadata and scope-finally clearing. The focused
+runtime test covers const native input parameters, native output parameters,
+dereference writes/compound updates/increments, single evaluation of returned
+interior-pointer receivers, native-to-managed-to-native reassignment,
+null clearing and forced GC. Existing Unicode/array pinning tests also pass
+under concurrent compacting GC. General native pointer arithmetic and interior
+pointer assignment/escape analysis remain separate work.
+
+The new WPF check extracts the exact GetFileZero method bytes from the original
+FontFace.cpp. The surrounding FontFace/FontFile declarations and HRESULT helper
+are focused fixtures; this is not a complete FontFace.cpp build. It includes the
+complete unchanged original NativePointerWrapper.cpp/header. A source-built
+native probe creates a real system-font IDWriteFontFace through DirectWrite.
+The original method calls GetFiles, allocates/indexes/frees its native pointer
+array, and transfers the first file reference into its managed wrapper. The C#
+consumer disposes the font face, forces GC, and verifies the returned file using
+both generated COM Analyze dispatch and an independently compiled native Analyze
+oracle. Thirty-two iterations and repeated face/file disposal pass. The system
+font exercises the normal success path; injected GetFiles failures and synthetic
+multi-file fonts are not claimed by this check.
+
+Validation on win11, with the source-built SDK/runtime/ilasm:
+
+```sh
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh \
+  build test-compound test-native-arrays test-native-pins
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-native-pins
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-compound
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh \
+  test-pinning test-enums test-native-fields test-native-allocation
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  WPF_CPPCLI_BUILD=/home/topkek/dotnetboot/m612/build/cppcli \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-font-file-zero bridge-gate
+```
+
+The frontend rebuild, focused checks and regressions pass. The WPF C# consumer
+build has zero warnings/errors. The combined full gate exits 1 after five
+upstream warnings at the explicit unsupported pointer addition; it produces no
+complete bridge assembly. Complete DirectWrite implementation-body evidence
+remains **four of 21**; the 620 C# foundation inputs, 14 nested native subsetter
+inputs and startup/native-loader checks remain the previous verified scope.
+System.Printing, higher WPF, native-export coverage and WindowsDesktop packaging
+remain incomplete. This is development frontend work, with no new installed
+WPF package. Logs, original extracted method/wrappers, emitted IL and native
+probe artifacts are archived under
+`tmp/wpf8-support/validation/compound-native-arrays-pins-20261012` on the local host.

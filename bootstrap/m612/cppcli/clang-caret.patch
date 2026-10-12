@@ -73,7 +73,38 @@
 +      if (Condition->getType()->isIntegerType())
 +        if (auto *Enum = cppcliEnum(Res.get()->getType()))
 +          Res = cppcliEnumCast(Actions, Res.get(), Enum->getIntegerType(), CaseLoc);
-@@ -531,0 +565,16 @@
+@@ -531,0 +565,47 @@
++        if (!RHS.isInvalid() &&
++            OpToken.isOneOf(tok::pipeequal, tok::caretequal, tok::ampequal)) {
++          auto *Enum = cppcliEnum(LHS.get()->getType());
++          if (Enum && !Enum->getIntegerType()->isBooleanType() &&
++              Actions.Context.hasSameUnqualifiedType(
++                  LHS.get()->getType(), RHS.get()->getType()) &&
++              LHS.get()->isModifiableLvalue(Actions.Context) == Expr::MLV_Valid) {
++            auto *OriginalLHS = LHS.get();
++            auto Left = cppcliEnumCast(Actions, OriginalLHS,
++                                      Enum->getIntegerType(), OpToken.getLocation());
++            auto Right = cppcliEnumCast(Actions, RHS.get(),
++                                       Enum->getIntegerType(), OpToken.getLocation());
++            if (Left.isInvalid() || Right.isInvalid())
++              return ExprError();
++            auto BinaryToken = OpToken.is(tok::pipeequal) ? tok::pipe :
++                               OpToken.is(tok::caretequal) ? tok::caret : tok::amp;
++            auto Computation = Actions.ActOnBinOp(getCurScope(),
++                OpToken.getLocation(), BinaryToken, Left.get(), Right.get());
++            if (Computation.isInvalid())
++              return ExprError();
++            auto *Binary = cast<BinaryOperator>(Computation.get());
++            auto Opcode = OpToken.is(tok::pipeequal) ? BO_OrAssign :
++                          OpToken.is(tok::caretequal) ? BO_XorAssign : BO_AndAssign;
++            LHS = CompoundAssignOperator::Create(Actions.Context, OriginalLHS,
++                Binary->getRHS(), Opcode, OriginalLHS->getType(), VK_LValue,
++                OriginalLHS->getObjectKind(), OpToken.getLocation(),
++                FPOptionsOverride(), Binary->getLHS()->getType(),
++                Binary->getType());
++            continue;
++          }
++        }
 +        QualType CliResult;
 +        if (!RHS.isInvalid() &&
 +            OpToken.isOneOf(tok::pipe, tok::caret, tok::amp)) {
@@ -90,11 +121,11 @@
 +              return ExprError();
 +          }
 +        }
-@@ -534,0 +584,3 @@
+@@ -534,0 +615,3 @@
 +        if (!BinOp.isInvalid() && !CliResult.isNull())
 +          BinOp = cppcliEnumCast(Actions, BinOp.get(), CliResult,
 +                                OpToken.getLocation());
-@@ -1160,0 +1213,10 @@
+@@ -1160,0 +1244,10 @@
 +      QualType CliResult;
 +      if (SavedKind == tok::tilde)
 +        if (auto *Enum = cppcliEnum(Arg->getType()))
@@ -105,10 +136,10 @@
 +              return ExprError();
 +            Arg = Res.get();
 +          }
-@@ -1162,0 +1225,2 @@
+@@ -1162,0 +1256,2 @@
 +      if (!Res.isInvalid() && !CliResult.isNull())
 +        Res = cppcliEnumCast(Actions, Res.get(), CliResult, SavedLoc);
-@@ -1779,2 +1843,53 @@
+@@ -1779,2 +1874,53 @@
 -          LHS = Actions.ActOnArraySubscriptExpr(getCurScope(), LHS.get(), Loc,
 -                                                ArgExprs, RLoc);
 +          // For a managed array handle, ask Sema to resolve the surrogate's
@@ -164,7 +195,7 @@
 +          if (!LHS.isInvalid())
 +            LHS = Actions.ActOnArraySubscriptExpr(getCurScope(), LHS.get(), Loc,
 +                                                  ArgExprs, RLoc);
-@@ -1838,0 +1954,23 @@
+@@ -1838,0 +1985,23 @@
 +      }
 +
 +      // CLI delegate handles call their runtime Invoke method. Let Sema

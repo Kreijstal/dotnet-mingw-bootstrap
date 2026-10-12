@@ -174,7 +174,10 @@
         "complete original NativePointerWrapper.cpp and header with original IUnknown release and erased native deletion checked through CriticalHandle disposal and pointer getter reflection",
         "full WPF gate passes IUnknown::Release and native delete; next unsupported type is the DWrite factory function pointer prototype",
         "Source-built upstream DWrite loader and ported managed main.cpp startup: real SDK function pointer call, concurrent initialization, exactly-once event registration, idempotent cleanup/reload and actual ProcessExit verification",
-        "Full WPF gate combines actual DirectWriteForwarder.cpp and main.cpp, with explicit native loader/subsetter imports; it passes Factory initialization, native SDK UUIDs, function calls and sizeof(WCHAR), then stops at Font.cpp:193 compound assignment"
+        "Full WPF gate combines actual DirectWriteForwarder.cpp and main.cpp, with explicit native loader/subsetter imports; it passes Factory initialization, native SDK UUIDs, function calls and sizeof(WCHAR), then stops at Font.cpp:193 compound assignment",
+        "Scalar compound assignment and CLI enum flag compounds preserve Clang types, signedness, narrowing and single location evaluation; native trivial arrays and native pointer pin locals now compile",
+        "Original FontFace::GetFileZero executes unchanged against real DirectWrite fonts with owned file references surviving face disposal and GC; complete-file proof remains four of 21 directly included bodies",
+        "Full WPF gate passes Font.cpp flag compounds and FontFace array allocation/native pin initializers; next unsupported operation is FontFace.cpp:250 native pointer addition"
       ]
     }
   ]
