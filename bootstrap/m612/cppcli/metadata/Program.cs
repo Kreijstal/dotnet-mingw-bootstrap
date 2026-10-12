@@ -17,11 +17,14 @@ record CliMethod(string Id, string Name, bool Static, CliType Return, CliType[] 
                  bool Supported, int GenericArity, bool Virtual, bool Abstract, bool Final, string Access);
 record CliField(string Name, CliType Type, bool Supported, string Access, bool Static, bool ReadOnly, string Id);
 record CliEnumMember(string Name, string Value);
-record CliProperty(string Name, CliType Type, string Getter, string Setter, bool Static, bool Supported);
+record CliProperty(string Name, CliType Type, string Getter, string Setter, bool Static, bool Supported) {
+    public CliType[] Parameters { get; init; } = Array.Empty<CliType>();
+}
 record CliClass(string Assembly, string Name, string Cpp, string Kind, string Base, CliMethod[] Methods, CliProperty[] Properties, string[] Interfaces, CliType? Underlying = null, CliEnumMember[]? EnumMembers = null, CliField[]? Fields = null) {
     public int GenericArity { get; init; }
     public CliType? BaseType { get; init; }
     public CliType[] InterfaceTypes { get; init; } = Array.Empty<CliType>();
+    public string DefaultMember { get; init; } = "";
 }
 record CliAssembly(string Name, string Version, string Token);
 record CliAccess(string Assembly, string PublicKey, string[] Friends);
@@ -187,6 +190,14 @@ static class Program
                         throw new Exception("imported type is internal; use #using as_friend with a matching InternalsVisibleTo: " + name);
                     if (name.Contains('+')) throw new Exception("unsupported imported nested type: " + name);
                     int genericArity = td.GetGenericParameters().Count;
+                    string defaultMember = "";
+                    foreach (var ah in td.GetCustomAttributes()) {
+                        var attribute = r.GetCustomAttribute(ah);
+                        if (AttributeType(r, attribute.Constructor) != "System.Reflection.DefaultMemberAttribute") continue;
+                        var blob = r.GetBlobReader(attribute.Value);
+                        if (blob.ReadUInt16() != 1) throw new Exception("invalid DefaultMemberAttribute");
+                        defaultMember = blob.ReadSerializedString() ?? "";
+                    }
                     var methods = new List<CliMethod>();
                     foreach (var mh in td.GetMethods())
                     {
@@ -216,8 +227,8 @@ static class Program
                         var getter = Accessor(accessors.Getter); var setter = Accessor(accessors.Setter);
                         string pn = r.GetString(pd.Name);
                         properties.Add(new(pn, sig.ReturnType, getter?.Name ?? "", setter?.Name ?? "",
-                            (getter ?? setter)?.Static ?? false, ValidName(pn) && sig.ParameterTypes.Length == 0 &&
-                            (getter?.Supported == true || setter?.Supported == true) && !(getter ?? setter)!.Static));
+                            (getter ?? setter)?.Static ?? false, ValidName(pn) && sig.ParameterTypes.Length <= 1 &&
+                            (getter?.Supported == true || setter?.Supported == true) && !(getter ?? setter)!.Static) { Parameters = sig.ParameterTypes.ToArray() });
                     }
                     var baseType = td.BaseType.IsNil ? null : SignatureTypes.EntityType(r, td.BaseType);
                     string baseName = baseType?.Name ?? "";
@@ -255,7 +266,7 @@ static class Program
                     }
                     var interfaceTypes = td.GetInterfaceImplementations().Select(ih => SignatureTypes.EntityType(r, r.GetInterfaceImplementation(ih).Interface)).ToArray();
                     types.Add(new CliClass(assembly, name, SignatureTypes.CppName(name), baseName == "System.ValueType" ? "value" : (td.Attributes & TypeAttributes.Interface) != 0 ? "interface" : "ref", baseName, methods.ToArray(), properties.ToArray(),
-                        interfaceTypes.Where(t => t.Kind != "unsupported").Select(t => t.Name).ToArray(), Fields: fields) { GenericArity = genericArity, BaseType = baseType, InterfaceTypes = interfaceTypes });
+                        interfaceTypes.Where(t => t.Kind != "unsupported").Select(t => t.Name).ToArray(), Fields: fields) { GenericArity = genericArity, BaseType = baseType, InterfaceTypes = interfaceTypes, DefaultMember = defaultMember });
                 }
             }
             var found = types.Select(t => t.Name).ToHashSet(StringComparer.Ordinal);
@@ -280,7 +291,7 @@ static class Program
                 Supported = m.Supported && Available(m.Return) && m.Parameters.All(Available),
                 Return = Qualified(m.Return), Parameters = m.Parameters.Select(Qualified).ToArray()
             }).ToArray(), Properties = t.Properties.Select(p => p with {
-                Type = Qualified(p.Type), Supported = p.Supported && Available(p.Type) &&
+                Type = Qualified(p.Type), Parameters = p.Parameters.Select(Qualified).ToArray(), Supported = p.Supported && Available(p.Type) && p.Parameters.All(Available) &&
                     (p.Getter.Length == 0 || t.Methods.Any(m => m.Name == p.Getter && m.Supported && Available(m.Return) && m.Parameters.All(Available))) &&
                     (p.Setter.Length == 0 || t.Methods.Any(m => m.Name == p.Setter && m.Supported && Available(m.Return) && m.Parameters.All(Available)))
             }).ToArray() }).OrderBy(t => t.Name, StringComparer.Ordinal).ToList();
@@ -371,12 +382,21 @@ static class Program
                 else w.WriteLine((m.Static ? "static " : cppVirtual && t.Kind != "value" ? "virtual " : "") + m.Return.Cpp + " " + cppMethod + "(" + parameters + ")" +
                     (m.Final && cppVirtual && t.Kind != "value" ? " final" : "") + (m.Abstract && cppVirtual && t.Kind != "value" && t.Kind != "interface" ? " = 0" : "") + ";");
             }
+            var propertyFacades = new Dictionary<string, string>();
             foreach (var p in t.Properties.Where(p => p.Supported))
             {
                 var accessors = new List<string>();
                 if (p.Getter.Length != 0) accessors.Add("get=" + p.Getter);
                 if (p.Setter.Length != 0) accessors.Add("put=" + p.Setter);
-                w.WriteLine("public: __declspec(property(" + string.Join(",", accessors) + ")) " + p.Type.Cpp + " " + p.Name + ";");
+                string propertyName = p.Parameters.Length != 0 && p.Name == t.DefaultMember ? "__cli_default" : p.Name;
+                string facade = "public: __declspec(property(" + string.Join(",", accessors) + ")) " + p.Type.Cpp + " " +
+                    propertyName + (p.Parameters.Length != 0 ? "[]" : "") + ";";
+                if (propertyFacades.TryGetValue(propertyName, out var existing)) {
+                    if (existing != facade) throw new Exception("unsupported overloaded property facade: " + t.Name + "::" + p.Name);
+                    continue;
+                }
+                propertyFacades.Add(propertyName, facade);
+                w.WriteLine(facade);
             }
             w.Write("}; ");
         }

@@ -581,6 +581,88 @@ EOF
   reject_case generic-native-pointer 'using namespace System::Collections::Generic; int main() { List<void*>^ value = gcnew List<void*>(); return 0; }' 'native pointers and typed boxed handles' "${generic_args[@]}"
   log "PASS test-generics: real CLR generic types, fields, constructors, methods and interface dispatch"
 }
+step_test-indexers() {
+  log "Default/named indexed properties through Clang pseudo-object semantics"
+  local refs=("$CPPCLI_SDK"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
+  compile "$(cygpath -m "$src/tests/indexers.cpp")" --target library \
+    --reference "$(cygpath -m "${refs[-1]}/System.Collections.dll")" --type 'System.Collections.Generic.Dictionary`2' \
+    -o "$(cygpath -m "$testdir/indexers.dll")"
+  mkdir -p "$testdir/indexer-consumer"
+  cat > "$testdir/indexer-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers></PropertyGroup><ItemGroup><Reference Include="indexers"><HintPath>../indexers.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  cat > "$testdir/indexer-consumer/Program.cs" <<'EOF'
+using System;
+using System.Collections.Generic;
+using System.Reflection;
+var value = new Indexed();
+value[1] = 37;
+IndexerBridge.Update(value);
+if (value.Reads != 1 || value.Writes != 2 || IndexerBridge.Receivers() != 1 || IndexerBridge.Indices() != 1)
+    throw new Exception("indexed update evaluation order/count lost");
+if (value[1] != 42 || IndexerBridge.Read(value) != 42 || IndexerBridge.Named(value) != 142 ||
+    typeof(Indexed).GetCustomAttribute<DefaultMemberAttribute>().MemberName != "Item" || typeof(Indexed).GetProperty("Item").GetIndexParameters()[0].ParameterType != typeof(int))
+    throw new Exception("indexer metadata or read binding failed");
+var dictionary = new Dictionary<string,int> { ["café"] = 40 };
+if (IndexerBridge.DictionaryItem(dictionary, "café") != 42 || dictionary["café"] != 42 || IndexerBridge.First("東京") != '東')
+    throw new Exception("imported generic/string indexers failed");
+try { IndexerBridge.Read(null); throw new Exception("null indexer receiver did not throw"); } catch (NullReferenceException) { }
+var overloaded = new OverloadedIndex();
+if (IndexerBridge.Overloaded(overloaded) != 42 || overloaded[1] != 40 || overloaded["name"] != 2 ||
+    typeof(OverloadedIndex).GetProperties().Length != 2 || typeof(OverloadedIndex).GetProperty("Hidden") != null)
+    throw new Exception("overloaded/out-of-line indexed properties or internal visibility failed");
+Console.WriteLine("CLR indexed properties OK");
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/indexer-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -p:NuGetAudit=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/indexer-consumer/bin/Debug/net8.0/consumer.dll")"
+  cat > "$testdir/indexer-reference.cpp" <<'EOF'
+#using "indexers.dll"
+using namespace System;
+int main() { Indexed^ value = gcnew Indexed(); value[1] = 42; Console::WriteLine(value[1]); OverloadedIndex^ other = gcnew OverloadedIndex(); other[1] = 40; other[__cli_literal("name")] = 2; Console::WriteLine(other[1] + other[__cli_literal("name")]); return 0; }
+EOF
+  run_case indexer-reference "$testdir/indexer-reference.cpp" $'42\n42' --type Indexed --type OverloadedIndex
+  reject_case indexer-getter-type 'public ref class C { public: property int default[int] { double get(int value) { return 0; } } }; int main() { return 0; }' 'getter type does not match'
+  reject_case indexer-index-type 'using namespace System; public ref class C { public: property int default[int] { int get(String^ value) { return 0; } } }; int main() { return 0; }' 'indexed getter parameter does not match'
+  reject_case indexer-setter-type 'public ref class C { public: property int default[int] { void set(int index, double value) {} } }; int main() { return 0; }' 'setter type does not match'
+  reject_case indexer-two-indices 'public ref class C { public: property int default[int,int] { int get(int x, int y) { return 0; } } }; int main() { return 0; }' 'require one index parameter'
+  log "PASS test-indexers: source/imported CLR indexers and compound evaluation"
+}
+step_test-named-overrides() {
+  log "Named CLR interface slots and renamed property accessor implementations"
+  local override_args=(--type System.Collections.IEnumerable --type System.Collections.IEnumerator)
+  compile "$(cygpath -m "$src/tests/named-overrides.cpp")" --target library "${override_args[@]}" \
+    -o "$(cygpath -m "$testdir/named-overrides.dll")"
+  mkdir -p "$testdir/named-override-consumer"
+  cat > "$testdir/named-override-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers></PropertyGroup><ItemGroup><Reference Include="named-overrides"><HintPath>../named-overrides.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  cat > "$testdir/named-override-consumer/Program.cs" <<'EOF'
+using System;
+using System.Collections;
+var sequence = (IEnumerable)new NamedSequence();
+var enumerator = sequence.GetEnumerator();
+if (!enumerator.MoveNext() || (int)enumerator.Current != 42 || enumerator.MoveNext()) throw new Exception("named interface dispatch failed");
+enumerator.Reset();
+if (!enumerator.MoveNext() || (int)enumerator.Current != 42) throw new Exception("named property accessor dispatch failed");
+var mapping = typeof(NamedSequence).GetInterfaceMap(typeof(IEnumerable));
+if (mapping.TargetMethods[0].Name != "GetEnumerator2" || !mapping.TargetMethods[0].IsPrivate || !mapping.TargetMethods[0].IsFinal)
+    throw new Exception("named override method identity or visibility lost");
+mapping = typeof(NamedEnumerator).GetInterfaceMap(typeof(IEnumerator));
+if (Array.FindIndex(mapping.TargetMethods, m => m.Name == "get_Current2") < 0) throw new Exception("accessor override mapping lost");
+var source = new SourceProperties();
+if (((IProperty)source).Number != 42 || ((IProperty)source).Read() != 42 || ((IHeaderProperty)source).HeaderNumber != 13 ||
+    !typeof(IProperty).GetProperty("Number").GetMethod.IsAbstract || !typeof(IHeaderProperty).IsInterface)
+    throw new Exception("source interface properties or interface macro protection failed");
+Console.WriteLine("named CLR interface overrides OK");
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/named-override-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -p:NuGetAudit=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/named-override-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case named-override-return 'using namespace System::Collections; public ref class C : IEnumerable { virtual int Other() = IEnumerable::GetEnumerator { return 0; } }; int main() { return 0; }' 'does not match the interface member signature' "${override_args[@]}"
+  reject_case named-override-unimplemented 'using namespace System::Collections; public ref class C { virtual IEnumerator^ Other() = IEnumerable::GetEnumerator { return nullptr; } }; int main() { return 0; }' 'not an implemented interface' "${override_args[@]}"
+  log "PASS test-named-overrides: explicit CLR mappings preserve source names and accessor dispatch"
+}
 step_test-values() {
   run_case values "$src/tests/values.cpp" $'7\n3\n5\n13\n3\n13\n10\n12\n9\n0\n9\n42'
   mkdir -p "$testdir/value-consumer"

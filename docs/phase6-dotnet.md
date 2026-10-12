@@ -1770,8 +1770,9 @@ The next build gate is `DirectWriteForwarder`: planning PresentationCore stops
 with `Build WPF dependency first: DirectWriteForwarder`. The initial
 packaged frontend stopped at included-header `#using` and missing `vcclr.h`.
 The development frontend now handles these, boxed value handles, static fields
-and managed metric layouts (see §13–16). The full upstream translation unit
-still fails on default indexed properties and named interface overrides. Native record
+and managed metric layouts (see §13–16). Default indexed properties, named imported-interface overrides and interface
+property declarations are now supported (see §18). The full upstream translation
+unit still fails on `for each` and COM attributes. Native record
 emission, managed class templates, callbacks, finalizers and automatic native
 partitioning also remain outside its supported subset.
 The same compiler failure can be reproduced with `wpf.sh bridge-gate`; it
@@ -2179,3 +2180,82 @@ been replaced by this development build. Source-defined generic types, indexed
 properties, named overrides, native record emission/partitioning, callbacks and
 finalizers still need work. Full WPF, WindowsDesktop and current Greenshot
 remain unpackaged, with the independent PresentationNative export gap unchanged.
+
+
+## 18. WPF indexers, named overrides and interface declarations
+
+The 2026-10-12 continuation adds one-parameter indexed properties through
+Clang's existing MSPropertySubscriptExpr/PseudoObjectExpr machinery. A small
+parser hook resolves the default property on a managed handle before asking
+Sema to bind its indexed accessors. Native pointer subscripts and managed array
+subscripts retain their existing paths. Imported default-property metadata now
+exposes String.Chars and Dictionary<TKey,TValue>.Item as indexed properties.
+Source default properties emit Item property rows and a real CLR
+DefaultMemberAttribute. Matched numeric/string overloads emit separate property
+rows and share a single C++ facade; original out-of-line default::get/set
+methods bind to the corresponding get_Item/set_Item declarations.
+
+The indexer checks verify side-effectful receiver/index evaluation exactly once,
+getter/setter counts, generic dictionary mutation, Unicode string indexing,
+null receivers, C# reflection/consumption, internal accessor visibility and
+importing the generated overloaded indexers into a second CLI assembly.
+Invalid getter/value/index types and multiple index parameters are rejected.
+Overloads currently require the same value type and accessor forms; static
+indexers, multiple indices and consuming a compound update as a value remain
+outside this subset.
+
+Named imported-interface overrides are converted to typed annotations, with
+Clang resolving the target interface. The emitter checks implementation,
+instance/virtual status and matching parameter/return types, then emits CLR
+.override mappings. The tests verify enumeration through IEnumerable and
+IEnumerator, a renamed private/final GetEnumerator2 and a renamed property
+getter, including interface maps from C#. One imported-interface target is
+supported; renamed source-interface implementations, lists and class targets
+remain pending.
+
+Raw token protection handles interface class/struct before the Windows
+interface macro can expand it. Directive definitions and ordinary native
+interface declarations remain subject to preprocessing. Interface property
+accessors become abstract virtual methods. Parameter attributes inside an
+interface method are excluded from method-boundary detection. Modifier
+placement before handle return types is preserved.
+
+`wpf.sh check-font-source` compiles the unchanged upstream IFontSource.h in a
+minimal context with the same interface macro definition used by Windows
+headers. The check uses source-built DateTime, Uri and UnmanagedMemoryStream
+references and validates both private interfaces, all five font-source methods,
+read-only property types, abstract/virtual flags and the factory signature on
+CoreCLR. This is a managed header check, not a full native-header/bridge build;
+including all Windows inline helper bodies in the IL emitter still reaches
+unsupported native reference returns and requires native partitioning.
+
+Validation on win11:
+
+```sh
+MSYSTEM=CLANG64 bash -l -c "/clang64/bin/cmake.exe --build /home/topkek/dotnetboot/m612/build/cppcli --target cli_ast -j2"
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh \
+  test-indexers test-named-overrides test-static-properties test-virtuals
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  WPF_CPPCLI_BUILD=/home/topkek/dotnetboot/m612/build/cppcli \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh \
+  check-font-source check-localized-messages
+```
+
+The focused compiler checks pass. Managed check builds have zero warnings and
+errors; the existing virtuals.cpp missing-override Clang warning remains.
+The font-source check reports `upstream WPF IFontSource interfaces OK` and the
+localized-messages check verifies its upstream static state and monitor locking.
+Properties and the native-XOR adapter gate also passed in the earlier regression
+run. Logs and source probes are retained under
+`/home/kreijstal/tmp/wpf8-support/validation/indexers-20261012`.
+
+The complete `wpf.sh bridge-gate` still exits nonzero. It now passes the indexed
+property and IFontSource declaration failures and reaches `for each` in
+LocalizedStrings.h plus PreserveSig/COM attribute declarations in
+DWriteInterfaces.h. These attributes must produce real interop metadata;
+removing them would not implement the bridge. Full DirectWriteForwarder,
+System.Printing, PresentationCore/PresentationFramework, the missing native
+exports, WindowsDesktop packaging and current Greenshot remain unfinished.
+The installed frontend package still predates these development changes.

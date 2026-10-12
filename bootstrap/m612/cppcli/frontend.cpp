@@ -183,23 +183,36 @@ void report(CompilerInstance& ci, SourceLocation loc, const std::string& message
 }
 
 struct Lexeme { std::string text, file; unsigned line; tok::TokenKind kind; bool system; };
-// Raw lexing only changes the directive name. Clang's preprocessor still owns
+// Raw lexing protects CLI keywords and directives. Clang's preprocessor owns
 // include lookup, macro expansion, conditional directives and pragma-once IDs.
 std::string shim_using(SourceManager& sm, FileID file, const LangOptions& lang) {
     auto buffer = sm.getBufferData(file); auto start = sm.getLocForStartOfFile(file);
     Lexer lexer(start, lang, buffer.begin(), buffer.begin(), buffer.end());
-    std::vector<std::pair<unsigned, unsigned>> replacements;
+    struct Replacement { unsigned offset, length; std::string text; };
+    std::vector<Replacement> replacements;
+    std::vector<Token> tokens;
     Token token;
-    while (!lexer.LexFromRawLexer(token)) {
-        if (token.is(tok::hash) && token.isAtStartOfLine()) {
-            Token name; lexer.LexFromRawLexer(name);
+    while (!lexer.LexFromRawLexer(token)) if (!token.is(tok::comment)) tokens.push_back(token);
+    bool directive = false;
+    for (size_t i = 0; i < tokens.size(); ++i) {
+        auto& token = tokens[i];
+        if (token.isAtStartOfLine()) directive = token.is(tok::hash);
+        if (token.is(tok::hash) && token.isAtStartOfLine() && i + 1 < tokens.size()) {
+            auto& name = tokens[i + 1];
             if (!name.isAtStartOfLine() && Lexer::getSpelling(name, sm, lang) == "using")
-                replacements.emplace_back(sm.getFileOffset(name.getLocation()), name.getLength());
+                replacements.push_back({sm.getFileOffset(name.getLocation()), name.getLength(), "pragma cli_reference"});
+        }
+        // Windows headers define interface as struct for native COM. Protect
+        // only the two CLI declaration forms; native uses still expand normally.
+        if (!directive && i + 1 < tokens.size() && Lexer::getSpelling(token, sm, lang) == "interface") {
+            auto next = Lexer::getSpelling(tokens[i + 1], sm, lang);
+            if (next == "class" || next == "struct")
+                replacements.push_back({sm.getFileOffset(token.getLocation()), token.getLength(), "__cli_interface"});
         }
     }
     std::string text = buffer.str();
     for (auto it = replacements.rbegin(); it != replacements.rend(); ++it)
-        text.replace(it->first, it->second, "pragma cli_reference");
+        text.replace(it->offset, it->length, it->text);
     return text;
 }
 class UsingFile : public llvm::vfs::File {
@@ -227,7 +240,7 @@ class UsingFileSystem : public llvm::vfs::ProxyFileSystem {
         auto buffer = getUnderlyingFS().getBufferForFile(path);
         if (!buffer) return nullptr;
         auto bytes = (*buffer)->getBuffer();
-        if (bytes.find("using") == llvm::StringRef::npos && bytes.find('\\') == llvm::StringRef::npos) return nullptr;
+        if (bytes.find("using") == llvm::StringRef::npos && bytes.find("interface") == llvm::StringRef::npos && bytes.find('\\') == llvm::StringRef::npos) return nullptr;
         // A separate source manager avoids changing the real translation unit's
         // include ancestry and file IDs while raw lexing the intercepted buffer.
         DiagnosticsEngine diagnostics(ci.getDiagnostics().getDiagnosticIDs(), ci.getDiagnosticOpts());
@@ -337,7 +350,9 @@ protected:
                 if (token.is(tok::eof)) break;
                 auto loc = sm.getPresumedLoc(token.getLocation());
                 if (!loc.isValid()) throw std::runtime_error("token has no source location");
-                tokens.push_back({pp.getSpelling(token), loc.getFilename(), loc.getLine(), token.getKind(), sm.isInSystemHeader(token.getLocation())});
+                auto spelling = pp.getSpelling(token);
+                if (spelling == "__cli_interface") spelling = "interface";
+                tokens.push_back({spelling, loc.getFilename(), loc.getLine(), token.getKind(), sm.isInSystemHeader(token.getLocation())});
             }
             if (ci.getDiagnostics().hasErrorOccurred()) return;
             // Only managed declarations and allocation markers are rewritten.
@@ -365,6 +380,7 @@ protected:
             // parses parameter expressions, default arguments and method bodies.
             std::vector<std::string> class_context(tokens.size()), class_access(tokens.size());
             std::vector<unsigned> class_depth(tokens.size());
+            std::vector<bool> class_interface(tokens.size(), false);
             std::set<size_t> member_starts;
             std::set<size_t> interface_virtual, interface_pure;
             std::map<size_t, std::string> value_defaults;
@@ -386,6 +402,7 @@ protected:
                         (tokens[j-1].text == "public" || tokens[j-1].text == "private" || tokens[j-1].text == "protected" || tokens[j-1].text == "internal")) member_begin = true;
                     else if (depth == 1 && member_begin && tokens[j].text != "}" && tokens[j].text != ";") { member_starts.insert(j); member_begin = false; }
                     class_context[j] = name; class_access[j] = access;
+                    class_interface[j] = tokens[i].text == "interface";
                     class_depth[j] = depth;
                     if (tokens[j].text == "{") ++depth;
                     else if (tokens[j].text == "}") { --depth; if (depth == 1) member_begin = true; }
@@ -404,11 +421,19 @@ protected:
                         if (tokens[i].text == "interface") {
                             if (end >= tokens.size() || tokens[end].text != ";") throw std::runtime_error("interface instance methods currently require a declaration without a body");
                             size_t start = j - 1;
-                            while (start > open + 1 && tokens[start - 1].text != ";" && tokens[start - 1].text != ":") --start;
+                            while (start > open + 1 && tokens[start - 1].text != ";" && tokens[start - 1].text != ":" &&
+                                tokens[start - 1].text != "}" && tokens[start - 1].text != "{") --start;
                             bool already_virtual = false;
                             for (size_t k = start; k < j; ++k) already_virtual |= tokens[k].text == "virtual";
                             if (!already_virtual) interface_virtual.insert(start);
                             interface_pure.insert(end);
+                            // Parameter attributes contain calls such as
+                            // MarshalAs(...), which are not interface methods.
+                            for (size_t k = j + 1; k < end; ++k) {
+                                class_context[k] = name; class_access[k] = access;
+                                class_depth[k] = 1; class_interface[k] = true;
+                            }
+                            j = end - 1;
                         }
                     }
                 }
@@ -544,7 +569,35 @@ protected:
                 i = end - 1;
                 return true;
             };
+            auto adapt_named_override = [&](size_t& i) {
+                if (tokens[i].text != "=") return false;
+                size_t end = i+1; int angles = 0;
+                std::vector<size_t> separators;
+                for (; end < tokens.size(); ++end) {
+                    auto text = tokens[end].text;
+                    if (!angles && (text == "{" || text == ";")) break;
+                    if (text == "<") ++angles; else if (text == ">") --angles; else if (text == ">>") angles -= 2;
+                    if (text == "::" && !angles) separators.push_back(end);
+                    if (text == "," && !angles) throw std::runtime_error("named override lists currently require one target");
+                }
+                if (separators.empty()) return false;
+                size_t split = separators.back();
+                std::string member;
+                if (split+1 < end && (tokens[split+1].text == "get" || tokens[split+1].text == "set")) {
+                    if (separators.size() < 2) throw std::runtime_error("named accessor override requires an interface property");
+                    member = tokens[split+1].text + "_" + tokens[split-1].text;
+                    split = separators[separators.size()-2];
+                } else {
+                    if (split+2 != end) throw std::runtime_error("unsupported named override member");
+                    member = tokens[split+1].text;
+                }
+                std::string target;
+                for (size_t j = i+1; j < split; ++j) target += tokens[j].text + " ";
+                emit(tokens[i], "__attribute__((annotate(\"cli.override:" + member + "\", static_cast<" + target + "*>(nullptr))))");
+                i = end-1; return true;
+            };
             std::set<std::pair<std::string, std::string>> property_names;
+            std::map<std::pair<std::string, std::string>, std::string> indexed_facades;
             for (size_t i = 0; i < tokens.size(); ++i) {
                 auto& t = tokens[i];
                 if (layout_attribute_ends.count(i)) {
@@ -558,14 +611,18 @@ protected:
                 if (cli_structural.count(i)) { emit(t, cli_structural[i]); continue; }
                 if (interface_virtual.count(i)) emit(t, "virtual");
                 if (interface_pure.count(i)) emit(t, "= 0");
-                if (member_starts.count(i) && class_access[i] == "internal") emit(t, "__attribute__((annotate(\"cli.access:assembly\")))");
+                if (member_starts.count(i) && class_access[i] == "internal" && t.text != "property" &&
+                    !((t.text == "virtual" || t.text == "static") && i+1 < tokens.size() && tokens[i+1].text == "property"))
+                    emit(t, "__attribute__((annotate(\"cli.access:assembly\")))");
                 if (t.text == "internal" && class_depth[i] == 1 && i + 1 < tokens.size() && tokens[i+1].text == ":") { emit(t, "public"); continue; }
                 if (i >= 2 && tokens[i-1].text == "::" && i + 2 < tokens.size() && tokens[i+1].text == "::" &&
                     (tokens[i+2].text == "get" || tokens[i+2].text == "set") && property_names.count({tokens[i-2].text, t.text})) {
-                    emit(t, tokens[i+2].text + "_" + t.text); i += 2; continue;
+                    emit(t, tokens[i+2].text + "_" + (t.text == "default" ? "Item" : t.text)); i += 2; continue;
                 }
                 if (t.text == "static" && i + 1 < tokens.size() && tokens[i+1].text == "property") continue;
                 if (t.text == "virtual" && i + 1 < tokens.size() && tokens[i+1].text == "property") continue;
+                if (t.text == "=" && class_depth[i] == 1 && i && (tokens[i-1].text == ")" || tokens[i-1].text == "sealed" || tokens[i-1].text == "override"))
+                    if (adapt_named_override(i)) continue;
                 if (t.text == "static" && i+3 < tokens.size()) {
                     size_t name = i+1;
                     while (name+2 < tokens.size() && tokens[name+1].text == "::") name += 2;
@@ -616,16 +673,33 @@ protected:
                 }
                 if (t.text == "property" && !class_context[i].empty()) {
                     size_t name = i + 1;
-                    while (name + 1 < tokens.size() && !(tokens[name].kind == tok::identifier &&
-                        (tokens[name + 1].text == "{" || tokens[name + 1].text == ";"))) ++name;
+                    while (name + 1 < tokens.size() && !((tokens[name].kind == tok::identifier || tokens[name].text == "default") &&
+                        (tokens[name + 1].text == "{" || tokens[name + 1].text == ";" || tokens[name + 1].text == "["))) ++name;
                     if (name + 1 == tokens.size()) throw std::runtime_error("unsupported property declarator");
                     std::string property = tokens[name].text, property_type;
                     property_names.insert({class_context[i], property});
                     bool is_static = i && tokens[i-1].text == "static";
-                    bool is_virtual = i && tokens[i-1].text == "virtual";
+                    bool is_virtual = class_interface[i] || (i && tokens[i-1].text == "virtual");
                     std::string access_attribute = class_access[i] == "internal" ? "__attribute__((annotate(\"cli.access:assembly\"))) " : "";
                     for (size_t j = i + 1; j < name; ++j) property_type += tokens[j].text + " ";
-                    size_t end = name + 1; bool getter = false, setter = false;
+                    size_t open = name + 1;
+                    bool indexed = tokens[open].text == "[", default_indexer = indexed && property == "default";
+                    std::string index_type;
+                    if (indexed) {
+                        if (is_static) throw std::runtime_error("static indexed properties are not enabled yet");
+                        size_t close = matching(open, "[", "]"); int angles = 0;
+                        for (size_t j = open + 1; j < close; ++j) {
+                            if (tokens[j].text == "<") ++angles;
+                            else if (tokens[j].text == ">") --angles;
+                            else if (tokens[j].text == ">>") angles -= 2;
+                            if (tokens[j].text == "," && !angles) throw std::runtime_error("indexed properties currently require one index parameter");
+                            index_type += tokens[j].text + " ";
+                        }
+                        open = close + 1;
+                        if (tokens[open].text != "{") throw std::runtime_error("indexed properties require accessor bodies/declarations");
+                        if (default_indexer) property = "Item";
+                    }
+                    size_t end = open; bool getter = false, setter = false;
                     if (tokens[end].text == "{") {
                         int depth = 1; ++end;
                         for (; end < tokens.size() && depth; ++end) {
@@ -642,8 +716,18 @@ protected:
                     if (getter) attribute += "get=get_" + property;
                     if (getter && setter) attribute += ",";
                     if (setter) attribute += "put=set_" + property;
+                    bool declare_property = true;
+                    if (indexed) {
+                        emit(t, "using _cli_index_" + property + "_" + std::to_string(i) + " __attribute__((annotate(\"cli.index:" + property + "\"))) = " + index_type + ";");
+                        auto key = std::make_pair(class_context[i], property);
+                        auto facade = attribute + ")) " + property_type;
+                        auto inserted = indexed_facades.emplace(key, facade);
+                        declare_property = inserted.second;
+                        if (!inserted.second && inserted.first->second != facade)
+                            throw std::runtime_error("overloaded indexed properties require the same value type and accessors");
+                    }
                     if (is_static) emit(t, "static __attribute__((annotate(\"cli.static.property:" + std::string(getter ? "get_" + property : "") + "|" + (setter ? "set_" + property : "") + "\"))) __cli_static_property<" + property_type + "> " + property + ";");
-                    else emit(t, attribute + ")) " + property_type + property + ";");
+                    else if (declare_property) emit(t, attribute + ")) " + property_type + (default_indexer ? "__cli_default" : property) + (indexed ? "[]" : "") + ";");
                     if (tokens[name + 1].text == ";") {
                         if (is_static) throw std::runtime_error("static auto-properties are not enabled yet");
                         emit(t, "private: " + property_type + " __cli_backing_" + property + "; " + class_access[i] + ":");
@@ -651,9 +735,18 @@ protected:
                         emit(t, std::string(is_virtual ? "virtual " : "") + "void __attribute__((annotate(\"cli.accessor:set\"))) set_" + property + "(" + property_type + " value) { __cli_backing_" + property + " = value; }");
                     } else {
                         int depth = 1;
-                        for (size_t j = name + 2; j + 1 < end; ++j) {
-                            if (is_static && depth == 1 && (tokens[j-1].text == "{" || tokens[j-1].text == "}" || tokens[j-1].text == ";" || tokens[j-1].text == ":") &&
-                                tokens[j].text != "private" && tokens[j].text != "public" && tokens[j].text != "protected") emit(tokens[j], "static " + access_attribute);
+                        for (size_t j = open + 1; j + 1 < end; ++j) {
+                            if (class_interface[i] && depth == 1 && tokens[j].text == ";") emit(tokens[j], "= 0");
+                            if (class_interface[i] && depth == 1 && tokens[j].text == "{")
+                                throw std::runtime_error("interface property accessors require declarations without bodies");
+                            if (depth == 1 && tokens[j].text == "sealed") { emit(tokens[j], "final"); continue; }
+                            if (depth == 1 && tokens[j].text == "=") if (adapt_named_override(j)) continue;
+                            if (depth == 1 && (tokens[j-1].text == "{" || tokens[j-1].text == "}" || tokens[j-1].text == ";" || tokens[j-1].text == ":") &&
+                                tokens[j].text != "private" && tokens[j].text != "public" && tokens[j].text != "protected" && tokens[j].text != ";" && tokens[j].text != "}") {
+                                bool explicit_virtual = false;
+                                for (size_t k = j; k < end && tokens[k].text != "("; ++k) explicit_virtual |= tokens[k].text == "virtual";
+                                emit(tokens[j], std::string(is_static ? "static " : is_virtual && !explicit_virtual ? "virtual " : "") + access_attribute);
+                            }
                             if (cli_structural.count(j)) {
                                 emit(tokens[j], cli_structural[j]);
                                 if (tokens[j].text == "}") --depth;
@@ -662,7 +755,7 @@ protected:
                             if (adapt_allocation(j)) continue;
                             if (tokens[j].text == "safe_cast") { emit(tokens[j], "__cli_safe_cast"); continue; }
                             if (depth == 1 && j + 1 < end && tokens[j + 1].text == "(" && (tokens[j].text == "get" || tokens[j].text == "set"))
-                                emit(tokens[j], std::string(is_virtual ? "virtual " : "") + access_attribute + "__attribute__((annotate(\"cli.accessor:" + tokens[j].text + "\"))) " + tokens[j].text + "_" + property);
+                                emit(tokens[j], "__attribute__((annotate(\"cli.accessor:" + tokens[j].text + "\"))) " + tokens[j].text + "_" + property);
                             else if (tok::isStringLiteral(tokens[j].kind) && call_context[j] && j > 0 && j + 1 < tokens.size() &&
                                 (tokens[j - 1].text == "(" || tokens[j - 1].text == ",") &&
                                 (tokens[j + 1].text == ")" || tokens[j + 1].text == ",")) emit(tokens[j], "__cli_literal(" + tokens[j].text + ")");
@@ -1039,6 +1132,31 @@ class Emitter {
         std::string sig = (m.is_static ? "" : "instance ") + m.result + " " + owner + "::'" + m.name + "'(";
         for (size_t i = 0; i < m.parameters.size(); ++i) { if (i) sig += ", "; sig += m.parameters[i]; }
         return sig + ")";
+    }
+    std::vector<const CXXMethodDecl*> named_overrides(const CXXMethodDecl* method) const {
+        std::vector<const CXXMethodDecl*> result;
+        for (auto* attribute : method->specific_attrs<AnnotateAttr>()) {
+            if (!attribute->getAnnotation().starts_with("cli.override:")) continue;
+            if (!method->isVirtual() || method->isStatic() || attribute->args_size() != 1) throw std::runtime_error("named override requires a virtual instance method");
+            auto target_type = (*attribute->args_begin())->getType();
+            auto* target = target_type->isPointerType() ? target_type->getPointeeType()->getAsCXXRecordDecl() : nullptr;
+            if (!target || !is_interface(target)) throw std::runtime_error("named overrides currently require an interface target");
+            if (!method->getParent()->isDerivedFrom(target)) throw std::runtime_error("named override target is not an implemented interface");
+            auto member = attribute->getAnnotation().drop_front(13).str();
+            const CXXMethodDecl* selected = nullptr;
+            for (auto* candidate : target->methods()) {
+                if (candidate->getNameAsString() != member || candidate->isStatic() || candidate->getNumParams() != method->getNumParams() ||
+                    type(candidate->getReturnType()) != type(method->getReturnType())) continue;
+                bool match = true;
+                for (unsigned i = 0; i < candidate->getNumParams(); ++i) match &= type(candidate->getParamDecl(i)->getType()) == type(method->getParamDecl(i)->getType());
+                if (!match) continue;
+                if (selected) throw std::runtime_error("ambiguous named override target");
+                selected = candidate;
+            }
+            if (!selected) throw std::runtime_error("named override does not match the interface member signature: " + member);
+            result.push_back(selected);
+        }
+        return result;
     }
     void string_literal(const StringLiteral* s) {
         llvm::SmallVector<llvm::UTF16, 32> utf16;
@@ -1887,6 +2005,7 @@ public:
         if (auto* m = dyn_cast<CXXMethodDecl>(f)) if (!record_annotation(m->getParent(), "cli.external:").empty()) return true;
         if (isa<CXXDestructorDecl>(f)) throw std::runtime_error("managed destructors/finalizers are not enabled yet");
         if (method && f->isOverloadedOperator()) throw std::runtime_error("managed operator metadata is not enabled yet");
+        if (method) named_overrides(method);
         if (method) for (auto* base : method->overridden_methods()) {
             if (type(method->getReturnType()) != type(base->getReturnType())) throw std::runtime_error("covariant managed return metadata is not enabled yet");
             if (!is_interface(base->getParent()) && !method->hasAttr<OverrideAttr>()) throw std::runtime_error("managed class overrides require an explicit override specifier");
@@ -1915,6 +2034,8 @@ public:
                         if (imported == metadata.methods.end() || !imported->second.is_abstract || imported->second.is_static) continue;
                         bool implemented = false;
                         std::function<void(const CXXRecordDecl*)> find_implementation = [&](const CXXRecordDecl* owner) {
+                            for (auto* method : owner->methods()) for (auto* target : named_overrides(method))
+                                implemented |= target->getCanonicalDecl() == expected->getCanonicalDecl();
                             for (auto* method : owner->methods()) if (method->getNameAsString() == imported->second.name && method->isVirtual() &&
                                 method->getAccess() == AS_public && method->getNumParams() == expected->getNumParams() && type(method->getReturnType()) == type(expected->getReturnType())) {
                                 bool match = true;
@@ -2050,6 +2171,7 @@ public:
             for (unsigned j = 0; j < f->getNumParams(); ++j) { if (j) il << ", "; il << type(f->getParamDecl(j)->getType()); }
             il << ") cil managed {\n";
             if (f->getNameAsString() == "main" && body.owner.empty() && options.target == "exe") il << "    .entrypoint\n";
+            if (method) for (auto* target : named_overrides(method)) il << "    .override method " << signature(target) << "\n";
             if (method && method->isPureVirtual()) { il << "  }\n"; return; }
             il << "    .maxstack " << body.max_stack << "\n";
             if (!body.locals.empty()) il << "    .locals init (" << body.locals << ")\n";
@@ -2081,6 +2203,8 @@ public:
                 il << (first_interface ? " implements " : ", ") << record_token(base.getType()->getAsCXXRecordDecl()); first_interface = false;
             }
             il << " {\n";
+            for (auto* member : r->decls()) if (auto* property = dyn_cast<MSPropertyDecl>(member); property && property->getNameAsString() == "__cli_default")
+                il << "  .custom instance void [System.Runtime]System.Reflection.DefaultMemberAttribute::.ctor(string) = (01 00 04 49 74 65 6d 00 00)\n";
             if (annotated(r, "cli.layout.Pack")) il << "  .pack " << layout_constant(r, "cli.layout.Pack", 0) << "\n";
             if (annotated(r, "cli.layout.Size")) il << "  .size " << layout_constant(r, "cli.layout.Size", 0) << "\n";
             for (auto* field : r->fields()) {
@@ -2114,12 +2238,49 @@ public:
                 il << "  }\n";
             }
             for (auto* member : r->decls()) if (auto* property = dyn_cast<MSPropertyDecl>(member)) {
-                il << "  .property instance " << type(property->getType()) << " '" << property->getNameAsString() << "'() {\n";
+                auto property_type = property->getType();
+                bool indexed = property_type->isIncompleteArrayType();
+                if (indexed) property_type = context.getAsArrayType(property_type)->getElementType();
+                auto name = property->getNameAsString() == "__cli_default" ? "Item" : property->getNameAsString();
+                std::set<std::string> declared_indices;
+                if (indexed) for (auto* declaration : r->decls()) if (auto* alias = dyn_cast<TypedefNameDecl>(declaration);
+                    alias && annotation(alias, "cli.index:") == name)
+                    if (!declared_indices.insert(type(alias->getUnderlyingType())).second)
+                        throw std::runtime_error("duplicate indexed property parameter type");
+                struct Accessors { const CXXMethodDecl* getter = nullptr; const CXXMethodDecl* setter = nullptr; };
+                std::map<std::string, Accessors> overloads;
+                std::set<const CXXMethodDecl*> seen;
                 for (auto* method : r->methods()) {
-                    if (property->getGetterId() && method->getIdentifier() == property->getGetterId()) il << "    .get " << signature(method) << "\n";
-                    if (property->getSetterId() && method->getIdentifier() == property->getSetterId()) il << "    .set " << signature(method) << "\n";
+                    bool get = property->getGetterId() && method->getIdentifier() == property->getGetterId();
+                    bool set = property->getSetterId() && method->getIdentifier() == property->getSetterId();
+                    if ((!get && !set) || !seen.insert(method->getCanonicalDecl()).second) continue;
+                    if (set && !method->getNumParams()) throw std::runtime_error("property setter requires a value parameter");
+                    unsigned indices = method->getNumParams() - (set ? 1 : 0);
+                    if (indexed && indices != 1) throw std::runtime_error("indexed properties currently require one index parameter");
+                    if (!indexed && indices) throw std::runtime_error("non-indexed property getter cannot have parameters");
+                    if (get && type(method->getReturnType()) != type(property_type)) throw std::runtime_error("property getter type does not match its declaration");
+                    if (set && (!method->getReturnType()->isVoidType() || type(method->getParamDecl(indices)->getType()) != type(property_type)))
+                        throw std::runtime_error("property setter type does not match its declaration");
+                    auto key = indexed ? type(method->getParamDecl(0)->getType()) : std::string();
+                    if (indexed && !declared_indices.count(key))
+                        throw std::runtime_error(get ? "indexed getter parameter does not match its declaration" : "indexed setter parameter does not match its declaration");
+                    auto& slot = get ? overloads[key].getter : overloads[key].setter;
+                    if (slot) throw std::runtime_error("duplicate indexed property accessor");
+                    slot = method;
                 }
-                il << "  }\n";
+                if (indexed) for (auto& key : declared_indices) if (!overloads.count(key))
+                    throw std::runtime_error("indexed property declaration has no matching accessors");
+                for (auto& entry : overloads) {
+                    auto& accessors = entry.second;
+                    if ((property->getGetterId() && !accessors.getter) || (property->getSetterId() && !accessors.setter))
+                        throw std::runtime_error("property overload is missing a declared accessor");
+                    il << "  .property instance " << type(property_type) << " '" << name << "'(";
+                    if (indexed) il << entry.first;
+                    il << ") {\n";
+                    if (accessors.getter) il << "    .get " << signature(accessors.getter) << "\n";
+                    if (accessors.setter) il << "    .set " << signature(accessors.setter) << "\n";
+                    il << "  }\n";
+                }
             }
             il << "}\n";
         }

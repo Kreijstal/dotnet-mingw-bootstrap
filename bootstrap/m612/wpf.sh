@@ -117,7 +117,7 @@ step_bridge_gate() {
     --type System.Runtime.InteropServices.CriticalHandle --type System.Threading.Interlocked --type System.GC \
     --type System.Runtime.ConstrainedExecution.Cer --type System.Runtime.ConstrainedExecution.Consistency \
     --type System.Runtime.ConstrainedExecution.ReliabilityContractAttribute --type System.Globalization.CultureInfo \
-    --type System.NotSupportedException --type MS.Internal.Invariant \
+    --type System.NotSupportedException --type System.NotImplementedException --type System.IO.UnmanagedMemoryStream --type MS.Internal.Invariant \
     --type 'System.Collections.Generic.IDictionary`2' --type 'System.Collections.Generic.ICollection`1' \
     --type 'System.Collections.Generic.IEnumerable`1' --type 'System.Collections.Generic.IEnumerator`1' \
     --type 'System.Collections.Generic.KeyValuePair`2' --type System.Collections.IEnumerable \
@@ -200,6 +200,30 @@ EOF
   "$sdk/dotnet.exe" build "$(cygpath -m "$work/LocalizedMessagesCheck.csproj")" -c Release \
     --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -v:q
   timeout 30 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/LocalizedMessagesCheck.dll")"
+}
+
+step_check_font_source() {
+  initialize
+  local work=$build/font-source-check
+  local original=$source/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/CPP/DWriteWrapper/IFontSource.h
+  mkdir -p "$work"
+  cat > "$work/FontSource.cpp" <<EOF
+// Same macro used by Windows headers; the probe only emits the managed header.
+#define interface struct
+#include "$(cygpath -m "$original")"
+public ref class FontSourceHeaderMarker abstract sealed {};
+EOF
+  bridge_compile "$(cygpath -m "$work/FontSource.cpp")" --target library --std c++14 \
+    --ilasm "$(cygpath -m /clang64/bin/ilasm-dotnet.exe)" \
+    --type System.DateTime --type System.Uri --type System.IO.UnmanagedMemoryStream \
+    -o "$(cygpath -m "$work/FontSource.dll")"
+  cp "$here/wpf-tests/FontSource.cs" "$work/Program.cs"
+  cat > "$work/FontSourceCheck.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="FontSource"><HintPath>FontSource.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$sdk/dotnet.exe" build "$(cygpath -m "$work/FontSourceCheck.csproj")" -c Release \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -v:q
+  timeout 30 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/FontSourceCheck.dll")"
 }
 
 step_check_font_simulations() {

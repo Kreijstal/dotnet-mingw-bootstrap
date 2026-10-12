@@ -45,18 +45,21 @@
         "typed CLI enum bitwise operators, Flags metadata and switch control flow",
         "inline/out-of-line source static constructors and virtual property accessors",
         "closed imported CLR generic types and bound methods/fields/constructors",
-        "generic reference/value/array/byref signatures and generic interface implementations"
+        "generic reference/value/array/byref signatures and generic interface implementations",
+        "one-parameter default/named indexed properties and matched overloads with CLR property metadata",
+        "single named imported-interface method/accessor overrides and preserved private/final methods",
+        "interface property accessor declarations and Windows interface macro protection"
       ],
       "remaining": [
         "implicit boxing into Object/interfaces, primitive boxes and boxed-handle conversions",
         "generic declarations/methods, constraints/variance and nested generic types",
-        "delegates/events/indexers",
+        "delegates/events and extended indexed-property forms",
         "destructors/finalizers and deterministic cleanup",
         "extended tracking references, nonprimitive pinning and managed pointer operations",
         "general attributes/interface static constructors/multiple translation units",
         "full CLI semantic analysis and metadata type discovery"
       ],
-      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values test-tracking test-pinning test-boxed-values test-static-fields test-static-properties test-nativeints test-layout test-switch test-generics"
+      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values test-tracking test-pinning test-boxed-values test-static-fields test-static-properties test-nativeints test-layout test-switch test-generics test-indexers test-named-overrides"
     },
     {
       "stage": 4,
@@ -89,7 +92,8 @@
         "upstream localized error messages compiled and checked on source-built CoreCLR",
         "upstream font/glyph metric types with preserved layout and native DirectWrite glyph ABI checks",
         "unchanged font-simulation conversion bodies with real Flags metadata and MinGW enum values",
-        "complete DirectWrite Sema gate advanced through real generic collection imports and generic base parsing"
+        "complete DirectWrite Sema gate advanced through real generic collection imports and generic base parsing",
+        "unchanged upstream IFontSource interfaces compiled with abstract property metadata and Windows macro protection"
       ]
     }
   ]

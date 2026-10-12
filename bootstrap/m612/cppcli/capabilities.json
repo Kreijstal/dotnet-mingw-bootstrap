@@ -87,7 +87,13 @@
     "Imported generic interface/base relationships and generated IComparer<int>/two-argument interface implementations",
     "Generic and nongeneric enumeration calls preserve CLR dispatch and Dispose cleanup",
     "Imported interface completeness is checked in the IL backend; nongeneric enumeration facade slots avoid native C++ return-type conflicts",
-    "Managed inheritance token adaptation preserves commas within generic base arguments"
+    "Managed inheritance token adaptation preserves commas within generic base arguments",
+    "Default and named one-parameter indexed properties, CLR DefaultMember metadata and source/imported generic/string indexers",
+    "Indexed compound updates preserve one receiver/index/getter/setter evaluation through Clang pseudo-object expressions",
+    "Overloaded indexers with matching value types/accessor forms, out-of-line definitions and C# / second CLI assembly consumption",
+    "Single named imported-interface method/property-accessor overrides emit genuine CLR MethodImpl mappings and preserve private/final source methods",
+    "CLI interface class/struct keywords survive the Windows interface macro in main files and included headers while native interface uses retain macro expansion",
+    "Interface property declarations emit abstract virtual accessors; unchanged upstream WPF IFontSource header metadata is checked on CoreCLR"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -96,9 +102,9 @@
     "Generic consumption is partial; generic declarations/methods, constraints/variance, delegates and events remain incomplete",
     "No mixed-mode PE output or ijwhost integration yet",
     "Unsupported AST nodes are errors; this is not a conforming general C++/CLI compiler",
-    "Properties cover non-indexed instance and static members; indexed/static auto-properties and static compound updates are not implemented",
+    "Indexed properties currently require one index parameter; overloads require the same value type and accessor forms; static indexed/auto-properties and static compound updates remain unsupported",
     "Interface surrogates use C++ abstract bases; interface-only classes need an explicit Object base for Object upcasts",
-    "Interface declarations currently permit ordinary method declarations only; named/explicit interface implementations are not enabled",
+    "Interface methods and property accessors require declarations without bodies; named overrides cover one imported-interface target; source-interface renamed methods, target lists and class-target overrides remain unsupported",
     "Managed arrays currently require rank one; no aggregate initializers or covariance",
     "Managed destructors/finalizers, covariance metadata and managed operator metadata are explicitly rejected",
     "Native bridges require extern-C scalars or unmanaged pointers; bool/automatic marshalling, callbacks and automatic native partitioning are not enabled",
@@ -111,6 +117,6 @@
     "CLI enum operations currently cover comparisons, explicit casts and bitwise OR/AND/XOR/complement; additive/increment/compound enum operators remain incomplete",
     "Switch initializers and GNU case ranges are rejected; switch labels cannot enter generated protected/pinned scopes",
     "Source-defined static constructors currently cover ref/value classes in one translation unit; interface static constructors remain unsupported",
-    "Imported generic nested types, indexed properties and named interface overrides remain unsupported; static template-field facades can produce native definition warnings"
+    "Imported generic nested types remain unsupported; indexed compound updates used as values are unsupported; static template-field facades can produce native definition warnings"
   ]
 }
