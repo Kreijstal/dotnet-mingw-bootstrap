@@ -62,7 +62,7 @@ def main():
     ap.add_argument("--public-key", type=Path, help="strong-name public-key blob for the emitted assembly identity (public signing only)")
     ap.add_argument("--framework", choices=["windowsforms"], help="reference the source-built Windows Forms pack and select its runtime framework")
     ap.add_argument("--native-library", default="", help="DLL supplying used extern-C functions through a split native bridge")
-    ap.add_argument("--native-import", action="append", default=[], type=Path, help="trusted x64 MinGW import library supplying named Windows API bindings")
+    ap.add_argument("--native-import", action="append", default=[], type=Path, help="trusted x64 MinGW import archive supplying named native DLL bindings")
     ap.add_argument("--llvm-readobj", default="llvm-readobj", help="LLVM reader used to inspect native COFF import libraries")
     ap.add_argument("--clang", default=os.environ.get("CPPCLI_CLANG", "clang++"))
     ap.add_argument("--sdk", type=Path, default=os.environ.get("CPPCLI_SDK"))

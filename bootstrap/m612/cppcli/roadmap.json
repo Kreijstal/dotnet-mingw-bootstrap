@@ -112,7 +112,9 @@
         "GC-free managed-value native pointer bridges, copies/member calls/stores and C# pinned struct-buffer ABI validation",
         "ordinary native integer/pointer conversions with predefined Win32 handle sign extension",
         "opt-in x64 MinGW COFF import archive bindings for lazily selected Windows API calls",
-        "native POD aggregate/field/address lowering, single receiver evaluation and preserved pack pragmas with real native ABI checks"
+        "native POD aggregate/field/address lowering, single receiver evaluation and preserved pack pragmas with real native ABI checks",
+        "Native import archive binding also selects explicitly DLL-imported declarations in user headers",
+        "Clang constexpr evaluation handles provably side-effect-free constant SDK integer/enum calls; no runtime native execution or ignored dynamic calls"
       ],
       "remaining": [
         "native layouts, complete pointer operations and automatic marshalling",
@@ -158,7 +160,11 @@
         "original WPF GlyphMetrics typed native pointer signature, private explicit layout and all seven DirectWrite field writes checked in a pinned array after GC",
         "full WPF gate passes GlyphMetrics pointer declarations and predefined HKEY casts; first missing native SDK bridge is RegOpenKeyExW",
         "complete unchanged upstream util2.cpp with original declaration and focused precompiled-header context; real Windows registry timestamps, Out metadata, Unicode failure output, compacting GC and repeated handle cleanup verified",
-        "full WPF bridge passes RegOpenKeyExW/RegQueryInfoKeyW/RegCloseKey and FILETIME aggregate/field operations; next IL gate is an uninitialized TrueType subsetter local in ttfdelta.cpp"
+        "full WPF bridge passes RegOpenKeyExW/RegQueryInfoKeyW/RegCloseKey and FILETIME aggregate/field operations; next IL gate is an uninitialized TrueType subsetter local in ttfdelta.cpp",
+        "WPF /clr:initLocals-compatible zero-at-entry declarations, including method-entry rather than loop-reentry initialization",
+        "Real upstream TrueType subsetting port: 14 native implementation inputs, thread-safe initialization, explicit source-built C ABI and complete managed wrapper; reduced real Arial from 1045720 to 317024 bytes with outlines/checksum/Windows font loading/concurrency/error checks",
+        "Font-simulation probe now uses complete trusted MinGW dwrite.h and its actual constexpr flag operators",
+        "Full bridge passes the native subsetter and constant native enum flags; next IL gate is IUnknown::Release in NativePointerWrapper.cpp:35"
       ]
     }
   ]

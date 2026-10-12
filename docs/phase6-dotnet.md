@@ -1790,8 +1790,11 @@ Native Guid references and opaque trivial native record copies now pass (see
 GC-free managed value pointers now pass (§31), including the original
 GlyphMetrics header/native ABI. Windows API imports and native FILETIME
 aggregate/field operations now pass (§32); the complete original util2.cpp
-is compiled and checked against actual registry timestamps. IL emission next
-fails at an uninitialized local in TrueTypeSubsetter/TtfDelta/ttfdelta.cpp:46.
+is compiled and checked against actual registry timestamps. The TrueType
+subsetter now builds from its actual upstream algorithm into a native DLL, with
+a checked managed split bridge (§33). Clang-proven side-effect-free SDK constexpr
+integer calls also pass, including MinGW's constant enum flag operator. IL
+emission next fails at IUnknown::Release in NativePointerWrapper.cpp:35.
 General native record operations, open managed
 generics, callbacks, finalizers and automatic native
 partitioning also remain outside its supported subset.
@@ -3414,3 +3417,90 @@ exports, protocol/version matching and desktop packaging remain open. Frontend
 changes remain in the development build; installed packages are unchanged.
 Logs, original registry sources, native ABI checks and emitted IL are archived
 under `tmp/wpf8-support/validation/windows-api-registry-20261012` on the local host.
+
+## 33. Actual TrueType subsetting through a native split bridge
+
+The 2026-10-12 continuation first removes the declaration-initializer gate.
+Every generated method already uses `.locals init`, and WPF's project explicitly
+requests `/clr:initLocals`. Declarations without initializers therefore use
+zeroed method-entry storage; they do not reset that storage on loop re-entry.
+The focused test checks primitive, native pointer and native enum zero values
+and repeated block entry. The full unsplit bridge advances to unsupported
+native callback-pointer storage in TtfDelta.
+
+`wpf.sh native-subsetter` now builds the actual upstream algorithm, including all
+14 TtfDelta implementation inputs, into `wpf-subsetter.dll` and a named x64 COFF
+import archive. Patch 0005 adds conditional native initialization paths to the
+two original table-initialization routines: `std::call_once` replaces managed
+Monitor/finally scaffolding while retaining the table assignments. The native
+translation unit supplies the standard headers outside the upstream namespace,
+legacy Win32 min/max semantics, ttBoolean and MinGW SAL spellings. It uses
+C++14 and `-ftrivial-auto-var-init=zero`. Native initialization failure returns
+the original generic font error instead of unwinding across the CLR boundary.
+The DLL depends on the trusted CLANG64 libc++ runtime and Windows UCRT/OS APIs.
+
+Patch 0005 also adds an opt-in `WPF_SUBSETTER_SPLIT` path to the complete original
+managed truetype.cpp wrapper. Its native call uses the same subset format,
+language/list settings and allocator/free functions as upstream. Allocation
+callbacks stay wholly native. The managed pin, Marshal.Copy, finally cleanup,
+FileFormatException and original-font fallback remain in the wrapper. The
+upstream managed initialization path remains available when the split flags
+are absent. Native DLL-import declarations in user headers can now bind against
+an explicitly supplied import archive as well as system headers; unrelated
+unbound functions are not assigned to the subsetter DLL.
+
+`wpf.sh check-subsetter` compiles the complete patched truetype.cpp and its
+original declaration in a focused dependency context. A C# consumer invokes
+the actual internal ComputeSubset method, compares its output byte for byte
+with a direct native call, and independently checks sfnt table bounds, the
+requested glyph outlines and the full TrueType checksum. Windows accepts and
+removes the resulting in-memory font. Concurrent first use checks native table
+initialization, malformed input produces FileFormatException, and the operation
+still works after compacting GC. With the Windows-installed Arial input and
+glyphs 0, 36, 37 and 171, the font shrinks from **1,045,720 to 317,024 bytes**.
+No font is bundled in the bootstrap or redistributed in the evidence archive.
+
+The next full-bridge failure exposed MinGW's constexpr overload of enum `operator|`.
+The emitter now asks Clang to evaluate system-header constexpr integer/enum
+calls with `SE_NoSideEffects`. A proven result becomes an IL constant. Dynamic
+calls and calls with side effects remain errors unless their implementation or
+native bridge exists; no SDK function is executed by the compiler. Focused checks
+exercise the real SDK enum operators, an unsigned 64-bit high-bit constant and
+the rejection paths. The existing font-simulation check now includes the complete
+MinGW Windows/dwrite headers rather than extracting only the enum declaration.
+
+Validation on win11:
+
+```sh
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh \
+  test-sdk-constants test-init-locals test-windows-api
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh \
+  test-native-fields test-interop test-pinning
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  WPF_CPPCLI_BUILD=/home/topkek/dotnetboot/m612/build/cppcli \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh \
+  native-subsetter check-font-simulations check-subsetter bridge-gate
+```
+
+The frontend build and focused checks pass. The native algorithm build has
+83 upstream warnings; the managed wrapper retains one upstream module-attribute
+warning, and its C# consumer builds with zero warnings/errors. The full bridge
+gate still exits 1, now after three warnings at NativePointerWrapper.cpp:35:
+`IUnknown::Release` requires native COM method dispatch. The subsetter and constant
+enum flag failures are absent. Remaining startup units, COM/native allocation,
+System.Printing, PresentationCore/PresentationFramework, required native exports,
+protocol/version alignment and WindowsDesktop packaging remain unfinished.
+
+Evidence now covers **three of the 21 directly included implementation bodies**:
+the two unchanged components from earlier turns plus the complete patched
+truetype.cpp wrapper; its 14 nested native algorithm inputs are also built.
+This does not prove the complete DirectWriteForwarder assembly. The 620 C#
+foundation inputs remain compiled, and no complete WPF package is produced.
+Changes remain in the development build. Logs, import/ABI manifests, native DLL,
+patched sources and emitted IL are archived under
+`tmp/wpf8-support/validation/native-subsetter-20261012` on the local host.

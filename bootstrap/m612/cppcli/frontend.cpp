@@ -2219,9 +2219,23 @@ class Emitter {
     void call(const CallExpr* c) {
         auto* f = c->getDirectCallee();
         if (!f) fail(c, "indirect calls are not supported yet");
+        // Clang can prove constexpr SDK calls without executing native code.
+        // Require side-effect-free integer evaluation; dynamic calls still need
+        // an emitted body or an explicit native binding.
+        if (f->isConstexpr() && ci.getSourceManager().isInSystemHeader(f->getLocation()) &&
+            (c->getType()->isIntegerType() || c->getType()->isEnumeralType())) {
+            Expr::EvalResult evaluated;
+            if (c->EvaluateAsInt(evaluated, context, Expr::SE_NoSideEffects)) {
+                auto value = evaluated.Val.getInt();
+                unsigned bits = context.getTypeSize(c->getType()) > 32 ? 64 : 32;
+                auto constant = value.isSigned() ? value.sextOrTrunc(bits) : value.zextOrTrunc(bits);
+                op(std::string(bits == 64 ? "ldc.i8 " : "ldc.i4 ") + std::to_string(constant.getSExtValue()), 0, 1);
+                return;
+            }
+        }
         auto binding = native_imports.find(f->getNameAsString());
         if (binding != native_imports.end() && f->isExternC() && !isa<CXXMethodDecl>(f) && !f->hasBody() &&
-            f->hasAttr<DLLImportAttr>() && ci.getSourceManager().isInSystemHeader(f->getLocation())) {
+            f->hasAttr<DLLImportAttr>()) {
             selected_native_imports.insert(f->getCanonicalDecl());
             if (seen.insert(f->getCanonicalDecl()).second) functions.push_back(const_cast<FunctionDecl*>(f));
         }
@@ -2855,7 +2869,10 @@ class Emitter {
         else if (auto* d = dyn_cast<DeclStmt>(s)) {
             for (auto* decl : d->decls()) {
                 auto* v = cast<VarDecl>(decl);
-                if (!v->hasInit()) fail(s, "uninitialized locals are not supported yet");
+                // Every emitted method already uses .locals init, matching
+                // WPF's /clr:initLocals: zero once on method entry. A declaration
+                // without an initializer does not reset storage on loop re-entry.
+                if (!v->hasInit()) continue;
                 if (native_reference(v)) native_address(v->getInit());
                 else if (v->getType()->isReferenceType()) address(v->getInit()); else pointer_value(v->getInit(), v); op("stloc " + std::to_string(locals.at(v)), 1);
             }

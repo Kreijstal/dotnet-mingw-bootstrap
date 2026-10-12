@@ -442,6 +442,18 @@ EOF
   reject_case native-exception 'int main() { try { throw 1; } catch (int value) { return value; } }' 'only managed handle'
   reject_case rethrow-outside-catch 'int main() { throw; }' 'rethrow requires'
 }
+step_test-sdk-constants() {
+  run_case sdk-constants "$src/tests/sdk-constants.cpp" $'3\n9223372036854775813\n9'
+  reject_case sdk-dynamic-operator '#include <windows.h>
+#include <dwrite.h>
+int Dynamic(DWRITE_FONT_SIMULATIONS value) { return value | DWRITE_FONT_SIMULATIONS_BOLD; }
+int main() { return Dynamic(DWRITE_FONT_SIMULATIONS_NONE); }' 'without an emitted definition'
+  reject_case sdk-side-effect '#include "sdk-constants.hpp"
+int main() { int value = 0; return SdkIntegerConstant(++value); }' 'without an emitted definition' -I "$(cygpath -m "$src/tests")"
+}
+step_test-init-locals() {
+  run_case init-locals "$src/tests/init-locals.cpp" $'0\n6'
+}
 step_test-native-fields() {
   /clang64/bin/clang++.exe -std=c++17 -fms-extensions -shared -O2 -DCPPCLI_NATIVE_BUILD "$src/tests/native-fields-native.cpp" -o "$testdir/cppcli-native-fields.dll"
   run_case native-fields "$src/tests/native-fields.cpp" 'native POD aggregate, packed nested fields, addresses and single evaluation OK' --native-library cppcli-native-fields.dll

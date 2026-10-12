@@ -101,8 +101,23 @@ step_check_checked_integers() {
   "$build/checked-integers.exe"
 }
 
+step_native_subsetter() {
+  step_prepare_bridges
+  local subset=$source/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/CPP/TrueTypeSubsetter
+  /clang64/bin/clang++.exe -std=c++14 -fms-extensions -ftrivial-auto-var-init=zero -O2 -shared -DNDEBUG -DINTEL \
+    "$here/wpf-native/SubsetterBridge.cpp" -I "$subset/TtfDelta" -I "$subset" \
+    -D '__checkReturn=_Check_return_' -D '__success(x)=_Success_(x)' \
+    -D '__in_bcount(x)=_In_reads_bytes_(x)' -D '__out_bcount(x)=_Out_writes_bytes_(x)' \
+    -D '__inout_bcount(x)=_Inout_updates_bytes_(x)' \
+    -D '__field_bcount(x)=_Field_size_bytes_(x)' -D '__field_ecount(x)=_Field_size_(x)' \
+    -D '__in_ecount(x)=_In_reads_(x)' -D '__out_ecount(x)=_Out_writes_(x)' \
+    -D '__field_range(low,high)=_Field_range_(low,high)' \
+    -o "$build/lib/wpf-subsetter.dll" "-Wl,--out-implib,$build/lib/libwpf-subsetter.a"
+}
+
 step_bridge_gate() {
   step_prepare_bridges
+  [ -s "$build/lib/libwpf-subsetter.a" ] || step_native_subsetter
   local cpp=$source/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/CPP
   local shared=$source/src/Microsoft.DotNet.Wpf/src/Shared/inc
   local core_refs=("$sdk"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
@@ -110,6 +125,8 @@ step_bridge_gate() {
   bridge_compile "$(cygpath -m "$cpp/DirectWriteForwarder.cpp")" --std c++14 --target library --emit il \
     --native-import "$(cygpath -m /clang64/lib/libadvapi32.a)" \
     --native-import "$(cygpath -m /clang64/lib/libkernel32.a)" \
+    --native-import "$(cygpath -m "$build/lib/libwpf-subsetter.a")" \
+    -D WPF_SUBSETTER_SPLIT=1 -I "$(cygpath -m "$here/wpf-native")" \
     --public-key "$(cygpath -m "$build/keys/MSShared.snk")" \
     --type System.Double --type System.Int32 --type System.UInt32 --type System.IFormatProvider --type System.Globalization.NumberStyles \
     --type System.DateTime --type System.Threading.Monitor --type System.Security.SecurityCriticalAttribute \
@@ -370,6 +387,34 @@ EOF
   "$sdk/dotnet.exe" build "$(cygpath -m "$work/PointerHandleCheck.csproj")" -c Release \
     --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -v:q
   timeout 30 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/PointerHandleCheck.dll")"
+}
+
+step_check_subsetter() {
+  initialize
+  local work=$build/subsetter-check
+  local original=$source/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/CPP/TrueTypeSubsetter
+  local core_refs=("$sdk"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
+  local core_ref=${core_refs[-1]}
+  [ -s "$build/lib/libwpf-subsetter.a" ] || step_native_subsetter
+  mkdir -p "$work"
+  cp "$original/truetype.cpp" "$original/truetype.h" "$original/fsassert.h" "$work/"
+  printf '#include <windows.h>\n#include <limits.h>\n#include <vcclr.h>\n' > "$work/precomp.hxx"
+  bridge_compile "$(cygpath -m "$work/truetype.cpp")" --target library --std c++14 \
+    --ilasm "$(cygpath -m /clang64/bin/ilasm-dotnet.exe)" --type System.Uri --type System.IntPtr \
+    --type System.Runtime.InteropServices.Marshal --type System.IO.FileFormatException \
+    --reference "$(cygpath -m "$core_ref/System.Runtime.InteropServices.dll")" \
+    --reference "$(cygpath -m "$oob/System.IO.Packaging.dll")" \
+    --native-import "$(cygpath -m "$build/lib/libwpf-subsetter.a")" \
+    -D WPF_SUBSETTER_SPLIT=1 -I "$(cygpath -m "$here/wpf-native")" -I "$(cygpath -m "$original")" \
+    -o "$(cygpath -m "$work/Subsetter.dll")"
+  cp "$here/wpf-tests/Subsetter.cs" "$work/Program.cs"
+  cat > "$work/SubsetterCheck.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit><AllowUnsafeBlocks>true</AllowUnsafeBlocks></PropertyGroup></Project>
+EOF
+  "$sdk/dotnet.exe" build "$(cygpath -m "$work/SubsetterCheck.csproj")" -c Release \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -v:q
+  cp "$work/Subsetter.dll" "$build/lib/wpf-subsetter.dll" "$oob/System.IO.Packaging.dll" "$work/bin/Release/net8.0/"
+  timeout 60 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/SubsetterCheck.dll")"
 }
 
 step_check_registry_time() {

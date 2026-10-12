@@ -1,0 +1,89 @@
+--- a/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/CPP/TrueTypeSubsetter/TtfDelta/GlobalInit.h
++++ b/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/CPP/TrueTypeSubsetter/TtfDelta/GlobalInit.h
+@@ -8,0 +9,3 @@
++#if defined(WPF_SUBSETTER_NATIVE)
++class GlobalInit { public: static void Init(); };
++#else
+@@ -16,0 +20 @@
++#endif
+--- a/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/CPP/TrueTypeSubsetter/TtfDelta/ControlTableInit.h
++++ b/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/CPP/TrueTypeSubsetter/TtfDelta/ControlTableInit.h
+@@ -8,0 +9,3 @@
++#if defined(WPF_SUBSETTER_NATIVE)
++class ControlTableInit { public: static void Init(); };
++#else
+@@ -16,0 +20 @@
++#endif
+--- a/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/CPP/TrueTypeSubsetter/TtfDelta/ttfcntrl.cpp
++++ b/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/CPP/TrueTypeSubsetter/TtfDelta/ttfcntrl.cpp
+@@ -433,0 +434,6 @@
++#if defined(WPF_SUBSETTER_NATIVE)
++void GlobalInit::Init()
++{
++    static std::once_flag initialization;
++    std::call_once(initialization, [] {
++#else
+@@ -442,0 +449 @@
++#endif
+@@ -1564,0 +1572,4 @@
++#if defined(WPF_SUBSETTER_NATIVE)
++    });
++}
++#else
+@@ -1573,0 +1585 @@
++#endif
+--- a/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/CPP/TrueTypeSubsetter/TtfDelta/ttftabl1.cpp
++++ b/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/CPP/TrueTypeSubsetter/TtfDelta/ttftabl1.cpp
+@@ -64,0 +65,6 @@
++#if defined(WPF_SUBSETTER_NATIVE)
++void ControlTableInit::Init()
++{
++    static std::once_flag initialization;
++    std::call_once(initialization, [] {
++#else
+@@ -73,0 +80 @@
++#endif
+@@ -123,0 +131,4 @@
++#if defined(WPF_SUBSETTER_NATIVE)
++    });
++}
++#else
+@@ -132,0 +144 @@
++#endif
+--- a/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/CPP/TrueTypeSubsetter/TtfDelta/ttmem.cpp
++++ b/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/CPP/TrueTypeSubsetter/TtfDelta/ttmem.cpp
+@@ -22,0 +23 @@
++#if !defined(WPF_SUBSETTER_NATIVE)
+@@ -23,0 +25 @@
++#endif
+--- a/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/CPP/TrueTypeSubsetter/truetype.cpp
++++ b/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/CPP/TrueTypeSubsetter/truetype.cpp
+@@ -21,0 +22,3 @@
++#if defined(WPF_SUBSETTER_SPLIT)
++#include "SubsetterBridge.h"
++#else
+@@ -49,0 +53 @@
++#endif // !WPF_SUBSETTER_SPLIT
+@@ -53,0 +58,3 @@
++#if defined(WPF_SUBSETTER_SPLIT)
++#include "TtfDelta/ttferror.h"
++#endif
+@@ -55,0 +63 @@
++#if !defined(WPF_SUBSETTER_SPLIT)
+@@ -59,0 +68 @@
++#endif
+@@ -70,0 +80,6 @@
++#if defined(WPF_SUBSETTER_SPLIT)
++    int16 errCode = WpfCreateSubset(
++        static_cast<const uint8 *>(fontData), fileSize, &puchDestBuffer,
++        &ulDestBufferSize, &ulBytesWritten, pinnedGlyphArray,
++        static_cast<USHORT>(glyphArray->Length), directoryOffset);
++#else
+@@ -88,0 +104 @@
++#endif
+@@ -101,0 +118,3 @@
++#if defined(WPF_SUBSETTER_SPLIT)
++        WpfFreeSubset(puchDestBuffer);
++#else
+@@ -102,0 +122 @@
++#endif

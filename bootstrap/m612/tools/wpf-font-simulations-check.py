@@ -15,7 +15,8 @@ end = text.index("    DWRITE_FONT_FACE_TYPE DWriteTypeConverter::Convert(FontFac
 # Preserve these two complete original methods byte for byte, including their
 # enum case labels, bitwise expressions, explicit casts and exception paths.
 methods = text[begin:end]
-output.write_text(f'''{native.group()}
+output.write_text(f'''#include <windows.h>
+#include <dwrite.h>
 #include "{(wrapper / 'FontSimulation.h').as_posix()}"
 namespace MS {{ namespace Internal {{ namespace Text {{ namespace TextInterface {{
 private ref class DWriteTypeConverter sealed {{
