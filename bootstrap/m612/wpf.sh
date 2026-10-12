@@ -226,6 +226,28 @@ EOF
   timeout 30 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/FontSourceCheck.dll")"
 }
 
+step_check_localized_copy() {
+  initialize
+  local work=$build/localized-copy-check
+  local core_refs=("$sdk"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
+  local core_ref=${core_refs[-1]}
+  mkdir -p "$work"
+  /clang64/bin/python.exe "$here/tools/wpf-localized-copy-check.py" "$(cygpath -m "$source")" "$(cygpath -m "$work/LocalizedCopy.cpp")"
+  bridge_compile "$(cygpath -m "$work/LocalizedCopy.cpp")" --target library --std c++14 \
+    --ilasm "$(cygpath -m /clang64/bin/ilasm-dotnet.exe)" \
+    --reference "$(cygpath -m "$core_ref/System.Globalization.dll")" --type System.Globalization.CultureInfo \
+    --type 'System.Collections.Generic.IEnumerable`1' --type 'System.Collections.Generic.IEnumerator`1' \
+    --type 'System.Collections.Generic.KeyValuePair`2' --type System.Collections.IEnumerable \
+    --type System.Collections.IEnumerator --type System.IDisposable -o "$(cygpath -m "$work/LocalizedCopy.dll")"
+  cp "$here/wpf-tests/LocalizedCopy.cs" "$work/Program.cs"
+  cat > "$work/LocalizedCopyCheck.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="LocalizedCopy"><HintPath>LocalizedCopy.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$sdk/dotnet.exe" build "$(cygpath -m "$work/LocalizedCopyCheck.csproj")" -c Release \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -v:q
+  timeout 30 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/LocalizedCopyCheck.dll")"
+}
+
 step_check_font_simulations() {
   initialize
   local work=$build/font-simulations-check

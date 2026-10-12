@@ -93,7 +93,12 @@
     "Overloaded indexers with matching value types/accessor forms, out-of-line definitions and C# / second CLI assembly consumption",
     "Single named imported-interface method/property-accessor overrides emit genuine CLR MethodImpl mappings and preserve private/final source methods",
     "CLI interface class/struct keywords survive the Windows interface macro in main files and included headers while native interface uses retain macro expansion",
-    "Interface property declarations emit abstract virtual accessors; unchanged upstream WPF IFontSource header metadata is checked on CoreCLR"
+    "Interface property declarations emit abstract virtual accessors; unchanged upstream WPF IFontSource header metadata is checked on CoreCLR",
+    "For each with braced bodies over rank-one arrays, generic/nongeneric collections, pattern enumerators and selected String character enumerators",
+    "Clang-selected GetEnumerator/MoveNext/get_Current methods retain CLR method and generic type identities via unevaluated helper declarations",
+    "Enumerator cleanup uses real CLR finally and IDisposable dispatch, including break, early return and exceptions",
+    "For each value copies, primitive unboxing/reference casts and numeric safe_cast identity/width conversions",
+    "Unchanged upstream WPF LocalizedStrings CopyTo method compiles and runs with CultureInfo/String pairs, offsets and exception cleanup"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -117,6 +122,7 @@
     "CLI enum operations currently cover comparisons, explicit casts and bitwise OR/AND/XOR/complement; additive/increment/compound enum operators remain incomplete",
     "Switch initializers and GNU case ranges are rejected; switch labels cannot enter generated protected/pinned scopes",
     "Source-defined static constructors currently cover ref/value classes in one translation unit; interface static constructors remain unsupported",
-    "Imported generic nested types remain unsupported; indexed compound updates used as values are unsupported; static template-field facades can produce native definition warnings"
+    "Imported generic nested types remain unsupported; indexed compound updates used as values are unsupported; static template-field facades can produce native definition warnings",
+    "For each currently requires braced bodies and managed array/reference-enumerator handles; MoveNext currently requires bool; tracking-reference variables and value/native enumerators remain unsupported"
   ]
 }

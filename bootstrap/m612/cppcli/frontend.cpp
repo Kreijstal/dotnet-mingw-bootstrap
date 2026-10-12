@@ -355,6 +355,58 @@ protected:
                 tokens.push_back({spelling, loc.getFilename(), loc.getLine(), token.getKind(), sm.isInSystemHeader(token.getLocation())});
             }
             if (ci.getDiagnostics().hasErrorOccurred()) return;
+            // Lower only the CLI loop boundary. Collection expressions, element
+            // declarations and loop bodies are still parsed and checked by Clang.
+            auto balance = [&](size_t begin, llvm::StringRef open, llvm::StringRef close) {
+                int depth = 0;
+                for (size_t end = begin; end < tokens.size(); ++end) {
+                    if (tokens[end].text == open) ++depth;
+                    if (tokens[end].text == close && --depth == 0) return end;
+                }
+                throw std::runtime_error("unterminated for each statement");
+            };
+            unsigned each_id = 0;
+            for (size_t pos = tokens.size(); pos-- > 0;) {
+                if (tokens[pos].text != "for" || pos+2 >= tokens.size() || tokens[pos+1].text != "each" || tokens[pos+2].text != "(") continue;
+                size_t close = balance(pos+2, "(", ")"), in = pos+3;
+                while (in < close && tokens[in].text != "in") ++in;
+                if (in < pos+5 || in+1 == close || tokens[in-1].kind != tok::identifier)
+                    throw std::runtime_error("for each requires an element declaration and a collection expression");
+                for (size_t j = pos+3; j < in-1; ++j) if (tokens[j].text == "%" || tokens[j].text == "&")
+                    throw std::runtime_error("tracking-reference for each variables are not enabled yet");
+                if (close+1 >= tokens.size() || tokens[close+1].text != "{")
+                    throw std::runtime_error("for each currently requires a braced body");
+                size_t end = balance(close+1, "{", "}");
+                auto anchor = tokens[pos];
+                std::vector<Lexeme> replacement;
+                auto append = [&](const std::string& source) {
+                    // Raw lexing signals end-of-buffer on the final token.
+                    // A trailing newline keeps each fragment's last token.
+                    auto file = sm.createFileID(llvm::MemoryBuffer::getMemBufferCopy(source + "\n", "<cli-for-each>"));
+                    auto data = sm.getBufferData(file);
+                    Lexer lexer(sm.getLocForStartOfFile(file), ci.getLangOpts(), data.begin(), data.begin(), data.end());
+                    Token token;
+                    while (!lexer.LexFromRawLexer(token)) {
+                        auto lexeme = anchor;
+                        lexeme.text = Lexer::getSpelling(token, sm, ci.getLangOpts());
+                        lexeme.kind = token.is(tok::raw_identifier) ? tok::identifier : token.getKind();
+                        replacement.push_back(std::move(lexeme));
+                    }
+                };
+                auto append_tokens = [&](size_t first, size_t last) { replacement.insert(replacement.end(), tokens.begin()+first, tokens.begin()+last); };
+                auto enumerator = "__cli_each_enumerator_" + std::to_string(each_id);
+                auto index = "__cli_each_index_" + std::to_string(each_id++);
+                append("{ auto " + enumerator + " = __cli_each_get((");
+                append_tokens(in+1, close);
+                append(")); int " + index + " = -1; try { while (__cli_each_next(" + enumerator + ", " + index + ")) {");
+                append_tokens(pos+3, in);
+                append("= __cli_safe_cast<"); append_tokens(pos+3, in-1);
+                append(">(__cli_each_current(" + enumerator + ", " + index + "));");
+                append_tokens(close+1, end+1);
+                append("} } finally { __cli_each_dispose(" + enumerator + "); } }");
+                tokens.erase(tokens.begin()+pos, tokens.begin()+end+1);
+                tokens.insert(tokens.begin()+pos, replacement.begin(), replacement.end());
+            }
             // Only managed declarations and allocation markers are rewritten.
             // Expressions/statements remain C++ and are parsed by Clang later.
             for (size_t i = 0; i + 2 < tokens.size(); ++i)
@@ -1437,6 +1489,41 @@ class Emitter {
             if (c->getNumArgs() != 1 || !isa<StringLiteral>(c->getArg(0)->IgnoreParenImpCasts())) fail(c, "invalid string literal marker");
             expr(c->getArg(0)); return;
         }
+        if (llvm::StringRef(f->getNameAsString()).starts_with("__cli_each_")) {
+            if (!c->getNumArgs()) fail(c, "enumeration intrinsic lacks a receiver");
+            auto receiver = c->getArg(0)->getType();
+            auto* record = handle_target(receiver);
+            if (!record) fail(c, "for each currently requires managed array or reference enumerator handles");
+            auto element = array_element(record);
+            auto name = f->getNameAsString();
+            if (name == "__cli_each_dispose") {
+                if (element.isNull()) {
+                    unsigned slot = temporary("class [System.Runtime]System.IDisposable");
+                    expr(c->getArg(0)); op("isinst [System.Runtime]System.IDisposable", 1, 1); op("stloc " + std::to_string(slot), 1);
+                    auto done = label(); op("ldloc " + std::to_string(slot), 0, 1); op("brfalse " + done, 1);
+                    op("ldloc " + std::to_string(slot), 0, 1); op("callvirt instance void [System.Runtime]System.IDisposable::Dispose()", 1);
+                    mark(done);
+                }
+                return;
+            }
+            if (!element.isNull()) {
+                if (name == "__cli_each_get") { expr(c->getArg(0)); return; }
+                if (name == "__cli_each_current") {
+                    expr(c->getArg(0)); expr(c->getArg(1)); op("ldelem " + type(element), 2, 1); return;
+                }
+                if (name == "__cli_each_next") {
+                    address(c->getArg(1)); op("dup", 1, 2); op("ldind.i4", 1, 1); op("ldc.i4.1", 0, 1); op("add", 2, 1); op("stind.i4", 2);
+                    expr(c->getArg(1)); expr(c->getArg(0)); op("ldlen", 1, 1); op("conv.i4", 1, 1); op("clt", 2, 1); return;
+                }
+            }
+            auto* result = dyn_cast<DecltypeType>(f->getReturnType().getTypePtr());
+            auto* selected = result ? dyn_cast<CXXMemberCallExpr>(result->getUnderlyingExpr()->IgnoreParenImpCasts()) : nullptr;
+            auto* method = selected ? selected->getMethodDecl() : nullptr;
+            if (!method || method->getNumParams() || method->isStatic()) fail(c, "enumeration intrinsic lacks a Clang-selected instance method");
+            if (name == "__cli_each_get" && !handle_target(method->getReturnType())) fail(c, "value enumerators are not enabled yet");
+            if (name == "__cli_each_next" && !method->getReturnType()->isBooleanType()) fail(c, "enumerator MoveNext must return bool");
+            expr(c->getArg(0)); op("callvirt " + signature(method), 1, 1); return;
+        }
         if (auto* opcall = dyn_cast<CXXOperatorCallExpr>(c)) {
             if (opcall->getOperator() == OO_Arrow) { expr(opcall->getArg(0)); return; }
             if (opcall->getOperator() == OO_Equal && opcall->getNumArgs() == 2 && (handle_target(opcall->getArg(0)->getType()) || value_target(opcall->getArg(0)->getType()))) {
@@ -1448,6 +1535,18 @@ class Emitter {
             auto* target = handle_target(c->getType());
             bool safe = f->getNameAsString() == "__cli_safe_cast";
             QualType source_type = c->getArg(0)->getType();
+            if (safe && type(source_type) == type(c->getType())) { expr(c->getArg(0)); return; }
+            if (safe && (source_type->isArithmeticType() || source_type->isEnumeralType()) &&
+                (c->getType()->isArithmeticType() || c->getType()->isEnumeralType())) {
+                expr(c->getArg(0));
+                if (c->getType()->isBooleanType()) {
+                    auto source = numeric_type(source_type);
+                    op(source == "int64" || source == "uint64" ? "ldc.i8 0" : source == "float32" ? "ldc.r4 0" : source == "float64" ? "ldc.r8 0" : "ldc.i4.0", 0, 1);
+                    op("ceq", 2, 1); op("ldc.i4.0", 0, 1); op("ceq", 2, 1); return;
+                }
+                if (source_type->isUnsignedIntegerType() && c->getType()->isRealFloatingType()) op("conv.r.un", 1, 1);
+                numeric_conversion(c->getType()); return;
+            }
             if (safe && target && boxable(source_type)) {
                 if (target != value_target(source_type) && record_name(target) != "[System.Runtime]'System.Object'") fail(c, "boxing requires the matching value handle or an Object handle target");
                 expr(c->getArg(0)); op("box " + type(source_type), 1, 1); return;

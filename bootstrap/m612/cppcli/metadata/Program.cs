@@ -318,6 +318,15 @@ static class Program
             }
             foreach (var t in types) Define(t);
             header.WriteLine("namespace cli { template<class T, int Rank> class __attribute__((annotate(\"cli.ref\"), annotate(\"cli.array\"))) array : public System::Object { public: static_assert(Rank == 1, \"only rank-one managed arrays are supported\"); explicit array(int); T& operator[](int); int get_Length(); __declspec(property(get=get_Length)) int Length; }; } using cli::array;");
+            // Unevaluated calls retain Clang's selected member in DecltypeType.
+            // The emitter uses that selection for the real CLR member reference.
+            header.WriteLine("template<class C> auto __cli_each_get(C c) -> decltype(c->GetEnumerator());");
+            header.WriteLine("template<class T, int R> cli::array<T,R>* __cli_each_get(cli::array<T,R>*);");
+            header.WriteLine("template<class E> auto __cli_each_next(E e, int&) -> decltype(e->MoveNext());");
+            header.WriteLine("template<class T, int R> bool __cli_each_next(cli::array<T,R>*, int&);");
+            header.WriteLine("template<class E> auto __cli_each_current(E e, int) -> decltype(e->get_Current());");
+            header.WriteLine("template<class T, int R> T __cli_each_current(cli::array<T,R>*, int);");
+            header.WriteLine("template<class E> void __cli_each_dispose(E);");
 
             File.WriteAllText(jsonPath, JsonSerializer.Serialize(new { version = 1, assemblies, types }, new JsonSerializerOptions { WriteIndented = true }), new UTF8Encoding(false));
             return 0;

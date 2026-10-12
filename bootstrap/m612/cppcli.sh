@@ -628,6 +628,34 @@ EOF
   reject_case indexer-two-indices 'public ref class C { public: property int default[int,int] { int get(int x, int y) { return 0; } } }; int main() { return 0; }' 'require one index parameter'
   log "PASS test-indexers: source/imported CLR indexers and compound evaluation"
 }
+step_test-each() {
+  log "For each collection/array iteration with real CLR finally cleanup"
+  mkdir -p "$testdir/each-fixture" "$testdir/each-consumer"
+  cp "$src/tests/EachFixture.cs" "$testdir/each-fixture/Fixture.cs"
+  cat > "$testdir/each-fixture/each-fixture.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/each-fixture/each-fixture.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  cp "$testdir/each-fixture/bin/Debug/net8.0/each-fixture.dll" "$testdir/each-fixture.dll"
+  local args=(--type System.InvalidOperationException --type System.CharEnumerator --type System.Collections.IEnumerable --type System.Collections.IEnumerator
+    --type 'System.Collections.Generic.IEnumerable`1' --type 'System.Collections.Generic.IEnumerator`1'
+    --type 'System.Collections.Generic.KeyValuePair`2' --type System.IDisposable --type EachFixtures.ProbeSequence --type EachFixtures.ExplicitSequence
+    --reference "$(cygpath -m "$testdir/each-fixture.dll")")
+  compile "$(cygpath -m "$src/tests/each.cpp")" --target library "${args[@]}" -o "$(cygpath -m "$testdir/each.dll")"
+  cp "$src/tests/EachConsumer.cs" "$testdir/each-consumer/Program.cs"
+  cat > "$testdir/each-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="each"><HintPath>../each.dll</HintPath></Reference><Reference Include="each-fixture"><HintPath>../each-fixture.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/each-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/each-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case each-reference 'using namespace System; int main() { array<int>^ a = gcnew array<int>(1); for each (int% value in a) { value = 0; } return 0; }' 'tracking-reference for each'
+  reject_case each-unbraced 'using namespace System; int main() { array<int>^ a = gcnew array<int>(1); for each (int value in a) Console::WriteLine(value); return 0; }' 'requires a braced body'
+  reject_case each-element-type 'using namespace System; public ref class C {}; int main() { array<int>^ a = gcnew array<int>(1); for each (C^ value in a) {} return 0; }' 'matching value handle or an Object handle'
+  reject_case each-invalid-next 'public ref class E { public: int MoveNext() { return 0; } property int Current { int get() { return 0; } } }; public ref class C { public: E^ GetEnumerator() { return gcnew E(); } }; int main() { C^ source = gcnew C(); for each (int value in source) {} return 0; }' 'MoveNext must return bool'
+  log "PASS test-each: array/generic/nongeneric iteration, value copies and exception/return cleanup"
+}
 step_test-named-overrides() {
   log "Named CLR interface slots and renamed property accessor implementations"
   local override_args=(--type System.Collections.IEnumerable --type System.Collections.IEnumerator)

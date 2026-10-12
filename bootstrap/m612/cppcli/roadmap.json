@@ -48,7 +48,8 @@
         "generic reference/value/array/byref signatures and generic interface implementations",
         "one-parameter default/named indexed properties and matched overloads with CLR property metadata",
         "single named imported-interface method/accessor overrides and preserved private/final methods",
-        "interface property accessor declarations and Windows interface macro protection"
+        "interface property accessor declarations and Windows interface macro protection",
+        "for each over managed arrays/reference enumerators, CLR finally cleanup and typed element conversions"
       ],
       "remaining": [
         "implicit boxing into Object/interfaces, primitive boxes and boxed-handle conversions",
@@ -57,9 +58,10 @@
         "destructors/finalizers and deterministic cleanup",
         "extended tracking references, nonprimitive pinning and managed pointer operations",
         "general attributes/interface static constructors/multiple translation units",
-        "full CLI semantic analysis and metadata type discovery"
+        "full CLI semantic analysis and metadata type discovery",
+        "for each with unbraced bodies, tracking-reference variables and value/native enumerators"
       ],
-      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values test-tracking test-pinning test-boxed-values test-static-fields test-static-properties test-nativeints test-layout test-switch test-generics test-indexers test-named-overrides"
+      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values test-tracking test-pinning test-boxed-values test-static-fields test-static-properties test-nativeints test-layout test-switch test-generics test-indexers test-named-overrides test-each"
     },
     {
       "stage": 4,
@@ -93,7 +95,8 @@
         "upstream font/glyph metric types with preserved layout and native DirectWrite glyph ABI checks",
         "unchanged font-simulation conversion bodies with real Flags metadata and MinGW enum values",
         "complete DirectWrite Sema gate advanced through real generic collection imports and generic base parsing",
-        "unchanged upstream IFontSource interfaces compiled with abstract property metadata and Windows macro protection"
+        "unchanged upstream IFontSource interfaces compiled with abstract property metadata and Windows macro protection",
+        "unchanged LocalizedStrings CopyTo method compiled and checked with value pairs, Unicode, array offsets and exceptional cleanup"
       ]
     }
   ]

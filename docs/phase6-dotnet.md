@@ -1772,7 +1772,7 @@ packaged frontend stopped at included-header `#using` and missing `vcclr.h`.
 The development frontend now handles these, boxed value handles, static fields
 and managed metric layouts (see §13–16). Default indexed properties, named imported-interface overrides and interface
 property declarations are now supported (see §18). The full upstream translation
-unit still fails on `for each` and COM attributes. Native record
+unit now parses `for each` (see §19) and still fails on COM attributes. Native record
 emission, managed class templates, callbacks, finalizers and automatic native
 partitioning also remain outside its supported subset.
 The same compiler failure can be reproduced with `wpf.sh bridge-gate`; it
@@ -2259,3 +2259,83 @@ removing them would not implement the bridge. Full DirectWriteForwarder,
 System.Printing, PresentationCore/PresentationFramework, the missing native
 exports, WindowsDesktop packaging and current Greenshot remain unfinished.
 The installed frontend package still predates these development changes.
+
+
+## 19. CLR for each loops and the upstream localized-string copy method
+
+The following 2026-10-12 continuation adds `for each` over rank-one managed
+arrays and reference enumerators. Only the CLI loop boundary is lowered;
+Clang still parses the collection expression, element declaration and loop
+body. Unevaluated helper declarations preserve Sema's selected GetEnumerator,
+MoveNext and get_Current methods. The emitter uses these declarations to
+construct actual CLR calls, including bound generic member references. Arrays
+use typed element loads with CLR bounds checks. Element conversion preserves
+value copies, unboxes nongeneric values and casts reference elements; numeric
+safe_cast now includes identity conversion, unsigned floating conversion and
+boolean tests at the original source width.
+
+Collection evaluation occurs once. Reference enumerators are cleaned up in a
+real CLR finally region via IDisposable when implemented. Normal completion,
+break, continue, early return and exceptions retain protected-region control
+flow. Null and nondisposable enumerators do not receive a Dispose call. Nested
+loops keep separate enumerators, and property-accessor bodies use the same
+lowering. The behavior follows the enumeration/cleanup rules in
+[ECMA-372 §16.2.1](https://www.ecma-international.org/wp-content/uploads/ECMA-372_1st_edition_december_2005.pdf).
+This remains a subset: bodies must be braced, variables cannot be tracking
+references, MoveNext must return bool in this subset, and enumerators must be
+managed reference types. Value/native
+enumerators and broader collection discovery remain pending; metadata types
+still require explicit selection.
+
+`cppcli.sh test-each` verifies receiver/GetEnumerator/MoveNext/Current/Dispose
+counts, generic and nongeneric dispatch, explicit IEnumerable implementations,
+nondisposable enumerators, nested-loop cleanup, early returns from property
+accessors, UTF-16 character enumeration (including surrogate pairs), primitive
+unboxing/reference cast failures, empty/null arrays and numeric conversions.
+It injects failures in acquisition, MoveNext, Current, Dispose and the loop
+body. Nonboolean MoveNext return types, incompatible element types, unbraced
+bodies and tracking-reference variables are rejected.
+
+`tools/wpf-localized-copy-check.py` extracts the unchanged upstream
+LocalizedStrings.h CopyTo declaration/body into a collection probe. The
+surrounding class supplies an actual IEnumerable<KeyValuePair<CultureInfo^,
+String^>>; the copied upstream method retains its for each loop and array
+assignment. `wpf.sh check-localized-copy` builds this method using the frontend
+and source-built ilasm, then verifies Unicode values, offset slots and disposal
+on normal and out-of-range/null-array exits. It also preserves the original
+empty-input behavior. This proves the original CopyTo method, not the complete
+LocalizedStrings class or DirectWriteForwarder assembly.
+
+Validation on win11:
+
+```sh
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build
+MSYSTEM=CLANG64 bash -l -c "/clang64/bin/cmake.exe --build /home/topkek/dotnetboot/m612/build/cppcli --target cli_ast -j2"
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh \
+  test-each test-exceptions test-generics test-boxed-values test-core
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  WPF_CPPCLI_BUILD=/home/topkek/dotnetboot/m612/build/cppcli \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-localized-copy
+```
+
+Builds and focused checks pass. The final `test-each` run also covers wide
+boolean/unsigned floating conversion and direct String enumeration;
+`check-localized-copy` was rerun after the final emitter change. Managed builds
+have zero warnings/errors. The existing generic static-field C++ facade
+warnings remain in the generic regression. Results include
+`CLR for each enumeration and cleanup OK` and
+`upstream WPF LocalizedStrings::CopyTo OK`. Logs, the extracted upstream method
+probe and its IL are retained under
+`/home/kreijstal/tmp/wpf8-support/validation/each-20261012`.
+
+The complete `wpf.sh bridge-gate` still exits nonzero. Its first errors are now
+PreserveSig declarations in DWriteInterfaces.h; the original LocalizedStrings
+for each error is absent. Correct COM import/GUID/interface/marshalling metadata
+is the next source gate. Native partitioning, callbacks, finalizers, full
+System.Printing and higher-level WPF assemblies, missing PresentationNative
+exports and WindowsDesktop packaging remain unfinished. Current Greenshot
+cannot yet be packaged on this WPF stack, and the installed frontend package
+still predates these development changes.
