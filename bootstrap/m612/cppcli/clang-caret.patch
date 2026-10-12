@@ -1,63 +1,30 @@
 --- ParseDecl.cpp
 +++ ParseDecl.cpp
-@@ -6315,7 +6315,7 @@
-   if (!Lang.CPlusPlus)
-     return false;
- 
+@@ -6318 +6318 @@
 -  if (Kind == tok::amp)
 +  if (Kind == tok::amp || Kind == tok::percent)
-     return true;
- 
-   // We parse rvalue refs in C++03, because otherwise the errors are scary.
-@@ -6458,7 +6458,10 @@
-     // Recursively parse the declarator.
-     Actions.runWithSufficientStackSpace(
-         D.getBeginLoc(), [&] { ParseDeclaratorInternal(D, DirectDeclParser); });
+@@ -6461 +6461,4 @@
 -    if (Kind == tok::star)
 +    // This parser is private to the CLI frontend. Clang has already resolved
 +    // declaration/type context, so expression XOR remains untouched. Preserve
 +    // the caret source location for managed-type validation by the AST plugin.
 +    if (Kind == tok::star || (Kind == tok::caret && !getLangOpts().Blocks))
-       // Remember that we parsed a pointer type, and remember the type-quals.
-       D.AddTypeInfo(DeclaratorChunk::getPointer(
-                         DS.getTypeQualifiers(), Loc, DS.getConstSpecLoc(),
-@@ -6524,7 +6527,7 @@
- 
-     // Remember that we parsed a reference type.
-     D.AddTypeInfo(DeclaratorChunk::getReference(DS.getTypeQualifiers(), Loc,
+@@ -6527 +6530 @@
 -                                                Kind == tok::amp),
 +                                                Kind == tok::amp || Kind == tok::percent),
-                   std::move(DS.getAttributes()), SourceLocation());
-   }
- }
 --- ParseAST.cpp
 +++ ParseAST.cpp
-@@ -27,6 +27,12 @@
- #include <memory>
- 
- using namespace clang;
+@@ -29,0 +30,6 @@
 +
 +namespace clang {
 +void cppcliParseAST(Preprocessor &, ASTConsumer *, ASTContext &, bool,
 +                    TranslationUnitKind, CodeCompleteConsumer *, bool);
 +void cppcliParseAST(Sema &, bool, bool);
 +}
- 
- namespace {
- 
-@@ -96,7 +102,7 @@
- /// the file is parsed.  This inserts the parsed decls into the translation unit
- /// held by Ctx.
- ///
+@@ -99 +105 @@
 -void clang::ParseAST(Preprocessor &PP, ASTConsumer *Consumer,
 +void clang::cppcliParseAST(Preprocessor &PP, ASTConsumer *Consumer,
-                      ASTContext &Ctx, bool PrintStats,
-                      TranslationUnitKind TUKind,
-                      CodeCompleteConsumer *CompletionConsumer,
-@@ -108,10 +114,10 @@
-   // Recover resources if we crash before exiting this method.
-   llvm::CrashRecoveryContextCleanupRegistrar<Sema> CleanupSema(S.get());
- 
+@@ -111,4 +117,4 @@
 -  ParseAST(*S, PrintStats, SkipFunctionBodies);
 -}
 -
@@ -66,23 +33,80 @@
 +}
 +
 +void clang::cppcliParseAST(Sema &S, bool PrintStats, bool SkipFunctionBodies) {
-   // Collect global stats on Decls/Stmts (until we have a module streamer).
-   if (PrintStats) {
-     Decl::EnableStatistics();
 --- ParseExpr.cpp
 +++ ParseExpr.cpp
-@@ -21,6 +21,7 @@
- //===----------------------------------------------------------------------===//
- 
- #include "clang/AST/ASTContext.h"
+@@ -23,0 +24 @@
 +#include "clang/AST/Attr.h"
- #include "clang/AST/Availability.h"
- #include "clang/AST/ExprCXX.h"
- #include "clang/AST/LocInfoType.h"
-@@ -1776,8 +1777,27 @@
-                 RLoc);
-           }
-         } else {
+@@ -34,0 +36 @@
++#include "clang/Sema/ScopeInfo.h"
+@@ -44,0 +47,21 @@
++
++// CLI enum operations retain their scoped type identity. Sema still checks
++// explicit conversions and native operations; ordinary C++ enums are untouched.
++static const EnumDecl *cppcliEnum(QualType Type) {
++  auto *Enum = Type->getAs<EnumType>();
++  if (!Enum)
++    return nullptr;
++  auto *Decl = Enum->getDecl();
++  if (Decl->getDefinition())
++    Decl = Decl->getDefinition();
++  for (auto *Attr : Decl->specific_attrs<AnnotateAttr>())
++    if (Attr->getAnnotation() == "cli.enum")
++      return Decl;
++  return nullptr;
++}
++
++static ExprResult cppcliEnumCast(Sema &Actions, Expr *Value, QualType Type,
++                                SourceLocation Loc) {
++  return Actions.BuildCStyleCastExpr(
++      Loc, Actions.Context.getTrivialTypeSourceInfo(Type, Loc), Loc, Value);
++}
+@@ -181,0 +205,9 @@
++  // MSVC permits CLI enum constants as labels in integral switches. Keep
++  // that conversion local to case labels: enum-to-integer assignments and
++  // overload resolution continue to require an explicit source conversion.
++  auto *Function = Actions.getCurFunction();
++  if (!Res.isInvalid() && Function && !Function->SwitchStack.empty())
++    if (auto *Condition = Function->SwitchStack.back().getPointer()->getCond())
++      if (Condition->getType()->isIntegerType())
++        if (auto *Enum = cppcliEnum(Res.get()->getType()))
++          Res = cppcliEnumCast(Actions, Res.get(), Enum->getIntegerType(), CaseLoc);
+@@ -531,0 +564,16 @@
++        QualType CliResult;
++        if (!RHS.isInvalid() &&
++            OpToken.isOneOf(tok::pipe, tok::caret, tok::amp)) {
++          auto *Enum = cppcliEnum(LHS.get()->getType());
++          if (Enum && !Enum->getIntegerType()->isBooleanType() &&
++              Actions.Context.hasSameUnqualifiedType(
++                  LHS.get()->getType(), RHS.get()->getType())) {
++            CliResult = LHS.get()->getType().getUnqualifiedType();
++            LHS = cppcliEnumCast(Actions, LHS.get(), Enum->getIntegerType(),
++                                OpToken.getLocation());
++            RHS = cppcliEnumCast(Actions, RHS.get(), Enum->getIntegerType(),
++                                OpToken.getLocation());
++            if (LHS.isInvalid() || RHS.isInvalid())
++              return ExprError();
++          }
++        }
+@@ -534,0 +583,3 @@
++        if (!BinOp.isInvalid() && !CliResult.isNull())
++          BinOp = cppcliEnumCast(Actions, BinOp.get(), CliResult,
++                                OpToken.getLocation());
+@@ -1160,0 +1212,10 @@
++      QualType CliResult;
++      if (SavedKind == tok::tilde)
++        if (auto *Enum = cppcliEnum(Arg->getType()))
++          if (!Enum->getIntegerType()->isBooleanType()) {
++            CliResult = Arg->getType().getUnqualifiedType();
++            Res = cppcliEnumCast(Actions, Arg, Enum->getIntegerType(), SavedLoc);
++            if (Res.isInvalid())
++              return ExprError();
++            Arg = Res.get();
++          }
+@@ -1162,0 +1224,2 @@
++      if (!Res.isInvalid() && !CliResult.isNull())
++        Res = cppcliEnumCast(Actions, Res.get(), CliResult, SavedLoc);
+@@ -1779,2 +1842,21 @@
 -          LHS = Actions.ActOnArraySubscriptExpr(getCurScope(), LHS.get(), Loc,
 -                                                ArgExprs, RLoc);
 +          // For a managed array handle, ask Sema to resolve the surrogate's
@@ -106,6 +130,3 @@
 +          if (!LHS.isInvalid())
 +            LHS = Actions.ActOnArraySubscriptExpr(getCurScope(), LHS.get(), Loc,
 +                                                  ArgExprs, RLoc);
-         }
-       } else {
-         LHS = ExprError();

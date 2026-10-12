@@ -18,6 +18,28 @@ public:
     virtual void Write(int next) { value = next; }
     virtual int Scale() override { return Base::Scale() * 2; }
 };
+public ref class PropertyBase {
+protected:
+    int value;
+public:
+    PropertyBase() : value(7) {}
+    virtual property int Value {
+        int get() { return value; }
+        void set(int next) { value = next; }
+    }
+};
+public ref class PropertyDerived : PropertyBase {
+public:
+    virtual property int Value {
+        int get() override { return value + 10; }
+        void set(int next) override { value = next + 1; }
+    }
+};
+public ref class VirtualProperties abstract sealed {
+public:
+    static int Read(PropertyBase^ value) { return value->Value; }
+    static void Write(PropertyBase^ value, int next) { value->Value = next; }
+};
 }
 int main() {
     Example::Counter^ counter = gcnew Example::Counter(7);

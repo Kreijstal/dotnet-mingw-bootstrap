@@ -1770,8 +1770,8 @@ The next build gate is `DirectWriteForwarder`: planning PresentationCore stops
 with `Build WPF dependency first: DirectWriteForwarder`. The initial
 packaged frontend stopped at included-header `#using` and missing `vcclr.h`.
 The development frontend now handles these, boxed value handles, static fields
-and managed metric layouts (see §13–15). The full upstream translation unit
-still fails on managed enum operations and additional imports. Native record
+and managed metric layouts (see §13–16). The full upstream translation unit
+still fails on generic collections and explicit interface implementations. Native record
 emission, managed class templates, callbacks, finalizers and automatic native
 partitioning also remain outside its supported subset.
 The same compiler failure can be reproduced with `wpf.sh bridge-gate`; it
@@ -2044,3 +2044,75 @@ record interop and automatic partitioning are still required after Sema.
 The installed compiler package remains the older build. No complete WPF,
 WindowsDesktop or Greenshot package has been produced; the separate 101 missing
 PresentationNative exports remain unchanged.
+
+## 16. Managed enum operations, switches and static constructors
+
+The following 2026-10-12 continuation advanced the complete DirectWriteForwarder
+Sema gate through its enum expressions, static constructor declarations and
+virtual property declarations. The current first failures are the generic
+collection types and explicit interface implementations in LocalizedStrings
+and FontList. Full bridge emission and WPF packaging remain unfinished.
+
+The private Clang parser now asks Sema to apply bitwise OR/AND/XOR and complement
+to a CLI enum's underlying integer, then convert the result back to the same
+enum. Native scoped enums and ordinary integer/XOR expressions retain their
+original behavior. Different enum types cannot be combined, and implicit enum
+to integer conversions remain rejected, consistent with [CLI enum rules](https://learn.microsoft.com/en-us/cpp/dotnet/how-to-define-and-consume-enums-in-cpp-cli?view=msvc-170).
+Integral switches permit CLI enum case constants as used in WPF's original
+converter; enum switches retain their scoped labels. `[Flags]` now emits the
+actual FlagsAttribute on the enum type, which is verified by reflection and
+Enum.ToString. The imported-assembly check also caught an IL keyword collision
+for an assembly named `switch`; single-word assembly scopes are now quoted.
+
+The IL backend implements switch dispatch with one evaluation of the condition,
+constant comparisons, default and fallthrough. Nested switch/loop break and
+continue targets are distinct, and branches leaving exception regions use
+`leave`, preserving finally cleanup. Tests cover sparse/stacked labels, signed
+and unsigned 64-bit constants, no-default switches and CLR exceptions. Switch
+initializers and GNU ranges are rejected, as are labels entering generated
+protected/pinned scopes. Enum additive/increment/compound operations remain
+incomplete.
+
+Inline and out-of-line static constructors now become one private CLR `.cctor`,
+combining ordered field initializers with the source body. The tests exercise
+ref/value classes, concurrent first access, failure caching, and coexistence
+with ordinary instance constructors. Missing definitions, parameters and
+initializer lists are rejected. Interface static constructors and linking
+definitions across translation units remain unsupported. Virtual properties
+transfer their virtual flag to the accessors and preserve CLR override slots;
+C# overrides dispatch correctly through generated getters/setters.
+
+`wpf.sh check-font-simulations` compiles the two unchanged font-simulation
+conversion bodies from upstream DWriteTypeConverter.cpp, its original
+FontSimulation.h, and the native enum declaration from the installed MinGW
+DWrite header. A reduced declaration of the containing class and a public test
+facade supply the check context; the rest of DWriteTypeConverter is not compiled
+by this check. Both bold/oblique flags roundtrip, unknown flags take the original
+exception path, and the original nonpublic enum formats as `Bold, Oblique`.
+Result: `upstream WPF font simulation conversions OK`, zero build warnings/errors.
+
+Focused validation on win11:
+
+```sh
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh \
+  test-switch test-static-fields test-virtuals test-properties
+
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  WPF_CPPCLI_BUILD=/home/topkek/dotnetboot/m612/build/cppcli \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh \
+  check-font-simulations check-localized-messages
+```
+
+These checks passed. The affected core, enum-import, parser-shadowing, exception,
+pinning, static-property and boxed-import suites also passed. The rebuilt
+metadata tool had zero warnings/errors; frontend/parser rebuilds used
+`cmake --build ... --target cli_ast -j2`. The complete `bridge-gate` still fails
+and preserves its diagnostics; CriticalHandle, Interlocked, constrained-execution
+metadata, CultureInfo and source-built WindowsBase's internal Invariant are now
+real imports. Neither generic collection APIs nor native layout/emission,
+callbacks, finalizers or automatic native partitioning are complete. The
+installed compiler package remains the earlier release. Complete WPF,
+WindowsDesktop and current Greenshot remain unbuilt and unpackaged; the native
+PresentationNative text/layout export gap is unchanged.

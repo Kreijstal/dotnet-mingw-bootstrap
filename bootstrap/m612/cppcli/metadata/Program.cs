@@ -98,7 +98,7 @@ static class Program
         return (ns.Length == 0 ? "" : ns + ".") + name;
     }
     static string Escape(string s) => s.Replace("\\", "\\\\").Replace("\"", "\\\"");
-    static string AssemblyReference(string name) => name.All(c => char.IsAsciiLetterOrDigit(c) || c == '_' || c == '.') ? "[" + name + "]" : "['" + name.Replace("\\", "\\\\").Replace("'", "\\'") + "']";
+    static string AssemblyReference(string name) => name.Contains('.') && name.All(c => char.IsAsciiLetterOrDigit(c) || c == '_' || c == '.') ? "[" + name + "]" : "['" + name.Replace("\\", "\\\\").Replace("'", "\\'") + "']";
     static bool ValidName(string s) => s.Length > 0 && (char.IsLetter(s[0]) || s[0] == '_') && s.All(c => char.IsLetterOrDigit(c) || c == '_');
     static string AttributeType(MetadataReader r, EntityHandle ctor)
     {

@@ -114,11 +114,16 @@ step_bridge_gate() {
     --type System.Guid --type System.Exception --type System.IO.FileNotFoundException \
     --type System.UnauthorizedAccessException --type System.Net.WebException \
     --type System.InvalidOperationException --type System.Windows.Point --type System.Windows.Media.TextFormattingMode \
+    --type System.Runtime.InteropServices.CriticalHandle --type System.Threading.Interlocked --type System.GC \
+    --type System.Runtime.ConstrainedExecution.Cer --type System.Runtime.ConstrainedExecution.Consistency \
+    --type System.Runtime.ConstrainedExecution.ReliabilityContractAttribute --type System.Globalization.CultureInfo \
+    --type System.NotSupportedException --type MS.Internal.Invariant \
     --type System.Runtime.InteropServices.StructLayoutAttribute --type System.Runtime.InteropServices.LayoutKind \
     --type System.Runtime.InteropServices.FieldOffsetAttribute \
     --reference "$(cygpath -m "$core_ref/System.Threading.dll")" \
     --reference "$(cygpath -m "$core_ref/System.Runtime.InteropServices.dll")" \
     --reference "$(cygpath -m "$core_ref/System.Net.Requests.dll")" \
+    --reference "$(cygpath -m "$core_ref/System.Globalization.dll")" \
     --reference "$(cygpath -m "$oob/System.IO.Packaging.dll")" \
     --reference "$(cygpath -m "$build/lib/WindowsBase.dll")" -I "$(cygpath -m "$shared")" \
     -I "$(cygpath -m "$cpp/..")" -I "$(cygpath -m "$cpp/TrueTypeSubsetter")" \
@@ -191,6 +196,24 @@ EOF
   "$sdk/dotnet.exe" build "$(cygpath -m "$work/LocalizedMessagesCheck.csproj")" -c Release \
     --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -v:q
   timeout 30 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/LocalizedMessagesCheck.dll")"
+}
+
+step_check_font_simulations() {
+  initialize
+  local work=$build/font-simulations-check
+  mkdir -p "$work"
+  /clang64/bin/python.exe "$here/tools/wpf-font-simulations-check.py" "$(cygpath -m "$source")" \
+    "$(cygpath -m /clang64/include/dwrite.h)" "$(cygpath -m "$work/FontSimulations.cpp")"
+  bridge_compile "$(cygpath -m "$work/FontSimulations.cpp")" --target library --std c++14 \
+    --ilasm "$(cygpath -m /clang64/bin/ilasm-dotnet.exe)" --type System.InvalidOperationException \
+    -o "$(cygpath -m "$work/FontSimulations.dll")"
+  cp "$here/wpf-tests/FontSimulations.cs" "$work/Program.cs"
+  cat > "$work/FontSimulationsCheck.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="FontSimulations"><HintPath>FontSimulations.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$sdk/dotnet.exe" build "$(cygpath -m "$work/FontSimulationsCheck.csproj")" -c Release \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -v:q
+  timeout 30 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/FontSimulationsCheck.dll")"
 }
 
 step_check_metrics_layout() {

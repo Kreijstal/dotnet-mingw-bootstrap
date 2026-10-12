@@ -71,7 +71,7 @@ template<> struct SystemTrait<float> {}; int main() { return 0; }' 'cannot be sp
   run_case branches "$src/tests/branches.cpp" $'False\nTrue\nTrue\n1\n12\n25'
   reject_case unknown 'using namespace System; int main() { int n = missing; return n; }' 'undeclared identifier'
   reject_case mismatch 'using namespace System; int main() { int n = "wrong"; return n; }' 'cannot initialize'
-  reject_case outside 'using namespace System; int main() { switch (1) { default: return 0; } }' 'unsupported AST statement'
+  reject_case outside 'using namespace System; int main() { do {} while (false); return 0; }' 'unsupported AST statement'
   reject_case missing-return 'using namespace System; int broken() { int n = 0; } int main() { return broken(); }' 'does not return'
   log "PASS test-core: Clang parsing, metadata overloads, control flow, macros/includes, Unicode, negative checks"
 }
@@ -219,10 +219,19 @@ if (counter.Read() != 42 || ((IRead)counter).Read() != 42 || counter.Scale() != 
     !typeof(Base).IsAbstract || !typeof(IRead).IsInterface || !typeof(Base).GetMethod("Fixed").IsFinal)
     throw new Exception("incorrect virtual/interface metadata");
 ((IWrite)counter).Write(12);
+PropertyBase property = new PropertyDerived();
+if (VirtualProperties.Read(property) != 17) throw new Exception("virtual property getter did not dispatch");
+VirtualProperties.Write(property, 20);
+if (VirtualProperties.Read(property) != 31 || !typeof(PropertyBase).GetProperty("Value").GetMethod.IsVirtual ||
+    VirtualProperties.Read(new PropertyOverride()) != 99)
+    throw new Exception("virtual property setter/metadata/C# override lost");
 Console.WriteLine("dispatch metadata OK");
 class Override : Counter {
     public Override(int value) : base(value) {}
     public override int Read() => 42;
+}
+class PropertyOverride : PropertyBase {
+    public override int Value { get => 99; set { } }
 }
 EOF
   "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/virtual-consumer/consumer.csproj")" -nologo -v:q \
@@ -462,6 +471,50 @@ EOF
   run_case enum-reference "$testdir/enum-reference.cpp" '2' --type Example.Enums --type Example.Shade
   reject_case enum-overflow 'public enum class Small : unsigned char { Value = 256 }; int main() { return 0; }' 'cannot be narrowed'
 }
+step_test-switch() {
+  log "Scoped CLI enum bitwise operators, Flags metadata and switch control flow"
+  compile "$(cygpath -m "$src/tests/switch.cpp")" --target library --type System.InvalidOperationException \
+    -o "$(cygpath -m "$testdir/switch.dll")"
+  mkdir -p "$testdir/switch-consumer"
+  cat > "$testdir/switch-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers></PropertyGroup><ItemGroup><Reference Include="switch"><HintPath>../switch.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  cat > "$testdir/switch-consumer/Program.cs" <<'EOF'
+using System;
+using Example;
+if (Switches.Combine(Bits.A, Bits.B) != Bits.Both || Switches.Mask(Bits.Both, Bits.A) != Bits.A || Switches.Toggle(Bits.Both, Bits.A) != Bits.B ||
+    (byte)Switches.Invert(Bits.A) != 254 || Switches.InvertWide(Wide.High) != (Wide)0x7fffffffffffffffUL)
+    throw new Exception("CLI enum operation type or width lost");
+if (!typeof(Bits).IsDefined(typeof(FlagsAttribute), false) || ((Bits)3).ToString() != "Both" || ((Bits)255).ToString() != "255")
+    throw new Exception("Flags enum metadata lost");
+for (int i = 0; i < 4; i++) if (Switches.Convert((Bits)i) != i * 10) throw new Exception("enum case conversion failed");
+try { Switches.Convert((Bits)4); throw new Exception("default exception lost"); } catch (InvalidOperationException) { }
+if (Switches.FallThrough(1) != 30 || Switches.FallThrough(2) != 20 || Switches.FallThrough(3) != 90 || Switches.FallThrough(4) != 40 || Switches.FallThrough(5) != 40 ||
+    Switches.Evaluations() != 5 || Switches.NoDefault(0) != 7 || Switches.NoDefault(5) != 9)
+    throw new Exception("fallthrough/default/condition evaluation failed");
+if (Switches.WideCases(Wide.High) != 1 || Switches.WideCases(Wide.Max) != 2 || Switches.WideCases((Wide)0) != 3 || Switches.NegativeCase(Negative.Low) != 4)
+    throw new Exception("64-bit switch constants truncated");
+if (Switches.Nested(9) != 102 || Switches.Nested(8) != 42) throw new Exception("nested switch/loop break or continue targets lost");
+int cleanup = 0;
+if (Switches.WithFinally(1, ref cleanup) != 42 || cleanup != 1 || Switches.WithFinally(2, ref cleanup) != 7 || cleanup != 3)
+    throw new Exception("switch return/break skipped finally");
+Console.WriteLine("CLI enum operators and switches OK");
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/switch-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -p:NuGetAudit=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/switch-consumer/bin/Debug/net8.0/consumer.dll")"
+  cat > "$testdir/switch-reference.cpp" <<'EOF'
+#using "switch.dll"
+using namespace System;
+int main() { Example::Bits value = Example::Bits::A | Example::Bits::B; Console::WriteLine(Example::Switches::Convert(value)); return 0; }
+EOF
+  run_case switch-reference "$testdir/switch-reference.cpp" '30' --type Example.Bits --type Example.Switches
+  reject_case enum-implicit-integer 'public enum class E { A }; int main() { int value = E::A; return value; }' 'cannot initialize'
+  reject_case enum-mixed-bits 'public enum class A { X }; public enum class B { X }; int main() { auto value = A::X | B::X; return 0; }' 'invalid operands'
+  reject_case native-scoped-bits 'enum class E { A, B }; int main() { auto value = E::A | E::B; return 0; }' 'invalid operands'
+  reject_case switch-duplicate 'int main() { switch(1) { case 1: return 0; case 1: return 1; } return 0; }' 'duplicate case'
+  log "PASS test-switch: typed enum operations and C# consumption of switch control flow"
+}
 step_test-values() {
   run_case values "$src/tests/values.cpp" $'7\n3\n5\n13\n3\n13\n10\n12\n9\n0\n9\n42'
   mkdir -p "$testdir/value-consumer"
@@ -548,11 +601,16 @@ using Example;
 var locks = new object[32];
 Parallel.For(0, locks.Length, i => { locks[i] = State.Lock(); if (State.Read() != 42) throw new Exception("incorrect initialization order"); });
 foreach (var value in locks) if (!ReferenceEquals(value, locks[0])) throw new Exception("static initializer ran repeatedly");
+Parallel.For(0, locks.Length, i => { if (Explicit.Read() != 43 || Explicit.Runs() != 1) throw new Exception("explicit static constructor ordering/once semantics lost"); });
+if (OutOfLine.Read() != 42 || ValueInitialization.Read() != 42 || new Explicit(99).Snapshot != 99 || !typeof(Explicit).TypeInitializer.IsPrivate)
+    throw new Exception("out-of-line/value static constructor or instance constructor lost");
 State.Increment();
 if (State.Read() != 43 || typeof(State).TypeInitializer == null) throw new Exception("static field byref or cctor metadata failed");
 if (!typeof(State).GetField("_seed", BindingFlags.Static | BindingFlags.NonPublic).IsPrivate) throw new Exception("static field visibility lost");
 for (int i = 0; i < 2; ++i) {
     try { Failing.Read(); throw new Exception("failed initializer did not poison the type"); }
+    catch (TypeInitializationException e) when (e.InnerException is InvalidOperationException) { }
+    try { FailingExplicit.Read(); throw new Exception("failed explicit initializer did not poison the type"); }
     catch (TypeInitializationException e) when (e.InnerException is InvalidOperationException) { }
 }
 Console.WriteLine("static fields and CLR initialization OK");
@@ -564,6 +622,9 @@ EOF
   printf '%s\n' 'initialize once' 'static fields and CLR initialization OK' > "$testdir/static-consumer.expected"
   cmp "$testdir/static-consumer.expected" "$testdir/static-consumer.actual"
   cat "$testdir/static-consumer.actual"
+  reject_case cctor-parameters 'public ref class C { static C(int value) {} }; int main() { return 0; }' 'static constructor takes no parameters'
+  reject_case cctor-missing 'public ref class C { static C(); }; int main() { return 0; }' 'static constructor requires a definition'
+  reject_case cctor-initializer 'public ref class C { int Value; static C() : Value(1) {} }; int main() { return 0; }' 'static constructor cannot have an initializer list'
   log "PASS test-static-fields: ordered CLR .cctor and private static storage"
 }
 step_test-static-properties() {

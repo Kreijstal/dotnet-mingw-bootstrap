@@ -41,7 +41,9 @@
         "static fields, CLR type initializers, static properties and out-of-line accessors",
         "internal members and nonpublic managed type identities",
         "pointer-sized IntPtr/UIntPtr and primitive pointer metadata imports",
-        "managed explicit/sequential layout with field offsets, pack, size and charset"
+        "managed explicit/sequential layout with field offsets, pack, size and charset",
+        "typed CLI enum bitwise operators, Flags metadata and switch control flow",
+        "inline/out-of-line source static constructors and virtual property accessors"
       ],
       "remaining": [
         "implicit boxing into Object/interfaces, primitive boxes and boxed-handle conversions",
@@ -49,10 +51,10 @@
         "delegates/events/indexers",
         "destructors/finalizers and deterministic cleanup",
         "extended tracking references, nonprimitive pinning and managed pointer operations",
-        "attributes/source-defined static constructors/multiple translation units",
+        "general attributes/interface static constructors/multiple translation units",
         "full CLI semantic analysis and metadata type discovery"
       ],
-      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values test-tracking test-pinning test-boxed-values test-static-fields test-static-properties test-nativeints test-layout"
+      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values test-tracking test-pinning test-boxed-values test-static-fields test-static-properties test-nativeints test-layout test-switch"
     },
     {
       "stage": 4,
@@ -74,7 +76,7 @@
     },
     {
       "stage": 5,
-      "status": "upstream localized messages and metrics types compiled; complete bridges remain pending",
+      "status": "upstream messages, metric types and font-simulation methods compiled; complete bridges remain pending",
       "remaining": [
         "compile DirectWriteForwarder",
         "compile System.Printing",
@@ -83,7 +85,8 @@
       "implemented": [
         "WPF source patch for MinGW checked integers and DirectWrite UUID namespace declarations",
         "upstream localized error messages compiled and checked on source-built CoreCLR",
-        "upstream font/glyph metric types with preserved layout and native DirectWrite glyph ABI checks"
+        "upstream font/glyph metric types with preserved layout and native DirectWrite glyph ABI checks",
+        "unchanged font-simulation conversion bodies with real Flags metadata and MinGW enum values"
       ]
     }
   ]

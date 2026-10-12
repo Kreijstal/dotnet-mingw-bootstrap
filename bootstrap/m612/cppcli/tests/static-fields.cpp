@@ -18,4 +18,32 @@ public ref class Failing abstract sealed {
 public:
     static int Read() { return _value; }
 };
+public ref class Explicit {
+    static int _seed = 40;
+    static int _value = _seed + 2;
+    static int _runs;
+    static Explicit() { _value += 1; _runs += 1; }
+public:
+    int Snapshot;
+    Explicit(int value) : Snapshot(value) {}
+    static int Read() { return _value; }
+    static int Runs() { return _runs; }
+};
+public ref class OutOfLine abstract sealed {
+    static int _value = 41;
+    static OutOfLine();
+public:
+    static int Read() { return _value; }
+};
+static OutOfLine::OutOfLine() { _value += 1; }
+public value struct ValueInitialization {
+    static int _value = 41;
+    static ValueInitialization() { _value += 1; }
+    static int Read() { return _value; }
+};
+public ref class FailingExplicit abstract sealed {
+    static FailingExplicit() { throw gcnew InvalidOperationException(); }
+public:
+    static int Read() { return 0; }
+};
 }

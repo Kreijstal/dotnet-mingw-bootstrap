@@ -73,7 +73,14 @@
     "StructLayout and FieldOffset emit CLR explicit/sequential layout, pack, size and charset with Clang-checked constant arguments",
     "Default managed value structs have sequential CLR layout; explicit reference types retain member visibility",
     "Upstream WPF FontMetrics and GlyphMetrics headers compile and run, with glyph offsets/size verified against native DirectWrite",
-    "Explicit C-style/static pin_ptr casts to unmanaged pointer types preserve CLR pins through compacting collections"
+    "Explicit C-style/static pin_ptr casts to unmanaged pointer types preserve CLR pins through compacting collections",
+    "Scoped managed enum bitwise OR/AND/XOR/complement via Clang Sema, with enum result types and underlying widths retained",
+    "CLI enum labels in integral switches and actual FlagsAttribute type metadata",
+    "Switch dispatch with one condition evaluation, fallthrough, default, nested loop/switch control and exception cleanup",
+    "Inline and out-of-line managed static constructors combine ordered field initialization with the source body in one CLR .cctor",
+    "Virtual instance property accessors preserve CLR slots and C# override dispatch",
+    "Quoted single-word assembly scopes prevent IL keyword collisions when importing generated assemblies",
+    "Unchanged upstream WPF font-simulation conversion methods compile and run against the actual MinGW enum declaration"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -88,11 +95,14 @@
     "Managed arrays currently require rank one; no aggregate initializers or covariance",
     "Managed destructors/finalizers, covariance metadata and managed operator metadata are explicitly rejected",
     "Native bridges require extern-C scalars or unmanaged pointers; bool/automatic marshalling, callbacks and automatic native partitioning are not enabled",
-    "Implicit boxing into Object/interfaces/primitive boxes, source-defined static constructors and multi-translation-unit linking remain unimplemented",
+    "Implicit boxing into Object/interfaces/primitive boxes and multi-translation-unit linking remain unimplemented",
     "WPF DirectWriteForwarder and System.Printing are not compiled by this frontend yet",
     "Value classes currently exclude nested types, bases/interfaces, virtual methods, native pointer fields and custom zero-argument constructors",
     "Boxing covers explicit safe_cast to Object and implicit boxing into matching selected value-class handles; handle upcasts, primitive boxes, constrained dispatch and boxed operator overloads remain incomplete",
     "Tracking references exclude constructors, fields and byref returns; pin_ptr is limited to initialized primitive block locals, and interior_ptr to primitive addresses/read dereferences; managed pointer assignments, unmanaged pointer arithmetic and intrinsic returns are not implemented",
-    "Layout attributes currently appear individually before managed declarations; inherited layout types, bitfields and general custom attributes remain unsupported"
+    "Layout attributes currently appear individually before managed declarations; inherited layout types, bitfields and general custom attributes remain unsupported",
+    "CLI enum operations currently cover comparisons, explicit casts and bitwise OR/AND/XOR/complement; additive/increment/compound enum operators remain incomplete",
+    "Switch initializers and GNU case ranges are rejected; switch labels cannot enter generated protected/pinned scopes",
+    "Source-defined static constructors currently cover ref/value classes in one translation unit; interface static constructors remain unsupported"
   ]
 }
