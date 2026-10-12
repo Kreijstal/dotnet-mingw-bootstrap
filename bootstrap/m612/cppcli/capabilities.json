@@ -149,7 +149,12 @@
     "Derived/source and imported disposal patterns retain dynamic dispatch and finally-protected base cleanup when a destructor throws; unrelated Dispose methods are excluded",
     "Managed delete and explicit destructor calls evaluate the receiver once and use runtime IDisposable dispatch with null/non-disposable no-op behavior",
     "Source nested ref/value classes emit genuine nested CLR metadata and slash-qualified member/type identities, preserving nested access to outer private members",
-    "Original WPF localized-string nested enumerator and both Current getters compile and run, including real IDisposable metadata, nongeneric boxing, Reset and compacting GC"
+    "Original WPF localized-string nested enumerator and both Current getters compile and run, including real IDisposable metadata, nongeneric boxing, Reset and compacting GC",
+    "Source GC-free managed value pointers retain native star versus boxed caret provenance through supported declaration/alias, field, return, call, cast and conditional lowering",
+    "Native managed-value pointer parameters/locals/fields/returns emit typed CLR unmanaged pointers; field access, instance calls, copies and indirect assignment operate on native storage",
+    "Boxing intrinsics preserve handle identity; native/boxed bindings, managed casts of native pointers, movable heap addresses, GC-bearing elements and conflicting canonical declarations are rejected",
+    "Ordinary unmanaged integer/pointer casts preserve target pointer width and signed Win32 predefined handle bits",
+    "Unchanged WPF GlyphMetrics header supports a typed native pointer bridge to real MinGW DWRITE_GLYPH_METRICS writes in a pinned managed array across compacting GC"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -194,6 +199,8 @@
     "Native storage types use generated canonical CLR identities; general metadata visibility/import compatibility with other C++/CLI compilers is not yet implemented",
     "Destructor support requires explicit source bodies in ref classes; defaulted destructors, explicit Dispose/Finalize conflicts, stack-semantics RAII and automatic nontrivial member cleanup remain unsupported",
     "Managed deletion supports single handles; native delete/delete[], native allocation and full cleanup/mixed-mode semantics remain incomplete",
-    "Nested source ref/value metadata is supported, but imported nested types, general nested generic forms and nested delegates remain incomplete"
+    "Nested source ref/value metadata is supported, but imported nested types, general nested generic forms and nested delegates remain incomplete",
+    "Native value pointer provenance remains a frontend subset over Clang surrogate types; pointer-versus-caret-only overloads/redeclarations are rejected, and imported native value-pointer signatures, native pointer properties/array/generic elements and general expression/lifetime forms remain incomplete",
+    "Native value pointers currently require direct GC-free value storage and stable caller-owned addresses; struct pin_ptr/interior_ptr, arithmetic, native allocation/deletion and automatic native SDK partitioning remain unsupported"
   ]
 }

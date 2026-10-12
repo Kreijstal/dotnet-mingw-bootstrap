@@ -370,6 +370,46 @@ EOF
   timeout 30 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/PointerHandleCheck.dll")"
 }
 
+step_check_glyph_pointer() {
+  initialize
+  local work=$build/glyph-pointer-check
+  local core_refs=("$sdk"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
+  local core_ref=${core_refs[-1]}
+  local header=$source/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/CPP/DWriteWrapper/GlyphMetrics.h
+  mkdir -p "$work"
+  cat > "$work/GlyphPointer.cpp" <<EOF
+using namespace System;
+typedef int INT32;
+typedef unsigned int UINT32;
+#include "$(cygpath -m "$header")"
+using namespace MS::Internal::Text::TextInterface;
+extern "C" int NativeGlyphs(GlyphMetrics*, unsigned int);
+public ref class WpfGlyphPointer abstract sealed {
+public:
+    static Object^ Allocate(int count) { return gcnew array<GlyphMetrics>(count); }
+    static int Fill(IntPtr address, unsigned int count) {
+        GlyphMetrics* pointer = reinterpret_cast<GlyphMetrics*>(address.ToPointer());
+        GC::Collect();
+        return NativeGlyphs(pointer, count);
+    }
+};
+EOF
+  /clang64/bin/clang++.exe -std=c++17 -O2 -shared "$here/wpf-tests/GlyphPointerNative.cpp" -o "$work/wpf-glyph-pointer.dll"
+  bridge_compile "$(cygpath -m "$work/GlyphPointer.cpp")" --target library --std c++14 \
+    --ilasm "$(cygpath -m /clang64/bin/ilasm-dotnet.exe)" --type System.GC \
+    --type System.Runtime.InteropServices.StructLayoutAttribute --type System.Runtime.InteropServices.LayoutKind \
+    --type System.Runtime.InteropServices.FieldOffsetAttribute --native-library wpf-glyph-pointer.dll \
+    --reference "$(cygpath -m "$core_ref/System.Runtime.InteropServices.dll")" -o "$(cygpath -m "$work/GlyphPointer.dll")"
+  cp "$here/wpf-tests/GlyphPointer.cs" "$work/Program.cs"
+  cat > "$work/GlyphPointerCheck.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="GlyphPointer"><HintPath>GlyphPointer.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$sdk/dotnet.exe" build "$(cygpath -m "$work/GlyphPointerCheck.csproj")" -c Release \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -v:q
+  cp "$work/wpf-glyph-pointer.dll" "$work/bin/Release/net8.0/"
+  timeout 30 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/GlyphPointerCheck.dll")"
+}
+
 step_check_enumerator() {
   initialize
   local work=$build/enumerator-check

@@ -1293,6 +1293,92 @@ class Emitter {
         return spec->getTemplateArgs()[0].getAsType();
     }
     bool pinned(QualType t) const { return record_annotated(t->getAsCXXRecordDecl(), "cli.pin"); }
+    QualType native_value_pointer(QualType t, const TypeSourceInfo* info) const {
+        if (!t->isPointerType() || !value_target(t->getPointeeType()) ||
+            !record_annotation(value_target(t->getPointeeType()), "cli.nativeint:").empty() || !info) return {};
+        auto& sm = ci.getSourceManager();
+        for (TypeLoc loc = info->getTypeLoc(); !loc.isNull(); loc = loc.getNextTypeLoc()) {
+            auto alias = loc.getAs<TypedefTypeLoc>();
+            if (!alias.isNull()) return native_value_pointer(t, alias.getTypePtr()->getDecl()->getTypeSourceInfo());
+            auto pointer = loc.getAs<PointerTypeLoc>();
+            if (pointer.isNull()) continue;
+            auto sigil = sm.getSpellingLoc(pointer.getStarLoc());
+            if (sigil.isValid() && sm.isWrittenInMainFile(sigil) && *sm.getCharacterData(sigil) == '*') return t->getPointeeType();
+            return {};
+        }
+        return {};
+    }
+    QualType native_value_pointer(const ValueDecl* declaration) const {
+        if (annotated(declaration, "cli.box") || annotated(declaration, "cli.box.object")) return {};
+        QualType t;
+        const TypeSourceInfo* info = nullptr;
+        if (auto* function = dyn_cast<FunctionDecl>(declaration)) { t = function->getReturnType(); info = function->getTypeSourceInfo(); }
+        else if (auto* field = dyn_cast<FieldDecl>(declaration)) { t = field->getType(); info = field->getTypeSourceInfo(); }
+        else if (auto* variable = dyn_cast<VarDecl>(declaration)) { t = variable->getType(); info = variable->getTypeSourceInfo(); }
+        else return {};
+        if (annotated(declaration, "cli.native.value.pointer") && t->isPointerType()) return t->getPointeeType();
+        if (auto* parameter = dyn_cast<ParmVarDecl>(declaration)) {
+            auto* function = dyn_cast<FunctionDecl>(parameter->getDeclContext());
+            if (function && !annotation(function, "cli.import:").empty()) return {};
+        }
+        if (!annotation(declaration, "cli.import:").empty() || !annotation(declaration, "cli.import.field:").empty()) return {};
+        return native_value_pointer(t, info);
+    }
+    QualType native_value_pointer(const Expr* original) const {
+        const Expr* e = strip(original);
+        if (auto* cast = dyn_cast<ExplicitCastExpr>(e)) return native_value_pointer(cast->getType(), cast->getTypeInfoAsWritten());
+        if (auto* cast = dyn_cast<ImplicitCastExpr>(e)) {
+            if (cast->getCastKind() == CK_NullToPointer) return {};
+            return native_value_pointer(cast->getSubExpr());
+        }
+        if (auto* reference = dyn_cast<DeclRefExpr>(e)) return native_value_pointer(reference->getDecl());
+        if (auto* member = dyn_cast<MemberExpr>(e)) return native_value_pointer(member->getMemberDecl());
+        if (auto* call = dyn_cast<CallExpr>(e); call && call->getDirectCallee()) return native_value_pointer(call->getDirectCallee());
+        if (auto* address = dyn_cast<UnaryOperator>(e); address && address->getOpcode() == UO_AddrOf && value_target(address->getSubExpr()->getType()))
+            return address->getSubExpr()->getType();
+        if (auto* opaque = dyn_cast<OpaqueValueExpr>(e)) return native_value_pointer(opaque->getSourceExpr());
+        if (auto* pseudo = dyn_cast<PseudoObjectExpr>(e)) return native_value_pointer(pseudo->getResultExpr());
+        if (auto* conditional = dyn_cast<ConditionalOperator>(e)) {
+            auto left = native_value_pointer(conditional->getTrueExpr()), right = native_value_pointer(conditional->getFalseExpr());
+            if (left.isNull() != right.isNull()) {
+                const Expr* other = left.isNull() ? conditional->getTrueExpr() : conditional->getFalseExpr();
+                if (!other->isNullPointerConstant(context, Expr::NPC_ValueDependentIsNotNull))
+                    fail(conditional, "native value pointers and boxed value handles cannot be implicitly mixed");
+            }
+            if (!left.isNull() && !right.isNull() && context.hasSameUnqualifiedType(left, right)) return left;
+            if (!left.isNull() && conditional->getFalseExpr()->isNullPointerConstant(context, Expr::NPC_ValueDependentIsNotNull)) return left;
+            if (!right.isNull() && conditional->getTrueExpr()->isNullPointerConstant(context, Expr::NPC_ValueDependentIsNotNull)) return right;
+        }
+        return {};
+    }
+    std::string declared_type(const ValueDecl* declaration) const {
+        auto element = native_value_pointer(declaration);
+        if (!element.isNull()) {
+            if (!native_storage(element)) throw std::runtime_error("native value pointers require proven GC-free element storage");
+            return type(element) + "*";
+        }
+        if (auto* function = dyn_cast<FunctionDecl>(declaration)) return type(function->getReturnType());
+        return type(declaration->getType());
+    }
+    std::string expression_type(const Expr* expression) const {
+        auto element = native_value_pointer(expression);
+        return element.isNull() ? type(expression->getType()) : type(element) + "*";
+    }
+    void pointer_binding(const Expr* value, const ValueDecl* target) const {
+        auto target_type = isa<FunctionDecl>(target) ? cast<FunctionDecl>(target)->getReturnType() : target->getType();
+        if (!boxed_target(target_type)) return;
+        bool native_target = !native_value_pointer(target).isNull();
+        if (value->isNullPointerConstant(context, Expr::NPC_ValueDependentIsNotNull)) return;
+        if (native_target != !native_value_pointer(value).isNull())
+            fail(value, "native value pointers and boxed value handles cannot be implicitly mixed");
+    }
+    void pointer_value(const Expr* value, const ValueDecl* target) {
+        pointer_binding(value, target);
+        if (!native_value_pointer(target).isNull() && value->isNullPointerConstant(context, Expr::NPC_ValueDependentIsNotNull)) {
+            op("ldc.i4.0", 0, 1); op("conv.u", 1, 1); return;
+        }
+        expr(value);
+    }
     const CXXDestructorDecl* source_destructor(const CXXRecordDecl* record) const {
         if (!record || !record->getDefinition() || !record_annotation(record, "cli.external:").empty()) return nullptr;
         auto* destructor = record->getDefinition()->getDestructor();
@@ -1392,7 +1478,7 @@ class Emitter {
         return "valuetype " + name;
     }
     std::string variable_type(const VarDecl* variable) const {
-        if (!native_reference(variable)) return type(variable->getType());
+        if (!native_reference(variable)) return declared_type(variable);
         auto element = variable->getType()->getPointeeType();
         if (!native_storage(element)) throw std::runtime_error("native references require a primitive or proven GC-free value/native layout");
         return type(element) + "* modopt([System.Runtime.CompilerServices.VisualC]System.Runtime.CompilerServices.IsImplicitlyDereferenced)";
@@ -1672,6 +1758,13 @@ class Emitter {
         if (!info) return;
         auto& sm = ci.getSourceManager();
         for (TypeLoc loc = info->getTypeLoc(); !loc.isNull(); loc = loc.getNextTypeLoc()) {
+            auto specialization = loc.getAs<TemplateSpecializationTypeLoc>();
+            if (!specialization.isNull()) for (unsigned i = 0; i < specialization.getNumArgs(); ++i) {
+                auto argument = specialization.getArgLoc(i);
+                if (argument.getArgument().getKind() == TemplateArgument::Type &&
+                    !native_value_pointer(argument.getArgument().getAsType(), argument.getTypeSourceInfo()).isNull())
+                    throw std::runtime_error("native value-pointer array/generic elements are not supported yet");
+            }
             auto reference = loc.getAs<ReferenceTypeLoc>();
             if (!reference.isNull()) {
                 if (reference.getType()->isRValueReferenceType()) throw std::runtime_error("rvalue reference signatures are not enabled yet");
@@ -1689,6 +1782,10 @@ class Emitter {
             }
             if (!handle_target(pointer.getType())) continue;
             if (star.isValid() && sm.isWrittenInMainFile(star) && *sm.getCharacterData(star) == '*') {
+                if (value_target(pointer.getType()->getPointeeType())) {
+                    if (!native_storage(pointer.getType()->getPointeeType())) throw std::runtime_error("native value pointers require proven GC-free element storage");
+                    continue;
+                }
                 auto source = sm.getPresumedLoc(pointer.getStarLoc());
                 throw std::runtime_error((source.isValid() ? std::string(source.getFilename()) + ":" + std::to_string(source.getLine()) + ": " : "") +
                     "native '*' pointers to managed reference/value classes are not supported: " + pointer.getType().getAsString() + "; declare a '^' handle or use a native storage bridge");
@@ -1699,12 +1796,12 @@ class Emitter {
         auto* parent = dyn_cast<CXXRecordDecl>(f->getParent());
         if (!parent) throw std::runtime_error("field has no managed parent");
         auto imported = metadata.fields.find(annotation(f, "cli.import.field:"));
-        return (imported == metadata.fields.end() ? type(f->getType()) : imported->second.type) + " " + record_token(parent) + "::'" + f->getNameAsString() + "'";
+        return (imported == metadata.fields.end() ? declared_type(f) : imported->second.type) + " " + record_token(parent) + "::'" + f->getNameAsString() + "'";
     }
     std::string static_field_signature(const VarDecl* f) const {
         if (!f->isStaticDataMember()) throw std::runtime_error("static storage requires a managed class field");
         auto imported = metadata.fields.find(annotation(f, "cli.import.field:"));
-        return (imported == metadata.fields.end() ? type(f->getType()) : imported->second.type) + " " + record_token(cast<CXXRecordDecl>(f->getDeclContext())) + "::'" + f->getNameAsString() + "'";
+        return (imported == metadata.fields.end() ? declared_type(f) : imported->second.type) + " " + record_token(cast<CXXRecordDecl>(f->getDeclContext())) + "::'" + f->getNameAsString() + "'";
     }
     const CXXMethodDecl* static_property_method(const VarDecl* property, bool write) const {
         auto names = annotation(property, "cli.static.property:");
@@ -1733,7 +1830,7 @@ class Emitter {
         auto imported = metadata.methods.find(annotation(f, "cli.import:"));
         if (imported != metadata.methods.end()) return imported_signature(imported->second, method);
         if (method) owner = record_token(method->getParent()) + "::";
-        std::string result = isa<CXXConstructorDecl>(f) ? "void" : type(f->getReturnType());
+        std::string result = isa<CXXConstructorDecl>(f) ? "void" : declared_type(f);
         std::string name = method_name(f);
         std::string sig = (method && !method->isStatic() ? "instance " : "") + result + " " + owner + "'" + name + "'(";
         for (unsigned i = 0; i < f->getNumParams(); ++i) {
@@ -1795,6 +1892,9 @@ class Emitter {
     }
     void address(const Expr* original) {
         const Expr* e = strip(original)->IgnoreParenImpCasts();
+        if (auto* unary = dyn_cast<UnaryOperator>(e); unary && unary->getOpcode() == UO_Deref && !native_value_pointer(unary->getSubExpr()).isNull()) {
+            expr(unary->getSubExpr()); return;
+        }
         if (auto* unary = dyn_cast<UnaryOperator>(e); unary && unary->getOpcode() == UO_Deref && boxed_target(unary->getSubExpr()->getType())) {
             auto* r = boxed_target(unary->getSubExpr()->getType());
             if (isa<CXXThisExpr>(unary->getSubExpr()->IgnoreParenImpCasts())) op("ldarg.0", 0, 1);
@@ -1826,6 +1926,7 @@ class Emitter {
         expr(e); op("stloc " + std::to_string(slot), 1); op("ldloca " + std::to_string(slot), 0, 1);
     }
     void emit_receiver(const Expr* e) {
+        if (!native_value_pointer(e).isNull()) { expr(e); return; }
         if (value_target(e->getType())) {
             auto* at = strip(e)->IgnoreParenImpCasts();
             const ValueDecl* field = nullptr;
@@ -1911,7 +2012,7 @@ class Emitter {
     void store(const Expr* target, bool retain) {
         target = target->IgnoreParenImpCasts();
         if (auto* dereference = dyn_cast<UnaryOperator>(target); dereference && dereference->getOpcode() == UO_Deref &&
-            !handle_target(dereference->getSubExpr()->getType())) {
+            (!handle_target(dereference->getSubExpr()->getType()) || !native_value_pointer(dereference->getSubExpr()).isNull())) {
             unsigned slot = temporary(type(target->getType()));
             op("stloc " + std::to_string(slot), 1); expr(dereference->getSubExpr()); op("ldloc " + std::to_string(slot), 0, 1);
             op("stobj " + type(target->getType()), 2);
@@ -1929,7 +2030,7 @@ class Emitter {
             auto* field = dyn_cast<FieldDecl>(member->getMemberDecl());
             if (!field) fail(target, "assignment target is not an instance field");
             if (annotated(field, "cli.readonly")) fail(target, "readonly imported fields cannot be assigned");
-            unsigned slot = temporary(type(field->getType()));
+            unsigned slot = temporary(declared_type(field));
             op("stloc " + std::to_string(slot), 1);
             emit_receiver(member->getBase()); op("ldloc " + std::to_string(slot), 0, 1);
             op("stfld " + field_signature(field), 2);
@@ -1962,7 +2063,14 @@ class Emitter {
         if ((handle_target(b->getLHS()->getType()) || handle_target(b->getRHS()->getType())) &&
             b->getOpcode() != BO_Assign && b->getOpcode() != BO_EQ && b->getOpcode() != BO_NE)
             fail(b, "managed handle arithmetic and ordering are unsupported");
-        if (b->getOpcode() == BO_Assign) { expr(b->getRHS()); store(b->getLHS(), true); return; }
+        if (b->getOpcode() == BO_Assign) {
+            const ValueDecl* declaration = nullptr;
+            auto* target = b->getLHS()->IgnoreParenImpCasts();
+            if (auto* reference = dyn_cast<DeclRefExpr>(target)) declaration = reference->getDecl();
+            if (auto* member = dyn_cast<MemberExpr>(target)) declaration = member->getMemberDecl();
+            if (declaration) pointer_value(b->getRHS(), declaration); else expr(b->getRHS());
+            store(b->getLHS(), true); return;
+        }
         if (b->isCompoundAssignmentOp()) {
             std::string operation;
             switch (b->getOpcode()) {
@@ -1981,7 +2089,7 @@ class Emitter {
             if (auto* member = dyn_cast<MemberExpr>(b->getLHS()->IgnoreParenImpCasts())) {
                 auto* field = dyn_cast<FieldDecl>(member->getMemberDecl());
                 if (!field) fail(b, "compound assignment target is not an instance field");
-                unsigned receiver = temporary(receiver_type(field));
+                unsigned receiver = temporary(native_value_pointer(member->getBase()).isNull() ? receiver_type(field) : expression_type(member->getBase()));
                 unsigned result = temporary(type(field->getType()));
                 emit_receiver(member->getBase()); op("stloc " + std::to_string(receiver), 1);
                 op("ldloc " + std::to_string(receiver), 0, 1); op("ldfld " + field_signature(field), 1, 1);
@@ -2002,7 +2110,16 @@ class Emitter {
             op(b->getOpcode() == BO_LAnd ? "ldc.i4.0" : "ldc.i4.1", 0, 1);
             code << done << ":\n"; return;
         }
-        expr(b->getLHS()); expr(b->getRHS());
+        if ((b->getOpcode() == BO_EQ || b->getOpcode() == BO_NE) &&
+            (!native_value_pointer(b->getLHS()).isNull() || !native_value_pointer(b->getRHS()).isNull())) {
+            for (const Expr* operand : {b->getLHS(), b->getRHS()}) {
+                if (operand->isNullPointerConstant(context, Expr::NPC_ValueDependentIsNotNull)) { op("ldc.i4.0", 0, 1); op("conv.u", 1, 1); }
+                else {
+                    if (boxed_target(operand->getType()) && native_value_pointer(operand).isNull()) fail(b, "native value pointers and boxed value handles cannot be implicitly mixed");
+                    expr(operand);
+                }
+            }
+        } else { expr(b->getLHS()); expr(b->getRHS()); }
         bool unsign = b->getLHS()->getType()->isUnsignedIntegerType();
         bool unordered = unsign || ((b->getOpcode() == BO_GE || b->getOpcode() == BO_LE) && b->getLHS()->getType()->isRealFloatingType());
         std::string operation;
@@ -2032,6 +2149,7 @@ class Emitter {
             auto* member = dyn_cast<CXXMemberCallExpr>(c);
             if (!member || !handle_target(member->getImplicitObjectArgument()->getType()))
                 fail(c, "explicit destruction currently requires a managed handle receiver");
+            if (!native_value_pointer(member->getImplicitObjectArgument()).isNull()) fail(c, "native value destruction requires a native implementation");
             dispose_handle(member->getImplicitObjectArgument()); return;
         }
         if (annotated(f, "cli.cctor")) fail(c, "managed static constructors cannot be called directly");
@@ -2172,6 +2290,7 @@ class Emitter {
         }
         if (f->getNameAsString() == "__cli_safe_cast" || f->getNameAsString() == "__cli_dynamic_cast") {
             if (c->getNumArgs() != 1) fail(c, "managed casts require one argument");
+            if (!native_value_pointer(c->getArg(0)).isNull()) fail(c, "native value pointers cannot be used as managed cast operands");
             auto* target = handle_target(c->getType());
             bool safe = f->getNameAsString() == "__cli_safe_cast";
             QualType source_type = c->getArg(0)->getType();
@@ -2259,7 +2378,7 @@ class Emitter {
             for (unsigned i = 0; i < count; ++i) {
                 if (type(argument(i)->getType()) != type(selected->getParamDecl(i)->getType())) fail(c, "constructor argument conversion is not enabled yet");
                 if (selected->getParamDecl(i)->getType()->isReferenceType()) address(argument(i));
-                else expr(argument(i));
+                else pointer_value(argument(i), selected->getParamDecl(i));
             }
             op("newobj " + signature(selected), count, 1);
             if (record_annotated(target, "cli.value")) op("box valuetype " + record_name(target), 1, 1);
@@ -2274,7 +2393,7 @@ class Emitter {
         }
         for (unsigned i = 0; i < c->getNumArgs(); ++i) {
             if (native_reference(f->getParamDecl(i))) native_address(c->getArg(i));
-            else if (f->getParamDecl(i)->getType()->isReferenceType()) address(c->getArg(i)); else expr(c->getArg(i));
+            else if (f->getParamDecl(i)->getType()->isReferenceType()) address(c->getArg(i)); else pointer_value(c->getArg(i), f->getParamDecl(i));
         }
         std::string id = annotation(f, "cli.import:");
         bool delegate_call = m && delegate_invoke(m->getParent()) == m;
@@ -2296,8 +2415,27 @@ class Emitter {
     }
     void expr(const Expr* original) {
         const Expr* e = strip(original);
+        if (auto* unary = dyn_cast<UnaryOperator>(e); unary && unary->getOpcode() == UO_Deref && !native_value_pointer(unary->getSubExpr()).isNull()) {
+            expr(unary->getSubExpr()); op("ldobj " + type(unary->getType()), 1, 1); return;
+        }
+        if (auto* cast = dyn_cast<ExplicitCastExpr>(e); cast && !native_value_pointer(cast).isNull()) {
+            if (cast->getCastKind() != CK_BitCast && cast->getCastKind() != CK_NoOp && cast->getCastKind() != CK_NullToPointer)
+                fail(cast, "unsupported native value pointer cast");
+            if (boxed_target(cast->getSubExpr()->getType()) && native_value_pointer(cast->getSubExpr()).isNull() &&
+                !cast->getSubExpr()->isNullPointerConstant(context, Expr::NPC_ValueDependentIsNotNull))
+                fail(cast, "boxed value handles cannot be cast to untracked native value pointers");
+            if (cast->getSubExpr()->isNullPointerConstant(context, Expr::NPC_ValueDependentIsNotNull)) { op("ldc.i4.0", 0, 1); op("conv.u", 1, 1); }
+            else expr(cast->getSubExpr());
+            return;
+        }
+        if (auto* cast = dyn_cast<ExplicitCastExpr>(e); cast && handle_target(cast->getType()) && !native_value_pointer(cast->getSubExpr()).isNull())
+            fail(cast, "native value pointers cannot be cast to boxed value handles");
+        if (auto* unary = dyn_cast<UnaryOperator>(e); unary && unary->getOpcode() == UO_AddrOf && !native_value_pointer(unary).isNull()) {
+            if (!native_storage(unary->getSubExpr()->getType())) fail(unary, "native value pointers require proven GC-free element storage");
+            native_address(unary->getSubExpr()); return;
+        }
         if (auto* deletion = dyn_cast<CXXDeleteExpr>(e)) {
-            if (deletion->isArrayForm() || !handle_target(deletion->getArgument()->getType()))
+            if (deletion->isArrayForm() || !handle_target(deletion->getArgument()->getType()) || !native_value_pointer(deletion->getArgument()).isNull())
                 fail(e, "native deletion and delete[] require a native implementation; managed delete requires a single handle");
             dispose_handle(deletion->getArgument()); return;
         }
@@ -2311,6 +2449,9 @@ class Emitter {
                 return;
             }
             expr(c->getSubExpr());
+            if (c->getCastKind() == CK_PointerToBoolean && !native_value_pointer(c->getSubExpr()).isNull()) {
+                op("ldc.i4.0", 0, 1); op("conv.u", 1, 1); op("ceq", 2, 1); op("ldc.i4.0", 0, 1); op("ceq", 2, 1); return;
+            }
             if (c->getCastKind() == CK_PointerToBoolean && handle_target(c->getSubExpr()->getType())) {
                 op("ldnull", 0, 1); op("ceq", 2, 1); op("ldc.i4.0", 0, 1); op("ceq", 2, 1); return;
             }
@@ -2371,7 +2512,7 @@ class Emitter {
             unsigned result = 0; bool has_result = false;
             for (const Expr* semantic : pseudo->semantics()) {
                 if (auto* opaque = dyn_cast<OpaqueValueExpr>(semantic)) {
-                    unsigned slot = temporary(type(opaque->getType()));
+                    unsigned slot = temporary(expression_type(opaque));
                     expr(opaque->getSourceExpr()); op("stloc " + std::to_string(slot), 1);
                     opaque_values[opaque] = slot;
                     if (semantic == result_expr) { result = slot; has_result = true; }
@@ -2398,10 +2539,15 @@ class Emitter {
         if (auto* conditional = dyn_cast<ConditionalOperator>(e)) {
             int base = stack; auto otherwise = label(), done = label();
             expr(conditional->getCond()); op("brfalse " + otherwise, 1);
-            expr(conditional->getTrueExpr());
+            bool native = !native_value_pointer(conditional).isNull();
+            auto branch_value = [&](const Expr* branch) {
+                if (native && branch->isNullPointerConstant(context, Expr::NPC_ValueDependentIsNotNull)) { op("ldc.i4.0", 0, 1); op("conv.u", 1, 1); }
+                else expr(branch);
+            };
+            branch_value(conditional->getTrueExpr());
             if (stack != base + 1) fail(e, "conditional operand did not produce one value");
             op("br " + done); stack = base; code << otherwise << ":\n";
-            expr(conditional->getFalseExpr());
+            branch_value(conditional->getFalseExpr());
             if (stack != base + 1) fail(e, "conditional branch stack mismatch");
             code << done << ":\n"; return;
         }
@@ -2488,7 +2634,7 @@ class Emitter {
                 if (auto* member = dyn_cast<MemberExpr>(u->getSubExpr()->IgnoreParenImpCasts())) {
                     auto* field = dyn_cast<FieldDecl>(member->getMemberDecl());
                     if (!field) fail(u, "increment target is not an instance field");
-                    unsigned receiver = temporary(receiver_type(field));
+                    unsigned receiver = temporary(native_value_pointer(member->getBase()).isNull() ? receiver_type(field) : expression_type(member->getBase()));
                     unsigned old = temporary(type(field->getType())), result = temporary(type(field->getType()));
                     emit_receiver(member->getBase()); op("stloc " + std::to_string(receiver), 1);
                     op("ldloc " + std::to_string(receiver), 0, 1); op("ldfld " + field_signature(field), 1, 1);
@@ -2515,6 +2661,15 @@ class Emitter {
             return;
         }
         if (auto* c = dyn_cast<ExplicitCastExpr>(e)) {
+            if (c->getCastKind() == CK_IntegralToPointer && !handle_target(c->getType())) {
+                expr(c->getSubExpr());
+                if (context.getTypeSize(c->getSubExpr()->getType()) < context.getTypeSize(c->getType()))
+                    op(c->getSubExpr()->getType()->isUnsignedIntegerType() ? "conv.u8" : "conv.i8", 1, 1);
+                op("conv.u", 1, 1); return;
+            }
+            if (c->getCastKind() == CK_PointerToIntegral && (!handle_target(c->getSubExpr()->getType()) || !native_value_pointer(c->getSubExpr()).isNull())) {
+                expr(c->getSubExpr()); numeric_conversion(c->getType()); return;
+            }
             if (c->getCastKind() == CK_ConstructorConversion && value_target(c->getType())) { expr(c->getSubExpr()); return; }
             if (c->getCastKind() == CK_UserDefinedConversion && c->getType()->isPointerType() && !handle_target(c->getType())) {
                 auto* conversion = dyn_cast<CXXMemberCallExpr>(strip(c->getSubExpr()));
@@ -2523,7 +2678,7 @@ class Emitter {
                 expr(c->getSubExpr()); return;
             }
             if (c->getCastKind() == CK_BitCast && c->getType()->isPointerType() && !handle_target(c->getType()) &&
-                c->getSubExpr()->getType()->isPointerType() && !handle_target(c->getSubExpr()->getType())) { expr(c->getSubExpr()); return; }
+                c->getSubExpr()->getType()->isPointerType() && (!handle_target(c->getSubExpr()->getType()) || !native_value_pointer(c->getSubExpr()).isNull())) { expr(c->getSubExpr()); return; }
             if (handle_target(c->getType())) {
                 const Expr* source = strip(c->getSubExpr());
                 if (auto* ctor = dyn_cast<CXXConstructExpr>(source)) {
@@ -2588,18 +2743,18 @@ class Emitter {
                 auto* v = cast<VarDecl>(decl);
                 if (!v->hasInit()) fail(s, "uninitialized locals are not supported yet");
                 if (native_reference(v)) native_address(v->getInit());
-                else if (v->getType()->isReferenceType()) address(v->getInit()); else expr(v->getInit()); op("stloc " + std::to_string(locals.at(v)), 1);
+                else if (v->getType()->isReferenceType()) address(v->getInit()); else pointer_value(v->getInit(), v); op("stloc " + std::to_string(locals.at(v)), 1);
             }
         } else if (auto* r = dyn_cast<ReturnStmt>(s)) {
             if (finally_depth) fail(s, "return cannot leave a finally handler");
             if (!interior_element(current->getReturnType()).isNull() &&
                 (!r->getRetValue() || !heap_interior_return(r->getRetValue())))
                 fail(s, "interior pointer return must refer directly to managed heap storage; local aliases and stack addresses cannot escape");
-            if (r->getRetValue()) expr(r->getRetValue());
+            if (r->getRetValue()) pointer_value(r->getRetValue(), current);
             if (exception_depth) {
                 if (return_label.empty()) return_label = label();
                 if (r->getRetValue()) {
-                    if (!return_slot_set) { return_slot = temporary(type(current->getReturnType())); return_slot_set = true; }
+                    if (!return_slot_set) { return_slot = temporary(declared_type(current)); return_slot_set = true; }
                     op("stloc " + std::to_string(return_slot), 1);
                 }
                 op("leave " + return_label);
@@ -2695,14 +2850,14 @@ class Emitter {
             !ci.getSourceManager().isInSystemHeader(f->getLocation());
     }
     void validate_native_signature(const FunctionDecl* f) const {
-        auto valid = [&](QualType t, bool result) {
+        auto valid = [&](const ValueDecl* declaration, QualType t, bool result) {
             if (result && t->isVoidType()) return;
-            if ((!t->isIntegerType() && !t->isRealFloatingType() && !t->isPointerType()) || t->isBooleanType() || handle_target(t))
+            if ((!t->isIntegerType() && !t->isRealFloatingType() && !t->isPointerType()) || t->isBooleanType() || (handle_target(t) && native_value_pointer(declaration).isNull()))
                 throw std::runtime_error("native bridge signatures require scalars or unmanaged pointers; bool and managed/pointer marshalling are not enabled");
-            type(t);
+            declared_type(declaration);
         };
-        valid(f->getReturnType(), true);
-        for (auto* parameter : f->parameters()) valid(parameter->getType(), false);
+        valid(f, f->getReturnType(), true);
+        for (auto* parameter : f->parameters()) valid(parameter, parameter->getType(), false);
         auto convention = f->getType()->castAs<FunctionType>()->getCallConv();
         if (f->isVariadic() || f->hasAttr<AsmLabelAttr>() || (convention != CC_C && convention != CC_Win64))
             throw std::runtime_error("native bridge requires a non-variadic extern-C function using the platform C ABI");
@@ -2712,13 +2867,13 @@ class Emitter {
         for (auto* p : f->parameters()) if (pinned(p->getType())) throw std::runtime_error("pin_ptr is restricted to block-scoped locals");
         if (native_function(f)) {
             validate_native_signature(f);
-            return {method_name(f), "", type(f->getReturnType()), false, 0, "", ""};
+            return {method_name(f), "", declared_type(f), false, 0, "", ""};
         }
         current = f; locals.clear(); parameters.clear(); temporary_types.clear(); opaque_values.clear(); code.str(""); code.clear(); stack = 0; max_stack = 0;
         label_count = 0; control_labels.clear(); switch_labels.clear(); exception_depth = catch_depth = finally_depth = 0; return_label.clear(); return_slot_set = false;
         auto* method = dyn_cast<CXXMethodDecl>(f);
         bool instance = method && !method->isStatic();
-        if (method && method->isPureVirtual()) return {method_name(f), record_name(method->getParent()), type(f->getReturnType()), instance, 0, "", ""};
+        if (method && method->isPureVirtual()) return {method_name(f), record_name(method->getParent()), declared_type(f), instance, 0, "", ""};
         if (f->isVariadic()) throw std::runtime_error("variadic managed functions are unsupported");
         for (unsigned i = 0; i < f->getNumParams(); ++i) parameters[f->getParamDecl(i)] = i + unsigned(instance);
         collect_locals(f->getBody());
@@ -2749,7 +2904,7 @@ class Emitter {
                 op("ldarg.0", 0, 1); op("initobj " + record_token(method->getParent()), 1);
             } else if (!base_initialized) { op("ldarg.0", 0, 1); op("call instance void [System.Runtime]System.Object::.ctor()", 1); }
             for (auto* init : constructor->inits()) if (init->isMemberInitializer()) {
-                op("ldarg.0", 0, 1); expr(init->getInit()); op("stfld " + field_signature(init->getMember()), 2);
+                op("ldarg.0", 0, 1); pointer_value(init->getInit(), init->getMember()); op("stfld " + field_signature(init->getMember()), 2);
             }
         }
         statement(f->getBody());
@@ -2761,7 +2916,8 @@ class Emitter {
         } else {
             std::string result = type(f->getReturnType());
             op(result == "int64" || result == "uint64" ? "ldc.i8 0" : result == "float32" ? "ldc.r4 0" : result == "float64" ? "ldc.r8 0" :
-               handle_target(f->getReturnType()) ? "ldnull" : "ldc.i4.0", 0, 1);
+               handle_target(f->getReturnType()) && native_value_pointer(f).isNull() ? "ldnull" : "ldc.i4.0", 0, 1);
+            if (!native_value_pointer(f).isNull()) op("conv.u", 1, 1);
             if (!interior_element(f->getReturnType()).isNull()) op("conv.u", 1, 1);
             op("ret", 1);
         } // Unreachable for correctly-returning non-void functions except main.
@@ -2781,7 +2937,7 @@ class Emitter {
             if (!declarations.empty()) declarations += ", ";
             declarations += "[" + std::to_string(ordered.size() + i) + "] " + temporary_types[i] + " 'temporary" + std::to_string(i) + "'";
         }
-        return {method_name(f), method ? record_name(method->getParent()) : "", type(f->getReturnType()), instance,
+        return {method_name(f), method ? record_name(method->getParent()) : "", declared_type(f), instance,
             std::max(1u, max_stack), declarations, code.str()};
     }
 public:
@@ -2789,6 +2945,12 @@ public:
     bool VisitFunctionDecl(FunctionDecl* f) {
         if (f->isDependentContext() || f->getType()->isDependentType()) return true;
         auto* method = dyn_cast<CXXMethodDecl>(f);
+        for (auto* previous = f->getPreviousDecl(); previous; previous = previous->getPreviousDecl()) {
+            bool conflict = native_value_pointer(f).isNull() != native_value_pointer(previous).isNull();
+            for (unsigned i = 0; i < f->getNumParams() && i < previous->getNumParams(); ++i)
+                conflict |= native_value_pointer(f->getParamDecl(i)).isNull() != native_value_pointer(previous->getParamDecl(i)).isNull();
+            if (conflict) throw std::runtime_error("native-pointer and boxed-handle signatures cannot share one canonical Clang declaration");
+        }
         if (method && record_annotated(method->getParent(), "cli.delegate")) return true;
         if (ci.getSourceManager().isInSystemHeader(f->getLocation()) &&
             !(method && (record_annotated(method->getParent(), "cli.ref") || record_annotated(method->getParent(), "cli.value"))) && !native_function(f)) return true;
@@ -2911,6 +3073,9 @@ public:
             }
             for (auto* member : r->decls()) if (auto* field = dyn_cast<VarDecl>(member); field && annotated(field, "cli.field.offset"))
                 throw std::runtime_error("FieldOffset requires a managed instance field");
+            for (auto* member : r->decls()) if (auto* property = dyn_cast<MSPropertyDecl>(member))
+                if (!native_value_pointer(property->getType(), property->getTypeSourceInfo()).isNull())
+                    throw std::runtime_error("native value-pointer properties are not supported yet");
             for (auto* method : r->methods()) if (annotated(method, "cli.cctor") && !method->hasBody())
                 throw std::runtime_error("managed static constructor requires a definition in this translation unit");
             if (record_annotated(r, "cli.value")) {
@@ -2922,7 +3087,7 @@ public:
             if (classes > 1 || (is_interface(r) && classes)) throw std::runtime_error("a managed class permits one class base and interfaces only");
             if (is_interface(r) && !r->field_empty()) throw std::runtime_error("interface instance fields are forbidden");
             for (const auto& base : r->bases()) record_name(base.getType()->getAsCXXRecordDecl());
-            for (auto* field : r->fields()) { if (field->getType()->isReferenceType() || !interior_element(field->getType()).isNull()) throw std::runtime_error("tracking reference and managed pointer fields are not enabled yet"); type(field->getType()); validate_declarator(field->getTypeSourceInfo()); }
+            for (auto* field : r->fields()) { if (field->getType()->isReferenceType() || !interior_element(field->getType()).isNull()) throw std::runtime_error("tracking reference and managed pointer fields are not enabled yet"); declared_type(field); validate_declarator(field->getTypeSourceInfo()); }
             if (!is_interface(r) && !(annotated(r, "cli.abstract") && annotated(r, "cli.sealed"))) {
                 auto* ctor = ci.getSema().LookupDefaultConstructor(r);
                 if (ctor && ctor->isImplicit() && !ctor->isDeleted() && !ctor->hasBody())
@@ -3012,7 +3177,7 @@ public:
             bool cctor = annotated(f, "cli.cctor");
             if (native_function(f)) {
                 il << "  .method public hidebysig static pinvokeimpl(" << quote(native_library) << " as " << quote(f->getNameAsString())
-                   << " cdecl) " << type(f->getReturnType()) << " '" << f->getNameAsString() << "'(";
+                   << " cdecl) " << declared_type(f) << " '" << f->getNameAsString() << "'(";
                 for (unsigned j = 0; j < f->getNumParams(); ++j) { if (j) il << ", "; il << parameter_signature(f->getParamDecl(j)); }
                 il << ") cil managed preservesig {}\n"; return;
             }
@@ -3026,7 +3191,7 @@ public:
             }
             il << "  .method " << (destructor || cctor || (isa<CXXMethodDecl>(f) && f->getAccess() == AS_private) ? "private" : f->getAccess() == AS_protected ? "family" : annotation(f, "cli.access:") == "assembly" ? "assembly" : "public") << " hidebysig " << flags
                << (cctor || isa<CXXConstructorDecl>(f) ? "specialname rtspecialname " : !annotation(f, "cli.accessor:").empty() ? "specialname " : "") << (body.instance ? "instance " : "static ")
-               << type(f->getReturnType()) << " '" << body.name << "'(";
+               << declared_type(f) << " '" << body.name << "'(";
             for (unsigned j = 0; j < f->getNumParams(); ++j) { if (j) il << ", "; il << parameter_signature(f->getParamDecl(j)); }
             il << ") cil managed " << (annotated(f, "cli.preservesig") ? "preservesig " : "") << "{\n";
             if (annotated(f, "cli.reliability")) {
@@ -3154,14 +3319,14 @@ public:
                 il << "  .field ";
                 if (layout == 2) il << '[' << layout_constant(field, "cli.field.offset", -1) << "] ";
                 il << (field->getAccess() == AS_private ? "private " : field->getAccess() == AS_protected ? "family " : annotation(field, "cli.access:") == "assembly" ? "assembly " : "public ")
-                    << type(field->getType()) << " '" << field->getNameAsString() << "'\n";
+                    << declared_type(field) << " '" << field->getNameAsString() << "'\n";
             }
             for (auto* member : r->decls()) if (auto* field = dyn_cast<VarDecl>(member); field && field->isStaticDataMember()) {
                 if (!annotation(field, "cli.static.property:").empty()) continue;
                 if (field->getType()->isReferenceType() || !interior_element(field->getType()).isNull()) throw std::runtime_error("managed pointer static fields are not enabled yet");
                 validate_declarator(field->getTypeSourceInfo());
                 il << "  .field " << (field->getAccess() == AS_private ? "private " : field->getAccess() == AS_protected ? "family " : annotation(field, "cli.access:") == "assembly" ? "assembly " : "public ")
-                    << "static " << type(field->getType()) << " '" << field->getNameAsString() << "'\n";
+                    << "static " << declared_type(field) << " '" << field->getNameAsString() << "'\n";
             }
             bool explicit_cctor = false, field_initializers = false;
             for (auto* method : r->methods()) {

@@ -1787,7 +1787,9 @@ now pass (see §28). The complete amalgamation passes Clang parsing and Sema;
 Native Guid references and opaque trivial native record copies now pass (see
 §29). Source destructor disposal and genuine nested ref/value metadata now pass
 (§30), including the original LocalizedStringsEnumerator and its getters.
-IL collection next fails at GlyphMetrics* in FontFace::GetDesignGlyphMetrics.
+GC-free managed value pointers now pass (§31), including the original
+GlyphMetrics header/native ABI. IL emission next fails at the missing
+RegOpenKeyExW native bridge in TrueTypeSubsetter/util2.cpp.
 General native record operations, open managed
 generics, callbacks, finalizers and automatic native
 partitioning also remain outside its supported subset.
@@ -3252,3 +3254,81 @@ and WindowsDesktop packaging remain open. New features are development
 frontend changes. Logs, emitted IL and original-enumerator probe sources are
 archived in `tmp/wpf8-support/validation/destructors-enumerator-20261012` on the
 local build host.
+
+## 31. Native managed-value pointers and DirectWrite glyph output
+
+The next 2026-10-12 continuation distinguishes supported source V* native
+pointers from V^ boxed handles when lowering declarations and expressions.
+Clang's existing surrogate pointer shape still performs ordinary C++ lookup,
+but source sigils/aliases and expression origins select different CLR storage.
+Native parameters, locals, fields and returns emit valuetype V*; boxed handles
+retain their ValueType/IsBoxed metadata and unboxing/alias semantics. Native
+member reads/writes, instance calls, value copies, indirect assignment,
+forwarding, conditional/null values and scalar split-DLL calls now work for
+proven GC-free value elements.
+
+Bindings/casts do not silently interchange native pointers and boxes. Guards
+cover argument/return/local bindings, conditional mixing, managed casts of raw
+pointers, native deletion and incompatible native/boxed redeclarations sharing
+one canonical Clang declaration. Direct addresses require stable stack/native
+storage; movable managed fields remain rejected. Source boxing intrinsics are
+explicitly retained as boxing operations. Unsupported native pointer properties
+and array/generic elements are rejected. Imported native value-pointer
+signatures, pointer-versus-caret-only overloads, general expression/lifetime
+forms, value pin_ptr/interior_ptr, pointer arithmetic and native allocation/
+deletion remain incomplete. This is declaration/expression provenance in the
+current frontend, not a completed canonical Clang C++/CLI type system.
+
+Ordinary unmanaged integral/pointer conversions now preserve pointer width and
+sign extension. A runtime check verifies the predefined Win32 handle bit pattern
+0xffffffff80000002, which removes the HKEY_LOCAL_MACHINE cast failure from the
+complete WPF gate. These casts do not turn managed boxes into raw pointers.
+
+`cppcli.sh test-value-pointers` checks typed source signatures, fields and
+returns, aliases, native field/method updates, indirect struct copies and
+conditional/null pointer identity. It calls a real MinGW DLL from a stack value
+and from a C# fixed managed struct array, with a GC collection before the native
+call. The native DLL verifies the input fields and mutates a 64-bit field. C#
+reflection checks unmanaged pointer metadata, while the box factory/reader and
+existing boxed-value checks retain actual boxed object behavior. Negative
+checks enforce the unsupported/mixed cases described above.
+
+`wpf.sh check-glyph-pointer` includes the unchanged upstream GlyphMetrics.h.
+The private explicit-layout type stays private and preserves all seven field
+offsets and its 28-byte size. A C# GCHandle pin roots an array of three actual
+GlyphMetrics values. The generated CLI code accepts its address, collects, and
+passes a typed GlyphMetrics* P/Invoke to a native MinGW function compiled against
+DWRITE_GLYPH_METRICS. That function checks alignment and writes every field;
+reflection checks the values after another compacting collection. This
+validates actual native glyph-buffer representation and writes, not a complete
+FontFace/DirectWrite implementation or DirectWrite font operation.
+
+Validation on win11:
+
+```sh
+MSYSTEM=CLANG64 bash -l -c "/clang64/bin/cmake.exe --build /home/topkek/dotnetboot/m612/build/cppcli --target cli_ast -j2"
+MSYSTEM=CLANG64 M612=/home/topkek/dotnetboot/m612 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh \
+  test-value-pointers test-boxed-values test-native-storage test-pinning
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  WPF_CPPCLI_BUILD=/home/topkek/dotnetboot/m612/build/cppcli \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-glyph-pointer bridge-gate
+```
+
+The frontend rebuild and focused checks pass; managed builds report zero
+warnings/errors. The original-header check prints `original WPF GlyphMetrics
+pointer, native DirectWrite ABI and pinned GC storage OK`. The complete bridge
+still exits 1 after 39 upstream/native C++ warnings. It now passes the native
+GlyphMetrics pointer declarations and Win32 predefined-handle conversions. The
+first IL-emission error is util2.cpp:18: RegOpenKeyExW has no emitted native
+bridge. System SDK calls need real DLL binding/partitioning; suppressing that
+error would not implement the registry helper or native text/font operations.
+
+No complete DirectWriteForwarder assembly or WPF package is produced. Complete
+implementation-file evidence remains one of 21 DirectWrite bodies, and 620
+foundation C# inputs remain compiled. Native SDK calls/partitioning, finalizers,
+System.Printing, higher WPF, missing native exports, protocol/version matching
+and WindowsDesktop packaging remain open. Changes are development frontend
+changes. Logs, emitted IL and glyph pointer source checks are archived in
+`tmp/wpf8-support/validation/value-glyph-pointers-20261012` on the local build host.

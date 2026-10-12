@@ -511,6 +511,34 @@ EOF
   reject_case layout-negative-size "$prefix"'[StructLayout(LayoutKind::Sequential, Size=-1)] public value struct Bad { int Value; }; int main() { return 0; }' 'Size must be a nonnegative' "${layout_args[@]}"
   log "PASS test-layout: explicit/sequential CLR layout, overlapping fields, pack, size and charset"
 }
+step_test-value-pointers() {
+  log "Native managed-value pointers distinct from boxed handles"
+  /clang64/bin/clang++.exe -std=c++17 -shared -O2 "$src/tests/value-pointers-native.cpp" -o "$testdir/cppcli-value-pointers.dll"
+  compile "$(cygpath -m "$src/tests/value-pointers.cpp")" --target library --type System.GC \
+    --native-library cppcli-value-pointers.dll -o "$(cygpath -m "$testdir/value-pointers.dll")"
+  mkdir -p "$testdir/value-pointers-consumer"
+  cp "$src/tests/ValuePointersConsumer.cs" "$testdir/value-pointers-consumer/Program.cs"
+  cat > "$testdir/value-pointers-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><AllowUnsafeBlocks>true</AllowUnsafeBlocks></PropertyGroup><ItemGroup><Reference Include="value-pointers"><HintPath>../value-pointers.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/value-pointers-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -p:NuGetAudit=false
+  cp "$testdir/cppcli-value-pointers.dll" "$testdir/value-pointers-consumer/bin/Debug/net8.0/"
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/value-pointers-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case value-pointer-box-mix 'public value struct V { int X; }; void Bad(V^ box) { V* pointer = box; } int main() { return 0; }' 'native value pointers and boxed value handles cannot be implicitly mixed'
+  reject_case value-pointer-to-box 'public value struct V { int X; }; void Bad(V* pointer) { V^ box = pointer; } int main() { return 0; }' 'native value pointers and boxed value handles cannot be implicitly mixed'
+  reject_case value-pointer-gc 'public value struct V { System::String^ Text; }; void Bad(V* pointer) {} int main() { return 0; }' 'native value pointers require proven GC-free element storage'
+  reject_case value-pointer-heap-address 'public value struct V { int X; }; public ref class C { public: V Value; }; void Bad(C^ owner) { V* pointer = &owner->Value; } int main() { return 0; }' 'native reference cannot bind to movable managed storage'
+  reject_case value-pointer-managed-cast 'public value struct V { int X; }; void Bad(V* pointer) { System::Object^ box = safe_cast<System::Object^>(pointer); } int main() { return 0; }' 'native value pointers cannot be used as managed cast operands'
+  reject_case value-pointer-delete 'public value struct V { int X; }; void Bad(V* pointer) { delete pointer; } int main() { return 0; }' 'native deletion and delete'
+  reject_case value-pointer-argument 'public value struct V { int X; }; void Native(V* value) {} void Bad(V^ box) { Native(box); } int main() { return 0; }' 'native value pointers and boxed value handles cannot be implicitly mixed'
+  reject_case value-pointer-return 'public value struct V { int X; }; V* Bad(V^ box) { return box; } int main() { return 0; }' 'native value pointers and boxed value handles cannot be implicitly mixed'
+  reject_case value-pointer-conditional 'public value struct V { int X; }; void Bad(V^ box, V* pointer, bool choose) { V^ result = choose ? box : pointer; } int main() { return 0; }' 'native value pointers and boxed value handles cannot be implicitly mixed'
+  reject_case value-pointer-redeclaration 'public value struct V { int X; }; void Bad(V^ box); void Bad(V* pointer) {} int main() { return 0; }' 'native-pointer and boxed-handle signatures cannot share one canonical Clang declaration'
+  reject_case value-pointer-array 'public value struct V { int X; }; using namespace System; void Bad(array<V*>^ values) {} int main() { return 0; }' 'native value-pointer array/generic elements are not supported yet'
+  reject_case value-pointer-property 'public value struct V { int X; }; public ref class Holder { public: property V* Value { V* get() { return nullptr; } } }; int main() { return 0; }' 'native value-pointer properties are not supported yet'
+  log "PASS test-value-pointers: native value signatures/storage, C# pinned arrays and boxed-handle rejection"
+}
 step_test-destructors() {
   log "Managed destructor dispose pattern, base cleanup and nested CLR identity"
   compile "$(cygpath -m "$src/tests/destructors.cpp")" --target library --type System.InvalidOperationException \
