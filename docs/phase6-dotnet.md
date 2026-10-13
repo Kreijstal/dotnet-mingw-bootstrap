@@ -8042,3 +8042,49 @@ WindowsDesktop packaging are corrected. Evidence is archived under
  tmp/wpf8-support/validation/paragraph-context-20261013. Page formatting/query/
 break records, full bidi/optimal/natural-language behavior remain open; the full
 WPF goal stays active and this source change still requires a package update.
+
+
+## 115. Installed release 8: paragraph contexts and penalty-resource ownership
+
+The 2026-10-13 continuation packages section 114 as WindowsDesktop 8.0.0-8.
+Declared/checksummed 0008-paragraph-contexts-and-penalty-resources.patch carries
+the source ABI generator, paragraph module, LS penalty ownership APIs and
+native/public/SDK fixtures. Clean pinned sources plus all eight declared patches
+match committed feature inputs byte for byte. The private package tree builds
+the native modules, refreshes inventory and passes paragraph/native line tests
+before regenerating both shared-framework and runtime-pack output. Unchanged
+managed/graphics/printing inputs remain its earlier source builds.
+
+Validation from the CLANG64 package workspace:
+
+```sh
+makepkg --verifysource --force
+source PKGBUILD                 # with srcdir set to this workspace's src/
+_wpf native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+makepkg --repackage --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-8-any.pkg.tar.zst
+python3 check-staged.py /clang64/lib/dotnet
+bash "$(_driver)/wpf-tests/check-paragraph-context-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-paragraph-context-sdk-check
+bash "$(_driver)/wpf-tests/check-flowdocument-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-flowdocument-context-check
+```
+
+All context/package/SDK checks pass with zero consumer warnings/errors. Private
+normal WPF/tab/object/justification/width/context/WinForms build and publish
+regressions pass. Installed original paragraph contexts pass false/true optimal-
+capable configurations in Ideal/Display modes, source object callbacks, cached
+release and dispatcher shutdown across GC. Their portable publishes run with
+SDK roots/toolchain PATH removed. Staged/installed 42-managed/pack/native-seed
+checks pass. The known srcdir warning remains only source-bootstrap.json
+provenance. The final FlowDocument command is intentionally a pending gate:
+it now reproducibly fails at absent FsCreatePageFinite in the installed package.
+No page visual or optimal penalty calculation is claimed.
+
+Artifact: mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-8-any.pkg.tar.zst.
+SHA-256: 418fef04ed48108b7051af7214253720f020ee8aad7fbcf463d7ac4950f2b0e7.
+Recipe commit: msys2-ur 888596e; feature commit: 793a7e9.
+Logs, patch/recipe/metadata and the local artifact are archived under
+ tmp/wpf8-support/validation/paragraph-context-package-20261013.
+Imported native coverage increases from 58 to 65 of 139 (74 absent), adding
+actual resource/context ownership interfaces. Page formatting/query/break
+records, full bidi/optimal algorithms and natural-language behavior remain
+incomplete; the full WPF goal stays active.
