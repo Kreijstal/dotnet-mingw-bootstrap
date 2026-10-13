@@ -112,8 +112,20 @@ across GC. Position-dependent objects following aligned tabs still explicitly
 reject while that circular measurement path is unfinished; ordinary text and
 left/incremental-tab positions use retained preceding geometry.
 
-Optimal/min-max formatting, bidi reversal objects and justification remain
-unsupported and return explicit errors.
+Regular inter-word justification requests original nominal/glyph expansion
+callbacks using source-generated 28-byte neighbor, 48-byte character and 80-byte
+glyph records. Three callback capacity levels distribute remaining visible
+width across eligible whitespace; negative capacities and callback failures
+propagate. Original glyph advances and nominal minimum widths remain retained,
+while actual advances, enumeration, caret/selection cells and drawing use the
+expanded geometry. Trailing spaces do not receive expansion. Paragraph-final,
+explicit-break and no-opportunity lines stay ragged. Public Latin/Indic tests
+cover Ideal/Display modes and actual justified TextBlock rendering/hit testing.
+Aligned-tab justification, other justification modes, ink insertion and full
+compression/optimal algorithms still explicitly reject or require further work.
+
+Optimal/min-max formatting and bidi reversal objects remain unsupported and
+return explicit errors.
 Complete hit testing, RTL/nonmonotonic shaping clusters, full bidi and paragraph
 layout require further work. This does not establish full Line Services
 compatibility or complete WPF packaging.

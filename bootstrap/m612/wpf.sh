@@ -228,6 +228,14 @@ step_check_inline_objects_native() {
   "$work/native-check.exe" "$build/lib/PresentationNative_cor3.dll"
 }
 
+step_check_justification_native() {
+  local work=$build/justification-native-check
+  mkdir -p "$work"
+  /clang64/bin/clang++.exe -std=c++17 -O2 "$here/wpf-tests/JustificationNative.cpp" \
+    -I "$build/classification-native" -o "$work/native-check.exe"
+  "$work/native-check.exe" "$build/lib/PresentationNative_cor3.dll"
+}
+
 step_check_text_line() {
   initialize
   local work=$build/text-line-check
@@ -277,6 +285,32 @@ PY
     cp "${WPF_DECORATION_NATIVE:-$build/lib}/$native.dll" "$work/bin/Release/net8.0/"
   done
   "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/DecorationsCheck.dll")"
+}
+
+step_check_text_justification() {
+  initialize
+  local work=$build/text-justification-check
+  mkdir -p "$work"
+  cp "$here/wpf-tests/TextJustification.cs" "$work/Program.cs"
+  /usr/bin/python3 - "$work" "$build/lib" "$oob" <<'PY'
+from pathlib import Path
+import subprocess,sys,xml.etree.ElementTree as E
+work,lib,oob=map(Path,sys.argv[1:])
+root=E.Element('Project',Sdk='Microsoft.NET.Sdk');props=E.SubElement(root,'PropertyGroup')
+for name,value in {'TargetFramework':'net8.0','OutputType':'Exe','UseAppHost':'false','EnableNETAnalyzers':'false','NuGetAudit':'false','UseSharedCompilation':'false'}.items():E.SubElement(props,name).text=value
+items=E.SubElement(root,'ItemGroup')
+files={f.stem:f for f in oob.glob('*.dll')}
+files.update({name:lib/(name+'.dll') for name in ('PresentationCore','PresentationFramework','WindowsBase','System.Xaml','DirectWriteForwarder')})
+for name,file in sorted(files.items()):
+    ref=E.SubElement(items,'Reference',Include=name);E.SubElement(ref,'HintPath').text=subprocess.check_output(['cygpath','-m',str(file)],text=True).strip()
+E.ElementTree(root).write(work/'JustificationCheck.csproj',encoding='utf-8')
+PY
+  "$sdk/dotnet.exe" build "$(cygpath -m "$work/JustificationCheck.csproj")" -c Release --configfile "$(cygpath -m "$build/NuGet.config")" -v:q -p:UseSharedCompilation=false
+  local native
+  for native in PresentationNative_cor3 wpfgfx_cor3 wpf-dwrite-loader wpf-subsetter; do
+    cp "${WPF_JUSTIFICATION_NATIVE:-$build/lib}/$native.dll" "$work/bin/Release/net8.0/"
+  done
+  "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/JustificationCheck.dll")"
 }
 
 step_check_text_tabs() {
@@ -724,6 +758,7 @@ step_check_sdk() {
   bash "$here/wpf-tests/check-sdk.sh" "$root" "$build/sdk-check"
   bash "$here/wpf-tests/check-text-tabs-sdk.sh" "$root" "$build/tabs-sdk-check"
   bash "$here/wpf-tests/check-inline-objects-sdk.sh" "$root" "$build/inline-sdk-check"
+  bash "$here/wpf-tests/check-justification-sdk.sh" "$root" "$build/justification-sdk-check"
   bash "$here/winforms-tests/check-sdk.sh" "$root" "$build/winforms-sdk-check"
 }
 

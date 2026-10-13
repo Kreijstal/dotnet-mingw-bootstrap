@@ -9,6 +9,7 @@
 #include <new>
 #include <limits>
 #include <unicode/ubrk.h>
+#include <unicode/uchar.h>
 #include "LineServicesNative.h"
 
 namespace {
@@ -30,7 +31,7 @@ struct Run {
     LsChp properties{};
     LsTxM metrics{};
     std::vector<WCHAR> text;
-    std::vector<int> widths,advances;
+    std::vector<int> widths,advances,nominal_advances;
     std::vector<uint16_t> glyphs,clusters,characters;
     std::vector<uint32_t> glyph_properties;
     std::vector<uint8_t> expansion;
@@ -74,6 +75,8 @@ using EnumTabCallback=int (WINAPI *)(void*,uint32_t,int,WCHAR*,uint16_t,int,int,
 using ObjectHandler=int (WINAPI *)(void*,uint32_t,InlineInit*);
 using FormatObject=int (WINAPI *)(void*,uint32_t,int,int,int,ObjDim*,int*,int*,int*,int*);
 using DrawObject=int (WINAPI *)(void*,uint32_t,LSPOINT*,int,int);
+using CharExpansion=int(WINAPI*)(void*,int,int,LsCharRunInfo*,LsNeighborInfo*,LsNeighborInfo*,int,int**,int**);
+using GlyphExpansion=int(WINAPI*)(void*,int,int,LsGlyphRunInfo*,LsNeighborInfo*,LsNeighborInfo*,int,int**,int**,uint8_t*,int*);
 
 int format_object(Context& context,Run& run,int position,int margin) {
     if(!context.info.pfnGetObjectHandlerInfo) return LS_NotImplemented;
@@ -252,6 +255,113 @@ int trailing_width(const Run& run,bool& all_spaces) {
     int width=0;
     for(size_t glyph=first;glyph<run.advances.size();++glyph) width+=run.advances[glyph];
     return width;
+}
+
+LsNeighborInfo neighbor(const Run* run,bool last) {
+    LsNeighborInfo value{};
+    if(!run || run->text.empty()) return value;
+    value.fNeighborIsPresent=1; value.plsrun=static_cast<uint32_t>(run->id);
+    value.fNeighborIsText=!run->hidden && !run->embedded && !run->tab;
+    size_t index=last?run->text.size()-1:0;
+    value.wch=run->text[index]; value.fGlyphBased=run->shaped;
+    if(run->shaped) {
+        unsigned glyph=run->clusters[index];
+        if(glyph<run->glyphs.size()) { value.chprop=run->characters[index]; value.gindex=run->glyphs[glyph]; value.gprop=run->glyph_properties[glyph]; }
+    }
+    return value;
+}
+
+int justify_line(Line& line,int target,int& total,int& trailing) {
+    int64_t remaining=static_cast<int64_t>(target)-trailing;
+    if(remaining<=0) return LS_None;
+    auto& context=*line.context;
+    if(std::any_of(line.runs.begin(),line.runs.end(),[](const Run& run) { return run.tab; }) &&
+        std::any_of(context.tabs.begin(),context.tabs.end(),[](const LsTbd& stop) { return stop.lskt!=0; })) return LS_NotImplemented;
+    int visible_cp=line.first;
+    for(const auto& run:line.runs) visible_cp+=static_cast<int>(run.text.size());
+    for(auto run=line.runs.rbegin();run!=line.runs.rend();++run) {
+        size_t count=run->text.size();
+        while(count && (run->text[count-1]==L' ' || run->text[count-1]==0xa0)) { --count; --visible_cp; }
+        if(count) break;
+    }
+    struct Opportunity { Run* run; size_t index; int capacity[3]; int added; bool left; uint8_t type; };
+    std::vector<Opportunity> sites;
+    size_t begin=0;
+    for(size_t i=0;i<line.runs.size();++i) if(line.runs[i].tab) begin=i+1;
+    for(size_t index=begin;index<line.runs.size();++index) {
+        auto& run=line.runs[index];
+        if(run.hidden || run.embedded || run.tab || run.cp>=visible_cp) continue;
+        if(run.flow!=0) return LS_NotImplemented;
+        size_t count=run.shaped?run.advances.size():run.text.size();
+        std::vector<int> left[3],right[3]; int* lp[3]; int* rp[3];
+        for(int level=0;level<3;++level) { left[level].assign(count,0);right[level].assign(count,0);lp[level]=left[level].data();rp[level]=right[level].data(); }
+        std::vector<uint8_t> types(count,1);std::vector<int> ink(count),zero(run.text.size());
+        auto previous=neighbor(index?&line.runs[index-1]:nullptr,true);
+        auto next=neighbor(index+1<line.runs.size()?&line.runs[index+1]:nullptr,false);
+        int status=0;
+        if(run.shaped) {
+            if(!context.info.pfnGetGlyphExpansionInfoFullMixed) return LS_NotImplemented;
+            LsGlyphRunInfo info{static_cast<uint32_t>(run.id),reinterpret_cast<uint16_t*>(run.text.data()),run.clusters.data(),run.characters.data(),
+                static_cast<int>(run.text.size()),0,run.glyphs.data(),run.glyph_properties.data(),run.advances.data(),run.offsets.data(),static_cast<int>(count)};
+            status=reinterpret_cast<GlyphExpansion>(context.info.pfnGetGlyphExpansionInfoFullMixed)(context.info.pols,0,run.flow,&info,&previous,&next,3,lp,rp,types.data(),ink.data());
+        } else {
+            if(!context.info.pfnGetCharExpansionInfoFullMixed) return LS_NotImplemented;
+            LsCharRunInfo info{static_cast<uint32_t>(run.id),reinterpret_cast<uint16_t*>(run.text.data()),run.widths.data(),zero.data(),zero.data(),static_cast<int>(count)};
+            status=reinterpret_cast<CharExpansion>(context.info.pfnGetCharExpansionInfoFullMixed)(context.info.pols,0,run.flow,&info,&previous,&next,3,lp,rp);
+        }
+        if(status) return status;
+        for(size_t item=0;item<count;++item) {
+            if(types[item]>3 || ink[item]<0) return LS_InvalidFormatterResult;
+            for(int level=0;level<3;++level) if(left[level][item]<0 || right[level][item]<0) return LS_InvalidFormatterResult;
+        }
+        for(size_t cp=0;cp<run.text.size() && run.cp+static_cast<int>(cp)<visible_cp;++cp) {
+            if(!u_isUWhiteSpace(run.text[cp])) continue;
+            size_t item=cp;
+            if(run.shaped) {
+                if((cp && run.clusters[cp]==run.clusters[cp-1]) || (cp+1<run.text.size() && run.clusters[cp]==run.clusters[cp+1])) continue;
+                unsigned end=cp+1<run.text.size()?run.clusters[cp+1]:run.advances.size();
+                if(end<=run.clusters[cp] || end>run.advances.size()) return LS_InvalidCharToGlyphMapping;
+                item=end-1;
+                if(types[item]==0) continue;
+                if(types[item]!=1) return LS_NotImplemented;
+            }
+            for(int side=0;side<2;++side) {
+                auto* capacities=side?right:left;
+                sites.push_back({&run,item,{capacities[0][item],capacities[1][item],capacities[2][item]},0,side==0,types[item]});
+            }
+        }
+    }
+    int64_t added=0;
+    for(int level=0;level<3 && remaining>0;++level) {
+        for(;;) {
+            size_t active=0;
+            for(const auto& site:sites) if(site.capacity[level]>site.added) ++active;
+            if(!active || !remaining) break;
+            int64_t share=(remaining+active-1)/active;
+            for(auto& site:sites) {
+                int64_t room=static_cast<int64_t>(site.capacity[level])-site.added;
+                if(room<=0) continue;
+                int amount=static_cast<int>(std::min({room,share,remaining}));
+                site.added+=amount;remaining-=amount;added+=amount;
+            }
+        }
+    }
+    if(static_cast<int64_t>(total)+added>INT_MAX) return LS_InvalidFormatterResult;
+    for(const auto& site:sites) if(site.added) {
+        auto& run=*site.run;
+        if(run.shaped && run.nominal_advances.empty()) run.nominal_advances=run.advances;
+        int& advance=run.shaped?run.advances[site.index]:run.widths[site.index];
+        if(static_cast<int64_t>(advance)+site.added>INT_MAX || static_cast<int64_t>(run.width)+site.added>INT_MAX) return LS_InvalidFormatterResult;
+        advance+=site.added;run.width+=site.added;
+        if(run.shaped) {
+            run.expansion[site.index]=site.type;
+            if(site.left) {
+                if(static_cast<int64_t>(run.offsets[site.index].du)+site.added>INT_MAX) return LS_InvalidFormatterResult;
+                run.offsets[site.index].du+=site.added;
+            }
+        }
+    }
+    total+=static_cast<int>(added);trailing+=static_cast<int>(added);return LS_None;
 }
 
 // Prefix widths are meaningful only at complete glyph-cluster boundaries.
@@ -523,7 +633,7 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
         if(!previous_break) result->paragraph_first=paragraph.cpFirst;
         status=reinterpret_cast<FetchProps>(context->callbacks.pfnFetchLineProps)(context->info.pols,cp,cp==result->paragraph_first,&properties);
         if(status) return status;
-        if(paragraph.fJustify || (paragraph.grpf&0x1000)) return LS_NotImplemented;
+        if((paragraph.fJustify && paragraph.lskj!=0) || (paragraph.grpf&0x1000)) return LS_NotImplemented;
         result->widths.upStartMainText=properties.durLeft;
         int position=cp,total=properties.durLeft,trailing=properties.durLeft;
         int flow=paragraph.lstflow;
@@ -655,6 +765,12 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
             trailing-=trailing_width(*item,all_spaces);
             if(!all_spaces) break;
         }
+        int minimum_total=total,minimum_trailing=trailing;
+        if(paragraph.fJustify && result->info.endr==0 && limit==0) {
+            int64_t target=static_cast<int64_t>(column)-properties.durRightJustify;
+            if(target<INT_MIN || target>INT_MAX) return LS_InvalidFormatterResult;
+            status=justify_line(*result,static_cast<int>(target),total,trailing); if(status) return status;
+        }
         result->info.dvrAscent=result->info.dvpAscent;
         result->info.dvrDescent=result->info.dvpDescent;
         result->info.dvrMultiLineHeight=result->info.dvpMultiLineHeight;
@@ -662,7 +778,7 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
         result->info.cpLimToContinue=result->info.cpLimToStay=position;
         result->info.cpFirstVis=cp; result->info.fFirstLineInPara=cp==result->paragraph_first;
         result->widths.upLimLine=total; result->widths.upStartTrailing=trailing;
-        result->widths.upMinLimLine=total; result->widths.upMinStartTrailing=trailing;
+        result->widths.upMinLimLine=minimum_total; result->widths.upMinStartTrailing=minimum_trailing;
         void* line_handle=result.get();
         { std::lock_guard<std::mutex> lock(gate); lines.emplace(line_handle,result); }
         *info=result->info; *widths=result->widths; *depth=1; *output=line_handle;
@@ -779,7 +895,7 @@ extern "C" __declspec(dllexport) int WINAPI LoDisplayLine(void* handle,LSPOINT* 
                 if(!context.info.pfnDrawGlyphs) return LS_NotImplemented;
                 status=reinterpret_cast<DrawGlyphs>(context.info.pfnDrawGlyphs)(context.info.pols,static_cast<uint32_t>(run.id),
                     run.text.data(),run.clusters.data(),run.characters.data(),static_cast<int>(run.text.size()),run.glyphs.data(),
-                    run.advances.data(),run.advances.data(),run.offsets.data(),run.glyph_properties.data(),run.expansion.data(),
+                    run.advances.data(),run.nominal_advances.empty()?run.advances.data():run.nominal_advances.data(),run.offsets.data(),run.glyph_properties.data(),run.expansion.data(),
                     static_cast<int>(run.glyphs.size()),run.flow,mode,&point,&height,run.width,clip);
             } else {
                 if(!context.info.pfnDrawTextRun) return LS_NotImplemented;

@@ -7803,3 +7803,50 @@ Imported native coverage remains 58/139. Position-dependent objects after
 aligned tabs, bidi/paragraph layout, justification and natural-language behavior
 remain incomplete. This delivers inline-object behavior in the experimental
 package while the full WPF goal remains active.
+
+
+## 110. Original expansion callbacks and regular inter-word justification
+
+The 2026-10-13 continuation removes regular inter-word paragraph justification
+rejection. It generates original nominal/glyph/neighbor record layouts, including
+pointer fields and unsigned Plsrun identity. The native engine requests original
+character/glyph expansion callbacks, validates output capacities/types, and
+uses three provider capacity levels to distribute the missing visible width
+across whitespace opportunities. Original glyph advances and nominal minimum
+widths remain retained; actual glyph/character advances update run geometry,
+caret/selection, enumeration and drawing. Original and adjusted glyph advances
+are passed separately to DrawGlyphs. Trailing spaces are not expanded, and final
+paragraph/hard-break/no-opportunity lines retain their nominal width.
+
+Native checks prove 28/48/80-byte callback record ABI, exact 23-unit expanded
+space width/47-unit following-text position, visible end 67 and total end 77,
+nominal minima 54/64, original glyph advances, provider limits and error outputs.
+The public fixture reproduces NotImplemented against installed release 5. Source
+Latin/Indic paragraphs pass in Ideal and Display modes with 133-pixel justified
+visible widths, retained selection/caret geometry, source-backed glyph advances,
+raster output and compacting GC. Original justified TextBlock measure/render/
+point-hit checks also pass. Final/hard-break/no-space cases stay ragged.
+
+The initial public glyph-sum comparison overlooked original WPF's thousandth-of-
+em storage in Ideal mode; it now uses the source quantization bound, while exact
+native geometry and visible width checks remain strict. The initial Display
+Indic column already equalled nominal width, so the fixture column changes from
+130 to 133 pixels to exercise actual expansion in both formatting modes.
+
+Validation with the standard win11 WPF environment:
+
+```sh
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-lineservices-line-native check-inline-objects-native
+WPF_JUSTIFICATION_NATIVE=/clang64/lib/dotnet/shared/Microsoft.WindowsDesktop.App/8.0.0-bootstrap.wpf.8.0.0 bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-text-justification
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-justification-native check-text-justification
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-text-justification check-text-tabs check-inline-objects check-text-decorations
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-text-justification
+```
+
+Final commands pass with zero consumer warnings/errors; the installed-native
+baseline fails as expected. Evidence is archived under
+ tmp/wpf8-support/validation/justification-20261013. Imported coverage remains
+58/139 because this improves existing exports. Aligned-tab/other justification
+modes, ink insertion, compression/optimal algorithms and full bidi/paragraph
+layout remain open. The package update is still required; the full goal stays
+active.
