@@ -3,6 +3,7 @@
 import argparse
 import json
 import os
+import shutil
 from pathlib import Path
 import subprocess
 import xml.etree.ElementTree as ET
@@ -49,7 +50,7 @@ def main():
         "WpfSharedDir": str((root_source / "Shared").resolve()) + "/",
         "WpfCommonDir": str((root_source / "Common").resolve()) + "/",
         "WpfCycleBreakersDir": str((source / "src/Microsoft.DotNet.Wpf/cycle-breakers").resolve()) + "/",
-        "SystemIOPackagingPackage": "System.IO.Packaging", "DefineConstants": "",
+        "SystemIOPackagingPackage": "System.IO.Packaging", "SystemDirectoryServicesPackage":"System.DirectoryServices", "DefineConstants": "",
     }
     ev = ci.Evaluator(props, [key for key in props if key != "DefineConstants" and not (args.project and key == "AssemblyName")])
     ev.items["Compile"] = [(str(path), {}) for path in sorted(folder.rglob("*.cs"))
@@ -64,7 +65,7 @@ def main():
         ev.items["Compile"] = []
     if defaults.get("EnableDefaultItems") == "false" or defaults.get("EnableDefaultEmbeddedResourceItems") == "false":
         ev.items["EmbeddedResource"] = []
-    ev.load(str(project), {"Compile", "EmbeddedResource", "PackageReference", "ProjectReference"}, True)
+    ev.load(str(project), {"Compile", "EmbeddedResource", "PackageReference", "ProjectReference", "Page", "ApplicationDefinition", "Resource", "Content"}, True)
     assembly_name = ev.props.get("AssemblyName", name)
     out = build / name
     out.mkdir(parents=True, exist_ok=True)
@@ -81,7 +82,8 @@ def main():
 
     namespace = {"WindowsBase": "MS.Internal.WindowsBase", "PresentationCore": "MS.Internal.PresentationCore",
                  "PresentationFramework": "System.Windows", "UIAutomationProvider": "MS.Internal.Automation",
-                 "ReachFramework": "System.Windows.Xps", "PresentationBuildTasks": "MS.Utility"}.get(name, "System")
+                 "ReachFramework": "System.Windows.Xps", "PresentationBuildTasks": "MS.Utility",
+                 "PresentationUI": "System.Windows.TrustUI"}.get(name, "System")
     resx = folder / "Resources/Strings.resx"
     if resx.exists():
         logical = name + ".Resources.Strings"
@@ -99,7 +101,10 @@ def main():
         sr.write_text("\n".join(lines) + "\n")
         generated.append(sr)
 
-    root = ET.Element("Project", Sdk="Microsoft.NET.Sdk")
+    markup = bool(ev.items.get("Page") or ev.items.get("ApplicationDefinition")) and not args.reference_only
+    root = ET.Element("Project", **({} if markup else {"Sdk":"Microsoft.NET.Sdk"}))
+    if markup:
+        ET.SubElement(root,"Import",Project="Sdk.props",Sdk="Microsoft.NET.Sdk")
     pg = ET.SubElement(root, "PropertyGroup")
     key = "ECMA" if name in ("System.Xaml", "System.Windows.Input.Manipulations") else "MSShared"
     settings = {
@@ -118,6 +123,16 @@ def main():
         settings.update({"ProduceReferenceAssembly": "false", "ProduceOnlyReferenceAssembly": "true"})
     for key, value in settings.items():
         ET.SubElement(pg, key).text = value
+    if markup:
+        taskdir=build/'markup-tasks'
+        taskdir.mkdir(parents=True,exist_ok=True)
+        for input in (build/'lib/PresentationBuildTasks.dll',oob/'System.CodeDom.dll',oob/'System.Reflection.MetadataLoadContext.dll'):
+            if not input.is_file(): raise SystemExit("Build markup task dependency first: "+str(input))
+            shutil.copyfile(input,taskdir/input.name)
+        for key,value in {"_PresentationBuildTasksAssembly":native(taskdir/'PresentationBuildTasks.dll'),
+                          "AlwaysCompileMarkupFilesInSeparateDomain":"false", "NoInternalTypeHelper":ev.props.get("NoInternalTypeHelper","false"),
+                          "IncludePackageReferencesDuringMarkupCompilation":"false"}.items():
+            ET.SubElement(pg,key).text=value
     items = ET.SubElement(root, "ItemGroup")
     seen = set()
     for file, _ in ev.items.get("Compile", []) + [(str(path), {}) for path in generated]:
@@ -143,6 +158,21 @@ def main():
         if file.suffix == ".resx":
             logical = logical.removesuffix(".resx").removesuffix(".resources") + ".resources"
         ET.SubElement(node, "LogicalName").text = logical
+        for key in ("ManifestResourceName","StronglyTypedClassName","StronglyTypedNameSpace","StronglyTypedLanguage"):
+            if metadata.get(key): ET.SubElement(node,key).text=metadata[key]
+        if metadata.get("StronglyTypedFileName"):
+            ET.SubElement(node,"StronglyTypedFileName").text=native(out/(metadata.get("StronglyTypedNameSpace","Resources")+'.'+metadata.get("StronglyTypedClassName","Resources")+'.g.cs'))
+    for kind in ("Page","ApplicationDefinition","Resource","Content"):
+        for file,metadata in ev.items.get(kind,[]):
+            file=Path(file.strip())
+            if not file.is_file(): raise SystemExit("Missing WPF markup/resource input: "+str(file))
+            node=ET.SubElement(items,kind,Include=native(file))
+            # Absolute source paths live outside the generated project directory.
+            # Link retains their original relative resource/BAML URI.
+            link=metadata.get('Link') or str(file.relative_to(folder)).replace(os.sep,'/')
+            ET.SubElement(node,'Link').text=link
+            for key in ('Generator','LogicalName','CopyToOutputDirectory'):
+                if metadata.get(key): ET.SubElement(node,key).text=metadata[key]
     refs = {path.stem: path for path in oob.glob("*.dll")}
     if name == "PresentationBuildTasks":
         # The installed SDK's MSBuild assemblies are themselves source-built.
@@ -183,11 +213,20 @@ def main():
         dependency = Path(dependency).name
         if dependency and dependency not in refs:
             raise SystemExit("Build source dependency first: " + dependency)
+    if markup:
+        ET.SubElement(root,'Import',Project='Sdk.targets',Sdk='Microsoft.NET.Sdk')
+        ET.SubElement(root,'Import',Project=native(root_source/'PresentationBuildTasks/Microsoft.WinFX.targets'))
+        ET.SubElement(root,'Import',Project=native(source/'eng/WpfArcadeSdk/tools/NoInternalTypeHelper.targets'))
+        if name=='PresentationUI':
+            # Preserve upstream's resource-designer-before-markup dependency.
+            footer=ET.SubElement(root,'PropertyGroup')
+            ET.SubElement(footer,'PrepareResourcesDependsOn').text='PrepareResourceNames;ResGen;$(PrepareResourcesDependsOn)'
     ET.indent(root)
     ET.ElementTree(root).write(out / (name + ".csproj"), encoding="utf-8", xml_declaration=True)
     (out / "source-items.json").write_text(json.dumps({"project": str(project), "assembly": assembly_name, "reference_only": args.reference_only,
                                                     "dependencies": [str(path.resolve()) for path, _ in dependencies], "compile": sorted(map(str, seen)),
-                                                    "resources": sorted(map(str, seen_resources)), "warnings": ev.warnings}, indent=2))
+                                                    "resources": sorted(map(str, seen_resources)),
+                                                    "pages":[file for file,_ in ev.items.get('Page',[])], "warnings": ev.warnings}, indent=2))
     print(f"{name}: {len(seen)} source files, {len(seen_resources)} resources")
 
 

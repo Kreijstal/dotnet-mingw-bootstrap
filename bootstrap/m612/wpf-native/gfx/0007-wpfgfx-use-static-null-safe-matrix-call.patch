@@ -1,0 +1,14 @@
+--- a/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/common/rtutils.cpp
++++ b/src/Microsoft.DotNet.Wpf/src/WpfGfx/core/common/rtutils.cpp
+@@ -401,7 +401,10 @@
+     {
+         CRectF<CoordinateSpace::Device> rcDeviceBounds; // Shape bounds in device space.
+    
+-        pmatShapeToDevice->Transform2DBoundsNullSafe(*prcShapeBounds, OUT rcDeviceBounds);
++        // A member call on a null this pointer is undefined in standard C++.
++        // Use the existing static overload to preserve the null-as-identity path.
++        CMatrix<CoordinateSpace::Shape,CoordinateSpace::Device>::Transform2DBoundsNullSafe(
++            pmatShapeToDevice, *prcShapeBounds, OUT rcDeviceBounds);
+ 
+         if (!c_rcSafeDeviceBounds.DoesContain(rcDeviceBounds))
+         {

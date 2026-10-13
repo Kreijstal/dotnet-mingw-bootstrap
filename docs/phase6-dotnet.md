@@ -4122,3 +4122,89 @@ under `tmp/wpf8-support/validation/gfx-markup-20261013` on the local host.
 System.Printing implementation, complete native text exports, generated themes,
 remaining desktop assemblies, SDK/targeting/runtime packs, a shown application
 window and installed WPF packaging still require work. The goal remains active.
+
+## 41. Source-built themes, WPF 8 pen input DLL and a visible themed window
+
+The next 2026-10-13 continuation builds PresentationUI and all six theme
+assemblies with the actual upstream Microsoft.WinFX.targets. The planner now
+preserves Page/ApplicationDefinition/Resource/Content items and their relative
+resource URIs, copies source-built task dependencies into a private task folder,
+and imports SDK targets before the WPF markup targets. The original
+NoInternalTypeHelper.targets preserves friend-access rules and passes generated
+resource designers into the temporary assembly. PresentationUI retains its
+upstream resource-designer-before-markup dependency. Real two-pass markup
+compilation generates BAML for local types, not just loose XAML resources.
+
+PresentationUI has **95 C# inputs and 13 XAML pages**. The themes have **63 C#
+inputs and eight pages**: Aero 12/1, Aero2 12/1, AeroLite 9/1, Classic 8/1,
+Luna 11/3, Royale 11/1. All implementation builds pass with zero warnings/errors.
+The total WPF implementation C# input scope is now **3,841**, excluding additional
+markup-generated C# and resource designers. The native System.Printing project
+can supply its original source-built reference project for these compilations;
+the graph records that mapping and never copies that reference into runtime
+lib. Its actual native/CLI printing implementation remains pending. Verified
+implementation dependencies are reused, but an explicitly requested graph root
+is rebuilt. System.DirectoryServices was separately built from runtime source
+with zero C# errors; the planner now resolves its original package property.
+
+`wpf-penimc.sh build check` builds WPF v8.0.0's pen/stylus input DLL from **14
+C/C++ compilation inputs**, using trusted MSYS2 ReactOS ATL and widl. All **14
+exports** resolve. The generated merged COM proxy exposes four interfaces;
+PimcManager3 class-factory lookup succeeds, an unknown class is rejected, and
+unload behavior changes correctly while the factory is held. This is not a
+physical tablet/input-device test. Port provenance and limitations are recorded
+in wpf-native/penimc/README.md.
+
+The visible-window check runs on the active user's interactive desktop using a
+temporary, uniquely named scheduled task. SSH starts processes in session 0,
+whose parent desktop is invisible; the active RDP user is in session 2. The
+runner sets the trusted CLANG64 runtime DLL search path, waits for the task's
+actual terminal state/result, and removes its task in finally. It does not store
+credentials or leave a recurring task. The app references the dynamic theme
+assemblies so the .NET dependency manifest allows their normal WPF lookup.
+
+That integration exposed a real graphics port bug. Windows' fault record and a
+conditional native GDB breakpoint traced a null `this` in
+CBaseMatrix::Transform2DBounds to ClipToSafeDeviceBounds. The original caller
+invoked the typed null-safe member through a null matrix pointer; Clang removed
+the intended null check under standard C++ rules. Graphics patch 0007 calls the
+existing static null-safe overload, preserving the original null-as-identity
+semantics. Only rtutils.cpp and its link outputs needed rebuilding. The patch
+detector now forces reverse dry-run semantics instead of allowing patch's batch
+heuristic to treat an unapplied patch as already applied.
+
+The resulting source WPF window is verified with a valid native HWND,
+IsWindowVisible, managed loaded/visible state, its actual default Button template
+and nonempty visual tree. A routed click invokes its handler. RenderTargetBitmap
+captures the actual themed control with a blue Ellipse and verifies rendered
+blue pixels before writing source-window.png. The image was inspected locally.
+This proves a shown, themed WPF control window with shape content; it does not
+prove text layout or all input devices.
+
+Validation on win11:
+
+```sh
+CSC_DOTNET=/clang64/lib/dotnet/dotnet.exe MSYSTEM=UCRT64 \
+  M612=/home/topkek/dotnetboot/m612 OOB=System.DirectoryServices \
+  bash ~/dotnetboot/repo/bootstrap/m612/libraries.sh \
+  /clang64/lib/dotnet/sdk/8.0.131/Roslyn/bincore/csc.dll plan gens build report
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh build-themes
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf-penimc.sh build check
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh build-gfx check-gfx check-window
+```
+
+All listed commands pass. The window consumer has zero warnings/errors. The
+separate `wpf.sh check-window-text` fails at the original Classification type
+initializer: MILGetClassificationTables is absent from PresentationNative.
+That failure is retained as a real text gate; no classification or line-service
+export is stubbed to make it pass. Full text/paragraph support, printing,
+remaining assemblies, SDK/framework packs and installed packaging remain open.
+Logs, manifests, generated resources/DLLs, debugger evidence and PNG are archived
+under `tmp/wpf8-support/validation/themes-window-20261013` locally. The goal
+remains active.

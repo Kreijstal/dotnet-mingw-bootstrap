@@ -31,7 +31,8 @@ def main():
                'TargetOS':'windows','TargetsWindows':'true','Configuration':'Release','MSBuildProjectName':path.stem,
                'DefaultLanguageSourceExtension':'.cs','WpfSourceDir':str(root.resolve())+'/',
                'WpfSharedDir':str((root/'Shared').resolve())+'/', 'WpfCommonDir':str((root/'Common').resolve())+'/',
-               'WpfCycleBreakersDir':str(cycles.resolve())+'/', 'SystemIOPackagingPackage':'System.IO.Packaging','DefineConstants':''}
+               'WpfCycleBreakersDir':str(cycles.resolve())+'/', 'SystemIOPackagingPackage':'System.IO.Packaging',
+               'SystemDirectoryServicesPackage':'System.DirectoryServices','DefineConstants':''}
         evaluator=ci.Evaluator(props,[name for name in props if name!='DefineConstants'])
         evaluator.load(str(path),{'ProjectReference'},True)
         return evaluator
@@ -42,16 +43,21 @@ def main():
         if not path.is_file(): raise SystemExit('Missing upstream WPF project: '+key)
         if path.suffix.lower()=='.vcxproj':
             artifact=build/'lib'/(path.stem+'.dll')
-            if path.stem=='DirectWriteForwarder' and artifact.is_file():
+            if path.stem in {'DirectWriteForwarder','System.Printing'} and artifact.is_file():
                 completed[key]=artifact; mappings[key]=str(artifact.resolve()); return artifact
+            if path.stem=='System.Printing':
+                artifact=build_project(path.parent/'ref/System.Printing-ref.csproj')
+                completed[key]=artifact; mappings[key]=str(artifact.resolve())
+                print('Compile-only printing reference; native implementation remains pending',flush=True)
+                return artifact
             raise SystemExit('Native/CLI implementation must be source-built first: '+key)
         evaluator=model(path)
         assembly=evaluator.props.get('AssemblyName',path.stem)
         reference_only='cycle-breakers' in path.parts or path.parent.name=='ref'
         # These verified implementation artifacts already precede this graph.
-        seeds={'WindowsBase','System.Xaml','System.Windows.Input.Manipulations','UIAutomationTypes','UIAutomationProvider','PresentationCore','DirectWriteForwarder'}
+        seeds={'WindowsBase','System.Xaml','System.Windows.Input.Manipulations','UIAutomationTypes','UIAutomationProvider','PresentationCore','DirectWriteForwarder','PresentationFramework','ReachFramework','PresentationUI'}
         candidate=build/'lib'/(assembly+'.dll')
-        if not reference_only and assembly in seeds and candidate.is_file():
+        if path!=project.resolve() and not reference_only and assembly in seeds and candidate.is_file():
             completed[key]=candidate; mappings[key]=str(candidate.resolve()); return candidate
         if path.suffix.lower()!='.csproj':
             raise SystemExit('Native/CLI implementation must be source-built first: '+key)

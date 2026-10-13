@@ -4,6 +4,10 @@ This directory carries the MinGW graphics port from
 Its six source patches apply to WPF v8.0.0. The bootstrap copy defaults the
 version resource to 8.0.0, removes the later WpfGfxSwitches.cpp build input, and
 reads the handshake constant from the actual source header in its smoke test.
+Patch 0007 uses the existing static null-safe matrix overload in the renderer's
+clipping path. Clang otherwise assumes a member call's `this` is non-null and
+removes the intended identity-transform fallback, causing a native access
+violation when a themed window draws through the software rasterizer.
 
 `wpf.sh build-gfx check-gfx` builds a private patched copy of WpfGfx/Shared,
 regenerates text shaders and compiles HLSL with trusted MSYS2 vkd3d, then checks

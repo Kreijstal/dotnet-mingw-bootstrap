@@ -41,9 +41,9 @@ PYKEYS
 }
 
 step_prerequisites() {
-  CSC_DOTNET="$sdk/dotnet.exe" OOB='System.IO.Packaging System.Security.Permissions' \
+  CSC_DOTNET="$sdk/dotnet.exe" MSYSTEM=UCRT64 OOB='System.IO.Packaging System.Security.Permissions System.DirectoryServices' \
     bash "$here/libraries.sh" "$sdk/sdk/8.0.131/Roslyn/bincore/csc.dll" plan gens build report
-  for name in System.IO.Packaging System.Security.Permissions; do test -s "$oob/$name.dll"; done
+  for name in System.IO.Packaging System.Security.Permissions System.DirectoryServices; do test -s "$oob/$name.dll"; done
 }
 
 build_assembly() {
@@ -128,8 +128,8 @@ step_prepare_gfx() {
   fi
   local patchfile
   for patchfile in "$port"/000*.patch; do
-    if ! patch --batch --dry-run -R -p1 -d "$root" -i "$patchfile" >/dev/null 2>&1; then
-      patch --batch -p1 -d "$root" -i "$patchfile"
+    if ! patch --batch --force --dry-run -R -p1 -d "$root" -i "$patchfile" >/dev/null 2>&1; then
+      patch --batch --forward -p1 -d "$root" -i "$patchfile"
     fi
   done
   [ -f "$gfx/core/hw/Shaders.rc.upstream" ] || mv "$gfx/core/hw/Shaders.rc" "$gfx/core/hw/Shaders.rc.upstream"
@@ -361,6 +361,58 @@ step_build_reach_framework() {
 step_build_presentation_framework() {
   initialize
   /usr/bin/python3 "$here/tools/wpfgraph.py" "$source" "$build" "$sdk" "$oob" "$build/keys" PresentationFramework/PresentationFramework.csproj
+}
+
+step_build_themes() {
+  initialize
+  for name in Aero2 Aero AeroLite Classic Luna Royale; do
+    /usr/bin/python3 "$here/tools/wpfgraph.py" "$source" "$build" "$sdk" "$oob" "$build/keys" "Themes/PresentationFramework.$name/PresentationFramework.$name.csproj"
+  done
+}
+
+step_build_presentation_ui() {
+  initialize
+  /usr/bin/python3 "$here/tools/wpfgraph.py" "$source" "$build" "$sdk" "$oob" "$build/keys" PresentationUI/PresentationUI.csproj
+}
+
+step_build_penimc() {
+  bash "$here/wpf-penimc.sh" build check
+}
+
+step_check_window() {
+  initialize
+  local work=$build/window-check
+  mkdir -p "$work"
+  cp "$here/wpf-tests/Window.cs" "$work/Program.cs"
+  /usr/bin/python3 - "$work" "$build/lib" "$oob" <<'PY'
+from pathlib import Path
+import subprocess,sys,xml.etree.ElementTree as E
+work,lib,oob=map(Path,sys.argv[1:])
+def win(p): return subprocess.check_output(['cygpath','-m',str(p.resolve())],text=True).strip()
+root=E.Element('Project',Sdk='Microsoft.NET.Sdk'); pg=E.SubElement(root,'PropertyGroup')
+for key,value in {'TargetFramework':'net8.0','OutputType':'Exe','UseAppHost':'false','EnableNETAnalyzers':'false','NuGetAudit':'false','UseSharedCompilation':'false'}.items(): E.SubElement(pg,key).text=value
+items=E.SubElement(root,'ItemGroup')
+for name in ('PresentationFramework','PresentationCore','ReachFramework','WindowsBase','System.Xaml','DirectWriteForwarder','PresentationUI','UIAutomationTypes','UIAutomationProvider','System.Windows.Input.Manipulations',
+             'PresentationFramework.Aero','PresentationFramework.Aero2','PresentationFramework.AeroLite','PresentationFramework.Classic','PresentationFramework.Luna','PresentationFramework.Royale'):
+    item=E.SubElement(items,'Reference',Include=name); E.SubElement(item,'HintPath').text=win(lib/(name+'.dll'))
+for file in sorted(oob.glob('*.dll')):
+    item=E.SubElement(items,'Reference',Include=file.stem); E.SubElement(item,'HintPath').text=win(file)
+E.ElementTree(root).write(work/'WindowCheck.csproj',encoding='utf-8')
+PY
+  "$sdk/dotnet.exe" build "$(cygpath -m "$work/WindowCheck.csproj")" -c Release \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -v:q
+  cp "$build/lib/PresentationNative_cor3.dll" "$build/lib/wpfgfx_cor3.dll" "$build/lib/PenImc_cor3.dll" \
+    "$build/lib/wpf-dwrite-loader.dll" "$build/lib/wpf-subsetter.dll" "$build/lib/PresentationFramework."*.dll "$work/bin/Release/net8.0/"
+  /c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe -NoProfile -NonInteractive \
+    -File "$(cygpath -m "$here/wpf-tests/RunInteractive.ps1")" \
+    -Work "$(cygpath -m "$work/bin/Release/net8.0")" -Dotnet "$(cygpath -m "$sdk/dotnet.exe")" -ToolchainBin "$(cygpath -m /clang64/bin)"
+}
+
+step_check_window_text() {
+  local work=$build/window-check
+  /c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe -NoProfile -NonInteractive \
+    -File "$(cygpath -m "$here/wpf-tests/RunInteractive.ps1")" \
+    -Work "$(cygpath -m "$work/bin/Release/net8.0")" -Dotnet "$(cygpath -m "$sdk/dotnet.exe")" -ToolchainBin "$(cygpath -m /clang64/bin)" -Text
 }
 step_check_presentation_framework() {
   initialize

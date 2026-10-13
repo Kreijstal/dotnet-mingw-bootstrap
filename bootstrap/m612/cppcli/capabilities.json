@@ -198,7 +198,8 @@
     "Namespace-scope System.Reflection string assembly metadata emits source-verified CLR custom attributes; AssemblyVersion emits the actual assembly identity version, with duplicate/range/wildcard rejection and UTF-8 runtime checks",
     "ReachFramework builds from 285 C# inputs and PresentationFramework from 1345; upstream dependency-cycle reference projects compile separately and are never copied into the runtime library directory",
     "WPF 8 native compositor builds from the MinGW graphics port; all 106 exports resolve, source protocol handshakes and embedded shader checks pass; actual PresentationFramework controls/XAML/type loading and verified pixel/PNG rendering execute on the source-built runtime",
-    "PresentationBuildTasks compiles from 96 source inputs; the real markup compiler produces BAML and generated C# against source-built WPF and .NET references; original ResourcesGenerator packages BAML, and the generated InitializeComponent loads it and connects named fields on the source-built WPF runtime"
+    "PresentationBuildTasks compiles from 96 source inputs; the real markup compiler produces BAML and generated C# against source-built WPF and .NET references; original ResourcesGenerator packages BAML, and the generated InitializeComponent loads it and connects named fields on the source-built WPF runtime",
+    "PresentationUI (95 C# inputs/13 pages) and all six themes (63 inputs/eight pages) build through original two-pass WinFX markup targets; WPF 8 PenImc builds from 14 native inputs with all exports/COM factory/proxy/unload checks; a visible interactive window uses a real default Button template, routed click and pixel-verified shape rendering; text remains blocked at native MILGetClassificationTables"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
