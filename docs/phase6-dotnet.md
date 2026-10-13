@@ -4741,3 +4741,83 @@ previous 58/139; complete layout/printing/desktop requirements remain open.
 Evidence is archived locally under
 `tmp/wpf8-support/validation/printing-arrays-20261013`. The development frontend
 is changed; installed compiler packages are unchanged. The goal remains active.
+
+## 51. Source finalizers and literal String initialization for printing
+
+The next 2026-10-13 continuation lowers source `!Type()` finalizers, including
+inline/out-of-line definitions and explicit `(void)` parameter lists. An owned
+source helper retains the actual body and source access rules. Explicit bang calls invoke only that
+helper; GC uses a real protected CLR Finalize override and the generated
+Dispose(false) chain. Source destructor disposal remains deterministic,
+implements IDisposable, chains base cleanup and suppresses finalization after
+successful disposal. A finally region preserves base cleanup when the source
+finalizer helper throws. Types without a source destructor can still have a
+finalizer and release native resources during GC. Finalizer methods require a
+source ref class and reject parameters, virtual/static forms, missing bodies
+and explicit Dispose/Finalize conflicts.
+
+This follows the distinction between explicit finalizer calls and GC chaining
+in Microsoft's [C++/CLI destructor/finalizer documentation](https://learn.microsoft.com/en-us/cpp/dotnet/how-to-define-and-consume-classes-and-structs-cpp-cli).
+The runtime fixture owns real native allocations and counts live/closed
+resources and release order. Deterministic IDisposable and managed delete,
+explicit own-only and qualified protected-base calls, forced collection, base chaining, suppression and
+idempotent source bodies pass. A finalizer-only object also releases its
+allocation. A throwing finalizer is invoked through Dispose(false) under
+reflection so its exception can be observed safely; base native release still
+runs, and that test object is then explicitly suppressed. Protected virtual
+Finalize metadata resolves to System.Object's base slot. Generic-qualified
+owners and arbitrary imported-base finalization patterns remain unverified.
+
+The old destructor test still expected deletion of a null native scalar pointer
+to fail, despite the previously implemented native allocation/deletion support.
+Its replacement rejects incomplete native storage. Original destructor tests
+still verify derived/base order, imported Stream closure, unrelated Dispose
+method handling, exception-safe cleanup, nested types and inherited-finalizer
+suppression.
+
+Static String-handle fields initialized by literal tokens now use real CLR
+literal conversion in their generated initializer helpers. Both the printing
+source's ASCII RAW value and adjacent wide Unicode literals are preserved.
+The existing ordered/once/concurrent/failure tests now also read the ASCII and
+Unicode strings after forced GC. This does not implement general contextual
+literal conversion in arbitrary expressions or return statements.
+
+The printing gate adds actual source-built PrintTicketConverter/BaseDevModeType,
+CER and XPS RCW metadata, plus StringBuilder, Win32Exception, SafeFileHandle,
+SafeWaitHandle and COM IStream imports. The earlier System.Printing.Interop,
+RCW namespace and finalizer/string-initializer failures disappear. No namespace
+or runtime type placeholder is supplied.
+
+Validation on win11:
+
+```sh
+/clang64/bin/cmake.exe --build ~/dotnetboot/m612/build/cppcli --target cli_ast -j2
+CPPCLI_SDK=/clang64/lib/dotnet CPPCLI_ILASM=/clang64/bin/ilasm-dotnet.exe \
+  M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-finalizers
+CPPCLI_SDK=/clang64/lib/dotnet CPPCLI_ILASM=/clang64/bin/ilasm-dotnet.exe \
+  M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-destructors
+CPPCLI_SDK=/clang64/lib/dotnet CPPCLI_ILASM=/clang64/bin/ilasm-dotnet.exe \
+  M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-static-fields
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  WPF_CPPCLI_BUILD=/home/topkek/dotnetboot/m612/build/cppcli \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh build-directwrite check-directwrite-assembly
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh printing-gate
+```
+
+Focused runtime/rejection tests pass, and DirectWrite still loads 85 types,
+prepares 283 bodies and resolves 81 real font families with original owned
+font/face/file and managed COM-loader checks. The complete printing-gate
+command **fails** in ordinary Sema, beginning with missing kPropertyTypeString,
+kPropertyTypeInt32 and kPropertyTypeTime native definitions at
+InteropAttributeValueDictionary.hpp:29-31. Further SDK/declaration/import and
+attribute/body/link/runtime work remains. No System.Printing runtime DLL or
+finished WPF package is produced. Evidence is archived under
+`tmp/wpf8-support/validation/printing-finalizers-20261013` locally. Native
+coverage remains 58/139, installed compiler packages are unchanged, and the goal
+remains active.

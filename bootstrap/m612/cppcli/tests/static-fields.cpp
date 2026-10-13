@@ -5,10 +5,14 @@ public ref class State abstract sealed {
     static Object^ _lock = gcnew Object();
     static int _seed = MakeSeed();
     static int _next = _seed + 2;
+    static String^ _raw = "RAW";
+    static System::String^ _unicode = L"東京 " L"😀";
     static int MakeSeed() { Console::WriteLine("initialize once"); return 40; }
 public:
     static Object^ Lock() { return _lock; }
     static int Read() { return _next; }
+    static String^ Raw() { return _raw; }
+    static String^ Unicode() { return _unicode; }
     static void Change(int% value) { value += 1; }
     static void Increment() { Change(_next); }
 };

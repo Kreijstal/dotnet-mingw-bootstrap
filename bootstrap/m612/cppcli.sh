@@ -749,6 +749,26 @@ EOF
   reject_case value-pointer-property 'public value struct V { int X; }; public ref class Holder { public: property V* Value { V* get() { return nullptr; } } }; int main() { return 0; }' 'native value-pointer properties are not supported yet'
   log "PASS test-value-pointers: native value signatures/storage, C# pinned arrays and boxed-handle rejection"
 }
+step_test-finalizers() {
+  /clang64/bin/clang++.exe -std=c++17 -O2 -shared "$src/tests/finalizers-native.cpp" -o "$testdir/finalizers-native.dll"
+  compile "$(cygpath -m "$src/tests/finalizers.cpp")" --target library --native-library finalizers-native.dll \
+    --type System.IDisposable --type System.InvalidOperationException -o "$(cygpath -m "$testdir/finalizers.dll")"
+  mkdir -p "$testdir/finalizers-consumer"
+  cp "$src/tests/FinalizersConsumer.cs" "$testdir/finalizers-consumer/Program.cs"
+  cat > "$testdir/finalizers-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="finalizers"><HintPath>../finalizers.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/finalizers-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  cp "$testdir/finalizers-native.dll" "$testdir/finalizers-consumer/bin/Debug/net8.0/"
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/finalizers-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case finalizer-parameters 'public ref class C { !C(int value) {} }; int main() { return 0; }' 'finalizer takes no parameters'
+  reject_case finalizer-missing 'public ref class C { !C(); }; int main() { return 0; }' 'finalizer requires an explicit source body'
+  reject_case finalizer-conflict 'public ref class C { !C() {} void Finalize() {} }; int main() { return 0; }' 'finalizer conflicts with an explicit Dispose/Finalize'
+  reject_case finalizer-value 'public value struct C { !C() {} }; int main() { return 0; }' 'finalizers require'
+  reject_case finalizer-private 'public ref class C { public: C() {} private: !C() {} }; int main() { C^ value=gcnew C(); value->!C(); return 0; }' 'private member'
+}
+
 step_test-destructors() {
   log "Managed destructor dispose pattern, base cleanup and nested CLR identity"
   compile "$(cygpath -m "$src/tests/destructors.cpp")" --target library --type System.InvalidOperationException \
@@ -763,7 +783,7 @@ EOF
   "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/destructors-consumer/bin/Debug/net8.0/consumer.dll")"
   reject_case destructor-conflict 'public ref class B { public: ~B() {} void Dispose() {} }; int main() { return 0; }' 'destructor conflicts with an explicit Dispose/Finalize'
   reject_case destructor-defaulted 'public ref class B { public: ~B() = default; }; int main() { return 0; }' 'destructor requires an explicit source body'
-  reject_case delete-native 'int main() { int* value = nullptr; delete value; return 0; }' 'native deletion and delete'
+  reject_case delete-native-incomplete 'struct Native; int main() { Native* value = nullptr; delete value; return 0; }' 'native deletion requires scalar or trivial native POD storage'
   log "PASS test-destructors: IDisposable dispatch, exception-safe base cleanup and genuine nested types"
 }
 step_test-native-storage() {
@@ -1403,6 +1423,8 @@ using System.Threading.Tasks;
 using Example;
 var locks = new object[32];
 Parallel.For(0, locks.Length, i => { locks[i] = State.Lock(); if (State.Read() != 42) throw new Exception("incorrect initialization order"); });
+GC.Collect(2, GCCollectionMode.Forced, true, true);
+if (State.Raw() != "RAW" || State.Unicode() != "東京 😀") throw new Exception("literal static String initializer or adjacent UTF16 literals lost");
 foreach (var value in locks) if (!ReferenceEquals(value, locks[0])) throw new Exception("static initializer ran repeatedly");
 Parallel.For(0, locks.Length, i => { if (Explicit.Read() != 43 || Explicit.Runs() != 1) throw new Exception("explicit static constructor ordering/once semantics lost"); });
 if (OutOfLine.Read() != 42 || ValueInitialization.Read() != 42 || new Explicit(99).Snapshot != 99 || !typeof(Explicit).TypeInitializer.IsPrivate)

@@ -633,7 +633,7 @@ protected:
                             ++end;
                         }
                         if (tokens[i].text == "value" && tokens[j-1].text == name && end == j+2 &&
-                            (j < 2 || (tokens[j-2].text != "static" && tokens[j-2].text != "~")))
+                            (j < 2 || (tokens[j-2].text != "static" && tokens[j-2].text != "~" && tokens[j-2].text != "!")))
                             throw std::runtime_error("user-defined zero-argument value constructors are not supported; default storage is zero initialized");
                         if (string_parameter) {
                             if (tokens[j-1].text == name) managed_string_constructors[name].insert(string_parameters.begin(), string_parameters.end());
@@ -680,6 +680,25 @@ protected:
             // real catch clauses, nest the catch region inside the finally
             // region, as required by CLR exception table structure.
             std::map<size_t, std::string> cli_structural;
+            std::map<size_t,std::string> finalizer_prefix, finalizer_name;
+            for(size_t pos=0;pos+2<tokens.size();++pos) {
+                if(tokens[pos].text!="!" || tokens[pos+1].kind!=tok::identifier || tokens[pos+2].text!="(") continue;
+                auto name=tokens[pos+1].text;
+                bool qualified=pos>=2 && tokens[pos-1].text=="::" && tokens[pos-2].text==name;
+                size_t owner=qualified?pos-2:pos;
+                while(qualified && owner>=2 && tokens[owner-1].text=="::" && tokens[owner-2].kind==tok::identifier) owner-=2;
+                bool member_call=owner && (tokens[owner-1].text=="->" || tokens[owner-1].text==".");
+                bool declaration=(class_depth[pos]==1 && class_context[pos]==name && !qualified && !member_call) ||
+                    (qualified && class_depth[pos]==0 && !member_call);
+                if(!declaration && !member_call && !qualified) continue;
+                finalizer_name[pos]="_cli_finalizer_"+name;
+                if(declaration) {
+                    size_t close=balance(pos+2,"(",")");
+                    if(close!=pos+3 && !(close==pos+4 && tokens[pos+3].text=="void"))
+                        throw std::runtime_error(tokens[pos].file+":"+std::to_string(tokens[pos].line)+": a managed finalizer takes no parameters");
+                    finalizer_prefix[qualified?owner:pos]="void __attribute__((annotate(\"cli.finalizer\"))) ";
+                }
+            }
             auto matching = [&](size_t begin, const std::string& open, const std::string& close) {
                 int depth = 0;
                 for (size_t end = begin; end < tokens.size(); ++end) {
@@ -993,6 +1012,8 @@ protected:
             std::map<std::pair<std::string, std::string>, std::string> indexed_facades;
             for (size_t i = 0; i < tokens.size(); ++i) {
                 auto& t = tokens[i];
+                if(finalizer_prefix.count(i)) emit(t,finalizer_prefix[i]);
+                if(finalizer_name.count(i)) { emit(t,finalizer_name[i]); ++i; continue; }
                 if (auto attribute = assembly_attributes.find(i); attribute != assembly_attributes.end()) {
                     emit(t, attribute->second.second); i = attribute->second.first; continue;
                 }
@@ -1071,7 +1092,14 @@ protected:
                         for (size_t j = i + 1; j + 1 < equal; ++j) field_type += tokens[j].text + " ";
                         emit(t, std::string(class_access[i] == "internal" ? "__attribute__((annotate(\"cli.access:assembly\"))) " : "") + "static " + field_type + field + "; private: static " + field_type +
                             " __attribute__((annotate(\"cli.static.init:" + field + "\"))) _cli_init_" + field + "() { return");
-                        for (size_t j = equal + 1; j < end; ++j) {
+                        bool string_field=false,literal_initializer=end>equal+1;
+                        for(size_t j=i+1;j+2<equal;++j) string_field|=tokens[j].text=="String" && tokens[j+1].text=="^";
+                        for(size_t j=equal+1;j<end;++j) literal_initializer&=tok::isStringLiteral(tokens[j].kind);
+                        if(string_field && literal_initializer) {
+                            std::string literal;
+                            for(size_t j=equal+1;j<end;++j) literal+=tokens[j].text+" ";
+                            emit(tokens[equal+1],"__cli_literal("+literal+")");
+                        } else for (size_t j = equal + 1; j < end; ++j) {
                             if (cli_structural.count(j)) { emit(tokens[j], cli_structural[j]); continue; }
                             if (adapt_allocation(j)) continue;
                             if (tokens[j].text == "safe_cast") { emit(tokens[j], "__cli_safe_cast"); continue; }
@@ -1499,6 +1527,15 @@ class Emitter {
         auto* destructor = record->getDefinition()->getDestructor();
         return destructor && !destructor->isImplicit() && !destructor->isDeleted() ? destructor : nullptr;
     }
+    const CXXMethodDecl* source_finalizer(const CXXRecordDecl* record) const {
+        if(!record || !record->getDefinition() || !record_annotation(record,"cli.external:").empty()) return nullptr;
+        const CXXMethodDecl* result=nullptr;
+        for(auto* method:record->getDefinition()->methods()) if(annotated(method,"cli.finalizer")) {
+            if(result && result->getCanonicalDecl()!=method->getCanonicalDecl()) throw std::runtime_error("duplicate managed finalizer");
+            result=method;
+        }
+        return result;
+    }
     struct DisposeBase {
         const CXXRecordDecl* owner = nullptr;
         const CXXMethodDecl* method = nullptr;
@@ -1516,7 +1553,7 @@ class Emitter {
     DisposeBase dispose_base(const CXXRecordDecl* record) const {
         DisposeBase simple;
         for (auto* parent = class_base(record); parent; parent = class_base(parent)) {
-            if (source_destructor(parent)) return {parent, nullptr, true, true};
+            if (source_destructor(parent) || source_finalizer(parent)) return {parent, nullptr, true, true};
             if (!implements_disposable(parent)) continue;
             for (auto* method : parent->methods()) {
                 if (method->getNameAsString() != "Dispose" || method->isStatic() || !method->getReturnType()->isVoidType()) continue;
@@ -3863,6 +3900,9 @@ public:
             throw std::runtime_error("ComVisibleAttribute requires a boolean value");
         if (annotated(f, "cli.cctor") && (!method || !method->isStatic() || method->getNumParams() || !method->getReturnType()->isVoidType() || is_interface(method->getParent())))
             throw std::runtime_error("invalid or unsupported managed static constructor");
+        if(annotated(f,"cli.finalizer") && (!method || !record_annotated(method->getParent(),"cli.ref") || is_interface(method->getParent()) ||
+            method->isStatic() || method->isVirtual() || method->getNumParams() || !method->getReturnType()->isVoidType()))
+            throw std::runtime_error("finalizers require non-static, non-virtual zero-argument source ref-class methods");
         if (annotated(f, "cli.field.offset")) throw std::runtime_error("FieldOffset requires a managed instance field");
         if (annotated(f, "cli.value.zero")) return true;
         if (isa<CXXConstructorDecl>(f)) for (auto* parameter : f->parameters())
@@ -3950,6 +3990,12 @@ public:
                 for (auto& base : r->bases()) validate_slots(base.getType()->getAsCXXRecordDecl());
             }
             auto layout = layout_kind(r);
+            if(auto* finalizer=source_finalizer(r)) {
+                if(!record_annotated(r,"cli.ref") || is_interface(r)) throw std::runtime_error("finalizers require source ref classes");
+                if(!finalizer->hasBody()) throw std::runtime_error("managed finalizer requires an explicit source body");
+                for(auto* method:r->methods()) if(method->getNameAsString()=="Dispose" || method->getNameAsString()=="Finalize")
+                    throw std::runtime_error("managed finalizer conflicts with an explicit Dispose/Finalize declaration");
+            }
             if (auto* destructor = source_destructor(r)) {
                 if (!record_annotated(r, "cli.ref") || is_interface(r)) throw std::runtime_error("destructors currently require source ref classes");
                 if (!destructor->hasBody() || destructor->isDefaulted()) throw std::runtime_error("managed destructor requires an explicit source body");
@@ -4225,7 +4271,8 @@ public:
         }
         auto emit_cleanup = [&](const CXXRecordDecl* r) {
             auto* destructor = source_destructor(r);
-            if (!destructor) return;
+            auto* finalizer = source_finalizer(r);
+            if (!destructor && !finalizer) return;
             auto base = dispose_base(r);
             bool inherited_entry = false;
             for (auto* parent = class_base(r); parent; parent = class_base(parent)) {
@@ -4233,7 +4280,7 @@ public:
                 for (auto* method : parent->methods()) inherited_entry |= method->getNameAsString() == "Dispose" &&
                     !method->isStatic() && !method->getNumParams() && method->getReturnType()->isVoidType() && method->getAccess() == AS_public;
             }
-            if (!base.boolean || !inherited_entry) {
+            if (destructor && (!base.boolean || !inherited_entry)) {
                 il << "  .method public hidebysig newslot virtual final instance void Dispose() cil managed {\n"
                    << "    .override method instance void [System.Runtime]System.IDisposable::Dispose()\n    .maxstack 2\n"
                    << "    ldarg.0\n    ldc.i4.1\n    callvirt instance void " << record_token(r) << "::Dispose(bool)\n"
@@ -4243,21 +4290,29 @@ public:
                << "instance void Dispose(bool marshal(unsigned int8)) cil managed {\n    .maxstack 2\n"
                << "    ldarg.1\n    brfalse DISPOSE_FALSE\n";
             if (base.owner) il << "    .try {\n";
-            il << "    ldarg.0\n    call " << signature(destructor) << "\n";
+            if(destructor) il << "    ldarg.0\n    call " << signature(destructor) << "\n";
             if (base.owner) {
                 il << "    leave DISPOSE_DONE\n    } finally {\n    ldarg.0\n";
                 if (base.boolean) il << "    ldc.i4.1\n";
                 il << "    call " << (base.generated ? "instance void " + record_token(base.owner) + "::Dispose(bool)" : signature(base.method))
                    << "\n    endfinally\n    }\nDISPOSE_DONE:\n";
             }
-            il << "    ret\nDISPOSE_FALSE:\n    ldarg.0\n";
+            il << "    ret\nDISPOSE_FALSE:\n";
+            // GC chains through Dispose(false); explicit bang calls only the
+            // source helper and never acquire the automatic base chain.
+            il << "    .try {\n";
+            if(finalizer) il << "    ldarg.0\n    call " << signature(finalizer) << "\n";
+            il << "    leave FINALIZE_DONE\n    } finally {\n    ldarg.0\n";
             if (base.boolean) {
                 il << "    ldc.i4.0\n    call " << (base.generated ? "instance void " + record_token(base.owner) + "::Dispose(bool)" : signature(base.method)) << "\n";
             } else {
                 auto* parent = class_base(r);
                 il << "    call instance void " << (parent ? record_token(parent) : "[System.Runtime]System.Object") << "::Finalize()\n";
             }
-            il << "    ret\n  }\n";
+            il << "    endfinally\n    }\nFINALIZE_DONE:\n    ret\n  }\n";
+            if(finalizer) il << "  .method family hidebysig virtual instance void Finalize() cil managed {\n"
+                << "    .override method instance void [System.Runtime]System.Object::Finalize()\n    .maxstack 2\n"
+                << "    ldarg.0\n    ldc.i4.0\n    callvirt instance void " << record_token(r) << "::Dispose(bool)\n    ret\n  }\n";
         };
         std::function<void(const CXXRecordDecl*)> emit_record = [&](const CXXRecordDecl* r) {
             if (auto* invoke = delegate_invoke(r)) {

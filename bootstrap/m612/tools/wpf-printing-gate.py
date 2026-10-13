@@ -118,7 +118,17 @@ def main():
               "System.Collections.Generic.IEnumerable`1", "System.Collections.Generic.IEnumerator`1",
               "System.Collections.Generic.KeyValuePair`2", "System.Collections.Generic.ICollection`1",
               "System.Collections.Generic.IDictionary`2", "System.Collections.Generic.IList`1", "System.Collections.Generic.Queue`1",
-              "System.Windows.Xps.Packaging.PackagingAction", "System.Windows.Xps.Serialization.XpsDocumentEventType"]
+              "System.Windows.Xps.Packaging.PackagingAction", "System.Windows.Xps.Serialization.XpsDocumentEventType",
+              "System.Printing.Interop.PrintTicketConverter", "System.Printing.Interop.BaseDevModeType",
+              "System.Runtime.ConstrainedExecution.Consistency", "System.Runtime.ConstrainedExecution.Cer",
+              "System.Runtime.ConstrainedExecution.ReliabilityContractAttribute",
+              "System.Windows.Xps.Serialization.RCW.IXpsDocumentPackageTarget",
+              "System.Windows.Xps.Serialization.RCW.IXpsOMPackageWriter",
+              "System.Windows.Xps.Serialization.RCW.IPrintDocumentPackageTarget",
+              "System.Windows.Xps.Serialization.RCW.PrintDocumentPackageStatusProvider",
+              "System.Text.StringBuilder", "System.ComponentModel.Win32Exception",
+              "Microsoft.Win32.SafeHandles.SafeFileHandle", "Microsoft.Win32.SafeHandles.SafeWaitHandle",
+              "System.Runtime.InteropServices.ComTypes.IStream"]
     for name in types:
         command += ["--type", name]
     # SHLWAPI and KERNEL32 both export DelayLoadFailureHook. Keep SHLWAPI

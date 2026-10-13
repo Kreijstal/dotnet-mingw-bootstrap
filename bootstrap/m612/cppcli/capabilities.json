@@ -212,7 +212,9 @@
     "MarshalAs LPArray parameters support SizeParamIndex, SizeConst and ArraySubType with original ilasm array descriptors; reflection and actual native-to-managed COM array lengths, fixed/combined/zero counts, bounded in/out mutation and GC pass; invalid count/index/type/duplicate/nonconstant declarations are rejected without narrowing large constants",
     "Original WPF-style static constructors with an explicit (void) parameter list emit zero-argument CLR type initializers, including out-of-line declarations/definitions; ordered initialization, concurrency, once semantics and failure poisoning pass",
     "Imported instance value-field types are defined before containing native surrogates even when inheritance reorders the owners; real inherited SafeHandle/IntPtr protected-field access and disposal pass",
-    "Property modifiers are accepted before or after property; virtual override dispatch and static property access pass, and static auto-properties generate private static backing storage plus real CLR static accessors"
+    "Property modifiers are accepted before or after property; virtual override dispatch and static property access pass, and static auto-properties generate private static backing storage plus real CLR static accessors",
+    "Source ref-class finalizers support inline/out-of-line and explicit (void) declarations, source-visibility-preserving helpers, explicit own-only and qualified protected-base bang calls and CLR Finalize overrides; native resource tests verify deterministic delete/Dispose, GC/base order, suppression/idempotence, finalizer-only cleanup and base release after a manually observed finalizer exception",
+    "Static String-handle fields initialized by ordinary/wide/adjacent literal tokens now emit real CLR strings through ordered type initialization; ASCII/UTF16/GC checks pass"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -273,6 +275,7 @@
     "Native bitfields require little-endian 8-bit bytes, integral/enum storage up to 64 bits and at most 64 covered bits without excess declared padding width; volatile bitfields currently require byte-sized allocation units; bitfield-address/native-reference temporaries remain unsupported",
     "Assembly attributes cover individual namespace-scope InternalsVisibleTo literal identities, imported non-nested/non-generic named type forwarders and selected System.Reflection string metadata; AssemblyVersion requires four numeric components in 0..65534; general attributes, nested/generic forwarders and legacy NGEN Dependency attributes remain incomplete",
     "Complete DirectWriteForwarder assembly/version/file/informational metadata now match WPF 8.0.0 source-build settings; broader packaging identity still needs integration; CLR JIT preparation proves body validity but does not execute every path",
-    "PresentationCore runtime checks cover CLR type loading, matrix/point operations and DirectWrite-backed fonts/glyph metadata; they do not prove a rendered WPF window or cover the missing native text exports"
+    "PresentationCore runtime checks cover CLR type loading, matrix/point operations and DirectWrite-backed fonts/glyph metadata; they do not prove a rendered WPF window or cover the missing native text exports",
+    "Finalizer lowering covers source ref classes and validated source dispose-pattern inheritance; generic-qualified finalizer owners and arbitrary imported-base finalization patterns remain unverified"
   ]
 }
