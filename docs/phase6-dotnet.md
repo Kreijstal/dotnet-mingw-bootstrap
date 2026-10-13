@@ -7127,3 +7127,50 @@ exercised runtime paths, not physical printing or every method's behavior.
 Native text coverage remains 58/139; full text/layout and WindowsDesktop
 SDK/reference/runtime packaging remain required. The WPF packaging goal stays
 active.
+
+
+## 95. Remaining managed shipping assemblies
+
+The 2026-10-13 continuation builds ten additional implementation components
+listed in upstream ShippingProjects.props: UIAutomationClient (76 planned C#
+inputs), UIAutomationClientSideProviders (78), the five PresentationFramework-
+System extensions (2/1/1/2/1), System.Windows.Presentation (2), Ribbon (131) and
+WindowsFormsIntegration (24). This adds 318 planned C# inputs; generated markup
+inputs remain additional. Real implementation assemblies go to build/lib.
+
+The planner now reads upstream UseMicrosoftSharedKeyId to choose MSShared or
+ECMA public signing identity instead of assuming MSShared for all but two
+assemblies. The first extension build exposed the wrong friend-access key.
+Resource helper namespaces follow the upstream Ribbon and WindowsFormsIntegration
+namespaces; the latter's initial build exposed the missing System.Windows SR
+mapping. Both corrections preserve the original sources and access checks.
+
+The focused runtime consumer checks all ten identities/versions, loads 674 types
+and prepares 6,426 bodies. Original automation queries the real native desktop
+root; Ribbon loads its original compiled generic BAML and creates a default
+visual template. Original framework extensions execute dynamic binding updates,
+DataRowView binding and XML XPath binding. Original WindowsFormsHost/ElementHost
+construct, retain children/property maps and dispose across GC. Forms integration
+currently uses the approved source-built WinForms 7.0.20 interim runtime.
+
+Validation on win11 with the standard WPF environment:
+
+```sh
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh build-shipping-managed
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh build-windowsforms-integration
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-shipping-managed
+```
+
+Nine components pass the final bulk build; the narrowed WindowsFormsIntegration
+rebuild passes after its resource fix. The runtime command passes with zero
+compiler warnings/errors. Initial fixture mistakes in PropertyMap count access
+and repeated ApplyTemplate return interpretation were corrected to test Keys
+and the actual visual tree. Python/Bash syntax and whitespace checks pass.
+
+Evidence is archived under
+`tmp/wpf8-support/validation/shipping-managed-20261013`. All listed managed WPF
+shipping components now have source-built implementation artifacts. This does
+not establish full native text/paragraph layout or WindowsDesktop packaging;
+PresentationNative imported coverage remains 58/139. Framework pack/SDK layout,
+package recipe/build and remaining native behavior are still required. The WPF
+packaging goal stays active.

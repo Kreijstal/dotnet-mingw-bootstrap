@@ -63,7 +63,7 @@ def main():
         assembly=evaluator.props.get('AssemblyName',path.stem)
         reference_only='cycle-breakers' in path.parts or path.parent.name=='ref'
         # These verified implementation artifacts already precede this graph.
-        seeds={'WindowsBase','System.Xaml','System.Windows.Input.Manipulations','UIAutomationTypes','UIAutomationProvider','PresentationCore','DirectWriteForwarder','PresentationFramework','ReachFramework','PresentationUI'}
+        seeds={'WindowsBase','System.Xaml','System.Windows.Input.Manipulations','UIAutomationTypes','UIAutomationProvider','PresentationCore','DirectWriteForwarder','PresentationFramework','ReachFramework','PresentationUI','UIAutomationClient','UIAutomationClientSideProviders'}
         candidate=build/'lib'/(assembly+'.dll')
         if path!=project.resolve() and not reference_only and assembly in seeds and candidate.is_file():
             completed[key]=candidate; mappings[key]=str(candidate.resolve()); return candidate

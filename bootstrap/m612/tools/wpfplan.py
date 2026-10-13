@@ -83,7 +83,9 @@ def main():
     namespace = {"WindowsBase": "MS.Internal.WindowsBase", "PresentationCore": "MS.Internal.PresentationCore",
                  "PresentationFramework": "System.Windows", "UIAutomationProvider": "MS.Internal.Automation",
                  "ReachFramework": "System.Windows.Xps", "PresentationBuildTasks": "MS.Utility",
-                 "PresentationUI": "System.Windows.TrustUI"}.get(name, "System")
+                 "PresentationUI": "System.Windows.TrustUI",
+                 "System.Windows.Controls.Ribbon": "Microsoft.Windows.Controls",
+                 "WindowsFormsIntegration": "System.Windows"}.get(name, "System")
     resx = folder / "Resources/Strings.resx"
     if resx.exists():
         logical = name + ".Resources.Strings"
@@ -106,7 +108,11 @@ def main():
     if markup:
         ET.SubElement(root,"Import",Project="Sdk.props",Sdk="Microsoft.NET.Sdk")
     pg = ET.SubElement(root, "PropertyGroup")
-    key = "ECMA" if name in ("System.Xaml", "System.Windows.Input.Manipulations") else "MSShared"
+    shipping = ET.parse(source / "eng/WpfArcadeSdk/tools/ShippingProjects.props")
+    shared_keys = {item.strip().casefold() for node in shipping.iter()
+                   if node.tag.rsplit("}",1)[-1] == "UseMicrosoftSharedKeyId"
+                   for item in (node.text or "").split(";") if item.strip()}
+    key = "MSShared" if assembly_name.casefold() in shared_keys else "ECMA"
     settings = {
         "TargetFramework": "net8.0", "AssemblyName": assembly_name, "RootNamespace": assembly_name,
         "EnableDefaultItems": "false", "GenerateAssemblyInfo": "true", "ProduceReferenceAssembly": "true",

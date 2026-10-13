@@ -608,6 +608,55 @@ step_build_presentation_framework() {
   /usr/bin/python3 "$here/tools/wpfgraph.py" "$source" "$build" "$sdk" "$oob" "$build/keys" PresentationFramework/PresentationFramework.csproj
 }
 
+step_build_shipping_managed() {
+  initialize
+  local name
+  for name in UIAutomationClient UIAutomationClientSideProviders; do
+    /usr/bin/python3 "$here/tools/wpfgraph.py" "$source" "$build" "$sdk" "$oob" "$build/keys" "UIAutomation/$name/$name.csproj"
+  done
+  for name in SystemCore SystemData SystemDrawing SystemXml SystemXmlLinq; do
+    /usr/bin/python3 "$here/tools/wpfgraph.py" "$source" "$build" "$sdk" "$oob" "$build/keys" "Extensions/PresentationFramework-$name/PresentationFramework-$name.csproj"
+  done
+  for name in System.Windows.Presentation System.Windows.Controls.Ribbon; do
+    /usr/bin/python3 "$here/tools/wpfgraph.py" "$source" "$build" "$sdk" "$oob" "$build/keys" "$name/$name.csproj"
+  done
+  step_build_windowsforms_integration
+}
+
+step_build_windowsforms_integration() {
+  initialize
+  /usr/bin/python3 "$here/tools/wpfgraph.py" "$source" "$build" "$sdk" "$oob" "$build/keys" WindowsFormsIntegration/WindowsFormsIntegration.csproj
+}
+
+step_check_shipping_managed() {
+  initialize
+  local work=$build/shipping-managed-check
+  mkdir -p "$work"
+  cp "$here/wpf-tests/ShippingManaged.cs" "$work/Program.cs"
+  /usr/bin/python3 - "$build" "$work" "$oob" "$sdk" <<'PY'
+from pathlib import Path
+import sys,subprocess,xml.etree.ElementTree as E
+build,work,oob,sdk=map(Path,sys.argv[1:])
+root=E.Element('Project',Sdk='Microsoft.NET.Sdk'); props=E.SubElement(root,'PropertyGroup')
+for name,value in {'TargetFramework':'net8.0','OutputType':'Exe','UseAppHost':'false','EnableNETAnalyzers':'false','NuGetAudit':'false','EnableUnsafeBinaryFormatterSerialization':'true'}.items():
+    E.SubElement(props,name).text=value
+items=E.SubElement(root,'ItemGroup')
+files={f.stem:f for f in oob.glob('*.dll')}
+files.update({f.stem:f for f in (sdk/'shared/Microsoft.WindowsDesktop.App/8.0.0-bootstrap.7.0.20').glob('*.dll')})
+native={'PresentationNative_cor3','wpfgfx_cor3','PenImc_cor3','wpf-dwrite-loader','wpf-subsetter'}
+files.update({f.stem:f for f in (build/'lib').glob('*.dll') if f.stem not in native})
+for name,file in sorted(files.items()):
+    ref=E.SubElement(items,'Reference',Include=name)
+    E.SubElement(ref,'HintPath').text=subprocess.check_output(['cygpath','-m',str(file)],text=True).strip()
+E.ElementTree(root).write(work/'ShippingManagedCheck.csproj',encoding='utf-8')
+PY
+  "$sdk/dotnet.exe" build "$(cygpath -m "$work/ShippingManagedCheck.csproj")" -c Release \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -v:q -p:UseSharedCompilation=false -p:NuGetAudit=false
+  cp "$build/lib/PresentationNative_cor3.dll" "$build/lib/wpfgfx_cor3.dll" "$build/lib/PenImc_cor3.dll" \
+    "$build/lib/wpf-dwrite-loader.dll" "$build/lib/wpf-subsetter.dll" "$work/bin/Release/net8.0/"
+  timeout 60 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/ShippingManagedCheck.dll")"
+}
+
 step_build_themes() {
   initialize
   for name in Aero2 Aero AeroLite Classic Luna Royale; do
