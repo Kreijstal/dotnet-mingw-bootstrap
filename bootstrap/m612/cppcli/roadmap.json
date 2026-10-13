@@ -87,7 +87,9 @@
         "CLR static source conversion operator declarations/bodies consumed by C#, including out-of-line and tracking-reference operands",
         "combined CLI access flags for methods, fields and accessors and managed __finally spelling",
         "primitive/enum boxing into unambiguous Object method slots, fields/arrays and property setters",
-        "CLI enum Object virtual method calls and explicit local typed array brace initializers"
+        "CLI enum Object virtual method calls and explicit local typed array brace initializers",
+        "source-owned reference types in imported signatures with actual source definitions and cross-assembly runtime callbacks",
+        "Object-return boxing, managed literal returns/stores and Object-to-primitive/enum C-style/static unboxing"
       ],
       "remaining": [
         "implicit boxing into interfaces, primitive boxes and boxed-handle conversions",
@@ -100,7 +102,7 @@
         "for each with unbraced bodies, tracking-reference variables and value/native enumerators",
         "general CLI source implicit conversion/cast selection and complete conversion-operator discovery"
       ],
-      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values test-tracking test-pinning test-boxed-values test-static-fields test-static-properties test-nativeints test-layout test-switch test-generics test-indexers test-named-overrides test-each test-com test-delegates test-type-tokens test-constructors test-paramarrays test-primitive-statics test-guid-object-boxing test-managed-templates test-nested-indexers test-native-storage test-destructors test-value-pointers test-events test-multicast test-semantic-literals test-conversions test-combined-access test-argument-files test-implicit-boxing"
+      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values test-tracking test-pinning test-boxed-values test-static-fields test-static-properties test-nativeints test-layout test-switch test-generics test-indexers test-named-overrides test-each test-com test-delegates test-type-tokens test-constructors test-paramarrays test-primitive-statics test-guid-object-boxing test-managed-templates test-nested-indexers test-native-storage test-destructors test-value-pointers test-events test-multicast test-semantic-literals test-conversions test-combined-access test-argument-files test-implicit-boxing test-source-owned-types"
     },
     {
       "stage": 4,

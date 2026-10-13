@@ -13,6 +13,12 @@ if(ImplicitBoxes.Character(target,'λ').GetType()!=typeof(char) || (char)target.
 var values=new object[2];
 if((int)ImplicitBoxes.Array(values,1,44)!=44 || values[0]!=null || (int)values[1]!=44 || (int)ImplicitBoxes.Expression(target,45)!=45) throw new Exception("array/assignment result boxing");
 if(ImplicitBoxes.Typed(target,41)!=42) throw new Exception("typed overload was displaced by Object boxing");
+if((int)ImplicitBoxes.ReturnInt(47)!=47 || ImplicitBoxes.ReturnInt(47).GetType()!=typeof(int) || (BoxFlags)ImplicitBoxes.ReturnFlag(BoxFlags.High)!=BoxFlags.High || !(bool)ImplicitBoxes.ReturnBool(true)) throw new Exception("Object-return boxing");
+if(ImplicitBoxes.UnboxInt(48)!=48 || ImplicitBoxes.UnboxFlag(BoxFlags.High)!=BoxFlags.High || ImplicitBoxes.UnboxFlagStatic(BoxFlags.Low)!=BoxFlags.Low || !ImplicitBoxes.UnboxBool(true)) throw new Exception("Object scalar/enum C-style/static unboxing");
+target.Value=49; if(ImplicitBoxes.UnboxProperty(target)!=49) throw new Exception("Object property getter/unboxing");
+try { ImplicitBoxes.UnboxInt("wrong"); throw new Exception("wrong unbox accepted"); } catch(InvalidCastException) {}
+try { ImplicitBoxes.UnboxFlag(null); throw new Exception("null unbox accepted"); } catch(NullReferenceException) {}
+if(ImplicitBoxes.ReturnText()!="東京 😀" || ImplicitBoxes.StoreText()!="RAW" || (string)ImplicitBoxes.StoreObjectText(target)!="managed" || string.Join(",",ImplicitBoxes.StoreArrayText())!="first,second") throw new Exception("managed return/local/field/array literal conversion");
 if(ImplicitBoxes.EnumName(BoxFlags.High)!="High" || ImplicitBoxes.EnumHash(BoxFlags.High)!=BoxFlags.High.GetHashCode() || !ImplicitBoxes.EnumEquals(BoxFlags.High,BoxFlags.High) || ImplicitBoxes.EnumEquals(BoxFlags.High,BoxFlags.Low)) throw new Exception("enum Object virtual methods");
 var filter=ImplicitBoxes.Filter("Priority");
 if(filter.Length!=5 || filter[0]!="Priority" || filter[1]!="RAW" || filter[2]!="owned" || filter[3]!="tail" || filter[4]!=null || ImplicitBoxes.Owned[0]!="owned" || ImplicitBoxes.Owned[1]!="tail") throw new Exception("printing-style local/static String array initializer");

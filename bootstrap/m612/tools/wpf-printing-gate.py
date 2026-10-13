@@ -198,6 +198,7 @@ def main():
               "System.Printing.PageImageableArea", "System.Nullable`1"]
     for name in types:
         command += ["--type", name]
+    command += ["--source-type", "System.Printing.PrintQueue"]
     # SHLWAPI and KERNEL32 both export DelayLoadFailureHook. Keep SHLWAPI
     # bindings pending explicit duplicate-symbol resolution rather than
     # silently selecting one DLL. Used unavailable functions still fail.

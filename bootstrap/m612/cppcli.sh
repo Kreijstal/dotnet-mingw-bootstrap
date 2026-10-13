@@ -493,6 +493,47 @@ EOF
   reject_case boxing-native-pointer 'public ref class Slot { public: void Set(System::Object^ value) {} }; int main() { Slot^ s=gcnew Slot(); void* p=nullptr; s->Set(p); return 0; }' 'cannot initialize'
   reject_case boxing-private-setter 'public ref class Slot { public: property System::Object^ Value { System::Object^ get() { return nullptr; } private: void set(System::Object^ value) {} } }; int main() { Slot^ s=gcnew Slot(); s->Value=42; return 0; }' 'private member'
 }
+step_test-source-owned-types() {
+  mkdir -p "$testdir/source-contract" "$testdir/source-peer" "$testdir/source-owned-consumer"
+  cat > "$testdir/source-contract/contract.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><AssemblyName>SourceContract</AssemblyName><AssemblyVersion>1.0.0.0</AssemblyVersion><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup></Project>
+EOF
+  cat > "$testdir/source-contract/Contract.cs" <<'EOF'
+namespace SourceContract;
+public class Value { public virtual int Read() { throw new System.Exception("compile-only contract executed"); } }
+EOF
+  cat > "$testdir/source-peer/peer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><AssemblyName>SourcePeer</AssemblyName><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="SourceContract"><HintPath>../source-contract/bin/Debug/net8.0/SourceContract.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  cat > "$testdir/source-peer/Peer.cs" <<'EOF'
+namespace Peer;
+public class Holder {
+    readonly SourceContract.Value value;
+    public Holder(SourceContract.Value value) { this.value=value; }
+    public int Read() { return value.Read(); }
+    public SourceContract.Value Current => value;
+    public static SourceContract.Value[] EchoArray(SourceContract.Value[] values) => values;
+    public static void Replace(ref SourceContract.Value value,SourceContract.Value replacement) { value=replacement; }
+}
+EOF
+  for project in "$testdir/source-contract/contract.csproj" "$testdir/source-peer/peer.csproj"; do
+    "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$project")" -nologo -v:q --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  done
+  cp "$testdir/source-peer/bin/Debug/net8.0/SourcePeer.dll" "$testdir/SourcePeer.dll"
+  cp "$src/tests/source-owned-types.cpp" "$testdir/source-owned-types.cpp"
+  compile "$(cygpath -m "$testdir/source-owned-types.cpp")" --target library --type Peer.Holder \
+    --source-type SourceContract.Value -o "$(cygpath -m "$testdir/SourceContract.dll")"
+  cp "$src/tests/SourceOwnedConsumer.cs" "$testdir/source-owned-consumer/Program.cs"
+  cat > "$testdir/source-owned-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="SourceContract"><HintPath>../SourceContract.dll</HintPath></Reference><Reference Include="SourcePeer"><HintPath>../SourcePeer.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/source-owned-consumer/consumer.csproj")" -nologo -v:q --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/source-owned-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case source-type-undefined 'int main() { return 0; }' 'requires a real definition' --source-type Missing.Value
+  reject_case source-type-wrong-kind 'namespace Missing { public value struct Value { int x; }; } int main() { return 0; }' 'requires a real definition' --source-type Missing.Value
+  reject_case source-type-wrong-assembly '#using "SourcePeer.dll"
+namespace SourceContract { public ref class Value {}; } int main() { return 0; }' 'references another assembly' --source-type SourceContract.Value --type Peer.Holder
+}
 step_test-events() {
   local args=(--type System.Delegate --type System.MulticastDelegate --type System.Action)
   compile "$(cygpath -m "$src/tests/events.cpp")" --target library -o "$(cygpath -m "$testdir/events.dll")" "${args[@]}"

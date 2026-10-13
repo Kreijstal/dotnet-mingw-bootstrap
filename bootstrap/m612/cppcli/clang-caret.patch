@@ -41,7 +41,7 @@
 +#include "clang/Sema/Lookup.h"
 @@ -34,0 +37 @@
 +#include "clang/Sema/ScopeInfo.h"
-@@ -44,0 +48,119 @@
+@@ -44,0 +48,167 @@
 +
 +// CLI enum operations retain their scoped type identity. Sema still checks
 +// explicit conversions and native operations; ordinary C++ enums are untouched.
@@ -133,7 +133,7 @@
 +  return Found && AllObject;
 +}
 +
-+static bool cppcliObjectTarget(Expr *Value) {
++static QualType cppcliAssignmentType(Expr *Value) {
 +  QualType Type=Value->getType();
 +  Expr *Base=Value->IgnoreParens();
 +  while (auto *Subscript=dyn_cast<MSPropertySubscriptExpr>(Base)) Base=Subscript->getBase()->IgnoreParens();
@@ -141,8 +141,12 @@
 +    Type=Property->getPropertyDecl()->getType();
 +    if(Type->isIncompleteArrayType()) Type=cast<ArrayType>(Type.getTypePtr())->getElementType();
 +  }
++  return Type;
++}
++
++static bool cppcliNamedHandle(QualType Type, StringRef Name) {
 +  auto *Record=Type->isPointerType() ? Type->getPointeeType()->getAsCXXRecordDecl() : nullptr;
-+  return Record && Record->getQualifiedNameAsString()=="System::Object";
++  return Record && Record->getQualifiedNameAsString()==Name;
 +}
 +
 +static ExprResult cppcliBoxObject(Sema &Actions, Scope *CurrentScope,
@@ -156,12 +160,56 @@
 +      llvm::MutableArrayRef<Expr *>(&Argument,1),Argument->getEndLoc());
 +}
 +
++namespace clang {
++ExprResult cppcliTryUnbox(Sema &Actions, Scope *CurrentScope, Preprocessor &PP,
++    Expr *Argument, Declarator &DeclaratorInfo, SourceLocation Loc) {
++  if(!Argument || Argument->getType().isNull()) return ExprResult();
++  if(Argument->getType()->isSpecificBuiltinType(BuiltinType::PseudoObject)) {
++    auto Resolved=Actions.CheckPlaceholderExpr(Argument);
++    if(Resolved.isInvalid()) return ExprError();
++    Argument=Resolved.get();
++  }
++  if(!cppcliNamedHandle(Argument->getType(),"System::Object")) return ExprResult();
++  auto *TypeInfo=Actions.GetTypeForDeclaratorCast(DeclaratorInfo,Argument->getType());
++  if(!TypeInfo) return ExprError();
++  auto Target=TypeInfo->getType();
++  if(!Target->isArithmeticType() && !cppcliEnum(Target)) return ExprResult();
++  CXXScopeSpec Global; Global.MakeGlobal(Actions.Context,Loc);
++  auto *Identifier=&PP.getIdentifierTable().get("__cli_safe_cast");
++  LookupResult Lookup(Actions,Identifier,Loc,Sema::LookupOrdinaryName);
++  Actions.LookupQualifiedName(Lookup,Actions.Context.getTranslationUnitDecl());
++  TemplateArgumentListInfo Arguments(Loc,Loc);
++  Arguments.addArgument(TemplateArgumentLoc(TemplateArgument(Target),TypeInfo));
++  auto Helper=Actions.BuildTemplateIdExpr(Global,SourceLocation(),Lookup,false,&Arguments);
++  if(Helper.isInvalid()) return ExprError();
++  return Actions.ActOnCallExpr(CurrentScope,Helper.get(),Loc,
++      llvm::MutableArrayRef<Expr *>(&Argument,1),Argument->getEndLoc());
++}
++
++ExprResult cppcliConvertReturn(Sema &Actions, Scope *CurrentScope,
++    Preprocessor &PP, Expr *Argument, QualType Target, SourceLocation Loc) {
++  bool Object=cppcliNamedHandle(Target,"System::Object");
++  if(Object && (Argument->getType()->isArithmeticType() || Argument->getType()->isEnumeralType()))
++    return cppcliBoxObject(Actions,CurrentScope,PP,Argument,Loc);
++  if((Object || cppcliNamedHandle(Target,"System::String")) && isa<StringLiteral>(Argument->IgnoreParenImpCasts())) {
++    CXXScopeSpec Global; UnqualifiedId Name;
++    Global.MakeGlobal(Actions.Context,Loc);
++    Name.setIdentifier(&PP.getIdentifierTable().get("__cli_literal"),Loc);
++    auto Helper=Actions.ActOnIdExpression(CurrentScope,Global,SourceLocation(),Name,true,false);
++    if(Helper.isInvalid()) return ExprError();
++    return Actions.ActOnCallExpr(CurrentScope,Helper.get(),Loc,
++        llvm::MutableArrayRef<Expr *>(&Argument,1),Argument->getEndLoc());
++  }
++  return Argument;
++}
++}
++
 +static ExprResult cppcliEnumCast(Sema &Actions, Expr *Value, QualType Type,
 +                                SourceLocation Loc) {
 +  return Actions.BuildCStyleCastExpr(
 +      Loc, Actions.Context.getTrivialTypeSourceInfo(Type, Loc), Loc, Value);
 +}
-@@ -181,0 +304,9 @@
+@@ -181,0 +352,9 @@
 +  // MSVC permits CLI enum constants as labels in integral switches. Keep
 +  // that conversion local to case labels: enum-to-integer assignments and
 +  // overload resolution continue to require an explicit source conversion.
@@ -171,7 +219,7 @@
 +      if (Condition->getType()->isIntegerType())
 +        if (auto *Enum = cppcliEnum(Res.get()->getType()))
 +          Res = cppcliEnumCast(Actions, Res.get(), Enum->getIntegerType(), CaseLoc);
-@@ -531,0 +663,83 @@
+@@ -531,0 +711,82 @@
 +        if (!RHS.isInvalid() &&
 +            OpToken.isOneOf(tok::pipeequal, tok::caretequal, tok::ampequal)) {
 +          auto *Enum = cppcliEnum(LHS.get()->getType());
@@ -203,9 +251,8 @@
 +            continue;
 +          }
 +        }
-+        if (!RHS.isInvalid() && OpToken.is(tok::equal) && cppcliObjectTarget(LHS.get()) &&
-+            (RHS.get()->getType()->isArithmeticType() || RHS.get()->getType()->isEnumeralType())) {
-+          RHS=cppcliBoxObject(Actions,getCurScope(),PP,RHS.get(),OpToken.getLocation());
++        if (!RHS.isInvalid() && OpToken.is(tok::equal)) {
++          RHS=cppcliConvertReturn(Actions,getCurScope(),PP,RHS.get(),cppcliAssignmentType(LHS.get()),OpToken.getLocation());
 +          if(RHS.isInvalid()) return ExprError();
 +        }
 +        if (!RHS.isInvalid() && OpToken.isOneOf(tok::plusequal, tok::minusequal) && cppcliEvent(LHS.get())) {
@@ -255,11 +302,11 @@
 +              return ExprError();
 +          }
 +        }
-@@ -534,0 +749,3 @@
+@@ -534,0 +796,3 @@
 +        if (!BinOp.isInvalid() && !CliResult.isNull())
 +          BinOp = cppcliEnumCast(Actions, BinOp.get(), CliResult,
 +                                OpToken.getLocation());
-@@ -1160,0 +1378,10 @@
+@@ -1160,0 +1425,10 @@
 +      QualType CliResult;
 +      if (SavedKind == tok::tilde)
 +        if (auto *Enum = cppcliEnum(Arg->getType()))
@@ -270,10 +317,10 @@
 +              return ExprError();
 +            Arg = Res.get();
 +          }
-@@ -1162,0 +1390,2 @@
+@@ -1162,0 +1437,2 @@
 +      if (!Res.isInvalid() && !CliResult.isNull())
 +        Res = cppcliEnumCast(Actions, Res.get(), CliResult, SavedLoc);
-@@ -1779,2 +2008,53 @@
+@@ -1779,2 +2055,53 @@
 -          LHS = Actions.ActOnArraySubscriptExpr(getCurScope(), LHS.get(), Loc,
 -                                                ArgExprs, RLoc);
 +          // For a managed array handle, ask Sema to resolve the surrogate's
@@ -329,7 +376,7 @@
 +          if (!LHS.isInvalid())
 +            LHS = Actions.ActOnArraySubscriptExpr(getCurScope(), LHS.get(), Loc,
 +                                                  ArgExprs, RLoc);
-@@ -1838,0 +2119,25 @@
+@@ -1838,0 +2166,25 @@
 +      }
 +
 +      // CLI delegate handles call their runtime Invoke method. Let Sema
@@ -355,7 +402,7 @@
 +                tok::arrow, Scope, SourceLocation(), Member, nullptr);
 +          }
 +        }
-@@ -1892,0 +2198,31 @@
+@@ -1892,0 +2245,31 @@
 +        for (unsigned Index=0; Index<ArgExprs.size(); ++Index) {
 +          if (!isa<StringLiteral>(ArgExprs[Index]->IgnoreParenImpCasts()) ||
 +              !cppcliStringArgument(Fn, Index, ArgExprs.size())) continue;
@@ -387,7 +434,7 @@
 +          if (Boxed.isInvalid()) return ExprError();
 +          ArgExprs[Index] = Boxed.get();
 +        }
-@@ -1910,0 +2247,8 @@
+@@ -1910,0 +2294,8 @@
 +      if (!LHS.isInvalid() && OpKind==tok::period && cppcliEnum(LHS.get()->getType()) && Tok.is(tok::identifier)) {
 +        auto Name=Tok.getIdentifierInfo()->getName();
 +        if(Name=="ToString" || Name=="GetHashCode" || Name=="Equals" || Name=="GetType") {
@@ -396,13 +443,28 @@
 +          OpKind=tok::arrow;
 +        }
 +      }
+@@ -2807 +3198,3 @@
+-              Result = Actions.ActOnCastExpr(getCurScope(), OpenLoc,
++              auto Unboxed=cppcliTryUnbox(Actions,getCurScope(),PP,Result.get(),DeclaratorInfo,OpenLoc);
++          if(!Unboxed.isUnset()) Result=Unboxed;
++          else Result = Actions.ActOnCastExpr(getCurScope(), OpenLoc,
+@@ -2858 +3251,3 @@
+-          Result = Actions.ActOnCastExpr(getCurScope(), OpenLoc,
++          auto Unboxed=cppcliTryUnbox(Actions,getCurScope(),PP,Result.get(),DeclaratorInfo,OpenLoc);
++          if(!Unboxed.isUnset()) Result=Unboxed;
++          else Result = Actions.ActOnCastExpr(getCurScope(), OpenLoc,
 --- ParseExprCXX.cpp
 +++ ParseExprCXX.cpp
 @@ -12,0 +13 @@
 +#include "clang/AST/Attr.h"
 @@ -26,0 +28 @@
 +#include "clang/Sema/Lookup.h"
-@@ -393,0 +396,39 @@
+@@ -32,0 +35,4 @@
++namespace clang {
++ExprResult cppcliTryUnbox(Sema &, Scope *, Preprocessor &, Expr *, Declarator &, SourceLocation);
++}
++
+@@ -393,0 +400,39 @@
 +    // CLI primitive aliases remain fundamental C++ types in declarations.
 +    // Only static scope lookup selects their metadata facade, after ordinary
 +    // lookup has resolved namespace qualification and native shadowing.
@@ -442,7 +504,7 @@
 +    }
 +
 +    if (CLIPrimitiveScope) continue;
-@@ -1547,0 +1589,16 @@
+@@ -1547,0 +1593,20 @@
 +  if (!Result.isInvalid() && Kind == tok::kw_reinterpret_cast &&
 +      DeclaratorInfo.getNumTypeObjects() &&
 +      DeclaratorInfo.getTypeObject(0).Kind == DeclaratorChunk::Pointer) {
@@ -459,7 +521,11 @@
 +        }
 +  }
 +
-@@ -1845,0 +1903,35 @@
++  if (!Result.isInvalid() && !DeclaratorInfo.isInvalidType() && Kind==tok::kw_static_cast) {
++    auto Unboxed=cppcliTryUnbox(Actions,getCurScope(),PP,Result.get(),DeclaratorInfo,OpLoc);
++    if(!Unboxed.isUnset()) return Unboxed;
++  }
+@@ -1845,0 +1911,35 @@
 +
 +    // Adapt literal arguments only after Clang has resolved the actual
 +    // managed value type. Native classes and same-named functions are untouched.
@@ -495,3 +561,24 @@
 +        }
 +      }
 +    }
+@@ -3681,2 +3781,4 @@
+-    if (!Result.isInvalid())
+-      Result = Actions.ActOnCastExpr(getCurScope(), Tracker.getOpenLocation(),
++    if (!Result.isInvalid()) {
++      auto Unboxed=cppcliTryUnbox(Actions,getCurScope(),PP,Result.get(),DeclaratorInfo,Tracker.getOpenLocation());
++      if(!Unboxed.isUnset()) Result=Unboxed;
++      else Result = Actions.ActOnCastExpr(getCurScope(), Tracker.getOpenLocation(),
+@@ -3684,0 +3787 @@
++    }
+--- ParseStmt.cpp
++++ ParseStmt.cpp
+@@ -34,0 +35,4 @@
++namespace clang {
++ExprResult cppcliConvertReturn(Sema &, Scope *, Preprocessor &, Expr *, QualType, SourceLocation);
++}
++
+@@ -2372,0 +2377,4 @@
++  if(R.isUsable()) if(auto *Function=Actions.getCurFunctionDecl()) {
++    R=cppcliConvertReturn(Actions,getCurScope(),PP,R.get(),Function->getReturnType(),ReturnLoc);
++    if(R.isInvalid()) return StmtError();
++  }

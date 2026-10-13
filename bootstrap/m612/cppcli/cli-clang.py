@@ -63,6 +63,7 @@ def main():
     ap.add_argument("--std", choices=["c++14", "c++17", "c++20"], default="c++17", help="C++ language mode used by Clang (default: c++17)")
     ap.add_argument("--reference", action="append", default=[], type=Path)
     ap.add_argument("--type", action="append", default=[])
+    ap.add_argument("--source-type", action="append", default=[], help="reference type defined by this source assembly and used in imported signatures")
     ap.add_argument("--emit", choices=["il", "assembly"], default="assembly")
     ap.add_argument("--target", choices=["exe", "library"], default="exe")
     ap.add_argument("--assembly-name")
@@ -157,7 +158,7 @@ def main():
             friends.append(str(found))
     references = list({os.path.normcase(str(p.resolve())): p.resolve() for p in references}.values())
     access_file = work / "access.json"
-    access_file.write_text(json.dumps({"Assembly": assembly_name, "PublicKey": public_key, "Friends": friends}), encoding="utf-8")
+    access_file.write_text(json.dumps({"Assembly": assembly_name, "PublicKey": public_key, "Friends": friends, "SourceTypes": a.source_type}), encoding="utf-8")
     metadata_arguments = work / "metadata-arguments.json"
     metadata_arguments.write_text(json.dumps([str(value) for value in
         [manifest, header, ";".join(types), "--access", access_file, *references]], ensure_ascii=False), encoding="utf-8")

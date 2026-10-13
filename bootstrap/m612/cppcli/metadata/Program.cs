@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.Json;
 
 record CliType(string Il, string Cpp, string Kind, string Name = "") {
+    public string ReferencedAssembly { get; init; } = "";
     public string[] Modifiers { get; init; } = Array.Empty<string>();
     public CliType? Element { get; init; }
     public CliType[] Arguments { get; init; } = Array.Empty<CliType>();
@@ -36,7 +37,9 @@ record CliClass(string Assembly, string Name, string Cpp, string Kind, string Ba
     public bool NativeStorageSafe { get; init; }
 }
 record CliAssembly(string Name, string Version, string Token);
-record CliAccess(string Assembly, string PublicKey, string[] Friends);
+record CliAccess(string Assembly, string PublicKey, string[] Friends) {
+    public string[] SourceTypes { get; init; } = Array.Empty<string>();
+}
 
 sealed class SignatureTypes : ISignatureTypeProvider<CliType, object?>
 {
@@ -74,13 +77,16 @@ sealed class SignatureTypes : ISignatureTypeProvider<CliType, object?>
     public CliType GetTypeFromDefinition(MetadataReader r, TypeDefinitionHandle h, byte k)
     {
         var d = r.GetTypeDefinition(h);
-        return Named(Program.FullName(r, d), k == 0x11);
+        return Named(Program.FullName(r, d), k == 0x11) with { ReferencedAssembly=r.GetString(r.GetAssemblyDefinition().Name) };
     }
     public CliType GetTypeFromReference(MetadataReader r, TypeReferenceHandle h, byte k)
     {
         var d = r.GetTypeReference(h);
         var ns = r.GetString(d.Namespace);
-        return Named((ns.Length == 0 ? "" : ns + ".") + r.GetString(d.Name), k == 0x11);
+        string owner=d.ResolutionScope.Kind==HandleKind.AssemblyReference ?
+            r.GetString(r.GetAssemblyReference((AssemblyReferenceHandle)d.ResolutionScope).Name) :
+            d.ResolutionScope.Kind==HandleKind.ModuleDefinition ? r.GetString(r.GetAssemblyDefinition().Name) : "";
+        return Named((ns.Length == 0 ? "" : ns + ".") + r.GetString(d.Name), k == 0x11) with { ReferencedAssembly=owner };
     }
     public CliType GetTypeFromSpecification(MetadataReader r, object? c, TypeSpecificationHandle h, byte k) =>
         r.GetTypeSpecification(h).DecodeSignature(this, c);
@@ -367,9 +373,22 @@ static class Program
                 }
             }
             var found = types.Select(t => t.Name).ToHashSet(StringComparer.Ordinal);
+            var sourceTypes=access.SourceTypes.ToHashSet(StringComparer.Ordinal);
+            if(sourceTypes.Any(name=>!name.Split('.').All(ValidName))) throw new Exception("source-owned types require ordinary non-generic CLR names");
+            if(sourceTypes.Overlaps(found)) throw new Exception("a source-owned type cannot also be imported");
+            if(types.Any(t=>sourceTypes.Contains(t.Base) || t.InterfaceTypes.Any(i=>sourceTypes.Contains(i.Name))))
+                throw new Exception("imported inheritance from source-owned types requires complete source declarations and is not enabled yet");
             if (!wanted.IsSubsetOf(found)) throw new Exception("reference metadata lacks: " + string.Join(", ", wanted.Except(found)));
             // Cross-type signatures may refer to types we haven't imported yet.
+            bool SourceAvailable(CliType t) {
+                if(t.Element!=null) return false;
+                if(!sourceTypes.Contains(t.Name)) return false;
+                if(t.Kind!="ref") throw new Exception("source-owned signature support requires a reference type: "+t.Name);
+                if(t.ReferencedAssembly!=access.Assembly) throw new Exception("source-owned signature references another assembly: "+t.Name+" from "+t.ReferencedAssembly);
+                return true;
+            }
             bool Available(CliType t) => t.Kind == "primitive" || t.Kind == "pointer" || t.Kind == "typeparam" ||
+                SourceAvailable(t) ||
                 ((t.Kind == "ref" || t.Kind == "value" || t.Kind == "boxed") && found.Contains(t.Name)) ||
                 (t.Kind == "generic" && t.Element != null && Available(t.Element) && t.Arguments.All(Available)) ||
                 ((t.Kind == "array" || t.Kind == "byref") && t.Element != null && Available(t.Element));
@@ -406,6 +425,13 @@ static class Program
             header.WriteLine("template<class T, class A> T __cli_safe_cast(A); template<class T, class A> T __cli_dynamic_cast(A);");
             header.WriteLine("template<class T> class __attribute__((annotate(\"cli.static.property.proxy\"))) __cli_static_property { public: operator T() const; T operator->() const; __cli_static_property& operator=(T); };");
             header.WriteLine("System::String* __cli_literal(const char*); System::String* __cli_literal(const wchar_t*);");
+            foreach(string sourceType in sourceTypes.Order()) {
+                var parts=sourceType.Split('.');
+                foreach(string ns in parts.SkipLast(1)) header.Write("namespace "+ns+" { ");
+                header.Write("class "+parts[^1]+";");
+                foreach(string ns in parts.SkipLast(1)) header.Write(" }");
+                header.WriteLine();
+            }
             foreach (var alias in PrimitiveAliases)
                 header.WriteLine("namespace System { using " + alias.Key + " __attribute__((annotate(\"cli.primitive.facade:__cli_primitive_" + alias.Key + "\"))) = " + alias.Value + "; }");
             foreach (var t in types) WriteClass(header, t, true);
@@ -439,7 +465,7 @@ static class Program
             header.WriteLine("template<class T, int R> T __cli_each_current(cli::array<T,R>*, int);");
             header.WriteLine("template<class E> void __cli_each_dispose(E);");
 
-            File.WriteAllText(jsonPath, JsonSerializer.Serialize(new { version = 1, assemblies, types }, new JsonSerializerOptions { WriteIndented = true }), new UTF8Encoding(false));
+            File.WriteAllText(jsonPath, JsonSerializer.Serialize(new { version = 1, assemblies, types, sourceTypes=sourceTypes.Order().ToArray() }, new JsonSerializerOptions { WriteIndented = true }), new UTF8Encoding(false));
             return 0;
         }
         catch (Exception e) { Console.Error.WriteLine("cli-metadata: " + e.Message); return 1; }

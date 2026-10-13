@@ -1,0 +1,13 @@
+using System;
+using SourceContract;
+if(Bridge.Call(41)!=42) throw new Exception("external constructor/virtual callback into source-owned type");
+var value=new Value(42);
+if(!ReferenceEquals(Bridge.Return(value),value)) throw new Exception("source-owned return/property identity");
+var values=new[]{value,new Value(7)};
+if(!ReferenceEquals(Bridge.Array(values),values)) throw new Exception("source-owned array signature/identity");
+var replacement=new Value(43);
+Bridge.Replace(ref value,replacement);
+if(!ReferenceEquals(value,replacement) || value.Read()!=44) throw new Exception("source-owned byref signature/mutation");
+GC.Collect(); GC.WaitForPendingFinalizers();
+if(Bridge.Call(41)!=42 || Bridge.Return(value).Read()!=44) throw new Exception("source-owned lifetime");
+Console.WriteLine("source-owned CLR signatures: external constructor, virtual callback, return/property/array identity, byref mutation, actual source definitions and GC PASS");

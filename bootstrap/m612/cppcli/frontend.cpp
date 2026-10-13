@@ -126,6 +126,7 @@ struct Metadata {
     std::map<std::string, ImportedField> fields;
     std::map<std::string, std::string> types;
     std::set<std::string> short_types, interface_types;
+    std::vector<std::string> source_types;
     std::string externs;
     void load(const std::string& path) {
         auto value = llvm::json::parse(read_file(path));
@@ -135,6 +136,12 @@ struct Metadata {
         auto* assemblies = root->getArray("assemblies");
         auto* classes = root->getArray("types");
         if (!assemblies || !classes) throw std::runtime_error("incomplete metadata manifest");
+        if(auto* source=root->getArray("sourceTypes")) for(const auto& entry:*source) {
+            auto name=entry.getAsString();
+            if(!name) throw std::runtime_error("invalid source-owned type manifest");
+            source_types.push_back(name->str());
+            short_types.insert(name->substr(name->find_last_of('.')+1).str());
+        }
         for (auto& entry : *assemblies) {
             auto& a = *entry.getAsObject();
             std::string name = a.getString("Name")->str(), token = a.getString("Token")->str();
@@ -4452,6 +4459,12 @@ public:
             }
         }
         collect(context.getTranslationUnitDecl());
+        for(const auto& name:metadata.source_types) {
+            bool defined=false;
+            for(auto* record:records) if(record_name(record)=="'"+name+"'" && record_annotated(record,"cli.ref") &&
+                !record_annotated(record,"cli.value") && record_annotation(record,"cli.external:").empty()) defined=true;
+            if(!defined) throw std::runtime_error("source-owned reference type requires a real definition in this assembly: "+name);
+        }
         bool entry = false;
         // Managed calls discover native imports while generating their bodies.
         // Index traversal keeps those appended declarations stable and emits them.

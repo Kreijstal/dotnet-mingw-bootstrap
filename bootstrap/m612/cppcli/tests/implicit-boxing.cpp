@@ -25,6 +25,18 @@ public:
     static Object^ Array(array<Object^>^ values,int index,int value) { values[index]=value; return values[index]; }
     static Object^ Expression(ObjectSlot^ target,int value) { return target->Field=value; }
     static int Typed(ObjectSlot^ target,int value) { return target->Overloaded(value); }
+    static Object^ ReturnInt(int value) { return value; }
+    static Object^ ReturnFlag(BoxFlags value) { return value; }
+    static Object^ ReturnBool(bool value) { return value; }
+    static int UnboxInt(Object^ value) { return (int)value; }
+    static BoxFlags UnboxFlag(Object^ value) { return (BoxFlags)value; }
+    static BoxFlags UnboxFlagStatic(Object^ value) { return static_cast<BoxFlags>(value); }
+    static bool UnboxBool(Object^ value) { return (bool)value; }
+    static int UnboxProperty(ObjectSlot^ target) { return (int)target->Value; }
+    static String^ ReturnText() { return L"東京" L" 😀"; }
+    static String^ StoreText() { String^ value=nullptr; value=L"RAW"; return value; }
+    static Object^ StoreObjectText(ObjectSlot^ target) { target->Field=L"managed"; return target->Field; }
+    static array<String^>^ StoreArrayText() { array<String^>^ values=gcnew array<String^>(2); values[0]=L"first"; values[1]=L"second"; return values; }
     static String^ EnumName(BoxFlags value) { return value.ToString(); }
     static int EnumHash(BoxFlags value) { return value.GetHashCode(); }
     static bool EnumEquals(BoxFlags left,BoxFlags right) { return left.Equals(right); }

@@ -5104,3 +5104,70 @@ all 49 original project inputs/66 tree C++ files; no System.Printing runtime
 DLL or completed WPF package is claimed. Native import coverage remains 58/139,
 and complete native layout, printing/link/runtime and WindowsDesktop packaging
 remain open. Installed compiler packages are unchanged.
+
+## 56. Source-owned signatures, return boxing and Object unboxing
+
+The next 2026-10-13 continuation adds explicit --source-type reference names to
+the compiler driver/metadata context. A selected imported method can refer to
+those names when its metadata identifies the assembly being built. The header
+supplies forward declarations, not duplicate implementations or bodies; final
+IL emission requires real source ref-class definitions. Imported/source name
+collisions, missing or value-type definitions, wrong assembly names and imported
+inheritance from source-owned types reject. Source-owned value/generic/nested
+types, imported inheritance and full version/public-key identity checks remain
+unfinished.
+
+A two-assembly runtime fixture builds a C# peer against a compile-only contract,
+then supplies the genuine C++/CLI implementation with the same assembly/version
+identity. The peer constructs with the source-owned type, calls its actual
+virtual body and returns the original object through a property. Array identity,
+byref replacement and GC are checked. The compile-only contract's method throws
+if accidentally executed; only the source implementation enters the consumer's
+runtime references. Three invalid source-type cases reject. This enables the
+original NgcSerializationManager/Async constructors and PrintDialog.PrintQueue
+signatures using the genuine System.Printing.PrintQueue source definition.
+
+Primitive/enum returns to Object now use the existing typed box marker and CLR
+box instruction. Direct String/Object literal returns and String/Object/array
+stores retain Clang assignment/return checking after managed literal construction.
+C-style and static casts from direct Object operands to primitives/CLI enums
+resolve the existing safe_cast template through Clang lookup and call checking;
+the backend emits CLR unbox.any. Checks cover exact scalar/enum payloads,
+property getter operands, wrong-type InvalidCastException and null
+NullReferenceException. Typed primitive/enum handles, general constructor/
+initializer/interface conversions and user-defined conversion selection remain
+unfinished.
+
+The complete bridge regression caught a crash in native SIMD header parsing:
+Clang uses a temporary expression without a type while assembling a vector
+cast. The unboxing hook now leaves empty/untyped operands to the original parser.
+The source-owned fixture includes mmintrin.h, and the full DirectWrite rebuild
+passes after the fix. Normal native/value/enum cast regressions also pass.
+
+Validated commands on win11 with the usual source SDK/ilasm/M612/CLANG64 and
+WPF_BUILD/WPF_CPPCLI_BUILD environment:
+
+```bash
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-source-owned-types test-implicit-boxing
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-implicit-boxing test-semantic-literals test-exceptions
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-boxed-values test-nativeints test-enums
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh build-directwrite check-directwrite-assembly printing-gate
+```
+
+The cppcli runtime/rejection checks pass, with zero C# warnings/errors. The
+final WPF command validates all 85 DirectWrite types, 283 prepared bodies, 81
+font families and original factory/managed COM loader/font/face/file ownership
+paths. It then **fails** in printing Sema, beginning at
+PrintSystemAttributeValue.cpp:1097's typed enum-handle initialization. Further
+errors show enum-handle casts, Int32^ initialization/return, qualified primitive
+syntax, ResourceManager constructor metadata and additional source type imports.
+The previous source-owned constructor/property, literal-store, Object-return
+boxing and scalar/enum unboxing failures are absent.
+
+Evidence is archived locally under
+`tmp/wpf8-support/validation/printing-source-owned-unboxing-20261013`.
+No full System.Printing runtime DLL, separate-unit link/runtime proof or WPF
+package is produced. All 49 original project inputs/66 tree C++ files remain in
+the diagnostic gate; native coverage remains 58/139. Complete native layout,
+printing runtime and WindowsDesktop packaging remain open; installed compiler
+packages are unchanged.
