@@ -17,6 +17,25 @@ static bool decorate=false;
 static int decoration_error=0;
 struct DecorationCall { uint32_t kind; int x,y,width,thickness; };
 static std::vector<DecorationCall> decorations;
+struct TabCall { int cp,x,width; uint16_t leader; };
+static std::vector<TabCall> tab_calls;
+static int leader_draws=0;
+static bool tab_abort=false;
+static int WINAPI tab_draw(void*,uint32_t id,LSPOINT*,WCHAR* text,int* values,int count,int flow,uint32_t mode,LSPOINT*,LsHeights*,int width,LSRECT*) {
+    if(id!=5 || flow!=0 || mode!=1) return LS_ClientAbort;
+    if(text[0]==L'.' && count>1) {
+        int sum=0; for(int i=0;i<count;++i) { if(text[i]!=L'.' || values[i]!=5) return LS_ClientAbort; sum+=values[i]; }
+        if(sum!=width) return LS_ClientAbort;
+        ++leader_draws;
+        if(tab_abort) return LS_ClientAbort;
+    }
+    return 0;
+}
+static int WINAPI enum_tab(void*,uint32_t id,int cp,WCHAR* text,uint16_t leader,int flow,int reverse,int geometry,LSPOINT* point,LsHeights* height,int width) {
+    if(id!=5 || text[0]!=L'\t' || flow!=0 || reverse || !geometry || height->dvAscent!=12) return LS_ClientAbort;
+    tab_calls.push_back({cp,point->x,width,leader}); return tab_abort?LS_ClientAbort:0;
+}
+static int WINAPI enum_text(void*,uint32_t,int,int,WCHAR*,int,int,int,int,LSPOINT*,LsHeights*,int,int,int*,uint16_t*,uint16_t*,uint16_t*,int*,void*,uint32_t*,int) { return 0; }
 static int WINAPI pap(void*,int,LsPap* value) { *value={}; value->cpFirst=0; value->grpf=paragraph_flags; return 0; }
 static int WINAPI props(void*,int,int,LsLineProps* value) { *value={}; value->durLeft=4; return 0; }
 static int WINAPI fetch(void*,int cp,int,void*,WCHAR* buffer,int capacity,int* used,WCHAR** output,int* count,int* hidden,LsChp* chp,uintptr_t* id) {
@@ -66,11 +85,14 @@ int main(int argc,char** argv) {
         using Acquire=int (WINAPI *)(void*,void**);
         using CpQuery=int (WINAPI *)(void*,int,int,LsQSubInfo*,int*,LsTextCell*);
         using PointQuery=int (WINAPI *)(void*,const LSPOINT*,int,LsQSubInfo*,int*,LsTextCell*);
+        using SetTabs=int (WINAPI *)(void*,int,int,const LsTbd*);
+        using EnumLine=int (WINAPI *)(void*,BOOL,BOOL,LSPOINT*);
 #define PROC(name,type) auto name=reinterpret_cast<type>(GetProcAddress(dll,#name)); require(name!=nullptr,#name)
         PROC(LoCreateContext,CreateContext); PROC(LoDestroyContext,DestroyContext); PROC(LoSetDoc,Doc);
         PROC(LoCreateLine,CreateLine); PROC(LoDisposeLine,DisposeLine); PROC(LoDisplayLine,Display);
         PROC(LoAcquireBreakRecord,Acquire); PROC(LoCloneBreakRecord,Acquire); PROC(LoDisposeBreakRecord,DisposeLine);
         PROC(LoQueryLineCpPpoint,CpQuery); PROC(LoQueryLinePointPcp,PointQuery);
+        PROC(LoSetTabs,SetTabs); PROC(LoEnumLine,EnumLine);
         LsContextInfo config{}; config.version=4; config.pfnFetchPap=reinterpret_cast<void*>(pap);
         config.pfnGetRunTextMetrics=reinterpret_cast<void*>(metrics); config.pfnGetRunCharWidths=reinterpret_cast<void*>(widths);
         config.pfnDrawTextRun=reinterpret_cast<void*>(draw);
@@ -147,6 +169,41 @@ int main(int argc,char** argv) {
         sample=L"a  \u2029";
         require(LoCreateLine(context,0,0,14,0,nullptr,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==4&&info.endr==2&&measured.upStartTrailing==14,"trailing spaces across runs retain paragraph end");
         require(LoDisposeLine(line,FALSE)==0,"trailing line disposal");
+        // Exercise tab geometry independently of managed callback behavior.
+        paragraph_flags=0; uniform_width=false; run_length=1; sample=L"a\tb.c\u2029";
+        config.pfnDrawTextRun=reinterpret_cast<void*>(tab_draw);
+        config.pfnEnumTab=reinterpret_cast<void*>(enum_tab);
+        config.pfnEnumText=reinterpret_cast<void*>(enum_text);
+        void* tab_context=nullptr;
+        require(LoCreateContext(&config,&callbacks,&tab_context)==0&&LoSetDoc(tab_context,1,1,&resolution)==0,"tab context setup");
+        const int starts[]={100,73,45,80,80},ends[]={155,128,100,135,135};
+        for(int kind=0;kind<5;++kind) {
+            LsTbd stop{kind,100,L'.',L'.'};
+            require(LoSetTabs(tab_context,40,1,&stop)==0,"tab stop ABI");
+            require(LoCreateLine(tab_context,0,0,1000,0,nullptr,&info,&line,&depth,&measured)==0&&measured.upLimLine==ends[kind],"aligned field measured across client runs");
+            require(LoQueryLineCpPpoint(line,1,1,&sub,&queried_depth,&cell)==0&&cell.pointUvStartCell.x==14&&cell.dupCell==starts[kind]-14,"tab caret spans actual gap");
+            require(LoQueryLineCpPpoint(line,2,1,&sub,&queried_depth,&cell)==0&&cell.pointUvStartCell.x==starts[kind],"following field starts at selected alignment");
+            tab_calls.clear();leader_draws=0;
+            require(LoEnumLine(line,FALSE,TRUE,&origin)==0&&tab_calls.size()==1&&tab_calls[0].cp==1&&tab_calls[0].x==14&&tab_calls[0].width==starts[kind]-14&&tab_calls[0].leader==L'.',"original EnumTab ABI retains CP/leader/geometry");
+            require(LoDisplayLine(line,&origin,1,&clip)==0&&leader_draws==1,"leader glyphs measured and drawn through original callbacks");
+            tab_abort=true;
+            require(LoDisplayLine(line,&origin,1,&clip)==LS_ClientAbort&&LoEnumLine(line,FALSE,TRUE,&origin)==LS_ClientAbort,"tab callback errors propagate");
+            tab_abort=false;
+            require(LoDisposeLine(line,FALSE)==0,"tab line disposal");
+        }
+        sample=L"a\tb\tc\u2029";
+        require(LoSetTabs(tab_context,40,0,nullptr)==0,"incremental tab setup");
+        require(LoCreateLine(tab_context,0,0,1000,0,nullptr,&info,&line,&depth,&measured)==0&&measured.upLimLine==110,"incremental tabs advance to successive stops");
+        require(LoDisposeLine(line,FALSE)==0,"incremental tab line disposal");
+        sample=L"a\tb.c\u2029";paragraph_flags=0x40;
+        LsTbd right_stop{2,100,0,0};
+        require(LoSetTabs(tab_context,40,1,&right_stop)==0,"aligned wrap tab setup");line=reinterpret_cast<void*>(1);
+        require(LoCreateLine(tab_context,0,0,80,0,nullptr,&info,&line,&depth,&measured)==LS_NotImplemented&&!line,"aligned field wrap cannot fabricate a fitting line after moving the stop");
+        paragraph_flags=0;
+        require(LoSetTabs(tab_context,0,0,nullptr)==0,"zero incremental tab setup");line=reinterpret_cast<void*>(1);
+        require(LoCreateLine(tab_context,0,0,1000,0,nullptr,&info,&line,&depth,&measured)==LS_InvalidFormatterResult&&!line,"missing tab stops reject without fabricated geometry");
+        require(LoDestroyContext(tab_context)==0,"tab context disposal");
+        std::puts("native tab stop/EnumTab ABI, five alignments, cross-run fields, leader drawing, caret geometry, incremental stops and errors PASS");
         require(LoDestroyContext(context)==0,"line context disposal");
         std::puts("native line callbacks, exact metrics/CP-point geometry, query ABI/identity/failure isolation, cross-run word/grapheme wrapping, overflow/emergency policies, trailing spaces and native break-record clone/continuation/ownership PASS");
         return 0;

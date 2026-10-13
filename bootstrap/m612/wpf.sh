@@ -271,6 +271,32 @@ PY
   "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/DecorationsCheck.dll")"
 }
 
+step_check_text_tabs() {
+  initialize
+  local work=$build/text-tabs-check
+  mkdir -p "$work"
+  cp "$here/wpf-tests/TextTabs.cs" "$work/Program.cs"
+  /usr/bin/python3 - "$work" "$build/lib" "$oob" <<'PY'
+from pathlib import Path
+import subprocess,sys,xml.etree.ElementTree as E
+work,lib,oob=map(Path,sys.argv[1:])
+root=E.Element('Project',Sdk='Microsoft.NET.Sdk');props=E.SubElement(root,'PropertyGroup')
+for name,value in {'TargetFramework':'net8.0','OutputType':'Exe','UseAppHost':'false','EnableNETAnalyzers':'false','NuGetAudit':'false','UseSharedCompilation':'false'}.items():E.SubElement(props,name).text=value
+items=E.SubElement(root,'ItemGroup')
+files={f.stem:f for f in oob.glob('*.dll')}
+files.update({name:lib/(name+'.dll') for name in ('PresentationCore','WindowsBase','System.Xaml','DirectWriteForwarder')})
+for name,file in sorted(files.items()):
+    ref=E.SubElement(items,'Reference',Include=name);E.SubElement(ref,'HintPath').text=subprocess.check_output(['cygpath','-m',str(file)],text=True).strip()
+E.ElementTree(root).write(work/'TabsCheck.csproj',encoding='utf-8')
+PY
+  "$sdk/dotnet.exe" build "$(cygpath -m "$work/TabsCheck.csproj")" -c Release --configfile "$(cygpath -m "$build/NuGet.config")" -v:q -p:UseSharedCompilation=false
+  local native
+  for native in PresentationNative_cor3 wpfgfx_cor3 wpf-dwrite-loader wpf-subsetter; do
+    cp "${WPF_TAB_NATIVE:-$build/lib}/$native.dll" "$work/bin/Release/net8.0/"
+  done
+  "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/TabsCheck.dll")"
+}
+
 step_prepare_gfx() {
   local root=$build/gfx-source
   local gfx=$root/src/Microsoft.DotNet.Wpf/src/WpfGfx
@@ -596,6 +622,7 @@ EOF
 
 step_build_presentation_core() {
   [ -s "$build/lib/DirectWriteForwarder.dll" ] || step_build_directwrite
+  [ -s "$build/lib/PresentationBuildTasks.dll" ] || step_build_presentation_tasks
   build_assembly PresentationCore
 }
 

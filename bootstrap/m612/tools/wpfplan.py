@@ -103,7 +103,9 @@ def main():
         sr.write_text("\n".join(lines) + "\n")
         generated.append(sr)
 
-    markup = bool(ev.items.get("Page") or ev.items.get("ApplicationDefinition")) and not args.reference_only
+    # Resource-only projects also need WinFX's MainResourcesGeneration target.
+    # PresentationCore's composite fonts are read from PresentationCore.g.
+    markup = bool(ev.items.get("Page") or ev.items.get("ApplicationDefinition") or ev.items.get("Resource")) and not args.reference_only
     root = ET.Element("Project", **({} if markup else {"Sdk":"Microsoft.NET.Sdk"}))
     if markup:
         ET.SubElement(root,"Import",Project="Sdk.props",Sdk="Microsoft.NET.Sdk")
@@ -232,6 +234,7 @@ def main():
     (out / "source-items.json").write_text(json.dumps({"project": str(project), "assembly": assembly_name, "reference_only": args.reference_only,
                                                     "dependencies": [str(path.resolve()) for path, _ in dependencies], "compile": sorted(map(str, seen)),
                                                     "resources": sorted(map(str, seen_resources)),
+                                                    "wpfResources":[file for file,_ in ev.items.get('Resource',[])],
                                                     "pages":[file for file,_ in ev.items.get('Page',[])], "warnings": ev.warnings}, indent=2))
     print(f"{name}: {len(seen)} source files, {len(seen_resources)} resources")
 

@@ -7499,3 +7499,52 @@ under tmp/wpf8-support/validation/text-decorations-package-20261013.
 Imported PresentationNative coverage stays 58/139. Full bidi, paragraph layout
 and remaining text/natural-language behavior remain required; the goal stays
 active.
+
+
+## 104. Tab layout, leaders and missing composite-font resources
+
+The 2026-10-13 continuation removes the native tab-character rejection. Tabs
+become retained layout runs with their own width and the original client run
+identity/CP. The engine measures the following field across runs, aligns source
+left/center/right/decimal/character stops and continues with incremental stops
+after explicit ones. Nominal/shaped field widths respect original clusters.
+Caret cells span the gap, and original EnumTab supplies its source position,
+leader and geometry. Leaders are measured through original GetRunCharWidths
+and drawn as repeated whole characters centered in the available gap through
+original DrawTextRun. Callback failures and invalid/missing stops propagate.
+
+The first public check exposes missing PresentationCore.g.resources during
+composite-font fallback. The planner had preserved Resource items without
+importing WinFX resource-generation targets for resource-only projects. It now
+selects those targets whenever upstream Resource items exist and records them
+in its source manifest. PresentationCore builds its source PresentationBuildTasks
+first when absent. All four original composite fonts are embedded; original
+fallback proceeds. No Microsoft binary resources or assemblies are added.
+
+Validation with the standard win11 WPF environment:
+
+```sh
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-text-tabs check-lineservices-line-native check-text-line check-text-decorations
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh build-presentation-core check-text-tabs check-lineservices-line-native check-text-line check-text-decorations
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-lineservices-line-native check-text-tabs
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-lineservices-line-native
+```
+
+The initial public run fails with MissingManifestResourceException and motivates
+the resource correction. The final commands pass. The native check covers all
+five original stop kinds, cross-run field metrics, exact tab cells, EnumTab ABI,
+leader widths/drawing, incremental stops and draw/enumeration errors. Its initial
+leader counter also counted a literal period in the field; distinguishing the
+repeated leader callback fixes that fixture. The public test checks all four
+WPF alignments with/without dotted leaders and both whole/split fields: starts
+160.000, 126.937, 93.873 and 130.763 pixels, with 142/102/67/108 leader pixels
+and zero gap pixels without leaders. It verifies tab caret/selection geometry,
+source-backed glyph enumeration, all four composite resources, incremental
+stops, ordinary wrapping and moving GC. Existing Indic/decoration tests pass.
+
+A field cut by wrapping can move its aligned stop beyond the column; this path
+still explicitly rejects and is checked rather than returning false geometry.
+Full bidi tabs and exact private legacy leader spacing remain open. Evidence is
+archived under tmp/wpf8-support/validation/text-tabs-20261013. Imported native
+coverage remains 58/139 because these are behaviors of existing exports. The
+updated package is still required; the full WPF goal remains active.

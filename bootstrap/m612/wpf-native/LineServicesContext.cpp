@@ -35,7 +35,8 @@ struct Run {
     std::vector<uint32_t> glyph_properties;
     std::vector<uint8_t> expansion;
     std::vector<GlyphOffset> offsets;
-    bool shaped=false,hidden=false;
+    bool shaped=false,hidden=false,tab=false;
+    uint16_t leader=0;
 };
 struct Line {
     std::shared_ptr<Context> context;
@@ -65,6 +66,7 @@ using EnumText=int (WINAPI *)(void*,uint32_t,int,int,WCHAR*,int,int,int,int,LSPO
 using UnderlineInfo=int (WINAPI *)(void*,uint32_t,LsHeights*,int,LsULInfo*);
 using StrikeInfo=int (WINAPI *)(void*,uint32_t,LsHeights*,int,LsStInfo*);
 using DrawDecoration=int (WINAPI *)(void*,uint32_t,uint32_t,LSPOINT*,int,int,int,uint32_t,LSRECT*);
+using EnumTabCallback=int (WINAPI *)(void*,uint32_t,int,WCHAR*,uint16_t,int,int,int,LSPOINT*,LsHeights*,int);
 
 int measure_run(Context& context,Run& run) {
     int count=static_cast<int>(run.text.size()),flow=run.flow,status=0;
@@ -73,6 +75,7 @@ int measure_run(Context& context,Run& run) {
         status=reinterpret_cast<Metrics>(context.info.pfnGetRunTextMetrics)(context.info.pols,
             static_cast<uint32_t>(run.id),0,flow,&run.metrics);
         if(status) return status;
+        if(run.tab) return LS_None;
         if(run.properties.flags&0x400) {
             if(!context.callbacks.pfnGetGlyphsRedefined || !context.info.pfnGetGlyphPositions) return LS_NotImplemented;
             run.shaped=true; run.clusters.resize(count); run.characters.resize(count);
@@ -111,6 +114,65 @@ int measure_run(Context& context,Run& run) {
         }
     }
     return LS_None;
+}
+
+int prefix_width(const Run& run,size_t end,int64_t& width) {
+    if(run.hidden) return LS_None;
+    if(!run.shaped) {
+        for(size_t i=0;i<end;++i) width+=run.widths[i];
+    } else {
+        unsigned last=end==run.text.size()?run.advances.size():run.clusters[end];
+        if(last>run.advances.size() || (end && end<run.text.size() && run.clusters[end]==run.clusters[end-1]))
+            return LS_NotImplemented;
+        for(unsigned i=0;i<last;++i) width+=run.advances[i];
+    }
+    return LS_None;
+}
+
+// Tab locations are relative to the paragraph origin. Measure the entire
+// following field, across client runs, before selecting an aligned stop.
+int layout_tabs(Line& line,int start,int& total) {
+    int64_t x=start;
+    const Context& context=*line.context;
+    for(size_t i=0;i<line.runs.size();++i) {
+        auto& run=line.runs[i];
+        if(run.tab && !run.hidden) {
+            bool selected=false;
+            int64_t target=0;
+            run.leader=0;
+            for(const auto& stop:context.tabs) {
+                if(stop.ur<=x) continue;
+                int64_t field=0;
+                bool aligned=false;
+                if(stop.lskt) {
+                    WCHAR align=stop.lskt==3?L'.':stop.wchCharTab;
+                    for(size_t j=i+1;j<line.runs.size() && !line.runs[j].tab;++j) {
+                        const auto& next=line.runs[j];
+                        size_t end=next.text.size();
+                        if(stop.lskt>=3) {
+                            auto found=std::find(next.text.begin(),next.text.end(),align);
+                            if(found!=next.text.end()) { end=found-next.text.begin(); aligned=true; }
+                        }
+                        int status=prefix_width(next,end,field); if(status) return status;
+                        if(aligned) break;
+                    }
+                }
+                target=static_cast<int64_t>(stop.ur)-(stop.lskt==1?field/2:field);
+                if(target<=x) continue;
+                run.leader=stop.wchTabLeader; selected=true; break;
+            }
+            if(!selected) {
+                if(context.incremental_tab<=0) return LS_InvalidFormatterResult;
+                int64_t after=context.tabs.empty()?x:std::max<int64_t>(x,context.tabs.back().ur);
+                target=(after/context.incremental_tab+1)*context.incremental_tab;
+            }
+            if(target>x+INT_MAX || target>INT_MAX) return LS_InvalidFormatterResult;
+            run.width=static_cast<int>(target-x); run.widths.assign(1,run.width);
+        }
+        x+=run.width;
+        if(x<INT_MIN || x>INT_MAX) return LS_InvalidFormatterResult;
+    }
+    total=static_cast<int>(x); return LS_None;
 }
 
 std::shared_ptr<Line> get_line(void* handle) {
@@ -399,7 +461,6 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
             }
             if(!text) return LS_InvalidCpContentFetched;
             if(run.properties.idObj!=0xFFFF) return LS_NotImplemented;
-            if(std::find(text,text+count,L'\t')!=text+count) return LS_NotImplemented;
             run.hidden=hidden_flag!=0 || (run.properties.flags&0x10000)!=0;
             run.text.assign(text,text+count); run.widths.resize(count);
             if(count==1 && (text[0]==0x2028 || text[0]==0x2029)) {
@@ -410,6 +471,9 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
             }
             if(limit>0 && position-cp+count>limit) count=limit-(position-cp);
             if(count<=0) { ended=true; break; }
+            auto tab=std::find(text,text+count,L'\t');
+            if(tab==text) { count=1; run.tab=true; }
+            else if(tab!=text+count) count=static_cast<int>(tab-text);
             run.text.resize(count); run.widths.resize(count);
             status=measure_run(*context,run);
             if(status) return status;
@@ -428,6 +492,7 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
             if(limit>0 && position-cp>=limit) ended=true;
         }
         if(!ended) return LS_TooLongParagraph;
+        status=layout_tabs(*result,properties.durLeft,total); if(status) return status;
         // Fetch through the separator before finding Unicode breaks: a client
         // run boundary can be in the middle of a word or grapheme.
         if((paragraph.grpf&0x40) && total>column-properties.durRightBreak && limit==0) {
@@ -451,6 +516,11 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
             }
             result->runs.resize(keep);
             if(truncated) { result->info.endr=0; result->has_terminator=false; position=cp+cut; }
+            status=layout_tabs(*result,properties.durLeft,total); if(status) return status;
+            // Aligned fields can move after a wrap cuts their text. Do not
+            // silently return a line whose recomputed stop exceeds its column.
+            if(total>column-properties.durRightBreak && std::any_of(result->runs.begin(),result->runs.end(),
+                [](const Run& run) { return run.tab; })) return LS_NotImplemented;
             total=properties.durLeft; trailing=total;
             result->info.dvpAscent=result->info.dvpDescent=result->info.dvpMultiLineHeight=0;
             result->info.EffectsFlags=0;
@@ -559,13 +629,33 @@ extern "C" __declspec(dllexport) int WINAPI LoDisplayLine(void* handle,LSPOINT* 
     if(!origin || !clip) return LS_InvalidParameter;
     auto line=get_line(handle); if(!line) return LS_InvalidLine;
     auto& context=*line->context;
+    try {
     int x=origin->x+line->widths.upStartMainText;
     for(auto& run:line->runs) {
         LSPOINT point{x,origin->y};
         LsHeights height{run.metrics.dvAscent,run.metrics.dvDescent,run.metrics.dvMultiLineHeight};
         int status=0;
         if(!run.hidden) {
-            if(run.shaped) {
+            if(run.tab) {
+                if(run.leader && run.width) {
+                    if(!context.info.pfnDrawTextRun) return LS_NotImplemented;
+                    WCHAR leader=run.leader; int advance=0,measured=0,fitted=0;
+                    status=reinterpret_cast<Widths>(context.info.pfnGetRunCharWidths)(context.info.pols,
+                        static_cast<uint32_t>(run.id),0,&leader,1,INT_MAX,run.flow,&advance,&measured,&fitted);
+                    if(status) return status;
+                    if(fitted!=1 || advance<=0 || measured!=advance) return LS_InvalidFormatterResult;
+                    int count=run.width/advance;
+                    if(count>1048576) return LS_InvalidFormatterResult;
+                    if(count) {
+                        std::vector<WCHAR> text(count,leader);
+                        std::vector<int> widths(count,advance);
+                        int width=count*advance;
+                        LSPOINT first{x+(run.width-width)/2,origin->y};
+                        status=reinterpret_cast<DrawTextCallback>(context.info.pfnDrawTextRun)(context.info.pols,
+                            static_cast<uint32_t>(run.id),&first,text.data(),widths.data(),count,run.flow,mode,&first,&height,width,clip);
+                    }
+                }
+            } else if(run.shaped) {
                 if(!context.info.pfnDrawGlyphs) return LS_NotImplemented;
                 status=reinterpret_cast<DrawGlyphs>(context.info.pfnDrawGlyphs)(context.info.pols,static_cast<uint32_t>(run.id),
                     run.text.data(),run.clusters.data(),run.characters.data(),static_cast<int>(run.text.size()),run.glyphs.data(),
@@ -621,6 +711,7 @@ extern "C" __declspec(dllexport) int WINAPI LoDisplayLine(void* handle,LSPOINT* 
         x+=run.width;
     }
     return LS_None;
+    } catch(const std::bad_alloc&) { return LS_OutOfMemory; }
 }
 
 extern "C" __declspec(dllexport) int WINAPI LoEnumLine(void* handle,BOOL reverse,BOOL geometry,LSPOINT* origin) {
@@ -637,6 +728,14 @@ extern "C" __declspec(dllexport) int WINAPI LoEnumLine(void* handle,BOOL reverse
         auto& run=line->runs[position]; if(run.hidden) continue;
         LSPOINT point{starts[position],origin->y};
         LsHeights height{run.metrics.dvAscent,run.metrics.dvDescent,run.metrics.dvMultiLineHeight};
+        if(run.tab) {
+            if(!context.info.pfnEnumTab) return LS_NotImplemented;
+            int status=reinterpret_cast<EnumTabCallback>(context.info.pfnEnumTab)(context.info.pols,
+                static_cast<uint32_t>(run.id),run.cp,run.text.data(),run.leader,run.flow,
+                reverse!=FALSE,geometry!=FALSE,&point,&height,run.width);
+            if(status) return status;
+            continue;
+        }
         int status=reinterpret_cast<EnumText>(context.info.pfnEnumText)(context.info.pols,static_cast<uint32_t>(run.id),
             run.cp,static_cast<int>(run.text.size()),run.text.data(),static_cast<int>(run.text.size()),run.flow,
             reverse!=FALSE,geometry!=FALSE,&point,&height,run.width,run.shaped?1:0,run.widths.data(),

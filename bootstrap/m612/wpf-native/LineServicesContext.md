@@ -77,7 +77,19 @@ failures and invalid metrics propagate. Original managed drawing implements
 custom pens and underline/strikethrough/overline/baseline locations; public
 TextFormatter raster checks cover all four locations across compacting GC.
 
-Optimal/min-max formatting, inline objects, bidi reversal objects, tabs and
+Tabs are retained as individual layout runs. Explicit left/center/right/decimal/
+character stops align the following field across client runs; incremental stops
+continue after the last explicit stop. Tab caret/selection geometry retains the
+actual gap. Original EnumTab preserves source CP, leader and geometry, while
+leaders are measured and drawn using original text callbacks. The public test
+covers WPF's four exposed alignments, one-run/split fields, dotted leaders,
+incremental stops, ordinary wrapping and drawing/enumeration across GC. A wrap
+that cuts an aligned field and moves its stop beyond the column still returns
+NotImplemented; aligned-field wrapping needs a dedicated break strategy. Leaders
+currently repeat whole measured characters centered in the gap; exact legacy
+leader spacing and non-LTR tab behavior require further validation.
+
+Optimal/min-max formatting, inline objects, bidi reversal objects and
 justification remain unsupported and return explicit errors.
 Complete hit testing, RTL/nonmonotonic shaping clusters, full bidi and paragraph
 layout require further work. This does not establish full Line Services
