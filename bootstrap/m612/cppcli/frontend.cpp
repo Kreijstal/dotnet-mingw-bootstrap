@@ -1769,7 +1769,8 @@ class Emitter {
     bool pinned(QualType t) const { return record_annotated(t->getAsCXXRecordDecl(), "cli.pin"); }
     const Expr* interior_dereference(const Expr* expression) const {
         auto* call = dyn_cast<CXXOperatorCallExpr>(expression->IgnoreParenImpCasts());
-        if (!call || call->getOperator() != OO_Star || call->getNumArgs() != 1 ||
+        if (!call || !((call->getOperator()==OO_Star && call->getNumArgs()==1) ||
+            (call->getOperator()==OO_Subscript && call->getNumArgs()==2)) ||
             interior_element(call->getArg(0)->getType()).isNull()) return nullptr;
         return call->getArg(0);
     }
@@ -2560,7 +2561,16 @@ class Emitter {
     void address(const Expr* original) {
         const Expr* e = strip(original)->IgnoreParenImpCasts();
         if(auto* call=dyn_cast<CallExpr>(e);call && call->getDirectCallee() && annotated(call->getDirectCallee(),"cli.typed.box.address")) { this->call(call); return; }
-        if (auto* pointer = interior_dereference(e)) { expr(pointer); return; }
+        if (auto* pointer = interior_dereference(e)) {
+            expr(pointer);
+            auto* operation=cast<CXXOperatorCallExpr>(e);
+            if(operation->getOperator()==OO_Subscript) {
+                expr(operation->getArg(1)); op("conv.i",1,1);
+                op("ldc.i8 "+std::to_string(context.getTypeSizeInChars(interior_element(pointer->getType())).getQuantity()),0,1);
+                op("conv.i",1,1); op("mul",2,1); op("add",2,1);
+            }
+            return;
+        }
         if (auto* subscript = dyn_cast<ArraySubscriptExpr>(e)) { native_array_address(subscript); return; }
         if (auto* unary = dyn_cast<UnaryOperator>(e); unary && unary->getOpcode() == UO_Deref && native_pointer(unary->getSubExpr())) {
             expr(unary->getSubExpr()); return;
@@ -2859,7 +2869,7 @@ class Emitter {
         if (auto* pointer = interior_dereference(target)) {
             auto token = type(target->getType());
             unsigned value = temporary(token); op("stloc " + std::to_string(value), 1);
-            expr(pointer); op("ldloc " + std::to_string(value), 0, 1);
+            address(target); op("ldloc " + std::to_string(value), 0, 1);
             if (pinned(pointer->getType()) || target->getType().isVolatileQualified()) op("volatile.");
             op("stobj " + token, 2);
             if (retain) op("ldloc " + std::to_string(value), 0, 1); return;
@@ -3044,7 +3054,7 @@ class Emitter {
             if (auto* receiver = interior_dereference(target)) {
                 auto token = type(target->getType());
                 unsigned pointer = temporary(token + "&"), result = temporary(token);
-                expr(receiver); op("stloc " + std::to_string(pointer), 1);
+                address(target); op("stloc " + std::to_string(pointer), 1);
                 op("ldloc " + std::to_string(pointer), 0, 1);
                 if (pinned(receiver->getType()) || target->getType().isVolatileQualified()) op("volatile.");
                 op("ldobj " + token, 1, 1); apply(); op("stloc " + std::to_string(result), 1);
@@ -3372,6 +3382,11 @@ class Emitter {
             if (auto* member = dyn_cast<CXXMemberCallExpr>(c)) receiver = member->getImplicitObjectArgument();
             else if (auto* operation = dyn_cast<CXXOperatorCallExpr>(c)) receiver = operation->getArg(0);
             if (!receiver) fail(c, "managed pointer operation lacks a receiver");
+            if(auto* operation=dyn_cast<CXXOperatorCallExpr>(c); operation && operation->getOperator()==OO_Subscript) {
+                address(operation);
+                if(pinned(receiver->getType()) || interior_element(receiver->getType()).isVolatileQualified()) op("volatile.");
+                op("ldobj "+type(interior_element(receiver->getType())),1,1); return;
+            }
             expr(receiver);
             if (isa<CXXConversionDecl>(method) && pinned(receiver->getType()) && c->getType()->isPointerType() && !handle_target(c->getType())) {
                 if (interior_element(receiver->getType()).isConstQualified() && !c->getType()->getPointeeType().isConstQualified())
@@ -4031,7 +4046,7 @@ class Emitter {
                 if (auto* receiver = interior_dereference(u->getSubExpr())) {
                     auto token = type(u->getSubExpr()->getType());
                     unsigned pointer = temporary(token + "&"), old = temporary(token), result = temporary(token);
-                    expr(receiver); op("stloc " + std::to_string(pointer), 1);
+                    address(u->getSubExpr()); op("stloc " + std::to_string(pointer), 1);
                     op("ldloc " + std::to_string(pointer), 0, 1);
                     if (pinned(receiver->getType()) || u->getSubExpr()->getType().isVolatileQualified()) op("volatile.");
                     op("ldobj " + token, 1, 1); op("stloc " + std::to_string(old), 1);

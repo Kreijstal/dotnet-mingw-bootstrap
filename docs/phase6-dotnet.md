@@ -5453,3 +5453,61 @@ Diagnostic scope remains 49 original printing project inputs/66 tree C++ files.
 No complete System.Printing runtime DLL or WPF package is produced. Native
 import coverage remains 58/139; complete layout, printing runtime and
 WindowsDesktop SDK/targeting/runtime packaging remain required.
+
+## 61. Tracked interior indexing and the original GDI byte snapshot
+
+The 2026-10-13 continuation adds primitive interior_ptr/pin_ptr indexing to the
+intrinsic declarations and AST emitter. The selected C++ subscript remains an
+lvalue of the element type; its address adds a signed element-sized offset to
+the original CLR managed byref. Reads/stores use ldobj/stobj. Indexed addresses,
+compound updates and prefix/postfix operations capture the location once in a
+tracked byref local. Pin/volatile memory prefixes remain in use, and element
+const qualification is enforced by Clang rather than bypassed by the emitter.
+
+The fixture executes the original CachedGDIObject pattern: a constructor takes
+a const interior_ptr<Byte> object and copies its indexed bytes into an actual
+CLR byte array after collection. C# passes array-element byrefs. Signed negative
+offsets, 32-bit/64-bit/floating element strides, loads/stores, indexed tracking
+aliases, compound/prefix/postfix values, single index evaluation, byte narrowing,
+pinned operations and independent copied storage pass across GC calls. All
+fixture managed methods/constructors are prepared in the source-built runtime.
+Element-const writes are rejected. Existing concurrent compacting-GC string and
+native-array pinning checks also pass.
+
+The original printing gate now imports actual Stack, ImageBrush,
+StyleSimulations, MatrixTransform, StreamGeometry, GeometryGroup, Freezable and
+Animatable metadata needed by the drawing code. The base metadata restores
+Geometry's inherited Object API. ILegacyDevice remains the original source
+interface in LegacyDevice.hpp; it is not an imported replacement. With these
+source signatures available, the earlier legacy-device conversion/member
+errors are absent. The private source preparation restores the Windows min/max
+macro definitions that trusted MinGW minwindef.h omits in C++ mode; it retains
+Windows evaluation behavior rather than introducing new helper implementations.
+
+Commands on win11 use the source SDK/ilasm/M612/CLANG64 and WPF environment
+recorded in §57:
+
+```bash
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-interior-indexing test-pinning
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh build-directwrite check-directwrite-assembly printing-gate
+```
+
+The focused runtime/rejection and pinning checks pass with zero C# warnings or
+errors. Complete DirectWrite generation/assembly still loads 85 types, prepares
+283 managed bodies and finds 81 font families. The final printing gate **fails**
+first at utils.cpp:350's Matrix multiplication operator. Subsequent failures
+include more drawing metadata and native BITMAPINFO interior-pointer arrow
+access. The previous byte indexing, Stack/ImageBrush/style/geometry base,
+legacy-device conversion and min/max errors are absent. No original bodies are
+removed or replaced with stubs.
+
+Managed pointer indexing has low-level pointer semantics: callers supply valid
+ranges, rather than retaining CLR array bounds on every index. Native/managed
+record elements, arrow access, general pointer arithmetic and broader interior
+return provenance remain unfinished. Evidence is archived locally under
+`tmp/wpf8-support/validation/printing-interior-index-20261013`. Diagnostic scope
+remains 49 original printing project inputs/66 tree C++ files; no complete
+System.Printing runtime DLL or WPF package is produced. Native import coverage
+remains 58/139. Full layout, printing runtime and WindowsDesktop
+SDK/targeting/runtime packaging remain required.

@@ -45,6 +45,10 @@ def main():
     # otherwise rewrites the property to DocumentEventW; native declarations
     # and the literal P/Invoke entry point remain intact.
     header.write_text(header.read_text()+"\n#ifdef DocumentEvent\n#undef DocumentEvent\n#endif\n")
+    # MinGW suppresses the Windows min/max macros in C++ mode. The original
+    # printing code relies on those macros; restore their Windows semantics
+    # only where the trusted SDK did not define them.
+    header.write_text(header.read_text()+"\n#ifndef min\n#define min(a,b) (((a)<(b))?(a):(b))\n#endif\n#ifndef max\n#define max(a,b) (((a)>(b))?(a):(b))\n#endif\n")
     sdk_probe=work/"sdk-property-probe.cpp"
     sdk_probe.write_text("#include <windows.h>\n#include <winspool.h>\nPrintPropertyValue value;\nPrintPropertiesCollection collection;\n")
     missing_properties=subprocess.run(["/clang64/bin/clang++.exe","-fsyntax-only",win(sdk_probe)],
@@ -205,6 +209,10 @@ def main():
               "System.Windows.Media.PixelFormat", "System.Windows.Media.Transform",
               "System.Windows.Media.SolidColorBrush", "System.Windows.Media.PenLineCap",
               "System.Windows.Media.PenLineJoin"]
+    types += ["System.Collections.Stack", "System.Windows.Media.ImageBrush", "System.Windows.Media.StyleSimulations",
+              "System.Windows.Media.MatrixTransform", "System.Windows.Media.StreamGeometry",
+              "System.Windows.Media.GeometryGroup", "System.Windows.Freezable",
+              "System.Windows.Media.Animation.Animatable"]
     for name in types:
         command += ["--type", name]
     command += ["--source-type", "System.Printing.PrintQueue"]
@@ -222,7 +230,8 @@ def main():
         "treeCppCount": tree_count,
         "portPreparation": ["MinGW skips temporary MSVC code-analysis include", "disable MSVC banned-API static analysis",
                             "map legacy copied-SDK annotations to trusted MinGW SAL2 spellings",
-                            "remove MinGW DocumentEvent macro collision with original managed property"],
+                            "remove MinGW DocumentEvent macro collision with original managed property",
+                            "restore Windows min/max macros omitted by MinGW in C++ mode"],
         "legacySalAliases": legacy_sal,
         "missingSdkFlags": flags,
         "missingPrintPropertyTypes": missing_properties,

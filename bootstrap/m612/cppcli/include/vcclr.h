@@ -9,6 +9,7 @@ template<class T> class __attribute__((annotate("cli.interior"))) interior_ptr {
 public:
     interior_ptr(T*);
     T& operator*() const;
+    T& operator[](long long) const;
 };
 template<class T> class __attribute__((annotate("cli.pin"))) pin_ptr {
 public:
@@ -21,6 +22,7 @@ public:
     // explicit prevents unrelated pointer types from matching native overloads.
     template<class U> explicit operator U*() const;
     T& operator*() const;
+    T& operator[](long long) const;
 };
 }
 using cli::pin_ptr;

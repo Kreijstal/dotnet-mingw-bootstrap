@@ -1905,6 +1905,19 @@ int main() { int value = StaticAccessorAccess::WriteOnly; return value; }' 'stat
 int main() { return StaticAccessorAccess::get_Hidden(); }' 'protected member' --type StaticAccessorAccess
   log "PASS test-static-properties: CLR static properties, imported read/write and framework getters"
 }
+step_test-interior-indexing() {
+  compile "$(cygpath -m "$src/tests/interior-indexing.cpp")" --target library --type System.GC \
+    -o "$(cygpath -m "$testdir/interior-indexing.dll")"
+  mkdir -p "$testdir/interior-indexing-consumer"
+  cp "$src/tests/InteriorIndexingConsumer.cs" "$testdir/interior-indexing-consumer/Program.cs"
+  cat > "$testdir/interior-indexing-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="interior-indexing"><HintPath>../interior-indexing.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/interior-indexing-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/interior-indexing-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case interior-index-const 'int main() { const wchar_t* native=L"text"; interior_ptr<const wchar_t> chars=PtrToStringChars(__cli_literal(L"text")); chars[0]=65; return 0; }' 'returns a const value'
+}
 step_test-nativeints() {
   log "CLR native integers, primitive pointer metadata and WPF Marshal.Copy pattern"
   local references=("$CPPCLI_SDK"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)

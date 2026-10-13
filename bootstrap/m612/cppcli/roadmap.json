@@ -98,7 +98,8 @@
         "Object argument boxing filters impossible scalar/reference-class alternatives; typed and null alternatives retain normal Sema",
         "Unary percent value-class box copies and resolved local String/Object copy initialization",
         "Explicit native-integer raw pointer casts, recognized source inherited property accessor/delegate lookup and automatic guarded pointer intrinsics",
-        "Imported enum-valued constant facades retain typed CLR metadata and correct native C++ initialization"
+        "Imported enum-valued constant facades retain typed CLR metadata and correct native C++ initialization",
+        "Tracked primitive interior/pinned pointer indexing, indexed addresses and captured update operations with signed/wide strides and moving-GC runtime checks"
       ],
       "remaining": [
         "implicit boxing into interfaces and complete boxed-handle/primitive-member conversions",
@@ -111,7 +112,7 @@
         "for each with unbraced bodies, tracking-reference variables and value/native enumerators",
         "general CLI source implicit conversion/cast selection and complete conversion-operator discovery"
       ],
-      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values test-tracking test-pinning test-boxed-values test-static-fields test-static-properties test-nativeints test-layout test-switch test-generics test-indexers test-named-overrides test-each test-com test-delegates test-type-tokens test-constructors test-paramarrays test-primitive-statics test-guid-object-boxing test-managed-templates test-nested-indexers test-native-storage test-destructors test-value-pointers test-events test-multicast test-semantic-literals test-conversions test-combined-access test-argument-files test-implicit-boxing test-source-owned-types test-scalar-boxes test-printing-accessors test-nested-imports test-primitive-array-apis"
+      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values test-tracking test-pinning test-boxed-values test-static-fields test-static-properties test-nativeints test-layout test-switch test-generics test-indexers test-named-overrides test-each test-com test-delegates test-type-tokens test-constructors test-paramarrays test-primitive-statics test-guid-object-boxing test-managed-templates test-nested-indexers test-native-storage test-destructors test-value-pointers test-events test-multicast test-semantic-literals test-conversions test-combined-access test-argument-files test-implicit-boxing test-source-owned-types test-scalar-boxes test-printing-accessors test-nested-imports test-primitive-array-apis test-interior-indexing"
     },
     {
       "stage": 4,
