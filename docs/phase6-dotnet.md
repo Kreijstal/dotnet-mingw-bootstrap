@@ -6776,3 +6776,40 @@ Bash/JSON syntax and whitespace checks pass. Evidence is archived under
 without per-file compile counts. Native text coverage stays 58/139; full printing,
 layout/text and WindowsDesktop SDK/reference/runtime packaging remain required.
 The WPF packaging goal stays active.
+
+
+## 86. Interior pointer assignment and tracked rebinding
+
+The 2026-10-13 continuation handles interior pointer copy assignment through
+Clang's selected operator. Local/parameter pointer slots store the existing CLR
+byref value and retain the assignment expression result; no referent copy or
+native pointer conversion is introduced. Pin-variable assignment retains its
+previous dedicated block-local handling.
+
+The consumer checks rebinding a local from one array to another, retaining an
+independent alias to the first array, and reassigning a copied parameter without
+changing the caller's pointer. Mutations after GC reach the correct arrays. The
+original RenderGlyphRun-shaped Char-array to ushort interior view assignment
+retains its location across GC. Existing interior indexing/stride/update/const
+rejection checks pass.
+
+Validation on win11 with the standard compiler/WPF environment:
+
+```sh
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-interior-assignment test-interior-indexing
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh printing-gate
+```
+
+The focused rebuild/runtime/rejection command passes. Printing passes Clang
+parsing/Sema and advances beyond RenderGlyphRun's interior assignments. It next
+fails at CreateFontCached (gditextrt.cpp:791), where a native inline face-name
+array reached through an interior record initializes a pin_ptr. Its Clang array-
+to-pointer decay must retain provenance during constructor lowering. No complete
+printing IL/DLL or printing runtime proof is produced.
+
+Bash/JSON syntax and whitespace checks pass. Evidence is archived under
+`tmp/wpf8-support/validation/printing-interior-assignment-20261013`. Scope remains
+all 49 original project inputs/66 tree C++ files in the combined diagnostic gate,
+without per-file compile counts. Native coverage stays 58/139; full printing,
+layout/text and WindowsDesktop SDK/reference/runtime packaging remain required.
+The WPF packaging goal stays active.

@@ -604,6 +604,17 @@ int main() { CombinedAccess^ c=gcnew CombinedAccess(); return c->OrMethod(); }' 
   reject_case combined-foreign-and '#using "combined-access.dll"
 public ref class Foreign : CombinedAccess { public: int Read() { return AndMethod(); } }; int main() { return 0; }' 'undeclared identifier' --type CombinedAccess
 }
+step_test-interior-assignment() {
+  compile "$(cygpath -m "$src/tests/interior-assignment.cpp")" --target library --type System.GC -o "$(cygpath -m "$testdir/interior-assignment.dll")"
+  mkdir -p "$testdir/interior-assignment-consumer"
+  cp "$src/tests/InteriorAssignmentConsumer.cs" "$testdir/interior-assignment-consumer/Program.cs"
+  cat > "$testdir/interior-assignment-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="interior-assignment"><HintPath>../interior-assignment.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/interior-assignment-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/interior-assignment-consumer/bin/Debug/net8.0/consumer.dll")"
+}
 step_test-managed-sizeof() {
   local refs=("$CPPCLI_SDK"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
   local args=(--type System.Runtime.InteropServices.StructLayoutAttribute --type System.Runtime.InteropServices.LayoutKind

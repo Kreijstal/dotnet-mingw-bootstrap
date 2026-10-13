@@ -3609,6 +3609,14 @@ class Emitter {
             if (auto* member = dyn_cast<CXXMemberCallExpr>(c)) receiver = member->getImplicitObjectArgument();
             else if (auto* operation = dyn_cast<CXXOperatorCallExpr>(c)) receiver = operation->getArg(0);
             if (!receiver) fail(c, "managed pointer operation lacks a receiver");
+            if(auto* assignment=dyn_cast<CXXOperatorCallExpr>(c);assignment && assignment->getOperator()==OO_Equal) {
+                auto* reference=dyn_cast<DeclRefExpr>(receiver->IgnoreParenImpCasts());
+                auto* variable=reference ? dyn_cast<VarDecl>(reference->getDecl()) : nullptr;
+                if(assignment->getNumArgs()!=2 || !variable ||
+                    (!isa<ParmVarDecl>(variable) && !variable->hasLocalStorage()))
+                    fail(c,"interior assignment requires a local or parameter");
+                expr(assignment->getArg(1)); store(receiver,true); return;
+            }
             if(auto* operation=dyn_cast<CXXOperatorCallExpr>(c); operation &&
                (operation->getOperator()==OO_PlusEqual || operation->getOperator()==OO_MinusEqual ||
                 operation->getOperator()==OO_PlusPlus || operation->getOperator()==OO_MinusMinus)) {
