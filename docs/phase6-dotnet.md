@@ -6062,3 +6062,61 @@ Diagnostic scope retains all 49 original project inputs/66 tree C++ files, with
 no per-file compile count. Native text coverage remains 58/139. Full text/layout,
 printing and WindowsDesktop SDK/reference/runtime packaging remain required;
 no completed WPF package is produced and the full goal stays active.
+
+
+## 71. Nested delegates and metadata-derived automatic event signatures
+
+The 2026-10-13 continuation emits source delegates nested in ordinary ref-class
+owners using the existing record nesting model. The delegate class uses its
+local name inside the actual owner block, with nested public/private/family
+visibility. References and method bindings retain the full CLR owner path.
+Deeper ref-class nesting is supported; generic delegates and generic/value/
+native owners remain rejected. Delegate runtime constructor/Invoke slots remain
+unchanged. Imported nested delegate binding remains unverified.
+
+The fixture verifies two same-named delegates under different owner depths,
+actual DeclaringType/MulticastDelegate identity, public/private/protected access,
+source and C# static/instance/private/byref calls and target retention after
+compacting GC. Source private type access is rejected. The first fixture used an
+unqualified instance method address, which ordinary Clang rejects; using the
+required qualified address fixes it. Original global/imported/virtual/native
+callback and multicast delegate checks still pass.
+
+The printing gate then exposed an automatic-event signature problem: imported
+Invoke metadata rendered Object parameters as C++ surrogate stars in newly
+generated source. The unchanged native-pointer validator correctly rejected
+those stars. CliType metadata now includes source spelling derived from its
+actual reference/array/byref/generic kind, preserving caret/percent sigils and
+native pointer spelling. Automatic event generation uses that spelling while
+metadata facades and actual CLR signatures retain their previous Cpp/Il forms.
+A real imported EventHandler automatic event now validates C# subscription,
+source raise, exact sender/EventArgs identity and removal. Existing automatic/
+custom/virtual/byref/imported event checks and access rejection checks pass.
+
+Validation on win11 with the standard compiler/WPF environment:
+
+```sh
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-nested-delegates test-delegates
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-nested-delegates test-delegates
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-nested-delegates test-events
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh build-directwrite check-directwrite-assembly printing-gate
+```
+
+The initial build exposes the fixture address qualification noted above. Both
+subsequent focused suites pass. The final WPF command passes DirectWrite's
+85 types, 283 prepared bodies and 81-font-family runtime scope. Printing passes
+Clang parsing/Sema and advances past nested delegates and generated event
+signatures. It fails next with `returning tracking references is not enabled
+yet`; the original GeometryProxy.GetGeometryData declaration/body returns its
+managed _data field by tracking reference and needs that lowering. No reference
+return restriction was silently removed and no complete printing IL/DLL is
+produced.
+
+Bash/JSON syntax and whitespace checks pass. Logs, manifests and actual runtime
+artifacts are archived locally under
+`tmp/wpf8-support/validation/printing-nested-delegates-20261013`. Scope remains
+all 49 original project inputs/66 tree C++ files as a combined diagnostic gate,
+without a per-file compile count. Native coverage stays 58/139. Full printing
+lowering/link/runtime, full text/layout and WindowsDesktop SDK/reference/runtime
+packaging remain required. No completed WPF package is produced; the full goal
+stays active.

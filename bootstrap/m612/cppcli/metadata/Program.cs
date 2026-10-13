@@ -13,6 +13,13 @@ record CliType(string Il, string Cpp, string Kind, string Name = "") {
     public string[] Modifiers { get; init; } = Array.Empty<string>();
     public CliType? Element { get; init; }
     public CliType[] Arguments { get; init; } = Array.Empty<CliType>();
+    public string SourceCpp => Kind switch {
+        "ref" => Cpp.TrimEnd('*')+"^",
+        "array" when Element!=null => "::cli::array<"+Element.SourceCpp+">^",
+        "byref" when Element!=null => Element.SourceCpp+"%",
+        "generic" when Element!=null => SignatureTypes.CppName(Name)+"<"+string.Join(", ",Arguments.Select(t=>t.SourceCpp))+">"+(Element.Kind=="ref" ? "^" : ""),
+        _ => Cpp
+    };
 }
 record CliMethod(string Id, string Name, bool Static, CliType Return, CliType[] Parameters,
                  bool Supported, int GenericArity, bool Virtual, bool Abstract, bool Final, string Access) {

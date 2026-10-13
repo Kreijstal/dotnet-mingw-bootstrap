@@ -604,6 +604,20 @@ int main() { CombinedAccess^ c=gcnew CombinedAccess(); return c->OrMethod(); }' 
   reject_case combined-foreign-and '#using "combined-access.dll"
 public ref class Foreign : CombinedAccess { public: int Read() { return AndMethod(); } }; int main() { return 0; }' 'undeclared identifier' --type CombinedAccess
 }
+step_test-nested-delegates() {
+  compile "$(cygpath -m "$src/tests/nested-delegates.cpp")" --target library \
+    --type System.Delegate --type System.MulticastDelegate --type System.GC --type System.EventHandler --type System.EventArgs \
+    -o "$(cygpath -m "$testdir/nested-delegates.dll")"
+  mkdir -p "$testdir/nested-delegates-consumer"
+  cp "$src/tests/NestedDelegatesConsumer.cs" "$testdir/nested-delegates-consumer/Program.cs"
+  cat > "$testdir/nested-delegates-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="nested-delegates"><HintPath>../nested-delegates.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/nested-delegates-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/nested-delegates-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case nested-delegate-access 'public ref class Owner { delegate int Hidden(int value); }; int main() { Owner::Hidden^ value=nullptr; return 0; }' 'private member' --type System.MulticastDelegate --type System.Delegate
+}
 step_test-field-marshalling() {
   /clang64/bin/clang++.exe -std=c++17 -shared -O2 "$src/tests/field-marshalling-native.cpp" -o "$testdir/field-marshalling-native.dll"
   compile "$(cygpath -m "$src/tests/field-marshalling.cpp")" --target library \

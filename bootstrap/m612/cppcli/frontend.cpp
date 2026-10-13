@@ -212,8 +212,11 @@ struct Metadata {
                     m.getObject("Return")->getString("Il")->str(), {}, m.getBoolean("Static").value_or(false), m.getBoolean("Abstract").value_or(false)};
                 for (auto& p : *m.getArray("Parameters")) im.parameters.push_back(p.getAsObject()->getString("Il")->str());
                 if (c.getString("Base").value_or("") == "System.MulticastDelegate" && im.name == "Invoke") {
-                    DelegateSignature signature{m.getObject("Return")->getString("Cpp")->str(), {}};
-                    for (auto& p : *m.getArray("Parameters")) signature.parameters.push_back(p.getAsObject()->getString("Cpp")->str());
+                    auto spelling=[](const llvm::json::Object* type) {
+                        return type->getString("SourceCpp").value_or(*type->getString("Cpp")).str();
+                    };
+                    DelegateSignature signature{spelling(m.getObject("Return")), {}};
+                    for (auto& p : *m.getArray("Parameters")) signature.parameters.push_back(spelling(p.getAsObject()));
                     std::string cpp_name = name;
                     for (size_t pos=0; (pos=cpp_name.find('.',pos))!=std::string::npos;pos+=2) cpp_name.replace(pos,1,"::");
                     delegates[cpp_name]=signature;
@@ -4639,7 +4642,10 @@ public:
             if (auto* invoke = delegate_invoke(r)) {
                 for (auto* attr : r->specific_attrs<AnnotateAttr>()) if (attr->getAnnotation().starts_with("cli.com."))
                     throw std::runtime_error("interop attributes on delegate declarations are not enabled yet");
-                if (isa<CXXRecordDecl>(r->getDeclContext()) || isa<ClassTemplateSpecializationDecl>(r)) throw std::runtime_error("nested/generic delegate declarations are not enabled yet");
+                if(isa<ClassTemplateSpecializationDecl>(r)) throw std::runtime_error("generic delegate declarations are not enabled yet");
+                for(auto* owner=dyn_cast<CXXRecordDecl>(r->getDeclContext());owner;owner=dyn_cast<CXXRecordDecl>(owner->getDeclContext()))
+                    if(isa<ClassTemplateSpecializationDecl>(owner) || !record_annotated(owner,"cli.ref"))
+                        throw std::runtime_error("nested delegates require ordinary source ref-class owners");
                 if (invoke->isVariadic() || invoke->getReturnType()->isReferenceType()) throw std::runtime_error("variadic/byref-return delegates are not enabled yet");
                 type(invoke->getReturnType()); validate_declarator(invoke->getTypeSourceInfo());
                 for (auto* p : invoke->parameters()) { parameter_signature(p); validate_declarator(p->getTypeSourceInfo()); }
@@ -5031,8 +5037,13 @@ public:
                 << "    ldarg.0\n    ldc.i4.0\n    callvirt instance void " << record_token(r) << "::Dispose(bool)\n    ret\n  }\n";
         };
         std::function<void(const CXXRecordDecl*)> emit_record = [&](const CXXRecordDecl* r) {
+            auto* enclosing = dyn_cast<CXXRecordDecl>(r->getDeclContext());
+            auto name = record_name(r);
+            if (enclosing) name = name.substr(record_name(enclosing).size() + 1);
+            auto visibility = enclosing ? (r->getAccess() == AS_private ? "nested private " : r->getAccess() == AS_protected ? "nested family " : "nested public ") :
+                (annotation(r, "cli.visibility:") == "private" ? "private " : "public ");
             if (auto* invoke = delegate_invoke(r)) {
-                il << ".class " << (annotation(r, "cli.visibility:") == "private" ? "private" : "public") << " auto ansi sealed " << record_name(r)
+                il << ".class " << visibility << "auto ansi sealed " << name
                    << " extends [System.Runtime]System.MulticastDelegate {\n"
                    << "  .method public hidebysig specialname rtspecialname instance void .ctor(object, native int) runtime managed {}\n"
                    << "  .method public hidebysig newslot virtual instance " << type(invoke->getReturnType()) << " Invoke(";
@@ -5042,11 +5053,6 @@ public:
             }
             auto* parent = class_base(r);
             auto layout = layout_kind(r), charset = layout_constant(r, "cli.layout.CharSet", 1);
-            auto* enclosing = dyn_cast<CXXRecordDecl>(r->getDeclContext());
-            auto name = record_name(r);
-            if (enclosing) name = name.substr(record_name(enclosing).size() + 1);
-            auto visibility = enclosing ? (r->getAccess() == AS_private ? "nested private " : r->getAccess() == AS_protected ? "nested family " : "nested public ") :
-                (annotation(r, "cli.visibility:") == "private" ? "private " : "public ");
             il << ".class " << visibility << (is_interface(r) ? "interface abstract " :
                 std::string(layout == 2 ? "explicit " : layout == 0 ? "sequential " : "auto ") + (charset == 3 ? "unicode " : charset == 4 ? "autochar " : "ansi "))
                << (!is_interface(r) && (annotated(r, "cli.abstract") || r->isAbstract()) ? "abstract " : "")
