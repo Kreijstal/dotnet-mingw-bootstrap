@@ -6223,3 +6223,51 @@ Bash/JSON syntax and git whitespace checks pass. Evidence is archived under
 no per-file compile count or complete System.Printing DLL is claimed. Native
 text coverage stays 58/139. Full printing/native text/layout and WindowsDesktop
 SDK/reference/runtime packaging remain unfinished; the goal stays active.
+
+
+## 74. Persistent static-local storage and initialization
+
+The 2026-10-13 continuation gives ordinary static locals private CLR holder
+fields, including a lazily created lock and initialization flag. Declaration
+execution acquires Monitor, evaluates the initializer only on the first reaching
+call, stores the persistent value, and releases Monitor in a CLR finally handler.
+An initializer exception leaves the flag clear so a later call can retry. The
+initializer retains its actual source receiver/argument context; it is not moved
+into a type initializer. Distinct lexical declarations receive distinct holders.
+Reads, writes and addresses use the holder field; eligible direct static-local
+tracking returns retain actual CLR heap byrefs. Zero-initialized declarations
+preserve subsequent mutations across calls.
+
+The fixture checks sixteen simultaneous first callers and exactly one initializer,
+first argument and first receiver caching, exceptions followed by retry from a
+different thread, distinct scopes, zero/persistent scalar storage, managed String
+identity and a value containing managed references. Returned static field/value
+byrefs survive twenty forced compacting collections. Existing exception and
+tracking-return suites pass. TLS, static tracking aliases, native arrays and
+storage requiring deterministic native cleanup are rejected. General recursive
+initializer behavior remains unsupported. Monitor metadata must be explicitly
+imported; each declaration currently acquires its lock even after initialization.
+
+Validation on win11 with the standard compiler/WPF environment:
+
+```sh
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-static-locals
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-static-locals test-tracking-returns test-exceptions
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh build-directwrite check-directwrite-assembly printing-gate
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-static-locals
+```
+
+The compiler rebuild and focused suites pass, including the final cross-thread
+retry consumer. DirectWrite retains its 85-type/283-prepared-body/81-font-family
+runtime proof. Printing passes the original IsXpsOMPrintingSupported static
+local and advances to PrintQueue.cpp:3398, where an if condition declares its
+String handle. The next failure is `if initializer is not supported yet`; the
+combined printing gate still does not produce a full IL/DLL.
+
+Bash/JSON syntax and whitespace checks pass. Evidence is archived under
+`tmp/wpf8-support/validation/printing-static-locals-20261013`. Scope remains all
+49 original project inputs/66 tree C++ files in the combined diagnostic gate,
+without a per-file pass count. Native coverage stays 58/139; full printing,
+layout/text and WindowsDesktop SDK/reference/runtime packaging remain required.
+The WPF packaging goal stays active.

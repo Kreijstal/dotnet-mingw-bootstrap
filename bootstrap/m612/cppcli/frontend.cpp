@@ -1693,6 +1693,7 @@ class Emitter {
     std::set<const FunctionDecl*> seen;
     std::set<const CXXRecordDecl*> seen_records;
     std::map<const VarDecl*, unsigned> locals;
+    std::map<const VarDecl*, std::string> static_locals;
     std::map<const ParmVarDecl*, unsigned> parameters;
     std::ostringstream code;
     FunctionDecl* current = nullptr;
@@ -2112,7 +2113,7 @@ class Emitter {
         if(array_subscript(e)) return true;
         if(auto* ref=dyn_cast<DeclRefExpr>(e)) {
             auto* variable=dyn_cast<VarDecl>(ref->getDecl());
-            return variable && variable->isStaticDataMember();
+            return variable && (variable->isStaticDataMember() || static_locals.count(variable));
         }
         if(auto* member=dyn_cast<MemberExpr>(e);member && isa<FieldDecl>(member->getMemberDecl())) {
             if(auto* owner=handle_target(member->getBase()->getType());owner && !record_annotated(owner,"cli.value") &&
@@ -2506,6 +2507,7 @@ class Emitter {
         return (imported == metadata.fields.end() ? declared_type(f) : imported->second.type) + " " + record_token(parent) + "::'" + f->getNameAsString() + "'";
     }
     std::string static_field_signature(const VarDecl* f) const {
+        if(auto found=static_locals.find(f);found!=static_locals.end()) return declared_type(f)+" "+found->second+"::'value'";
         if (!f->isStaticDataMember()) throw std::runtime_error("static storage requires a managed class field");
         auto imported = metadata.fields.find(annotation(f, "cli.import.field:"));
         return (imported == metadata.fields.end() ? declared_type(f) : imported->second.type) + " " + record_token(cast<CXXRecordDecl>(f->getDeclContext())) + "::'" + f->getNameAsString() + "'";
@@ -2751,7 +2753,7 @@ class Emitter {
             else if (auto* v = dyn_cast<VarDecl>(d->getDecl())) {
                 if (annotated(v, "cli.readonly")) fail(e, "readonly imported fields cannot be passed by writable reference");
                 if (!annotation(v, "cli.import.constant:").empty()) fail(e, "imported literals have no addressable CLR storage");
-                if (v->isStaticDataMember()) op("ldsflda " + static_field_signature(v), 0, 1);
+                if (v->isStaticDataMember() || static_locals.count(v)) op("ldsflda " + static_field_signature(v), 0, 1);
                 else op(std::string(v->getType()->isReferenceType() ? "ldloc " : "ldloca ") + std::to_string(locals.at(v)), 0, 1);
             }
             else fail(e, "value address requires a local or parameter");
@@ -2922,7 +2924,7 @@ class Emitter {
                 op(found->second.constant, 0, 1); return;
             }
             if (!annotation(v, "cli.static.property:").empty()) { op("call " + signature(static_property_method(v, false)), 0, 1); return; }
-            if (v->isStaticDataMember()) { op("ldsfld " + static_field_signature(v), 0, 1); return; }
+            if (v->isStaticDataMember() || static_locals.count(v)) { op("ldsfld " + static_field_signature(v), 0, 1); return; }
             auto it = locals.find(v);
             if (it == locals.end()) fail(at, "global/static storage is not supported yet");
             op("ldloc " + std::to_string(it->second), 0, 1); if (v->getType()->isReferenceType()) op("ldobj " + reference_element_type(v->getType()->getPointeeType()), 1, 1); return;
@@ -3099,7 +3101,7 @@ class Emitter {
         if (retain) op("dup", 1, 2);
         if (auto* p = dyn_cast<ParmVarDecl>(d->getDecl())) op("starg " + std::to_string(parameters.at(p)), 1);
         else if (auto* v = dyn_cast<VarDecl>(d->getDecl())) {
-            if (v->isStaticDataMember()) op("stsfld " + static_field_signature(v), 1);
+            if (v->isStaticDataMember() || static_locals.count(v)) op("stsfld " + static_field_signature(v), 1);
             else op("stloc " + std::to_string(locals.at(v)), 1);
         }
         else fail(target, "unsupported assignment target");
@@ -4407,6 +4409,29 @@ class Emitter {
         return variable && variable->getType()->isPointerType() &&
             record_annotated(variable->getType()->getPointeeType()->getAsCXXRecordDecl(), "cli.finally");
     }
+    std::string monitor_method(const std::string& name) const {
+        for(const auto& entry:metadata.methods) {
+            const auto& method=entry.second;
+            if(method.owner=="System.Threading.Monitor" && method.name==name && method.is_static && method.parameters==std::vector<std::string>{"object"})
+                return imported_signature(method);
+        }
+        throw std::runtime_error("static locals require imported System.Threading.Monitor Enter/Exit metadata");
+    }
+    void initialize_static_local(const VarDecl* variable) {
+        auto holder=static_locals.at(variable), ready=label(), done=label();
+        op("ldsfld object "+holder+"::'gate'",0,1);
+        op("call "+monitor_method("Enter"),1);
+        code << "    .try {\n"; ++exception_depth;
+        op("ldsfld bool "+holder+"::'initialized'",0,1); op("brtrue "+ready,1);
+        if(variable->hasInit()) {
+            pointer_value(variable->getInit(),variable); op("stsfld "+static_field_signature(variable),1);
+        }
+        op("ldc.i4.1",0,1); op("stsfld bool "+holder+"::'initialized'",1);
+        mark(ready); op("leave "+done); --exception_depth;
+        code << "    } finally {\n";
+        op("ldsfld object "+holder+"::'gate'",0,1); op("call "+monitor_method("Exit"),1); op("endfinally");
+        code << "    }\n"; mark(done);
+    }
     void collect_locals(const Stmt* s) {
         if (!s) return;
         if (auto* handler = dyn_cast<CXXCatchStmt>(s)) if (!finally_handler(handler)) {
@@ -4418,10 +4443,21 @@ class Emitter {
         }
         if (auto* ds = dyn_cast<DeclStmt>(s)) for (auto* d : ds->decls()) {
             auto* v = dyn_cast<VarDecl>(d);
-            if (!v || v->isStaticLocal()) fail(s, "unsupported local declaration");
+            if (!v) fail(s, "unsupported local declaration");
             validate_interop_attributes(v, 0);
             variable_type(v);
             validate_declarator(v->getTypeSourceInfo());
+            if(v->isStaticLocal()) {
+                auto type=v->getType();
+                auto* record=type->getAsCXXRecordDecl();
+                if(v->getTLSKind()!=VarDecl::TLS_None || type->isReferenceType() || type->isArrayType() || pinned(type) ||
+                   !interior_element(type).isNull() || (record && record_annotated(record,"cli.ref")) ||
+                   (record && !value_target(type) && !native_pod(type)))
+                    fail(s,"static locals require ordinary scalar, handle, managed value or trivial native POD storage; TLS, byrefs, arrays and deterministic native cleanup are unsupported");
+                monitor_method("Enter"); monitor_method("Exit");
+                if(!static_locals.count(v)) static_locals.emplace(v,"'__cli_static_"+std::to_string(static_locals.size())+"'");
+                continue;
+            }
             locals.emplace(v, locals.size());
         }
         for (auto* child : s->children()) collect_locals(child);
@@ -4446,6 +4482,7 @@ class Emitter {
         else if (auto* d = dyn_cast<DeclStmt>(s)) {
             for (auto* decl : d->decls()) {
                 auto* v = cast<VarDecl>(decl);
+                if(v->isStaticLocal()) { initialize_static_local(v); continue; }
                 // Every emitted method already uses .locals init, matching
                 // WPF's /clr:initLocals: zero once on method entry. A declaration
                 // without an initializer does not reset storage on loop re-entry.
@@ -5039,6 +5076,15 @@ public:
         for (auto* function : selected_native_imports) system_libraries.insert(native_imports.at(function->getNameAsString()).library);
         for(auto* function:functions) if(annotated(function,"cli.dllimport")) system_libraries.insert(dllimport_string(function,"cli.dllimport"));
         for (const auto& library : system_libraries) il << ".module extern '" << library << "'\n";
+        for(const auto& [variable,holder]:static_locals) {
+            il << ".class private auto ansi sealed " << holder << " extends [System.Runtime]System.Object {\n"
+               << "  .field assembly static " << declared_type(variable) << " 'value'\n"
+               << "  .field assembly static bool 'initialized'\n"
+               << "  .field assembly static object 'gate'\n"
+               << "  .method private hidebysig specialname rtspecialname static void '.cctor'() cil managed {\n"
+               << "    .maxstack 1\n    newobj instance void [System.Runtime]System.Object::.ctor()\n"
+               << "    stsfld object " << holder << "::'gate'\n    ret\n  }\n}\n";
+        }
         for (const auto& entry : guid_constants) {
             const auto& constant = entry.second;
             il << ".data '" << constant.name << "_data' = bytearray (" << constant.bytes << ")\n"

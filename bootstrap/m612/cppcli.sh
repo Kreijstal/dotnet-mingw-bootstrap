@@ -604,6 +604,24 @@ int main() { CombinedAccess^ c=gcnew CombinedAccess(); return c->OrMethod(); }' 
   reject_case combined-foreign-and '#using "combined-access.dll"
 public ref class Foreign : CombinedAccess { public: int Read() { return AndMethod(); } }; int main() { return 0; }' 'undeclared identifier' --type CombinedAccess
 }
+step_test-static-locals() {
+  local refs=("$CPPCLI_SDK"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
+  local args=(--type System.Threading.Monitor --type System.Threading.Interlocked --type System.Threading.Thread
+    --type System.GC --type System.ArgumentException
+    --reference "$(cygpath -m "${refs[-1]}/System.Threading.dll")"
+    --reference "$(cygpath -m "${refs[-1]}/System.Threading.Thread.dll")")
+  compile "$(cygpath -m "$src/tests/static-locals.cpp")" --target library "${args[@]}" -o "$(cygpath -m "$testdir/static-locals.dll")"
+  mkdir -p "$testdir/static-locals-consumer"
+  cp "$src/tests/StaticLocalsConsumer.cs" "$testdir/static-locals-consumer/Program.cs"
+  cat > "$testdir/static-locals-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="static-locals"><HintPath>../static-locals.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/static-locals-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/static-locals-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case static-local-byref 'int main() { int value=1; static int% alias=value; return alias; }' 'static locals require ordinary' "${args[@]}"
+  reject_case static-local-tls 'int main() { static thread_local int value=1; return value; }' 'static locals require ordinary' "${args[@]}"
+}
 step_test-dllimport() {
   local refs=("$CPPCLI_SDK"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
   local args=(--type System.Runtime.InteropServices.CharSet --type System.Runtime.InteropServices.CallingConvention
