@@ -101,7 +101,8 @@
         "Imported enum-valued constant facades retain typed CLR metadata and correct native C++ initialization",
         "Tracked primitive interior/pinned pointer indexing, indexed addresses and captured update operations with signed/wide strides and moving-GC runtime checks",
         "Imported CLR value operators validated against actual WPF Matrix multiplication/equality",
-        "Native POD interior/pinned arrow fields, packed/inline-array tracked locations, explicit qualified views and scaled local/parameter pointer updates validated with moving GC"
+        "Native POD interior/pinned arrow fields, packed/inline-array tracked locations, explicit qualified views and scaled local/parameter pointer updates validated with moving GC",
+        "Resolved ordinary instance property getter results participate in managed collection/array index lookup while named indexers retain bracket binding"
       ],
       "remaining": [
         "implicit boxing into interfaces and complete boxed-handle/primitive-member conversions",

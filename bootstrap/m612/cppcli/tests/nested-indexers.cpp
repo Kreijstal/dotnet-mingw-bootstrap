@@ -1,20 +1,28 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 using namespace System;
 using namespace System::Collections::Generic;
-public ref class NestedIndexers abstract sealed {
+public ref class NestedIndexers {
     static int _receiverCalls;
     static int _outerCalls;
     static int _innerCalls;
     static List<array<unsigned int>^>^ Source(List<array<unsigned int>^>^ value) { ++_receiverCalls; return value; }
     static int Outer() { ++_outerCalls; return 0; }
     static int Inner() { ++_innerCalls; return 1; }
+    static List<array<unsigned int>^>^ _rows;
 public:
+    property List<array<unsigned int>^>^ Rows {
+        List<array<unsigned int>^>^ get() { ++_receiverCalls; return _rows; }
+    }
     static unsigned int Check() {
         List<array<unsigned int>^>^ ranges = gcnew List<array<unsigned int>^>();
         array<unsigned int>^ row = gcnew array<unsigned int>(2); row[1] = 17; ranges->Add(row);
         Source(ranges)[Outer()][Inner()] += 25;
         unsigned int result = ranges[0][1];
         if (_receiverCalls != 1 || _outerCalls != 1 || _innerCalls != 1) return 0;
+        _rows=ranges;
+        NestedIndexers^ owner=gcnew NestedIndexers();
+        owner->Rows[Outer()][Inner()] += 3;
+        if (_receiverCalls != 2 || _outerCalls != 2 || _innerCalls != 2 || ranges[0][1]!=45) return 0;
         return result;
     }
 };

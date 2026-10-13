@@ -253,7 +253,8 @@
     "The original GDI byte snapshot through a const interior_ptr object executes with real byte arrays; signed/wide/floating strides, indexed aliases, byte narrowing and independent copied storage are validated",
     "Imported public CLR value unary/binary operator hidden friends with exact metadata overload dispatch; original WPF Matrix multiplication/equality runtime proof",
     "GC-free native POD interior/pinned elements and arrow/nested/inline-array access with tracked CLR locations; explicit tracked pointer views retain const/volatile qualification",
-    "Interior pointer local/parameter prefix/postfix increment/decrement and scaled compound offsets retain CLR byrefs across collection and evaluate offsets once"
+    "Interior pointer local/parameter prefix/postfix increment/decrement and scaled compound offsets retain CLR byrefs across collection and evaluate offsets once",
+    "Resolved non-indexed instance property getter results support managed collection/array indexing before nested subscript lookup; original WPF DashStyle.Dashes indexing and single-evaluation fixture checks"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",

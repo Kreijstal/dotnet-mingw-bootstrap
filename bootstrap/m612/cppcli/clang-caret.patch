@@ -540,7 +540,7 @@
 @@ -1162,0 +1529,2 @@
 +      if (!Res.isInvalid() && !CliResult.isNull())
 +        Res = cppcliEnumCast(Actions, Res.get(), CliResult, SavedLoc);
-@@ -1779,2 +2147,53 @@
+@@ -1779,2 +2147,55 @@
 -          LHS = Actions.ActOnArraySubscriptExpr(getCurScope(), LHS.get(), Loc,
 -                                                ArgExprs, RLoc);
 +          // For a managed array handle, ask Sema to resolve the surrogate's
@@ -549,7 +549,9 @@
 +          // A following bracket indexes the getter result. Completing a
 +          // previous property subscript here prevents Sema from treating a
 +          // nested list/array access as one multi-index property invocation.
-+          if (isa<MSPropertySubscriptExpr>(LHS.get()->IgnoreParens()) &&
++          auto *Property = dyn_cast<MSPropertyRefExpr>(LHS.get()->IgnoreParens());
++          if ((isa<MSPropertySubscriptExpr>(LHS.get()->IgnoreParens()) ||
++               (Property && !Property->getPropertyDecl()->getType()->isIncompleteArrayType())) &&
 +              LHS.get()->getType()->isSpecificBuiltinType(BuiltinType::PseudoObject)) {
 +            LHS = Actions.CheckPlaceholderExpr(LHS.get());
 +            if (LHS.isInvalid()) return ExprError();

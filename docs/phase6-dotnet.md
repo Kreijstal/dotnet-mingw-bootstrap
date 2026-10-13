@@ -5586,3 +5586,54 @@ gate, without a per-file compile count or a complete System.Printing DLL.
 Native import coverage remains 58/139; full text/paragraph behavior, printing
 runtime and WindowsDesktop SDK/targeting/runtime packaging remain required.
 No completed WPF package is produced; the goal remains active.
+
+
+## 63. Printing collection-property indexing and rendering metadata
+
+The next 2026-10-13 continuation resolves a non-indexed instance property getter
+before applying managed array/default-indexer lookup. Previously
+`dashStyle->Dashes[i]` reached ordinary C++ pointer indexing and produced a
+DoubleCollection value instead of a double. The private parser now asks Sema to
+complete a non-indexed MSPropertyRefExpr, then performs existing type-selected
+managed lookup on its actual result. Named indexed properties remain bound to
+their following bracket, and nested indexed-property getter completion retains
+its existing behavior.
+
+The nested-indexer runtime fixture now includes an instance property returning
+a managed List of managed arrays. Its compound update checks single getter and
+outer/inner-index evaluation and actual stored data. Source/imported named and
+default indexers, reference updates and malformed signature rejection checks
+still pass. Static property proxy indexing remains an unimplemented separate
+case; the initial fixture accidentally exercised that case and was corrected to
+the instance-property operation used by the original printing source.
+
+Printing imports actual SortedList, gradient stops/brushes, PrintingCanceledException,
+bitmap codec/encoder/frame/decoder types, ImageSource/TileBrush and their used
+mapping/tiling/stretch/alignment/gradient enums. The original gate now passes
+both gdipen.cpp collection-property indexing failures and advances into gdirt.cpp.
+Remaining observed errors begin at RectangleGeometry/IntersectionDetail imports,
+then GeometryProxy tracking-reference binding to a temporary, Object boxing,
+Point subtraction/Vector import, Object-to-Color casts and Uri imports.
+
+Validation on win11 with the standard M612/MSYSTEM/compiler/WPF build environment:
+
+```sh
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-nested-indexers test-indexers
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-nested-indexers test-indexers
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh printing-gate
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh build-directwrite check-directwrite-assembly printing-gate
+```
+
+The first command rebuilds ParseExpr.cpp successfully, then exposes the static
+proxy fixture issue described above. The second command passes the corrected
+instance-property fixture and all focused indexer checks. The final WPF command
+passes DirectWrite rebuild/load, 85 CLR types, 283 prepared bodies and 81 real
+font families; it still fails at printing with the remaining errors above.
+Bash/Python/JSON syntax and git diff checks pass. Logs, manifests and compiled
+runtime evidence are archived locally under
+`tmp/wpf8-support/validation/printing-property-results-20261013`.
+
+All 49 original project inputs/66 printing tree C++ files remain in the combined
+gate. No complete System.Printing runtime DLL or WPF package is produced. Native
+coverage remains 58/139; full layout/printing/runtime and WindowsDesktop
+SDK/targeting/runtime packaging remain required, and the full goal stays active.

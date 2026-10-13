@@ -221,7 +221,16 @@ def main():
               "System.Runtime.ConstrainedExecution.CriticalFinalizerObject", "System.Windows.Media.PointCollection",
               "System.Windows.Media.DoubleCollection", "System.Windows.Media.DashStyle", "System.Windows.Media.DashStyles",
               "System.Windows.Media.Composition.CompositionResourceManager", "System.Windows.Media.Composition.MilMatrix3x2D",
-              "System.Windows.Xps.Serialization.GeometryHelper"]
+              "System.Windows.Xps.Serialization.GeometryHelper", "System.Collections.SortedList",
+              "System.Windows.Media.GradientStopCollection", "System.Windows.Media.GradientStop",
+              "System.Windows.Media.GradientBrush", "System.Windows.Media.LinearGradientBrush",
+              "System.Windows.Media.RadialGradientBrush", "System.Printing.PrintingCanceledException",
+              "System.Windows.Media.Imaging.BitmapCodecInfo", "System.Windows.Media.Imaging.BitmapEncoder",
+              "System.Windows.Media.Imaging.BitmapFrame", "System.Windows.Media.Imaging.BitmapDecoder",
+              "System.Windows.Media.ImageSource", "System.Windows.Media.TileBrush", "System.Windows.Media.BrushMappingMode",
+              "System.Windows.Media.TileMode", "System.Windows.Media.Stretch", "System.Windows.Media.AlignmentX",
+              "System.Windows.Media.AlignmentY", "System.Windows.Media.GradientSpreadMethod",
+              "System.Windows.Media.ColorInterpolationMode"]
     for name in types:
         command += ["--type", name]
     command += ["--source-type", "System.Printing.PrintQueue"]
