@@ -9527,3 +9527,56 @@ comparison/display transfer, balancing/span areas/footnotes, advanced/optimal/
 partial incremental/interruptible algorithms, full bidi/native language and
 broader runtime behavior remain required for the full WPF goal. Package
 integration follows.
+
+
+## 145. Installed release 23: multiple floating objects
+
+The 2026-10-14 continuation packages section 144 as WindowsDesktop 8.0.0-23.
+Declared/checksummed 0023-multiple-floater-placement.patch applies after the
+twenty-two prior patches. Clean pinned sources plus all twenty-three patches
+match the three committed feature files byte for byte. The private package tree
+rebuilds native output, inventory and layout, passes multi-object placement/
+source/ownership/failure gates, 335 original ABI field checks, context/line-service
+regressions and every normal SDK gate before archive creation and installation.
+Unchanged managed/graphics/printing outputs remain its own source builds.
+
+Validation in the CLANG64 package workspace:
+
+```sh
+makepkg --verifysource --force
+source PKGBUILD                 # with srcdir set to this workspace's src/
+_wpf native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+makepkg --repackage --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-23-any.pkg.tar.zst
+/usr/bin/python3 check-staged.py /clang64/lib/dotnet
+bash "$(_driver)/wpf-tests/check-floaters-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-multiple-floaters-sdk-check
+bash "$(_driver)/wpf-tests/check-columns-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-multiple-floaters-columns-sdk-check
+```
+
+All final commands pass. Staged/installed 42-managed/eight-native/SDK/legacy
+payload checks pass. Installed original WPF documents render red/green floaters
+with blue content, same-edge stacking and disjoint opposite-edge placement.
+Actual line-height exclusion keeps black host glyphs outside both obstacles.
+Ideal/Display cases complete three pages with all 944 characters covered exactly
+once and correct original GetPageNumber mappings. Disposed first pages regenerate
+both original colored objects across GC. Existing single-floater and scrolling-
+edit/raster/extent checks pass. Normal shared-framework and self-contained
+publishes run with SDK roots/toolchain PATH removed and pass dispatcher shutdown.
+Installed column pagination still renders 12 Ideal/9 Display pages with all 1278
+characters covered once. Private normal WPF/tab/inline-object/justification/width/
+context/finite/bottomless/pagination/columns/hard-break/keep/keep-next/forced/block/
+subpage/subtrack/floater/WinForms gates pass with zero consumer warnings/errors.
+The existing source-bootstrap.json srcdir provenance warning remains.
+
+Artifact: mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-23-any.pkg.tar.zst.
+SHA-256: 7566bf3f3e07f36d1de9758ef788004b58eabb40a6429652b5270916d993a510.
+Recipe commit: msys2-ur 4c6f2c8; feature commit: d9bf77d.
+Artifact, recipe, metadata, patch and validation logs are archived under
+ tmp/wpf8-support/validation/multiple-floaters-package-20261014.
+Imported native coverage remains 103/139 with 36 absent. Multiple intact
+before-line rectangles now work within the supported placement area. Deferred/
+split floater pages, later in-line anchors and cross-paragraph flow, complex
+center/clear policies, figures/tables, comparison/display transfer, balancing/
+span areas/footnotes, advanced/optimal/partial incremental/interruptible
+algorithms, full bidi/native language and broader runtime behavior remain
+incomplete. The full WPF goal stays active.
