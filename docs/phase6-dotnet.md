@@ -7367,3 +7367,58 @@ ReachFramework/dependency references. A final source patch/pin must carry the
 layout changes into the package's declared inputs before final package claims.
 Clean package checks/archive/installation and full native text/layout remain
 open. The WPF goal stays active.
+
+
+## 101. WindowsDesktop package built, installed and verified
+
+The 2026-10-13 continuation completes the private source/build-tree package run.
+After the section 100 source dependency correction, all WPF managed shipping
+implementations, both CLI assemblies, graphics and pen input rebuild. Full checks
+pass: DirectWrite original fonts/COM/lifetimes; 235 printing types and 2,017
+prepared bodies; original properties/native spooler/XPS paths; ten additional
+shipping assemblies with 674 types/6,426 bodies and automation/Ribbon/interop;
+106 native graphics exports/shader/pixel checks; ordinary WPF/WinForms SDK builds
+and self-contained publishes. Source input checksums pass for the final declared
+crypto patch and staged-payload checker.
+
+The final source-only recipe reuses its own compiled outputs for archive
+creation after the diagnostic retry. Newly declared checksum-verified files are
+copied into that private source staging directory before repackage, and the
+payload checker passes all 42 implementation/reference hashes, native seed hashes,
+pack entries, markup tasks and retained legacy versions. Build work paths in
+source-bootstrap.json remain provenance only; makepkg reports them as a srcdir
+reference warning. They are not SDK imports or runtime resolution paths.
+
+Final validation commands, with the CLANG64 package environment:
+
+```sh
+makepkg --noextract --force --noconfirm
+makepkg --verifysource --force
+makepkg --repackage --force --noconfirm
+pacman -U mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-1-any.pkg.tar.zst
+python3 check-staged.py /clang64/lib/dotnet
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-sdk.sh /clang64/lib/dotnet ~/wpfboot/installed-wpf-sdk-check
+bash ~/wpfboot/driver/bootstrap/m612/winforms-tests/check-sdk.sh /clang64/lib/dotnet ~/wpfboot/installed-desktop-forms-check
+```
+
+The package replaces the WinForms-only SDK package and retains its freshly
+source-built legacy framework and pack versions. Installed source SDK consumers
+pass WPF BAML/named fields/window/raster/shared-framework and portable app-local
+publish checks, and WinForms generator/control/resource/event/GDI+ checks. A
+WinForms app explicitly requesting 8.0.0-bootstrap.7.0.20 with rollForward Disable
+also runs. The installed payload hash/manifest check passes. No build warnings/
+errors occur in those SDK consumers.
+
+Artifact: mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-1-any.pkg.tar.zst
+(about 53 MiB compressed / 161 MiB installed).
+SHA-256: 21306aa5f12ce094a6a6498c295cc8b92d5c3ea63bf442b629037cd3ee039b2b.
+A local copy and logs are archived under
+`tmp/wpf8-support/validation/windowsdesktop-package-20261013`.
+The msys2-ur recipe/payload verifier is committed through 903d407.
+
+This completes a concrete experimental WPF package and installation proof. It
+continues to label the partial native port: PresentationNative imported symbol
+coverage remains 58/139, with bidi/paragraph/NLS/other text paths unfinished.
+WinForms remains the approved 7.0.20 interim source port. The package does not
+prove full upstream WPF behavior. The original full WPF goal stays active while
+remaining native behavior and coverage are completed.
