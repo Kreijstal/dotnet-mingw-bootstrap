@@ -289,7 +289,8 @@
     "Float32/float64 boolean conversion compares against matching floating zero and preserves C++ truth for signed zero, subnormals, infinities and NaN, including logical not and conditions",
     "Managed value sizeof emits actual CLR runtime sizing with size_t-width conversion and unevaluated operand semantics; sequential, explicit and reference-containing values match source-built Unsafe.SizeOf",
     "Interior pointer assignment rebinds block-local/parameter CLR byref slots without copying referents or losing existing aliases; original Char/ushort view assignment and GC mutation checks pass",
-    "Inline native array decay initializes pin pointers using the original Clang conversion and tracked containing-record address; native UTF-16 field mutation, String copy ownership and GC checks pass"
+    "Inline native array decay initializes pin pointers using the original Clang conversion and tracked containing-record address; native UTF-16 field mutation, String copy ownership and GC checks pass",
+    "Fixed one-dimensional native local arrays use Clang-sized/aligned CLR value storage; scalar/enum/pointer/trivial POD aggregate and native string initialization preserve decay aliases, evaluation order, zero filler and declaration reinitialization"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",

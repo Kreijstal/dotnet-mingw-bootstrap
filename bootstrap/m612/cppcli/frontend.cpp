@@ -1723,6 +1723,7 @@ class Emitter {
     std::map<std::string, std::string> assembly_strings;
     std::map<std::string, std::string> assembly_forwards;
     mutable std::map<std::string, const CXXRecordDecl*> native_records;
+    mutable std::map<std::string, std::pair<uint64_t, unsigned>> native_local_arrays;
     std::vector<std::string> temporary_types;
     std::map<const OpaqueValueExpr*, unsigned> opaque_values;
     std::set<const OpaqueValueExpr*> opaque_addresses;
@@ -2080,6 +2081,21 @@ class Emitter {
         return "valuetype " + name;
     }
     std::string variable_type(const VarDecl* variable) const {
+        if (!isa<ParmVarDecl>(variable) && variable->hasLocalStorage() && variable->getType()->isArrayType()) {
+            auto* array = context.getAsConstantArrayType(variable->getType());
+            if (!array || array->getElementType()->isArrayType() ||
+                (!array->getElementType()->isArithmeticType() && !array->getElementType()->isEnumeralType() &&
+                 !(array->getElementType()->isPointerType() && !handle_target(array->getElementType())) &&
+                 !native_pod(array->getElementType())))
+                throw std::runtime_error("native local arrays require a fixed one-dimensional scalar, pointer or trivial native POD layout");
+            auto size = context.getTypeSizeInChars(variable->getType()).getQuantity();
+            auto alignment = context.getTypeAlignInChars(variable->getType()).getQuantity();
+            if (size < 1 || size > INT32_MAX || alignment > 8)
+                throw std::runtime_error("native local array layout exceeds supported CLR size/alignment");
+            auto name = "'__cli_local_array_" + std::to_string(size) + "_" + std::to_string(alignment) + "'";
+            native_local_arrays.emplace(name, std::make_pair(size, alignment));
+            return "valuetype " + name;
+        }
         if(!isa<ParmVarDecl>(variable)) if(auto* record=variable->getType()->getAsCXXRecordDecl();
             record && record_annotated(record,"cli.ref") && !record_annotated(record,"cli.value") &&
             record_annotation(record,"cli.external:").empty()) return reference_element_type(variable->getType());
@@ -4071,6 +4087,11 @@ class Emitter {
             bool static_property_conversion = conversion_method && record_annotated(conversion_method->getParent(), "cli.static.property.proxy");
             if (c->getCastKind() == CK_ArrayToPointerDecay) {
                 if (auto* literal=dyn_cast<StringLiteral>(c->getSubExpr()->IgnoreParenImpCasts())) { native_literal(literal); return; }
+                if (auto* reference=dyn_cast<DeclRefExpr>(strip(c->getSubExpr())->IgnoreParenImpCasts()))
+                    if (auto* variable=dyn_cast<VarDecl>(reference->getDecl()); variable &&
+                        variable->hasLocalStorage() && locals.count(variable) && variable->getType()->isArrayType()) {
+                        native_address(reference); return;
+                    }
                 auto* member = dyn_cast<MemberExpr>(strip(c->getSubExpr())->IgnoreParenImpCasts());
                 if (member && native_field(dyn_cast<FieldDecl>(member->getMemberDecl()))) {
                     // Native inline arrays occupy their containing record's
@@ -4619,6 +4640,25 @@ class Emitter {
                 // WPF's /clr:initLocals: zero once on method entry. A declaration
                 // without an initializer does not reset storage on loop re-entry.
                 if (!v->hasInit()) continue;
+                if (auto* array=context.getAsConstantArrayType(v->getType())) {
+                    auto slot=locals.at(v);
+                    op("ldloca "+std::to_string(slot),0,1); op("initobj "+variable_type(v),1);
+                    auto* initializer=strip(v->getInit())->IgnoreParenImpCasts();
+                    auto element=array->getElementType();
+                    auto stride=context.getTypeSizeInChars(element).getQuantity();
+                    auto* list=dyn_cast<InitListExpr>(initializer);
+                    auto* literal=dyn_cast<StringLiteral>(initializer);
+                    if (!list && !literal) fail(initializer,"native local arrays require aggregate or string initialization");
+                    auto count=literal ? literal->getLength() : list->getNumInits();
+                    for (unsigned i=0;i<count;++i) {
+                        if(list && isa<ImplicitValueInitExpr>(list->getInit(i))) continue;
+                        op("ldloca "+std::to_string(slot),0,1); op("conv.u",1,1); native_offset(i*stride);
+                        if(literal) op("ldc.i4 "+std::to_string(literal->getCodeUnit(i)),0,1);
+                        else expr(list->getInit(i));
+                        op("unaligned. 1"); op("stobj "+type(element),2);
+                    }
+                    continue;
+                }
                 if (native_reference(v)) native_address(v->getInit());
                 else if (v->getType()->isReferenceType()) address(v->getInit()); else pointer_value(v->getInit(), v); op("stloc " + std::to_string(locals.at(v)), 1);
             }
@@ -5259,6 +5299,12 @@ public:
                << "  .pack 1\n  .size " << literal.size << "\n  .field [0] private uint8 '__storage'\n}\n"
                << ".data '" << literal.name << "_data' = bytearray (" << literal.bytes << ")\n"
                << ".field assembly static initonly valuetype '" << literal.name << "_type' '" << literal.name << "' at '" << literal.name << "_data'\n";
+        }
+        for (const auto& entry : native_local_arrays) {
+            il << ".class private sequential ansi sealed " << entry.first << " extends [System.Runtime]System.ValueType {\n"
+               << "  .pack " << entry.second.second << "\n  .size " << entry.second.first << "\n"
+               << "  .custom instance void [System.Runtime.CompilerServices.VisualC]System.Runtime.CompilerServices.NativeCppClassAttribute::.ctor() = (01 00 00 00)\n"
+               << "  .field private uint" << entry.second.second * 8 << " '__storage'\n}\n";
         }
         for (const auto& entry : native_records) {
             const auto& layout = context.getASTRecordLayout(entry.second);

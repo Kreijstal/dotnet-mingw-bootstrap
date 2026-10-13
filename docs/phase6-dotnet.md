@@ -6846,3 +6846,44 @@ Evidence is archived under
 49 project inputs/66 tree C++ files, without per-file compile counts. Native text
 coverage remains 58/139. Full printing, text/layout and WindowsDesktop packaging
 remain required; the WPF packaging goal stays active.
+
+
+## 88. Fixed native local array storage
+
+The 2026-10-13 continuation adds fixed one-dimensional native local arrays.
+Their opaque CLR value slots use Clang's byte size/alignment and native element
+strides; pointer decay addresses the local rather than allocating a managed
+array or copying storage. Explicit aggregate/string declarations zero their
+storage on each execution before ordered element initialization. Declarations
+without initializers retain existing method-entry /clr:initLocals semantics.
+Supported elements are scalars, enums, native pointers and trivial native POD.
+Managed-handle elements, multidimensional arrays and nontrivial construction
+remain rejected. Static arrays and whole-array native fields remain unsupported.
+
+A runtime fixture covers the original 17-byte charset-list shape, packed
+five-byte records, pointer aliases, narrow/UTF-16 strings with surrogate pairs,
+enum/floating elements, ordered side effects, zero-filled tails, loop declaration
+reinitialization and aliases surviving GC. All runtime and rejection checks pass.
+A negative test initially expected the storage-layout rejection for a trivially
+copyable record with a user constructor; the correct rejection is unsupported
+non-aggregate construction, and that assertion was corrected before completion.
+
+Validation on win11 with the standard compiler/WPF environment:
+
+```sh
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-native-local-arrays test-inline-array-pins
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-native-local-arrays test-inline-array-pins
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh printing-gate
+```
+
+The compiler rebuild succeeds; final focused runtime/rejection checks pass. The
+combined original printing gate passes parsing/Sema and advances beyond the
+charset array and subsequent font creation to TrueTypeFont::ReplaceFontName
+(FontInfo.cpp:291), where the explicit (void)version discard is unsupported.
+No complete printing IL/DLL or printing runtime proof is produced.
+
+Evidence is archived under
+`tmp/wpf8-support/validation/printing-native-local-arrays-20261013`. Scope remains
+49 project inputs/66 tree C++ files without per-file compile counts; native text
+coverage remains 58/139. Full printing, text/layout and WindowsDesktop packaging
+remain required. The WPF packaging goal stays active.

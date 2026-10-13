@@ -604,6 +604,13 @@ int main() { CombinedAccess^ c=gcnew CombinedAccess(); return c->OrMethod(); }' 
   reject_case combined-foreign-and '#using "combined-access.dll"
 public ref class Foreign : CombinedAccess { public: int Read() { return AndMethod(); } }; int main() { return 0; }' 'undeclared identifier' --type CombinedAccess
 }
+step_test-native-local-arrays() {
+  run_case native-local-arrays "$src/tests/native-local-arrays.cpp" 'native local arrays: charset constants, packed POD, pointers, strings, order, zero filler, reinitialization and GC PASS' \
+    --type System.GC --type System.InvalidOperationException
+  reject_case native-local-array-managed 'int main() { System::String^ values[2]; return 0; }' 'native local arrays require a fixed one-dimensional'
+  reject_case native-local-array-multidimensional 'int main() { int values[2][3]; return 0; }' 'native local arrays require a fixed one-dimensional'
+  reject_case native-local-array-nontrivial 'struct Value { Value() {} int x; }; int main() { Value values[2]; return 0; }' 'native local arrays require aggregate or string initialization'
+}
 step_test-inline-array-pins() {
   run_case inline-array-pins "$src/tests/inline-array-pins.cpp" 'inline native array decay pin retains parent storage, UTF-16 text copy and GC PASS' \
     --type System.GC --type System.InvalidOperationException
