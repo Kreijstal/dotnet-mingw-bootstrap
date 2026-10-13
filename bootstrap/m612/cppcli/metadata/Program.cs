@@ -195,12 +195,14 @@ static class Program
         }
         return "";
     }
-    static void ValidateFriend(MetadataReader r, AssemblyDefinition assembly, CliAccess access)
+    static bool ValidateFriend(MetadataReader r, AssemblyDefinition assembly, CliAccess access)
     {
         byte[] outputKey = Convert.FromHexString(access.PublicKey);
         foreach (var handle in assembly.GetCustomAttributes()) {
             var attribute = r.GetCustomAttribute(handle);
             if (AttributeType(r, attribute.Constructor) != "System.Runtime.CompilerServices.InternalsVisibleToAttribute") continue;
+            if (r.GetBlobBytes(assembly.PublicKey).Length == 0 && outputKey.Length != 0)
+                throw new Exception("a strong-named as_friend client cannot reference an unsigned friend component");
             var blob = r.GetBlobReader(attribute.Value);
             if (blob.ReadUInt16() != 1) throw new Exception("invalid InternalsVisibleTo attribute");
             var identity = new AssemblyName(blob.ReadSerializedString() ?? "");
@@ -208,9 +210,9 @@ static class Program
             byte[] friendKey = identity.GetPublicKey() ?? Array.Empty<byte>();
             if (!friendKey.AsSpan().SequenceEqual(outputKey)) continue;
             if (r.GetBlobBytes(assembly.PublicKey).Length != 0 && friendKey.Length == 0) continue;
-            return;
+            return true;
         }
-        throw new Exception("#using as_friend requires InternalsVisibleTo matching output assembly name and public key: " + access.Assembly);
+        return false;
     }
     static string MemberAccess(MethodAttributes attributes, bool friend) => (attributes & MethodAttributes.MemberAccessMask) switch {
         MethodAttributes.Public => "public",
@@ -244,7 +246,8 @@ static class Program
                 var a = r.GetAssemblyDefinition();
                 string assembly = r.GetString(a.Name);
                 bool friend = friendPaths.Contains(Path.GetFullPath(path));
-                if (friend) ValidateFriend(r, a, access);
+                if (friend && !ValidateFriend(r, a, access))
+                    Console.Error.WriteLine("cli-metadata: warning: as_friend exposes metadata but runtime internal access is not granted: " + assembly);
                 byte[] key = r.GetBlobBytes(a.PublicKey);
                 string token = key.Length == 0 ? "" : Convert.ToHexString(SHA1.HashData(key).TakeLast(8).Reverse().ToArray()).ToLowerInvariant();
                 assemblies.Add(new(assembly, a.Version.ToString(), token));

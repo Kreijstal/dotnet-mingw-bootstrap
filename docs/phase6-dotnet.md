@@ -4542,3 +4542,109 @@ decorations, paragraph/NLS exports, printing and WindowsDesktop packaging
 remain unfinished. Evidence is archived under
 `tmp/wpf8-support/validation/lineservices-caret-20261013` locally. The goal remains
 active.
+
+## 48. Visible WPF text editing and native character input
+
+The next 2026-10-13 continuation adds check-window-edit. A source WPF TextBox
+uses the actual default theme and renders mixed Indic/Latin text in a visible
+window. The test replaces a selected word, verifies TextChanged, undo/redo,
+keyboard focus, two wrapped lines, a caret rectangle and its corresponding
+point hit. A real native WM_CHAR sent to the window HWND reaches WPF text
+composition and appends the character; undo removes that input. This exercises
+the native window-to-managed editor path without injecting global keyboard
+input. Selecting the two-code-unit Indic cluster returns the expected text.
+
+The initial screenshot was taken before queued selection invalidation completed
+and still showed the earlier word selection. Capture now occurs on the next
+normal dispatcher timer tick. The final check verifies 528 highlight pixels
+inside the selected Indic cluster's caret bounds, plus nonempty glyph pixels.
+The final image was inspected locally. The ordinary shape/button window also
+passes. No runtime code change was needed for these validated editor paths.
+
+Validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-window check-window-edit
+```
+
+The command passes and the C# consumer has zero warnings/errors. Logs and the
+rendered selection PNG are archived locally under
+`tmp/wpf8-support/validation/textbox-20261013`. This does not establish IME,
+clipboard, accessibility, full bidi, rich editing or full desktop packaging.
+System.Printing and remaining native/desktop work stay open; the goal remains
+active.
+
+## 49. Original printing project gate and frontend compatibility corrections
+
+The same continuation adds printing-gate, driven by the original
+System.Printing.vcxproj CLCompile items. There are **49 project compilation
+inputs** and **66 C++ files in the original tree**. A private combined-source
+copy preserves the original implementation/header bodies, dependency identities
+and #using directives. Preparation conditionally omits a temporary MSVC static
+analysis header under MinGW and disables the unavailable banned-API analysis.
+It records input paths, command and scope in printing-gate/inputs.json. This is
+a compiler diagnostic gate, not proof of separate-unit linking or a printing
+runtime DLL. Source-built WPF dependency DLLs take precedence over empty core
+facades; no printing reference DLL is copied into runtime lib.
+
+The first gate failure was the trusted WINSPOOL.DRV import module. The driver
+now accepts both DLL and DRV modules from named x64 COFF archives. MinGW's
+original winspool.h functions have no dllimport annotation; they now bind when
+the canonical declaration is in a system header and an explicit trusted import
+archive provides the function. User declarations without that provenance and
+unbound SDK functions still fail. Real read-only EnumPrintersW through the CLI
+assembly exactly matches the separately compiled native SDK oracle.
+
+The next gate failure was eager validation of every #using as_friend, even for
+assemblies whose public metadata alone was used. The reader now follows the
+[documented C++/CLI friend semantics](https://learn.microsoft.com/en-us/cpp/dotnet/friend-assemblies-cpp):
+as_friend exposes metadata; CLR internal access depends on the actual
+InternalsVisibleTo identity. Correctly signed/name-matched access passes.
+Public-only usage without a grant passes. Accessing an internal member with a
+wrong name or key compiles and produces MethodAccessException at runtime,
+verified in separate load contexts. Private/protected members remain excluded
+or protected; no-friend internal-type imports fail. Strong callers of unsigned
+friend components with InternalsVisibleTo remain rejected.
+
+The next source failure came from ordinary printing parameters named delegate.
+Adaptation now recognizes delegate as contextual and preserves parameter,
+field, local, expression and ordinary function identifiers alongside real
+delegate declarations. Focused construction/invocation tests execute under
+the CLR, including original WPF-style MulticastDelegate parameters. Attribute
+failure messages now retain source path, line and attribute name.
+
+Validation on win11:
+
+```sh
+/clang64/bin/cmake.exe --build ~/dotnetboot/m612/build/cppcli --target cli_ast -j2
+CPPCLI_SDK=/clang64/lib/dotnet CPPCLI_ILASM=/clang64/bin/ilasm-dotnet.exe \
+  M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-references test-native-spooler
+CPPCLI_SDK=/clang64/lib/dotnet CPPCLI_ILASM=/clang64/bin/ilasm-dotnet.exe \
+  M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-contextual-delegate
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  WPF_CPPCLI_BUILD=/home/topkek/dotnetboot/m612/build/cppcli \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh build-directwrite check-directwrite-assembly
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh printing-gate
+```
+
+Rebuilds and focused tests pass. The full DirectWrite bridge regression still
+loads 85 types, prepares 283 eligible bodies and resolves 81 real system font
+families with owned font/face/file and managed COM-loader checks. The ordinary
+Windows API binding/registry/process test also passes after the import change.
+The final printing-gate command **fails**, now specifically at
+CPP/inc/GDIExporter/nativemethods.h:737: MarshalAs currently supports one
+positional argument, while this original declaration also needs named options.
+No System.Printing runtime DLL is produced. SHLWAPI/KERNEL32 duplicate import
+symbols also require explicit binding resolution before adding both archives;
+unavailable used functions still fail rather than receiving arbitrary bindings.
+Other printing/compiler/native/desktop requirements remain open. Evidence is
+archived locally under `tmp/wpf8-support/validation/printing-gate-20261013`.
+Installed compiler packages are unchanged; this is the development frontend.
+The goal remains active.

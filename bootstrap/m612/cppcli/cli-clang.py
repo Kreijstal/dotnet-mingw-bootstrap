@@ -22,7 +22,7 @@ def native_imports(libraries, reader):
             dll = lines[0].strip()
             if "Format: COFF-import-file-x86-64" not in lines or "Type: code" not in lines or "Name type: name" not in lines:
                 continue
-            if not re.fullmatch(r"[A-Za-z0-9_.-]+\.dll", dll, re.IGNORECASE):
+            if not re.fullmatch(r"[A-Za-z0-9_.-]+\.(?:dll|drv)", dll, re.IGNORECASE):
                 raise ValueError("invalid native import DLL: " + dll)
             exports = [line.removeprefix("Export name: ") for line in lines if line.startswith("Export name: ")]
             if len(exports) != 1:

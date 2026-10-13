@@ -482,10 +482,15 @@ protected:
             }
             for (size_t pos = tokens.size(); pos-- > 0;) {
                 if (tokens[pos].text != "delegate") continue;
+                // delegate is contextual: original WPF printing APIs also
+                // use it as a parameter, field and expression identifier.
+                if (pos+1==tokens.size() || !(tokens[pos+1].kind==tok::identifier ||
+                    keyword_types.count(tokens[pos+1].text) || tokens[pos+1].text=="void" ||
+                    tokens[pos+1].text=="::" || tokens[pos+1].text=="const")) continue;
                 size_t open = pos+1;
                 while (open < tokens.size() && tokens[open].text != "(" && tokens[open].text != ";" && tokens[open].text != "{") ++open;
                 if (open < pos+3 || open == tokens.size() || tokens[open].text != "(" || tokens[open-1].kind != tok::identifier)
-                    throw std::runtime_error("delegate requires an ordinary function declaration");
+                    throw std::runtime_error(tokens[pos].file+":"+std::to_string(tokens[pos].line)+": delegate requires an ordinary function declaration");
                 auto close = balance(open, "(", ")");
                 if (close+1 >= tokens.size() || tokens[close+1].text != ";") throw std::runtime_error("delegate declarations require a semicolon");
                 auto name = tokens[open-1].text;
@@ -844,7 +849,7 @@ protected:
                         auto end = matching(cursor, "(", ")");
                         int depth = 0;
                         for (size_t j = cursor+1; j < end; ++j) {
-                            if (tokens[j].text == "," && !depth) throw std::runtime_error("interop attributes currently take one positional argument");
+                            if (tokens[j].text == "," && !depth) throw std::runtime_error(tokens[begin].file+":"+std::to_string(tokens[begin].line)+": "+attr+": interop attributes currently take one positional argument");
                             if (tokens[j].text == "(") ++depth;
                             else if (tokens[j].text == ")") --depth;
                             argument += tokens[j].text + " ";
@@ -2733,7 +2738,7 @@ class Emitter {
         }
         auto binding = native_imports.find(f->getNameAsString());
         if (binding != native_imports.end() && f->isExternC() && !isa<CXXMethodDecl>(f) && !f->hasBody() &&
-            f->hasAttr<DLLImportAttr>()) {
+            (f->hasAttr<DLLImportAttr>() || ci.getSourceManager().isInSystemHeader(f->getCanonicalDecl()->getLocation()))) {
             selected_native_imports.insert(f->getCanonicalDecl());
             if (seen.insert(f->getCanonicalDecl()).second) functions.push_back(const_cast<FunctionDecl*>(f));
         }

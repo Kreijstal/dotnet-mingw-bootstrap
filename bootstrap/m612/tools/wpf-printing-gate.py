@@ -1,0 +1,109 @@
+#!/usr/bin/env python3
+"""Run the original System.Printing project inputs through the source CLI frontend."""
+import argparse
+import json
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+import xml.etree.ElementTree as ET
+
+
+def win(path):
+    return subprocess.check_output(["cygpath", "-m", str(path.resolve())], text=True).strip()
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("source", type=Path)
+    parser.add_argument("build", type=Path)
+    parser.add_argument("sdk", type=Path)
+    parser.add_argument("oob", type=Path)
+    parser.add_argument("frontend", type=Path)
+    args = parser.parse_args()
+    root = args.source / "src/Microsoft.DotNet.Wpf/src"
+    original = root / "System.Printing"
+    work = args.build / "printing-gate"
+    work.mkdir(parents=True, exist_ok=True)
+    cpp = work / "CPP"
+    shutil.copytree(original / "CPP", cpp, dirs_exist_ok=True)
+    # This temporary MSVC code-analysis include has no runtime declarations.
+    # MinGW's Windows headers already provide the SAL annotations used here.
+    header = cpp / "Win32Inc.hpp"
+    text = header.read_text()
+    old = "#include <codeanalysis\\sourceannotations.h>  //TEMPORARY INCLUDE"
+    if old not in text:
+        raise SystemExit("System.Printing code-analysis include changed; review port preparation")
+    header.write_text(text.replace(old, "#if !defined(__MINGW32__)\n" + old + "\n#endif"))
+    inputs = [item.attrib["Include"].replace("\\", "/")
+              for item in ET.parse(original / "System.Printing.vcxproj").iter()
+              if item.tag.rsplit("}", 1)[-1].lower() == "clcompile" and "Include" in item.attrib]
+    for file in inputs:
+        if not (work / file).is_file():
+            raise SystemExit("Missing original printing source: " + file)
+    combined = work / "System.Printing.cpp"
+    combined.write_text('using namespace System::Reflection;\n'
+                        '[assembly:AssemblyVersion("8.0.0.0")];\n'
+                        '[assembly:AssemblyFileVersion("8.0.0.0")];\n'
+                        '[assembly:AssemblyInformationalVersion("8.0.0")];\n' +
+                        "".join('#include "' + file + '"\n' for file in inputs))
+    refs = sorted((args.sdk / "packs/Microsoft.NETCore.App.Ref").glob("*/ref/net8.0"))[-1]
+    command = ["/clang64/bin/python.exe", win(args.frontend / "cli-clang"),
+               "--sdk", win(args.sdk), "--clang", win(Path("/clang64/bin/clang++.exe")),
+               win(combined), "--std", "c++14", "--target", "library", "--emit", "il",
+               "--assembly-name", "System.Printing", "--public-key", win(args.build / "keys/MSShared.snk"),
+               "-o", win(work / "System.Printing.il")]
+    for include in [cpp, cpp / "inc", cpp / "inc/GDIExporter", root / "Shared/inc"]:
+        command += ["-I", win(include)]
+    for define in ["UNICODE=1", "_UNICODE=1", "_CLR_NETCORE=1", "DDBANNED_H=1"]:
+        command += ["-D", define]
+    # Preserve the upstream #using/as_friend boundaries and source identities.
+    for macro, name in [("SYSTEMXAML_DLL", "System.Xaml"), ("WINDOWSBASE_DLL", "WindowsBase"),
+                        ("PRESENTATIONCORE_DLL", "PresentationCore"),
+                        ("PRESENTATIONFRAMEWORK_DLL", "PresentationFramework"), ("REACHFRAMEWORK_DLL", "ReachFramework")]:
+        file = args.build / "lib" / (name + ".dll")
+        if not file.is_file():
+            raise SystemExit("Build original printing dependency first: " + name)
+        command += ["-D", macro + '="' + win(file) + '"', "--reference", win(file)]
+    for file in sorted(refs.glob("*.dll")) + sorted(args.oob.glob("*.dll")):
+        if file.stem in {"System.Xaml", "WindowsBase", "PresentationCore", "PresentationFramework", "ReachFramework"}:
+            continue
+        command += ["--reference", win(file)]
+    types = ["System.Exception", "System.SystemException", "System.ArgumentException", "System.ArgumentNullException",
+             "System.InvalidOperationException", "System.NotSupportedException", "System.NotImplementedException",
+             "System.ObjectDisposedException", "System.OutOfMemoryException", "System.IDisposable", "System.MarshalByRefObject",
+             "System.Boolean", "System.Int32", "System.UInt32", "System.Int64", "System.Double", "System.Enum", "System.Type",
+             "System.RuntimeTypeHandle", "System.Array", "System.DateTime", "System.TimeSpan", "System.EventArgs",
+             "System.EventHandler", "System.Delegate", "System.MulticastDelegate", "System.Action", "System.IFormatProvider",
+             "System.IO.Stream", "System.IO.MemoryStream", "System.IO.FileStream", "System.IO.FileMode", "System.IO.FileAccess",
+             "System.IO.SeekOrigin", "System.Threading.Monitor", "System.Threading.Thread", "System.Diagnostics.Debug",
+             "System.Collections.IEnumerable", "System.Collections.IEnumerator", "System.Collections.ICollection",
+             "System.Collections.IDictionary", "System.Collections.Hashtable", "System.Collections.ArrayList",
+             "System.Collections.Specialized.StringCollection", "System.Globalization.CultureInfo",
+             "System.Runtime.InteropServices.Marshal", "System.Runtime.InteropServices.GCHandle",
+             "System.Runtime.InteropServices.GCHandleType", "System.Runtime.InteropServices.SafeHandle",
+             "System.Resources.ResourceManager", "System.Reflection.Assembly", "System.Security.SecurityCriticalAttribute",
+             "System.Windows.Threading.DispatcherObject", "System.Windows.Threading.Dispatcher",
+             "System.Windows.DependencyObject", "System.Windows.Point", "System.Windows.Size", "System.Windows.Rect",
+             "System.Printing.PrintTicket", "System.Printing.PrintCapabilities"]
+    for name in types:
+        command += ["--type", name]
+    # SHLWAPI and KERNEL32 both export DelayLoadFailureHook. Keep SHLWAPI
+    # bindings pending explicit duplicate-symbol resolution rather than
+    # silently selecting one DLL. Used unavailable functions still fail.
+    for name in ["kernel32", "advapi32", "winspool", "gdi32", "user32", "ole32"]:
+        command += ["--native-import", win(Path("/clang64/lib/lib" + name + ".a"))]
+    tree_count = len(list((original / "CPP").rglob("*.cpp")))
+    (work / "inputs.json").write_text(json.dumps({
+        "project": "System.Printing.vcxproj", "projectInputs": inputs,
+        "treeCppCount": tree_count,
+        "portPreparation": ["MinGW skips temporary MSVC code-analysis include", "disable MSVC banned-API static analysis"],
+        "scope": "combined-source compiler diagnostic gate; success does not prove separate-unit linking or printing runtime",
+        "command": command,
+    }, indent=2) + "\n")
+    print(f"System.Printing: {len(inputs)} project compilation inputs; original tree has {tree_count} C++ files", flush=True)
+    return subprocess.run(command).returncode
+
+
+if __name__ == "__main__":
+    sys.exit(main())

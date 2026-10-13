@@ -6,6 +6,7 @@ param(
     [string]$DebuggerCommands,
     [switch]$Indic,
     [switch]$Wrap,
+    [switch]$Edit,
     [switch]$Text
 )
 $ErrorActionPreference='Stop'
@@ -15,7 +16,7 @@ $log=Join-Path $Work $(if($Text){'interactive-text.log'}else{'interactive.log'})
 $dll=Join-Path $Work 'WindowCheck.dll'
 $launch='"'+$Dotnet+'" "'+$dll+'"'
 if($Debugger) { $launch='"'+$Debugger+'" -batch -x "'+$DebuggerCommands+'" --args '+$launch }
-$argument='/d /c "set "PATH='+$ToolchainBin+';%PATH%" && '+$launch+$(if($Text){' --text'}else{''})+$(if($Indic){' --indic'}else{''})+$(if($Wrap){' --wrap'}else{''})+' >"'+$log+'" 2>&1"'
+$argument='/d /c "set "PATH='+$ToolchainBin+';%PATH%" && '+$launch+$(if($Text){' --text'}else{''})+$(if($Indic){' --indic'}else{''})+$(if($Wrap){' --wrap'}else{''})+$(if($Edit){' --edit'}else{''})+' >"'+$log+'" 2>&1"'
 $action=New-ScheduledTaskAction -Execute "$env:SystemRoot\System32\cmd.exe" -Argument $argument -WorkingDirectory $Work
 $principal=New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -LogonType Interactive -RunLevel Limited
 $settings=New-ScheduledTaskSettingsSet -ExecutionTimeLimit (New-TimeSpan -Seconds 45) -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries

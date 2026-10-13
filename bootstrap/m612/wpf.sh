@@ -426,6 +426,15 @@ step_build_directwrite() {
     "-output=$(cygpath -m "$build/lib/DirectWriteForwarder.dll")"
 }
 
+step_printing_gate() {
+  initialize
+  /usr/bin/python3 "$here/tools/wpf-printing-gate.py" "$source" "$build" "$sdk" "$oob" \
+    "${WPF_CPPCLI_BUILD:-$M612/build/cppcli}" > "$build/printing-gate.log" 2>&1 || {
+      tail -100 "$build/printing-gate.log"
+      die "The source frontend cannot compile the original System.Printing project yet; see printing-gate.log"
+    }
+}
+
 step_check_directwrite_assembly() {
   initialize
   [ -s "$build/lib/DirectWriteForwarder.dll" ] || step_build_directwrite
@@ -558,6 +567,13 @@ step_check_window_wrap() {
       -Work "$(cygpath -m "$work/bin/Release/net8.0")" -Dotnet "$(cygpath -m "$sdk/dotnet.exe")" \
       -ToolchainBin "$(cygpath -m /clang64/bin)" -Text -Wrap "${extra[@]}"
   done
+}
+step_check_window_edit() {
+  local work=$build/window-check
+  /c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe -NoProfile -NonInteractive \
+    -File "$(cygpath -m "$here/wpf-tests/RunInteractive.ps1")" \
+    -Work "$(cygpath -m "$work/bin/Release/net8.0")" -Dotnet "$(cygpath -m "$sdk/dotnet.exe")" \
+    -ToolchainBin "$(cygpath -m /clang64/bin)" -Text -Edit
 }
 step_check_presentation_framework() {
   initialize

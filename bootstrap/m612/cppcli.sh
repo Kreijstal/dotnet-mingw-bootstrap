@@ -320,10 +320,42 @@ import json, sys
 refs = json.load(open(sys.argv[1], encoding='utf-8'))
 assert len(refs) == 1 and refs[0]['as_friend'] and refs[0]['source'].replace('\\', '/').endswith('/includes/nested/reference.hpp'), refs
 PY
-  reject_case wrong-friend '#using "FriendLibrary.dll" as_friend
-int main() { return 0; }' 'InternalsVisibleTo matching output assembly name and public key' --public-key "$key"
-  reject_case wrong-friend-key '#using "FriendLibrary.dll" as_friend
-int main() { return 0; }' 'InternalsVisibleTo matching output assembly name and public key' --assembly-name FriendBridge
+  cat > "$testdir/friend-public-only.cpp" <<'EOF'
+#using "FriendLibrary.dll" as_friend
+int main() { FriendApi::PublicApi^ value=gcnew FriendApi::PublicApi(); System::Console::WriteLine("public as_friend metadata works without an internal grant"); return 0; }
+EOF
+  run_case friend-public-only "$testdir/friend-public-only.cpp" 'public as_friend metadata works without an internal grant' \
+    --type FriendApi.PublicApi --public-key "$key"
+  cat > "$testdir/friend-runtime-denied.cpp" <<'EOF'
+#using "FriendLibrary.dll" as_friend
+public ref class UngrantedFriend abstract sealed { public: static int Read() { return FriendApi::PublicApi::Extra(); } };
+EOF
+  compile "$(cygpath -m "$testdir/friend-runtime-denied.cpp")" --target library --type FriendApi.PublicApi \
+    --public-key "$key" -o "$(cygpath -m "$testdir/friend-runtime-denied.dll")"
+  compile "$(cygpath -m "$testdir/friend-runtime-denied.cpp")" --target library --type FriendApi.PublicApi \
+    --assembly-name FriendBridge -o "$(cygpath -m "$testdir/friend-wrong-key.dll")"
+  mkdir -p "$testdir/friend-runtime-consumer"
+  cat > "$testdir/friend-runtime-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers></PropertyGroup></Project>
+EOF
+  cat > "$testdir/friend-runtime-consumer/Program.cs" <<'EOF'
+using System;
+using System.IO;
+using System.Reflection;
+using System.Runtime.Loader;
+foreach(string file in args) {
+    var context=new AssemblyLoadContext(file,true);
+    context.Resolving+=(scope,name)=>scope.LoadFromAssemblyPath(Path.Combine(Path.GetDirectoryName(Path.GetFullPath(file)),name.Name+".dll"));
+    var assembly=context.LoadFromAssemblyPath(Path.GetFullPath(file));
+    try { assembly.GetType("UngrantedFriend").GetMethod("Read").Invoke(null,null); throw new Exception("runtime accepted ungranted internal access"); }
+    catch(TargetInvocationException error) when(error.InnerException is MethodAccessException) { Console.WriteLine("runtime rejects ungranted internal access: "+Path.GetFileName(file)); }
+    context.Unload();
+}
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/friend-runtime-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -p:NuGetAudit=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/friend-runtime-consumer/bin/Debug/net8.0/consumer.dll")" \
+    "$(cygpath -m "$testdir/friend-runtime-denied.dll")" "$(cygpath -m "$testdir/friend-wrong-key.dll")"
   reject_case internal-without-friend '#using "FriendLibrary.dll"
 int main() { return 0; }' 'imported type is internal' --type FriendApi.SecretApi
   reject_case friend-private '#using "FriendLibrary.dll" as_friend
@@ -570,6 +602,38 @@ step_test-native-fields() {
   run_case native-fields "$src/tests/native-fields.cpp" 'native POD aggregate, packed nested fields, addresses and single evaluation OK' --native-library cppcli-native-fields.dll
   reject_case native-bitfield-reference 'struct Native { unsigned Value:3; }; unsigned Read(const unsigned& value) { return value; } int main() { Native value; return Read(value.Value); }' 'native bitfields have no independently addressable native storage'
   reject_case native-array-field-init 'struct Native { int Values[2]; }; int main() { Native value = {{1, 2}}; return 0; }' 'native POD whole-array field operations'
+}
+
+step_test-contextual-delegate() {
+  run_case contextual-delegate "$src/tests/contextual-delegate.cpp" \
+    'contextual delegate declarations, WPF-style parameter/field identifiers and delegate invocation PASS' \
+    --type System.MulticastDelegate --type System.Delegate
+}
+
+step_test-native-spooler() {
+  /clang64/bin/clang++.exe -std=c++17 -O2 -DSPOOLER_NATIVE_ORACLE \
+    "$src/tests/native-spooler.cpp" -lwinspool -o "$testdir/native-spooler-oracle.exe"
+  compile "$(cygpath -m "$src/tests/native-spooler.cpp")" \
+    --native-import "$(cygpath -m /clang64/lib/libwinspool.a)" \
+    -o "$(cygpath -m "$testdir/native-spooler.dll")"
+  "$testdir/native-spooler-oracle.exe" > "$testdir/native-spooler.expected"
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/native-spooler.dll")" > "$testdir/native-spooler.actual"
+  cmp "$testdir/native-spooler.expected" "$testdir/native-spooler.actual" || die "spooler native/CLI enumeration mismatch"
+  /usr/bin/python3 - "$testdir/native-spooler.dll.work/native-imports.json" \
+    "$testdir/native-spooler.dll.work/assembly.il" <<'PY'
+from pathlib import Path
+import json,sys
+manifest=json.loads(Path(sys.argv[1]).read_text())
+assert manifest['imports']['EnumPrintersW']['library'].upper()=='WINSPOOL.DRV'
+assert 'WINSPOOL.DRV' in Path(sys.argv[2]).read_text().upper()
+PY
+  reject_case spooler-unbound '#include <windows.h>
+#include <winspool.h>
+int main() { DWORD bytes=0,count=0; return EnumPrintersW(PRINTER_ENUM_LOCAL,nullptr,1,nullptr,0,&bytes,&count); }' 'without an emitted definition'
+  reject_case spooler-user-declaration 'extern "C" int EnumPrintersW();
+int main() { return EnumPrintersW(); }' 'without an emitted definition' \
+    --native-import "$(cygpath -m /clang64/lib/libwinspool.a)"
+  log "PASS native-spooler: trusted WINSPOOL.DRV import and real read-only EnumPrintersW match native SDK oracle"
 }
 step_test-windows-api() {
   log "MinGW import archives -> lazy Windows API P/Invoke bindings"
