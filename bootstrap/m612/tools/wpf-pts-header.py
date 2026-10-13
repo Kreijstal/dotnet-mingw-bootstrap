@@ -115,14 +115,18 @@ for name in ('FSIMETHODS', 'FSCONTEXTINFO', 'FSRECT', 'FSPOINT', 'FSBBOX',
              'FSFMTR', 'FSPAP', 'FSTXTPROPS', 'FSPARADESCRIPTION',
              'FSTRACKDETAILS', 'FSTRACKDESCRIPTION', 'FSPAGEDETAILS',
              'FSSECTIONDESCRIPTION', 'FSSECTIONDETAILS', 'FSTEXTDETAILS',
-             'FSLINEDESCRIPTIONSINGLE', 'FSSUBTRACKDETAILS', 'FSCOLUMNINFO'):
+             'FSLINEDESCRIPTIONSINGLE', 'FSSUBTRACKDETAILS', 'FSCOLUMNINFO',
+             'FSFLOATERINIT', 'FSFLOATERPROPS', 'FSFLOATERDETAILS'):
     emit(name)
 # Derive callback function signatures from the same source declarations.
 for name in ('GetPageDimensions', 'GetSectionProperties', 'GetMainTextSegment',
              'GetFirstPara', 'GetNextPara', 'GetParaProperties', 'CreateParaclient',
              'DestroyParaclient', 'GetTextProperties', 'FormatLine', 'DestroyLine',
              'DestroyLineBreakRecord', 'DestroyMcsclient', 'ObjFormatParaFinite',
-             'ObjDestroyPara', 'ObjFormatParaBottomless', 'ObjDestroyBreakRecord', 'GetSectionColumnInfo', 'DuplicateMcsclient'):
+             'ObjDestroyPara', 'ObjFormatParaBottomless', 'ObjDestroyBreakRecord', 'GetSectionColumnInfo', 'DuplicateMcsclient',
+             'GetObjectHandlerInfo', 'ConvertMcsclient', 'GetFloaterProperties',
+             'FormatFloaterContentFinite', 'FormatFloaterContentBottomless',
+             'DestroyFloaterContent', 'DestroyFloaterContentBreakRecord', 'GetMCSClientAfterFloater'):
     match = re.search(r'\bdelegate\s+int\s+' + name + r'\s*\((.*?)\)\s*;', text, re.S)
     if not match:
         raise SystemExit('Missing source callback: ' + name)

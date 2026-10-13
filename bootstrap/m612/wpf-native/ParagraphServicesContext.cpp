@@ -12,6 +12,10 @@
 #include "ParagraphServicesNative.h"
 namespace {
 struct InstalledObjects { FSIMETHODS methods[2]; };
+// The handler record is opaque to managed callers. Both its producer and
+// consumer belong to this replacement; its callback table comes from Pts.cs.
+struct FloaterHandler { uint32_t magic=0; FSFLOATERINIT init{}; };
+constexpr uint32_t floater_magic=0x464c5431;
 struct Context {
     FSCONTEXTINFO info{};
     std::shared_ptr<InstalledObjects> installed;
@@ -32,6 +36,11 @@ int destroy_objects(Context& context) {
     }
     return result;
 }
+}
+extern "C" __declspec(dllexport) int WINAPI GetFloaterHandlerInfo(const FSFLOATERINIT* init,void* output) {
+    if(!output)return PTS_tserrNullOutputParameter;
+    if(!init)return PTS_tserrInvalidParameter;
+    auto handler=static_cast<FloaterHandler*>(output);handler->init=*init;handler->magic=floater_magic;return 0;
 }
 extern "C" __declspec(dllexport) int WINAPI CreateInstalledObjectsInfo(const FSIMETHODS* subtrack,const FSIMETHODS* subpage,void** output,int* count) {
     if(!output||!count)return PTS_tserrNullOutputParameter;*output=nullptr;*count=0;
@@ -177,15 +186,31 @@ struct TextData {
         --context->resources;
     }
 };
+struct FloaterData;
+void erase_floater(void* handle);
+struct FloaterData {
+    std::shared_ptr<Context> context;
+    FSFLOATERCBK callbacks{};
+    FSFLOATERDETAILS details{};
+    void* break_record=nullptr;
+    explicit FloaterData(std::shared_ptr<Context> value):context(std::move(value)){++context->resources;}
+    ~FloaterData() {
+        erase_floater(this);
+        if(break_record)reinterpret_cast<PtsDestroyFloaterContentBreakRecord>(callbacks.pfnDestroyFloaterContentBreakRecord)(context->info.pfsclient,break_record);
+        if(details.pfsFloaterContent)reinterpret_cast<PtsDestroyFloaterContent>(callbacks.pfnDestroyFloaterContent)(details.pfsFloaterContent);
+        --context->resources;
+    }
+};
 struct ParaData {
     std::shared_ptr<Context> context;
     FSPARADESCRIPTION desc{};
     bool forced_progress=false;
     std::shared_ptr<TextData> text;
+    std::shared_ptr<FloaterData> floater;
     ~ParaData() {
         if(desc.idobj==0 && desc.pfspara)
             reinterpret_cast<PtsObjDestroyPara>(context->installed->methods[0].pfnDestroyPara)(desc.pfspara);
-        text.reset();
+        text.reset();floater.reset();
         if(desc.pfsparaclient)reinterpret_cast<PtsDestroyParaclient>(context->info.fscbk.cbkgen.pfnDestroyParaclient)(context->info.pfsclient,desc.pfsparaclient);
     }
 };
@@ -227,11 +252,13 @@ struct PageData {
 };
 std::unordered_map<void*,std::shared_ptr<TrackData>> tracks;
 std::unordered_map<void*,std::weak_ptr<TextData>> texts;
+std::unordered_map<void*,std::weak_ptr<FloaterData>> floaters;
 std::unordered_map<void*,std::shared_ptr<PageData>> pages;
 std::unordered_map<void*,std::shared_ptr<BreakData>> records;
 std::unordered_map<void*,std::weak_ptr<SectionData>> sections;
 void erase_section(void* handle){std::lock_guard<std::mutex> lock(gate);sections.erase(handle);}
 void erase_text(void* handle){std::lock_guard<std::mutex> lock(gate);texts.erase(handle);}
+void erase_floater(void* handle){std::lock_guard<std::mutex> lock(gate);floaters.erase(handle);}
 // A managed object callback may successfully format a native subtrack and then
 // throw, resetting its out handle. Track those exports across callback reentry
 // so the enclosing failure still releases the now-unreported native resources.
@@ -353,6 +380,62 @@ int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const F
     return 0;
 }
 
+int format_block_ui(const std::shared_ptr<ParaData>& para,uint32_t direction,const FSRECT& rect,
+    void* input_margin,bool bottomless,bool empty_ok,int suppress,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA suppress_break,
+    std::shared_ptr<Continuation>& output,void** margin_output) {
+    auto context=para->context;auto& obj=context->info.fscbk.cbkobj;void* client=context->info.pfsclient;
+    if(!obj.pfnGetObjectHandlerInfo||!obj.pfnConvertMcsclient)return PTS_tserrInvalidParameter;
+    FloaterHandler handler{};
+    int status=reinterpret_cast<PtsGetObjectHandlerInfo>(obj.pfnGetObjectHandlerInfo)(client,2,&handler);if(status)return status;
+    if(handler.magic!=floater_magic)return PTS_tserrInvalidClientOutput;
+    auto& cb=handler.init.fsfloatercbk;
+    if(!cb.pfnGetFloaterProperties||!cb.pfnDestroyFloaterContent||!cb.pfnDestroyFloaterContentBreakRecord||!cb.pfnGetMCSClientAfterFloater||
+       !(bottomless?cb.pfnFormatFloaterContentBottomless:cb.pfnFormatFloaterContentFinite))return PTS_tserrInvalidParameter;
+    FSFLOATERPROPS props{};
+    status=reinterpret_cast<PtsGetFloaterProperties>(cb.pfnGetFloaterProperties)(client,para->desc.nmp,direction,&props);if(status)return status;
+    // A nonfloating block owns the entire column width. Floating obstacles
+    // need a separate text-flow algorithm, rather than treating them as blocks.
+    if(props.fFloat||props.fskwr!=fskwrNone||props.fskclear!=fskclearNone)return PTS_tserrNotImplemented;
+    int top=0;
+    status=reinterpret_cast<PtsConvertMcsclient>(obj.pfnConvertMcsclient)(client,para->desc.pfsparaclient,para->desc.nmp,direction,input_margin,suppress,&top);if(status)return status;
+    if(int64_t(rect.v)+top<INT32_MIN||int64_t(rect.v)+top>INT32_MAX||int64_t(rect.dv)-top>INT32_MAX)return PTS_tserrInvalidGeometry;
+    auto data=std::make_shared<FloaterData>(context);data->callbacks=cb;para->floater=data;
+    auto& details=data->details;details.fsnmFloater=para->desc.nmp;details.fskupdContent=fskupdNew;
+    int width=0,height=0,polygons=0,vertices=0;FSBBOX box{};
+    int available=std::max(0,rect.dv-top);FSFMTR finite{};
+    if(bottomless) {
+        FSFMTRBL result{};
+        status=reinterpret_cast<PtsFormatFloaterContentBottomless>(cb.pfnFormatFloaterContentBottomless)(client,para->desc.pfsparaclient,para->desc.nmp,suppress,direction,1,rect.du,available,
+            &result,&details.pfsFloaterContent,&width,&height,&box,&polygons,&vertices);
+        if(!status&&result!=fmtrblGoalReached)status=PTS_tserrNotImplemented;
+    } else {
+        status=reinterpret_cast<PtsFormatFloaterContentFinite>(cb.pfnFormatFloaterContentFinite)(client,para->desc.pfsparaclient,nullptr,0,para->desc.nmp,nullptr,empty_ok,suppress,direction,1,rect.du,available,suppress_break,
+            &finite,&details.pfsFloaterContent,&data->break_record,&width,&height,&box,&polygons,&vertices);
+    }
+    if(status)return status;
+    if(polygons||vertices||data->break_record)return PTS_tserrNotImplemented;
+    if(!bottomless&&finite.kstop==fmtrNoProgressOutOfSpace) {
+        if(details.pfsFloaterContent||width||height)return PTS_tserrInvalidClientOutput;
+        output=std::make_shared<Continuation>();output->context=context;output->paragraph=para->desc.nmp;
+        return 0;
+    }
+    if(!bottomless&&finite.kstop!=fmtrGoalReached)return PTS_tserrNotImplemented;
+    if(width<0||height<0||width>rect.du||int64_t(rect.v)+top+height>INT32_MAX)return PTS_tserrInvalidClientOutput;
+    if(!bottomless&&int64_t(top)+height>rect.dv&&!finite.fForcedProgress)return PTS_tserrInvalidClientOutput;
+    details.fsrcFloater={rect.u,rect.v+top,width,height};
+    if(box.fDefined) {
+        if(int64_t(box.fsrc.u)+rect.u<INT32_MIN||int64_t(box.fsrc.u)+rect.u>INT32_MAX||
+           int64_t(box.fsrc.v)+rect.v+top<INT32_MIN||int64_t(box.fsrc.v)+rect.v+top>INT32_MAX)return PTS_tserrInvalidClientOutput;
+        box.fsrc.u+=rect.u;box.fsrc.v+=rect.v+top;
+    }
+    para->desc.fsbbox=box;para->desc.pfspara=data.get();para->desc.dvrTopSpace=top;
+    para->forced_progress=!bottomless&&finite.fForcedProgress;
+    para->desc.dvrUsed=int(std::max<int64_t>(0,bottomless?int64_t(top)+height:std::min<int64_t>(int64_t(top)+height,rect.dv)));
+    status=reinterpret_cast<PtsGetMCSClientAfterFloater>(cb.pfnGetMCSClientAfterFloater)(client,para->desc.pfsparaclient,para->desc.nmp,direction,input_margin,margin_output);if(status)return status;
+    {std::lock_guard<std::mutex> lock(gate);floaters[data.get()]=data;}
+    return 0;
+}
+
 int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t direction,const FSRECT& rect,
     int suppress,void* incoming,std::shared_ptr<TrackData>& result,void** margin_output,bool bottomless=false,const std::shared_ptr<Continuation>& input={},bool empty_ok=false,bool previous_page=true,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA suppress_break=fsksuppresshardbreakbeforefirstparaPageAndColumn,bool keep_self=false) {
     auto& cb=context->info.fscbk.cbkgen;void* client=context->info.pfsclient;
@@ -372,7 +455,7 @@ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t 
     while(found) {
         if(!name||!visited.insert(name).second)return PTS_tserrInvalidClientOutput;
         FSPAP props{};status=reinterpret_cast<PtsGetParaProperties>(cb.pfnGetParaProperties)(client,name,&props);if(status)return status;
-        if(props.idobj!=-1&&props.idobj!=0)return PTS_tserrNotImplemented;
+        if(props.idobj!=-1&&props.idobj!=0&&props.idobj!=2)return PTS_tserrNotImplemented;
         bool first=track->paras.empty();
         bool continued=input&&first&&(input->child||input->dcp>0);
         bool page_break=!bottomless&&!continued&&props.fBreakPageBefore&&!(first&&suppress_break==fsksuppresshardbreakbeforefirstparaPageAndColumn);
@@ -401,7 +484,14 @@ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t 
         std::shared_ptr<Continuation> next_position;FSFMTRKSTOP next_stop=fmtrBrokenOutOfSpace;
         auto resume=(input&&track->paras.empty())?input:std::shared_ptr<Continuation>{};
         if(props.idobj==-1)status=format_text(para,direction,available,resume,next_position,bottomless,!empty_ok&&track->paras.empty(),keep_self||props.fKeepWithNext);
-        else {
+        else if(props.idobj==2) {
+            void* margin_next=nullptr;
+            status=format_block_ui(para,direction,available,input_margin,bottomless,empty_ok||!track->paras.empty(),suppress&&first,first?suppress_break:fsksuppresshardbreakbeforefirstparaNone,next_position,&margin_next);
+            // Deferral preserves the incoming margin. Accepted content returns
+            // a newly owned bottom-margin state through the original callback.
+            if(!next_position){margin.reset();margin.value=margin_next;input_margin=margin.value;}
+            else if(margin_next)reinterpret_cast<PtsDestroyMcsclient>(context->info.fscbk.cbkobj.pfnDestroyMcsclient)(client,margin_next);
+        } else {
             auto& methods=context->installed->methods[0];
             if(!(bottomless?methods.pfnFormatParaBottomless:methods.pfnFormatParaFinite)||!methods.pfnDestroyPara)return PTS_tserrInvalidParameter;
             CallbackTracks pending;
@@ -455,6 +545,7 @@ void clear_track(const std::shared_ptr<TrackData>& track) {
     track->update=fskupdNoChange;
     for(const auto& para:track->paras) {
         para->desc.fsupdinf.fskupd=fskupdNoChange;
+        if(para->floater)para->floater->details.fskupdContent=fskupdNoChange;
         if(para->desc.idobj==0){auto child=lookup_owned(tracks,track->context.get(),para->desc.pfspara);if(child)clear_track(child);}
     }
 }
@@ -654,6 +745,15 @@ extern "C" __declspec(dllexport) int WINAPI FsQueryTrackParaList(void* context,v
 }
 extern "C" __declspec(dllexport) int WINAPI FsQuerySubtrackParaList(void* context,void* handle,int capacity,FSPARADESCRIPTION* output,int* count) {
     return FsQueryTrackParaList(context,handle,capacity,output,count);
+}
+extern "C" __declspec(dllexport) int WINAPI FsQueryFloaterDetails(void* context,void* handle,FSFLOATERDETAILS* output) {
+    if(!output)return PTS_tserrNullOutputParameter;*output={};
+    std::shared_ptr<FloaterData> data;
+    {std::lock_guard<std::mutex> lock(gate);auto found=floaters.find(handle);
+        if(found==floaters.end()||contexts.find(context)==contexts.end())return PTS_tserrInvalidQuery;
+        data=found->second.lock();}
+    if(!data||data->context.get()!=context)return PTS_tserrInvalidQuery;
+    *output=data->details;return 0;
 }
 extern "C" __declspec(dllexport) int WINAPI FsQueryTextDetails(void* context,void* handle,FSTEXTDETAILS* output) {
     if(!output)return PTS_tserrNullOutputParameter;*output={};auto text=find_text(context,handle);if(!text)return PTS_tserrInvalidQuery;

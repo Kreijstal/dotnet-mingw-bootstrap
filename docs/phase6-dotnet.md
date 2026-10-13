@@ -8922,3 +8922,54 @@ behavior to existing exports. Optimal policies, balancing/span areas, tables/
 floaters/figures, advanced/incremental/interruptible algorithms, full bidi/native
 language and broader runtime behavior remain incomplete. The full WPF goal
 stays active.
+
+
+## 134. Original BlockUIContainer callbacks, pagination and child layout
+
+The 2026-10-14 continuation adds nonfloating, full-column BlockUIContainer
+formatting through original WPF floater callbacks. GetFloaterHandlerInfo copies
+FSFLOATERINIT into this replacement's opaque handler record; the engine obtains
+it through original GetObjectHandlerInfo. Its private handler producer and
+consumer are both source-owned. Callback tables/properties/query records and
+function signatures come from original Pts.cs, bringing ABI field validation
+from 283 to 313 entries. No Microsoft native handler implementation is imported.
+
+ConvertMcsclient computes collapsed top space; FormatFloaterContentFinite or
+Bottomless performs original UIElementIsland measurement; GetMCSClientAfterFloater
+returns the original bottom-margin state. The engine retains the original
+content handle, page-coordinate block bounds, used height, forced-progress and
+query/update state. An occupied area can defer a whole block without advancing
+source or replacing incoming margins. A fresh undersized area accepts original
+forced content with bounded used height and no phantom terminal continuation.
+Scoped content/break ownership releases populated outputs after callback errors,
+then destroys the original paragraph client. FsQueryFloaterDetails provides real
+recorded placement. Floating obstacles still need their own text-flow algorithm
+and are explicitly rejected rather than formatted as nonfloating blocks.
+
+Validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-paragraph-context-native
+MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-block-ui-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/block-ui-sdk-check'
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-paragraph-context inventory layout check-sdk
+```
+
+Native checks verify original handler table use, intact deferral/resume, actual
+content/bounds, forced terminal progress, foreign/stale queries, clear-update
+state, populated callback failure and exact content/line/break/client cleanup.
+Original WPF flat/nested documents in Ideal/Display defer a real Button inside a
+red Border to page 1 after preceding text. Child size is 360x60 at (18,10), with
+16560 red pixels; text/block page mapping, visual point hit, routed click events,
+disposed-page regeneration and GC pass. Oversized and empty blocks finish on a
+single 400x10 page at the requested size. A two-column document moves its block
+intact to the second column at (208,10), width 150, and finishes on one page.
+Original FlowDocumentScrollViewer child resizing from 60 to 120 updates the
+rendered red area from 22020 to 44040 pixels. Shared-framework and self-contained
+SDK consumers with SDK roots/toolchain PATH removed pass dispatcher cleanup.
+The source SDK gate now includes the block-control test alongside previous WPF/
+text/paragraph/pagination/keep/forced/WinForms regressions. Evidence is archived
+under tmp/wpf8-support/validation/block-ui-20261014; package integration follows.
+Imported native coverage rises to 91/139 with 48 absent. Floating obstacles,
+figures, tables, balancing/span areas, optimal/advanced/incremental/interruptible
+algorithms, full bidi/native language and broader runtime behavior remain
+required for the full WPF goal.
