@@ -30,6 +30,7 @@ class Check {
         int ink=0;for(int i=0;i<bytes.Length;i+=4)if(bytes[i+3]>100&&bytes[i]<100&&bytes[i+1]<100&&bytes[i+2]<100)++ink;
         if(ink<100){Dump(visual,0);throw new Exception("original subpage visual has no glyph raster: "+ink+", bounds="+VisualTreeHelper.GetDescendantBounds(visual));}return ink;
     }
+    static byte[] Raster(Visual visual){var image=new RenderTargetBitmap(400,180,96,96,PixelFormats.Pbgra32);image.Render(visual);var bytes=new byte[400*180*4];image.CopyPixels(bytes,400*4,0);return bytes;}
     static void Dump(Visual visual,int depth){Console.WriteLine(new string(' ',depth)+visual.GetType().Name+" bounds="+VisualTreeHelper.GetDescendantBounds(visual)+" clip="+VisualTreeHelper.GetClip(visual));for(int i=0;i<VisualTreeHelper.GetChildrenCount(visual);++i)Dump((Visual)VisualTreeHelper.GetChild(visual,i),depth+1);}
     [STAThread]
     static void Main() {
@@ -85,15 +86,36 @@ class Check {
                         var format=Get(cache,"CurrentFormatContext");Call(format,"PushNewPageData",new Size(400,double.PositiveInfinity),new Thickness(0),false,false);
                         try {Call(paragraph,"FormatParaBottomless",args);}finally{Call(format,"PopPageData");}
                     }
+                    byte[] beforeRaster;
                     if((int)args[11]<=Dpi(180)||(int)args[16]!=1)throw new Exception("original bottomless subpage must retain full content extent");
                     using((IDisposable)Call(cache,"SetDocumentArrangeContext",ownerPage)) {
                         var arrange=Get(cache,"CurrentArrangeContext");Call(arrange,"PushNewPageData",Get(ownerPage,"PageContext"),Rect(0,0,Dpi(400),(int)args[11]),false);
                         try {Call(client,"Arrange",args[10],Rect(0,0,Dpi(400),(int)args[11]),(int)args[15],0u);Call(client,"ValidateVisual",Enum("FSKUPDATE",2));Call(client,"UpdateViewport",Rect(0,0,Dpi(400),Dpi(180)));Ink((Visual)Get(client,"Visual"));
                             var range=Call(client,"GetTextContentRange");for(int at=0;at<run.Text.Length;++at)if(!(bool)Call(range,"Contains",run.ContentStart.GetPositionAtOffset(at,LogicalDirection.Forward),true))throw new Exception("bottomless subpage loses source text");
-                            ((IDisposable)client).Dispose();
+                            beforeRaster=Raster((Visual)Get(client,"Visual"));
                         }finally{Call(arrange,"PopPageData");}
                     }
                     Console.WriteLine($"original bottomless subpage clients {mode}: full extent {(int)args[11]/300.0:F1}, all {run.Text.Length} source characters, viewport glyphs and original disposal PASS");
+                    int previousHeight=(int)args[11];IntPtr stable=(IntPtr)args[10];
+                    run.Text+=" "+string.Join(" ",Enumerable.Range(100,80).Select(i=>$"edit{i:D3}"));
+                    object[] update={stable,client,1,0u,0,Dpi(300),0,null,Enum("FSKCLEAR",0),1,null,0,null,IntPtr.Zero,null,0,0};
+                    using((IDisposable)Call(cache,"SetDocumentFormatContext",ownerPage)) {
+                        var format=Get(cache,"CurrentFormatContext");Call(format,"PushNewPageData",new Size(300,double.PositiveInfinity),new Thickness(0),true,false);
+                        try {Call(paragraph,"UpdateBottomlessPara",update);}finally{Call(format,"PopPageData");}
+                    }
+                    if((int)update[11]<=previousHeight||(int)update[16]!=1||(IntPtr)Get(Get(client,"_paraHandle"),"Value")!=stable)throw new Exception("original bottomless update must retain handle and grow full extent");
+                    using((IDisposable)Call(cache,"SetDocumentArrangeContext",ownerPage)) {
+                        var arrange=Get(cache,"CurrentArrangeContext");Call(arrange,"PushNewPageData",Get(ownerPage,"PageContext"),Rect(0,0,Dpi(300),(int)update[11]),false);
+                        try {
+                            Call(client,"Arrange",stable,Rect(0,0,Dpi(300),(int)update[11]),(int)update[15],0u);Call(client,"ValidateVisual",Enum("FSKUPDATE",2));Call(client,"UpdateViewport",Rect(0,0,Dpi(300),Dpi(180)));Ink((Visual)Get(client,"Visual"));
+                            if(beforeRaster.SequenceEqual(Raster((Visual)Get(client,"Visual"))))throw new Exception("updated original subpage retained stale viewport glyphs");
+                            var range=Call(client,"GetTextContentRange");for(int at=0;at<run.Text.Length;++at)if(!(bool)Call(range,"Contains",run.ContentStart.GetPositionAtOffset(at,LogicalDirection.Forward),true))throw new Exception("updated original subpage loses source text");
+                            ((IDisposable)client).Dispose();
+                        }finally{Call(arrange,"PopPageData");}
+                    }
+                    if(context.GetType().GetProperty("CallbackException",I).GetValue(context) is Exception updateFailure)throw new Exception("original updated subpage cleanup callback",updateFailure);
+                    GC.Collect(2,GCCollectionMode.Forced,true,true);
+                    Console.WriteLine($"original bottomless subpage update {mode}: stable handle, width 400->300, extent {previousHeight/300.0:F1}->{(int)update[11]/300.0:F1}, all {run.Text.Length} characters, changed glyph raster and original cleanup PASS");
                 }
             }finally{Call(context,"Enter");try{if(incoming!=IntPtr.Zero)Native("FsDestroySubpageBreakRecord",handle,incoming);((IDisposable)paragraph).Dispose();}finally{Call(context,"Leave");}}
         }

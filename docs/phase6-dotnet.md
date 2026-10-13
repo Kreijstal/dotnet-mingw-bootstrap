@@ -9142,3 +9142,50 @@ display transfer, balancing/span areas/footnotes, floating obstacles/figures,
 tables, optimal/advanced/incremental/interruptible algorithms, full bidi/native
 language and broader runtime behavior remain incomplete. The full WPF goal
 stays active.
+
+
+## 138. Stable-identity bottomless subpage updates
+
+The 2026-10-14 continuation implements FsUpdateBottomlessSubpage for supported
+single-column LTR subpages. The formatter builds a replacement tree through
+original callbacks, allocates its registry entry before changing existing state,
+then swaps the root/layout data while retaining the existing subpage identity.
+Superseded original line/client resources release outside the registry lock.
+Failed formatting or invalid geometry leaves the previous native tree queryable;
+metric/margin/interruption outputs remain reset. Foreign/stale handles, finite
+subpages and a different source segment are rejected. Formatting completes fully
+and reports uninterruptible completion; this does not add an interruptible or
+partial-paragraph incremental algorithm.
+
+Validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-paragraph-context-native
+MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-subpages-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/subpages-update-sdk-check'
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-paragraph-context-native inventory layout check-sdk
+```
+
+Native gates verify stable identity, changed source/extent/position, invalidated
+old root queries, exact superseded-resource release, partial populated callback
+failure, clean failure outputs, preserved prior geometry, allocation-free invalid
+geometry rejection, foreign/wrong-segment/stale rejection and exact final cleanup.
+Original SubpageParagraph.UpdateBottomlessPara updates the same original
+SubpageParaClient after appending 640 text characters and narrowing its width
+from 400 to 300. Full height grows from 532 to 1197 in Ideal and from 560 to 1260
+in Display. All 1339 source characters remain in the original content range,
+the original handle stays unchanged and viewport glyph raster changes. Original
+arrange/viewport/visual creation, client disposal, callback-exception checks and
+compacting GC pass. Shared-framework and self-contained SDK consumers run with
+SDK roots/toolchain PATH removed and pass dispatcher cleanup. Existing finite
+subpage coverage remains four rendered chunks covering all 699 characters once.
+This is the original cell subpage path; public table layout still requires its
+table object handler.
+
+The existing source SDK gate includes these update checks in check-subpages-sdk.sh.
+Final source regressions and inventory are archived under
+ tmp/wpf8-support/validation/subpage-update-20261014. Coverage rises to 100/139
+with 39 absent; original ABI field checks remain 326. Subpage comparison/display
+transfer, subtrack updates, balancing/span areas/footnotes, floating obstacles/
+figures, tables, optimal/advanced/incremental/interruptible algorithms, full
+bidi/native language and broader runtime behavior remain required for the full
+WPF goal. Package integration follows.

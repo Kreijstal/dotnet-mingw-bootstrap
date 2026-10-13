@@ -909,6 +909,35 @@ extern "C" __declspec(dllexport) int WINAPI FsDestroySubpage(void* context,void*
     auto page=lookup_owned(pages,context,handle);if(!page||!page->subpage)return PTS_tserrInvalidQuery;
     unregister_page(page);return 0;
 }
+extern "C" __declspec(dllexport) int WINAPI FsUpdateBottomlessSubpage(void* context_handle,void* handle,void* segment,int suppress,uint32_t direction,int width,
+    int u,int dur,int v,int columns,const FSCOLUMNINFO* info,int segment_areas,void* const* segments,const int* segment_spans,
+    int height_areas,const int* heights,const int* height_spans,int interruptible,FSFMTRBL* formatted,int* used,FSBBOX* bbox,
+    void** margin_output,int* top_space,int* uninterruptible) {
+    if(!formatted||!used||!bbox||!margin_output||!top_space||!uninterruptible)return PTS_tserrNullOutputParameter;
+    *formatted=fmtrblGoalReached;*margin_output=nullptr;*used=*top_space=*uninterruptible=0;*bbox={};
+    auto page=lookup_owned(pages,context_handle,handle);
+    if(!page||!page->subpage||!page->bottomless||page->section||page->track->segment!=segment)return PTS_tserrInvalidQuery;
+    if(segment_areas||height_areas)return PTS_tserrNotImplemented;if(v<0)return PTS_tserrInvalidGeometry;
+    try {
+        FSRECT rect{u,v,dur,INT32_MAX-v};std::shared_ptr<PageData> replacement;MarginOwner margin{page->context};
+        int next_used=0;FSBBOX next_box{};
+        int status=build_subpage(page->context,segment,direction,rect,width,0,columns,info,true,false,suppress,true,fsksuppresshardbreakbeforefirstparaPageAndColumn,{},replacement,&margin.value,next_used,next_box);if(status)return status;
+        {
+            std::lock_guard<std::mutex> lock(gate);
+            // Allocate the new registry entry before changing any old state.
+            // Retain subpage identity; superseded clients are released below,
+            // outside the registry lock, through their original callbacks.
+            tracks.emplace(replacement->track.get(),replacement->track);
+            tracks.erase(page->track.get());
+            page->track.swap(replacement->track);
+            std::swap(page->subpage_details,replacement->subpage_details);
+            page->continuation.swap(replacement->continuation);
+            std::swap(page->stop,replacement->stop);
+            std::swap(page->forced_progress,replacement->forced_progress);
+        }
+        *used=next_used;*bbox=next_box;*margin_output=margin.value;margin.value=nullptr;*uninterruptible=1;return 0;
+    }catch(const std::bad_alloc&){return PTS_tserrOutOfMemory;}
+}
 extern "C" __declspec(dllexport) int WINAPI FsDestroySubpageBreakRecord(void* context,void* handle){return destroy_record(context,handle,false,true);}
 extern "C" __declspec(dllexport) int WINAPI FsDuplicateSubpageBreakRecord(void* context,void* handle,void** output) {
     if(!output)return PTS_tserrNullOutputParameter;*output=nullptr;
