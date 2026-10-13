@@ -449,6 +449,7 @@ static class Program
             header.WriteLine("template<class T> class __cli_handle; template<bool B,class T,class F> struct __cli_select { using type=F; }; template<class T,class F> struct __cli_select<true,T,F> { using type=T; }; template<class T> typename __cli_select<__is_arithmetic(T)||__is_enum(T),__cli_handle<T>,T*>::type __cli_alloc(T*);");
             header.WriteLine("template<class T> class __attribute__((annotate(\"cli.typed.box\"))) __cli_handle { void* __cli_reference_layout; public: __cli_handle(); __cli_handle(T); __cli_handle(decltype(nullptr)); explicit __cli_handle(System::Object*); __attribute__((annotate(\"cli.typed.box.identity\"))) operator System::Object*() const; __attribute__((annotate(\"cli.typed.box.identity\"))) System::Object* operator->() const; __attribute__((annotate(\"cli.typed.box.address\"))) T& operator*() const; __attribute__((annotate(\"cli.typed.box.truth\"))) explicit operator bool() const; __attribute__((annotate(\"cli.typed.box.null\"))) bool operator==(decltype(nullptr)) const; __attribute__((annotate(\"cli.typed.box.nonnull\"))) bool operator!=(decltype(nullptr)) const; };");
             header.WriteLine("template<class T> System::Object* __cli_box_object(T);");
+            header.WriteLine("template<class T> __attribute__((annotate(\"cli.box\"))) T* __cli_box_value(T);");
             header.WriteLine("template<class T> cli::array<T>* __cli_empty_params();");
             header.WriteLine("template<class A> struct __cli_array_element; template<class T> struct __cli_array_element<cli::array<T,1>*> { using type=T; }; template<class A> A __cli_array_init(const typename __cli_array_element<A>::type*);");
             header.WriteLine("template<class T, class A> T __cli_safe_cast(A); template<class T, class A> T __cli_dynamic_cast(A);");
@@ -482,8 +483,12 @@ static class Program
                 WriteClass(header, t, false, parent != null, interfaces, types.Where(child=>child.Name.Contains('+') && child.Name[..child.Name.LastIndexOf('+')]==t.Name).ToArray());
             }
             foreach (var t in types) Define(t);
+            foreach(var alias in PrimitiveAliases)
+                if(types.Any(t=>t.Name=="System."+alias.Key))
+                    header.WriteLine("__attribute__((annotate(\"cli.box\"),annotate(\"cli.primitive.box\"))) ::System::__cli_primitive_"+alias.Key+"* __cli_primitive_box_"+alias.Key+"("+alias.Value+");");
             if (types.Any(t => t.Name == "System.Type")) header.WriteLine("template<class T> ::System::Type* __cli_typeid();");
-            header.WriteLine("namespace cli { template<class T, int Rank> class __attribute__((annotate(\"cli.ref\"), annotate(\"cli.array\"))) array : public System::Object { public: static_assert(Rank == 1, \"only rank-one managed arrays are supported\"); explicit array(int); T& operator[](int); int get_Length(); __declspec(property(get=get_Length)) int Length; }; } using cli::array;");
+            string arrayBase=types.Any(t=>t.Name=="System.Array") ? "::System::Array" : "::System::Object";
+            header.WriteLine("namespace cli { template<class T, int __cli_array_rank> class __attribute__((annotate(\"cli.ref\"), annotate(\"cli.array\"))) array : public "+arrayBase+" { public: static_assert(__cli_array_rank == 1, \"only rank-one managed arrays are supported\"); explicit array(int); T& operator[](int); int get_Length(); __declspec(property(get=get_Length)) int Length; }; } using cli::array;");
             // Unevaluated calls retain Clang's selected member in DecltypeType.
             // The emitter uses that selection for the real CLR member reference.
             header.WriteLine("template<class C> auto __cli_each_get(C c) -> decltype(c->GetEnumerator());");
@@ -557,7 +562,7 @@ static class Program
             }
             var overloads = t.Methods.Where(m => m.Supported).GroupBy(m => m.Name + "(" + string.Join(", ", m.Parameters.Select(p => p.Cpp)) + ")").ToDictionary(g => g.Key, g => g.Count());
             var seen = new HashSet<string>();
-            foreach (var m in t.Methods.Where(m => m.Supported && (!primitiveFacade || m.Static)))
+            foreach (var m in t.Methods.Where(m => m.Supported))
             {
                 // These nongeneric enumeration slots conflict by return type
                 // with generic slots. Their CLR virtual/abstract metadata stays

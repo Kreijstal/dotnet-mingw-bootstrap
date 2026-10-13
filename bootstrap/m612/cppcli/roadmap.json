@@ -93,7 +93,10 @@
         "Clang-resolved primitive/enum caret boxes and aliases, ValueType/IsBoxed signatures, allocation/casts/identity/null/GC, tracked dereference/update semantics and direct external boxed imports",
         "Metadata-selected qualified imported default/named accessors and preserved base dispatch",
         "Clang-resolved parenthesized base/member/new constructor literal conversions and unambiguous Object boxing",
-        "Non-generic public/friend nested metadata imports with declaring-type closure, real CLR nested identities and external TypeRef ownership"
+        "Non-generic public/friend nested metadata imports with declaring-type closure, real CLR nested identities and external TypeRef ownership",
+        "Primitive instance metadata overload dispatch and culture-aware formatting; imported System.Array API inheritance and actual runtime enumeration/stores/metrics/clone",
+        "Object argument boxing filters impossible scalar/reference-class alternatives; typed and null alternatives retain normal Sema",
+        "Unary percent value-class box copies and resolved local String/Object copy initialization"
       ],
       "remaining": [
         "implicit boxing into interfaces and complete boxed-handle/primitive-member conversions",
@@ -106,7 +109,7 @@
         "for each with unbraced bodies, tracking-reference variables and value/native enumerators",
         "general CLI source implicit conversion/cast selection and complete conversion-operator discovery"
       ],
-      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values test-tracking test-pinning test-boxed-values test-static-fields test-static-properties test-nativeints test-layout test-switch test-generics test-indexers test-named-overrides test-each test-com test-delegates test-type-tokens test-constructors test-paramarrays test-primitive-statics test-guid-object-boxing test-managed-templates test-nested-indexers test-native-storage test-destructors test-value-pointers test-events test-multicast test-semantic-literals test-conversions test-combined-access test-argument-files test-implicit-boxing test-source-owned-types test-scalar-boxes test-printing-accessors test-nested-imports"
+      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values test-tracking test-pinning test-boxed-values test-static-fields test-static-properties test-nativeints test-layout test-switch test-generics test-indexers test-named-overrides test-each test-com test-delegates test-type-tokens test-constructors test-paramarrays test-primitive-statics test-guid-object-boxing test-managed-templates test-nested-indexers test-native-storage test-destructors test-value-pointers test-events test-multicast test-semantic-literals test-conversions test-combined-access test-argument-files test-implicit-boxing test-source-owned-types test-scalar-boxes test-printing-accessors test-nested-imports test-primitive-array-apis"
     },
     {
       "stage": 4,

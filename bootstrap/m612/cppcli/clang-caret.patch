@@ -23,7 +23,22 @@
 +++ ParseDecl.cpp
 @@ -13,0 +14 @@
 +#include "clang/AST/Attr.h"
-@@ -6296,0 +6298,55 @@
+@@ -38,0 +40,4 @@
++namespace clang {
++ExprResult cppcliConvertReturn(Sema &, Scope *, Preprocessor &, Expr *, QualType, SourceLocation);
++}
++
+@@ -2615,0 +2621,9 @@
++      if(!Init.isInvalid())
++        if(auto *Variable=dyn_cast_or_null<VarDecl>(ThisDecl)) {
++          auto Type=Variable->getType();
++          auto *Record=Type->isPointerType() ? Type->getPointeeType()->getAsCXXRecordDecl() : nullptr;
++          if(Record && (Record->getQualifiedNameAsString()=="System::Object" || Record->getQualifiedNameAsString()=="System::String") &&
++              !Init.get()->getType().isNull() && !Init.get()->isNullPointerConstant(Actions.Context,Expr::NPC_ValueDependentIsNotNull))
++            Init=cppcliConvertReturn(Actions,getCurScope(),PP,Init.get(),Type,EqualLoc);
++        }
++
+@@ -6296,0 +6311,55 @@
 +// Scalar caret handles are selected from Clang's resolved declaration type.
 +// The temporary facade is a CLR reference; source native stars retain their
 +// ordinary C++ type. Each comma declarator starts from the original base type.
@@ -79,7 +94,7 @@
 +  return true;
 +}
 +
-@@ -6297,0 +6354,8 @@
+@@ -6297,0 +6367,8 @@
 +  auto &Spec = D.getMutableDeclSpec();
 +  if (Spec.getTypeSpecType() == DeclSpec::TST_typename &&
 +      PP.getSourceManager().isWrittenInMainFile(Spec.getTypeSpecTypeLoc()) &&
@@ -88,13 +103,13 @@
 +    if (auto Element = cppcliScalarBoxElement(Type); !Element.isNull())
 +      cppcliSetDeclSpecType(Actions, Spec, Element, Spec.getTypeSpecTypeLoc());
 +  }
-@@ -6318 +6382 @@
+@@ -6318 +6395 @@
 -  if (Kind == tok::amp)
 +  if (Kind == tok::amp || Kind == tok::percent)
-@@ -6440,0 +6505,2 @@
+@@ -6440,0 +6518,2 @@
 +  bool ScalarBox = Kind == tok::caret && !getLangOpts().Blocks &&
 +      cppcliScalarBox(Actions, getCurScope(), PP, AttrFactory, D, Tok.getLocation());
-@@ -6461 +6527,7 @@
+@@ -6461 +6540,7 @@
 -    if (Kind == tok::star)
 +    // This parser is private to the CLI frontend. Clang has already resolved
 +    // declaration/type context, so expression XOR remains untouched. Preserve
@@ -103,7 +118,7 @@
 +      if (DS.getTypeQualifiers()) D.setInvalidType();
 +      // The handle is already represented by the reference facade in DeclSpec.
 +    } else if (Kind == tok::star || (Kind == tok::caret && !getLangOpts().Blocks))
-@@ -6527 +6599 @@
+@@ -6527 +6612 @@
 -                                                Kind == tok::amp),
 +                                                Kind == tok::amp || Kind == tok::percent),
 --- ParseDeclCXX.cpp
@@ -153,7 +168,7 @@
 +#include "clang/Sema/Lookup.h"
 @@ -34,0 +37 @@
 +#include "clang/Sema/ScopeInfo.h"
-@@ -44,0 +48,200 @@
+@@ -44,0 +48,246 @@
 +
 +// CLI enum operations retain their scoped type identity. Sema still checks
 +// explicit conversions and native operations; ordinary C++ enums are untouched.
@@ -224,16 +239,31 @@
 +
 +// Leave overload sets with typed alternatives to normal Sema. Boxing an
 +// arithmetic/enum argument is unambiguous when every arity-compatible method
-+// declares this position as System.Object.
-+static bool cppcliObjectArgument(Expr *Function, unsigned Index, unsigned Count) {
++// declares this position as System.Object, after excluding impossible scalar
++// conversions to unrelated managed reference classes.
++static bool cppcliObjectArgument(Sema &Actions, Expr *Function, Expr *Argument, unsigned Index, unsigned Count) {
 +  bool Found = false, AllObject = true;
 +  auto Inspect = [&](const NamedDecl *Decl) {
 +    auto *Method = dyn_cast<CXXMethodDecl>(Decl);
 +    if (!Method || Index >= Method->getNumParams() || Count > Method->getNumParams() ||
 +        Count < Method->getMinRequiredArguments()) return;
-+    Found = true;
 +    auto Type = Method->getParamDecl(Index)->getType();
 +    auto *Record = Type->isPointerType() ? Type->getPointeeType()->getAsCXXRecordDecl() : nullptr;
++    // A non-null scalar cannot initialize an unrelated CLR reference class.
++    // Keep interfaces, Enum/ValueType boxes and zero/null alternatives with
++    // normal Sema, where broader boxing overload resolution remains pending.
++    if(Record && Record->getQualifiedNameAsString()!="System::Object" &&
++        Record->getQualifiedNameAsString()!="System::Enum" && Record->getQualifiedNameAsString()!="System::ValueType" &&
++        !Argument->isNullPointerConstant(Actions.Context,Expr::NPC_ValueDependentIsNotNull)) {
++      bool Reference=false,Interface=false;
++      auto *Owner=Record->getDefinition(); if(!Owner) Owner=Record;
++      for(auto *Attr:Owner->specific_attrs<AnnotateAttr>()) {
++        Reference |= Attr->getAnnotation()=="cli.ref" || Attr->getAnnotation().starts_with("cli.external:");
++        Interface |= Attr->getAnnotation()=="cli.interface" || Attr->getAnnotation()=="cli.value";
++      }
++      if(Reference && !Interface) return;
++    }
++    Found = true;
 +    AllObject &= cppcliStringSlot(Method, Index, Count) && Record &&
 +                 Record->getQualifiedNameAsString() == "System::Object";
 +  };
@@ -259,6 +289,37 @@
 +static bool cppcliNamedHandle(QualType Type, StringRef Name) {
 +  auto *Record=Type->isPointerType() ? Type->getPointeeType()->getAsCXXRecordDecl() : nullptr;
 +  return Record && Record->getQualifiedNameAsString()==Name;
++}
++
++// Resolve the scalar width/kind, then let the selected metadata facade carry
++// ordinary C++ overload/access lookup for the actual CLR primitive methods.
++static ExprResult cppcliPrimitiveReceiver(Sema &Actions, Scope *CurrentScope,
++    Preprocessor &PP, Expr *Value, SourceLocation Loc) {
++  auto Type=Value->getType();
++  if(!Type->isArithmeticType()) return Value;
++  std::string Name;
++  if(Type->isBooleanType()) Name="Boolean";
++  else if(Type->isSpecificBuiltinType(BuiltinType::Char16) ||
++      (Type->isWideCharType() && Actions.Context.getTypeSize(Type)==16)) Name="Char";
++  else if(Type->isIntegerType()) {
++    auto Bits=Actions.Context.getTypeSize(Type);
++    if(Bits==8) Name=Type->isUnsignedIntegerType() ? "Byte" : "SByte";
++    else if(Bits==16 || Bits==32 || Bits==64) Name=(Type->isUnsignedIntegerType() ? "UInt" : "Int")+std::to_string(Bits);
++  } else if(Type->isRealFloatingType()) {
++    auto Bits=Actions.Context.getTypeSize(Type);
++    if(Bits==32) Name="Single";
++    else if(Bits==64) Name="Double";
++  }
++  if(Name.empty()) return Value;
++  auto *Identifier=&PP.getIdentifierTable().get("__cli_primitive_box_"+Name);
++  LookupResult Lookup(Actions,Identifier,Loc,Sema::LookupOrdinaryName);
++  if(!Actions.LookupQualifiedName(Lookup,Actions.Context.getTranslationUnitDecl())) return Value;
++  CXXScopeSpec Global; Global.MakeGlobal(Actions.Context,Loc);
++  UnqualifiedId Helper; Helper.setIdentifier(Identifier,Loc);
++  auto Function=Actions.ActOnIdExpression(CurrentScope,Global,SourceLocation(),Helper,true,false);
++  if(Function.isInvalid()) return ExprError();
++  return Actions.ActOnCallExpr(CurrentScope,Function.get(),Loc,
++      MutableArrayRef<Expr *>(&Value,1),Value->getEndLoc());
 +}
 +
 +static ExprResult cppcliBoxObject(Sema &Actions, Scope *CurrentScope,
@@ -354,7 +415,7 @@
 +  return Actions.BuildCStyleCastExpr(
 +      Loc, Actions.Context.getTrivialTypeSourceInfo(Type, Loc), Loc, Value);
 +}
-@@ -181,0 +385,9 @@
+@@ -181,0 +431,9 @@
 +  // MSVC permits CLI enum constants as labels in integral switches. Keep
 +  // that conversion local to case labels: enum-to-integer assignments and
 +  // overload resolution continue to require an explicit source conversion.
@@ -364,7 +425,7 @@
 +      if (Condition->getType()->isIntegerType())
 +        if (auto *Enum = cppcliEnum(Res.get()->getType()))
 +          Res = cppcliEnumCast(Actions, Res.get(), Enum->getIntegerType(), CaseLoc);
-@@ -531,0 +744,82 @@
+@@ -531,0 +790,82 @@
 +        if (!RHS.isInvalid() &&
 +            OpToken.isOneOf(tok::pipeequal, tok::caretequal, tok::ampequal)) {
 +          auto *Enum = cppcliEnum(LHS.get()->getType());
@@ -447,11 +508,25 @@
 +              return ExprError();
 +          }
 +        }
-@@ -534,0 +829,3 @@
+@@ -534,0 +875,3 @@
 +        if (!BinOp.isInvalid() && !CliResult.isNull())
 +          BinOp = cppcliEnumCast(Actions, BinOp.get(), CliResult,
 +                                OpToken.getLocation());
-@@ -1160,0 +1458,10 @@
+@@ -1089,0 +1433,13 @@
++  case tok::percent: {
++    if(NotPrimaryExpression) *NotPrimaryExpression=true;
++    auto Loc=ConsumeToken();
++    auto Value=ParseCastExpression(CastParseKind::AnyCastExpr);
++    if(Value.isInvalid()) return ExprError();
++    CXXScopeSpec Global; Global.MakeGlobal(Actions.Context,Loc);
++    UnqualifiedId Name; Name.setIdentifier(&PP.getIdentifierTable().get("__cli_box_value"),Loc);
++    auto Helper=Actions.ActOnIdExpression(getCurScope(),Global,SourceLocation(),Name,true,false);
++    if(Helper.isInvalid()) return ExprError();
++    Expr *Argument=Value.get();
++    return Actions.ActOnCallExpr(getCurScope(),Helper.get(),Loc,
++        MutableArrayRef<Expr *>(&Argument,1),Argument->getEndLoc());
++  }
+@@ -1160,0 +1517,10 @@
 +      QualType CliResult;
 +      if (SavedKind == tok::tilde)
 +        if (auto *Enum = cppcliEnum(Arg->getType()))
@@ -462,10 +537,10 @@
 +              return ExprError();
 +            Arg = Res.get();
 +          }
-@@ -1162,0 +1470,2 @@
+@@ -1162,0 +1529,2 @@
 +      if (!Res.isInvalid() && !CliResult.isNull())
 +        Res = cppcliEnumCast(Actions, Res.get(), CliResult, SavedLoc);
-@@ -1779,2 +2088,53 @@
+@@ -1779,2 +2147,53 @@
 -          LHS = Actions.ActOnArraySubscriptExpr(getCurScope(), LHS.get(), Loc,
 -                                                ArgExprs, RLoc);
 +          // For a managed array handle, ask Sema to resolve the surrogate's
@@ -521,7 +596,7 @@
 +          if (!LHS.isInvalid())
 +            LHS = Actions.ActOnArraySubscriptExpr(getCurScope(), LHS.get(), Loc,
 +                                                  ArgExprs, RLoc);
-@@ -1838,0 +2199,25 @@
+@@ -1838,0 +2258,25 @@
 +      }
 +
 +      // CLI delegate handles call their runtime Invoke method. Let Sema
@@ -547,7 +622,7 @@
 +                tok::arrow, Scope, SourceLocation(), Member, nullptr);
 +          }
 +        }
-@@ -1892,0 +2278,31 @@
+@@ -1892,0 +2337,31 @@
 +        for (unsigned Index=0; Index<ArgExprs.size(); ++Index) {
 +          if (!isa<StringLiteral>(ArgExprs[Index]->IgnoreParenImpCasts()) ||
 +              !cppcliStringArgument(Fn, Index, ArgExprs.size())) continue;
@@ -566,7 +641,7 @@
 +        for (unsigned Index=0; Index<ArgExprs.size(); ++Index) {
 +          auto Type = ArgExprs[Index]->getType();
 +          if ((!Type->isArithmeticType() && !Type->isEnumeralType()) ||
-+              !cppcliObjectArgument(Fn, Index, ArgExprs.size())) continue;
++              !cppcliObjectArgument(Actions,Fn,ArgExprs[Index],Index,ArgExprs.size())) continue;
 +          CXXScopeSpec ScopeSpec; UnqualifiedId Name;
 +          ScopeSpec.MakeGlobal(Actions.Context, Loc);
 +          Name.setIdentifier(&PP.getIdentifierTable().get("__cli_box_object"), Loc);
@@ -579,7 +654,14 @@
 +          if (Boxed.isInvalid()) return ExprError();
 +          ArgExprs[Index] = Boxed.get();
 +        }
-@@ -1910,0 +2327,8 @@
+@@ -1910,0 +2386,15 @@
++      if(!LHS.isInvalid() && OpKind==tok::period && LHS.get()->getType()->isArithmeticType() && Tok.is(tok::identifier)) {
++        LHS=Tok.getIdentifierInfo()->getName()=="GetType" ?
++            cppcliBoxObject(Actions,getCurScope(),PP,LHS.get(),OpLoc) :
++            cppcliPrimitiveReceiver(Actions,getCurScope(),PP,LHS.get(),OpLoc);
++        if(LHS.isInvalid()) return ExprError();
++        if(LHS.get()->getType()->isPointerType()) OpKind=tok::arrow;
++      }
 +      if (!LHS.isInvalid() && OpKind==tok::period && cppcliEnum(LHS.get()->getType()) && Tok.is(tok::identifier)) {
 +        auto Name=Tok.getIdentifierInfo()->getName();
 +        if(Name=="ToString" || Name=="GetHashCode" || Name=="Equals" || Name=="GetType") {
@@ -588,12 +670,12 @@
 +          OpKind=tok::arrow;
 +        }
 +      }
-@@ -2807 +3231,3 @@
+@@ -2807 +3297,3 @@
 -              Result = Actions.ActOnCastExpr(getCurScope(), OpenLoc,
 +              auto Unboxed=cppcliTryUnbox(Actions,getCurScope(),PP,Result.get(),DeclaratorInfo,OpenLoc);
 +          if(!Unboxed.isUnset()) Result=Unboxed;
 +          else Result = Actions.ActOnCastExpr(getCurScope(), OpenLoc,
-@@ -2858 +3284,3 @@
+@@ -2858 +3350,3 @@
 -          Result = Actions.ActOnCastExpr(getCurScope(), OpenLoc,
 +          auto Unboxed=cppcliTryUnbox(Actions,getCurScope(),PP,Result.get(),DeclaratorInfo,OpenLoc);
 +          if(!Unboxed.isUnset()) Result=Unboxed;

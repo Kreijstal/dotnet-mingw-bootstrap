@@ -5317,3 +5317,75 @@ Diagnostic scope remains 49 original project inputs/66 tree C++ files, without
 individual-file pass/fail claims. Native import coverage stays 58/139; complete
 layout, printing runtime and WindowsDesktop SDK/targeting/runtime packaging
 remain required.
+
+## 59. Primitive instance and Array APIs, printing boxing and local initializers
+
+The 2026-10-13 continuation adds primitive instance lookup from Clang's resolved
+scalar kind/width. Selected primitive metadata facades now expose their actual
+instance overloads. A typed receiver marker emits a CLR box, and existing
+value-type call lowering uses its managed address for the real primitive method.
+GetType dispatches through boxed Object. All twelve primitive kinds execute
+their real formatting methods, including culture-aware Int32/Int64/Double
+overloads, signed minima, unsigned maxima, Boolean and Unicode Char. Typed/Object
+Equals, CompareTo, GetHashCode, resolved scalar aliases and record lookup pass.
+A side-effecting receiver evaluates once. The original printing pattern
+`*(Status^)Enum::Parse(Status::typeid, value.ToString(culture))` executes against
+the source-built runtime with exact enum identity.
+
+When System.Array is imported, the rank-one array facade inherits its selected
+API rather than only Object. Its template rank parameter has a private name to
+avoid collision with the inherited Rank property. Real Array GetEnumerator,
+SetValue/GetValue, GetLength/Rank/GetLowerBound/GetUpperBound and Clone calls
+execute on actual CLR arrays. Integer stores use real Object boxing, clone
+storage is independent, and string enumerators retain their arrays across GC.
+Wrong element types, null arrays, invalid dimensions and out-of-range stores
+raise actual CLR exceptions. The existing direct index/Length/for-each paths
+remain supported; native pointer values cannot enter Array.SetValue.
+
+The original PropertyCollectionMemorySafeHandle.SetValue overloads take Object
+or Type in their third slot. Non-null scalar arguments cannot initialize the
+unrelated Type reference. Object boxing now excludes that impossible reference
+alternative while keeping typed scalar, interface, Enum/ValueType and null
+alternatives with normal Sema. The exact printing-shaped call selects Object
+and retains its integer payload; an int alternative still wins, explicitly
+typed null selects Type, and ambiguous literal zero is rejected.
+
+Unary `%` on a managed value-class operand creates a typed CLR box copy; the
+original `attributeMap->Add("DriverName", (Object^)(%infoData))` now passes Sema.
+Fixture box identity, copied fields, Object casts and GC are checked. Native
+scalar operands are explicitly rejected. Binary remainder remains ordinary C++.
+Local copy initialization resolves the variable's actual String/Object type
+before managed literal conversion or scalar boxing. Literal-zero null
+initialization and native character buffers keep their previous behavior;
+variable-valued zero boxes as Int32. Native-header declarations bypass this
+managed initializer hook, including incomplete recovery expression types.
+
+Validation on win11 uses the source SDK/ilasm/M612/CLANG64 and WPF environment
+recorded in §57:
+
+```bash
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-primitive-array-apis test-primitive-statics test-implicit-boxing test-each
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-primitive-array-apis
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh build-directwrite check-directwrite-assembly printing-gate
+```
+
+Focused runtime/rejection checks and existing primitive-static, Object-boxing
+and enumeration regressions pass with zero C# warnings/errors. Complete
+DirectWrite generation/assembly still passes: 85 types load, 283 managed bodies
+prepare and 81 font families are found. The final printing gate **fails** first
+at InteropPrinterHandler.cpp:3159's IntPtr-to-void-pointer cast. The earlier
+InteropJobInfo primitive formatting, array GetEnumerator, unary-percent,
+local String initializer and printing SetValue overload failures are absent.
+Later errors include additional native pointer casts, inherited qualified
+accessors and missing namespace/type metadata. No original bodies are skipped
+or replaced with stubs.
+
+Primitive instance lookup needs the selected primitive metadata; general boxing
+overload resolution, enum-specific/interface dispatch, mutating/byref-like
+primitive APIs, scalar/reference-class unary-percent forms and general
+braced/direct/conditional initialization remain incomplete. Evidence is archived
+under `tmp/wpf8-support/validation/printing-primitive-array-20261013` locally.
+The diagnostic scope remains 49 original printing project inputs/66 tree C++
+files. No complete System.Printing runtime DLL or WPF package is produced.
+Native import coverage remains 58/139; full layout, printing runtime and
+WindowsDesktop SDK/targeting/runtime packaging remain required.

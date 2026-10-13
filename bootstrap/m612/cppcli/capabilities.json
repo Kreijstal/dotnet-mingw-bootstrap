@@ -240,7 +240,11 @@
     "Scalar box dereference, tracking aliases, assignments and compound/prefix/postfix updates use CLR unbox/ldobj/stobj and tracked byrefs; receivers evaluate once and all primitive payloads, GC, direct metadata imports and C# APIs are checked",
     "Qualified imported default/named property accessor syntax uses selected metadata accessor names, including non-Item default members; actual Hashtable/custom indexer base calls preserve nonvirtual base dispatch and setter access",
     "Parenthesized managed base/member/new constructor arguments resolve actual Clang types before literal String/Object conversion and unambiguous scalar/enum Object boxing; source/aliased/out-of-line/imported constructors, native literals and typed overload preservation are checked",
-    "Public and as_friend internal non-generic nested enum/ref/value/deep imports close over declaring types, expose C++ nested aliases and retain actual CLR slash-qualified identities; cross-assembly nested TypeRefs, fields/properties/constructors, typed-box modifiers and GC are checked"
+    "Public and as_friend internal non-generic nested enum/ref/value/deep imports close over declaring types, expose C++ nested aliases and retain actual CLR slash-qualified identities; cross-assembly nested TypeRefs, fields/properties/constructors, typed-box modifiers and GC are checked",
+    "Clang-resolved builtin scalar instance receivers bind selected primitive metadata overloads through typed CLR boxes; all twelve primitive kinds, culture-aware formatting, typed/Object equality, comparison/hash/GetType, aliases, receiver-once and the original printing Enum.Parse pattern execute",
+    "Rank-one array facades inherit the actual imported System.Array API when selected; real GetEnumerator, SetValue/GetValue, length/rank/bounds/clone calls preserve CLR boxing, element checks, null/bounds exceptions and GC lifetimes",
+    "Object argument boxing excludes impossible non-null scalar conversions to unrelated managed reference-class alternatives while preserving typed/interface/Enum/ValueType and null overload candidates",
+    "Unary percent on managed value-class operands emits typed CLR box copies; local copy initialization resolves String/Object targets before literal conversion or scalar boxing, preserves literal-zero null initialization, native literal storage and binary remainder"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -314,6 +318,7 @@
     "Managed return/literal-store conversion does not yet cover all constructor/initializer/conditional/interface conversions or property results needing additional placeholder resolution",
     "Object unboxing recognizes direct Object-typed operands with primitive/CLI enum targets; ValueType/interface operands, native numeric-pointer casts, general typed-box-to-scalar cast discovery and user-defined implicit conversions remain incomplete",
     "Typed scalar/enum boxes have direct signature/import evidence; nested array/generic/byref imports of these boxes, dependent element types, primitive/Enum-specific arrow members and native IntPtr/UIntPtr boxing remain incomplete; native storage/pointers to boxes are rejected",
-    "Managed constructor conversion covers parenthesized direct bases, single-argument fields and new expressions without declarator chunks; braced/delegating/general direct initialization, broader boxing overload selection and aliased/inherited imported accessor owner discovery remain incomplete"
+    "Managed constructor conversion covers parenthesized direct bases, single-argument fields and new expressions without declarator chunks; braced/delegating/general direct initialization, broader boxing overload selection and aliased/inherited imported accessor owner discovery remain incomplete",
+    "Primitive instance lookup requires the corresponding primitive metadata import; general primitive/enum/interface boxing overload resolution and mutating/byref-like primitive APIs remain incomplete; unary percent currently requires a managed value class, and general braced/direct/conditional initialization remains unfinished"
   ]
 }

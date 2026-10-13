@@ -3295,6 +3295,16 @@ class Emitter {
             } else expr(value);
             op("box valuetype " + record_name(method->getParent()), 1, 1); return;
         }
+        if(f->getNameAsString()=="__cli_box_value") {
+            auto* value=c->getNumArgs()==1 ? value_target(c->getArg(0)->getType()) : nullptr;
+            auto* target=boxed_target(c->getType());
+            if(!value || !target || value->getCanonicalDecl()!=target->getCanonicalDecl()) fail(c,"unary % requires a managed value-class operand");
+            expr(c->getArg(0)); op("box "+type(c->getArg(0)->getType()),1,1); return;
+        }
+        if(annotated(f,"cli.primitive.box")) {
+            if(c->getNumArgs()!=1 || !c->getArg(0)->getType()->isArithmeticType()) fail(c,"primitive instance receiver requires one scalar value");
+            expr(c->getArg(0)); op("box "+type(c->getArg(0)->getType()),1,1); return;
+        }
         if (annotated(f, "cli.box")) {
             auto* member = dyn_cast<CXXMemberCallExpr>(c);
             if (!member || !boxed_target(c->getType())) fail(c, "invalid implicit boxing conversion");

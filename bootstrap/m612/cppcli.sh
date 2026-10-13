@@ -403,6 +403,26 @@ A^ Get() { return nullptr; }
 int main() { A^ a=nullptr; Get()+=a; return 0; }' 'not assignable' "${args[@]}"
   reject_case multicast-object 'int main() { System::Object^ a=nullptr; System::Object^ b=nullptr; a+=b; return 0; }' 'invalid operands' "${args[@]}"
 }
+step_test-primitive-array-apis() {
+  compile "$(cygpath -m "$src/tests/primitive-array-apis.cpp")" --target library \
+    --type System.Int32 --type System.Int64 --type System.Double --type System.Type --type System.RuntimeTypeHandle \
+    --type System.Enum --type System.Globalization.CultureInfo --type System.IFormatProvider \
+    --type System.Boolean --type System.Byte --type System.SByte --type System.Int16 --type System.UInt16 \
+    --type System.UInt32 --type System.UInt64 --type System.Char --type System.Single \
+    --type System.Array --type System.Collections.IEnumerator \
+    -o "$(cygpath -m "$testdir/primitive-array-apis.dll")"
+  mkdir -p "$testdir/primitive-array-apis-consumer"
+  cp "$src/tests/PrimitiveArrayApisConsumer.cs" "$testdir/primitive-array-apis-consumer/Program.cs"
+  cat > "$testdir/primitive-array-apis-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="primitive-array-apis"><HintPath>../primitive-array-apis.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/primitive-array-apis-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/primitive-array-apis-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case boxing-ambiguous-null 'public ref class Slots { public: int Pick(System::Object^ value) { return 1; } int Pick(System::Type^ value) { return 2; } }; int main() { Slots^ s=gcnew Slots(); return s->Pick(0); }' 'ambiguous' --type System.Type
+  reject_case array-native-pointer-value 'int main() { array<int>^ values=gcnew array<int>(1); int value=42; values->SetValue(&value,0); return 0; }' 'no matching member function' --type System.Array
+  reject_case percent-native-value 'int main() { int value=42; %value; return 0; }' 'unary % requires a managed value-class operand'
+}
 step_test-printing-accessors() {
   local refs=("$CPPCLI_SDK"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
   mkdir -p "$testdir/accessor-contract" "$testdir/printing-accessors-consumer"
