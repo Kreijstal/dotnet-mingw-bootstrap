@@ -1721,6 +1721,7 @@ class Emitter {
     mutable std::map<std::string, const CXXRecordDecl*> native_records;
     std::vector<std::string> temporary_types;
     std::map<const OpaqueValueExpr*, unsigned> opaque_values;
+    std::set<const OpaqueValueExpr*> opaque_addresses;
 
     [[noreturn]] void fail(const Stmt* s, const std::string& message) const {
         auto loc = ci.getSourceManager().getPresumedLoc(s ? s->getBeginLoc() : current->getLocation());
@@ -2729,6 +2730,9 @@ class Emitter {
     }
     void address(const Expr* original) {
         const Expr* e = strip(original)->IgnoreParenImpCasts();
+        if(auto* opaque=dyn_cast<OpaqueValueExpr>(e);opaque && opaque_addresses.count(opaque)) {
+            op("ldloc "+std::to_string(opaque_values.at(opaque)),0,1); return;
+        }
         if (auto* pointer = interior_dereference(e)) {
             expr(pointer);
             auto* operation=cast<CXXOperatorCallExpr>(e);
@@ -4122,15 +4126,20 @@ class Emitter {
         if (auto* opaque = dyn_cast<OpaqueValueExpr>(e)) {
             auto found = opaque_values.find(opaque);
             if (found == opaque_values.end()) fail(e, "unbound opaque property value");
-            op("ldloc " + std::to_string(found->second), 0, 1); return;
+            op("ldloc " + std::to_string(found->second), 0, 1);
+            if(opaque_addresses.count(opaque)) op("ldobj "+type(opaque->getType()),1,1);
+            return;
         }
         if (auto* pseudo = dyn_cast<PseudoObjectExpr>(e)) {
             const Expr* result_expr = pseudo->getResultExpr();
             unsigned result = 0; bool has_result = false;
             for (const Expr* semantic : pseudo->semantics()) {
                 if (auto* opaque = dyn_cast<OpaqueValueExpr>(semantic)) {
-                    unsigned slot = temporary(expression_type(opaque));
-                    expr(opaque->getSourceExpr()); op("stloc " + std::to_string(slot), 1);
+                    bool location=value_target(opaque->getType()) && opaque->isGLValue() && opaque->getSourceExpr()->isGLValue();
+                    unsigned slot = temporary(expression_type(opaque)+(location ? "&" : ""));
+                    if(location) { emit_receiver(opaque->getSourceExpr()); opaque_addresses.insert(opaque); }
+                    else expr(opaque->getSourceExpr());
+                    op("stloc " + std::to_string(slot), 1);
                     opaque_values[opaque] = slot;
                     if (semantic == result_expr) { result = slot; has_result = true; }
                 } else {
@@ -4146,6 +4155,8 @@ class Emitter {
             if (!pseudo->getType()->isVoidType()) {
                 if (!has_result) fail(e, "property expression lacks a result");
                 op("ldloc " + std::to_string(result), 0, 1);
+                if(auto* opaque=dyn_cast<OpaqueValueExpr>(result_expr);opaque && opaque_addresses.count(opaque))
+                    op("ldobj "+type(opaque->getType()),1,1);
             }
             return;
         }
@@ -4739,7 +4750,7 @@ class Emitter {
             validate_native_signature(f);
             return {method_name(f), "", declared_type(f), false, 0, "", ""};
         }
-        current = f; locals.clear(); parameters.clear(); temporary_types.clear(); opaque_values.clear(); code.str(""); code.clear(); stack = 0; max_stack = 0;
+        current = f; locals.clear(); parameters.clear(); temporary_types.clear(); opaque_values.clear(); opaque_addresses.clear(); code.str(""); code.clear(); stack = 0; max_stack = 0;
         label_count = 0; control_labels.clear(); seh_leave_labels.clear(); switch_labels.clear(); exception_depth = catch_depth = finally_depth = 0; return_label.clear(); return_slot_set = false;
         auto* method = dyn_cast<CXXMethodDecl>(f);
         bool instance = method && !method->isStatic();

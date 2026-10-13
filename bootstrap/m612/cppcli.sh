@@ -604,6 +604,18 @@ int main() { CombinedAccess^ c=gcnew CombinedAccess(); return c->OrMethod(); }' 
   reject_case combined-foreign-and '#using "combined-access.dll"
 public ref class Foreign : CombinedAccess { public: int Read() { return AndMethod(); } }; int main() { return 0; }' 'undeclared identifier' --type CombinedAccess
 }
+step_test-value-property-locations() {
+  compile "$(cygpath -m "$src/tests/value-property-locations.cpp")" --target library --type System.GC -o "$(cygpath -m "$testdir/value-property-locations.dll")"
+  mkdir -p "$testdir/value-property-locations-consumer"
+  cp "$src/tests/ValuePropertyLocationsConsumer.cs" "$testdir/value-property-locations-consumer/Program.cs"
+  cat > "$testdir/value-property-locations-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="value-property-locations"><HintPath>../value-property-locations.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/value-property-locations-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/value-property-locations-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case managed-array-delete 'using namespace System; int main() { array<int>^ values=gcnew array<int>(2); delete[] values; return 0; }' 'managed delete requires a single handle'
+}
 step_test-global-scalars() {
   compile "$(cygpath -m "$src/tests/global-scalars.cpp")" --target library -o "$(cygpath -m "$testdir/global-scalars.dll")"
   mkdir -p "$testdir/global-scalars-consumer"

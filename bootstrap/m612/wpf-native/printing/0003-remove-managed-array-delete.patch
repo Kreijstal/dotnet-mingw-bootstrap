@@ -1,0 +1,11 @@
+--- a/src/Microsoft.DotNet.Wpf/src/System.Printing/CPP/src/GDIExporter/utils.cpp
++++ b/src/Microsoft.DotNet.Wpf/src/System.Printing/CPP/src/GDIExporter/utils.cpp
+@@ -248,7 +248,7 @@
+             bottom = vertex[i].Y;
+     }
+ 
+-    delete [] vertex;
++    // The managed Point array is reclaimed by the CLR garbage collector.
+ 
+     Debug::Assert((left <= right) && (top <= bottom));
+ 

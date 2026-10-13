@@ -311,6 +311,38 @@ step_prepare_bridges() {
   done
 }
 
+step_check_printing_bounds() {
+  initialize
+  local work=$build/printing-bounds
+  mkdir -p "$work/CPP/src/GDIExporter"
+  cp "$source/src/Microsoft.DotNet.Wpf/src/System.Printing/CPP/src/GDIExporter/utils.cpp" "$work/CPP/src/GDIExporter/utils.cpp"
+  patch --batch --forward -p6 -d "$work/CPP" -i "$here/wpf-native/printing/0003-remove-managed-array-delete.patch"
+  /usr/bin/python3 - "$work" <<'PYBOUNDS'
+from pathlib import Path
+import sys
+work=Path(sys.argv[1]); text=(work/'CPP/src/GDIExporter/utils.cpp').read_text()
+start=text.index('void\nTransformBounds('); opening=text.index('{',start); depth=1; end=opening+1
+while depth:
+    if text[end]=='{': depth+=1
+    elif text[end]=='}': depth-=1
+    end+=1
+body=text[start:end]
+assert 'delete [] vertex' not in body and 'matrix.Transform(vertex);' in body
+(work/'PrintingBounds.cpp').write_text('#using "WindowsBase.dll"\nusing namespace System;\nusing namespace System::Windows;\nusing namespace System::Windows::Media;\nusing namespace System::Diagnostics;\n#define MATRIX_EPSILON (Double::Epsilon*5000.0)\n'+body+'\npublic ref class PrintingBounds abstract sealed { public: static void Apply(Matrix matrix,double left,double top,double right,double bottom,Rect% bounds) { TransformBounds(matrix,left,top,right,bottom,bounds); } };\n')
+PYBOUNDS
+  cp "$build/lib/WindowsBase.dll" "$work/WindowsBase.dll"
+  bridge_compile "$(cygpath -m "$work/PrintingBounds.cpp")" --target library \
+    --ilasm "$(cygpath -m /clang64/bin/ilasm-dotnet.exe)" --type System.Windows.Media.Matrix \
+    --type System.Windows.Point --type System.Windows.Rect --type System.Diagnostics.Debug --type System.Double \
+    -o "$(cygpath -m "$work/PrintingBounds.dll")"
+  cat > "$work/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="PrintingBounds"><HintPath>PrintingBounds.dll</HintPath></Reference><Reference Include="WindowsBase"><HintPath>WindowsBase.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  cp "$here/wpf-tests/PrintingBounds.cs" "$work/Program.cs"
+  "$sdk/dotnet.exe" build "$(cygpath -m "$work/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Debug/net8.0/consumer.dll")"
+}
 step_check_matrix_operators() {
   initialize
   local work=$build/matrix-operators

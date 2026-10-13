@@ -6591,3 +6591,55 @@ Diagnostic scope remains 49 original project inputs/66 tree C++ files, without a
 per-file compile count. Native coverage stays 58/139. Full printing, layout/text
 and WindowsDesktop SDK/reference/runtime packaging remain required; the WPF
 packaging goal stays active.
+
+
+## 82. Original printing bounds and managed-value property locations
+
+The 2026-10-13 continuation reviews TransformBounds's delete [] vertex. vertex
+is a CLR Point array. ECMA-372 section 15.4.5 forbids the array form of delete on
+a handle type:
+https://www.ecma-international.org/wp-content/uploads/ECMA-372_1st_edition_december_2005.pdf
+The private printing source port now removes that obsolete deletion and records
+CLR ownership. Managed array-delete rejection stays in the compiler and has an
+explicit negative test. The original source checkout remains unchanged.
+
+A new focused WPF step extracts the actual patched TransformBounds body and
+its original MATRIX_EPSILON definition, imports the source-built WindowsBase,
+and executes identity/scale/reflection/shear inputs against an independent C#
+corner transformation. The first fixture needed explicit Double metadata. Its
+first runtime run then exposed a real compiler bug: identity returned bounds
+0,0,0,0 instead of 2,3,6,6. Managed value property receivers were cached as value
+copies, so Point array setters and Rect byref setters did not update storage.
+
+Clang lvalue opaque captures for managed values now retain CLR byref locations.
+Receiver use loads the captured address, while ordinary expression consumption
+loads its value. Readonly defensive-copy behavior uses the existing receiver
+path. Ref parameters, array elements and nested value fields keep their original
+locations and CLR GC roots. The consumer checks fields/properties containing
+managed String references, index evaluation once, setter GC and by-value copy
+isolation. Existing ordinary/ref-class property regressions pass.
+
+Validation on win11 with the standard compiler/WPF environment:
+
+```sh
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-value-property-locations test-properties test-tracking-properties
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-value-property-locations
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-printing-bounds
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-matrix-operators printing-gate
+```
+
+Final focused runtime/rejection commands pass, as does the original printing
+TransformBounds consumer with all four matrix cases. Existing Matrix operator
+runtime checks pass. Printing passes Clang parsing/Sema and advances beyond
+TransformBounds; it next fails in CGDIDevice.Polygon (gdidevice.cpp:106), whose
+pin_ptr<PointI> element is a managed value type. Extending GC-free value pinning
+and validating native layout remain required. No full printing IL/DLL is produced.
+
+Bash/Python/JSON syntax and whitespace checks pass. Original body, source patch,
+emitted artifacts, baseline failure and passing runtime logs are archived under
+`tmp/wpf8-support/validation/printing-value-properties-20261013`. Printing still
+covers 49 original project inputs/66 tree C++ files as a combined diagnostic gate,
+without per-file compile counts. Native text coverage stays 58/139. Full printing,
+layout/text and WindowsDesktop SDK/reference/runtime packaging remain required;
+the WPF packaging goal stays active.

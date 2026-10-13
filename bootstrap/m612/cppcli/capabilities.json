@@ -281,7 +281,9 @@
     "Static managed field/property reads through instance member syntax retain side-effectful receiver evaluation and actual static CLR dispatch; source fields/getters, null reference receivers and imported IntPtr.Size through value/call receivers validated",
     "Managed base constructor initialization resolves Clang cleanup/temporary/parenthesized wrappers before lowering the selected constructor; actual IntPtr builder arguments preserve single evaluation, base/member/body order, GC and exception propagation",
     "Do/while loops lower to body-first CLR branches with continue targets at the condition and protected-region-aware break/return; first iteration, evaluation counts, nesting, GC and finally cleanup validated",
-    "Nonvolatile namespace/file-scope const arithmetic/enum reads emit Clang-proven side-effect-free scalar constants with signed/unsigned width and IEEE floating representation; original pixel epsilon, negative zero/subnormal and comparison boundaries validated"
+    "Nonvolatile namespace/file-scope const arithmetic/enum reads emit Clang-proven side-effect-free scalar constants with signed/unsigned width and IEEE floating representation; original pixel epsilon, negative zero/subnormal and comparison boundaries validated",
+    "Clang managed-value property receiver captures retain real CLR byref locations for ref parameters, array elements and nested value fields; reads load values while setters address original storage, with managed payload GC, index-once and by-value isolation checks",
+    "Original printing TransformBounds executes with actual source-built Matrix/Point/Rect under identity, scale, reflection and shear; source port removes prohibited managed array delete[] while compiler rejection remains intact"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
