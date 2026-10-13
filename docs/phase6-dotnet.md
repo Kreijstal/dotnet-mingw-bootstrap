@@ -9189,3 +9189,56 @@ transfer, subtrack updates, balancing/span areas/footnotes, floating obstacles/
 figures, tables, optimal/advanced/incremental/interruptible algorithms, full
 bidi/native language and broader runtime behavior remain required for the full
 WPF goal. Package integration follows.
+
+
+## 139. Installed release 20: bottomless subpage updates
+
+The 2026-10-14 continuation packages section 138 as WindowsDesktop 8.0.0-20.
+Declared/checksummed 0020-bottomless-subpage-updates.patch applies after the
+nineteen previous patches. Clean pinned sources plus all twenty patches match
+the three committed feature files byte for byte. The private package tree
+rebuilds native output, inventory and layout, passes native ownership/update and
+326 original ABI field checks, context/line-service regressions and every normal
+SDK gate before archive creation and installation. Unchanged managed/graphics/
+printing outputs remain its own source builds.
+
+Validation in the CLANG64 package workspace:
+
+```sh
+makepkg --verifysource --force
+source PKGBUILD                 # with srcdir set to this workspace's src/
+_wpf native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+makepkg --repackage --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-20-any.pkg.tar.zst
+/usr/bin/python3 check-staged.py /clang64/lib/dotnet
+bash "$(_driver)/wpf-tests/check-subpages-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-subpage-update-sdk-check
+bash "$(_driver)/wpf-tests/check-bottomless-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-subpage-update-bottomless-sdk-check
+```
+
+All final commands pass. Staged/installed 42-managed/eight-native/SDK/legacy
+payload checks pass. Installed original cell subpage clients retain their handle
+after a text edit and width change from 400 to 300. Full extent grows 532->1197
+Ideal and 560->1260 Display, all 1339 source characters remain represented, and
+viewport glyph raster changes. Original arrange/viewport/visual/client disposal,
+callback-exception checks, compacting GC and dispatcher shutdown pass. Existing
+finite subpages still render four chunks covering all 699 characters exactly
+once. Normal shared-framework and self-contained publishes run with SDK roots/
+toolchain PATH removed. Installed ordinary FlowDocumentScrollViewer scrolling,
+text-edit/raster/extent changes and RichTextBox insertion regressions also pass.
+Private normal WPF/tab/inline-object/justification/width/context/finite/bottomless/
+pagination/columns/hard-break/keep/keep-next/forced/block/subpage/WinForms gates
+pass with zero consumer warnings/errors. The existing source-bootstrap.json
+srcdir provenance warning remains.
+
+Artifact: mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-20-any.pkg.tar.zst.
+SHA-256: 9b9f9426a08e0a7a1bfae6dba11fcf630508ff54d997044f256600b849ba2258.
+Recipe commit: msys2-ur 2e05bff; feature commit: 75261c5.
+Artifact, recipe, metadata, patch and validation logs are archived under
+ tmp/wpf8-support/validation/subpage-update-package-20261014.
+Imported native coverage is 100/139 with 39 absent. This supports complete-tree
+updates for the supported single-column LTR subpage scope. Public table layout
+still requires its table object handler; floating obstacles/figures, subpage
+comparison/display transfer, subtrack updates, balancing/span areas/footnotes,
+optimal/advanced/partial incremental/interruptible algorithms, full bidi/native
+language and broader runtime behavior remain incomplete. The full WPF goal
+stays active.
