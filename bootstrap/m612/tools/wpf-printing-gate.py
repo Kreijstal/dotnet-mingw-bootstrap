@@ -255,9 +255,10 @@ def main():
     # silently selecting one DLL. Used unavailable functions still fail.
     for name in ["kernel32", "advapi32", "winspool", "gdi32", "user32", "ole32"]:
         command += ["--native-import", win(Path("/clang64/lib/lib" + name + ".a"))]
-    # Select the actual CRT copy routine without adding unrelated exports that
+    # Select actual CRT routines without adding unrelated exports that
     # overlap other system archives (for example __C_specific_handler).
-    command += ["--native-import-symbol", "memcpy", win(Path("/clang64/lib/libmsvcrt.a"))]
+    for name in ["memcpy", "wcslen", "memset"]:
+        command += ["--native-import-symbol", name, win(Path("/clang64/lib/libmsvcrt.a"))]
     tree_count = len(list((original / "CPP").rglob("*.cpp")))
     arguments = work / "arguments.json"
     arguments.write_text(json.dumps(command[2:], ensure_ascii=False), encoding="utf-8")

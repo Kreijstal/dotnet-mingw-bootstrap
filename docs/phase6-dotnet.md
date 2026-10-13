@@ -6462,3 +6462,43 @@ inputs/66 tree C++ files remain in the combined diagnostic gate, without a
 per-file pass count. Native coverage stays 58/139. Full printing lowering/link/
 runtime, text/layout and WindowsDesktop SDK/reference/runtime packaging remain
 required; the WPF packaging goal stays active.
+
+
+## 79. Selective CRT wide-length and buffer-fill bindings
+
+The 2026-10-13 continuation binds the original printing wcslen and memset calls
+from the trusted x64 MinGW msvcrt import archive. The gate selects only those
+symbols alongside its existing memcpy selection, preserving duplicate-symbol
+checks instead of importing unrelated CRT exports that overlap system libraries.
+No printing source bodies or CRT algorithms are replaced.
+
+The focused consumer calls the actual native functions. wcslen checks UTF-16
+and surrogate units, offsets, empty tails, embedded NUL and original-shaped
+MULTI_SZ iteration. Pinned managed String characters remain valid through twenty
+collections. memset checks the actual returned native pointer, low-byte value
+truncation, bounded writes with sentinel bytes, zero count, zero fill and a
+managed array pin across collection. All checks pass.
+
+Validation on win11 with the standard compiler/WPF environment:
+
+```sh
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-crt-wide-length
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh printing-gate
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-crt-wide-length
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh printing-gate
+```
+
+The first gate passes wcslen and reaches memset in SafeMemoryHandle.TryCreate.
+The final focused native runtime command passes both bindings. Printing then
+passes that fill call and fails in SafeMemoryHandle.get_Size at
+InteropPrinterHandler.cpp:3233: the original handle.Size accesses IntPtr's static
+property through an instance expression. That member-expression lowering needs
+support. No full printing IL/DLL or printing runtime proof is produced.
+
+Bash/Python/JSON syntax and whitespace checks pass. Logs, actual native-import
+metadata, IL/DLL/runtime output and original gate manifests are archived under
+`tmp/wpf8-support/validation/printing-crt-length-fill-20261013`. Scope remains all
+49 original project inputs/66 tree C++ files in a combined diagnostic gate,
+without a per-file compile count. Native text coverage stays 58/139; full printing,
+layout/text and WindowsDesktop SDK/reference/runtime packaging remain required.
+The WPF packaging goal stays active.

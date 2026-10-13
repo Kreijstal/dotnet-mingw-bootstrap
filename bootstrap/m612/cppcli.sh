@@ -604,6 +604,12 @@ int main() { CombinedAccess^ c=gcnew CombinedAccess(); return c->OrMethod(); }' 
   reject_case combined-foreign-and '#using "combined-access.dll"
 public ref class Foreign : CombinedAccess { public: int Read() { return AndMethod(); } }; int main() { return 0; }' 'undeclared identifier' --type CombinedAccess
 }
+step_test-crt-wide-length() {
+  run_case crt-wide-length "$src/tests/crt-wide-length.cpp" \
+    'CRT wcslen/memset: UTF-16/surrogate/NUL/MULTI_SZ, pinned text/bytes, native return pointers, truncation/bounds/zero count and GC PASS' \
+    --type System.GC --native-import-symbol wcslen "$(cygpath -m /clang64/lib/libmsvcrt.a)" \
+    --native-import-symbol memset "$(cygpath -m /clang64/lib/libmsvcrt.a)"
+}
 step_test-ref-locals() {
   local refs=("$CPPCLI_SDK"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
   compile "$(cygpath -m "$src/tests/ref-locals.cpp")" --target library --type System.GC --type System.InvalidOperationException \

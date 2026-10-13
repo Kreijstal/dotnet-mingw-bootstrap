@@ -276,7 +276,8 @@
     "Source __try/__finally cleanup lowers Clang SEHTryStmt to CLR finally with protected returns and __leave targets; normal/exception/return/break/continue/nested cleanup, actual Monitor release to another thread and tracked byref GC validated",
     "Property receiver capture through ref-class tracking referents uses actual CLR class local types; getters/setters preserve identity, receiver-before-RHS evaluation and compacting-GC roots. Unconverted nullptr property captures use managed null storage while subsequent native conversions retain typed zero",
     "Native offsetof constants use Clang constant evaluation and trivial native POD layouts, including SDK records, nested inline-array fields and packed pointer/scalar fields; independently compiled native field addresses agree. Managed facade layouts and dynamic offsets are rejected",
-    "Ordinary non-disposable source ref-class/ref-struct local declarations allocate CLR objects in tracked class locals; fields/properties/methods, exact tracking-parameter binding and unary percent preserve identity through Hashtable/Object escape and moving GC"
+    "Ordinary non-disposable source ref-class/ref-struct local declarations allocate CLR objects in tracked class locals; fields/properties/methods, exact tracking-parameter binding and unary percent preserve identity through Hashtable/Object escape and moving GC",
+    "Original printing CRT wcslen and memset calls bind selectively from the trusted MinGW msvcrt archive; actual UTF-16/NUL/MULTI_SZ lengths, pinned text/byte buffers, fill return pointers, byte truncation, sentinel bounds and zero-count behavior validated"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
