@@ -177,6 +177,7 @@ struct PageData {
     ~PageData(){track.reset();--context->resources;}
     std::shared_ptr<TrackData> track;
     FSPAGEDETAILS details{};
+    bool bottomless=false;
 };
 std::unordered_map<void*,std::shared_ptr<TrackData>> tracks;
 std::unordered_map<void*,std::weak_ptr<TextData>> texts;
@@ -246,18 +247,18 @@ int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const F
         // unmanaged handles: bad_alloc afterwards must not leak those handles.
         text->lines.emplace_back();text->breaks.push_back(nullptr);
         auto& line=text->lines.back();auto& br=text->breaks.back();
-        line.dcpFirst=dcp;line.urStart=0;line.dur=rect.du;line.vrStart=used;
+        line.dcpFirst=dcp;line.urStart=rect.u;line.dur=rect.du;line.vrStart=rect.v+used;
         line.pfsbreakreclineclient=previous;line.fTreatedAsFirst=(dcp==props.dcpStartContent);
         int consumed=0,dependent=0,reformat=0;FSFLRES result{};
         status=reinterpret_cast<PtsFormatLine>(cb.pfnFormatLine)(client,para->desc.pfsparaclient,para->desc.nmp,0,dcp,previous,direction,
-            0,rect.du,rect.u,rect.du,rect.u,0,0,0,line.fTreatedAsFirst,0,used==0,
+            rect.u,rect.du,rect.u,rect.du,rect.u,0,0,0,line.fTreatedAsFirst,0,used==0,
             &line.pfslineclient,&consumed,&br,&line.fForceBroken,&result,&line.dvrAscent,&line.dvrDescent,&line.urBBox,&line.durBBox,&dependent,&reformat);
         if(status)return status;
-        if(!line.pfslineclient||consumed<=0||line.dvrAscent<0||line.dvrDescent<0||line.durBBox<0||int64_t(rect.u)+line.urBBox<INT32_MIN||int64_t(rect.u)+line.urBBox+line.durBBox>INT32_MAX||int64_t(dcp)+consumed>INT32_MAX)return PTS_tserrInvalidClientOutput;
+        if(!line.pfslineclient||consumed<=0||line.dvrAscent<0||line.dvrDescent<0||line.durBBox<0||int64_t(line.urBBox)+line.durBBox>INT32_MAX||int64_t(dcp)+consumed>INT32_MAX)return PTS_tserrInvalidClientOutput;
         int64_t height=int64_t(line.dvrAscent)+line.dvrDescent;
         if(height<=0||height>int64_t(rect.dv)-used)return PTS_tserrNotImplemented; // continuation requires a real page break record
         line.dcpLim=dcp+consumed;used+=int(height);dcp=line.dcpLim;previous=br;
-        FSBBOX bbox{1,{rect.u+line.urBBox,rect.v+line.vrStart,line.durBBox,int(height)}};status=merge_bbox(para->desc.fsbbox,bbox);if(status)return status;
+        FSBBOX bbox{1,{line.urBBox,line.vrStart,line.durBBox,int(height)}};status=merge_bbox(para->desc.fsbbox,bbox);if(status)return status;
         if(result>=fsflrEndOfParagraph&&result<=fsflrEndOfParagraphClearBoth)break;
         if(result!=fsflrOutOfSpace&&result!=fsflrSoftBreak)return PTS_tserrNotImplemented;
     }
@@ -267,7 +268,7 @@ int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const F
 }
 
 int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t direction,const FSRECT& rect,
-    int suppress,void* incoming,std::shared_ptr<TrackData>& result,void** margin_output) {
+    int suppress,void* incoming,std::shared_ptr<TrackData>& result,void** margin_output,bool bottomless=false) {
     auto& cb=context->info.fscbk.cbkgen;void* client=context->info.pfsclient;
     if(!segment||direction!=PTS_fswdirES||rect.du<=0||rect.dv<0||int64_t(rect.u)+rect.du>INT32_MAX||int64_t(rect.v)+rect.dv>INT32_MAX)return PTS_tserrNotImplemented;
     if(!cb.pfnGetFirstPara||!cb.pfnGetNextPara||!cb.pfnGetParaProperties||!cb.pfnCreateParaclient||!cb.pfnDestroyParaclient||!context->info.fscbk.cbkobj.pfnDestroyMcsclient)return PTS_tserrInvalidParameter;
@@ -292,21 +293,32 @@ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t 
         if(props.idobj==-1)status=format_text(para,direction,available);
         else {
             auto& methods=context->installed->methods[0];
-            if(!methods.pfnFormatParaFinite||!methods.pfnDestroyPara)return PTS_tserrInvalidParameter;
+            if(!(bottomless?methods.pfnFormatParaBottomless:methods.pfnFormatParaFinite)||!methods.pfnDestroyPara)return PTS_tserrInvalidParameter;
             CallbackTracks pending;
-            FSFMTR fmtr{};void* break_output=nullptr;void* margin_next=nullptr;FSKCLEAR clear{};int can_break=0;
-            status=reinterpret_cast<PtsObjFormatParaFinite>(methods.pfnFormatParaFinite)(context->object_contexts[0],para->desc.pfsparaclient,nullptr,0,name,0,nullptr,nullptr,
-                0,suppress&&track->paras.empty(),direction,&available,input_margin,fskclearNone,fsksuppresshardbreakbeforefirstparaNone,0,
-                &fmtr,&para->desc.pfspara,&break_output,&para->desc.dvrUsed,&para->desc.fsbbox,&margin_next,&clear,&para->desc.dvrTopSpace,&can_break);
+            void* margin_next=nullptr;FSKCLEAR clear{};int can_break=0;
+            if(bottomless) {
+                FSFMTRBL formatted{};
+                status=reinterpret_cast<PtsObjFormatParaBottomless>(methods.pfnFormatParaBottomless)(context->object_contexts[0],para->desc.pfsparaclient,name,0,nullptr,
+                    suppress&&track->paras.empty(),direction,available.u,available.du,available.v,input_margin,fskclearNone,0,
+                    &formatted,&para->desc.pfspara,&para->desc.dvrUsed,&para->desc.fsbbox,&margin_next,&clear,&para->desc.dvrTopSpace,&can_break);
+                if(!status&&formatted!=fmtrblGoalReached)status=PTS_tserrNotImplemented;
+            } else {
+                FSFMTR fmtr{};void* break_output=nullptr;
+                status=reinterpret_cast<PtsObjFormatParaFinite>(methods.pfnFormatParaFinite)(context->object_contexts[0],para->desc.pfsparaclient,nullptr,0,name,0,nullptr,nullptr,
+                    0,suppress&&track->paras.empty(),direction,&available,input_margin,fskclearNone,fsksuppresshardbreakbeforefirstparaNone,0,
+                    &fmtr,&para->desc.pfspara,&break_output,&para->desc.dvrUsed,&para->desc.fsbbox,&margin_next,&clear,&para->desc.dvrTopSpace,&can_break);
+                if(!status&&(fmtr.kstop!=fmtrGoalReached||break_output))status=PTS_tserrNotImplemented;
+            }
             pending.claimed=para->desc.pfspara;
             margin.reset();margin.value=margin_next;input_margin=margin.value;
-            if(!status&&(fmtr.kstop!=fmtrGoalReached||break_output||clear!=fskclearNone))status=PTS_tserrNotImplemented;
+            if(!status&&clear!=fskclearNone)status=PTS_tserrNotImplemented;
         }
         if(status)return status;
         if(para->desc.dvrUsed<0||para->desc.dvrUsed>available.dv)return PTS_tserrInvalidClientOutput;
         track->used+=para->desc.dvrUsed;status=merge_bbox(track->bbox,para->desc.fsbbox);if(status)return status;track->paras.push_back(para);
         void* next=nullptr;status=reinterpret_cast<PtsGetNextPara>(cb.pfnGetNextPara)(client,segment,name,&found,&next);if(status)return status;name=next;
     }
+    if(bottomless)track->rect.dv=track->used;
     result=track;*margin_output=margin.value;margin.value=nullptr;return 0;
 }
 void clear_track(const std::shared_ptr<TrackData>& track) {
@@ -342,29 +354,75 @@ extern "C" __declspec(dllexport) int WINAPI FsDestroySubtrack(void* context_hand
         track=found->second;tracks.erase(found);}
     return 0;
 }
+namespace {
+int build_page(const std::shared_ptr<Context>& context,void* section,bool bottomless,std::shared_ptr<PageData>& result) {
+    auto& cb=context->info.fscbk.cbkgen;void* client=context->info.pfsclient;
+    if(!section||!cb.pfnGetPageDimensions||!cb.pfnGetSectionProperties||!cb.pfnGetMainTextSegment)return PTS_tserrInvalidParameter;
+    FSRECT rect{};uint32_t direction=0,section_direction=0;int header=0,width=0,height=0;
+    int status=reinterpret_cast<PtsGetPageDimensions>(cb.pfnGetPageDimensions)(client,section,&direction,&header,&width,&height,&rect);if(status)return status;
+    int new_page=0,balance=0,columns=0,segments=0,heights=0;
+    status=reinterpret_cast<PtsGetSectionProperties>(cb.pfnGetSectionProperties)(client,section,&new_page,&section_direction,&balance,&columns,&segments,&heights);if(status)return status;
+    if(direction!=PTS_fswdirES||section_direction!=direction||header||columns!=1||segments||heights||balance)return PTS_tserrNotImplemented;
+    if(width<=0||(!bottomless&&height<=0)||rect.u<0||rect.v<0||rect.du<=0||int64_t(rect.u)+rect.du>width||(!bottomless&&int64_t(rect.v)+rect.dv>height))return PTS_tserrInvalidGeometry;
+    if(bottomless)rect.dv=INT32_MAX-rect.v;
+    void* segment=nullptr;status=reinterpret_cast<PtsGetMainTextSegment>(cb.pfnGetMainTextSegment)(client,section,&segment);if(status)return status;
+    auto page=std::make_shared<PageData>(context);page->bottomless=bottomless;MarginOwner margin{context};
+    status=format_track(context,segment,direction,rect,1,nullptr,page->track,&margin.value,bottomless);if(status)return status;
+    auto& details=page->details;details.fskupd=fskupdNew;details.fSimple=1;
+    auto& desc=details.u.simple.trackdescr;desc.fsupdinf.fskupd=fskupdNew;desc.nms=segment;desc.fsrc=page->track->rect;desc.fsbbox=page->track->bbox;desc.pfstrack=page->track.get();
+    result=page;return 0;
+}
+int register_page(const std::shared_ptr<PageData>& page) {
+    std::lock_guard<std::mutex> lock(gate);tracks.emplace(page->track.get(),page->track);
+    try {pages.emplace(page.get(),page);}catch(...){tracks.erase(page->track.get());throw;}
+    return 0;
+}
+}
 extern "C" __declspec(dllexport) int WINAPI FsCreatePageFinite(void* context_handle,void* break_input,void* section,FSFMTR* formatted,void** output,void** break_output) {
     if(!formatted||!output||!break_output)return PTS_tserrNullOutputParameter;
     *formatted={};*output=*break_output=nullptr;
     auto context=find_context(context_handle);if(!context)return PTS_tserrInvalidPtsContext;
     if(break_input)return PTS_tserrNotImplemented;
-    auto& cb=context->info.fscbk.cbkgen;void* client=context->info.pfsclient;
-    if(!section||!cb.pfnGetPageDimensions||!cb.pfnGetSectionProperties||!cb.pfnGetMainTextSegment)return PTS_tserrInvalidParameter;
     try {
-        FSRECT rect{};uint32_t direction=0,section_direction=0;int header=0,width=0,height=0;
-        int status=reinterpret_cast<PtsGetPageDimensions>(cb.pfnGetPageDimensions)(client,section,&direction,&header,&width,&height,&rect);if(status)return status;
-        int new_page=0,balance=0,columns=0,segments=0,heights=0;
-        status=reinterpret_cast<PtsGetSectionProperties>(cb.pfnGetSectionProperties)(client,section,&new_page,&section_direction,&balance,&columns,&segments,&heights);if(status)return status;
-        if(direction!=PTS_fswdirES||section_direction!=direction||header||columns!=1||segments||heights||balance)return PTS_tserrNotImplemented;
-        if(width<=0||height<=0||rect.u<0||rect.v<0||int64_t(rect.u)+rect.du>width||int64_t(rect.v)+rect.dv>height)return PTS_tserrInvalidGeometry;
-        void* segment=nullptr;status=reinterpret_cast<PtsGetMainTextSegment>(cb.pfnGetMainTextSegment)(client,section,&segment);if(status)return status;
-        auto page=std::make_shared<PageData>(context);MarginOwner margin{context};
-        status=format_track(context,segment,direction,rect,1,nullptr,page->track,&margin.value);if(status)return status;
-        auto& details=page->details;details.fskupd=fskupdNew;details.fSimple=1;
-        auto& desc=details.u.simple.trackdescr;desc.fsupdinf.fskupd=fskupdNew;desc.nms=segment;desc.fsrc=rect;desc.fsbbox=page->track->bbox;desc.pfstrack=page->track.get();
+        std::shared_ptr<PageData> page;int status=build_page(context,section,false,page);if(status)return status;
+        register_page(page);formatted->kstop=fmtrGoalReached;*output=page.get();return 0;
+    }catch(const std::bad_alloc&){return PTS_tserrOutOfMemory;}
+}
+extern "C" __declspec(dllexport) int WINAPI FsCreatePageBottomless(void* context_handle,void* section,FSFMTRBL* formatted,void** output) {
+    if(!formatted||!output)return PTS_tserrNullOutputParameter;*formatted=fmtrblGoalReached;*output=nullptr;
+    auto context=find_context(context_handle);if(!context)return PTS_tserrInvalidPtsContext;
+    try {
+        std::shared_ptr<PageData> page;int status=build_page(context,section,true,page);if(status)return status;
+        register_page(page);*output=page.get();return 0;
+    }catch(const std::bad_alloc&){return PTS_tserrOutOfMemory;}
+}
+extern "C" __declspec(dllexport) int WINAPI FsFormatSubtrackBottomless(void* context_handle,void* segment,int area,void* geometry,int suppress,uint32_t direction,
+    int u,int width,int v,void* margin_input,FSKCLEAR clear,int interruptible,FSFMTRBL* formatted,void** output,int* used,FSBBOX* bbox,
+    void** margin_output,FSKCLEAR* clear_output,int* top_space,int* can_interrupt) {
+    if(!formatted||!output||!used||!bbox||!margin_output||!clear_output||!top_space||!can_interrupt)return PTS_tserrNullOutputParameter;
+    *formatted=fmtrblGoalReached;*output=*margin_output=nullptr;*used=*top_space=*can_interrupt=0;*bbox={};*clear_output=fskclearNone;
+    auto context=find_context(context_handle);if(!context)return PTS_tserrInvalidPtsContext;
+    if(v<0||area||geometry||clear!=fskclearNone)return PTS_tserrNotImplemented;
+    try {
+        FSRECT rect{u,v,width,INT32_MAX-v};std::shared_ptr<TrackData> track;MarginOwner margin{context};
+        int status=format_track(context,segment,direction,rect,suppress,margin_input,track,&margin.value,true);if(status)return status;
+        track->subtrack=true;if(callback_tracks)callback_tracks->push_back(track);
+        {std::lock_guard<std::mutex> lock(gate);tracks.emplace(track.get(),track);}
+        *output=track.get();*used=track->used;*bbox=track->bbox;*margin_output=margin.value;margin.value=nullptr;return 0;
+    }catch(const std::bad_alloc&){return PTS_tserrOutOfMemory;}
+}
+extern "C" __declspec(dllexport) int WINAPI FsUpdateBottomlessPage(void* context_handle,void* handle,void* section,FSFMTRBL* formatted) {
+    if(!formatted)return PTS_tserrNullOutputParameter;*formatted=fmtrblGoalReached;
+    auto page=lookup_owned(pages,context_handle,handle);if(!page||!page->bottomless)return PTS_tserrInvalidQuery;
+    try {
+        std::shared_ptr<PageData> replacement;int status=build_page(page->context,section,true,replacement);if(status)return status;
+        std::shared_ptr<TrackData> previous=page->track;
         {std::lock_guard<std::mutex> lock(gate);
-            tracks.emplace(page->track.get(),page->track);
-            try {pages.emplace(page.get(),page);}catch(...){tracks.erase(page->track.get());throw;}}
-        formatted->kstop=fmtrGoalReached;*output=page.get();return 0;
+            tracks.emplace(replacement->track.get(),replacement->track);
+            tracks.erase(previous.get());page->track=replacement->track;page->details=replacement->details;}
+        // Retain page identity while replacing layout atomically. The old
+        // clients/lines are released outside the registry lock after success.
+        return 0;
     }catch(const std::bad_alloc&){return PTS_tserrOutOfMemory;}
 }
 extern "C" __declspec(dllexport) int WINAPI FsDestroyPage(void* context_handle,void* handle) {

@@ -8264,3 +8264,52 @@ Multi-page continuation/page break records, bottomless layout, multiple columns,
 RTL page text, optimal/keep policies and tables/floaters/figures remain open.
 Full bidi/native natural-language and broader runtime paths are also unfinished;
 the full WPF goal stays active.
+
+## 120. Bottomless scrolling/editor layout and corrected page line coordinates
+
+The 2026-10-13 continuation implements FsCreatePageBottomless,
+FsFormatSubtrackBottomless and FsUpdateBottomlessPage. Bottomless containers use
+their original ObjFormatParaBottomless callback, including managed margin/
+border/padding handling, and retain the shared source line/query/resource
+engine. Query rectangles report actual consumed content height. Page updates
+build a replacement tree, publish it under the existing page handle only after
+successful formatting, and release superseded clients/lines outside the registry
+lock. Failed replacement preserves the previous valid tree; the managed caller
+can then dispose it normally. Updates currently reformat the full page and do
+not claim the original incremental/interruptible algorithm.
+
+The initial scrolling probe exposed an error in release 10: single-line query
+records used paragraph-relative u/v positions, while original TextParaClient
+positions its line visuals in page coordinates. This made paragraphs overlap
+and scrolled viewports appear blank, despite the earlier nonempty-raster check.
+Line descriptors and ink bounding boxes now use actual page coordinates. Native
+geometry assertions and a new two-color finite-page raster test verify page
+padding and nonoverlapping paragraph rows: red at y=19..38 and blue starting
+y=45, with first red ink at x=14 after 12-unit page padding.
+
+Validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-paragraph-context-native
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-paragraph-context-native
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-bottomless-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/bottomless-sdk-check
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-flowdocument-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/bottomless-finite-sdk-check
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh inventory layout check-sdk
+```
+
+All commands pass. Native tests verify bottomless content beyond finite bounds,
+actual height, stable page identity, replacement and failed-update retention,
+stale query rejection and exact callback cleanup. Original
+FlowDocumentScrollViewer lays out 21 paragraphs and renders top/end viewports;
+editing grows the extent from 1695.8 to 1749.0 in Ideal and from 1756.0 to 1840.0
+in Display. Original RichTextBox renders initial and appended text, retaining
+correct text-container content and changed raster. Shared-framework and
+self-contained publishes with SDK roots/toolchain PATH removed pass compacting
+GC and dispatcher cleanup. Finite FlowDocument placement and the usual
+WPF/tab/inline-object/justification/width/context/WinForms regressions pass;
+consumer builds have zero warnings/errors. step_check_sdk now includes the
+bottomless gate. Imported native coverage is 83/139 with 56 absent.
+Evidence is archived under tmp/wpf8-support/validation/bottomless-20261013.
+Package integration follows. Multi-page continuation, advanced/incremental/
+interruptible paragraph layout, full bidi/optimal/native language behavior and
+broader runtime paths remain required for the full WPF goal.

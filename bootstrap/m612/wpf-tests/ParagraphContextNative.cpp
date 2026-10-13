@@ -43,9 +43,9 @@ static int WINAPI text_properties(void*,void*,int,FSTXTPROPS* props){*props={};r
 static int WINAPI line_format(void*,void*,void*,int,int dcp,void* incoming,uint32_t direction,
     int start,int width,int track_start,int track_width,int margin,int hyphen,int left,int right,int first,int last,int suppress,
     void** line,int* consumed,void** br,int* forced,FSFLRES* result,int* ascent,int* descent,int* bbox,int* bbox_width,int* depend,int* reformat) {
-    if(direction||start||width!=100||track_start!=10||track_width!=100||margin!=10||hyphen||left||right||last||first!=(dcp==0)||bool(incoming)!=(dcp!=0))return PTS_tserrInvalidParameter;
+    if(direction||start!=10||width!=100||track_start!=10||track_width!=100||margin!=10||hyphen||left||right||last||first!=(dcp==0)||bool(incoming)!=(dcp!=0))return PTS_tserrInvalidParameter;
     ++lines_created;*line=reinterpret_cast<void*>(1000+lines_created);*br=reinterpret_cast<void*>(2000+lines_created);
-    *consumed=5;*forced=0;*result=dcp==0?fsflrOutOfSpace:fsflrEndOfParagraph;*ascent=7;*descent=3;*bbox=0;*bbox_width=75;*depend=*reformat=0;
+    *consumed=5;*forced=0;*result=dcp==0?fsflrOutOfSpace:fsflrEndOfParagraph;*ascent=7;*descent=3;*bbox=10;*bbox_width=75;*depend=*reformat=0;
     if(lines_created==fail_line)return PTS_tserrCallbackException;
     return 0;
 }
@@ -152,7 +152,7 @@ int main(int argc,char** argv) {
         FSTEXTDETAILS text_details{};
         require(FsQueryTextDetails(context,paras[0].pfspara,&text_details)==0&&text_details.fsktd==fsktdFull&&text_details.u.full.cLines==2&&text_details.u.full.dcpFirst==0&&text_details.u.full.dcpLim==10,"text details describe actual formatted source range");
         FSLINEDESCRIPTIONSINGLE lines[2]{};
-        require(FsQueryLineListSingle(context,paras[0].pfspara,2,lines,&actual_count)==0&&actual_count==2&&lines[0].dcpFirst==0&&lines[0].dcpLim==5&&lines[1].dcpFirst==5&&lines[1].dcpLim==10&&lines[1].vrStart==10&&lines[1].pfsbreakreclineclient==reinterpret_cast<void*>(2001),"line metrics, ranges and continuation record");
+        require(FsQueryLineListSingle(context,paras[0].pfspara,2,lines,&actual_count)==0&&actual_count==2&&lines[0].dcpFirst==0&&lines[0].dcpLim==5&&lines[1].dcpFirst==5&&lines[1].dcpLim==10&&lines[0].urStart==10&&lines[0].vrStart==20&&lines[1].vrStart==30&&lines[1].pfsbreakreclineclient==reinterpret_cast<void*>(2001),"line metrics, ranges and continuation record");
         require(FsQueryPageDetails(reinterpret_cast<void*>(1),page_handle,&details)==PTS_tserrInvalidQuery&&!details.fSimple,"foreign context cannot query a page");
         require(FsDestroySubtrack(context,track)==PTS_tserrInvalidQuery,"page-owned root track cannot be destroyed as a subtrack");
         require(FsClearUpdateInfoInPage(context,page_handle)==0&&FsQueryPageDetails(context,page_handle,&details)==0&&details.fskupd==fskupdNoChange,"page update clear is retained");
@@ -170,6 +170,21 @@ int main(int argc,char** argv) {
         require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrNotImplemented&&!page_handle&&!page_break&&lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"page overflow rejects without pretending the remaining text was consumed and releases partial lines");
         available_height=80;columns=2;reset_page_counts();
         require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrNotImplemented&&!page_handle&&!page_break&&!lines_created,"unfinished multicolumn formatting rejects before fabricated output");
+        columns=1;available_height=10;reset_page_counts();
+        using BottomlessCreate=int(WINAPI*)(void*,void*,FSFMTRBL*,void**);
+        using BottomlessUpdate=int(WINAPI*)(void*,void*,void*,FSFMTRBL*);
+        PROC(FsCreatePageBottomless,BottomlessCreate);PROC(FsUpdateBottomlessPage,BottomlessUpdate);
+        FSFMTRBL bottomless_result{};
+        require(FsCreatePageBottomless(context,reinterpret_cast<void*>(66),&bottomless_result,&page_handle)==0&&bottomless_result==fmtrblGoalReached,"bottomless formatting consumes full text beyond finite available height");
+        require(FsQueryPageDetails(context,page_handle,&details)==0&&details.u.simple.trackdescr.fsrc.dv==40,"bottomless page height is actual consumed height");
+        void* previous_track=details.u.simple.trackdescr.pfstrack;
+        require(FsUpdateBottomlessPage(context,page_handle,reinterpret_cast<void*>(66),&bottomless_result)==0&&lines_created==8&&lines_destroyed==4&&clients_created==4&&clients_destroyed==2,"bottomless update retains page handle and releases superseded callback handles");
+        require(FsQueryPageDetails(context,page_handle,&details)==0&&details.u.simple.trackdescr.pfstrack!=previous_track&&FsQueryTrackDetails(context,previous_track,&track_details)==PTS_tserrInvalidQuery,"successful replacement invalidates old layout queries");
+        previous_track=details.u.simple.trackdescr.pfstrack;fail_line=lines_created+2;
+        require(FsUpdateBottomlessPage(context,page_handle,reinterpret_cast<void*>(66),&bottomless_result)==PTS_tserrCallbackException&&FsQueryPageDetails(context,page_handle,&details)==0&&details.u.simple.trackdescr.pfstrack==previous_track,"failed bottomless replacement preserves the previous valid page and layout");
+        fail_line=-1;require(FsDestroyPage(context,page_handle)==0&&lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"bottomless update/failure/teardown releases every source callback resource");
+        available_height=80;
+        std::puts("native bottomless pages: full content height, stable page identity, atomic replacement/failed-update retention, stale layout rejection and exact cleanup PASS");
         columns=1;require(DestroyDocContext(context)==0&&DestroyInstalledObjectsInfo(installed)==0,"failed page creation leaves no retained resources");
         std::puts("native finite pages: actual callback geometry/ranges/break records, query/update state, foreign/stale handles, exact teardown, partial failure rollback and unsupported paths PASS");
         std::printf("native paragraph records: context=%zu, methods=%zu, callbacks=%zu; copied ownership, callbacks, rollback, invalid states and teardown PASS\n",sizeof(FSCONTEXTINFO),sizeof(FSIMETHODS),sizeof(FSCBK));return 0;
