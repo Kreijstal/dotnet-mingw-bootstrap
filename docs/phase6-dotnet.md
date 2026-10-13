@@ -4272,3 +4272,63 @@ the failure evidence are archived under
 `tmp/wpf8-support/validation/classification-20261013` locally. Printing, complete
 text/paragraph/natural-language support, remaining desktop assemblies and
 WindowsDesktop packaging remain unfinished. The goal remains active.
+
+## 43. Real native DirectWrite analysis callbacks and complete itemizer runtime
+
+The next 2026-10-13 continuation supplies CreateTextAnalysisSink,
+CreateTextAnalysisSource, GetScriptAnalysisList and GetNumberSubstitutionList.
+These are real native COM implementations of the original DirectWrite source
+and sink contracts. Script, number, bidi and line-break callbacks all retain
+their results; none is a stub. The source borrows pinned UTF16 text, copies its
+locale and owns a factory-created number-substitution object. The sink preserves
+ordered half-open ranges and owns substitution references independently.
+Transactional range replacement retains uncovered prefixes/suffixes and cleans
+up new references on allocation failure. TextAnalysis.md records the contract.
+
+The list nodes match original TextItemizer.h: Value first, Range[2] next, then
+Next. Both script and number nodes have native **24-byte x64 size**, with Range
+at offset eight and Next at sixteen. The actual SDK DWRITE_SCRIPT_ANALYSIS is
+eight bytes because its native shapes enum is four bytes; the initial native
+static assertion caught that distinction before code could be loaded.
+
+The native peer sends mixed Latin/Arabic/Hebrew/Indic/supplementary text through
+the real system IDWriteTextAnalyzer. An independent forwarding recorder checks
+the original callback results against the exported script/number lists: four
+script ranges cover the complete text, and one range retains actual number
+substitution. Real bidi and line-break callbacks succeed too. Further checks
+cover borrowed text/copy-locale lifetime, paragraph direction, COM identity,
+empty sinks, invalid pointers/methods/positions, overflow and overlapping range
+splits. A counted test substitution verifies exact AddRef/Release ownership;
+production objects are actual DirectWrite substitutions.
+
+The managed peer invokes the **complete original C++/CLI TextAnalyzer.Itemize**,
+using the actual PresentationCore native delegates and ClassificationUtility.
+It produces **six spans** from mixed text and verifies full length coverage,
+Latin/Indic/combining/number properties, and original ItemProps native
+script/substitution ownership after source/sink disposal and forced GC.
+Original CanShapeTogether still succeeds on the retained properties. This is
+broader evidence than the earlier extracted range-merge methods or shaped-alone
+loop: the original source/factory/analysis/itemization/cleanup chain executes.
+
+Validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh \
+  check-text-analysis-native check-text-analysis inventory
+```
+
+The native build and both runtime checks pass. The C# consumer has zero
+warnings/errors. The patched-source imported-symbol inventory rises to
+**43/139 implemented**, with **96 still missing**. Complete Line Services,
+paragraph/natural-language layout and System.Printing implementation remain
+unfinished; the interactive text window still requires LoGetEscString and the
+later line-layout APIs. The remaining desktop assemblies and WindowsDesktop
+SDK/framework-pack packaging are still open. Logs, native source/checks,
+generated native DLL and managed consumer evidence are archived under
+`tmp/wpf8-support/validation/text-analysis-20261013` locally. The goal remains
+active.

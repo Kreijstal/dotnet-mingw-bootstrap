@@ -115,7 +115,7 @@ step_native_win32() {
   /usr/bin/python3 "$here/tools/wpf-classification-header.py" \
     "$source/src/Microsoft.DotNet.Wpf/src/PresentationCore/MS/internal/UnicodeClasses.cs" "$work/ClassificationEnums.h"
   /clang64/bin/clang++.exe -O2 -shared "$here/wpf-native/PresentationNativeWin32.cpp" \
-    "$here/wpf-native/Classification.cpp" -I "$work" \
+    "$here/wpf-native/Classification.cpp" "$here/wpf-native/TextAnalysis.cpp" -I "$work" \
     -o "$build/lib/PresentationNative_cor3.dll" -luser32 -lgdi32 -licuuc
 }
 
@@ -148,6 +148,38 @@ PY
     --configfile "$(cygpath -m "$build/NuGet.config")" -v:q
   cp "$build/lib/PresentationNative_cor3.dll" "$build/lib/wpf-dwrite-loader.dll" "$build/lib/wpf-subsetter.dll" "$work/bin/Release/net8.0/"
   "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/ClassificationCheck.dll")"
+}
+
+step_check_text_analysis_native() {
+  local work=$build/text-analysis-native-check
+  mkdir -p "$work"
+  /clang64/bin/clang++.exe -std=c++17 -O2 "$here/wpf-tests/TextAnalysisNative.cpp" -o "$work/check.exe" -ldwrite
+  "$work/check.exe" "$build/lib/PresentationNative_cor3.dll"
+}
+
+step_check_text_analysis() {
+  initialize
+  local work=$build/text-analysis-check
+  mkdir -p "$work"
+  cp "$here/wpf-tests/TextAnalysis.cs" "$work/Program.cs"
+  /usr/bin/python3 - "$work" "$build/lib" "$oob" <<'PY'
+from pathlib import Path
+import subprocess,sys,xml.etree.ElementTree as E
+work,lib,oob=map(Path,sys.argv[1:])
+def win(p): return subprocess.check_output(['cygpath','-m',str(p.resolve())],text=True).strip()
+root=E.Element('Project',Sdk='Microsoft.NET.Sdk'); pg=E.SubElement(root,'PropertyGroup')
+for key,value in {'TargetFramework':'net8.0','OutputType':'Exe','UseAppHost':'false','AllowUnsafeBlocks':'true','EnableNETAnalyzers':'false','NuGetAudit':'false','UseSharedCompilation':'false'}.items(): E.SubElement(pg,key).text=value
+items=E.SubElement(root,'ItemGroup')
+for name in ('PresentationCore','WindowsBase','System.Xaml','DirectWriteForwarder'):
+    item=E.SubElement(items,'Reference',Include=name); E.SubElement(item,'HintPath').text=win(lib/(name+'.dll'))
+for file in sorted(oob.glob('*.dll')):
+    item=E.SubElement(items,'Reference',Include=file.stem); E.SubElement(item,'HintPath').text=win(file)
+E.ElementTree(root).write(work/'TextAnalysisCheck.csproj',encoding='utf-8')
+PY
+  "$sdk/dotnet.exe" build "$(cygpath -m "$work/TextAnalysisCheck.csproj")" -c Release \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -v:q
+  cp "$build/lib/PresentationNative_cor3.dll" "$build/lib/wpf-dwrite-loader.dll" "$build/lib/wpf-subsetter.dll" "$work/bin/Release/net8.0/"
+  "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/TextAnalysisCheck.dll")"
 }
 
 step_prepare_gfx() {
