@@ -6813,3 +6813,36 @@ all 49 original project inputs/66 tree C++ files in the combined diagnostic gate
 without per-file compile counts. Native coverage stays 58/139; full printing,
 layout/text and WindowsDesktop SDK/reference/runtime packaging remain required.
 The WPF packaging goal stays active.
+
+
+## 87. Inline native array pin initialization
+
+The 2026-10-13 continuation preserves Clang's array-to-pointer decay when a
+native inline array initializes a pin pointer. Constructor lowering checks the
+original converted argument type and emits its containing-record location;
+stripping implicit casts before that check had incorrectly rejected the array.
+Existing qualification and interior-pointer provenance checks remain in place.
+
+The focused fixture pins a wchar_t field of a native record stored in a managed
+array. It mutates the original field across GC, copies a Unicode surrogate-pair
+string, changes the source afterward and verifies independent string ownership.
+Existing native-pin and native-interior-record runtime/rejection tests pass.
+
+Validation on win11 with the standard compiler/WPF environment:
+
+```sh
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-inline-array-pins test-native-pins test-interior-records
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh printing-gate
+```
+
+The compiler rebuild and focused tests pass. The original combined printing gate
+passes parsing/Sema and CreateFontCached's face-name pin; emission now stops in
+CreateSimulatedStyleFont (gditextrt.cpp:882) at the local const BYTE[17] charset
+array. Native local-array storage remains required. No complete printing DLL or
+printing runtime proof is produced.
+
+Evidence is archived under
+`tmp/wpf8-support/validation/printing-inline-array-pins-20261013`. Scope remains
+49 project inputs/66 tree C++ files, without per-file compile counts. Native text
+coverage remains 58/139. Full printing, text/layout and WindowsDesktop packaging
+remain required; the WPF packaging goal stays active.

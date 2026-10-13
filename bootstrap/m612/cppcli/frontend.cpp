@@ -4280,8 +4280,8 @@ class Emitter {
                         fail(c,"managed pointer view cannot discard element qualifiers");
                     expr(arg);
                 }
-                else if (arg->getType()->isPointerType() && (!handle_target(arg->getType()) || !native_value_pointer(arg).isNull())) {
-                    auto source=arg->getType()->getPointeeType();
+                else if (c->getArg(0)->getType()->isPointerType() && (!handle_target(c->getArg(0)->getType()) || !native_value_pointer(c->getArg(0)).isNull())) {
+                    auto source=c->getArg(0)->getType()->getPointeeType();
                     auto target=interior_element(c->getType());
                     if((source.isConstQualified() && !target.isConstQualified()) ||
                        (source.isVolatileQualified() && !target.isVolatileQualified()))

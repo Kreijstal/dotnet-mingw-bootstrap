@@ -604,6 +604,10 @@ int main() { CombinedAccess^ c=gcnew CombinedAccess(); return c->OrMethod(); }' 
   reject_case combined-foreign-and '#using "combined-access.dll"
 public ref class Foreign : CombinedAccess { public: int Read() { return AndMethod(); } }; int main() { return 0; }' 'undeclared identifier' --type CombinedAccess
 }
+step_test-inline-array-pins() {
+  run_case inline-array-pins "$src/tests/inline-array-pins.cpp" 'inline native array decay pin retains parent storage, UTF-16 text copy and GC PASS' \
+    --type System.GC --type System.InvalidOperationException
+}
 step_test-interior-assignment() {
   compile "$(cygpath -m "$src/tests/interior-assignment.cpp")" --target library --type System.GC -o "$(cygpath -m "$testdir/interior-assignment.dll")"
   mkdir -p "$testdir/interior-assignment-consumer"
