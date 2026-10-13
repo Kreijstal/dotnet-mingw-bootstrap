@@ -4481,6 +4481,11 @@ class Emitter {
             return;
         }
         if (auto* c = dyn_cast<ExplicitCastExpr>(e)) {
+            if (c->getCastKind() == CK_ToVoid) {
+                expr(c->getSubExpr());
+                if (!c->getSubExpr()->getType()->isVoidType()) op("pop",1);
+                return;
+            }
             if (c->getCastKind() == CK_IntegralToPointer && !handle_target(c->getType())) {
                 expr(c->getSubExpr());
                 if (context.getTypeSize(c->getSubExpr()->getType()) < context.getTypeSize(c->getType()))

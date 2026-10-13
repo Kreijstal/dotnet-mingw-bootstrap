@@ -6887,3 +6887,36 @@ Evidence is archived under
 49 project inputs/66 tree C++ files without per-file compile counts; native text
 coverage remains 58/139. Full printing, text/layout and WindowsDesktop packaging
 remain required. The WPF packaging goal stays active.
+
+
+## 89. Explicit void discard casts
+
+The 2026-10-13 continuation emits Clang CK_ToVoid casts by evaluating the
+operand and popping its nonvoid result. Void operands already leave an empty
+stack. A focused runtime check covers the original (void)version idiom,
+side-effectful calls, nested casts, native volatile fields, managed values,
+native pointers, allocated handles and exceptions from discarded operands.
+The rebuild and final runtime check pass. A comma-expression probe exposed an
+independent existing binary-operator gap; comma lowering remains unsupported.
+
+Validation on win11 with the standard compiler/WPF environment:
+
+```sh
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-void-discard
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-void-discard
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh printing-gate
+```
+
+The original combined printing gate passes parsing/Sema and proceeds beyond
+FontInfo.cpp to XpsDeviceSimulatingPrintThunkHandler::ThunkStartDocPrinter
+(XpsDeviceSimulatingInteropPrinterHandler.cpp:118). The remaining diagnostic
+is a missing native _wassert binding from assert. The gate currently omits the
+upstream Release configuration's NDEBUG definition; configuration fidelity needs
+checking before choosing debug CRT imports or Release preprocessing. No complete
+printing IL/DLL or printing runtime proof is produced.
+
+Evidence is archived under
+`tmp/wpf8-support/validation/printing-void-discard-20261013`. Scope remains
+49 project inputs/66 tree C++ files without per-file compile counts. Native text
+coverage remains 58/139; full printing, text/layout and WindowsDesktop packaging
+remain required. The WPF packaging goal stays active.
