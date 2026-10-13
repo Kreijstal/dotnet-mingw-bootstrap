@@ -1710,6 +1710,10 @@ class Emitter {
     struct ControlLabels { std::string stop, next; unsigned depth; };
     std::vector<ControlLabels> control_labels;
     std::vector<std::string> seh_leave_labels;
+    struct GotoTarget { std::string name; std::vector<const Stmt*> regions; };
+    std::map<const LabelDecl*,GotoTarget> goto_targets;
+    std::vector<const Stmt*> active_regions;
+    std::set<const Stmt*> finally_regions;
     std::map<const SwitchCase*, std::pair<std::string, unsigned>> switch_labels;
     unsigned exception_depth = 0, catch_depth = 0, finally_depth = 0, return_slot = 0;
     std::string return_label;
@@ -4075,6 +4079,11 @@ class Emitter {
                 op("ldnull", 0, 1); op("ceq", 2, 1); op("ldc.i4.0", 0, 1); op("ceq", 2, 1); return;
             }
             if (c->getCastKind() == CK_IntegralToBoolean) { op("ldc.i4.0", 0, 1); op("ceq", 2, 1); op("ldc.i4.0", 0, 1); op("ceq", 2, 1); }
+            else if(c->getCastKind()==CK_FloatingToBoolean) {
+                unsigned bits=context.getTypeSize(c->getSubExpr()->getType());
+                if(bits!=32 && bits!=64) fail(c,"floating boolean conversion requires float32 or float64");
+                op(bits==32 ? "ldc.r4 0.0" : "ldc.r8 0.0",0,1); op("ceq",2,1); op("ldc.i4.0",0,1); op("ceq",2,1);
+            }
             else if (c->getCastKind() == CK_IntegralCast || c->getCastKind() == CK_IntegralToFloating || c->getCastKind() == CK_FloatingCast || c->getCastKind() == CK_FloatingToIntegral) {
                 numeric_conversion(c->getType(), c->getSubExpr()->getType());
             } else if (c->getCastKind() != CK_LValueToRValue && c->getCastKind() != CK_NoOp && c->getCastKind() != CK_ArrayToPointerDecay && c->getCastKind() != CK_FunctionToPointerDecay &&
@@ -4479,6 +4488,36 @@ class Emitter {
         return variable && variable->getType()->isPointerType() &&
             record_annotated(variable->getType()->getPointeeType()->getAsCXXRecordDecl(), "cli.finally");
     }
+    void collect_labels(const Stmt* statement,std::vector<const Stmt*>& regions) {
+        if(!statement) return;
+        if(auto* label=dyn_cast<LabelStmt>(statement)) goto_targets.emplace(label->getDecl(),GotoTarget{this->label(),regions});
+        auto region=[&](const Stmt* key,const Stmt* body,bool final=false) {
+            if(final) finally_regions.insert(key);
+            regions.push_back(key); collect_labels(body,regions); regions.pop_back();
+        };
+        if(auto* block=dyn_cast<CompoundStmt>(statement)) {
+            bool pins=false;
+            for(auto* child:block->body()) if(auto* declarations=dyn_cast<DeclStmt>(child))
+                for(auto* declaration:declarations->decls()) if(auto* variable=dyn_cast<VarDecl>(declaration)) pins|=pinned(variable->getType());
+            if(pins) regions.push_back(block);
+            for(auto* child:block->body()) collect_labels(child,regions);
+            if(pins) regions.pop_back();
+            return;
+        }
+        if(auto* block=dyn_cast<CXXTryStmt>(statement)) {
+            region(block->getTryBlock(),block->getTryBlock());
+            for(unsigned i=0;i<block->getNumHandlers();++i) {
+                auto* handler=block->getHandler(i); region(handler,handler->getHandlerBlock(),finally_handler(handler));
+            }
+            return;
+        }
+        if(auto* block=dyn_cast<SEHTryStmt>(statement)) {
+            region(block->getTryBlock(),block->getTryBlock());
+            if(auto* handler=block->getFinallyHandler()) region(handler,handler->getBlock(),true);
+            return;
+        }
+        for(auto* child:statement->children()) collect_labels(child,regions);
+    }
     std::string monitor_method(const std::string& name) const {
         for(const auto& entry:metadata.methods) {
             const auto& method=entry.second;
@@ -4540,16 +4579,26 @@ class Emitter {
             for (auto* child : block->body()) if (auto* declarations = dyn_cast<DeclStmt>(child))
                 for (auto* d : declarations->decls()) if (auto* v = dyn_cast<VarDecl>(d); v && pinned(v->getType())) pins.push_back(v);
             std::string done;
-            if (!pins.empty()) { done = label(); code << "    .try {\n"; ++exception_depth; }
+            if (!pins.empty()) { done = label(); code << "    .try {\n"; ++exception_depth; active_regions.push_back(block); }
             for (auto* child : block->body()) statement(child);
             if (!pins.empty()) {
+                active_regions.pop_back();
                 op("leave " + done); --exception_depth;
                 code << "    } finally {\n";
                 for (auto* pin : pins) { op("ldc.i4.0", 0, 1); op("conv.u", 1, 1); op("stloc " + std::to_string(locals.at(pin)), 1); }
                 op("endfinally"); code << "    }\n"; mark(done);
             }
         }
-        else if (auto* d = dyn_cast<DeclStmt>(s)) {
+        else if(auto* target=dyn_cast<LabelStmt>(s)) {
+            mark(goto_targets.at(target->getDecl()).name); statement(target->getSubStmt());
+        } else if(auto* jump=dyn_cast<GotoStmt>(s)) {
+            const auto& target=goto_targets.at(jump->getLabel());
+            if(target.regions.size()>active_regions.size() || !std::equal(target.regions.begin(),target.regions.end(),active_regions.begin()))
+                fail(s,"goto cannot enter a protected or pinned region");
+            for(size_t i=target.regions.size();i<active_regions.size();++i)
+                if(finally_regions.count(active_regions[i])) fail(s,"goto cannot leave a finally handler");
+            op(std::string(target.regions==active_regions ? "br " : "leave ")+target.name);
+        } else if (auto* d = dyn_cast<DeclStmt>(s)) {
             for (auto* decl : d->decls()) {
                 auto* v = cast<VarDecl>(decl);
                 if(v->isStaticLocal()) { initialize_static_local(v); continue; }
@@ -4585,10 +4634,14 @@ class Emitter {
             if(!final) fail(s,"SEH exception filters are unsupported; only __try/__finally cleanup can lower to CLR finally");
             auto done=label();
             code << "    .try {\n"; ++exception_depth; seh_leave_labels.push_back(done);
+            active_regions.push_back(region->getTryBlock());
             statement(region->getTryBlock()); op("leave "+done);
+            active_regions.pop_back();
             seh_leave_labels.pop_back(); --exception_depth;
             code << "    } finally {\n"; ++exception_depth; ++finally_depth;
+            active_regions.push_back(final);
             statement(final->getBlock()); op("endfinally");
+            active_regions.pop_back();
             --finally_depth; --exception_depth; code << "    }\n"; mark(done);
         } else if(isa<SEHLeaveStmt>(s)) {
             if(seh_leave_labels.empty() || finally_depth) fail(s,"__leave requires an enclosing __try body and cannot leave a finally handler");
@@ -4596,7 +4649,9 @@ class Emitter {
         } else if (auto* region = dyn_cast<CXXTryStmt>(s)) {
             auto done = label();
             code << "    .try {\n"; ++exception_depth;
+            active_regions.push_back(region->getTryBlock());
             statement(region->getTryBlock()); op("leave " + done); --exception_depth;
+            active_regions.pop_back();
             code << "    }\n";
             for (unsigned i = 0; i < region->getNumHandlers(); ++i) {
                 auto* handler = region->getHandler(i);
@@ -4611,7 +4666,7 @@ class Emitter {
                     if (variable) op("stloc " + std::to_string(locals.at(variable)), 1);
                     else op("pop", 1);
                 }
-                statement(handler->getHandlerBlock());
+                active_regions.push_back(handler); statement(handler->getHandlerBlock()); active_regions.pop_back();
                 op(final ? "endfinally" : "leave " + done);
                 if (final) --finally_depth; else --catch_depth;
                 --exception_depth; code << "    }\n";
@@ -4760,6 +4815,8 @@ class Emitter {
         }
         current = f; locals.clear(); parameters.clear(); temporary_types.clear(); opaque_values.clear(); opaque_addresses.clear(); code.str(""); code.clear(); stack = 0; max_stack = 0;
         label_count = 0; control_labels.clear(); seh_leave_labels.clear(); switch_labels.clear(); exception_depth = catch_depth = finally_depth = 0; return_label.clear(); return_slot_set = false;
+        goto_targets.clear(); active_regions.clear(); finally_regions.clear();
+        std::vector<const Stmt*> label_regions; collect_labels(f->getBody(),label_regions);
         auto* method = dyn_cast<CXXMethodDecl>(f);
         bool instance = method && !method->isStatic();
         if (method && method->isPureVirtual()) return {method_name(f), record_name(method->getParent()), declared_type(f), instance, 0, "", ""};

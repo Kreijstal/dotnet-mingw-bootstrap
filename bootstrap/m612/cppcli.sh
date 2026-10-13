@@ -604,6 +604,30 @@ int main() { CombinedAccess^ c=gcnew CombinedAccess(); return c->OrMethod(); }' 
   reject_case combined-foreign-and '#using "combined-access.dll"
 public ref class Foreign : CombinedAccess { public: int Read() { return AndMethod(); } }; int main() { return 0; }' 'undeclared identifier' --type CombinedAccess
 }
+step_test-floating-bools() {
+  compile "$(cygpath -m "$src/tests/floating-bools.cpp")" --target library -o "$(cygpath -m "$testdir/floating-bools.dll")"
+  mkdir -p "$testdir/floating-bools-consumer"
+  cp "$src/tests/FloatingBoolsConsumer.cs" "$testdir/floating-bools-consumer/Program.cs"
+  cat > "$testdir/floating-bools-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="floating-bools"><HintPath>../floating-bools.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/floating-bools-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/floating-bools-consumer/bin/Debug/net8.0/consumer.dll")"
+}
+step_test-gotos() {
+  compile "$(cygpath -m "$src/tests/gotos.cpp")" --target library --type System.GC -o "$(cygpath -m "$testdir/gotos.dll")"
+  mkdir -p "$testdir/gotos-consumer"
+  cp "$src/tests/GotosConsumer.cs" "$testdir/gotos-consumer/Program.cs"
+  cat > "$testdir/gotos-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="gotos"><HintPath>../gotos.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/gotos-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/gotos-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case goto-pin-entry 'int main() { goto Inside; { Inside:; pin_ptr<int> pointer=nullptr; } return 0; }' 'goto cannot enter a protected or pinned region'
+  reject_case goto-finally-exit 'int main() { try {} finally { goto Outside; } Outside: return 0; }' 'goto cannot leave a finally handler'
+}
 step_test-value-pins() {
   local refs=("$CPPCLI_SDK"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
   local args=(--type System.GC --type System.Runtime.InteropServices.StructLayoutAttribute --type System.Runtime.InteropServices.LayoutKind

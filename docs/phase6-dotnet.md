@@ -6693,3 +6693,49 @@ emitted IL/DLLs and runtime/gate evidence are archived under
 without per-file compile counts. Native coverage stays 58/139; full printing,
 layout/text and WindowsDesktop SDK/reference/runtime packaging remain required.
 The WPF packaging goal stays active.
+
+
+## 84. Goto regions and floating-point truth conversion
+
+The 2026-10-13 continuation adds named labels and direct goto lowering. A source
+prepass records each label's protected/pinned region path. Same-region jumps use
+br; exits to an ancestor region use leave so CLR cleanup executes. Jumps into
+protected or pinned regions, sibling regions, and exits from finally handlers
+are rejected. Named branches inside the same finally remain valid. Computed
+gotos are not implemented.
+
+The consumer checks original-shaped mixed-data classification, backward loops,
+nested finally unwinding, pin cleanup and same-finally branches. The first pin-
+entry negative fixture put its declaration directly under a label and hit the
+existing pin-local restriction first; separating the label's empty statement from
+the declaration reaches the intended region-entry rejection. Final negative and
+existing exception/SEH-finally runtime suites pass.
+
+Printing advances beyond CGDIPath.ProcessCurve and reaches a FloatingToBoolean
+conversion in CanConvertDashes. Float32/64 truth conversion now compares against
+matching floating zero and negates equality, making both signed zeros false and
+finite nonzero, subnormal, infinity and NaN true. Logical not and conditions reuse
+that conversion. The consumer verifies both widths and operand evaluation once.
+
+Validation on win11 with the standard compiler/WPF environment:
+
+```sh
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-gotos test-exceptions test-seh-finally
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-floating-bools test-gotos
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh printing-gate
+```
+
+Focused rebuild/runtime/rejection commands pass. Original printing passes Clang
+parsing/Sema, the forward goto and dash-helper float conversion. It next fails
+at FillLinearGradient (gdirt.cpp:1588), which uses sizeof on the managed TriVertex
+value type. That requires CLR layout sizing rather than the surrogate C++ size.
+No complete printing IL/DLL or printing runtime proof is produced.
+
+Bash/JSON syntax and whitespace checks pass. Artifacts and runtime/gate evidence
+are archived under
+`tmp/wpf8-support/validation/printing-gotos-floating-bools-20261013`. Diagnostic
+scope remains all 49 original project inputs/66 tree C++ files, without per-file
+compile counts. Native coverage stays 58/139; full printing, layout/text and
+WindowsDesktop SDK/reference/runtime packaging remain required. The WPF
+packaging goal stays active.

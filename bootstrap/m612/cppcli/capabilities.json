@@ -284,7 +284,9 @@
     "Nonvolatile namespace/file-scope const arithmetic/enum reads emit Clang-proven side-effect-free scalar constants with signed/unsigned width and IEEE floating representation; original pixel epsilon, negative zero/subnormal and comparison boundaries validated",
     "Clang managed-value property receiver captures retain real CLR byref locations for ref parameters, array elements and nested value fields; reads load values while setters address original storage, with managed payload GC, index-once and by-value isolation checks",
     "Original printing TransformBounds executes with actual source-built Matrix/Point/Rect under identity, scale, reflection and shear; source port removes prohibited managed array delete[] while compiler rejection remains intact",
-    "GC-free managed value elements in pin_ptr/interior_ptr use CLR sizeof strides, typed byref storage and actual native pointer conversions; POINT and explicit 32-byte layouts match native reads/writes under concurrent compacting GC"
+    "GC-free managed value elements in pin_ptr/interior_ptr use CLR sizeof strides, typed byref storage and actual native pointer conversions; POINT and explicit 32-byte layouts match native reads/writes under concurrent compacting GC",
+    "Named labels and direct goto branches preserve forward/backward flow and CLR protected/pin region cleanup; entries into protected regions and exits from finally handlers are rejected",
+    "Float32/float64 boolean conversion compares against matching floating zero and preserves C++ truth for signed zero, subnormals, infinities and NaN, including logical not and conditions"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -373,6 +375,7 @@
     "Ref-class local storage currently excludes implicit copy/move construction and deterministic IDisposable/destructor cleanup; managed ref members, class-value parameters and broader stack semantics remain incomplete. Direct local-constructor native string literals still need contextual adaptation",
     "Instance-spelled static member support currently covers reads; address/store/compound paths and broader static-property forms remain incomplete",
     "File-scope scalar support is constant reads only; mutable/volatile/dynamic storage, address identity, aggregate globals and non-finite floating constants remain incomplete",
-    "Managed value pin/interior elements require proven GC-free storage; values containing handles and unproven imported layouts remain rejected. Native interop still requires independently verified layout compatibility"
+    "Managed value pin/interior elements require proven GC-free storage; values containing handles and unproven imported layouts remain rejected. Native interop still requires independently verified layout compatibility",
+    "Goto support excludes computed/indirect branches and entry into compiler-generated pin/protected regions; native exception-filter and coroutine flow remain incomplete"
   ]
 }
