@@ -4385,3 +4385,69 @@ remaining assemblies and WindowsDesktop packaging are still unfinished. Logs,
 generated ABI header, native DLL and consumer evidence are archived under
 `tmp/wpf8-support/validation/lineservices-context-20261013` locally. The goal
 remains active.
+
+## 45. Measured and shaped source lines, glyph enumeration and visible text
+
+The next 2026-10-13 continuation implements LoCreateLine, LoDisposeLine,
+LoDisplayLine and LoEnumLine using real original client callbacks. The generated
+native ABI header now includes paragraph/line/run/height/geometry/output records.
+Line creation fetches original text runs, paragraph and line properties, obtains
+actual font metrics and nominal character widths or invokes original shaping and
+glyph-position callbacks. Text, width, cluster, glyph/property/offset arrays and
+context ownership are retained for later drawing/enumeration. No constant or
+fabricated line metrics are returned.
+
+Paragraph/line separators are consumed with real end positions; nominal trailing
+spaces affect reported trailing widths. Construction rejects context reentry,
+propagates client aborts and leaves output handles empty on failure. Allocation
+failures are contained at the native ABI. Native tests supply known callback
+data and verify exact ascent/descent/height, widths/trailing spaces, paragraph
+end, retained draw arguments, callback abort and line disposal.
+
+The existing visible text window now passes through the original WPF formatter
+and drawing callbacks. It renders **Source WPF text** in a real themed Button.
+The test counts dark glyph pixels in the interior content area, excluding the
+border. A second window renders **कि** with Nirmala UI at 24 DIP, exercising
+original Indic itemization/shaping and reordered vowel rendering. Both PNGs
+were inspected locally; their glyph-pixel assertions pass. The shape window
+continues to pass.
+
+The public TextFormatter peer formats the same two-character Indic string and
+obtains **length 3** (including paragraph end), **width 26.953 DIP**, **height
+31.923 DIP** and one indexed glyph run. Original LoEnumLine callbacks return
+the retained shaped run, complete text coverage and nonempty glyphs. Repeated
+enumeration after forced GC has the same glyph count. The actual WPF/native
+formatting/shaping/drawing/enumeration/lifetime path executes.
+
+The interactive runner now suppresses PowerShell progress output under SSH and
+reports success after task cleanup. A transient scheduled-task cleanup cmdlet
+had attempted to read an unavailable console buffer; reruns pass and an explicit
+query confirms zero remaining WPF test tasks.
+
+Validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh \
+  native-win32 check-lineservices-line-native check-lineservices-context check-text-line
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-window
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-window-text check-window-indic inventory
+```
+
+Native/managed line/context checks, public glyph enumeration and both visible
+text checks pass. C# consumers have zero warnings/errors. Imported native
+coverage is **53/139**, with **86 missing**. This is not full line-service
+compatibility: wrapping overflow, optimal/min-max formatting, prior break
+records, inline and bidi reversal objects, tabs, justification and decorations
+remain unsupported and return explicit errors rather than fake success. Shaped
+trailing spaces, geometric hit testing and complete wrapping/bidi/paragraph
+behavior still require work. Printing, remaining desktop assemblies and
+WindowsDesktop packaging are unfinished. Logs, generated ABI header, native
+DLL, public consumer and Latin/Indic PNGs are archived under
+`tmp/wpf8-support/validation/lineservices-line-20261013` locally. The goal remains
+active.

@@ -212,6 +212,39 @@ PY
   "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/ContextCheck.dll")"
 }
 
+step_check_lineservices_line_native() {
+  local work=$build/lineservices-line-check
+  mkdir -p "$work"
+  /clang64/bin/clang++.exe -std=c++17 -O2 "$here/wpf-tests/LineServicesLineNative.cpp" \
+    -I "$build/classification-native" -o "$work/native-check.exe"
+  "$work/native-check.exe" "$build/lib/PresentationNative_cor3.dll"
+}
+
+step_check_text_line() {
+  initialize
+  local work=$build/text-line-check
+  mkdir -p "$work"
+  cp "$here/wpf-tests/TextLine.cs" "$work/Program.cs"
+  /usr/bin/python3 - "$work" "$build/lib" "$oob" <<'PY'
+from pathlib import Path
+import subprocess,sys,xml.etree.ElementTree as E
+work,lib,oob=map(Path,sys.argv[1:])
+def win(p): return subprocess.check_output(['cygpath','-m',str(p.resolve())],text=True).strip()
+root=E.Element('Project',Sdk='Microsoft.NET.Sdk'); pg=E.SubElement(root,'PropertyGroup')
+for key,value in {'TargetFramework':'net8.0','OutputType':'Exe','UseAppHost':'false','EnableNETAnalyzers':'false','NuGetAudit':'false','UseSharedCompilation':'false'}.items(): E.SubElement(pg,key).text=value
+items=E.SubElement(root,'ItemGroup')
+for name in ('PresentationCore','WindowsBase','System.Xaml','DirectWriteForwarder'):
+    item=E.SubElement(items,'Reference',Include=name); E.SubElement(item,'HintPath').text=win(lib/(name+'.dll'))
+for file in sorted(oob.glob('*.dll')):
+    item=E.SubElement(items,'Reference',Include=file.stem); E.SubElement(item,'HintPath').text=win(file)
+E.ElementTree(root).write(work/'TextLineCheck.csproj',encoding='utf-8')
+PY
+  "$sdk/dotnet.exe" build "$(cygpath -m "$work/TextLineCheck.csproj")" -c Release \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -v:q
+  cp "$build/lib/PresentationNative_cor3.dll" "$build/lib/wpf-dwrite-loader.dll" "$build/lib/wpf-subsetter.dll" "$build/lib/wpfgfx_cor3.dll" "$work/bin/Release/net8.0/"
+  "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/TextLineCheck.dll")"
+}
+
 step_prepare_gfx() {
   local root=$build/gfx-source
   local gfx=$root/src/Microsoft.DotNet.Wpf/src/WpfGfx
@@ -507,6 +540,13 @@ step_check_window_text() {
   /c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe -NoProfile -NonInteractive \
     -File "$(cygpath -m "$here/wpf-tests/RunInteractive.ps1")" \
     -Work "$(cygpath -m "$work/bin/Release/net8.0")" -Dotnet "$(cygpath -m "$sdk/dotnet.exe")" -ToolchainBin "$(cygpath -m /clang64/bin)" -Text
+}
+
+step_check_window_indic() {
+  local work=$build/window-check
+  /c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe -NoProfile -NonInteractive \
+    -File "$(cygpath -m "$here/wpf-tests/RunInteractive.ps1")" \
+    -Work "$(cygpath -m "$work/bin/Release/net8.0")" -Dotnet "$(cygpath -m "$sdk/dotnet.exe")" -ToolchainBin "$(cygpath -m /clang64/bin)" -Text -Indic
 }
 step_check_presentation_framework() {
   initialize

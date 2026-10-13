@@ -1,7 +1,9 @@
 This implements Line Services context setup and owned configuration, using
-record layouts generated from original WPF LineServices.cs. It does not return
-a fabricated formatted line. LoCreateLine and the later line/paragraph APIs
-remain absent until their behavior is implemented.
+record layouts generated from original WPF LineServices.cs. LoCreateLine now
+fetches actual client text and metrics, measures nominal advances or invokes
+the real shaping/glyph-position callbacks, and retains the result. LoDisplayLine
+and LoEnumLine use retained arrays through the original drawing/enumeration
+callbacks; LoDisposeLine releases its owned state.
 
 LoCreateContext retains callback addresses, copies installed handler methods,
 sets the client context cookie, and registers a real owned context. LoSetDoc,
@@ -29,4 +31,19 @@ The C# peer constructs original TextFormatterContext, whose original constructor
 populates callbacks, creates the native context, sets its four 1440-twip device
 resolutions, selects CJK breaking and keeps callback owners alive. Creation,
 configuration, forced GC and original repeated managed teardown pass. The text
-window now reaches missing LoCreateLine; that failure remains a required gate.
+window now renders Latin and shaped Indic text with glyph-pixel checks, and
+public TextFormatter returns retained indexed glyph runs after forced GC.
+
+Line creation currently supports unwrapped nominal/shaped runs and paragraph/
+line separators. It tracks nominal trailing spaces and returns measured ascent,
+descent, height, widths and text positions. It propagates callback failures and
+keeps outputs empty on failure; context reentry while constructing a line is
+rejected. Callbacks run outside the registry lock. Shaping arrays follow the
+actual eight-byte GlyphOffset and original delegate ABI.
+
+Wrapping overflow, optimal/min-max formatting, previous break records, inline
+objects, bidi reversal objects, tabs, justification and decorations remain
+unsupported and return explicit errors instead of a fabricated success. Shaped
+trailing-space trimming, geometric hit testing, complete bidi/wrapping/break
+records and paragraph layout require further work. This does not establish full
+Line Services compatibility or complete WPF packaging.

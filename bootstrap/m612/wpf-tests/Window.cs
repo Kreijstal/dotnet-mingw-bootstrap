@@ -18,12 +18,14 @@ class Check {
     [STAThread]
     static int Main(string[] args) {
         bool text=args.Contains("--text");
+        bool indic=args.Contains("--indic");
         var app=new Application();
         app.DispatcherUnhandledException+=(s,e)=>{
             Console.Error.WriteLine(e.Exception); e.Handled=true; app.Shutdown(1);
         };
         var button=new Button { Width=160,Height=90,
-            Content=text ? (object)"Source WPF text" : new Ellipse { Width=50,Height=50,Fill=Brushes.Blue } };
+            Content=text ? (object)(indic?"कि":"Source WPF text") : new Ellipse { Width=50,Height=50,Fill=Brushes.Blue } };
+        if(indic) { button.FontFamily=new FontFamily("Nirmala UI"); button.FontSize=24; }
         int clicks=0;
         button.Click+=(s,e)=>clicks++;
         var panel=new Grid { Background=Brushes.White };
@@ -55,9 +57,19 @@ class Check {
                     int blue=0;
                     for(int i=0;i<pixels.Length;i+=4) if(pixels[i]>240 && pixels[i+1]<15 && pixels[i+2]<15 && pixels[i+3]==255) blue++;
                     if(blue<100) throw new Exception("themed button content did not render");
+                } else {
+                    // Count dark glyph pixels in the central content area,
+                    // excluding the control's border and background.
+                    int dark=0;
+                    for(int y=bitmap.PixelHeight/2-10;y<bitmap.PixelHeight/2+10;++y)
+                        for(int x=bitmap.PixelWidth/2-60;x<bitmap.PixelWidth/2+60;++x) {
+                            int i=(y*bitmap.PixelWidth+x)*4;
+                            if(pixels[i]<80 && pixels[i+1]<80 && pixels[i+2]<80 && pixels[i+3]==255) ++dark;
+                        }
+                    if(dark<30) throw new Exception("themed button text glyph pixels did not render");
                 }
                 var encoder=new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap));
-                var path=Path.Combine(AppContext.BaseDirectory,text?"source-window-text.png":"source-window.png");
+                var path=Path.Combine(AppContext.BaseDirectory,indic?"source-window-indic.png":text?"source-window-text.png":"source-window.png");
                 using(var file=File.Create(path)) encoder.Save(file);
                 Console.WriteLine("visible source WPF window, default Button template, routed click and rendered content OK: "+path);
                 window.Close();
