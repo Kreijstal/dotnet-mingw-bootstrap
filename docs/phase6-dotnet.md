@@ -8313,3 +8313,51 @@ Evidence is archived under tmp/wpf8-support/validation/bottomless-20261013.
 Package integration follows. Multi-page continuation, advanced/incremental/
 interruptible paragraph layout, full bidi/optimal/native language behavior and
 broader runtime paths remain required for the full WPF goal.
+
+## 121. Installed release 11: scrolling/editor layout and line-placement correction
+
+The 2026-10-13 continuation packages section 120 as WindowsDesktop 8.0.0-11.
+Declared/checksummed 0011-bottomless-documents-and-page-coordinates.patch applies
+after the ten earlier patches. Clean pinned sources plus all eleven patches
+match the seven committed bottomless/coordinate feature files byte for byte.
+The private package tree rebuilds PresentationNative, inventory and layout,
+passes native ABI/resource/geometry and original context checks, and runs normal
+SDK tests including finite paragraph placement and bottomless scrolling/editing
+before creating and installing the archive. Unchanged managed/graphics/printing
+outputs remain its own source builds.
+
+Validation in the CLANG64 package workspace:
+
+```sh
+makepkg --verifysource --force
+source PKGBUILD                 # with srcdir set to this workspace's src/
+_wpf native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+makepkg --repackage --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-11-any.pkg.tar.zst
+/usr/bin/python3 check-staged.py /clang64/lib/dotnet
+bash "$(_driver)/wpf-tests/check-bottomless-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-bottomless-sdk-check
+bash "$(_driver)/wpf-tests/check-flowdocument-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-bottomless-finite-sdk-check
+```
+
+All commands pass. Staged/installed 42-managed/eight-native/SDK/legacy payload
+checks pass. Original FlowDocumentScrollViewer top/end glyph rasters, full
+content extent, source-text edits and original RichTextBox insertion/raster pass
+in Ideal/Display modes through the installed shared framework and self-contained
+publishes with SDK roots/toolchain PATH removed. Compacting GC and dispatcher
+cleanup pass. Finite FlowDocument text/count/cached-page checks pass along with
+the new colored paragraph placement test, correcting the release 10 overlap.
+Private normal WPF/tab/inline-object/justification/width/context/finite/bottomless/
+WinForms gates pass with zero consumer warnings/errors. The known
+source-bootstrap.json srcdir provenance warning remains.
+
+Artifact: mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-11-any.pkg.tar.zst.
+SHA-256: 2dde824e74d6ac6474e5122b19380e8166a975ead46588d55ca1b7e757b9a6da.
+Recipe commit: msys2-ur 4dd70f9; feature commit: dae8792.
+Artifact, recipe, metadata, patch and validation logs are archived under
+ tmp/wpf8-support/validation/bottomless-package-20261013.
+Imported native coverage is 83/139 with 56 absent. Supported bottomless text
+pages can scroll and reformat after edits; the page update currently replaces
+the full layout tree. Finite multi-page continuation/break records, advanced
+paragraph/incremental/interruptible algorithms, multiple columns, RTL page text,
+full bidi/optimal/native language behavior and broader runtime paths remain
+incomplete. The full WPF goal stays active.
