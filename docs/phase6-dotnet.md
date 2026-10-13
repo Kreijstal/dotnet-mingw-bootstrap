@@ -9418,3 +9418,57 @@ transfer, balancing/span areas/footnotes, figures/tables, optimal/advanced/parti
 incremental/interruptible algorithms, full bidi/native language and broader
 runtime behavior remain required for the full WPF goal. Package integration
 follows.
+
+
+## 143. Installed release 22: public rectangular floaters
+
+The 2026-10-14 continuation packages section 142 as WindowsDesktop 8.0.0-22.
+Declared/checksummed 0022-rectangular-floaters.patch applies after the twenty-one
+previous patches. Clean pinned sources plus all twenty-two patches match the
+six committed feature files byte for byte. The private package tree rebuilds
+native output, inventory and layout, passes attachment/source/ownership gates,
+335 original ABI field checks, context/line-service regressions and every normal
+SDK gate before archive creation and installation. Unchanged managed/graphics/
+printing outputs remain its own source builds.
+
+Validation in the CLANG64 package workspace:
+
+```sh
+makepkg --verifysource --force
+source PKGBUILD                 # with srcdir set to this workspace's src/
+_wpf native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+makepkg --repackage --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-22-any.pkg.tar.zst
+/usr/bin/python3 check-staged.py /clang64/lib/dotnet
+bash "$(_driver)/wpf-tests/check-floaters-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-floaters-sdk-check
+bash "$(_driver)/wpf-tests/check-subtracks-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-floaters-subtracks-sdk-check
+```
+
+All final commands pass. Staged/installed 42-managed/eight-native/SDK/legacy
+payload checks pass. Installed original public Floater documents render left/
+right red rectangles containing blue original text, with black host text beside
+them and zero black-ink overlap. All 821 source characters map to exactly one
+of three pages, original GetPageNumber agrees, intact floating content does not
+repeat on later pages and disposed first pages regenerate the actual red
+floater after GC. Both Ideal/Display pass. Original scrolling viewer edits
+change floating content, host glyph raster and full extent (834->881.8 Ideal,
+870->920 Display), and end scrolling works. Normal shared-framework and
+self-contained publishes run with SDK roots/toolchain PATH removed and pass
+dispatcher shutdown. Installed container subtrack update/synchronization and
+source-coverage regressions also pass. Private normal WPF/tab/inline-object/
+justification/width/context/finite/bottomless/pagination/columns/hard-break/keep/
+keep-next/forced/block/subpage/subtrack/floater/WinForms gates pass with zero
+consumer warnings/errors. The existing source-bootstrap.json srcdir provenance
+warning remains.
+
+Artifact: mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-22-any.pkg.tar.zst.
+SHA-256: 5e57f67cde9aee2cb2a8a3a2676c3335f9a265816cab7b995a931c61ecc91251.
+Recipe commit: msys2-ur 371a317; feature commit: 4a688c4.
+Artifact, recipe, metadata, patch and validation logs are archived under
+ tmp/wpf8-support/validation/floaters-package-20261014.
+Imported native coverage is 103/139 with 36 absent. This supports one intact
+before-line rectangular floater; in-line anchors, multiple/split floaters,
+complex center wrapping, clear policies, figures/tables, comparison/display
+transfer, balancing/span areas/footnotes, advanced/optimal/partial incremental/
+interruptible algorithms, full bidi/native language and broader runtime behavior
+remain incomplete. The full WPF goal stays active.
