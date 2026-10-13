@@ -7942,3 +7942,45 @@ minimum/maximum width call. Evidence is archived under
 remains 58/139. Full RTL, hyphenation/compression/optimal algorithms, paragraph
 layout and natural-language behavior remain open. The package update is still
 required, and the full WPF goal stays active.
+
+
+## 113. Installed release 7 with paragraph width measurement
+
+The 2026-10-13 continuation packages section 112 as WindowsDesktop 8.0.0-7.
+The declared/checksummed 0007-paragraph-widths.patch contains the native shared
+break geometry/min-max engine and expanded native/public/SDK fixtures. A clean
+pinned archive plus all seven declared patches matches committed feature/check
+inputs byte for byte. Its private tree rebuilds PresentationNative and verifies
+exact line/object minimum/maximum geometry, public width APIs and existing
+justification before fresh framework layout and ordinary SDK checks. Unchanged
+managed/graphics/printing artifacts remain its earlier source builds.
+
+Validation from the CLANG64 package workspace:
+
+```sh
+makepkg --verifysource --force
+source PKGBUILD                 # with srcdir set to this workspace's src/
+_wpf native-win32 check-lineservices-line-native check-inline-objects-native check-paragraph-widths check-justification-native layout check-sdk
+makepkg --repackage --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-7-any.pkg.tar.zst
+python3 check-staged.py /clang64/lib/dotnet
+bash "$(_driver)/wpf-tests/check-paragraph-widths-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-paragraph-widths-sdk-check
+```
+
+All final commands pass with zero consumer warnings/errors, including normal
+private WPF/tab/object/justification/width/WinForms SDK builds and publishes.
+Installed normal UseWPF consumers verify nominal/Indic/NBSP/hard-break/trailing/
+empty widths, cached repeats across GC in Ideal/Display modes, original
+FormattedText.MinWidth and intrinsic/wrapped TextBlock raster/point hits.
+The self-contained app runs with SDK roots/toolchain PATH removed. Staged and
+installed 42-managed/pack/native-seed checks pass. The existing srcdir warning
+remains only source-bootstrap.json provenance.
+
+Artifact: mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-7-any.pkg.tar.zst.
+SHA-256: bb63bd302469815d75d96f65ce42effa3af09313e91eb0902238010cb897289e.
+Recipe commit: msys2-ur f960ec4; feature commit: e8fa2d6.
+Logs, patch/recipe/metadata and the artifact are archived under
+ tmp/wpf8-support/validation/paragraph-widths-package-20261013.
+Imported native coverage remains 58/139. Full bidi/paragraph layout,
+hyphenation/compression/optimal algorithms and natural-language behavior remain
+incomplete; the full WPF goal stays active.
