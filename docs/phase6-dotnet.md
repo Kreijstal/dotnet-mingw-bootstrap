@@ -9302,3 +9302,57 @@ display transfer, balancing/span areas/footnotes, public floating obstacles/
 figures/tables, optimal/advanced/partial incremental/interruptible algorithms,
 full bidi/native language and broader runtime behavior remain required for the
 full WPF goal. Package integration follows.
+
+
+## 141. Installed release 21: container subtrack updates and shifts
+
+The 2026-10-14 continuation packages section 140 as WindowsDesktop 8.0.0-21.
+Declared/checksummed 0021-subtrack-updates-and-synchronization.patch applies after
+the twenty prior patches. Clean pinned sources plus all twenty-one patches match
+the five committed feature files byte for byte. The private package tree rebuilds
+native output, inventory and layout, passes native ownership/update/sync and 326
+original ABI field checks, context/line-service regressions and every normal SDK
+gate before archive creation and installation. Unchanged managed/graphics/
+printing outputs remain its own source builds.
+
+Validation in the CLANG64 package workspace:
+
+```sh
+makepkg --verifysource --force
+source PKGBUILD                 # with srcdir set to this workspace's src/
+_wpf native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+makepkg --repackage --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-21-any.pkg.tar.zst
+/usr/bin/python3 check-staged.py /clang64/lib/dotnet
+bash "$(_driver)/wpf-tests/check-subtracks-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-subtrack-update-sdk-check
+bash "$(_driver)/wpf-tests/check-subpages-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-subtrack-update-subpages-sdk-check
+```
+
+All final commands pass. Staged/installed 42-managed/eight-native/SDK/legacy
+payload checks pass. Installed original container clients in Ideal/Display,
+with zero/nonzero margins and padding, retain track identity after edits and
+resizing. All 1339 characters appear exactly once through actual native text
+paragraph ranges; original viewport glyph raster changes. Full extents grow
+532->1383.2 / 560->1456 without padding and 540->1604 / 568->1688 with padding.
+Original PtsHost synchronization moves retained geometry/viewport glyphs by
+15 units without losing source. Margin-state/track/client/paragraph disposal,
+callback-exception checks and compacting GC pass. Normal shared-framework and
+self-contained publishes run with SDK roots/toolchain PATH removed and pass
+dispatcher shutdown. Installed original finite/bottomless subpage and edited
+subpage regression checks also pass. Private normal WPF/tab/inline-object/
+justification/width/context/finite/bottomless/pagination/columns/hard-break/keep/
+keep-next/forced/block/subpage/subtrack/WinForms gates pass with zero consumer
+warnings/errors. The existing source-bootstrap.json srcdir provenance warning
+remains.
+
+Artifact: mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-21-any.pkg.tar.zst.
+SHA-256: dbe90dd72b13231f9cec7fe92b183ac819b4351dec91b84e88aabadedbc01f3f.
+Recipe commit: msys2-ur 2c4c80b; feature commit: f2b925f.
+Artifact, recipe, metadata, patch and validation logs are archived under
+ tmp/wpf8-support/validation/subtrack-update-package-20261014.
+Imported native coverage is 102/139 with 37 absent. Supported updates rebuild
+complete subtrack trees; synchronization preserves retained source/line identity.
+Comparison/display transfer, balancing/span areas/footnotes, public floating
+obstacles/figures/tables, optimal/advanced/partial incremental/interruptible
+algorithms, full bidi/native language and broader runtime behavior remain
+incomplete. The full WPF goal stays active.
