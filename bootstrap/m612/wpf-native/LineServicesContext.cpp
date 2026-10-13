@@ -62,6 +62,9 @@ using Positions=int (WINAPI *)(void*,uintptr_t*,int*,int,int,WCHAR*,uint16_t*,ui
 using DrawTextCallback=int (WINAPI *)(void*,uint32_t,LSPOINT*,WCHAR*,int*,int,int,uint32_t,LSPOINT*,LsHeights*,int,LSRECT*);
 using DrawGlyphs=int (WINAPI *)(void*,uint32_t,WCHAR*,uint16_t*,uint16_t*,int,uint16_t*,int*,int*,GlyphOffset*,uint32_t*,uint8_t*,int,int,uint32_t,LSPOINT*,LsHeights*,int,LSRECT*);
 using EnumText=int (WINAPI *)(void*,uint32_t,int,int,WCHAR*,int,int,int,int,LSPOINT*,LsHeights*,int,int,int*,uint16_t*,uint16_t*,uint16_t*,int*,GlyphOffset*,uint32_t*,int);
+using UnderlineInfo=int (WINAPI *)(void*,uint32_t,LsHeights*,int,LsULInfo*);
+using StrikeInfo=int (WINAPI *)(void*,uint32_t,LsHeights*,int,LsStInfo*);
+using DrawDecoration=int (WINAPI *)(void*,uint32_t,uint32_t,LSPOINT*,int,int,int,uint32_t,LSRECT*);
 
 int measure_run(Context& context,Run& run) {
     int count=static_cast<int>(run.text.size()),flow=run.flow,status=0;
@@ -562,7 +565,6 @@ extern "C" __declspec(dllexport) int WINAPI LoDisplayLine(void* handle,LSPOINT* 
         LsHeights height{run.metrics.dvAscent,run.metrics.dvDescent,run.metrics.dvMultiLineHeight};
         int status=0;
         if(!run.hidden) {
-            if(run.properties.flags&0x60000) return LS_NotImplemented;
             if(run.shaped) {
                 if(!context.info.pfnDrawGlyphs) return LS_NotImplemented;
                 status=reinterpret_cast<DrawGlyphs>(context.info.pfnDrawGlyphs)(context.info.pols,static_cast<uint32_t>(run.id),
@@ -575,6 +577,46 @@ extern "C" __declspec(dllexport) int WINAPI LoDisplayLine(void* handle,LSPOINT* 
                     &point,run.text.data(),run.widths.data(),static_cast<int>(run.text.size()),run.flow,mode,&point,&height,run.width,clip);
             }
             if(status) return status;
+            auto draw=[&](void* callback,uint32_t kind,int offset,int thickness) {
+                int64_t y=static_cast<int64_t>(origin->y)+offset;
+                if(thickness<=0 || y<INT_MIN || y>INT_MAX) return LS_InvalidFormatterResult;
+                LSPOINT decoration{x,static_cast<int>(y)};
+                return reinterpret_cast<DrawDecoration>(callback)(context.info.pols,static_cast<uint32_t>(run.id),kind,
+                    &decoration,run.width,thickness,run.flow,mode,clip);
+            };
+            if(run.properties.flags&0x20000) {
+                if(!context.info.pfnGetRunUnderlineInfo || !context.info.pfnDrawUnderline) return LS_NotImplemented;
+                LsULInfo info{};
+                status=reinterpret_cast<UnderlineInfo>(context.info.pfnGetRunUnderlineInfo)(context.info.pols,
+                    static_cast<uint32_t>(run.id),&height,run.flow,&info);
+                if(status) return status;
+                if(info.cNumberOfLines<0 || info.cNumberOfLines>2) return LS_InvalidFormatterResult;
+                int64_t offset=static_cast<int64_t>(info.dvpUnderlineOriginOffset)+info.dvpFirstUnderlineOffset;
+                if(offset<INT_MIN || offset>INT_MAX) return LS_InvalidFormatterResult;
+                if(info.cNumberOfLines) status=draw(context.info.pfnDrawUnderline,info.kulBase,static_cast<int>(offset),info.dvpFirstUnderlineSize);
+                if(status) return status;
+                offset+=static_cast<int64_t>(info.dvpFirstUnderlineSize)+info.dvpGapBetweenLines;
+                if(info.cNumberOfLines==2) {
+                    if(offset<INT_MIN || offset>INT_MAX) return LS_InvalidFormatterResult;
+                    status=draw(context.info.pfnDrawUnderline,info.kulBase,static_cast<int>(offset),info.dvpSecondUnderlineSize);
+                    if(status) return status;
+                }
+            }
+            if(run.properties.flags&0x40000) {
+                if(!context.info.pfnGetRunStrikethroughInfo || !context.info.pfnDrawStrikethrough) return LS_NotImplemented;
+                LsStInfo info{};
+                status=reinterpret_cast<StrikeInfo>(context.info.pfnGetRunStrikethroughInfo)(context.info.pols,
+                    static_cast<uint32_t>(run.id),&height,run.flow,&info);
+                if(status) return status;
+                if(info.cNumberOfLines<0 || info.cNumberOfLines>2 || info.dvpLowerStrikethroughOffset==INT_MIN || info.dvpUpperStrikethroughOffset==INT_MIN)
+                    return LS_InvalidFormatterResult;
+                if(info.cNumberOfLines) status=draw(context.info.pfnDrawStrikethrough,info.kstBase,-info.dvpLowerStrikethroughOffset,info.dvpLowerStrikethroughSize);
+                if(status) return status;
+                if(info.cNumberOfLines==2) {
+                    status=draw(context.info.pfnDrawStrikethrough,info.kstBase,-info.dvpUpperStrikethroughOffset,info.dvpUpperStrikethroughSize);
+                    if(status) return status;
+                }
+            }
         }
         x+=run.width;
     }

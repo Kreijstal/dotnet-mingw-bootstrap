@@ -69,8 +69,16 @@ Queries reject RTL/nonmonotonic cluster maps and graphemes spanning client runs;
 cross-run caret ownership remains unfinished even though wrapping respects
 those graphemes.
 
-Optimal/min-max formatting, inline objects, bidi reversal objects, tabs,
-justification and decorations remain unsupported and return explicit errors.
+LoDisplayLine obtains underline and strikethrough metrics through the original
+callbacks and draws each retained decorated run with its original identity,
+width, flow, drawing mode and clip rectangle. Single/double-line offsets and
+thicknesses follow the source-generated LsULInfo/LsStInfo records. Callback
+failures and invalid metrics propagate. Original managed drawing implements
+custom pens and underline/strikethrough/overline/baseline locations; public
+TextFormatter raster checks cover all four locations across compacting GC.
+
+Optimal/min-max formatting, inline objects, bidi reversal objects, tabs and
+justification remain unsupported and return explicit errors.
 Complete hit testing, RTL/nonmonotonic shaping clusters, full bidi and paragraph
 layout require further work. This does not establish full Line Services
 compatibility or complete WPF packaging.

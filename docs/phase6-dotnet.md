@@ -7422,3 +7422,38 @@ coverage remains 58/139, with bidi/paragraph/NLS/other text paths unfinished.
 WinForms remains the approved 7.0.20 interim source port. The package does not
 prove full upstream WPF behavior. The original full WPF goal stays active while
 remaining native behavior and coverage are completed.
+
+
+## 102. Original text decoration callbacks and public raster proof
+
+The 2026-10-13 continuation replaces the native LoDisplayLine decoration
+rejection with original underline/strikethrough metric and drawing callbacks.
+LsULInfo and LsStInfo are generated from original LineServices.cs alongside the
+existing ABI records. Each visible retained run supplies its actual identity,
+width, metrics, flow, draw mode and clip. One/two-line offsets and thicknesses
+are validated; metric and draw callback failures propagate unchanged.
+
+The installed 8.0.0-1 package reproduces NotImplemented when public TextFormatter
+draws decorated text. The source build passes native single/double geometry,
+callback ABI/error/ownership checks and public custom red-pen raster checks for
+underline, strikethrough, overline and baseline. Each has 310 red pixels; average
+y coordinates are 47.50, 36.50, 11.50 and 44.50 against text baseline 44.53.
+Decorated/plain line metrics agree, glyphs remain visible, and drawing survives
+compacting GC. Existing public Indic caret/selection/shaping and wrapping checks
+also pass. These checks cover the exercised LTR run path; complete bidi,
+paragraph layout, tabs, inline objects and justification remain unfinished.
+
+Validation with the standard win11 WPF environment:
+
+```sh
+WPF_DECORATION_NATIVE=/clang64/lib/dotnet/shared/Microsoft.WindowsDesktop.App/8.0.0-bootstrap.wpf.8.0.0 bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-text-decorations
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-lineservices-line-native check-text-decorations check-text-line
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-lineservices-line-native
+```
+
+The first command fails with the expected installed-library NotImplemented;
+the latter two pass, including the additional draw-callback failure check.
+Evidence is archived under tmp/wpf8-support/validation/text-decorations-20261013.
+This changes behavior of existing exports; imported coverage remains 58/139.
+The package update is still required to deliver the new native implementation.
+The full WPF goal remains active.

@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <string>
 #include <algorithm>
+#include <vector>
 #include "LineServicesNative.h"
 static bool abort_fetch=false;
 static int draws=0;
@@ -12,6 +13,10 @@ static std::wstring sample=L"abc  \u2029";
 static uint32_t paragraph_flags=0;
 static int run_length=9600;
 static bool uniform_width=false;
+static bool decorate=false;
+static int decoration_error=0;
+struct DecorationCall { uint32_t kind; int x,y,width,thickness; };
+static std::vector<DecorationCall> decorations;
 static int WINAPI pap(void*,int,LsPap* value) { *value={}; value->cpFirst=0; value->grpf=paragraph_flags; return 0; }
 static int WINAPI props(void*,int,int,LsLineProps* value) { *value={}; value->durLeft=4; return 0; }
 static int WINAPI fetch(void*,int cp,int,void*,WCHAR* buffer,int capacity,int* used,WCHAR** output,int* count,int* hidden,LsChp* chp,uintptr_t* id) {
@@ -19,6 +24,7 @@ static int WINAPI fetch(void*,int cp,int,void*,WCHAR* buffer,int capacity,int* u
     int end=static_cast<int>(sample.size())-1;
     if(cp<0 || cp>end) return LS_WrongGivenCp;
     *count=cp<end?std::min(run_length,end-cp):1; *output=nullptr; *used=0; *hidden=0; *chp={}; chp->idObj=0xFFFF; *id=cp<end?5:8;
+    if(decorate && cp<end) chp->flags=0x60000;
     if(capacity>=*count) { std::memcpy(buffer,sample.data()+cp,*count*sizeof(WCHAR)); *used=1; }
     return 0;
 }
@@ -33,6 +39,20 @@ static int WINAPI draw(void*,uint32_t,LSPOINT* point,WCHAR* text,int* values,int
     ++draws; return 0;
 }
 static void require(bool value,const char* message) { if(!value) throw std::runtime_error(message); }
+static int WINAPI underline_info(void*,uint32_t id,LsHeights* height,int flow,LsULInfo* value) {
+    if(id!=5 || height->dvAscent!=12 || height->dvDescent!=8 || flow!=0) return LS_ClientAbort;
+    if(decoration_error==1) return LS_ClientAbort;
+    *value={7,decoration_error==2?3:2,1,3,2,1,4}; return 0;
+}
+static int WINAPI strike_info(void*,uint32_t id,LsHeights*,int,LsStInfo* value) {
+    if(id!=5) return LS_ClientAbort;
+    *value={9,2,5,3,8,1}; return 0;
+}
+static int WINAPI decoration_draw(void*,uint32_t id,uint32_t kind,LSPOINT* point,int width,int thickness,int flow,uint32_t mode,LSRECT* clip) {
+    if(id!=5 || flow!=0 || mode!=1 || clip->left!=-100) return LS_ClientAbort;
+    if(decoration_error==3) return LS_ClientAbort;
+    decorations.push_back({kind,point->x,point->y,width,thickness}); return 0;
+}
 int main(int argc,char** argv) {
     try {
         require(argc==2,"usage: check DLL");
@@ -77,6 +97,23 @@ int main(int argc,char** argv) {
         LSPOINT origin{0,12}; LSRECT clip{-100,-100,1000,1000};
         require(LoDisplayLine(line,&origin,1,&clip)==0&&draws==1,"retained text/widths/metrics drawing callback");
         require(LoDisposeLine(line,FALSE)==0&&LoDisposeLine(line,FALSE)==LS_InvalidLine,"owned line disposal");
+        config.pfnGetRunUnderlineInfo=reinterpret_cast<void*>(underline_info);
+        config.pfnGetRunStrikethroughInfo=reinterpret_cast<void*>(strike_info);
+        config.pfnDrawUnderline=config.pfnDrawStrikethrough=reinterpret_cast<void*>(decoration_draw);
+        void* decorated_context=nullptr;
+        require(LoCreateContext(&config,&callbacks,&decorated_context)==0,"decoration context creation");
+        require(LoSetDoc(decorated_context,1,1,&resolution)==0,"decoration context device");
+        decorate=true;
+        require(LoCreateLine(decorated_context,0,0,1000,0,nullptr,&info,&line,&depth,&measured)==0,"decorated line creation");
+        require(LoDisplayLine(line,&origin,1,&clip)==0&&decorations.size()==4,"original decoration callback ABI");
+        const int ys[]={16,19,7,4},thicknesses[]={2,4,3,1};
+        for(size_t i=0;i<decorations.size();++i) require(decorations[i].kind==(i<2?7u:9u)&&decorations[i].x==4&&decorations[i].y==ys[i]&&decorations[i].width==70&&decorations[i].thickness==thicknesses[i],"decoration baseline offset/width/thickness/identity");
+        decoration_error=1;require(LoDisplayLine(line,&origin,1,&clip)==LS_ClientAbort,"decoration metric failure propagation");
+        decoration_error=2;require(LoDisplayLine(line,&origin,1,&clip)==LS_InvalidFormatterResult,"invalid decoration metrics rejected");
+        decoration_error=3;require(LoDisplayLine(line,&origin,1,&clip)==LS_ClientAbort,"decoration draw failure propagation");
+        decoration_error=0;decorate=false;
+        require(LoDisposeLine(line,FALSE)==0&&LoDestroyContext(decorated_context)==0,"decoration line/context teardown");
+        std::puts("native decoration callback ABI, single/double offsets, widths, thicknesses, errors and ownership PASS");
         require(LoQueryLineCpPpoint(line,0,1,&sub,&queried_depth,&cell)==LS_InvalidLine&&queried_depth==0,"disposed line query fails without dereferencing handle");
         abort_fetch=true; line=reinterpret_cast<void*>(1);
         require(LoCreateLine(context,0,0,1000,0,nullptr,&info,&line,&depth,&measured)==LS_ClientAbort&&!line,"callback abort propagated without fabricated line");
