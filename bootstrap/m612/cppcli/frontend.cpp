@@ -1709,6 +1709,7 @@ class Emitter {
     int stack = 0;
     struct ControlLabels { std::string stop, next; unsigned depth; };
     std::vector<ControlLabels> control_labels;
+    std::vector<std::string> seh_leave_labels;
     std::map<const SwitchCase*, std::pair<std::string, unsigned>> switch_labels;
     unsigned exception_depth = 0, catch_depth = 0, finally_depth = 0, return_slot = 0;
     std::string return_label;
@@ -4510,6 +4511,19 @@ class Emitter {
                 }
                 op("leave " + return_label);
             } else op("ret", current->getReturnType()->isVoidType() ? 0 : 1);
+        } else if(auto* region=dyn_cast<SEHTryStmt>(s)) {
+            auto* final=region->getFinallyHandler();
+            if(!final) fail(s,"SEH exception filters are unsupported; only __try/__finally cleanup can lower to CLR finally");
+            auto done=label();
+            code << "    .try {\n"; ++exception_depth; seh_leave_labels.push_back(done);
+            statement(region->getTryBlock()); op("leave "+done);
+            seh_leave_labels.pop_back(); --exception_depth;
+            code << "    } finally {\n"; ++exception_depth; ++finally_depth;
+            statement(final->getBlock()); op("endfinally");
+            --finally_depth; --exception_depth; code << "    }\n"; mark(done);
+        } else if(isa<SEHLeaveStmt>(s)) {
+            if(seh_leave_labels.empty() || finally_depth) fail(s,"__leave requires an enclosing __try body and cannot leave a finally handler");
+            op("leave "+seh_leave_labels.back());
         } else if (auto* region = dyn_cast<CXXTryStmt>(s)) {
             auto done = label();
             code << "    .try {\n"; ++exception_depth;
@@ -4535,7 +4549,8 @@ class Emitter {
             }
             mark(done);
         } else if (auto* i = dyn_cast<IfStmt>(s)) {
-            if (i->getInit() || i->getConditionVariable()) fail(s, "if initializer is not supported yet");
+            statement(i->getInit());
+            statement(i->getConditionVariableDeclStmt());
             auto otherwise = label(), done = label();
             expr(i->getCond()); op("brfalse " + otherwise, 1);
             statement(i->getThen()); op("br " + done); mark(otherwise);
@@ -4671,7 +4686,7 @@ class Emitter {
             return {method_name(f), "", declared_type(f), false, 0, "", ""};
         }
         current = f; locals.clear(); parameters.clear(); temporary_types.clear(); opaque_values.clear(); code.str(""); code.clear(); stack = 0; max_stack = 0;
-        label_count = 0; control_labels.clear(); switch_labels.clear(); exception_depth = catch_depth = finally_depth = 0; return_label.clear(); return_slot_set = false;
+        label_count = 0; control_labels.clear(); seh_leave_labels.clear(); switch_labels.clear(); exception_depth = catch_depth = finally_depth = 0; return_label.clear(); return_slot_set = false;
         auto* method = dyn_cast<CXXMethodDecl>(f);
         bool instance = method && !method->isStatic();
         if (method && method->isPureVirtual()) return {method_name(f), record_name(method->getParent()), declared_type(f), instance, 0, "", ""};

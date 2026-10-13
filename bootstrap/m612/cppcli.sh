@@ -604,6 +604,34 @@ int main() { CombinedAccess^ c=gcnew CombinedAccess(); return c->OrMethod(); }' 
   reject_case combined-foreign-and '#using "combined-access.dll"
 public ref class Foreign : CombinedAccess { public: int Read() { return AndMethod(); } }; int main() { return 0; }' 'undeclared identifier' --type CombinedAccess
 }
+step_test-seh-finally() {
+  local refs=("$CPPCLI_SDK"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
+  compile "$(cygpath -m "$src/tests/seh-finally.cpp")" --target library --type System.GC --type System.ArgumentException \
+    --type System.Threading.Monitor --reference "$(cygpath -m "${refs[-1]}/System.Threading.dll")" \
+    -o "$(cygpath -m "$testdir/seh-finally.dll")"
+  mkdir -p "$testdir/seh-finally-consumer"
+  cp "$src/tests/SehFinallyConsumer.cs" "$testdir/seh-finally-consumer/Program.cs"
+  cat > "$testdir/seh-finally-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="seh-finally"><HintPath>../seh-finally.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/seh-finally-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/seh-finally-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case seh-filter 'int main() { __try { return 1; } __except(1) { return 2; } }' 'SEH exception filters are unsupported'
+  reject_case seh-return-finally 'int main() { __try {} __finally { return 1; } return 0; }' 'return cannot leave a finally'
+}
+step_test-if-declarations() {
+  compile "$(cygpath -m "$src/tests/if-declarations.cpp")" --target library --type System.GC -o "$(cygpath -m "$testdir/if-declarations.dll")"
+  mkdir -p "$testdir/if-declarations-consumer"
+  cp "$src/tests/IfDeclarationsConsumer.cs" "$testdir/if-declarations-consumer/Program.cs"
+  cat > "$testdir/if-declarations-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="if-declarations"><HintPath>../if-declarations.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/if-declarations-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/if-declarations-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case if-declaration-scope 'int main() { if(int value=1) {} return value; }' 'undeclared identifier'
+}
 step_test-static-locals() {
   local refs=("$CPPCLI_SDK"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
   local args=(--type System.Threading.Monitor --type System.Threading.Interlocked --type System.Threading.Thread

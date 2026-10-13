@@ -6271,3 +6271,53 @@ Bash/JSON syntax and whitespace checks pass. Evidence is archived under
 without a per-file pass count. Native coverage stays 58/139; full printing,
 layout/text and WindowsDesktop SDK/reference/runtime packaging remain required.
 The WPF packaging goal stays active.
+
+
+## 75. If declarations and original __try/__finally cleanup
+
+The 2026-10-13 continuation handles the original PrintQueue condition declaration
+by emitting the IfStmt init statement and condition-variable declaration before
+testing Clang's resolved condition. Existing typed local allocation/initialization
+and Clang lexical scope rules remain in use. The consumer checks String handle
+identity, null and empty strings, scalar true/else bindings, single initializer
+evaluation, nested shadowing, C++17 initializer order/else visibility, repeated
+loop initialization and return through finally. Out-of-scope references fail Sema.
+
+Printing first advances to PrintSystemAttributeValueFactory.cpp:78, whose
+original Monitor cleanup uses __try/__finally. Clang retains this form as an
+SEHTryStmt rather than a CXXTryStmt. The emitter now writes a real CLR try/finally,
+maintains protected-return/loop-control depth, and maps __leave to the innermost
+try completion label. Managed exception filters are not substituted for native
+__except: those remain rejected. The implementation provides CLR cleanup
+semantics; native hardware-fault handling is not validated or claimed.
+
+The second consumer checks return, __leave, break, continue and nested finally
+execution. A managed exception retains its type/message while cleanup releases
+an actual Monitor lock; a different thread proves the lock is available. A field
+byref returned through __finally remains usable after compacting GC. Attempts to
+return from a finally handler and native __except filters fail. Existing managed
+exception tests still pass. General __leave inside finally, while/for/switch
+condition declarations and broader SEH semantics remain unfinished.
+
+Validation on win11 with the standard compiler/WPF environment:
+
+```sh
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-if-declarations test-exceptions
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh printing-gate
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-seh-finally test-if-declarations test-exceptions
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh printing-gate
+```
+
+Both focused rebuild/runtime/rejection commands pass. The first original printing
+gate fails at SEHTryStmt after passing the condition declaration. The second
+passes that cleanup form and fails next with `unsupported CLI type: class
+System::Printing::IndexedProperties::PrintStringProperty`. Further lowering is
+required; no full System.Printing IL/DLL or printing runtime proof is produced.
+
+Bash/JSON syntax and whitespace checks pass. Source fixtures, emitted IL/DLLs,
+consumers, logs and original gate manifests are archived under
+`tmp/wpf8-support/validation/printing-control-20261013`. Diagnostic scope still
+covers all 49 original project inputs/66 tree C++ files as a combined gate,
+without a per-file compile count. Native coverage remains 58/139. Full printing,
+text/layout and WindowsDesktop SDK/reference/runtime packaging remain required;
+the WPF packaging goal stays active.
