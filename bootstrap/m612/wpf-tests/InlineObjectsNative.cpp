@@ -72,6 +72,8 @@ int main(int argc,char** argv) {
             bool allowed=breaks[left][right];
             require(LoCreateLine(context,0,0,80,0,nullptr,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==(allowed?1:3)&&measured.upLimLine==(allowed?54:104),"all 16 original break-condition combinations match source table");
             require(LoDisposeLine(line,FALSE)==0,"break-table line disposal");
+            require(LoCreateLine(context,0,0,1,8,nullptr,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==3&&measured.upStartTrailing==104&&measured.upMinStartTrailing==(allowed?54:104),"min/max respects source object break table and atomic widths");
+            require(LoDisposeLine(line,FALSE)==0,"object min/max line disposal");
         }
         require(LoDestroyContext(context)==0,"object context teardown");
         std::puts("native InlineInit/ObjDim ABI, format/draw identity/geometry, atomic query, all 16 source break combinations, errors and ownership PASS");return 0;

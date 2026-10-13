@@ -38,7 +38,7 @@ struct Run {
     std::vector<GlyphOffset> offsets;
     bool shaped=false,hidden=false,tab=false;
     uint16_t leader=0;
-    bool embedded=false,position_used=false;
+    bool embedded=false,position_used=false,hard_break=false;
     InlineInit object_handler{};
     ObjDim object_metrics{};
     int break_before=1,break_after=1;
@@ -201,6 +201,7 @@ int layout_tabs(Line& line,int start,int& total) {
     int64_t x=start;
     for(size_t i=0;i<line.runs.size();++i) {
         auto& run=line.runs[i];
+        if(run.hard_break) { x=start; continue; }
         if(run.tab && !run.hidden) {
             int64_t target=0;
             int status=tab_target(line,i,x,INT_MAX,target,run.leader); if(status) return status;
@@ -364,14 +365,23 @@ int justify_line(Line& line,int target,int& total,int& trailing) {
     total+=static_cast<int>(added);trailing+=static_cast<int>(added);return LS_None;
 }
 
-// Prefix widths are meaningful only at complete glyph-cluster boundaries.
-int choose_wrap(const Line& line,int allowance,bool emergency,int max_cut,bool& unavoidable) {
-    const auto& runs=line.runs;
-    unavoidable=false;
-    bool tabs=std::any_of(runs.begin(),runs.end(),[](const Run& run) { return run.tab && !run.hidden; });
+struct BreakGeometry {
     std::vector<UChar> text;
     std::vector<int64_t> width{0};
     std::vector<bool> boundary{true};
+    std::vector<int> before,after;
+    bool allowed(int point,bool natural) const {
+        int left=after[point],right=before[point];
+        if(left<0 && right<0) return natural;
+        if(left<0) left=natural?2:1;
+        if(right<0) right=point==static_cast<int>(text.size())?3:natural?2:1;
+        return left==3 || right==3 || ((left!=0 && right!=0) && (left==2 || right==2));
+    }
+};
+
+int break_geometry(const Line& line,BreakGeometry& geometry) {
+    const auto& runs=line.runs;
+    auto& text=geometry.text;auto& width=geometry.width;auto& boundary=geometry.boundary;
     for(const auto& run:runs) {
         int64_t before=width.back();
         text.insert(text.end(),run.text.begin(),run.text.end());
@@ -386,26 +396,28 @@ int choose_wrap(const Line& line,int allowance,bool emergency,int max_cut,bool& 
                 size_t end=i+1;
                 while(end<run.text.size() && run.clusters[end]==run.clusters[i]) ++end;
                 unsigned first=run.clusters[i],last=end<run.text.size()?run.clusters[end]:run.advances.size();
-                if(first>last || last>run.advances.size()) return -1;
+                if(first>last || last>run.advances.size()) return LS_InvalidCharToGlyphMapping;
                 for(unsigned glyph=first;glyph<last;++glyph) before+=run.advances[glyph];
                 width[base+end]=before; boundary[base+end]=true; i=end;
             }
         }
     }
-    std::vector<int> before(text.size()+1,-1),after(text.size()+1,-1);
+    geometry.before.assign(text.size()+1,-1);geometry.after.assign(text.size()+1,-1);
+    auto& before=geometry.before;auto& after=geometry.after;
     for(const auto& run:runs) if(run.embedded) {
         before[run.cp-line.first]=run.break_before;
         after[run.cp-line.first+run.text.size()]=run.break_after;
     }
-    auto allowed=[&](int point,bool natural) {
-        int left=after[point],right=before[point];
-        if(left<0 && right<0) return natural;
-        if(left<0) left=natural?2:1;
-        if(right<0) right=point==static_cast<int>(text.size())?3:natural?2:1;
-        // Original LineBreakCondition combination table: Always wins over
-        // restraint; Desired breaks unless restrained; Possible/Possible does not.
-        return left==3 || right==3 || ((left!=0 && right!=0) && (left==2 || right==2));
-    };
+    return LS_None;
+}
+
+// Prefix widths are meaningful only at complete glyph-cluster boundaries.
+int choose_wrap(const Line& line,int allowance,bool emergency,int max_cut,bool& unavoidable) {
+    unavoidable=false;
+    bool tabs=std::any_of(line.runs.begin(),line.runs.end(),[](const Run& run) { return run.tab && !run.hidden; });
+    BreakGeometry geometry;if(break_geometry(line,geometry)) return -1;
+    const auto& text=geometry.text;const auto& width=geometry.width;const auto& boundary=geometry.boundary;
+    auto allowed=[&](int point,bool natural) { return geometry.allowed(point,natural); };
     UErrorCode error=U_ZERO_ERROR;
     auto* iterator=ubrk_open(UBRK_LINE,"root",text.data(),static_cast<int>(text.size()),&error);
     if(U_FAILURE(error) || !iterator) return -1;
@@ -442,6 +454,63 @@ int choose_wrap(const Line& line,int allowance,bool emergency,int max_cut,bool& 
         if(actual<=allowance) chosen=point;
     }
     ubrk_close(iterator); unavoidable=!chosen; return chosen?chosen:first_break;
+}
+
+int range_width(const Line& line,int first,int end,int visible,int64_t& width) {
+    int64_t x=line.widths.upStartMainText;
+    for(size_t i=0;i<line.runs.size();++i) {
+        const auto& run=line.runs[i];
+        int run_end=run.cp+static_cast<int>(run.text.size());
+        if(run_end<=first) continue;
+        if(run.cp>=visible) break;
+        if(run.tab && !run.hidden) {
+            int64_t target=0;uint16_t leader=0;
+            int status=tab_target(line,i,x,end,target,leader);if(status)return status;
+            x=target;
+        } else {
+            size_t begin=first>run.cp?first-run.cp:0;
+            size_t finish=std::min<size_t>(run.text.size(),visible-run.cp);
+            int64_t before=0,after=0;
+            int status=prefix_width(run,begin,before);if(status)return status;
+            status=prefix_width(run,finish,after);if(status)return status;
+            x+=after-before;
+        }
+        if(x<INT_MIN || x>INT_MAX)return LS_InvalidFormatterResult;
+    }
+    width=x;return LS_None;
+}
+
+int paragraph_widths(const Line& line,int& maximum_total,int& maximum_visible,int& minimum_total,int& minimum_visible) {
+    BreakGeometry geometry;int status=break_geometry(line,geometry);if(status)return status;
+    const auto& text=geometry.text;
+    UErrorCode error=U_ZERO_ERROR;
+    auto* raw=ubrk_open(UBRK_LINE,"root",text.data(),static_cast<int>(text.size()),&error);
+    if(U_FAILURE(error) || !raw)return LS_InvalidFormatterResult;
+    std::unique_ptr<UBreakIterator,decltype(&ubrk_close)> iterator(raw,ubrk_close);
+    maximum_total=maximum_visible=minimum_total=minimum_visible=line.widths.upStartMainText;
+    int segment=0,hard_first=0;
+    auto measure=[&](int first,int end,int& total,int& visible) {
+        int trim=end;
+        while(trim>first && (text[trim-1]==L' ' || text[trim-1]==0xa0 || text[trim-1]==0x2028))--trim;
+        while(trim>first && !geometry.boundary[trim])--trim;
+        int64_t full=0,shown=0;
+        int result=range_width(line,line.first+first,line.first+end,line.first+end,full);if(result)return result;
+        result=range_width(line,line.first+first,line.first+end,line.first+trim,shown);if(result)return result;
+        total=std::max(total,static_cast<int>(full));visible=std::max(visible,static_cast<int>(shown));return LS_None;
+    };
+    for(int point=1;point<=static_cast<int>(text.size());++point) {
+        bool hard=text[point-1]==0x2028;
+        if(hard || (geometry.boundary[point] && geometry.allowed(point,ubrk_isBoundary(raw,point)))) {
+            status=measure(segment,point,minimum_total,minimum_visible);if(status)return status;
+            segment=point;
+        }
+        if(hard || point==static_cast<int>(text.size())) {
+            status=measure(hard_first,point,maximum_total,maximum_visible);if(status)return status;
+            hard_first=point;
+        }
+    }
+    if(segment<static_cast<int>(text.size())) { status=measure(segment,text.size(),minimum_total,minimum_visible);if(status)return status; }
+    return LS_None;
 }
 
 struct Cell {
@@ -618,7 +687,7 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
         std::shared_ptr<Context> context;
         ~Active() { std::lock_guard<std::mutex> lock(gate); context->in_use=false; }
     } active{context};
-    if(flags&8) return LS_NotImplemented;
+    const bool minmax=(flags&8)!=0;
     try {
         auto result=std::make_shared<Line>(); result->context=context; result->first=cp; result->paragraph_first=cp;
         if(previous_break) {
@@ -662,6 +731,12 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
                 if(position==INT_MAX) return LS_InvalidFormatterResult;
                 result->info.endr=text[0]==0x2029?2:4;
                 run.hidden=true; result->terminator=std::move(run); result->has_terminator=true;
+                if(minmax && text[0]==0x2028) {
+                    result->terminator.hard_break=true;
+                    result->terminator.widths.assign(1,0);
+                    result->runs.push_back(std::move(result->terminator));result->has_terminator=false;
+                    total=properties.durLeft;++position;continue;
+                }
                 ended=true; ++position; break;
             }
             if(limit>0 && position-cp+count>limit) count=limit-(position-cp);
@@ -703,7 +778,7 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
         }
         // Fetch through the separator before finding Unicode breaks: a client
         // run boundary can be in the middle of a word or grapheme.
-        if((paragraph.grpf&0x40) && (needs_tab_layout || total>column-properties.durRightBreak) && limit==0) {
+        if(!minmax && (paragraph.grpf&0x40) && (needs_tab_layout || total>column-properties.durRightBreak) && limit==0) {
             int max_cut=INT_MAX;
             for(;;) {
                 bool unavoidable=false;
@@ -766,10 +841,13 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
             if(!all_spaces) break;
         }
         int minimum_total=total,minimum_trailing=trailing;
-        if(paragraph.fJustify && result->info.endr==0 && limit==0) {
+        if(!minmax && paragraph.fJustify && result->info.endr==0 && limit==0) {
             int64_t target=static_cast<int64_t>(column)-properties.durRightJustify;
             if(target<INT_MIN || target>INT_MAX) return LS_InvalidFormatterResult;
             status=justify_line(*result,static_cast<int>(target),total,trailing); if(status) return status;
+        }
+        if(minmax) {
+            status=paragraph_widths(*result,total,trailing,minimum_total,minimum_trailing);if(status)return status;
         }
         result->info.dvrAscent=result->info.dvpAscent;
         result->info.dvrDescent=result->info.dvpDescent;

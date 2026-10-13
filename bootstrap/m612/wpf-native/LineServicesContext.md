@@ -124,8 +124,19 @@ cover Ideal/Display modes and actual justified TextBlock rendering/hit testing.
 Aligned-tab justification, other justification modes, ink insertion and full
 compression/optimal algorithms still explicitly reject or require further work.
 
-Optimal/min-max formatting and bidi reversal objects remain unsupported and
-return explicit errors.
+Min/max paragraph mode retains the entire paragraph without column wrapping or
+justification. Shared Unicode/cluster/object-edge break geometry determines the
+widest indivisible segment; hard lines are measured separately for maximum
+width. Trailing spaces remain in total widths but are excluded from visible
+widths. Tabs use actual stops from each measured segment's paragraph origin,
+and inline objects preserve atomic dimensions and source break conditions.
+Native exact and public nominal/Indic/NBSP/hard-break/trailing/empty/cache tests
+pass in Ideal/Display modes, including original FormattedText.MinWidth and
+intrinsic/wrapped TextBlock layout. Streaming/range measurement optimization,
+full hyphenation/compression and RTL width coverage still require further work.
+
+Optimal formatting and bidi reversal objects remain unsupported and return
+explicit errors.
 Complete hit testing, RTL/nonmonotonic shaping clusters, full bidi and paragraph
 layout require further work. This does not establish full Line Services
 compatibility or complete WPF packaging.

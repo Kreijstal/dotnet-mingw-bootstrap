@@ -7893,3 +7893,52 @@ Imported native coverage remains 58/139. Advanced justification modes/ink
 insertion/compression/optimal algorithms, aligned-tab justification and full
 bidi/paragraph/natural-language behavior remain incomplete. This improves the
 experimental package while the full WPF goal stays active.
+
+
+## 112. Paragraph minimum/maximum widths and intrinsic text layout
+
+The 2026-10-13 continuation removes native MinMax-mode rejection. It retains
+whole paragraphs without column wrapping/justification and shares existing
+Unicode prefix/cluster/object-edge geometry with ordinary wrapping. Minimum
+width is the widest indivisible legal-break segment; maximum width is the widest
+unwrapped hard line. Hard breaks remain zero-width retained markers in this
+measurement mode and fetching continues through paragraph end. Trailing spaces
+remain in total widths but are excluded from visible widths. Tabs are measured
+at actual stops from each segment's paragraph origin. Objects preserve atomic
+dimensions and the original break-condition table.
+
+This follows original TextFormatterImp.FormatMinMaxParagraphWidth and
+FullTextLine.MinWidth metadata consumption. Microsoft documents the
+FormattedText.MinWidth word-width semantics at
+https://learn.microsoft.com/en-us/dotnet/api/system.windows.media.formattedtext.minwidth?view=windowsdesktop-10.0.
+Native checks verify exact column-independent max total/visible 124/104 and min
+84/64 across one-character client runs; hard-line paragraph coverage 12 LS units
+with max 94/min 64; NBSP max 84/min 54; tab max 60/min 40; all 16 adjacent-object
+break combinations produce the correct atomic minimum. Ordinary line/object/
+justification tests pass after sharing the break geometry.
+
+The public fixture verifies nominal Latin, shaped Indic, NBSP, multiple hard
+lines, whole words, trailing/empty/space-only content and cached repeat calls
+across GC in Ideal/Display modes. It compares measured widths with independently
+formatted source words/hard lines, checks minimum/maximum ordering and exercises
+original FormattedText.MinWidth plus intrinsic/wrapped TextBlock measure/render/
+point hits. The first fixture rename also changed framework type/property names;
+those identifiers are restored before final validation. FormattedText is created
+with the same formatting mode as its independent comparison.
+
+Validation with the standard win11 WPF environment:
+
+```sh
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-lineservices-line-native check-inline-objects-native check-justification-native
+WPF_WIDTHS_NATIVE=/clang64/lib/dotnet/shared/Microsoft.WindowsDesktop.App/8.0.0-bootstrap.wpf.8.0.0 bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-paragraph-widths
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-lineservices-line-native check-inline-objects-native check-paragraph-widths
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-lineservices-line-native check-text-justification check-inline-objects check-text-tabs
+```
+
+Final source commands pass with zero consumer warnings/errors. The installed
+release 6 native baseline fails with expected NotImplemented at the public
+minimum/maximum width call. Evidence is archived under
+ tmp/wpf8-support/validation/paragraph-widths-20261013. Imported native coverage
+remains 58/139. Full RTL, hyphenation/compression/optimal algorithms, paragraph
+layout and natural-language behavior remain open. The package update is still
+required, and the full WPF goal stays active.
