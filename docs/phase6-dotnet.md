@@ -8412,3 +8412,50 @@ absent. Evidence is archived under
  tmp/wpf8-support/validation/pagination-20261013. Package integration follows;
 advanced layout, full bidi/optimal/native language and broader runtime behavior
 remain required for the full WPF goal.
+
+## 123. Installed release 12: finite multi-page text pagination
+
+The 2026-10-13 continuation packages section 122 as WindowsDesktop 8.0.0-12.
+Declared/checksummed 0012-finite-pagination.patch applies after the eleven
+previous patches. Clean pinned sources plus all twelve patches match the six
+committed pagination feature files byte for byte. The private package tree
+rebuilds its native library, inventory and layout, passes continuation/clone/
+callback rollback checks and original context checks, and runs all normal SDK
+checks including six-page source coverage before packaging and installing.
+Unchanged managed/graphics/printing outputs remain its own source builds.
+
+Validation in the CLANG64 package workspace:
+
+```sh
+makepkg --verifysource --force
+source PKGBUILD                 # with srcdir set to this workspace's src/
+_wpf native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+makepkg --repackage --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-12-any.pkg.tar.zst
+/usr/bin/python3 check-staged.py /clang64/lib/dotnet
+bash "$(_driver)/wpf-tests/check-pagination-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-pagination-sdk-check
+bash "$(_driver)/wpf-tests/check-bottomless-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-pagination-bottomless-sdk-check
+```
+
+All commands pass. Staged/installed payload checks pass for the 42 managed
+assemblies/references, eight native libraries, WindowsDesktop SDK and preserved
+legacy versions. Installed original FlowDocument pagination renders six pages,
+covers all 1278 source characters exactly once, maps every forward-affinity
+content position to its page, regenerates disposed pages and passes compacting
+GC plus page/break-record dispatcher cleanup in Ideal/Display. Shared-framework
+and self-contained publishes with SDK roots/toolchain PATH removed pass. Original
+scrolling/editor extent, raster and text insertion checks also pass through the
+installed package. Private normal WPF/tab/inline-object/justification/width/
+context/finite/bottomless/pagination/WinForms regressions pass; consumer builds
+have zero warnings/errors. The existing source-bootstrap.json srcdir provenance
+warning remains.
+
+Artifact: mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-12-any.pkg.tar.zst.
+SHA-256: 25cedf08bbb7c8450b2a642c20480684682919987258bb595905773363f772b4.
+Recipe commit: msys2-ur c64be9d; feature commit: 680436d.
+Artifact, recipe, metadata, patch and validation logs are archived under
+ tmp/wpf8-support/validation/pagination-package-20261013.
+Imported native coverage is 86/139 with 53 absent. Finite text continuation is
+now real; tiny-page forced progress, hard/keep/optimal policies, multiple columns,
+advanced/incremental/interruptible paragraph algorithms, full bidi/native language
+and broader runtime behavior remain incomplete. The full WPF goal stays active.
