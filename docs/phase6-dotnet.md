@@ -6502,3 +6502,43 @@ metadata, IL/DLL/runtime output and original gate manifests are archived under
 without a per-file compile count. Native text coverage stays 58/139; full printing,
 layout/text and WindowsDesktop SDK/reference/runtime packaging remain required.
 The WPF packaging goal stays active.
+
+
+## 80. Static members read through instance syntax
+
+The 2026-10-13 continuation handles the original SafeMemoryHandle.Size getter's
+handle.Size expression. Metadata represents IntPtr.Size as a static property
+facade, but Clang retains instance spelling as a MemberExpr with a static VarDecl.
+The emitter now resolves that declaration through the existing static field/getter
+path, evaluating side-effectful receiver expressions exactly once and discarding
+their value. It does not create an instance getter or dereference a null reference
+receiver just to access a static member.
+
+The consumer checks source static fields/properties through receiver-producing
+calls, counts evaluation across GC, accepts null reference receiver values, and
+compares IntPtr.Size accessed through ordinary native-integer values and a call
+receiver against the actual CLR IntPtr.Size. Existing static property/imported
+access/readonly/visibility rejection checks pass. This extension covers reads;
+instance-spelled address/store/compound forms remain unfinished.
+
+Validation on win11 with the standard compiler/WPF environment:
+
+```sh
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-static-member-receivers test-static-properties
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh printing-gate
+```
+
+The focused rebuild/runtime/rejection command passes. Printing passes Clang
+parsing/Sema and SafeMemoryHandle.get_Size, then fails in
+PrinterInfoOneSafeMemoryHandle's base initializer (InteropPrinterHandler.cpp:3354).
+That initializer calls a builder returning IntPtr. The remaining managed
+constructor-initializer wrapper needs investigation; no full printing IL/DLL or
+printing runtime proof is produced.
+
+Bash/JSON syntax and whitespace checks pass. Source fixtures, emitted artifacts,
+consumers, logs and original manifests are archived under
+`tmp/wpf8-support/validation/printing-static-member-receivers-20261013`. All
+49 original project inputs/66 tree C++ files remain in the combined diagnostic
+gate, without a per-file pass count. Native coverage stays 58/139. Full printing,
+layout/text and WindowsDesktop SDK/reference/runtime packaging remain required;
+the WPF packaging goal stays active.

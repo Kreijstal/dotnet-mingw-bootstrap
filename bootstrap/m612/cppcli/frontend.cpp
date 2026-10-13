@@ -4088,6 +4088,10 @@ class Emitter {
             op("ldarg.0", 0, 1); return;
         }
         if (auto* member = dyn_cast<MemberExpr>(e)) {
+            if(auto* variable=dyn_cast<VarDecl>(member->getMemberDecl());variable && variable->isStaticDataMember()) {
+                if(member->getBase()->HasSideEffects(context)) { expr(member->getBase()); op("pop",1); }
+                load_decl(variable,e); return;
+            }
             auto* field = dyn_cast<FieldDecl>(member->getMemberDecl());
             if (field && annotated(field, "cli.event")) fail(e, "events can only be used through add/remove/raise accessors");
             if (!field) fail(e, "unsupported managed member expression");
