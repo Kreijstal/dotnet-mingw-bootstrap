@@ -7286,3 +7286,45 @@ vcclr.h header and passes its expanded checks. Its final archive must still be
 repinned to the committed fixture correction and built cleanly. WPF MSYS2 recipe/
 clean package build and full native text/layout behavior remain open. The WPF
 packaging goal stays active.
+
+
+## 99. Installed WPF compiler package and clean desktop recipe
+
+The 2026-10-13 continuation completes the clean C++/CLI 0.3.0 package from
+checksum-pinned bootstrap commit 96ae31a, including the committed test-core
+fixture correction. The full package check passes, creates the final package
+and installs it with pacman. Its installed launcher then compiles and executes
+the tracked inline UTF-16 array pin fixture successfully. The intrinsic vcclr.h
+header is present in both the archive and installed compiler directory.
+The msys2-ur compiler recipe/source-export/metadata changes are committed as
+24ec4dc without consuming unrelated staged changes.
+
+Validation on win11:
+
+```sh
+# private cppcli-0.3.0-final package directory; CLANG64 package environment
+makepkg --noconfirm --force
+pacman -U --noconfirm mingw-w64-clang-x86_64-cppcli-0.3.0-1-any.pkg.tar.zst
+/clang64/bin/cli-clang.exe /clang64/share/cppcli/tests/inline-array-pins.cpp --type System.GC --type System.InvalidOperationException -o E:/msys64/home/topkek/wpfboot/cppcli-installed-proof/inline-array-pins.dll
+/clang64/lib/dotnet/dotnet.exe E:/msys64/home/topkek/wpfboot/cppcli-installed-proof/inline-array-pins.dll
+```
+
+A new msys2-ur WindowsDesktop recipe builds both WPF 8 and approved interim
+WinForms 7 from declared, checksum-pinned source archives. It clones only the
+installed source-built core SDK toolchain and removes all existing desktop
+framework/pack/SDK inputs before privately rebuilding Drawing, WinForms and
+support libraries. WPF managed/native implementations and the tested combined
+layout are then built with the installed source compiler. The package replaces
+the WinForms-only SDK owner while retaining freshly rebuilt legacy framework/
+pack versions for existing applications. Native ICU/libc++ seed dependencies
+include package-provided licenses; the ICU license lives under share/icu rather
+than share/licenses and was corrected in the local recipe.
+
+The clean makepkg run has passed source checksums/extraction, rebuilt the initial
+SystemEvents and Drawing pieces, and is compiling support libraries in
+~/dotnetboot/packages/windowsdesktop-8.0.0. This is a live build, not a completed
+WPF package claim. Source-build fixes, full package checks, final archive and
+installation verification remain required. Compiler package evidence is under
+`tmp/wpf8-support/validation/cppcli-package-0.3.0`; desktop evidence is collected
+under `tmp/wpf8-support/validation/windowsdesktop-package-20261013`.
+Full native text/layout remains incomplete and the WPF goal stays active.
