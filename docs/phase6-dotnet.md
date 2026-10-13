@@ -5707,3 +5707,58 @@ per-file pass count, complete printing runtime or finished WPF package is
 claimed. Native coverage remains 58/139. Full text/paragraph and printing
 behavior plus WindowsDesktop SDK/targeting/runtime packaging remain required;
 the full goal stays active.
+
+
+## 65. Ref-class temporaries passed to source tracking-reference parameters
+
+The 2026-10-13 continuation permits a directly constructed source ref-class
+prvalue to bind an exact source percent tracking-reference call parameter.
+Clang's resolved method declarations, actual record identity and source sigil
+select the operation. Native ampersand references retain ordinary C++ rules;
+arity-compatible overloads must consistently declare the supported tracking
+slot. Constructor functional casts and CXXBindTemporary wrappers are resolved
+from the AST rather than rewritten from spelling.
+
+The annotated temporary intrinsic emits the actual source constructor with
+newobj, stores the handle in a CLR class local, and passes that local's address
+to the method/delegate. It neither creates a native C++ object nor copies the
+ref class. Deterministically disposable temporaries are rejected until
+full-expression cleanup exists. Imported temporaries, arbitrary factory/value
+expressions, ref-class copies and mixed overload selection remain incomplete.
+
+The runtime fixture verifies direct calls, delegate Invoke, two constructed
+arguments, exact construction/operand counts, mutation through a class byref,
+constructor exception propagation without callback execution, reflected CLR
+class& signatures and retained identity after forced compacting GC. Native
+reference binding, missing deterministic cleanup and mixed unsupported overload
+sets have targeted rejection checks. Original tracking-reference fixtures pass.
+The first build exposed a missing MulticastDelegate test import and an AST
+CXXBindTemporary wrapper, both fixed. A by-value ref-class rejection fixture
+hit its unsupported declaration before the intended operation; the replacement
+uses a supported scalar overload and validates ordinary Sema rejection.
+
+Validation on win11 with the usual compiler and WPF environments:
+
+```sh
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-tracking-temporaries
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-tracking-temporaries test-tracking
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh build-directwrite check-directwrite-assembly printing-gate
+```
+
+The frontend rebuild and positive temporary runtime proof pass; the subsequent
+focused command passes the final three rejection cases and original tracking
+checks. The full WPF command passes DirectWrite load, 85 types, 283 bodies and
+81 real font families, then fails at printing. The original gdirt.cpp:744
+GeometryProxy constructor callback now passes Sema. First remaining errors are
+String/native-literal comparisons, property-produced enum bitwise operations,
+interior-record native-call conversions, interface-to-Object conversions and
+missing managed base chains for FixedDocument/FixedPage. Actual ManualResetEvent
+and COMException imports were added to the gate. Full printing IL/link/runtime
+remain unproven.
+
+Logs, manifests and runtime artifacts are archived locally under
+`tmp/wpf8-support/validation/printing-tracking-temporary-20261013`. All 49 printing
+project inputs/66 tree C++ files remain in the combined diagnostic scope. No
+complete System.Printing DLL or WPF package is produced; native text coverage
+remains 58/139 and full text/paragraph/printing/WindowsDesktop SDK and framework
+packaging remain required. The full goal stays active.

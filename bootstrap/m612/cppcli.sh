@@ -604,6 +604,22 @@ int main() { CombinedAccess^ c=gcnew CombinedAccess(); return c->OrMethod(); }' 
   reject_case combined-foreign-and '#using "combined-access.dll"
 public ref class Foreign : CombinedAccess { public: int Read() { return AndMethod(); } }; int main() { return 0; }' 'undeclared identifier' --type CombinedAccess
 }
+step_test-tracking-temporaries() {
+  compile "$(cygpath -m "$src/tests/tracking-temporaries.cpp")" --target library --type System.GC \
+    --type System.ArgumentException --type System.Delegate --type System.MulticastDelegate \
+    -o "$(cygpath -m "$testdir/tracking-temporaries.dll")"
+  mkdir -p "$testdir/tracking-temporaries-consumer"
+  cp "$src/tests/TrackingTemporariesConsumer.cs" "$testdir/tracking-temporaries-consumer/Program.cs"
+  cat > "$testdir/tracking-temporaries-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="tracking-temporaries"><HintPath>../tracking-temporaries.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/tracking-temporaries-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/tracking-temporaries-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case tracking-temporary-native 'public ref class Proxy { public: Proxy(int value) {} }; public ref class Calls { public: static void Read(Proxy& value) {} }; int main() { Calls::Read(Proxy(1)); return 0; }' 'cannot bind to a temporary'
+  reject_case tracking-temporary-disposal 'public ref class Proxy { public: Proxy(int value) {} ~Proxy() {} }; public ref class Calls { public: static void Read(Proxy% value) {} }; int main() { Calls::Read(Proxy(1)); return 0; }' 'require full-expression cleanup'
+  reject_case tracking-temporary-mixed-overloads 'public ref class Proxy { public: Proxy(int value) {} }; public ref class Calls { public: static void Read(Proxy% value) {} static void Read(int value) {} }; int main() { Calls::Read(Proxy(1)); return 0; }' 'no matching function'
+}
 step_test-implicit-boxing() {
   local refs=("$CPPCLI_SDK"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
   compile "$(cygpath -m "$src/tests/implicit-boxing.cpp")" --target library --type System.Collections.Hashtable --type System.Collections.SortedList --type System.GC \

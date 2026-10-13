@@ -168,7 +168,7 @@
 +#include "clang/Sema/Lookup.h"
 @@ -34,0 +37 @@
 +#include "clang/Sema/ScopeInfo.h"
-@@ -44,0 +48,251 @@
+@@ -44,0 +48,287 @@
 +
 +// CLI enum operations retain their scoped type identity. Sema still checks
 +// explicit conversions and native operations; ordinary C++ enums are untouched.
@@ -273,6 +273,42 @@
 +  else if (auto *Overloads = dyn_cast<OverloadExpr>(Function))
 +    for (auto *Candidate : Overloads->decls()) Inspect(Candidate);
 +  return Found && AllObject;
++}
++
++// A source tracking reference may receive a directly constructed ref-class
++// temporary. Native references and ambiguous overloads keep ordinary Sema.
++static bool cppcliTrackingTemporaryArgument(Sema &Actions, Preprocessor &PP,
++    Expr *Function, Expr *Argument, unsigned Index, unsigned Count) {
++  if(!Argument->isPRValue()) return false;
++  auto *Value=Argument->IgnoreParenImpCasts();
++  if(auto *Cast=dyn_cast<CXXFunctionalCastExpr>(Value); Cast && Cast->getCastKind()==CK_ConstructorConversion)
++    Value=Cast->getSubExpr()->IgnoreParenImpCasts();
++  if(auto *Temporary=dyn_cast<CXXBindTemporaryExpr>(Value)) Value=Temporary->getSubExpr()->IgnoreParenImpCasts();
++  auto *Construction=dyn_cast<CXXConstructExpr>(Value);
++  if(!Construction) return false;
++  auto *Record=Construction->getType()->getAsCXXRecordDecl();
++  if(!Record || !Record->getDefinition()) return false;
++  bool Managed=false;
++  for(auto *Attr:Record->getDefinition()->specific_attrs<AnnotateAttr>()) Managed |= Attr->getAnnotation()=="cli.ref";
++  if(!Managed) return false;
++  bool Found=false,AllTracking=true;
++  auto Inspect=[&](const NamedDecl *Decl) {
++    auto *Method=dyn_cast<CXXMethodDecl>(Decl);
++    if(!Method || Index>=Method->getNumParams() || Count>Method->getNumParams() || Count<Method->getMinRequiredArguments()) return;
++    Found=true;
++    auto *Parameter=Method->getParamDecl(Index);
++    auto Type=Parameter->getType();
++    if(!Type->isLValueReferenceType() || !Actions.Context.hasSameUnqualifiedType(Type->getPointeeType(),Construction->getType()) ||
++        !Parameter->getTypeSourceInfo()) { AllTracking=false; return; }
++    auto Reference=Parameter->getTypeSourceInfo()->getTypeLoc().getAs<ReferenceTypeLoc>();
++    auto Loc=Reference.isNull() ? SourceLocation() : PP.getSourceManager().getSpellingLoc(Reference.getSigilLoc());
++    AllTracking &= Loc.isValid() && *PP.getSourceManager().getCharacterData(Loc)=='%';
++  };
++  Function=Function->IgnoreParenImpCasts();
++  if(auto *Member=dyn_cast<MemberExpr>(Function)) Inspect(Member->getMemberDecl());
++  else if(auto *Reference=dyn_cast<DeclRefExpr>(Function)) Inspect(Reference->getDecl());
++  else if(auto *Overloads=dyn_cast<OverloadExpr>(Function)) for(auto *Candidate:Overloads->decls()) Inspect(Candidate);
++  return Found && AllTracking;
 +}
 +
 +static QualType cppcliAssignmentType(Expr *Value) {
@@ -652,7 +688,19 @@
 +                tok::arrow, Scope, SourceLocation(), Member, nullptr);
 +          }
 +        }
-@@ -1892,0 +2337,31 @@
+@@ -1892,0 +2337,43 @@
++        for(unsigned Index=0;Index<ArgExprs.size();++Index) {
++          if(!cppcliTrackingTemporaryArgument(Actions,PP,Fn,ArgExprs[Index],Index,ArgExprs.size())) continue;
++          CXXScopeSpec Global; Global.MakeGlobal(Actions.Context,Loc);
++          UnqualifiedId Name; Name.setIdentifier(&PP.getIdentifierTable().get("__cli_tracking_temporary"),Loc);
++          auto Helper=Actions.ActOnIdExpression(getCurScope(),Global,SourceLocation(),Name,true,false);
++          if(Helper.isInvalid()) return ExprError();
++          Expr *Argument=ArgExprs[Index];
++          auto Temporary=Actions.ActOnCallExpr(getCurScope(),Helper.get(),Loc,
++              MutableArrayRef<Expr *>(&Argument,1),RParLoc);
++          if(Temporary.isInvalid()) return ExprError();
++          ArgExprs[Index]=Temporary.get();
++        }
 +        for (unsigned Index=0; Index<ArgExprs.size(); ++Index) {
 +          if (!isa<StringLiteral>(ArgExprs[Index]->IgnoreParenImpCasts()) ||
 +              !cppcliStringArgument(Fn, Index, ArgExprs.size())) continue;

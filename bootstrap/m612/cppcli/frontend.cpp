@@ -2598,6 +2598,7 @@ class Emitter {
     }
     void address(const Expr* original) {
         const Expr* e = strip(original)->IgnoreParenImpCasts();
+        if(auto* call=dyn_cast<CallExpr>(e);call && call->getDirectCallee() && annotated(call->getDirectCallee(),"cli.tracking.temporary")) { this->call(call); return; }
         if(auto* call=dyn_cast<CallExpr>(e);call && call->getDirectCallee() && annotated(call->getDirectCallee(),"cli.typed.box.address")) { this->call(call); return; }
         if (auto* pointer = interior_dereference(e)) {
             expr(pointer);
@@ -3306,6 +3307,26 @@ class Emitter {
                 op(std::string(bits == 64 ? "ldc.i8 " : "ldc.i4 ") + std::to_string(constant.getSExtValue()), 0, 1);
                 return;
             }
+        }
+        if(annotated(f,"cli.tracking.temporary")) {
+            const Expr* value=c->getNumArgs()==1 ? strip(c->getArg(0))->IgnoreParenImpCasts() : nullptr;
+            if(auto* cast=dyn_cast_or_null<CXXFunctionalCastExpr>(value);cast && cast->getCastKind()==CK_ConstructorConversion)
+                value=strip(cast->getSubExpr())->IgnoreParenImpCasts();
+            auto* construction=dyn_cast_or_null<CXXConstructExpr>(value);
+            auto* record=construction ? construction->getType()->getAsCXXRecordDecl() : nullptr;
+            if(!record || !record_annotated(record,"cli.ref") || !record_annotation(record,"cli.external:").empty())
+                fail(c,"tracking temporary requires a directly constructed source ref class");
+            if(implements_disposable(record)) fail(c,"tracking temporaries with deterministic disposal require full-expression cleanup");
+            auto* constructor=construction->getConstructor();
+            if(constructor->isCopyOrMoveConstructor()) fail(c,"tracking temporary ref-class copies are unsupported");
+            for(unsigned i=0;i<construction->getNumArgs();++i) {
+                auto* parameter=constructor->getParamDecl(i);
+                if(parameter->getType()->isReferenceType()) address(construction->getArg(i));
+                else pointer_value(construction->getArg(i),parameter);
+            }
+            op("newobj "+signature(constructor),construction->getNumArgs(),1);
+            auto slot=temporary(reference_element_type(construction->getType()));
+            op("stloc "+std::to_string(slot),1); op("ldloca "+std::to_string(slot),0,1); return;
         }
         if(f->getNameAsString()=="__cli_array_init") {
             auto* record=handle_target(c->getType());

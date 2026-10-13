@@ -258,7 +258,8 @@
     "Object-typed managed indexed-property keys box scalar/enum operands after placeholder resolution and retain normal getter access/overload checks; real SortedList keyed struct copies/unboxing and GC validation",
     "Object-to-managed-value C-style/static casts dispatch actual CLR unbox.any with copied value, wrong-type and null checks",
     "Windows metadata Char signatures use the same wchar_t representation as System.Char, including generic/array API signatures; Unicode String.CopyTo Char-array check",
-    "Explicit member default[index] spelling adapts to the existing managed default property facade, retaining actual getter/setter metadata"
+    "Explicit member default[index] spelling adapts to the existing managed default property facade, retaining actual getter/setter metadata",
+    "Directly constructed source ref-class temporaries bind exact source percent tracking-reference call parameters through GC-tracked handle slots; direct/delegate/multiple argument mutation, exception and retained identity checks"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -335,6 +336,7 @@
     "Managed constructor conversion covers parenthesized direct bases, single-argument fields and new expressions without declarator chunks; braced/delegating/general direct initialization, broader boxing overload selection and aliased/inherited imported accessor owner discovery remain incomplete",
     "Primitive instance lookup requires the corresponding primitive metadata import; general primitive/enum/interface boxing overload resolution and mutating/byref-like primitive APIs remain incomplete; unary percent currently requires a managed value class, and general braced/direct/conditional initialization remains unfinished",
     "Native-integer pointer conversions require supported raw target storage; general opaque/nontrivial/GC-bearing target forms remain incomplete. Source inherited accessor discovery currently uses recognized base names; general aliases, namespaces and generic base graphs remain unfinished",
-    "Managed pointer indexing and local/parameter updates are low-level operations with caller-owned range validity; primitives and GC-free native POD records are supported. Managed record elements, general pointer expression arithmetic and broader interior return provenance remain incomplete; tracked addresses cannot bind raw native pointers without pinning"
+    "Managed pointer indexing and local/parameter updates are low-level operations with caller-owned range validity; primitives and GC-free native POD records are supported. Managed record elements, general pointer expression arithmetic and broader interior return provenance remain incomplete; tracked addresses cannot bind raw native pointers without pinning",
+    "Tracking temporary call adaptation requires exact source ref-class percent parameters and consistent arity-compatible overload slots; imported types, native references, ref-class copy construction and deterministic disposal cleanup remain unsupported"
   ]
 }

@@ -235,7 +235,8 @@ def main():
               "System.Windows.Vector", "System.Uri", "System.UriKind", "System.IO.Path", "System.IO.File",
               "System.Text.Encoding", "System.Random", "System.Windows.FontStyle", "System.Windows.FontStyles",
               "System.Windows.FontWeight", "System.Windows.FontWeights", "System.Windows.FontStretch",
-              "System.Windows.FontStretches"]
+              "System.Windows.FontStretches", "System.Threading.ManualResetEvent",
+              "System.Runtime.InteropServices.COMException"]
     for name in types:
         command += ["--type", name]
     command += ["--source-type", "System.Printing.PrintQueue"]
