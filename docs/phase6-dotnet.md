@@ -8781,3 +8781,51 @@ regressions pass with zero consumer warnings/errors. Evidence is archived under
 Optimal/forced-line policies, balancing/span areas, tables/floaters/figures,
 advanced/incremental/interruptible algorithms, full bidi/native language and
 broader runtime behavior remain required for the full WPF goal.
+
+## 131. Installed release 16: KeepWithNext heading chains
+
+The 2026-10-13 continuation packages section 130 as WindowsDesktop 8.0.0-16.
+Declared/checksummed 0016-keep-with-next-chains.patch applies after the fifteen
+previous patches. Clean pinned sources plus all sixteen patches match the six
+committed chain feature files byte for byte. The private package tree rebuilds
+native output, inventory and layout, passes original ABI/context and native
+source/resource/chain checks, then runs all normal SDK gates including heading
+chains before archive creation and installation. Unchanged managed/graphics/
+printing outputs remain its own source builds.
+
+Validation in the CLANG64 package workspace:
+
+```sh
+makepkg --verifysource --force
+source PKGBUILD                 # with srcdir set to this workspace's src/
+_wpf native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+makepkg --repackage --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-16-any.pkg.tar.zst
+/usr/bin/python3 check-staged.py /clang64/lib/dotnet
+bash "$(_driver)/wpf-tests/check-keep-next-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-keep-next-sdk-check
+bash "$(_driver)/wpf-tests/check-keep-together-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-keep-next-together-sdk-check
+```
+
+All commands pass. Staged/installed 42-managed/eight-native/SDK/legacy payload
+checks pass. Installed original one/three-heading flat/nested WPF comparisons
+move enabled chains with their body while disabled headings remain on the earlier
+page. Source/page mappings, rendered page regeneration and GC pass in Ideal/
+Display. Nonzero collapsed-margin rollback, unbroken multi-line headings,
+oversized chain progress and heading/body glyphs together in the second column
+pass through shared-framework and self-contained publishes with SDK roots/
+toolchain PATH removed. Dispatcher cleanup and installed KeepTogether tests
+also pass. Private normal WPF/tab/inline-object/justification/width/context/
+finite/bottomless/pagination/columns/hard-break/keep/keep-next/WinForms regressions
+pass with zero consumer warnings/errors. The existing source-bootstrap.json
+srcdir provenance warning remains.
+
+Artifact: mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-16-any.pkg.tar.zst.
+SHA-256: 29a949f49ca9157adb2c558a8b990728a8bc2a59fea116d8862449ddd4320a2c.
+Recipe commit: msys2-ur 359d823; feature commit: 817cc43.
+Artifact, recipe, metadata, patch and validation logs are archived under
+ tmp/wpf8-support/validation/keep-next-package-20261013.
+Imported native coverage remains 89/139 with 50 absent: KeepWithNext adds
+behavior to existing exports. Optimal/forced-line policies, balancing/span areas,
+tables/floaters/figures, advanced/incremental/interruptible algorithms, full
+bidi/native language and broader runtime behavior remain incomplete. The full
+WPF goal stays active.
