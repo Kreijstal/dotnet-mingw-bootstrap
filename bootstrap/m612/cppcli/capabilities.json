@@ -291,7 +291,8 @@
     "Interior pointer assignment rebinds block-local/parameter CLR byref slots without copying referents or losing existing aliases; original Char/ushort view assignment and GC mutation checks pass",
     "Inline native array decay initializes pin pointers using the original Clang conversion and tracked containing-record address; native UTF-16 field mutation, String copy ownership and GC checks pass",
     "Fixed one-dimensional native local arrays use Clang-sized/aligned CLR value storage; scalar/enum/pointer/trivial POD aggregate and native string initialization preserve decay aliases, evaluation order, zero filler and declaration reinitialization",
-    "Explicit void discard casts evaluate their operands once, discard nonvoid results and preserve nested void calls, volatile native reads, managed/native values, side effects and exceptions"
+    "Explicit void discard casts evaluate their operands once, discard nonvoid results and preserve nested void calls, volatile native reads, managed/native values, side effects and exceptions",
+    "Windows x64 native COM by-value trivial aggregates of 1, 2, 4 or 8 bytes are copied and passed as integer bits; native probes cover float-field bit patterns, register/stack placement, signed unions and actual IStream Seek against a native oracle"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -341,7 +342,7 @@
     "Native value pointers require GC-free value storage and stable caller-owned addresses; arithmetic/indexing use CLR layout; struct pin_ptr/interior_ptr, allocation of managed-value storage and automatic native SDK partitioning remain unsupported",
     "Native import archives currently support named x64 short code imports; ordinal/data/decorated/forwarder forms, by-value native record API signatures, automatic marshalling and automatic Win32 last-error capture remain unsupported",
     "The WPF TrueType subsetter uses an explicit source patch and separate native DLL; generic automatic C++ native partitioning and general native class dispatch remain unsupported",
-    "Native COM calli excludes Windows x86, virtual/secondary-base vtables, concrete native classes, bool/managed/by-value-record marshalling, variadic methods and native function-pointer managed/bool/variadic marshalling",
+    "Native COM calli excludes Windows x86, virtual/secondary-base vtables, concrete native classes, bool/managed marshalling, aggregate returns and arguments outside the supported 1/2/4/8-byte trivial layouts, variadic methods and native function-pointer managed/bool/variadic marshalling",
     "Native heap operations cover UCRT-backed scalar/pointer/trivial POD single objects and arrays with alignment up to 8; arrays allow only uninitialized or empty value initialization; nonempty array initialization, placement/custom operators and nontrivial object lifetimes remain unsupported; negative array bounds throw CLR OverflowException and allocation failures use CLR OutOfMemoryException rather than native C++ exceptions; side-effectful single initializer cleanup requires an empty evaluation stack",
     "Native function-pointer calls currently require Windows x64, fixed prototypes, supported scalar/unmanaged pointer signatures and scalar/POD references; managed/bool/by-value-record marshalling, reference returns and arbitrary managed method addresses remain unsupported",
     "Native GUID constant lowering currently recognizes the trusted MinGW __mingw_uuidof macro/template shapes and validates Windows GUID field layout; general native global/static storage and other native constant-reference functions remain unsupported",

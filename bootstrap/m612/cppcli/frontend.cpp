@@ -3360,6 +3360,11 @@ class Emitter {
             return "native unsigned int";
         }
         if (t->isEnumeralType()) return numeric_type(t);
+        if (native_pod(t)) {
+            auto size=context.getTypeSizeInChars(t).getQuantity();
+            if(size==1 || size==2 || size==4 || size==8) return "uint"+std::to_string(size*8);
+            throw std::runtime_error("native COM aggregate arguments currently require a 1, 2, 4 or 8 byte trivial native POD layout");
+        }
         if ((!t->isIntegerType() && !t->isRealFloatingType() && !t->isPointerType()) || t->isBooleanType() ||
             (handle_target(t) && native_value_pointer(parameter).isNull()))
             throw std::runtime_error("native COM signatures require scalars or unmanaged pointers; automatic marshalling is not supported");
@@ -3392,6 +3397,17 @@ class Emitter {
             auto* parameter = method->getParamDecl(i);
             signature += ", " + native_com_parameter(parameter);
             if (parameter->getType()->isReferenceType()) native_address(call->getArg(i));
+            else if (native_pod(parameter->getType())) {
+                // Windows x64 passes these small aggregates as integer bits.
+                // Capture a copy, including floating fields and unions, rather
+                // than passing the CLR value type or the original address.
+                auto slot=temporary(type(parameter->getType()));
+                expr(call->getArg(i)); op("stloc "+std::to_string(slot),1);
+                op("ldloca "+std::to_string(slot),0,1);
+                auto size=context.getTypeSizeInChars(parameter->getType()).getQuantity();
+                op("unaligned. 1");
+                op(size==8 ? "ldind.i8" : "ldind.u"+std::to_string(size),1,1);
+            }
             else pointer_value(call->getArg(i), parameter);
         }
         op("ldloc " + std::to_string(receiver), 0, 1); op("ldind.i", 1, 1);

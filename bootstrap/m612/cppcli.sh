@@ -1251,6 +1251,11 @@ step_test-native-allocation() {
 struct Native { static void* operator new(std::size_t); int Value; }; int main() { Native* value = new Native(); return 0; }' 'custom native allocation operators'
   reject_case native-new-nested-side-effect 'int Init() { return 42; } int Consume(int value, int* pointer) { delete pointer; return value; } int main() { return Consume(1, new int(Init())); }' 'side-effectful initializer requires an empty evaluation stack'
 }
+step_test-native-com-aggregates() {
+  /clang64/bin/clang++.exe -std=c++17 -shared -O2 "$src/tests/native-com-aggregates-native.cpp" -lole32 -o "$testdir/cppcli-com-aggregates.dll"
+  run_case native-com-aggregates "$src/tests/native-com-aggregates.cpp" 'native COM small aggregates: integer/float bit ABI, register/stack args, union signed bits, single evaluation, copy isolation, GC and original IStream Seek PASS' \
+    --native-library cppcli-com-aggregates.dll --native-import "$(cygpath -m /clang64/lib/libole32.a)" --type System.GC
+}
 step_test-native-com() {
   /clang64/bin/clang++.exe -std=c++17 -shared -O2 "$src/tests/com-native.cpp" "$src/tests/native-com-extended.cpp" -luuid -o "$testdir/cppcli-native-com.dll"
   run_case native-com "$src/tests/native-com.cpp" 'native COM vtable dispatch, inheritance, GUID reference, HRESULT, outputs and receiver evaluation OK' \
@@ -1260,7 +1265,7 @@ step_test-native-com() {
 struct IFlag : IUnknown { virtual bool Flag() = 0; }; int main() { IFlag* value = nullptr; return value->Flag(); }' 'native COM return values require a scalar'
   reject_case native-com-byvalue '#include <windows.h>
 #include <unknwn.h>
-struct POD { int Value; }; struct IArg : IUnknown { virtual int Call(POD value) = 0; }; int main() { IArg* receiver = nullptr; POD value = {1}; return receiver->Call(value); }' 'native COM signatures require scalars'
+struct POD { long long First; long long Second; }; struct IArg : IUnknown { virtual int Call(POD value) = 0; }; int main() { IArg* receiver = nullptr; POD value = {1,2}; return receiver->Call(value); }' 'native COM aggregate arguments currently require'
 }
 step_test-sdk-constants() {
   run_case sdk-constants "$src/tests/sdk-constants.cpp" $'3\n9223372036854775813\n9'

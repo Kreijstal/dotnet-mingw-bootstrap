@@ -6949,3 +6949,49 @@ Evidence is archived under
 49 project inputs/66 tree C++ files without per-file compile counts. Native text
 coverage remains 58/139; full printing, text/layout and WindowsDesktop packaging
 remain required. The WPF packaging goal stays active.
+
+
+## 91. Native COM small aggregate arguments
+
+The 2026-10-13 continuation lowers by-value native COM arguments with trivial
+native layouts of 1, 2, 4 or 8 bytes. Each operand is evaluated once and copied
+to an opaque CLR value temporary; its raw bits are loaded as the corresponding
+unsigned integer argument for unmanaged calli. This follows the Windows x64 ABI,
+including structs containing floats and native unions. Aggregate returns and
+other-size/managed/nontrivial arguments remain unsupported. Native imported
+function and native function-pointer signatures retain their existing limits.
+
+ABI reference:
+https://learn.microsoft.com/en-us/cpp/build/x64-calling-convention?view=msvc-170
+
+The source-built native COM oracle verifies all four sizes, a float-containing
+record passed in an integer slot, an eight-byte pair on the stack, mixed trailing
+floating/integer arguments, exactly-once argument construction, copy isolation,
+and a negative LARGE_INTEGER value wider than 32 bits across GC. Actual Windows
+CreateStreamOnHGlobal/IStream::Seek/Release calls match an independent native
+caller at position 1234567. The first real-stream fixture failed with a beyond-
+4-GB offset; the corrected stream fixture uses an in-range offset while the COM
+oracle retains the wide signed union check. Existing COM receiver/GUID/HRESULT/
+output checks pass. The prior aggregate rejection now tests an unsupported
+16-byte record rather than the newly supported four-byte case.
+
+Validation on win11 with the standard compiler/WPF environment:
+
+```sh
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-native-com-aggregates test-native-com
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-native-com-aggregates test-native-com
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh printing-gate
+```
+
+The compiler rebuild succeeds and final focused runtime/rejection checks pass.
+The original combined printing gate passes parsing/Sema and both original
+IStream::Seek call sites. It next fails in AttributeValueInteropHandler::
+RegisterStaticMaps (InteropAttributeValueDictionary.cpp:65): native enum typeid
+metadata is unsupported for PrintPropertyTypeInterop. No complete printing
+IL/DLL or printing runtime proof is produced.
+
+Evidence is archived under
+`tmp/wpf8-support/validation/printing-native-com-aggregates-20261013`. Scope
+remains 49 project inputs/66 tree C++ files without per-file compile counts.
+Native text coverage remains 58/139; full printing, text/layout and
+WindowsDesktop packaging remain required. The WPF packaging goal stays active.
