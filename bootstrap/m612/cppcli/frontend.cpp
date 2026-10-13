@@ -1809,8 +1809,9 @@ class Emitter {
         auto* spec = dyn_cast<ClassTemplateSpecializationDecl>(r);
         if (!spec || spec->getTemplateArgs().size() != 1) throw std::runtime_error("invalid managed pointer intrinsic");
         auto element = spec->getTemplateArgs()[0].getAsType();
-        if (!element->isIntegerType() && !element->isRealFloatingType() && !native_pod(element))
-            throw std::runtime_error("managed pointer intrinsics require primitive or GC-free native POD elements");
+        if (!element->isIntegerType() && !element->isRealFloatingType() && !native_pod(element) &&
+            !(value_target(element) && native_storage(element)))
+            throw std::runtime_error("managed pointer intrinsics require primitive, GC-free native POD or GC-free managed value elements");
         return element;
     }
     QualType static_property_element(QualType t) const {
@@ -2738,8 +2739,7 @@ class Emitter {
             auto* operation=cast<CXXOperatorCallExpr>(e);
             if(operation->getOperator()==OO_Subscript) {
                 expr(operation->getArg(1)); op("conv.i",1,1);
-                op("ldc.i8 "+std::to_string(context.getTypeSizeInChars(interior_element(pointer->getType())).getQuantity()),0,1);
-                op("conv.i",1,1); op("mul",2,1); op("add",2,1);
+                native_stride(interior_element(pointer->getType())); op("mul",2,1); op("add",2,1);
             }
             return;
         }
@@ -2790,6 +2790,8 @@ class Emitter {
         expr(e); op("stloc " + std::to_string(slot), 1); op("ldloca " + std::to_string(slot), 0, 1);
     }
     void emit_receiver(const Expr* e) {
+        if(auto* call=dyn_cast<CallExpr>(strip(e)->IgnoreParenImpCasts());call && call->getDirectCallee() &&
+            annotated(call->getDirectCallee(),"cli.interior.address")) { expr(e); return; }
         if (!native_value_pointer(e).isNull()) { expr(e); return; }
         if (value_target(e->getType())) {
             auto* at = strip(e)->IgnoreParenImpCasts();
@@ -3636,7 +3638,8 @@ class Emitter {
                 expr(receiver); return;
             }
             expr(receiver);
-            if (isa<CXXConversionDecl>(method) && pinned(receiver->getType()) && c->getType()->isPointerType() && !handle_target(c->getType())) {
+            if (isa<CXXConversionDecl>(method) && pinned(receiver->getType()) && c->getType()->isPointerType() &&
+                (!handle_target(c->getType()) || !native_value_pointer(c).isNull())) {
                 if (interior_element(receiver->getType()).isConstQualified() && !c->getType()->getPointeeType().isConstQualified())
                     fail(c, "pin_ptr cast cannot discard element const qualification");
                 op("conv.u", 1, 1);
@@ -4008,6 +4011,11 @@ class Emitter {
             expr(unary->getSubExpr()); op("ldobj " + type(unary->getType()), 1, 1); return;
         }
         if (auto* cast = dyn_cast<ExplicitCastExpr>(e); cast && !native_value_pointer(cast).isNull()) {
+            if(cast->getCastKind()==CK_UserDefinedConversion) {
+                auto* call=dyn_cast<CXXMemberCallExpr>(strip(cast->getSubExpr()));
+                auto* method=call ? dyn_cast_or_null<CXXConversionDecl>(call->getDirectCallee()) : nullptr;
+                if(method && record_annotated(method->getParent(),"cli.pin")) { expr(cast->getSubExpr()); return; }
+            }
             if (cast->getCastKind() != CK_BitCast && cast->getCastKind() != CK_NoOp && cast->getCastKind() != CK_NullToPointer)
                 fail(cast, "unsupported native value pointer cast");
             if (boxed_target(cast->getSubExpr()->getType()) && native_value_pointer(cast->getSubExpr()).isNull() &&
@@ -4250,7 +4258,7 @@ class Emitter {
                         fail(c,"managed pointer view cannot discard element qualifiers");
                     expr(arg);
                 }
-                else if (arg->getType()->isPointerType() && !handle_target(arg->getType())) {
+                else if (arg->getType()->isPointerType() && (!handle_target(arg->getType()) || !native_value_pointer(arg).isNull())) {
                     auto source=arg->getType()->getPointeeType();
                     auto target=interior_element(c->getType());
                     if((source.isConstQualified() && !target.isConstQualified()) ||

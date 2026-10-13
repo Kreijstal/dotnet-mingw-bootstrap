@@ -604,6 +604,24 @@ int main() { CombinedAccess^ c=gcnew CombinedAccess(); return c->OrMethod(); }' 
   reject_case combined-foreign-and '#using "combined-access.dll"
 public ref class Foreign : CombinedAccess { public: int Read() { return AndMethod(); } }; int main() { return 0; }' 'undeclared identifier' --type CombinedAccess
 }
+step_test-value-pins() {
+  local refs=("$CPPCLI_SDK"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
+  local args=(--type System.GC --type System.Runtime.InteropServices.StructLayoutAttribute --type System.Runtime.InteropServices.LayoutKind
+    --type System.Runtime.InteropServices.FieldOffsetAttribute --reference "$(cygpath -m "${refs[-1]}/System.Runtime.InteropServices.dll")")
+  compile "$(cygpath -m "$src/tests/value-pins.cpp")" --target library "${args[@]}" --native-library value-pins-native.dll \
+    -o "$(cygpath -m "$testdir/value-pins.dll")"
+  mkdir -p "$testdir/value-pins-consumer"
+  /clang64/bin/clang++.exe -std=c++17 -O2 -shared "$src/tests/value-pins-native.cpp" -o "$testdir/value-pins-consumer/value-pins-native.dll"
+  cp "$src/tests/ValuePinsConsumer.cs" "$testdir/value-pins-consumer/Program.cs"
+  cat > "$testdir/value-pins-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><AllowUnsafeBlocks>true</AllowUnsafeBlocks><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="value-pins"><HintPath>../value-pins.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/value-pins-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  cp "$testdir/value-pins-consumer/value-pins-native.dll" "$testdir/value-pins-consumer/bin/Debug/net8.0/"
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/value-pins-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case value-pin-references 'using namespace System; public value struct Data { String^ Text; }; int main() { array<Data>^ values=gcnew array<Data>(1); pin_ptr<Data> pointer=&values[0]; return 0; }' 'GC-free managed value elements' "${args[@]}"
+}
 step_test-value-property-locations() {
   compile "$(cygpath -m "$src/tests/value-property-locations.cpp")" --target library --type System.GC -o "$(cygpath -m "$testdir/value-property-locations.dll")"
   mkdir -p "$testdir/value-property-locations-consumer"
@@ -2225,7 +2243,7 @@ EOF
   "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/interior-records-consumer/bin/Debug/net8.0/consumer.dll")"
   reject_case interior-arrow-escape 'struct Native { int Value; }; int main() { Native value; interior_ptr<Native> data=&value; Native* raw=data.operator->(); return 0; }' 'cannot escape as raw native pointers'
   reject_case interior-array-escape 'struct Native { int Values[2]; }; int main() { Native value; interior_ptr<Native> data=&value; int* raw=data->Values; return 0; }' 'require pinning before raw native pointer binding'
-  reject_case interior-record-gc 'struct Bad { System::String^ Text; }; void Read(interior_ptr<Bad> data) {} int main() { return 0; }' 'GC-free native POD elements'
+  reject_case interior-record-gc 'struct Bad { System::String^ Text; }; void Read(interior_ptr<Bad> data) {} int main() { return 0; }' 'GC-free managed value elements'
   reject_case interior-view-const 'int main() { const int value=1; interior_ptr<const int> data=&value; interior_ptr<int> writable=(interior_ptr<int>)data; return 0; }' 'cannot discard element qualifiers'
   reject_case interior-view-volatile 'int main() { volatile int value=1; interior_ptr<volatile int> data=&value; interior_ptr<int> writable=(interior_ptr<int>)data; return 0; }' 'cannot discard element qualifiers'
   reject_case interior-view-native 'int main() { int* raw=nullptr; interior_ptr<unsigned char> data=(interior_ptr<unsigned char>)raw; return 0; }' 'not an untracked native pointer'

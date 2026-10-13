@@ -6643,3 +6643,53 @@ covers 49 original project inputs/66 tree C++ files as a combined diagnostic gat
 without per-file compile counts. Native text coverage stays 58/139. Full printing,
 layout/text and WindowsDesktop SDK/reference/runtime packaging remain required;
 the WPF packaging goal stays active.
+
+
+## 83. GC-free managed value pinning and CLR strides
+
+The 2026-10-13 continuation accepts managed value pin/interior elements only when
+native_storage proves they contain no GC references. Indexed addresses and pointer
+steps use CLR sizeof for these elements, preserving explicit CLR layouts instead
+of the surrogate C++ size. Implicit/explicit pin conversion retains native value
+pointer provenance and checks qualifiers. Managed value arrow receivers reuse
+the actual tracked address.
+
+The initial consumer DLL fails with an internal CLR error: the arrow receiver
+path unboxes a value that is already a managed byref. The corrected receiver
+recognizes the trusted interior-address marker and preserves that address without
+boxing. The native oracle initially needed its missing cstddef include; subsequent
+native compilation and runtime checks pass. An old rejection assertion was updated
+for the expanded diagnostic; its invalid GC-reference element remains rejected.
+
+The oracle reads/writes real POINT-compatible two-int array elements and a 32-byte
+explicit value with its second field at byte 20. Source pin indexing, increments,
+implicit/explicit casts and interior indexing/updates preserve actual CLR strides.
+The final consumer repeats both native calls twenty times with a deliberate native
+pause and a background compacting collector: **4,382 concurrent collections** are
+confirmed. Sentinel elements, mutated values and tracked interior writes remain
+correct. Source values containing managed Strings are rejected. Existing primitive
+indexing and native POD/packed/array/qualifier/escape regression checks pass.
+
+Validation on win11 with the standard compiler/WPF environment:
+
+```sh
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-value-pins
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-value-pins test-interior-indexing test-interior-records
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-interior-records
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh printing-gate
+```
+
+The corrected focused runtime and final rejection suites pass. Original printing
+passes Clang parsing/Sema and advances beyond its PointI pin sites to
+CGDIPath.ProcessCurve (gdipath.cpp:815), whose forward goto is unsupported.
+Native layout compatibility remains a per-boundary obligation; accepting a
+GC-free value does not imply arbitrary native ABI compatibility. No complete
+printing IL/DLL or printing runtime proof is produced.
+
+Bash/JSON syntax and whitespace checks pass. Source fixtures, native oracle,
+emitted IL/DLLs and runtime/gate evidence are archived under
+`tmp/wpf8-support/validation/printing-value-pins-20261013`. Scope remains all
+49 original project inputs/66 tree C++ files as a combined diagnostic gate,
+without per-file compile counts. Native coverage stays 58/139; full printing,
+layout/text and WindowsDesktop SDK/reference/runtime packaging remain required.
+The WPF packaging goal stays active.
