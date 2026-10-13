@@ -196,6 +196,7 @@ def main():
     types += ["System.Windows.Xps.Serialization.XpsOMSerializationManager",
               "System.Windows.Xps.Serialization.XpsOMSerializationManagerAsync",
               "System.Printing.PageImageableArea", "System.Nullable`1"]
+    types += ["System.Printing.PrinterHResult+Facility", "System.EntryPointNotFoundException"]
     for name in types:
         command += ["--type", name]
     command += ["--source-type", "System.Printing.PrintQueue"]

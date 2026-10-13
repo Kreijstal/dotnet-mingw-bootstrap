@@ -111,6 +111,19 @@ void write_file(const std::string& path, const std::string& text) {
     out.close();
     if (!out) throw std::runtime_error("cannot write " + path);
 }
+std::string imported_type_name(const std::string& name) {
+    std::string result;
+    size_t begin=0;
+    do {
+        auto end=name.find('+',begin);
+        if(!result.empty()) result+="/";
+        result+="'"+name.substr(begin,end==std::string::npos ? end : end-begin)+"'";
+        if(end==std::string::npos) break;
+        begin=end+1;
+    } while(true);
+    return result;
+}
+
 struct ImportedMethod {
     std::string assembly, owner, name, result;
     std::vector<std::string> parameters;
@@ -127,6 +140,8 @@ struct Metadata {
     std::map<std::string, std::string> types;
     std::set<std::string> short_types, interface_types;
     std::vector<std::string> source_types;
+    std::map<std::pair<std::string,std::string>,std::pair<std::string,std::string>> property_accessors;
+    std::set<std::pair<std::string,std::string>> ambiguous_property_accessors;
     std::string externs;
     void load(const std::string& path) {
         auto value = llvm::json::parse(read_file(path));
@@ -167,6 +182,28 @@ struct Metadata {
                 if (generic != std::string::npos) cpp_name.erase(generic);
                 interface_types.insert(cpp_name);
                 interface_types.insert(cpp_name.substr(cpp_name.find_last_of(':') + 1));
+            }
+            auto add_property=[&](const std::string& owner,const std::string& property,const std::pair<std::string,std::string>& accessors) {
+                auto key=std::make_pair(owner,property);
+                if(ambiguous_property_accessors.count(key)) return;
+                auto [found,inserted]=property_accessors.emplace(key,accessors);
+                if(!inserted && found->second!=accessors) { property_accessors.erase(found); ambiguous_property_accessors.insert(key); }
+            };
+            std::string cpp_owner=name;
+            for(size_t pos=0;(pos=cpp_owner.find('.',pos))!=std::string::npos;pos+=2) cpp_owner.replace(pos,1,"::");
+            for(size_t pos=0;(pos=cpp_owner.find('+',pos))!=std::string::npos;pos+=2) cpp_owner.replace(pos,1,"::");
+            if(auto arity=cpp_owner.find('`');arity!=std::string::npos) cpp_owner.erase(arity);
+            for(auto& property:*c.getArray("Properties")) {
+                auto& prop=*property.getAsObject();
+                if(!prop.getBoolean("Supported").value_or(false)) continue;
+                auto pname=prop.getString("Name")->str();
+                auto accessors=std::make_pair(prop.getString("Getter")->str(),prop.getString("Setter")->str());
+                add_property(cpp_owner,pname,accessors);
+                add_property(cpp_owner.substr(cpp_owner.find_last_of(':')+1),pname,accessors);
+                if(pname==c.getString("DefaultMember").value_or("") && !prop.getArray("Parameters")->empty()) {
+                    add_property(cpp_owner,"default",accessors);
+                    add_property(cpp_owner.substr(cpp_owner.find_last_of(':')+1),"default",accessors);
+                }
             }
             for (auto& method : *c.getArray("Methods")) {
                 auto& m = *method.getAsObject();
@@ -1184,6 +1221,16 @@ protected:
                     if (property_names.count({tokens[owner].text, t.text})) {
                         emit(t, tokens[i+2].text + "_" + (t.text == "default" ? "Item" : t.text)); i += 2; continue;
                     }
+                    size_t first=owner;
+                    while(first>=2 && tokens[first-1].text=="::" && tokens[first-2].kind==tok::identifier) first-=2;
+                    std::string imported_owner;
+                    for(size_t j=first;j<=owner;++j) imported_owner+=tokens[j].text;
+                    auto found=metadata.property_accessors.find({imported_owner,t.text});
+                    if(found!=metadata.property_accessors.end() && (tokens[i+2].text=="get" || tokens[i+2].text=="set")) {
+                        auto accessor=tokens[i+2].text=="get" ? found->second.first : found->second.second;
+                        if(accessor.empty()) throw std::runtime_error("imported property has no selected accessor: "+imported_owner+"::"+t.text);
+                        emit(t,accessor); i+=2; continue;
+                    }
                 }
                 if (t.text == "static" && i + 1 < tokens.size() && (tokens[i+1].text == "property" || tokens[i+1].text == "event")) continue;
                 if (t.text == "virtual" && i + 1 < tokens.size() && (tokens[i+1].text == "property" || tokens[i+1].text == "event")) continue;
@@ -2075,7 +2122,7 @@ class Emitter {
         std::string ext = record_annotation(record, "cli.external:");
         if (!ext.empty()) {
             auto bar = ext.find('|');
-            std::string result = assembly_reference(ext.substr(0, bar)) + "'" + ext.substr(bar + 1) + "'";
+            std::string result = assembly_reference(ext.substr(0, bar)) + imported_type_name(ext.substr(bar+1));
             if (auto* spec = dyn_cast<ClassTemplateSpecializationDecl>(record)) {
                 if (ext.find('`', bar) == std::string::npos) throw std::runtime_error("imported template lacks CLI generic type identity");
                 result += '<';
@@ -2121,7 +2168,7 @@ class Emitter {
         std::string ext = annotation(enumeration, "cli.external:");
         if (ext.empty() && enumeration->getDefinition()) ext = annotation(enumeration->getDefinition(), "cli.external:");
         if (!ext.empty()) {
-            auto bar = ext.find('|'); return assembly_reference(ext.substr(0, bar)) + "'" + ext.substr(bar + 1) + "'";
+            auto bar = ext.find('|'); return assembly_reference(ext.substr(0, bar)) + imported_type_name(ext.substr(bar+1));
         }
         std::string name = enumeration->getQualifiedNameAsString();
         for (size_t at; (at = name.find("::")) != std::string::npos;) name.replace(at, 2, ".");
@@ -2313,7 +2360,7 @@ class Emitter {
         return sig + ")";
     }
     std::string imported_signature(const ImportedMethod& m, const CXXMethodDecl* bound = nullptr) const {
-        std::string owner = bound ? record_token(bound->getParent()) : assembly_reference(m.assembly) + "'" + m.owner + "'";
+        std::string owner = bound ? record_token(bound->getParent()) : assembly_reference(m.assembly) + imported_type_name(m.owner);
         std::string sig = (m.is_static ? "" : "instance ") + m.result + " " + owner + "::'" + m.name + "'(";
         for (size_t i = 0; i < m.parameters.size(); ++i) { if (i) sig += ", "; sig += m.parameters[i]; }
         return sig + ")";

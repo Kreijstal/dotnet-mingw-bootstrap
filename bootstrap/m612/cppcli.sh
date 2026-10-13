@@ -403,6 +403,110 @@ A^ Get() { return nullptr; }
 int main() { A^ a=nullptr; Get()+=a; return 0; }' 'not assignable' "${args[@]}"
   reject_case multicast-object 'int main() { System::Object^ a=nullptr; System::Object^ b=nullptr; a+=b; return 0; }' 'invalid operands' "${args[@]}"
 }
+step_test-printing-accessors() {
+  local refs=("$CPPCLI_SDK"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
+  mkdir -p "$testdir/accessor-contract" "$testdir/printing-accessors-consumer"
+  cat > "$testdir/accessor-contract/contract.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><AssemblyName>AccessorContract</AssemblyName><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup></Project>
+EOF
+  cat > "$testdir/accessor-contract/Contract.cs" <<'EOF'
+namespace AccessorContract;
+public class BaseTable {
+    readonly int[] values=new int[2];
+    [System.Runtime.CompilerServices.IndexerName("Lookup")]
+    public virtual int this[int index] { get=>values[index]; set=>values[index]=value; }
+    public string Title { get; private set; }="original title";
+}
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/accessor-contract/contract.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  cp "$testdir/accessor-contract/bin/Debug/net8.0/AccessorContract.dll" "$testdir/"
+  cp "$src/tests/printing-accessors.cpp" "$testdir/printing-accessors.cpp"
+  /clang64/bin/clang++.exe -shared -O2 "$src/tests/semantic-literals-native.cpp" -o "$testdir/printing-accessors-native.dll"
+  local args=(--type System.Resources.ResourceManager --type System.Reflection.Assembly --type System.Type --type System.ArgumentOutOfRangeException \
+    --type System.Collections.Hashtable --type AccessorContract.BaseTable \
+    --reference "$(cygpath -m "${refs[-1]}/System.Collections.NonGeneric.dll")" \
+    --reference "$(cygpath -m "$testdir/AccessorContract.dll")")
+  compile "$(cygpath -m "$testdir/printing-accessors.cpp")" --target library "${args[@]}" \
+    --native-library printing-accessors-native.dll -o "$(cygpath -m "$testdir/printing-accessors.dll")"
+  cp "$src/tests/PrintingAccessorsConsumer.cs" "$testdir/printing-accessors-consumer/Program.cs"
+  cat > "$testdir/printing-accessors-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="printing-accessors"><HintPath>../printing-accessors.dll</HintPath></Reference><Reference Include="AccessorContract"><HintPath>../AccessorContract.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/printing-accessors-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  cp "$testdir/printing-accessors-native.dll" "$testdir/printing-accessors-consumer/bin/Debug/net8.0/"
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/printing-accessors-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case accessor-private-setter '#using "AccessorContract.dll"
+public ref class Child : AccessorContract::BaseTable { public: void Write() { AccessorContract::BaseTable::Title::set("bad"); } }; int main() { return 0; }' 'no selected accessor' "${args[@]}"
+  reject_case initializer-private-constructor 'public ref class Base { private: Base(System::String^ text) {} }; public ref class Child : Base { public: Child():Base("private") {} }; int main() { return 0; }' 'private constructor'
+}
+step_test-nested-imports() {
+  mkdir -p "$testdir/nested-contract" "$testdir/nested-peer" "$testdir/nested-imports-consumer"
+  cat > "$testdir/nested-contract/contract.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><AssemblyName>NestedContract</AssemblyName><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup></Project>
+EOF
+  cat > "$testdir/nested-contract/Contract.cs" <<'EOF'
+using System.Runtime.CompilerServices;
+[assembly:InternalsVisibleTo("nested-friend")]
+namespace NestedContract;
+public class Outer {
+    public enum Flags : uint { High=0x80000000, Low=1 }
+    public static Flags Echo(Flags value)=>value;
+    public static Flags Facility(int value)=>(Flags)((value>>16)&0x1fff);
+    public class Node {
+        public string Name { get; }
+        public Flags Code;
+        public Node(string text) { Name=text; }
+        public class Detail { public string Name; public Detail(string text) { Name=text; } }
+    }
+    public struct Point { public int X; }
+    internal class Hidden { public int Value; public Hidden(int value) { Value=value; } }
+    private class Private {}
+}
+public class GenericOuter<T> { public class Nested {} }
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/nested-contract/contract.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  cp "$testdir/nested-contract/bin/Debug/net8.0/NestedContract.dll" "$testdir/"
+  cat > "$testdir/nested-peer/peer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><AssemblyName>NestedPeer</AssemblyName><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="NestedContract"><HintPath>../NestedContract.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  cat > "$testdir/nested-peer/Peer.cs" <<'EOF'
+namespace NestedPeer;
+public class Api {
+    public static NestedContract.Outer.Flags Echo(NestedContract.Outer.Flags value)=>value;
+    public static NestedContract.Outer.Node Node(NestedContract.Outer.Node value)=>value;
+    public static NestedContract.Outer.Point Point(NestedContract.Outer.Point value) { value.X++; return value; }
+}
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/nested-peer/peer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  cp "$testdir/nested-peer/bin/Debug/net8.0/NestedPeer.dll" "$testdir/"
+  cp "$src/tests/nested-imports.cpp" "$testdir/nested-imports.cpp"
+  local args=(--reference "$(cygpath -m "$testdir/NestedContract.dll")" --reference "$(cygpath -m "$testdir/NestedPeer.dll")" \
+    --type 'NestedContract.Outer+Flags' --type 'NestedContract.Outer+Node' --type 'NestedContract.Outer+Point' \
+    --type 'NestedContract.Outer+Node+Detail' --type NestedPeer.Api)
+  compile "$(cygpath -m "$testdir/nested-imports.cpp")" --target library "${args[@]}" -o "$(cygpath -m "$testdir/nested-imports.dll")"
+  cp "$src/tests/NestedImportsConsumer.cs" "$testdir/nested-imports-consumer/Program.cs"
+  cat > "$testdir/nested-imports-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="nested-imports"><HintPath>../nested-imports.dll</HintPath></Reference><Reference Include="NestedContract"><HintPath>../NestedContract.dll</HintPath></Reference><Reference Include="NestedPeer"><HintPath>../NestedPeer.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/nested-imports-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/nested-imports-consumer/bin/Debug/net8.0/consumer.dll")"
+  cat > "$testdir/nested-friend.cpp" <<'EOF'
+#using "NestedContract.dll" as_friend
+int main() { NestedContract::Outer::Hidden^ value=gcnew NestedContract::Outer::Hidden(32); System::Console::WriteLine(value->Value); return 0; }
+EOF
+  run_case nested-friend "$testdir/nested-friend.cpp" '32' --type 'NestedContract.Outer+Hidden'
+  reject_case nested-not-friend '#using "NestedContract.dll"
+int main() { return 0; }' 'imported type is internal' --type 'NestedContract.Outer+Hidden'
+  reject_case nested-private '#using "NestedContract.dll" as_friend
+int main() { return 0; }' 'unsupported private/protected nested import' --type 'NestedContract.Outer+Private'
+  reject_case nested-generic '#using "NestedContract.dll"
+int main() { return 0; }' 'unsupported nested generic import' --type 'NestedContract.GenericOuter`1+Nested'
+}
 step_test-semantic-literals() {
   local refs=("$CPPCLI_SDK"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
   /clang64/bin/clang++.exe -std=c++17 -O2 -shared "$src/tests/semantic-literals-native.cpp" -o "$testdir/semantic-literals-native.dll"

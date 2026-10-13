@@ -5245,3 +5245,75 @@ WindowsDesktop SDK/targeting/runtime packaging remain required.
 
 Evidence is archived locally under
 `tmp/wpf8-support/validation/printing-scalar-boxes-20261013`.
+
+## 58. Printing accessor, constructor and nested metadata gates
+
+The next 2026-10-13 continuation resolves the original printing failures at
+qualified Hashtable default accessors, the ResourceManager base constructor and
+PrinterHResult's nested Facility enum. Imported property accessor syntax now
+uses the selected metadata getter/setter names and DefaultMember designation,
+including default indexers whose CLR name is not Item. Clang still checks the
+resulting owner/member call and its access. Runtime checks use actual Hashtable
+storage and a separate source-built C# contract with a Lookup indexer and a
+private Title setter. A C# override confirms that qualified base calls bypass
+virtual dispatch; missing/private setters are rejected.
+
+The private parser resolves parenthesized base/member initializer types before
+adapting String/Object literal arguments. Source inline/out-of-line constructors,
+base aliases, a literal String field, an Object scalar field and the actual
+ResourceManager(String, Assembly) constructor execute successfully. The selected
+String constructor wins over a competing bool constructor; native char-pointer
+constructor arguments retain their original storage. The same semantic helper
+handles parenthesized new expressions without declarator chunks, including
+nested imported constructors. Arithmetic/enum arguments are boxed only when all
+arity-compatible non-copy constructor candidates use Object in that position;
+typed constructor alternatives remain with ordinary Clang selection. Actual
+ArgumentOutOfRangeException(String, Object, String) construction retains its
+numeric ActualValue and parameter name. Private base constructors still fail
+Clang access checks.
+
+Non-generic nested metadata imports now close over their declaring types and
+expose nested C++ aliases to private surrogate names. Those surrogates are never
+runtime classes: signatures, method owners, fields, constructor calls and boxed
+element modifiers retain actual CLR slash-qualified nested identities. Nested
+TypeRefs recurse through declaring scopes to their defining assembly. Separate
+source-built contract/peer assemblies verify nested enums, reference classes,
+value structs, a deeper nested class, constructors, fields/properties, unsigned
+enum payloads, typed boxes, external signatures and GC. The CLR prepares the
+fixture method bodies and C# verifies exact runtime types and optional modifiers.
+Public imports and internal nested imports through a valid as_friend identity
+execute; nonfriend internal, private/protected and nested generic imports fail.
+
+Commands on win11 use the same source SDK/ilasm/M612/CLANG64 and WPF build
+environment recorded in §57:
+
+```bash
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-printing-accessors test-nested-imports
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-semantic-literals test-indexers test-scalar-boxes
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh build-directwrite check-directwrite-assembly printing-gate
+```
+
+The focused compiler/runtime checks and rejection cases pass with zero C#
+warnings/errors. The final WPF command passes full DirectWrite generation and
+assembly, loads 85 types, prepares 283 managed bodies and finds 81 font families,
+then **fails** in printing Sema. The previously observed qualified default
+accessor, ResourceManager initializer, PrinterHResult/Facility and three-argument
+Object-valued range-exception constructor failures are absent. The gate imports
+the original source-built ReachFramework PrinterHResult/Facility with its actual
+friend identity and adds the actually used EntryPointNotFoundException metadata.
+
+The first remaining failure is InteropJobInfo.cpp:498's culture-aware primitive
+ToString call. Later errors include array GetEnumerator/SetValue APIs, additional
+literal contexts, IntPtr/native casts, qualified inherited accessors and missing
+metadata/namespaces. No bodies are removed or replaced with stubs. Braced,
+delegating and general direct constructor initialization, broader boxing
+overload selection, aliased/inherited accessor-owner discovery and nested
+generic/protected/private imports remain incomplete or rejected.
+
+Evidence is archived locally under
+`tmp/wpf8-support/validation/printing-accessors-nested-20261013`.
+No full System.Printing runtime DLL or completed WPF package is produced.
+Diagnostic scope remains 49 original project inputs/66 tree C++ files, without
+individual-file pass/fail claims. Native import coverage stays 58/139; complete
+layout, printing runtime and WindowsDesktop SDK/targeting/runtime packaging
+remain required.

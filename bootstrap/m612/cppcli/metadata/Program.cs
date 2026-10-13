@@ -43,14 +43,18 @@ record CliAccess(string Assembly, string PublicKey, string[] Friends) {
 
 sealed class SignatureTypes : ISignatureTypeProvider<CliType, object?>
 {
-    public static string CppName(string name) => "::" + string.Join("::", name.Split('.').Select(p => p.Split('`')[0]));
+    public static string IlName(string name) => string.Join("/", name.Split('+').Select(n=>"'"+n+"'"));
+    public static string CppName(string name) {
+        var parts=name.Split('.');
+        if(parts[^1].Contains('+')) parts[^1]="__cli_nested_"+Convert.ToHexString(Encoding.UTF8.GetBytes(parts[^1]));
+        return "::"+string.Join("::",parts.Select(p=>p.Split('`')[0]));
+    }
     static CliType Unsupported(string name) => new("", "", "unsupported", name);
     public static CliType Named(string name, bool value)
     {
         if (name == "System.String") return new("string", "::System::String*", "ref", name);
         if (name == "System.Object") return new("object", "::System::Object*", "ref", name);
-        if (name.Contains('+')) return Unsupported(name);
-        return new((value ? "valuetype " : "class ") + "'" + name + "'",
+        return new((value ? "valuetype " : "class ") + IlName(name),
                    value ? CppName(name) : CppName(name) + "*", value ? "value" : "ref", name);
     }
     public CliType GetPrimitiveType(PrimitiveTypeCode type) => type switch
@@ -82,11 +86,11 @@ sealed class SignatureTypes : ISignatureTypeProvider<CliType, object?>
     public CliType GetTypeFromReference(MetadataReader r, TypeReferenceHandle h, byte k)
     {
         var d = r.GetTypeReference(h);
-        var ns = r.GetString(d.Namespace);
-        string owner=d.ResolutionScope.Kind==HandleKind.AssemblyReference ?
-            r.GetString(r.GetAssemblyReference((AssemblyReferenceHandle)d.ResolutionScope).Name) :
-            d.ResolutionScope.Kind==HandleKind.ModuleDefinition ? r.GetString(r.GetAssemblyDefinition().Name) : "";
-        return Named((ns.Length == 0 ? "" : ns + ".") + r.GetString(d.Name), k == 0x11) with { ReferencedAssembly=owner };
+        var scope=d.ResolutionScope;
+        while(scope.Kind==HandleKind.TypeReference) scope=r.GetTypeReference((TypeReferenceHandle)scope).ResolutionScope;
+        string owner=scope.Kind==HandleKind.AssemblyReference ? r.GetString(r.GetAssemblyReference((AssemblyReferenceHandle)scope).Name) :
+            scope.Kind==HandleKind.ModuleDefinition ? r.GetString(r.GetAssemblyDefinition().Name) : "";
+        return Named(Program.ReferenceFullName(r,h),k==0x11) with { ReferencedAssembly=owner };
     }
     public CliType GetTypeFromSpecification(MetadataReader r, object? c, TypeSpecificationHandle h, byte k) =>
         r.GetTypeSpecification(h).DecodeSignature(this, c);
@@ -113,7 +117,7 @@ sealed class SignatureTypes : ISignatureTypeProvider<CliType, object?>
         if ((t.Name == "System.ValueType" || t.Kind == "boxed") && modifiers.Contains("System.Runtime.CompilerServices.IsBoxed")) {
             var valueName = modifiers.FirstOrDefault(n => n != "System.Runtime.CompilerServices.IsBoxed");
             if (valueName != null)
-                return new("class [System.Runtime]System.ValueType modopt('" + valueName + "') modopt([System.Runtime.CompilerServices.VisualC]System.Runtime.CompilerServices.IsBoxed)",
+                return new("class [System.Runtime]System.ValueType modopt(" + IlName(valueName) + ") modopt([System.Runtime.CompilerServices.VisualC]System.Runtime.CompilerServices.IsBoxed)",
                     CppName(valueName) + "*", "boxed", valueName) { Modifiers = modifiers };
         }
         return t with { Modifiers = modifiers };
@@ -203,6 +207,13 @@ static class Program
         }
         return "";
     }
+    public static string ReferenceFullName(MetadataReader r,TypeReferenceHandle handle) {
+        var type=r.GetTypeReference(handle);
+        if(type.ResolutionScope.Kind==HandleKind.TypeReference)
+            return ReferenceFullName(r,(TypeReferenceHandle)type.ResolutionScope)+"+"+r.GetString(type.Name);
+        var ns=r.GetString(type.Namespace);
+        return (ns.Length==0 ? "" : ns+".")+r.GetString(type.Name);
+    }
     static bool ValidateFriend(MetadataReader r, AssemblyDefinition assembly, CliAccess access)
     {
         byte[] outputKey = Convert.FromHexString(access.PublicKey);
@@ -261,14 +272,27 @@ static class Program
                 byte[] key = r.GetBlobBytes(a.PublicKey);
                 string token = key.Length == 0 ? "" : Convert.ToHexString(SHA1.HashData(key).TakeLast(8).Reverse().ToArray()).ToLowerInvariant();
                 assemblies.Add(new(assembly, a.Version.ToString(), token));
+                foreach(var handle in r.TypeDefinitions) {
+                    var definition=r.GetTypeDefinition(handle);
+                    if(!wanted.Contains(FullName(r,definition))) continue;
+                    for(var parent=definition.GetDeclaringType();!parent.IsNil;parent=r.GetTypeDefinition(parent).GetDeclaringType())
+                        wanted.Add(FullName(r,r.GetTypeDefinition(parent)));
+                }
                 foreach (var th in r.TypeDefinitions)
                 {
                     var td = r.GetTypeDefinition(th);
                     string name = FullName(r, td);
                     if (!wanted.Contains(name)) continue;
-                    if ((td.Attributes & TypeAttributes.VisibilityMask) != TypeAttributes.Public && !friend)
+                    var visibility=td.Attributes & TypeAttributes.VisibilityMask;
+                    if(name.Contains('+') && visibility!=TypeAttributes.NestedPublic && visibility!=TypeAttributes.NestedAssembly)
+                        throw new Exception("unsupported private/protected nested import: "+name);
+                    if (visibility != TypeAttributes.Public && visibility != TypeAttributes.NestedPublic && !friend)
                         throw new Exception("imported type is internal; use #using as_friend with a matching InternalsVisibleTo: " + name);
-                    if (name.Contains('+')) throw new Exception("unsupported imported nested type: " + name);
+                    if(name.Contains('+')) {
+                        if(td.GetGenericParameters().Count!=0) throw new Exception("unsupported nested generic import: "+name);
+                        for(var parent=td.GetDeclaringType();!parent.IsNil;parent=r.GetTypeDefinition(parent).GetDeclaringType())
+                            if(r.GetTypeDefinition(parent).GetGenericParameters().Count!=0) throw new Exception("unsupported nested generic import: "+name);
+                    }
                     int genericArity = td.GetGenericParameters().Count;
                     string defaultMember = "";
                     foreach (var ah in td.GetCustomAttributes()) {
@@ -405,7 +429,7 @@ static class Program
                     return t with { Cpp="__cli_handle<"+primitive+">", Il=t.Il.Replace("'"+t.Name+"'","[System.Runtime]'"+t.Name+"'") };
                 var owner = types.FirstOrDefault(c => c.Name == t.Name);
                 if(t.Kind=="boxed" && owner?.Kind=="enum") t=t with { Cpp="__cli_handle<"+SignatureTypes.CppName(t.Name)+">" };
-                return owner == null ? t : t with { Il = t.Il.Replace("'" + t.Name + "'", AssemblyReference(owner.Assembly) + "'" + t.Name + "'") };
+                return owner == null ? t : t with { Il = t.Il.Replace(SignatureTypes.IlName(t.Name), AssemblyReference(owner.Assembly) + SignatureTypes.IlName(t.Name)) };
             }
             types = types.Select(t => t with { Events=t.Events.Select(e=>e with { Type=Qualified(e.Type), Supported=e.Supported && !e.Static && Available(e.Type) &&
                 t.Methods.Any(m=>m.Name==e.Add && m.Supported && m.Parameters.All(Available)) &&
@@ -455,7 +479,7 @@ static class Program
                     var dependency=types.FirstOrDefault(p=>p.Name==field.Type.Name);
                     if (dependency!=null) Define(dependency);
                 }
-                WriteClass(header, t, false, parent != null, interfaces);
+                WriteClass(header, t, false, parent != null, interfaces, types.Where(child=>child.Name.Contains('+') && child.Name[..child.Name.LastIndexOf('+')]==t.Name).ToArray());
             }
             foreach (var t in types) Define(t);
             if (types.Any(t => t.Name == "System.Type")) header.WriteLine("template<class T> ::System::Type* __cli_typeid();");
@@ -475,11 +499,11 @@ static class Program
         }
         catch (Exception e) { Console.Error.WriteLine("cli-metadata: " + e.Message); return 1; }
     }
-    static void WriteClass(StreamWriter w, CliClass t, bool forward, bool hasBase = false, CliType[]? interfaces = null)
+    static void WriteClass(StreamWriter w, CliClass t, bool forward, bool hasBase = false, CliType[]? interfaces = null, CliClass[]? nested = null)
     {
         string[] parts = t.Name.Split('.');
         foreach (string ns in parts.SkipLast(1)) w.Write("namespace " + ns + " { ");
-        string name = parts[^1].Split('`')[0];
+        string name = parts[^1].Contains('+') ? "__cli_nested_"+Convert.ToHexString(Encoding.UTF8.GetBytes(parts[^1])) : parts[^1].Split('`')[0];
         bool primitiveFacade = parts.Length == 2 && parts[0] == "System" && PrimitiveAliases.ContainsKey(name);
         if (primitiveFacade) name = "__cli_primitive_" + name;
         if (t.GenericArity != 0) w.Write("template<" + string.Join(", ", Enumerable.Range(0, t.GenericArity).Select(i => "class __cli_T" + i)) + "> ");
@@ -507,6 +531,8 @@ static class Program
             if (interfaces != null && t.Kind != "value") bases.AddRange(interfaces.Select(i => "virtual " + i.Cpp.TrimEnd('*')));
             if (bases.Count != 0) w.Write(" : " + string.Join(", ", bases.Select(b => "public " + b)));
             w.WriteLine(" { public:");
+            foreach(var child in nested ?? Array.Empty<CliClass>())
+                w.WriteLine("using "+child.Name[(child.Name.LastIndexOf('+')+1)..]+" = "+SignatureTypes.CppName(child.Name)+";");
             if (t.Name == "System.Object") w.WriteLine("virtual ~Object() noexcept(false) = default;");
             if (t.Name == "System.String") w.WriteLine("String(const char*); String(const wchar_t*);");
             if (t.Kind == "value" && !t.Methods.Any(m => m.Name == ".ctor" && m.Parameters.Length == 0 && m.Supported))
