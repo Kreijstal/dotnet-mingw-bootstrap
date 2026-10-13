@@ -608,6 +608,32 @@ step_build_presentation_framework() {
   /usr/bin/python3 "$here/tools/wpfgraph.py" "$source" "$build" "$sdk" "$oob" "$build/keys" PresentationFramework/PresentationFramework.csproj
 }
 
+step_layout() {
+  initialize
+  local work=$build/desktop-inventory
+  mkdir -p "$work"
+  cp "$here/wpf-tests/DesktopInventory.cs" "$work/Program.cs"
+  cat > "$work/inventory.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup></Project>
+EOF
+  "$sdk/dotnet.exe" build "$(cygpath -m "$work/inventory.csproj")" -c Release --configfile "$(cygpath -m "$build/NuGet.config")" -v:q -p:UseSharedCompilation=false -p:NuGetAudit=false
+  "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/inventory.dll")" "$(cygpath -m "$work/identities.json")" \
+    "$(cygpath -m "$oob")" "$(cygpath -m "$sdk/shared/Microsoft.WindowsDesktop.App/8.0.0-bootstrap.7.0.20")" "$(cygpath -m "$build/lib")"
+  /usr/bin/python3 "$here/tools/wpf-layout.py" "$build" "$oob" "$source" "$sdk" "${WPF_LAYOUT:-$build/layout}" "$work/identities.json"
+}
+
+step_check_sdk() {
+  local root=$build/sdk-check-root
+  if [ ! -s "${WPF_LAYOUT:-$build/layout}/shared/Microsoft.WindowsDesktop.App/8.0.0-bootstrap.wpf.8.0.0/PresentationFramework.dll" ]; then step_layout; fi
+  rm -rf "${root:?}"
+  mkdir -p "$root"
+  cp -al "$sdk/." "$root/"
+  # Unlink the SDK overlay before copying to avoid modifying installed hardlinks.
+  rm -rf "$root/sdk/8.0.131/Sdks/Microsoft.NET.Sdk.WindowsDesktop"
+  cp -a "${WPF_LAYOUT:-$build/layout}/." "$root/"
+  bash "$here/wpf-tests/check-sdk.sh" "$root" "$build/sdk-check"
+}
+
 step_build_shipping_managed() {
   initialize
   local name

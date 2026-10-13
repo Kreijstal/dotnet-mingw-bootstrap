@@ -1,0 +1,5 @@
+<Window x:Class="SdkCheck.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="Source WPF SDK check" Width="240" Height="160">
+  <Grid x:Name="Surface" Background="White">
+    <Rectangle Width="80" Height="40" Fill="Red" />
+  </Grid>
+</Window>

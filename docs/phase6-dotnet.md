@@ -7174,3 +7174,55 @@ not establish full native text/paragraph layout or WindowsDesktop packaging;
 PresentationNative imported coverage remains 58/139. Framework pack/SDK layout,
 package recipe/build and remaining native behavior are still required. The WPF
 packaging goal stays active.
+
+
+## 96. Source WindowsDesktop SDK and framework-pack layout
+
+The 2026-10-13 continuation stages the source-built WPF implementations and the
+approved interim WinForms 7 components into an isolated WindowsDesktop shared
+framework, targeting pack, win-x64 runtime pack and SDK overlay. Its explicit
+version is 8.0.0-bootstrap.wpf.8.0.0. Forty managed assemblies use recorded real
+identities; available WPF C# reference outputs are used for targeting, while the
+CLI and dependency assemblies use their actual implementation metadata. Bootstrap
+cycle references never enter runtime directories. The original markup targets
+and source-built PresentationBuildTasks/CodeDom/MetadataLoadContext are included.
+Required companion WinForms SDK props/targets and its application generator are
+retained. The first prototype omitted an analyzer props companion; the corrected
+merge preserves upstream WPF files and adds the missing companion imports.
+
+Five native WPF libraries are joined by their transitive trusted MSYS2 seed
+runtime dependencies: libc++.dll, libicuuc78.dll and libicudt78.dll. PE import
+inspection discovers these; pacman package ownership is checked and recorded
+with SHA-256 hashes. Windows system libraries remain OS dependencies. The
+source-bootstrap manifest records WPF/WinForms source versions, implementation
+and reference hashes, remaining work and partial PresentationNative coverage.
+This remains a partial native port and WinForms 7 interim layout, not a claim of
+full upstream WindowsDesktop behavior or completed MSYS2 packaging.
+
+Validation on win11 with the standard WPF environment:
+
+```sh
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh layout check-sdk
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-sdk
+```
+
+The check clones the installed source SDK with hard links, unlinks its desktop
+SDK overlay before merging and leaves the installed files unchanged. A normal
+Microsoft.NET.Sdk project with net8.0-windows/UseWPF builds with an empty NuGet
+feed/cache, generates MainWindow BAML/named fields and starts an actual window.
+Shared framework resolution is checked against the explicit bootstrap directory,
+and a PNG contains the expected red rectangle pixels. Framework implementations
+are absent from the framework-dependent app output.
+
+Ordinary dotnet publish -r win-x64 --self-contained true includes the framework
+and native dependencies. The native apphost runs with DOTNET_ROOT/DOTNET_ROOT_X64
+unset and PATH restricted to /usr/bin and Windows/System32. Its loaded framework
+is verified app-local, and the same BAML/window/pixel checks pass. Both final
+build/run and publish/run checks pass with zero build warnings/errors. Syntax
+and whitespace checks pass.
+
+Evidence is archived under
+`tmp/wpf8-support/validation/desktop-layout-20261013`. The framework/SDK layout
+is concrete and tested, but an MSYS2 recipe/clean package build, remaining native
+text/paragraph/NLS behavior and full runtime coverage remain required. Imported
+PresentationNative coverage stays 58/139. The WPF packaging goal stays active.
