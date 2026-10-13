@@ -13,6 +13,47 @@ static int WINAPI create_object(void* client,void* context,FSCBKOBJ* callbacks,u
     *output=reinterpret_cast<void*>(100+id);return 0;
 }
 static int WINAPI destroy_object(void* value){if(value!=reinterpret_cast<void*>(100)&&value!=reinterpret_cast<void*>(101))return PTS_tserrInvalidParameter;++destroys;return 0;}
+static int lines_created=0,lines_destroyed=0,breaks_destroyed=0,clients_created=0,clients_destroyed=0,fail_line=-1,columns=1,available_height=80;
+static bool containers=false,lose_subtrack=false;
+static void* page_context=nullptr;
+using SubtrackFormat=int(WINAPI*)(void*,void*,int,void*,int,void*,void*,int,int,uint32_t,const FSRECT*,void*,FSKCLEAR,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA,FSFMTR*,void**,void**,int*,FSBBOX*,void**,FSKCLEAR*,int*);
+static SubtrackFormat format_subtrack=nullptr;
+static int(WINAPI* destroy_subtrack)(void*,void*)=nullptr;
+static int WINAPI container_format(void*,void*,void* input,int previous,void* name,int area,void* footnote,void* geometry,int empty,int suppress,uint32_t direction,FSRECT* rect,void* margin,FSKCLEAR clear,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA suppress_break,int,
+    FSFMTR* formatted,void** output,void** br,int* used,FSBBOX* bbox,void** margin_out,FSKCLEAR* clear_out,int* top,int* can_break) {
+    *can_break=0;
+    int status=format_subtrack(page_context,input,previous,name,area,footnote,geometry,empty,suppress,direction,rect,margin,clear,suppress_break,formatted,output,br,used,bbox,margin_out,clear_out,top);
+    if(!status&&lose_subtrack){*output=nullptr;return PTS_tserrCallbackException;}
+    return status;
+}
+static int WINAPI container_destroy(void* track){return destroy_subtrack(page_context,track);}
+static int WINAPI page_geometry(void*,void*,uint32_t* direction,int* header,int* width,int* height,FSRECT* margin) {
+    *direction=0;*header=0;*width=200;*height=140;*margin={10,20,100,available_height};return 0;
+}
+static int WINAPI section_properties(void*,void*,int* page,uint32_t* direction,int* balance,int* cols,int* segments,int* heights) {
+    *page=0;*direction=0;*balance=0;*cols=columns;*segments=*heights=0;return 0;
+}
+static int WINAPI main_segment(void*,void*,void** segment){*segment=reinterpret_cast<void*>(77);return 0;}
+static int WINAPI first_para(void*,void* segment,int* found,void** name){if(segment!=reinterpret_cast<void*>(77)&&!containers)return PTS_tserrInvalidParameter;*found=1;*name=segment==reinterpret_cast<void*>(77)?reinterpret_cast<void*>(101):reinterpret_cast<void*>(201);return 0;}
+static int WINAPI next_para(void*,void* segment,void* current,int* found,void** next){*found=segment==reinterpret_cast<void*>(77)&&current==reinterpret_cast<void*>(101);*next=*found?reinterpret_cast<void*>(102):nullptr;return 0;}
+static int WINAPI para_properties(void*,void* name,FSPAP* pap){*pap={};pap->idobj=containers&&reinterpret_cast<uintptr_t>(name)<200?0:-1;return 0;}
+static int WINAPI para_client(void*,void* name,void** output){++clients_created;*output=name;return 0;}
+static int WINAPI destroy_para_client(void*,void*){++clients_destroyed;return 0;}
+static int WINAPI text_properties(void*,void*,int,FSTXTPROPS* props){*props={};return 0;}
+static int WINAPI line_format(void*,void*,void*,int,int dcp,void* incoming,uint32_t direction,
+    int start,int width,int track_start,int track_width,int margin,int hyphen,int left,int right,int first,int last,int suppress,
+    void** line,int* consumed,void** br,int* forced,FSFLRES* result,int* ascent,int* descent,int* bbox,int* bbox_width,int* depend,int* reformat) {
+    if(direction||start||width!=100||track_start!=10||track_width!=100||margin!=10||hyphen||left||right||last||first!=(dcp==0)||bool(incoming)!=(dcp!=0))return PTS_tserrInvalidParameter;
+    ++lines_created;*line=reinterpret_cast<void*>(1000+lines_created);*br=reinterpret_cast<void*>(2000+lines_created);
+    *consumed=5;*forced=0;*result=dcp==0?fsflrOutOfSpace:fsflrEndOfParagraph;*ascent=7;*descent=3;*bbox=0;*bbox_width=75;*depend=*reformat=0;
+    if(lines_created==fail_line)return PTS_tserrCallbackException;
+    return 0;
+}
+static int WINAPI destroy_line(void*,void*){++lines_destroyed;return 0;}
+static int WINAPI destroy_break(void*,void*){++breaks_destroyed;return 0;}
+static int WINAPI destroy_margin(void*,void*){return 0;}
+static void reset_page_counts(){lines_created=lines_destroyed=breaks_destroyed=clients_created=clients_destroyed=0;}
+
 int main(int argc,char** argv) {
     try {
         require(argc==2,"usage: check DLL");auto dll=LoadLibraryA(argv[1]);require(dll!=nullptr,"native DLL load");
@@ -75,6 +116,62 @@ int main(int argc,char** argv) {
         require(CreateDocContext(&info,&context)==PTS_tserrCallbackException&&!context&&creates==2&&destroys==1,"second object creation failure rolls back the first object and clears output");
         fail_id=-1;info.version=1;require(CreateDocContext(&info,&context)==PTS_tserrInvalidParameter&&!context,"unsupported version rejects without fabricated context");
         require(DestroyInstalledObjectsInfo(installed)==0,"rollback registration disposal");
+        using PageCreate=int(WINAPI*)(void*,void*,void*,FSFMTR*,void**,void**);
+        using QueryPage=int(WINAPI*)(void*,void*,FSPAGEDETAILS*);
+        using QueryTrack=int(WINAPI*)(void*,void*,FSTRACKDETAILS*);
+        using QueryParas=int(WINAPI*)(void*,void*,int,FSPARADESCRIPTION*,int*);
+        using QueryText=int(WINAPI*)(void*,void*,FSTEXTDETAILS*);
+        using QueryLines=int(WINAPI*)(void*,void*,int,FSLINEDESCRIPTIONSINGLE*,int*);
+        using PageAction=int(WINAPI*)(void*,void*);
+        PROC(FsCreatePageFinite,PageCreate);PROC(FsDestroyPage,PageAction);PROC(FsDestroySubtrack,PageAction);
+        PROC(FsQueryPageDetails,QueryPage);PROC(FsQueryTrackDetails,QueryTrack);PROC(FsQueryTrackParaList,QueryParas);
+        PROC(FsQueryTextDetails,QueryText);PROC(FsQueryLineListSingle,QueryLines);PROC(FsClearUpdateInfoInPage,PageAction);
+        format_subtrack=reinterpret_cast<SubtrackFormat>(GetProcAddress(dll,"FsFormatSubtrackFinite"));destroy_subtrack=FsDestroySubtrack;
+        require(format_subtrack!=nullptr,"finite subtrack export");
+        methods.pfnFormatParaFinite=reinterpret_cast<void*>(container_format);methods.pfnDestroyPara=reinterpret_cast<void*>(container_destroy);
+        require(CreateInstalledObjectsInfo(&methods,&methods,&installed,&count)==0,"page installed registration");
+        info.version=0;info.pInstalledObjects=installed;
+        auto& gen=info.fscbk.cbkgen;auto& txt=info.fscbk.cbktxt;
+        gen.pfnGetPageDimensions=reinterpret_cast<void*>(page_geometry);gen.pfnGetSectionProperties=reinterpret_cast<void*>(section_properties);gen.pfnGetMainTextSegment=reinterpret_cast<void*>(main_segment);
+        gen.pfnGetFirstPara=reinterpret_cast<void*>(first_para);gen.pfnGetNextPara=reinterpret_cast<void*>(next_para);gen.pfnGetParaProperties=reinterpret_cast<void*>(para_properties);
+        gen.pfnCreateParaclient=reinterpret_cast<void*>(para_client);gen.pfnDestroyParaclient=reinterpret_cast<void*>(destroy_para_client);
+        txt.pfnGetTextProperties=reinterpret_cast<void*>(text_properties);txt.pfnFormatLine=reinterpret_cast<void*>(line_format);
+        txt.pfnDestroyLine=reinterpret_cast<void*>(destroy_line);txt.pfnDestroyLineBreakRecord=reinterpret_cast<void*>(destroy_break);
+        info.fscbk.cbkobj.pfnDestroyMcsclient=reinterpret_cast<void*>(destroy_margin);
+        require(CreateDocContext(&info,&context)==0,"page context creation");page_context=context;reset_page_counts();
+        FSFMTR formatted{};void* page_handle=nullptr;void* page_break=nullptr;
+        require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&page_handle&&!page_break&&formatted.kstop==fmtrGoalReached,"finite page creates actual callback paragraphs and lines");
+        require(lines_created==4&&clients_created==2&&!lines_destroyed&&!breaks_destroyed&&!clients_destroyed,"page retains line/client/break handles until release");
+        require(DestroyDocContext(context)==PTS_tserrInvalidPtsContext,"context cannot be destroyed with live pages");
+        FSPAGEDETAILS details{};require(FsQueryPageDetails(context,page_handle,&details)==0&&details.fSimple&&details.fskupd==fskupdNew&&details.u.simple.trackdescr.fsrc.u==10&&details.u.simple.trackdescr.fsrc.v==20,"original callback page margins and update state");
+        void* track=details.u.simple.trackdescr.pfstrack;FSTRACKDETAILS track_details{};
+        require(FsQueryTrackDetails(context,track,&track_details)==0&&track_details.cParas==2,"track actual paragraph count");
+        FSPARADESCRIPTION paras[2]{};int actual_count=0;
+        require(FsQueryTrackParaList(context,track,2,paras,&actual_count)==0&&actual_count==2&&paras[0].dvrUsed==20&&paras[1].dvrUsed==20&&paras[0].fsbbox.fsrc.u==10&&paras[1].fsbbox.fsrc.v==40,"paragraph retained geometry and identities");
+        require(FsQueryTrackParaList(context,track,1,paras,&actual_count)==PTS_tserrInvalidParameter&&!actual_count,"short paragraph array rejects without partial writes");
+        FSTEXTDETAILS text_details{};
+        require(FsQueryTextDetails(context,paras[0].pfspara,&text_details)==0&&text_details.fsktd==fsktdFull&&text_details.u.full.cLines==2&&text_details.u.full.dcpFirst==0&&text_details.u.full.dcpLim==10,"text details describe actual formatted source range");
+        FSLINEDESCRIPTIONSINGLE lines[2]{};
+        require(FsQueryLineListSingle(context,paras[0].pfspara,2,lines,&actual_count)==0&&actual_count==2&&lines[0].dcpFirst==0&&lines[0].dcpLim==5&&lines[1].dcpFirst==5&&lines[1].dcpLim==10&&lines[1].vrStart==10&&lines[1].pfsbreakreclineclient==reinterpret_cast<void*>(2001),"line metrics, ranges and continuation record");
+        require(FsQueryPageDetails(reinterpret_cast<void*>(1),page_handle,&details)==PTS_tserrInvalidQuery&&!details.fSimple,"foreign context cannot query a page");
+        require(FsDestroySubtrack(context,track)==PTS_tserrInvalidQuery,"page-owned root track cannot be destroyed as a subtrack");
+        require(FsClearUpdateInfoInPage(context,page_handle)==0&&FsQueryPageDetails(context,page_handle,&details)==0&&details.fskupd==fskupdNoChange,"page update clear is retained");
+        require(FsDestroyPage(context,page_handle)==0&&lines_destroyed==4&&breaks_destroyed==4&&clients_destroyed==2&&FsDestroyPage(context,page_handle)==PTS_tserrInvalidQuery,"page teardown releases every callback handle exactly once");
+        require(FsQueryTextDetails(context,paras[0].pfspara,&text_details)==PTS_tserrInvalidQuery&&FsQueryTrackDetails(context,track,&track_details)==PTS_tserrInvalidQuery,"page teardown invalidates child queries");
+        containers=true;reset_page_counts();
+        require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&page_handle&&clients_created==4&&lines_created==4,"container callbacks recursively format real subtracks");
+        require(FsDestroyPage(context,page_handle)==0&&clients_destroyed==4&&lines_destroyed==4&&breaks_destroyed==4,"recursive container teardown releases child tracks and callback handles");
+        reset_page_counts();lose_subtrack=true;
+        require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrCallbackException&&!page_handle&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"object callback failure after successful subtrack export rolls back a reset out handle");
+        containers=false;lose_subtrack=false;
+        reset_page_counts();fail_line=2;page_handle=reinterpret_cast<void*>(1);page_break=reinterpret_cast<void*>(1);
+        require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrCallbackException&&!page_handle&&!page_break&&lines_created==lines_destroyed&&lines_created==breaks_destroyed&&clients_created==clients_destroyed,"partial callback allocation failure rolls back line/client/break ownership");
+        fail_line=-1;available_height=10;reset_page_counts();
+        require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrNotImplemented&&!page_handle&&!page_break&&lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"page overflow rejects without pretending the remaining text was consumed and releases partial lines");
+        available_height=80;columns=2;reset_page_counts();
+        require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrNotImplemented&&!page_handle&&!page_break&&!lines_created,"unfinished multicolumn formatting rejects before fabricated output");
+        columns=1;require(DestroyDocContext(context)==0&&DestroyInstalledObjectsInfo(installed)==0,"failed page creation leaves no retained resources");
+        std::puts("native finite pages: actual callback geometry/ranges/break records, query/update state, foreign/stale handles, exact teardown, partial failure rollback and unsupported paths PASS");
         std::printf("native paragraph records: context=%zu, methods=%zu, callbacks=%zu; copied ownership, callbacks, rollback, invalid states and teardown PASS\n",sizeof(FSCONTEXTINFO),sizeof(FSIMETHODS),sizeof(FSCBK));return 0;
     }catch(const std::exception& e){std::printf("FAIL: %s\n",e.what());return 1;}
 }

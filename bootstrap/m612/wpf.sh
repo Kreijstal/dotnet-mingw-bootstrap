@@ -823,6 +823,7 @@ step_check_sdk() {
   bash "$here/wpf-tests/check-justification-sdk.sh" "$root" "$build/justification-sdk-check"
   bash "$here/wpf-tests/check-paragraph-widths-sdk.sh" "$root" "$build/paragraph-widths-sdk-check"
   bash "$here/wpf-tests/check-paragraph-context-sdk.sh" "$root" "$build/paragraph-context-sdk-check"
+  bash "$here/wpf-tests/check-flowdocument-sdk.sh" "$root" "$build/flowdocument-sdk-check"
   bash "$here/winforms-tests/check-sdk.sh" "$root" "$build/winforms-sdk-check"
 }
 

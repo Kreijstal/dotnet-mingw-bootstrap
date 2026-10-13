@@ -8167,3 +8167,51 @@ Imported native coverage is 67/139 with 72 absent. FsCreatePageFinite, page/
 paragraph formatting and query/break-record services, full bidi/optimal
 algorithms and native natural-language behavior remain unfinished. The full
 WPF goal stays active.
+
+## 118. Callback-driven finite text pages and original FlowDocument raster
+
+The 2026-10-13 continuation implements finite single-column text pages using
+original PTS geometry, section, segment, paragraph-client and line callbacks.
+Container paragraphs retain their original managed formatting callback, which
+applies margins/borders/padding and recursively calls FsFormatSubtrackFinite.
+The source engine owns real page/track/text records and the client line and
+line-break handles returned by original WPF. Query exports describe their real
+paragraph and source-character ranges, line geometry and continuation records.
+Update-clear state propagates through owned subtracks. Page teardown calls the
+original subtrack/client/line/break destructors; context destruction rejects live
+resources. Callback allocation failures unwind owned state. A callback that
+successfully exports a subtrack and then resets its out handle on failure also
+releases that unreported subtrack through a reentry transaction.
+
+The ABI generator derives callback signatures from original Pts.cs and adds
+FSSUBTRACKDETAILS. Original managed types match all 281 native field sizes/
+offsets. PresentationNative provides 80/139 imported symbols (13 added, 59
+absent). Supported pages finish on the first page. Overflow requires real page
+break records and explicitly rejects; no consumed-content or empty-page success
+is fabricated. Multiple columns, RTL page text, optimal/keep policies, tables,
+floaters/figures and bottomless layout remain unfinished.
+
+Validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-paragraph-context-native
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-paragraph-context-native inventory check-paragraph-context layout check-sdk
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-flowdocument-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/finite-page-sdk-check
+```
+
+All final commands pass. The native gate verifies actual callback page geometry,
+paragraph and character counts, line break/height data, capacity/foreign/stale
+query errors, update clearing, exact recursive teardown, failed allocations,
+reset-output subtrack rollback, page overflow and unfinished column rejection.
+Original FlowDocument.GetPage(0) now succeeds, replacing the previous missing
+FsCreatePageFinite failure. Stronger normal SDK/shared-framework and portable
+publish checks render short and wrapped two-paragraph documents, in Ideal and
+Display modes, across compacting GC. Their four raster cases contain
+1663/5971/1291/4732 dark glyph pixels and 20/75/20/60 ink rows respectively.
+Cached pages, the real end-of-document/page count and dispatcher teardown pass.
+The FlowDocument SDK check is now included in step_check_sdk. Other normal
+WPF/tab/inline-object/justification/width/context/WinForms gates also pass with
+zero consumer warnings/errors. Evidence is archived under
+ tmp/wpf8-support/validation/finite-page-20261013. Package integration follows;
+full pagination, bottomless/advanced paragraph layout and native text/language
+behavior remain required for the full WPF goal.

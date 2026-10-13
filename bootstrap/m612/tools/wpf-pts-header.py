@@ -115,8 +115,36 @@ for name in ('FSIMETHODS', 'FSCONTEXTINFO', 'FSRECT', 'FSPOINT', 'FSBBOX',
              'FSFMTR', 'FSPAP', 'FSTXTPROPS', 'FSPARADESCRIPTION',
              'FSTRACKDETAILS', 'FSTRACKDESCRIPTION', 'FSPAGEDETAILS',
              'FSSECTIONDESCRIPTION', 'FSSECTIONDETAILS', 'FSTEXTDETAILS',
-             'FSLINEDESCRIPTIONSINGLE'):
+             'FSLINEDESCRIPTIONSINGLE', 'FSSUBTRACKDETAILS'):
     emit(name)
+# Derive callback function signatures from the same source declarations.
+for name in ('GetPageDimensions', 'GetSectionProperties', 'GetMainTextSegment',
+             'GetFirstPara', 'GetNextPara', 'GetParaProperties', 'CreateParaclient',
+             'DestroyParaclient', 'GetTextProperties', 'FormatLine', 'DestroyLine',
+             'DestroyLineBreakRecord', 'DestroyMcsclient', 'ObjFormatParaFinite',
+             'ObjDestroyPara'):
+    match = re.search(r'\bdelegate\s+int\s+' + name + r'\s*\((.*?)\)\s*;', text, re.S)
+    if not match:
+        raise SystemExit('Missing source callback: ' + name)
+    parameters = []
+    for parameter in match[1].split(','):
+        parts = parameter.split()
+        indirect = parts[0] in ('ref', 'out', 'in')
+        if indirect:
+            parts = parts[1:]
+        kind = parts[0]
+        if kind in records:
+            emit(kind)
+            native = kind
+        elif kind in enums:
+            emit_enum(kind)
+            native = kind
+        elif kind in primitive:
+            native = primitive[kind]
+        else:
+            raise SystemExit('Unsupported callback parameter: ' + parameter)
+        parameters.append(native + ('*' if indirect else ''))
+    lines.append('using Pts' + name + ' = int (WINAPI*)(' + ', '.join(parameters) + ');')
 for name, value in re.findall(r'\bconst int\s+((?:tserr|fswdir)\w+|fUDirection|fVDirection|fUVertical)\s*=\s*(-?\d+)\s*;', text):
     lines.append(f'constexpr int32_t PTS_{name} = {value};')
 lines.extend(['struct WpfParagraphAbiField { const char* type; const char* field; int size; int offset; };',
