@@ -466,7 +466,38 @@
 +      if (Condition->getType()->isIntegerType())
 +        if (auto *Enum = cppcliEnum(Res.get()->getType()))
 +          Res = cppcliEnumCast(Actions, Res.get(), Enum->getIntegerType(), CaseLoc);
-@@ -531,0 +790,82 @@
+@@ -531,0 +790,113 @@
++        if(!RHS.isInvalid() && OpToken.isOneOf(tok::equalequal,tok::exclaimequal,tok::pipe,tok::caret,tok::amp)) {
++          for(auto *Operand : {&LHS,&RHS})
++            if(Operand->get()->getType()->isSpecificBuiltinType(BuiltinType::PseudoObject)) {
++              *Operand=Actions.CheckPlaceholderExpr(Operand->get());
++              if(Operand->isInvalid()) return ExprError();
++            }
++        }
++        if(!RHS.isInvalid() && OpToken.isOneOf(tok::equalequal,tok::exclaimequal)) {
++          bool LeftString=cppcliNamedHandle(LHS.get()->getType(),"System::String");
++          bool RightString=cppcliNamedHandle(RHS.get()->getType(),"System::String");
++          bool LeftLiteral=isa<StringLiteral>(LHS.get()->IgnoreParenImpCasts());
++          bool RightLiteral=isa<StringLiteral>(RHS.get()->IgnoreParenImpCasts());
++          bool LeftNull=LHS.get()->isNullPointerConstant(Actions.Context,Expr::NPC_ValueDependentIsNotNull);
++          bool RightNull=RHS.get()->isNullPointerConstant(Actions.Context,Expr::NPC_ValueDependentIsNotNull);
++          if((LeftString && (RightString || RightLiteral || RightNull)) ||
++              (RightString && (LeftString || LeftLiteral || LeftNull))) {
++            QualType Target=LeftString ? LHS.get()->getType() : RHS.get()->getType();
++            if(LeftLiteral) LHS=cppcliConvertReturn(Actions,getCurScope(),PP,LHS.get(),Target,OpToken.getLocation());
++            if(RightLiteral) RHS=cppcliConvertReturn(Actions,getCurScope(),PP,RHS.get(),Target,OpToken.getLocation());
++            if(LHS.isInvalid() || RHS.isInvalid()) return ExprError();
++            CXXScopeSpec Global; Global.MakeGlobal(Actions.Context,OpToken.getLocation());
++            UnqualifiedId Name;
++            Name.setIdentifier(&PP.getIdentifierTable().get(OpToken.is(tok::equalequal) ? "__cli_string_equal" : "__cli_string_not_equal"),OpToken.getLocation());
++            auto Helper=Actions.ActOnIdExpression(getCurScope(),Global,SourceLocation(),Name,true,false);
++            if(Helper.isInvalid()) return ExprError();
++            Expr *Arguments[]={LHS.get(),RHS.get()};
++            LHS=Actions.ActOnCallExpr(getCurScope(),Helper.get(),OpToken.getLocation(),Arguments,RHS.get()->getEndLoc());
++            if(LHS.isInvalid()) return ExprError();
++            continue;
++          }
++        }
 +        if (!RHS.isInvalid() &&
 +            OpToken.isOneOf(tok::pipeequal, tok::caretequal, tok::ampequal)) {
 +          auto *Enum = cppcliEnum(LHS.get()->getType());

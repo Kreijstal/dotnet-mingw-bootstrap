@@ -604,6 +604,19 @@ int main() { CombinedAccess^ c=gcnew CombinedAccess(); return c->OrMethod(); }' 
   reject_case combined-foreign-and '#using "combined-access.dll"
 public ref class Foreign : CombinedAccess { public: int Read() { return AndMethod(); } }; int main() { return 0; }' 'undeclared identifier' --type CombinedAccess
 }
+step_test-string-enum-properties() {
+  compile "$(cygpath -m "$src/tests/string-enum-properties.cpp")" --target library --type System.GC \
+    -o "$(cygpath -m "$testdir/string-enum-properties.dll")"
+  mkdir -p "$testdir/string-enum-properties-consumer"
+  cp "$src/tests/StringEnumPropertiesConsumer.cs" "$testdir/string-enum-properties-consumer/Program.cs"
+  cat > "$testdir/string-enum-properties-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="string-enum-properties"><HintPath>../string-enum-properties.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/string-enum-properties-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/string-enum-properties-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case string-native-buffer-comparison 'int main() { System::String^ value="text"; const char* buffer="text"; return value==buffer; }' 'comparison of distinct pointer types'
+}
 step_test-tracking-temporaries() {
   compile "$(cygpath -m "$src/tests/tracking-temporaries.cpp")" --target library --type System.GC \
     --type System.ArgumentException --type System.Delegate --type System.MulticastDelegate \

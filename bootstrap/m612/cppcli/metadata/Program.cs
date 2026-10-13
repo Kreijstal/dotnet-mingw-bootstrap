@@ -460,6 +460,11 @@ static class Program
             header.WriteLine("template<class T, class A> T __cli_safe_cast(A); template<class T, class A> T __cli_dynamic_cast(A);");
             header.WriteLine("template<class T> class __attribute__((annotate(\"cli.static.property.proxy\"))) __cli_static_property { public: operator T() const; T operator->() const; __cli_static_property& operator=(T); };");
             header.WriteLine("System::String* __cli_literal(const char*); System::String* __cli_literal(const wchar_t*);");
+            foreach(var method in types.Where(t=>t.Name=="System.String").SelectMany(t=>t.Methods).Where(m=>
+                m.Supported && m.Static && m.Access=="public" && m.Return.Il=="bool" &&
+                m.Name is "op_Equality" or "op_Inequality" && m.Parameters.Length==2 && m.Parameters.All(p=>p.Il=="string")))
+                header.WriteLine("__attribute__((annotate(\"cli.import:"+Escape(method.Id)+"\"))) bool "+
+                    (method.Name=="op_Equality" ? "__cli_string_equal" : "__cli_string_not_equal")+"(System::String*,System::String*);");
             foreach(string sourceType in sourceTypes.Order()) {
                 var parts=sourceType.Split('.');
                 foreach(string ns in parts.SkipLast(1)) header.Write("namespace "+ns+" { ");

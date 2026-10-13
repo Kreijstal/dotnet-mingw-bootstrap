@@ -5762,3 +5762,51 @@ project inputs/66 tree C++ files remain in the combined diagnostic scope. No
 complete System.Printing DLL or WPF package is produced; native text coverage
 remains 58/139 and full text/paragraph/printing/WindowsDesktop SDK and framework
 packaging remain required. The full goal stays active.
+
+
+## 66. String operator binding and property-produced enum operations
+
+The 2026-10-13 continuation exposes the source-metadata String op_Equality and
+op_Inequality slots as annotated helpers. The private parser resolves actual
+String handle operands, supported literals and nulls and binds those methods
+for equality/inequality. It does not compare CLR String object addresses for
+content equality. Native buffer operands retain ordinary C++ diagnostics and
+are not implicitly turned into managed strings. Other reference operators,
+String concatenation and Object/native-buffer conversion policies remain open.
+Microsoft's primary C++/CLI String documentation provides the comparison and
+managed literal examples used for this operation:
+https://learn.microsoft.com/en-us/cpp/extensions/string-cpp-component-extensions?view=msvc-170
+
+Before read-only equality and enum bitwise operations, Sema now completes
+MSProperty placeholder expressions to their actual getter result types.
+This fixes original GlyphTypeface.StyleSimulations bitwise tests while keeping
+compound-assignment property locations on their existing getter/setter path.
+The runtime fixture checks non-interned equal strings, unequal values,
+narrow/Unicode literals, reversed operands, null comparisons, a property getter
+with GC, high-bit unsigned enum flags and exactly one getter per operand.
+It prepares eligible CLR method bodies and repeats comparison after forced
+compacting GC. Native-buffer/String comparison remains a targeted rejection.
+
+Validation on win11 with the usual compiler and WPF build environment:
+
+```sh
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-string-enum-properties test-enums
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh build-directwrite check-directwrite-assembly printing-gate
+```
+
+The frontend rebuild, new runtime/rejection checks and original source/imported
+enum checks pass. The full WPF command passes DirectWrite load, 85 types,
+283 prepared bodies and 81 font families, then fails at printing. It gets past
+the original gditextrt.cpp String/literal and property enum errors. The first
+remaining failure is gditextrt.cpp:798 interior_ptr<ENUMLOGFONTEXDV> conversion
+for native memcpy, followed by native CreateFontIndirectEx pointer conversion
+and interface/FixedDocument/FixedPage-to-Object argument conversion. Printing
+assembly emission, native linking and runtime remain unproven.
+
+Logs, manifests, compiler work files and runtime artifacts are archived locally
+under `tmp/wpf8-support/validation/printing-string-enum-20261013`. Bash/JSON syntax
+and git whitespace checks pass. Scope remains 49 original project inputs/66 tree
+C++ files as one diagnostic gate, without a per-file pass count or complete
+System.Printing DLL. Native text coverage remains 58/139; full text/paragraph/
+printing behavior and WindowsDesktop SDK/reference/runtime packaging still
+require work. No complete WPF package is produced; the full goal stays active.
