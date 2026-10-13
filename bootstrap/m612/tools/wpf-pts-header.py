@@ -116,7 +116,7 @@ for name in ('FSIMETHODS', 'FSCONTEXTINFO', 'FSRECT', 'FSPOINT', 'FSBBOX',
              'FSTRACKDETAILS', 'FSTRACKDESCRIPTION', 'FSPAGEDETAILS',
              'FSSECTIONDESCRIPTION', 'FSSECTIONDETAILS', 'FSTEXTDETAILS',
              'FSLINEDESCRIPTIONSINGLE', 'FSSUBTRACKDETAILS', 'FSCOLUMNINFO',
-             'FSFLOATERINIT', 'FSFLOATERPROPS', 'FSFLOATERDETAILS', 'FSSUBPAGEDETAILS'):
+             'FSFLOATERINIT', 'FSFLOATERPROPS', 'FSFLOATERDETAILS', 'FSSUBPAGEDETAILS', 'FSATTACHEDOBJECTDESCRIPTION'):
     emit(name)
 # Derive callback function signatures from the same source declarations.
 for name in ('GetPageDimensions', 'GetSectionProperties', 'GetMainTextSegment',
@@ -126,7 +126,9 @@ for name in ('GetPageDimensions', 'GetSectionProperties', 'GetMainTextSegment',
              'ObjDestroyPara', 'ObjFormatParaBottomless', 'ObjDestroyBreakRecord', 'GetSectionColumnInfo', 'DuplicateMcsclient',
              'GetObjectHandlerInfo', 'ConvertMcsclient', 'GetFloaterProperties',
              'FormatFloaterContentFinite', 'FormatFloaterContentBottomless',
-             'DestroyFloaterContent', 'DestroyFloaterContentBreakRecord', 'GetMCSClientAfterFloater'):
+             'DestroyFloaterContent', 'DestroyFloaterContentBreakRecord', 'GetMCSClientAfterFloater',
+             'GetNumberAttachedObjectsBeforeTextLine', 'GetAttachedObjectsBeforeTextLine',
+             'GetNumberAttachedObjectsInTextLine'):
     match = re.search(r'\bdelegate\s+int\s+' + name + r'\s*\((.*?)\)\s*;', text, re.S)
     if not match:
         raise SystemExit('Missing source callback: ' + name)

@@ -9356,3 +9356,65 @@ Comparison/display transfer, balancing/span areas/footnotes, public floating
 obstacles/figures/tables, optimal/advanced/partial incremental/interruptible
 algorithms, full bidi/native language and broader runtime behavior remain
 incomplete. The full WPF goal stays active.
+
+
+## 142. Public rectangular floaters and original attached-object callbacks
+
+The 2026-10-14 continuation adds real paragraph attachment records and
+FsQueryAttachedObjectList. Original before-line attachment callbacks discover
+a floater, original CreateParaclient/handler/format callbacks produce its content,
+and the existing source subpage engine formats its original text. The parent
+retains its original floater client/content handle and query/update data. Scoped
+callback ownership covers exported subpages and records, including unreported
+outputs after managed failures. The text paragraph owns attachment lifetime;
+its teardown releases content before destroying the original floater client.
+
+Left/right rectangular obstacles constrain original line start/width until their
+bottom edge, after which text resumes at the full track width. An area with no
+allowed side advances below the obstacle. Floater alignment, real ink bounds,
+source ranges and attachment query descriptors remain distinct from the
+nonfloating BlockUIContainer path. Rejected speculative line ranges release
+attachments whose anchors were not accepted. Paragraph ink/used height retains
+actual floating content. Clear-update and vertical synchronization include
+attachment bounds/state while keeping subpage-local content coordinates intact.
+
+This initial public path supports one intact rectangular floater discovered by
+original before-line callbacks. In-line new anchors, multiple floaters, split
+floater content/continuation, complex center wrapping, figures and clear policies
+remain explicitly unsupported. This is required progress toward full floaters;
+it does not establish complete floating-object layout or cross-paragraph flow.
+
+Validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-paragraph-context-native check-paragraph-context
+MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-floaters-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/floaters-sdk-check'
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-paragraph-context-native check-paragraph-context inventory layout check-sdk
+```
+
+Native gates validate actual left/right attachment callbacks, retained original
+name/client/content, line widths beside the rectangle, capacity/stale queries,
+recursive update clearing, populated content callback failure and exact resource
+cleanup. FSATTACHEDOBJECTDESCRIPTION is generated from original Pts.cs; ABI
+validation rises from 326 to 335 original field sizes/offsets.
+
+Original public WPF Floater documents in Ideal/Display render a red floating
+background with blue original text and black host glyphs beside it, with zero
+black-ink overlap. Left bounds are x=10..129; right bounds x=270..389. Ideal
+renders 505 blue pixels and 1760 host pixels beside the floater; Display renders
+406 blue pixels and 1433 host pixels beside it. Host text completes three pages,
+all 821 source characters belong to exactly one page and original GetPageNumber
+matches the ranges. The intact floater does not repeat on later text pages;
+disposed first pages regenerate real floating content across GC. Original
+FlowDocumentScrollViewer edits change both floating content and host raster,
+with full extent 834->881.8 Ideal / 870->920 Display and working end scrolling.
+Shared-framework and self-contained publishes with SDK roots/toolchain PATH
+removed pass dispatcher cleanup. The SDK gate now includes check-floaters-sdk.sh.
+
+Final source evidence is archived under
+ tmp/wpf8-support/validation/floaters-20261014. Imported native coverage rises to
+103/139 with 36 absent. The remaining floater paths above, comparison/display
+transfer, balancing/span areas/footnotes, figures/tables, optimal/advanced/partial
+incremental/interruptible algorithms, full bidi/native language and broader
+runtime behavior remain required for the full WPF goal. Package integration
+follows.
