@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <new>
 #include <limits>
+#include <unicode/ubrk.h>
 #include "LineServicesNative.h"
 
 namespace {
@@ -41,10 +42,13 @@ struct Line {
     std::vector<Run> runs;
     LsLInfo info{};
     LsLineWidths widths{};
+    int first=0,paragraph_first=0;
 };
+struct BreakRecord { int next,paragraph_first; std::shared_ptr<Context> context; };
 std::mutex gate;
 std::unordered_map<void*,std::shared_ptr<Context>> contexts;
 std::unordered_map<void*,std::shared_ptr<Line>> lines;
+std::unordered_map<void*,std::shared_ptr<BreakRecord>> records;
 
 using FetchPap=int (WINAPI *)(void*,int,LsPap*);
 using FetchProps=int (WINAPI *)(void*,int,int,LsLineProps*);
@@ -57,9 +61,127 @@ using DrawTextCallback=int (WINAPI *)(void*,uint32_t,LSPOINT*,WCHAR*,int*,int,in
 using DrawGlyphs=int (WINAPI *)(void*,uint32_t,WCHAR*,uint16_t*,uint16_t*,int,uint16_t*,int*,int*,GlyphOffset*,uint32_t*,uint8_t*,int,int,uint32_t,LSPOINT*,LsHeights*,int,LSRECT*);
 using EnumText=int (WINAPI *)(void*,uint32_t,int,int,WCHAR*,int,int,int,int,LSPOINT*,LsHeights*,int,int,int*,uint16_t*,uint16_t*,uint16_t*,int*,GlyphOffset*,uint32_t*,int);
 
+int measure_run(Context& context,Run& run) {
+    int count=static_cast<int>(run.text.size()),flow=run.flow,status=0;
+    run.width=0; run.widths.assign(count,0);
+    if(!run.hidden) {
+        status=reinterpret_cast<Metrics>(context.info.pfnGetRunTextMetrics)(context.info.pols,
+            static_cast<uint32_t>(run.id),0,flow,&run.metrics);
+        if(status) return status;
+        if(run.properties.flags&0x400) {
+            if(!context.callbacks.pfnGetGlyphsRedefined || !context.info.pfnGetGlyphPositions) return LS_NotImplemented;
+            run.shaped=true; run.clusters.resize(count); run.characters.resize(count);
+            std::vector<int> alone(count);
+            int capacity=count+count/2+16,actual=0; bool generated=false;
+            for(int retry=0;retry<3;++retry) {
+                run.glyphs.resize(capacity); run.glyph_properties.resize(capacity);
+                int used_glyphs=0;
+                status=reinterpret_cast<Glyphs>(context.callbacks.pfnGetGlyphsRedefined)(context.info.pols,
+                    &run.id,&count,1,run.text.data(),count,flow,run.glyphs.data(),run.glyph_properties.data(),capacity,
+                    &used_glyphs,run.clusters.data(),run.characters.data(),alone.data(),&actual);
+                if(status) return status;
+                if(used_glyphs) { generated=true; break; }
+                if(actual<=capacity || actual>65535) return LS_InvalidCharToGlyphMapping;
+                capacity=actual;
+            }
+            if(!generated || actual<=0 || actual>capacity) return LS_InvalidCharToGlyphMapping;
+            run.glyphs.resize(actual); run.glyph_properties.resize(actual);
+            run.advances.resize(actual); run.offsets.resize(actual);
+            run.expansion.resize(actual);
+            status=reinterpret_cast<Positions>(context.info.pfnGetGlyphPositions)(context.info.pols,&run.id,&count,1,0,
+                run.text.data(),run.clusters.data(),run.characters.data(),count,run.glyphs.data(),run.glyph_properties.data(),actual,
+                flow,run.advances.data(),run.offsets.data());
+            if(status) return status;
+            int64_t advance=0;
+            for(int value:run.advances) advance+=value;
+            if(advance<0 || advance>INT_MAX) return LS_InvalidFormatterResult;
+            run.width=static_cast<int>(advance);
+        } else {
+            int measured=0,fitted=0;
+            status=reinterpret_cast<Widths>(context.info.pfnGetRunCharWidths)(context.info.pols,
+                static_cast<uint32_t>(run.id),0,run.text.data(),count,INT_MAX,flow,run.widths.data(),&measured,&fitted);
+            if(status) return status;
+            if(fitted!=count || measured<0) return LS_InvalidFormatterResult;
+            run.width=measured;
+        }
+    }
+    return LS_None;
+}
+
 std::shared_ptr<Line> get_line(void* handle) {
     std::lock_guard<std::mutex> lock(gate);
     auto found=lines.find(handle); return found==lines.end()?nullptr:found->second;
+}
+
+int trailing_width(const Run& run,bool& all_spaces) {
+    size_t end=run.text.size();
+    while(end && (run.text[end-1]==L' ' || run.text[end-1]==0xA0)) --end;
+    all_spaces=end==0;
+    if(run.hidden) return 0;
+    if(!run.shaped) {
+        int width=0;
+        for(size_t i=end;i<run.widths.size();++i) width+=run.widths[i];
+        return width;
+    }
+    if(end==run.text.size()) return 0;
+    // Only whole trailing clusters may be removed from the visible width.
+    if(end && run.clusters[end]==run.clusters[end-1]) return 0;
+    unsigned first=run.clusters[end];
+    if(first>run.advances.size()) return 0;
+    int width=0;
+    for(size_t glyph=first;glyph<run.advances.size();++glyph) width+=run.advances[glyph];
+    return width;
+}
+
+// Prefix widths are meaningful only at complete glyph-cluster boundaries.
+int choose_wrap(const std::vector<Run>& runs,int allowance,bool emergency) {
+    std::vector<UChar> text;
+    std::vector<int64_t> width{0};
+    std::vector<bool> boundary{true};
+    for(const auto& run:runs) {
+        int64_t before=width.back();
+        text.insert(text.end(),run.text.begin(),run.text.end());
+        if(!run.shaped || run.hidden) {
+            for(size_t i=0;i<run.text.size();++i) {
+                before+=run.hidden?0:run.widths[i]; width.push_back(before); boundary.push_back(true);
+            }
+        } else {
+            for(size_t i=0;i<run.text.size();++i) { width.push_back(before); boundary.push_back(false); }
+            size_t base=width.size()-run.text.size()-1;
+            for(size_t i=0;i<run.text.size();) {
+                size_t end=i+1;
+                while(end<run.text.size() && run.clusters[end]==run.clusters[i]) ++end;
+                unsigned first=run.clusters[i],last=end<run.text.size()?run.clusters[end]:run.advances.size();
+                if(first>last || last>run.advances.size()) return -1;
+                for(unsigned glyph=first;glyph<last;++glyph) before+=run.advances[glyph];
+                width[base+end]=before; boundary[base+end]=true; i=end;
+            }
+        }
+    }
+    UErrorCode error=U_ZERO_ERROR;
+    auto* iterator=ubrk_open(UBRK_LINE,"root",text.data(),static_cast<int>(text.size()),&error);
+    if(U_FAILURE(error) || !iterator) return -1;
+    int chosen=0,first_break=0;
+    for(int point=ubrk_first(iterator);(point=ubrk_next(iterator))!=UBRK_DONE;) {
+        if(!boundary[point]) continue;
+        if(!first_break) first_break=point;
+        int visible=point;
+        while(visible>0 && text[visible-1]==L' ') --visible;
+        while(visible>0 && !boundary[visible]) --visible;
+        if(width[visible]<=allowance) chosen=point;
+    }
+    ubrk_close(iterator);
+    if(chosen || !emergency) return chosen?chosen:first_break;
+    error=U_ZERO_ERROR;
+    iterator=ubrk_open(UBRK_CHARACTER,"root",text.data(),static_cast<int>(text.size()),&error);
+    if(U_FAILURE(error) || !iterator) return -1;
+    first_break=0;
+    for(int point=ubrk_first(iterator);(point=ubrk_next(iterator))!=UBRK_DONE;) {
+        if(!boundary[point]) continue;
+        if(!first_break) first_break=point;
+        if(width[point]<=allowance) chosen=point;
+    }
+    ubrk_close(iterator); return chosen?chosen:first_break;
 }
 
 // The source formatter's control vocabulary uses stable, single Unicode
@@ -156,15 +278,20 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
         std::shared_ptr<Context> context;
         ~Active() { std::lock_guard<std::mutex> lock(gate); context->in_use=false; }
     } active{context};
-    // Break records, optimal breaking and inline objects require their own
-    // implementations. Do not return a nominal line that ignores those inputs.
-    if(previous_break || (flags&8)) return LS_NotImplemented;
+    if(flags&8) return LS_NotImplemented;
     try {
-        auto result=std::make_shared<Line>(); result->context=context;
+        auto result=std::make_shared<Line>(); result->context=context; result->first=cp; result->paragraph_first=cp;
+        if(previous_break) {
+            std::lock_guard<std::mutex> lock(gate);
+            auto found=records.find(previous_break);
+            if(found==records.end() || found->second->next!=cp || found->second->context!=context) return LS_InvalidBreakRecord;
+            result->paragraph_first=found->second->paragraph_first;
+        }
         LsPap paragraph{}; LsLineProps properties{};
         int status=reinterpret_cast<FetchPap>(context->info.pfnFetchPap)(context->info.pols,cp,&paragraph);
         if(status) return status;
-        status=reinterpret_cast<FetchProps>(context->callbacks.pfnFetchLineProps)(context->info.pols,cp,1,&properties);
+        if(!previous_break) result->paragraph_first=paragraph.cpFirst;
+        status=reinterpret_cast<FetchProps>(context->callbacks.pfnFetchLineProps)(context->info.pols,cp,cp==result->paragraph_first,&properties);
         if(status) return status;
         if(paragraph.fJustify || (paragraph.grpf&0x1000)) return LS_NotImplemented;
         result->widths.upStartMainText=properties.durLeft;
@@ -198,68 +325,69 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
             if(limit>0 && position-cp+count>limit) count=limit-(position-cp);
             if(count<=0) { ended=true; break; }
             run.text.resize(count); run.widths.resize(count);
-            if(!run.hidden) {
-                status=reinterpret_cast<Metrics>(context->info.pfnGetRunTextMetrics)(context->info.pols,
-                    static_cast<uint32_t>(run.id),0,flow,&run.metrics);
-                if(status) return status;
-                if(run.properties.flags&0x400) {
-                    if(!context->callbacks.pfnGetGlyphsRedefined || !context->info.pfnGetGlyphPositions) return LS_NotImplemented;
-                    run.shaped=true; run.clusters.resize(count); run.characters.resize(count);
-                    std::vector<int> alone(count);
-                    int capacity=count+count/2+16,actual=0; bool generated=false;
-                    for(int retry=0;retry<3;++retry) {
-                        run.glyphs.resize(capacity); run.glyph_properties.resize(capacity);
-                        int used_glyphs=0;
-                        status=reinterpret_cast<Glyphs>(context->callbacks.pfnGetGlyphsRedefined)(context->info.pols,
-                            &run.id,&count,1,run.text.data(),count,flow,run.glyphs.data(),run.glyph_properties.data(),capacity,
-                            &used_glyphs,run.clusters.data(),run.characters.data(),alone.data(),&actual);
-                        if(status) return status;
-                        if(used_glyphs) { generated=true; break; }
-                        if(actual<=capacity || actual>65535) return LS_InvalidCharToGlyphMapping;
-                        capacity=actual;
-                    }
-                    if(!generated || actual<=0 || actual>capacity) return LS_InvalidCharToGlyphMapping;
-                    run.glyphs.resize(actual); run.glyph_properties.resize(actual);
-                    run.advances.resize(actual); run.offsets.resize(actual);
-                    run.expansion.resize(actual);
-                    status=reinterpret_cast<Positions>(context->info.pfnGetGlyphPositions)(context->info.pols,&run.id,&count,1,0,
-                        run.text.data(),run.clusters.data(),run.characters.data(),count,run.glyphs.data(),run.glyph_properties.data(),actual,
-                        flow,run.advances.data(),run.offsets.data());
-                    if(status) return status;
-                    int64_t advance=0;
-                    for(int value:run.advances) advance+=value;
-                    if(advance<0 || advance>INT_MAX) return LS_InvalidFormatterResult;
-                    run.width=static_cast<int>(advance);
-                } else {
-                    int measured=0,fitted=0;
-                    status=reinterpret_cast<Widths>(context->info.pfnGetRunCharWidths)(context->info.pols,
-                        static_cast<uint32_t>(run.id),0,run.text.data(),count,INT_MAX,flow,run.widths.data(),&measured,&fitted);
-                    if(status) return status;
-                    if(fitted!=count || measured<0) return LS_InvalidFormatterResult;
-                    run.width=measured;
-                }
-                result->info.dvpAscent=std::max(result->info.dvpAscent,run.metrics.dvAscent);
-                result->info.dvpDescent=std::max(result->info.dvpDescent,run.metrics.dvDescent);
-                result->info.dvpMultiLineHeight=std::max(result->info.dvpMultiLineHeight,run.metrics.dvMultiLineHeight);
-            }
+            status=measure_run(*context,run);
+            if(status) return status;
+            result->info.dvpAscent=std::max(result->info.dvpAscent,run.metrics.dvAscent);
+            result->info.dvpDescent=std::max(result->info.dvpDescent,run.metrics.dvDescent);
+            result->info.dvpMultiLineHeight=std::max(result->info.dvpMultiLineHeight,run.metrics.dvMultiLineHeight);
             if(static_cast<int64_t>(total)+run.width>INT_MAX || static_cast<int64_t>(position)+count>INT_MAX) return LS_InvalidFormatterResult;
             total+=run.width; position+=count;
-            if((paragraph.grpf&0x40) && total>column-properties.durRightBreak) return LS_NotImplemented;
             // Track trailing nominal spaces; shaped runs keep their full width
             // until cluster-aware whitespace trimming is implemented.
             trailing=total;
             if(!run.shaped) for(int i=count-1;i>=0 && (run.text[i]==L' '||run.text[i]==0xA0);--i) trailing-=run.widths[i];
             result->info.EffectsFlags|=run.properties.effectsFlags;
             result->runs.push_back(std::move(run));
+
             if(limit>0 && position-cp>=limit) ended=true;
         }
         if(!ended) return LS_TooLongParagraph;
+        // Fetch through the separator before finding Unicode breaks: a client
+        // run boundary can be in the middle of a word or grapheme.
+        if((paragraph.grpf&0x40) && total>column-properties.durRightBreak && limit==0) {
+            int cut=choose_wrap(result->runs,column-properties.durRightBreak-properties.durLeft,
+                (paragraph.grpf&0x80000)==0 || (flags&4));
+            if(cut<=0) return LS_InvalidFormatterResult;
+            int text_end=cp;
+            for(const auto& item:result->runs) text_end+=static_cast<int>(item.text.size());
+            bool truncated=cp+cut<text_end;
+            int remaining=cut;
+            size_t keep=0;
+            for(auto& item:result->runs) {
+                int length=static_cast<int>(item.text.size());
+                if(remaining<=0) break;
+                if(remaining<length) {
+                    item.text.resize(remaining);
+                    status=measure_run(*context,item); if(status) return status;
+                    length=remaining;
+                }
+                remaining-=length; ++keep;
+            }
+            result->runs.resize(keep);
+            if(truncated) { result->info.endr=0; position=cp+cut; }
+            total=properties.durLeft; trailing=total;
+            result->info.dvpAscent=result->info.dvpDescent=result->info.dvpMultiLineHeight=0;
+            result->info.EffectsFlags=0;
+            for(const auto& item:result->runs) {
+                total+=item.width;
+                result->info.EffectsFlags|=item.properties.effectsFlags;
+                result->info.dvpAscent=std::max(result->info.dvpAscent,item.metrics.dvAscent);
+                result->info.dvpDescent=std::max(result->info.dvpDescent,item.metrics.dvDescent);
+                result->info.dvpMultiLineHeight=std::max(result->info.dvpMultiLineHeight,item.metrics.dvMultiLineHeight);
+            }
+        }
+        trailing=total;
+        for(auto item=result->runs.rbegin();item!=result->runs.rend();++item) {
+            bool all_spaces=false;
+            trailing-=trailing_width(*item,all_spaces);
+            if(!all_spaces) break;
+        }
         result->info.dvrAscent=result->info.dvpAscent;
         result->info.dvrDescent=result->info.dvpDescent;
         result->info.dvrMultiLineHeight=result->info.dvpMultiLineHeight;
         if(result->runs.empty()) result->info.dvrMultiLineHeight=INT_MAX;
         result->info.cpLimToContinue=result->info.cpLimToStay=position;
-        result->info.cpFirstVis=cp; result->info.fFirstLineInPara=1;
+        result->info.cpFirstVis=cp; result->info.fFirstLineInPara=cp==result->paragraph_first;
         result->widths.upLimLine=total; result->widths.upStartTrailing=trailing;
         result->widths.upMinLimLine=total; result->widths.upMinStartTrailing=trailing;
         void* line_handle=result.get();
@@ -273,6 +401,31 @@ extern "C" __declspec(dllexport) int WINAPI LoDisposeLine(void* handle,BOOL) {
     std::lock_guard<std::mutex> lock(gate);
     auto found=lines.find(handle); if(found==lines.end()) return LS_InvalidLine;
     lines.erase(found); return LS_None;
+}
+
+extern "C" __declspec(dllexport) int WINAPI LoAcquireBreakRecord(void* handle,void** output) {
+    if(!output) return LS_NullOutputParameter; *output=nullptr;
+    auto line=get_line(handle); if(!line) return LS_InvalidLine;
+    try {
+        auto record=std::make_shared<BreakRecord>(BreakRecord{line->info.cpLimToContinue,line->info.endr==2?line->info.cpLimToContinue:line->paragraph_first,line->context});
+        void* key=record.get();
+        { std::lock_guard<std::mutex> lock(gate); records.emplace(key,record); }
+        *output=key; return LS_None;
+    } catch(const std::bad_alloc&) { return LS_OutOfMemory; }
+}
+extern "C" __declspec(dllexport) int WINAPI LoCloneBreakRecord(void* handle,void** output) {
+    if(!output) return LS_NullOutputParameter; *output=nullptr;
+    try {
+        std::lock_guard<std::mutex> lock(gate);
+        auto found=records.find(handle); if(found==records.end()) return LS_InvalidBreakRecord;
+        auto record=std::make_shared<BreakRecord>(*found->second);
+        void* key=record.get(); records.emplace(key,record); *output=key; return LS_None;
+    } catch(const std::bad_alloc&) { return LS_OutOfMemory; }
+}
+extern "C" __declspec(dllexport) int WINAPI LoDisposeBreakRecord(void* handle,BOOL) {
+    std::lock_guard<std::mutex> lock(gate);
+    auto found=records.find(handle); if(found==records.end()) return LS_InvalidBreakRecord;
+    records.erase(found); return LS_None;
 }
 
 extern "C" __declspec(dllexport) int WINAPI LoDisplayLine(void* handle,LSPOINT* origin,uint32_t mode,LSRECT* clip) {

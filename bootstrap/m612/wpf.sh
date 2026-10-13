@@ -118,7 +118,7 @@ step_native_win32() {
     "$source/src/Microsoft.DotNet.Wpf/src/PresentationCore/MS/internal/TextFormatting/LineServices.cs" "$work/LineServicesNative.h"
   /clang64/bin/clang++.exe -O2 -shared "$here/wpf-native/PresentationNativeWin32.cpp" \
     "$here/wpf-native/Classification.cpp" "$here/wpf-native/TextAnalysis.cpp" "$here/wpf-native/LineServicesContext.cpp" -I "$work" \
-    -o "$build/lib/PresentationNative_cor3.dll" -luser32 -lgdi32 -licuuc
+    -o "$build/lib/PresentationNative_cor3.dll" -luser32 -lgdi32 -licuuc -licuin
 }
 
 step_inventory() {
@@ -547,6 +547,17 @@ step_check_window_indic() {
   /c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe -NoProfile -NonInteractive \
     -File "$(cygpath -m "$here/wpf-tests/RunInteractive.ps1")" \
     -Work "$(cygpath -m "$work/bin/Release/net8.0")" -Dotnet "$(cygpath -m "$sdk/dotnet.exe")" -ToolchainBin "$(cygpath -m /clang64/bin)" -Text -Indic
+}
+step_check_window_wrap() {
+  local work=$build/window-check
+  for variant in Latin Indic; do
+    local extra=()
+    [ "$variant" != Indic ] || extra=(-Indic)
+    /c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe -NoProfile -NonInteractive \
+      -File "$(cygpath -m "$here/wpf-tests/RunInteractive.ps1")" \
+      -Work "$(cygpath -m "$work/bin/Release/net8.0")" -Dotnet "$(cygpath -m "$sdk/dotnet.exe")" \
+      -ToolchainBin "$(cygpath -m /clang64/bin)" -Text -Wrap "${extra[@]}"
+  done
 }
 step_check_presentation_framework() {
   initialize

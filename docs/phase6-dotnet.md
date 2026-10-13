@@ -4451,3 +4451,56 @@ WindowsDesktop packaging are unfinished. Logs, generated ABI header, native
 DLL, public consumer and Latin/Indic PNGs are archived under
 `tmp/wpf8-support/validation/lineservices-line-20261013` locally. The goal remains
 active.
+
+## 46. Unicode wrapping and owned native continuation records
+
+The next 2026-10-13 continuation implements source wrapping using ICU Unicode
+line opportunities and emergency grapheme boundaries, filtered by the original
+shaping cluster map and callback-derived advances. Overflow wrapping keeps an
+oversized word; emergency wrapping guarantees a complete grapheme even at a
+one-DIP column. Client run boundaries do not create artificial word breaks:
+the remaining paragraph is fetched before choosing a break. A truncated shaped
+run is reshaped through original callbacks. Trailing spaces are tracked across
+runs and excluded from visible column fitting. Reading the paragraph suffix for
+each line repeats work on long paragraphs; streaming remains an optimization.
+
+LoAcquireBreakRecord, LoCloneBreakRecord and LoDisposeBreakRecord own real next
+position, paragraph start and context identity. Clones survive line/original
+record disposal. Invalid handles, double release, wrong continuation positions
+and foreign contexts fail with empty outputs. Native tests cover those paths
+and exact widths, run-split words, combining graphemes, overflow/emergency
+policies and trailing-space paragraph termination. Public WPF single-line
+GetTextLineBreak normally requests no native record, so these ownership claims
+come from direct native calls, not an assumed managed invocation.
+
+Public TextFormatter formats successive Latin and Indic lines with exact total
+UTF16/paragraph-end coverage, nonempty content glyph runs and cluster progress.
+Very narrow Indic columns retain the whole shaping cluster. Real visible themed
+Buttons now contain wrapped TextBlocks: Latin has 106.400-DIP content height;
+Indic has 53.200 DIP. Both have multiple dark glyph bands and their PNGs were
+inspected locally. The shape window regression and native/managed context
+checks pass. The ICU import library is named icuin in MSYS2 CLANG64; using the
+Unix icui18n name had failed linking and is corrected.
+
+Validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh \
+  native-win32 check-lineservices-line-native check-text-line
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh \
+  check-window check-window-wrap inventory
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-lineservices-context
+```
+
+All listed commands pass; C# consumers report zero warnings/errors. Native
+import coverage is **56/139**, with **83 missing**. Full RTL/bidi and paragraph
+layout, optimal/min-max formatting, hit testing, inline objects, tabs,
+justification/decorations, System.Printing implementation and WindowsDesktop
+packaging remain unfinished. Evidence is archived locally under
+`tmp/wpf8-support/validation/lineservices-wrap-20261013`. The goal remains active.

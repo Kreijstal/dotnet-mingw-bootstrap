@@ -34,16 +34,31 @@ configuration, forced GC and original repeated managed teardown pass. The text
 window now renders Latin and shaped Indic text with glyph-pixel checks, and
 public TextFormatter returns retained indexed glyph runs after forced GC.
 
-Line creation currently supports unwrapped nominal/shaped runs and paragraph/
-line separators. It tracks nominal trailing spaces and returns measured ascent,
+Line creation supports nominal/shaped runs, paragraph/line separators and
+Unicode wrapping. It tracks trailing spaces across runs and returns measured ascent,
 descent, height, widths and text positions. It propagates callback failures and
 keeps outputs empty on failure; context reentry while constructing a line is
 rejected. Callbacks run outside the registry lock. Shaping arrays follow the
 actual eight-byte GlyphOffset and original delegate ABI.
 
-Wrapping overflow, optimal/min-max formatting, previous break records, inline
-objects, bidi reversal objects, tabs, justification and decorations remain
-unsupported and return explicit errors instead of a fabricated success. Shaped
-trailing-space trimming, geometric hit testing, complete bidi/wrapping/break
-records and paragraph layout require further work. This does not establish full
-Line Services compatibility or complete WPF packaging.
+ICU line opportunities are checked against measured prefix widths and complete
+shaping clusters. Emergency wrapping uses grapheme boundaries, including those
+that span client runs; overflow wrapping retains an oversized whole word.
+Trailing ordinary spaces do not consume the visible column allowance. A cut
+shaped run is reshaped by the original callbacks before retention. The engine
+currently fetches the remaining paragraph through its separator before choosing
+a break so a client run boundary never becomes an artificial word boundary.
+This can repeat work on long paragraphs and needs a streaming optimization.
+
+LoAcquireBreakRecord, LoCloneBreakRecord and LoDisposeBreakRecord own native
+continuation state with the exact next position, paragraph start and context.
+Clones survive disposal of the line and original record; wrong positions and
+foreign contexts fail. WPF's ordinary single-line public GetTextLineBreak path
+passes a null native line pointer, so the native test separately exercises these
+exports rather than relying on public formatting to prove record ownership.
+
+Optimal/min-max formatting, inline objects, bidi reversal objects, tabs,
+justification and decorations remain unsupported and return explicit errors.
+Geometric hit testing, RTL/nonmonotonic shaping clusters, full bidi and paragraph
+layout require further work. This does not establish full Line Services
+compatibility or complete WPF packaging.
