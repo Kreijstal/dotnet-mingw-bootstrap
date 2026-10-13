@@ -4332,3 +4332,56 @@ SDK/framework-pack packaging are still open. Logs, native source/checks,
 generated native DLL and managed consumer evidence are archived under
 `tmp/wpf8-support/validation/text-analysis-20261013` locally. The goal remains
 active.
+
+## 44. Source Line Services contexts and original formatter initialization
+
+The next 2026-10-13 continuation implements LoGetEscString, LoCreateContext,
+LoDestroyContext, LoSetDoc, LoSetBreaking and LoSetTabs. These operations retain
+real owned context/configuration state and do not fabricate a formatted line.
+Selected native record layouts and LsErr values are generated from the original
+LineServices.cs. The source control vocabulary uses module-lifetime UTF16
+paragraph/line/hidden/NBSP/object markers; LineServicesContext.md explicitly
+documents those choices and does not claim unknown legacy private marker values.
+
+Contexts copy callback tables and installed handler methods, assign their client
+cookie, and retain device/strategy/tab configuration. Native creation and
+configuration validate inputs. Registry lookup rejects invalid or destroyed
+handles without dereferencing them; a mutex protects concurrent access. Failed
+device/tab updates preserve the previous configuration. An explicit diagnostic
+state-copy ABI validates stored data without returning a fake line result.
+
+The native and C# ABI checks agree on **LsContextInfo size 760**, pols offset
+120, FetchPap offset 184 and final run-release flag offset 752; callback table
+size 24, tab record size 12 and diagnostic state size 64. Native checks cover
+context creation, copied inputs, control characters, configuration retention,
+invalid pointers/devices/strategies/tab ordering, concurrent operations and
+double-destroy/stale-handle rejection.
+
+The managed peer constructs the **original TextFormatterContext**. Its original
+constructor populates actual LineServicesCallbacks, obtains the native context,
+sets all four device resolutions to **1440 twips per inch**, and selects its
+breaking strategy. That constructor, original SetBreaking, forced-GC callback
+lifetime and original repeated managed Destroy all pass. The themed shape
+window continues to pass. The text window now reaches missing **LoCreateLine**
+instead of failing at control strings or native context creation.
+
+Validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-lineservices-context
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-window
+```
+
+The native context build and native/managed peers pass; the C# consumer has zero
+warnings/errors. The separate check-window-text still fails at LoCreateLine,
+which remains absent. Imported-symbol coverage is **49/139**, with **90 missing**;
+the diagnostic export is additional and not counted as an implemented upstream
+import. Complete line/paragraph/natural-language layout, printing implementation,
+remaining assemblies and WindowsDesktop packaging are still unfinished. Logs,
+generated ABI header, native DLL and consumer evidence are archived under
+`tmp/wpf8-support/validation/lineservices-context-20261013` locally. The goal
+remains active.
