@@ -8973,3 +8973,54 @@ Imported native coverage rises to 91/139 with 48 absent. Floating obstacles,
 figures, tables, balancing/span areas, optimal/advanced/incremental/interruptible
 algorithms, full bidi/native language and broader runtime behavior remain
 required for the full WPF goal.
+
+
+## 135. Installed release 18: original block UI controls
+
+The 2026-10-14 continuation packages section 134 as WindowsDesktop 8.0.0-18.
+Declared/checksummed 0018-block-ui-containers.patch applies after the seventeen
+previous patches. Clean pinned sources plus all eighteen patches match the six
+committed feature files byte for byte. The private package tree rebuilds native
+output, inventory and layout, passes 313 original ABI field checks, original
+context/line-service regressions and native source/resource/block checks, then
+runs every normal SDK gate before archive creation and installation. Unchanged
+managed/graphics/printing outputs remain its own source builds.
+
+Validation in the CLANG64 package workspace:
+
+```sh
+makepkg --verifysource --force
+source PKGBUILD                 # with srcdir set to this workspace's src/
+_wpf native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+makepkg --repackage --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-18-any.pkg.tar.zst
+/usr/bin/python3 check-staged.py /clang64/lib/dotnet
+bash "$(_driver)/wpf-tests/check-block-ui-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-block-ui-sdk-check
+bash "$(_driver)/wpf-tests/check-forced-progress-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-block-ui-forced-sdk-check
+```
+
+All final commands pass. Staged/installed 42-managed/eight-native/SDK/legacy
+payload checks pass. Installed original flat/nested WPF documents in Ideal/
+Display defer a real button block intact to the next page, with expected
+360x60 child size, (18,10) placement, 16560 red pixels, surrounding text/block
+page mappings, visual point hit, routed button event, regenerated pages and GC.
+Oversized/empty blocks finish on one tiny page without phantom continuation;
+a block can move intact to the second column of one page. Original scrolling
+controls react to child height changes from 60 to 120 with doubled red raster.
+Shared-framework and self-contained publishes run with SDK roots/toolchain PATH
+removed and pass dispatcher cleanup. Installed forced-text pagination remains
+three requested-size pages with all 61 characters mapped exactly once. Private
+normal WPF/tab/inline-object/justification/width/context/finite/bottomless/
+pagination/columns/hard-break/keep/keep-next/forced/block/WinForms regressions
+pass with zero consumer warnings/errors. The existing source-bootstrap.json
+srcdir provenance warning remains.
+
+Artifact: mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-18-any.pkg.tar.zst.
+SHA-256: eaa8a3186d838ac98e4cd2e4922afabf11b1b936b6ed70d3b271077814aa6c63.
+Recipe commit: msys2-ur 531b752; feature commit: 7570d75.
+Artifact, recipe, metadata, patch and validation logs are archived under
+ tmp/wpf8-support/validation/block-ui-package-20261014.
+Imported native coverage is 91/139 with 48 absent. Floating obstacles/figures,
+tables, balancing/span areas, optimal/advanced/incremental/interruptible
+algorithms, full bidi/native language and broader runtime behavior remain
+incomplete. The full WPF goal stays active.
