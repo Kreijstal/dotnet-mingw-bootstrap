@@ -8871,3 +8871,54 @@ Package integration follows. Imported native coverage stays 89/139 with 50 absen
 Optimal line policies, balancing/span areas, tables/floaters/figures, advanced/
 incremental/interruptible algorithms, full bidi/native language and broader
 runtime behavior remain required for the full WPF goal.
+
+
+## 133. Installed release 17: forced finite-page progress
+
+The 2026-10-13 continuation packages section 132 as WindowsDesktop 8.0.0-17.
+Declared/checksummed 0017-forced-page-progress.patch applies after the sixteen
+previous patches. Clean pinned sources plus all seventeen patches match the
+five committed feature files byte for byte. The private package tree rebuilds
+native output, inventory and layout, passes original ABI/context and native
+source/resource/forced checks, then runs all normal SDK gates before archive
+creation and installation. Unchanged managed/graphics/printing outputs remain
+its own source builds.
+
+Validation in the CLANG64 package workspace:
+
+```sh
+makepkg --verifysource --force
+source PKGBUILD                 # with srcdir set to this workspace's src/
+_wpf native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+makepkg --repackage --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-17-any.pkg.tar.zst
+/usr/bin/python3 check-staged.py /clang64/lib/dotnet
+bash "$(_driver)/wpf-tests/check-forced-progress-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-forced-sdk-check
+bash "$(_driver)/wpf-tests/check-pagination-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-forced-pagination-sdk-check
+```
+
+All final commands pass. The installation wrapper initially lacked CLANG64's
+MINGW_PACKAGE_PREFIX environment and stopped before any package mutation;
+running it through MSYSTEM=CLANG64 bash -lc supplies the intended environment.
+Staged/installed 42-managed/eight-native/SDK/legacy payload checks pass. Installed
+original flat/nested WPF checks with keep constraints false/true finish in three
+400x10 pages at the requested size, with all 61 characters mapped exactly once
+and original oversized glyph ink retained. Ideal/Display, page regeneration,
+compacting GC, normal shared-framework and self-contained publishes with SDK
+roots/toolchain PATH removed, and dispatcher cleanup pass. Installed ordinary
+pagination still renders six pages with all 1278 characters covered exactly
+once. Private normal WPF/tab/inline-object/justification/width/context/finite/
+bottomless/pagination/columns/hard-break/keep/keep-next/forced/WinForms regressions
+pass with zero consumer warnings/errors. The existing source-bootstrap.json
+srcdir provenance warning remains.
+
+Artifact: mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-17-any.pkg.tar.zst.
+SHA-256: d60b37c49133ad631df09382be9f419f52e8493a0e324232709e199794eb2b9d.
+Recipe commit: msys2-ur 0b4c9e4; feature commit: c32fec2.
+Artifact, recipe, metadata, patch and validation logs are archived under
+ tmp/wpf8-support/validation/forced-progress-package-20261013.
+Imported native coverage remains 89/139 with 50 absent: forced progress adds
+behavior to existing exports. Optimal policies, balancing/span areas, tables/
+floaters/figures, advanced/incremental/interruptible algorithms, full bidi/native
+language and broader runtime behavior remain incomplete. The full WPF goal
+stays active.
