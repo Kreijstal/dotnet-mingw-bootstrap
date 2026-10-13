@@ -8645,3 +8645,44 @@ additional behavior of existing exports. Keep/optimal/forced-line policies,
 balancing/span areas, tables/floaters/figures, advanced/incremental/interruptible
 algorithms, full bidi/native language and broader runtime behavior remain
 incomplete. The full WPF goal stays active.
+
+## 128. KeepTogether paragraph deferral and fresh-area progress
+
+The 2026-10-13 continuation implements original FSTXTPROPS KeepTogether behavior
+for finite text paragraphs. A fresh kept paragraph that cannot fit the remaining
+area is deferred without consuming any of its characters. At a fresh page or
+column, an oversized kept paragraph can still split, so the policy cannot cause
+an endless sequence of empty pages. Completed/resumed chunks keep original
+source ranges and line-break ownership. Nested object callbacks now propagate
+the inherited fEmptyOk argument: an empty subtrack inside a container that started
+mid-page does not count as a fresh page for relaxing keep constraints. Bottomless
+paragraphs naturally retain all content without a finite boundary. These improve
+existing exports; native coverage remains 89/139 with 50 absent.
+
+Validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-paragraph-context-native
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-keep-together-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/keep-sdk-check
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh inventory layout check-sdk
+```
+
+All commands pass. Native tests verify intact deferral after preceding text,
+resume from the first character, oversized keep progress across four short pages,
+and exact accepted/speculative line/client/break teardown. Original WPF compares
+the same document with KeepTogether false/true, in flat/nested Section form and
+Ideal/Display. Without keep, the paragraph spans pages 0..1; with keep, all its
+characters remain on page 1, while preceding text stays on page 0. The same
+raster content is retained (3439 total dark pixels Ideal, 2644 Display), and
+source/page mapping, disposed-page regeneration and compacting GC pass. An
+11-line oversized kept paragraph completes in three rendered pages in both
+modes. A two-column case renders preceding red text and the intact blue kept
+paragraph in separate columns on a single page. Normal shared-framework and
+self-contained publishes with SDK roots/toolchain PATH removed pass dispatcher
+cleanup. step_check_sdk now includes the keep-together gate; prior normal WPF/
+finite/bottomless/pagination/columns/hard-break/WinForms regressions pass with
+zero consumer warnings/errors. Evidence is archived under
+ tmp/wpf8-support/validation/keep-together-20261013. Package integration follows.
+KeepWithNext chains, optimal/forced-line policies, balancing/span areas, tables/
+floaters/figures, advanced/incremental/interruptible algorithms, full bidi/native
+language and broader runtime behavior remain required for the full WPF goal.

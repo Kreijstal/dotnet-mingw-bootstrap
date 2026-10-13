@@ -294,7 +294,7 @@ int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const F
     if(!cb.pfnGetTextProperties||!cb.pfnFormatLine||!cb.pfnDestroyLine||!cb.pfnDestroyLineBreakRecord)return PTS_tserrInvalidParameter;
     FSTXTPROPS props{};int status=reinterpret_cast<PtsGetTextProperties>(cb.pfnGetTextProperties)(client,para->desc.nmp,0,&props);
     if(status)return status;
-    if(props.fswdir!=direction||props.fDropCap||props.fVerticalGrid||props.fOptimizeParagraph||props.fKeepTogether)return PTS_tserrNotImplemented;
+    if(props.fswdir!=direction||props.fDropCap||props.fVerticalGrid||props.fOptimizeParagraph)return PTS_tserrNotImplemented;
     auto text=std::make_shared<TextData>(context);text->direction=direction;para->text=text;
     int dcp=input?input->dcp:props.dcpStartContent,used=0,fit=0;bool overflow=false,ended=false;
     std::shared_ptr<LineBreakData> previous=input?input->line_break:nullptr;text->incoming=previous;
@@ -326,6 +326,10 @@ int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const F
             fit=std::max(0,int(text->lines.size())-props.cMinLinesAfterBreak);
         if(fit<props.cMinLinesBeforeBreak)fit=0;
         if(!fit&&force)fit=fitting;
+        // A new keep-together paragraph that does not fit the remaining area
+        // is deferred intact. At a fresh area, an oversized paragraph must
+        // still split so pagination makes progress rather than looping.
+        if(props.fKeepTogether&&!force&&!input)fit=0;
         output=std::make_shared<Continuation>();output->context=context;output->paragraph=para->desc.nmp;
         output->dcp=fit?text->lines[fit-1].dcpLim:(input?input->dcp:props.dcpStartContent);
         output->line_break=fit?text->breaks[fit-1]:text->incoming;
@@ -394,7 +398,7 @@ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t 
                 FSFMTR fmtr{};void* break_output=nullptr;
                 void* child_input=resume&&resume->child?resume->child.get():nullptr;
                 status=reinterpret_cast<PtsObjFormatParaFinite>(methods.pfnFormatParaFinite)(context->object_contexts[0],para->desc.pfsparaclient,child_input,child_input&&previous_page?1:0,name,0,nullptr,nullptr,
-                    track->paras.empty()?0:1,suppress&&track->paras.empty(),direction,&available,input_margin,fskclearNone,first?suppress_break:fsksuppresshardbreakbeforefirstparaNone,0,
+                    (empty_ok||!track->paras.empty())?1:0,suppress&&track->paras.empty(),direction,&available,input_margin,fskclearNone,first?suppress_break:fsksuppresshardbreakbeforefirstparaNone,0,
                     &fmtr,&para->desc.pfspara,&break_output,&para->desc.dvrUsed,&para->desc.fsbbox,&margin_next,&clear,&para->desc.dvrTopSpace,&can_break);
                 pending.claimed_record=status?nullptr:break_output;
                 if(!status && break_output) {
