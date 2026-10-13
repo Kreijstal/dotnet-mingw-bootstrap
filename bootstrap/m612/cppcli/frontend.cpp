@@ -1905,6 +1905,18 @@ class Emitter {
         }
         expr(value);
     }
+    void constructor_argument(const Expr* value,const ParmVarDecl* parameter) {
+        auto target=parameter->getType();
+        if(target->isReferenceType()) {
+            if(!native_reference(parameter) && !context.hasSameUnqualifiedType(
+                value->IgnoreParenImpCasts()->getType(),target->getPointeeType()))
+                fail(value,"tracking constructor arguments require the exact referent type");
+            if(native_reference(parameter)) native_address(value); else address(value);
+            return;
+        }
+        if(type(value->getType())!=type(target)) fail(value,"constructor argument conversion is not enabled yet");
+        pointer_value(value,parameter);
+    }
     const CXXDestructorDecl* source_destructor(const CXXRecordDecl* record) const {
         if (!record || !record->getDefinition() || !record_annotation(record, "cli.external:").empty()) return nullptr;
         auto* destructor = record->getDefinition()->getDestructor();
@@ -2085,7 +2097,11 @@ class Emitter {
             unsigned expected = name.starts_with("cli.com.") ? 1 : (name == "cli.preservesig" || name == "cli.reliability") ? 2 : name.starts_with("cli.param.") ? 3 : 0;
             if (name == "cli.com.visible" && target == 2) expected = 2;
             if (!expected) continue;
-            if (expected != target) throw std::runtime_error("interop attribute applied to an unsupported declaration target");
+            if (expected != target) {
+                auto* named=dyn_cast<NamedDecl>(d);
+                throw std::runtime_error("interop attribute applied to an unsupported declaration target: "+name.str()+
+                    (named ? " on "+named->getQualifiedNameAsString() : ""));
+            }
             if (!seen.insert(name.str()).second) throw std::runtime_error("duplicate interop attribute");
         }
     }
@@ -2619,6 +2635,13 @@ class Emitter {
             if (isa<CXXThisExpr>(unary->getSubExpr()->IgnoreParenImpCasts())) op("ldarg.0", 0, 1);
             else { expr(unary->getSubExpr()); op("unbox " + record_token(r), 1, 1); }
             return;
+        }
+        if(auto* unary=dyn_cast<UnaryOperator>(e);unary && unary->getOpcode()==UO_Deref &&
+            handle_target(unary->getSubExpr()->getType()) && !value_target(unary->getType()) &&
+            native_value_pointer(unary->getSubExpr()).isNull()) {
+            auto slot=temporary(reference_element_type(unary->getType()));
+            expr(unary->getSubExpr()); op("stloc "+std::to_string(slot),1);
+            op("ldloca "+std::to_string(slot),0,1); return;
         }
         if (auto* d = dyn_cast<DeclRefExpr>(e)) {
             if (auto* p = dyn_cast<ParmVarDecl>(d->getDecl())) op(std::string(p->getType()->isReferenceType() ? "ldarg " : "ldarga ") + std::to_string(parameters.at(p)), 0, 1);
@@ -3319,11 +3342,8 @@ class Emitter {
             if(implements_disposable(record)) fail(c,"tracking temporaries with deterministic disposal require full-expression cleanup");
             auto* constructor=construction->getConstructor();
             if(constructor->isCopyOrMoveConstructor()) fail(c,"tracking temporary ref-class copies are unsupported");
-            for(unsigned i=0;i<construction->getNumArgs();++i) {
-                auto* parameter=constructor->getParamDecl(i);
-                if(parameter->getType()->isReferenceType()) address(construction->getArg(i));
-                else pointer_value(construction->getArg(i),parameter);
-            }
+            for(unsigned i=0;i<construction->getNumArgs();++i)
+                constructor_argument(construction->getArg(i),constructor->getParamDecl(i));
             op("newobj "+signature(constructor),construction->getNumArgs(),1);
             auto slot=temporary(reference_element_type(construction->getType()));
             op("stloc "+std::to_string(slot),1); op("ldloca "+std::to_string(slot),0,1); return;
@@ -3692,9 +3712,7 @@ class Emitter {
                 fail(c, "imported class has no public metadata constructor");
             if (selected->getNumParams() != count) fail(c, "default constructor arguments are not supported yet");
             for (unsigned i = 0; i < count; ++i) {
-                if (type(argument(i)->getType()) != type(selected->getParamDecl(i)->getType())) fail(c, "constructor argument conversion is not enabled yet");
-                if (selected->getParamDecl(i)->getType()->isReferenceType()) address(argument(i));
-                else pointer_value(argument(i), selected->getParamDecl(i));
+                constructor_argument(argument(i),selected->getParamDecl(i));
             }
             op("newobj " + signature(selected), count, 1);
             if (record_annotated(target, "cli.value")) op("box valuetype " + record_name(target), 1, 1);
@@ -4087,7 +4105,7 @@ class Emitter {
                     if (c->getNumArgs() != 1) fail(c, "unsupported value copy");
                     expr(c->getArg(0)); return;
                 }
-                for (auto* arg : c->arguments()) expr(arg);
+                for(unsigned i=0;i<c->getNumArgs();++i) constructor_argument(c->getArg(i),c->getConstructor()->getParamDecl(i));
                 op("newobj " + signature(c->getConstructor()), c->getNumArgs(), 1); return;
             }
             auto* target = handle_target(c->getType());
@@ -4479,7 +4497,8 @@ class Emitter {
                     auto* construct = dyn_cast<CXXConstructExpr>(init->getInit());
                     if (!construct) fail(init->getInit(), "unsupported managed base initializer");
                     op("ldarg.0", 0, 1);
-                    for (auto* arg : construct->arguments()) expr(arg);
+                    for(unsigned i=0;i<construct->getNumArgs();++i)
+                        constructor_argument(construct->getArg(i),construct->getConstructor()->getParamDecl(i));
                     op("call " + signature(construct->getConstructor()), construct->getNumArgs() + 1);
                     base_initialized = true;
                 }
@@ -4560,8 +4579,6 @@ public:
             throw std::runtime_error("finalizers require non-static, non-virtual zero-argument source ref-class methods");
         if (annotated(f, "cli.field.offset")) throw std::runtime_error("FieldOffset requires a managed instance field");
         if (annotated(f, "cli.value.zero")) return true;
-        if (isa<CXXConstructorDecl>(f)) for (auto* parameter : f->parameters())
-            if (parameter->getType()->isReferenceType() && !f->isImplicit()) throw std::runtime_error("tracking references in constructors are not enabled yet");
         if (isa<CXXConstructorDecl>(f) && method && is_interface(method->getParent())) return true;
         if (f->isImplicit() && method && annotated(method->getParent(), "cli.abstract") && annotated(method->getParent(), "cli.sealed")) return true;
         if ((f->isImplicit() && !(isa<CXXConstructorDecl>(f) && cast<CXXConstructorDecl>(f)->isDefaultConstructor())) || (!f->doesThisDeclarationHaveABody() && !(method && method->isPureVirtual()) && !native_function(f)) || llvm::StringRef(f->getNameAsString()).starts_with("__cli_")) return true;

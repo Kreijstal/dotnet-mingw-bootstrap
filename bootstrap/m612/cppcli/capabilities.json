@@ -264,7 +264,8 @@
     "Property-produced scoped enum reads resolve through Sema before ordinary bitwise lowering; unsigned payload and getter-once runtime checks",
     "Explicit native archive symbol selection imports requested x64 code bindings and rejects missing or conflicting symbols; real memcpy with other system libraries validated",
     "Source/imported managed interface handles convert to Object in unambiguous calls, returns, local initialization and existing Object stores without reboxing; runtime identity/null/typed-overload/dispatch/moving-GC checks",
-    "Pinned pointer prefix/postfix increment/decrement and scaled compound updates use tracked pointer lowering and existing block cleanup; managed array stepping/mutation across GC verified"
+    "Pinned pointer prefix/postfix increment/decrement and scaled compound updates use tracked pointer lowering and existing block cleanup; managed array stepping/mutation across GC verified",
+    "Constructor tracking-reference parameters emit actual CLR byrefs and pass exact referent addresses through allocation, value construction and base initializers; dereferenced ref-class handles use tracked handle slots"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -344,6 +345,7 @@
     "Managed pointer indexing and local/parameter updates are low-level operations with caller-owned range validity; primitives and GC-free native POD records are supported. Managed record elements, general pointer expression arithmetic and broader interior return provenance remain incomplete; tracked addresses cannot bind raw native pointers without pinning",
     "Tracking temporary call adaptation requires exact source ref-class percent parameters and consistent arity-compatible overload slots; imported types, native references, ref-class copy construction and deterministic disposal cleanup remain unsupported",
     "String equality supports actual String handles and literal/null operands; Object/native-buffer operand conversions, String concatenation and user-defined reference operator overload discovery remain incomplete",
-    "Interface-to-Object call adaptation requires all arity-compatible candidate positions to be Object; constructor/index-key/property-result/conditional conversions and broader overload selection remain incomplete"
+    "Interface-to-Object call adaptation requires all arity-compatible candidate positions to be Object; constructor/index-key/property-result/conditional conversions and broader overload selection remain incomplete",
+    "Constructor tracking references require exact referent identity; derived-to-base byref aliases remain rejected. General ref-class stack storage, member RAII, delegating constructors and reference-return escape analysis remain incomplete"
   ]
 }

@@ -5946,3 +5946,63 @@ lowering/link/runtime and the previously open full text/layout and WindowsDeskto
 SDK/reference/runtime packaging remain required. Native text coverage remains
 58/139; no complete System.Printing DLL or WPF package is produced, and the full
 goal stays active.
+
+
+## 69. Tracking-reference constructor arguments and declaration diagnostics
+
+The 2026-10-13 continuation removes the blanket constructor-reference rejection
+and lowers constructor arguments through one shared operation. Tracking
+references require the exact underlying referent type and pass a tracked
+address. Native references retain the existing stable-address rules. Ordinary
+arguments retain source/Sema-selected conversions and native-pointer binding
+checks. Allocation, value construction, base constructor initialization and
+source ref-class temporary construction use the same lowering.
+
+Taking the tracked address of a dereferenced ref-class handle creates a CLR
+class local holding the same object and passes that slot's address. It does not
+read native object layout. This supplies source constructor class-reference
+operands while preserving field mutation and GC identity. Derived-to-base
+tracking constructor aliasing remains rejected to keep CLR byref types exact.
+General ref-class stack storage, member cleanup, delegating constructors and
+broader lifetime/escape forms remain unfinished.
+
+The fixture verifies primitive/value/Object-handle/ref-class byref mutation,
+actual class& constructor signatures, source allocation and C# constructor
+invocation, base initialization before member snapshots, a managed array element
+address with one index evaluation, value construction, constructor exceptions
+retaining prior mutations and forced compacting GC. The first rebuild exposed
+the missing dereferenced-handle address path; the corrected runtime check passes.
+Original factory/private/protected/abstract/literal/base constructor checks pass.
+Their native-new rejection expected an obsolete unsupported-AST diagnostic;
+the expected text now matches the existing explicit native-allocation rejection.
+
+Validation on win11 with the usual compiler/WPF build environment:
+
+```sh
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-constructor-tracking test-constructors
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-constructor-tracking test-constructors
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-tracking-temporaries
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh build-directwrite check-directwrite-assembly printing-gate
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh printing-gate
+```
+
+The final focused constructor command passes runtime and all rejection checks.
+The subsequent build validates improved interop-target diagnostic names; the
+source temporary regression also passes. The WPF command passes DirectWrite's
+85 types, 283 bodies and 81-font-family runtime scope, then printing advances
+past constructor declarations. The final printing-only gate still passes
+Clang parsing/Sema and fails in AST-to-IL declaration validation. It now names
+the exact annotation/field: `cli.param.marshal` on
+`MS::Internal::PrintWin32Thunk::PrinterDefaults::defaultDataType`, whose original
+LPWStr MarshalAs needs field-marshalling metadata support. No attribute is
+silently discarded and no complete printing IL/DLL is produced.
+
+JSON/Bash syntax and whitespace checks pass. Logs, manifests and runtime
+artifacts are archived locally under
+`tmp/wpf8-support/validation/printing-constructor-tracking-20261013`. The combined
+scope retains all 49 original project inputs/66 tree C++ files without a
+per-file compile count. Native coverage remains 58/139; full printing lowering,
+native link/runtime behavior, full text/layout and WindowsDesktop SDK/reference/
+runtime packaging remain required. The complete WPF package is unfinished and
+the full goal stays active.

@@ -204,7 +204,7 @@ EOF
   reject_case constructor-private 'public ref class C { C(int) {} }; int main() { C^ c = gcnew C(1); return 0; }' 'private constructor'
   reject_case constructor-protected 'public ref class C { protected: C(int) {} }; int main() { C^ c = gcnew C(1); return 0; }' 'protected constructor'
   reject_case constructor-abstract 'public ref class C abstract { public: C() {} }; int main() { C^ c = gcnew C(); return 0; }' 'cannot allocate an abstract'
-  reject_case constructor-native-new 'public ref class C {}; int main() { C^ c = new C(); return 0; }' 'unsupported AST expression: CXXNewExpr'
+  reject_case constructor-native-new 'public ref class C {}; int main() { C^ c = new C(); return 0; }' 'native allocation requires scalar or trivial native POD elements'
   log "PASS test-constructors: private/protected factories, nested/default allocations, conversions and access rejection"
 }
 step_test-objects() {
@@ -603,6 +603,19 @@ EOF
 int main() { CombinedAccess^ c=gcnew CombinedAccess(); return c->OrMethod(); }' 'protected member' --type CombinedAccess
   reject_case combined-foreign-and '#using "combined-access.dll"
 public ref class Foreign : CombinedAccess { public: int Read() { return AndMethod(); } }; int main() { return 0; }' 'undeclared identifier' --type CombinedAccess
+}
+step_test-constructor-tracking() {
+  compile "$(cygpath -m "$src/tests/constructor-tracking.cpp")" --target library --type System.GC --type System.ArgumentException \
+    -o "$(cygpath -m "$testdir/constructor-tracking.dll")"
+  mkdir -p "$testdir/constructor-tracking-consumer"
+  cp "$src/tests/ConstructorTrackingConsumer.cs" "$testdir/constructor-tracking-consumer/Program.cs"
+  cat > "$testdir/constructor-tracking-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="constructor-tracking"><HintPath>../constructor-tracking.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/constructor-tracking-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/constructor-tracking-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case constructor-tracking-base-alias 'public ref class Base {}; public ref class Derived : Base {}; public ref class Owner { public: Owner(Base% value) {} }; int main() { Derived^ value=gcnew Derived(); Owner^ result=gcnew Owner(*value); return 0; }' 'exact referent type'
 }
 step_test-interface-object() {
   compile "$(cygpath -m "$src/tests/interface-object.cpp")" --target library --type System.IDisposable --type System.GC \
