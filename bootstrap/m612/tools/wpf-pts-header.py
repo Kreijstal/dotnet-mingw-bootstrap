@@ -116,7 +116,7 @@ for name in ('FSIMETHODS', 'FSCONTEXTINFO', 'FSRECT', 'FSPOINT', 'FSBBOX',
              'FSTRACKDETAILS', 'FSTRACKDESCRIPTION', 'FSPAGEDETAILS',
              'FSSECTIONDESCRIPTION', 'FSSECTIONDETAILS', 'FSTEXTDETAILS',
              'FSLINEDESCRIPTIONSINGLE', 'FSSUBTRACKDETAILS', 'FSCOLUMNINFO',
-             'FSFLOATERINIT', 'FSFLOATERPROPS', 'FSFLOATERDETAILS'):
+             'FSFLOATERINIT', 'FSFLOATERPROPS', 'FSFLOATERDETAILS', 'FSSUBPAGEDETAILS'):
     emit(name)
 # Derive callback function signatures from the same source declarations.
 for name in ('GetPageDimensions', 'GetSectionProperties', 'GetMainTextSegment',

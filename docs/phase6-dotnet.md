@@ -9024,3 +9024,68 @@ Imported native coverage is 91/139 with 48 absent. Floating obstacles/figures,
 tables, balancing/span areas, optimal/advanced/incremental/interruptible
 algorithms, full bidi/native language and broader runtime behavior remain
 incomplete. The full WPF goal stays active.
+
+
+## 136. Source subpage engine and original table-cell subpage clients
+
+The 2026-10-14 continuation adds finite and bottomless subpage creation,
+subpage destruction, independent typed break-record destruction/cloning, simple/
+complex queries, basic-column enumeration and recursive update clearing. These
+are eight original imported APIs, bringing coverage to 99/139 with 40 absent.
+FSSUBPAGEDETAILS and its nested union arms come from original Pts.cs; all 326
+managed/native ABI field sizes/offsets match.
+
+Subpages retain their own root tracks/columns, real text clients, actual local
+geometry and continuation checkpoints. Page/subpage/subtrack record kinds are
+validated independently. Original installed object 1 uses its own callback table
+and break destructor, while object 0 retains subtrack ownership. Scoped callback
+transactions also retain newly exported subpages, releasing whole child graphs
+if the managed callback loses its output handle and returns an error. Arranged
+original subpage clients own their native handle; disposal gives them ownership
+first, then releases any subpage left by an unarranged client. Root callbacks
+preserve actual forced ink bounds while accounting for available used height.
+
+Structural marker lines may consume source with zero visible height. Retained
+text/child records now preserve this source progress instead of losing it when
+used height is zero. At a fresh undersized area, a structural-only prefix does
+not exhaust the opportunity to accept an actual oversized visible line. Native
+checks cover every source unit once across those page boundaries.
+
+Validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-paragraph-context-native
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-paragraph-context inventory layout check-sdk
+```
+
+Final native gates pass. They verify four finite source ranges, independent
+clones after page disposal, record-kind/foreign/stale rejection, two-column
+geometry/capacity, recursive update state, allocation-free invalid-column
+rejection, partial line failure cleanup, bottomless actual extent, installed
+object-1 nested continuations and lost-output rollback. Forced nested ink retains
+its real ten-unit box while parent used height remains four units. Source SDK
+regressions pass; the final native-only overhang adjustment is rebuilt and
+validated again before package integration.
+
+A normal offline SDK consumer drives original SubpageParagraph and
+SubpageParaClient methods through an attached table cell, original scoped
+format/arrange contexts and the original viewport/visual pipeline. Four rendered
+chunks in each formatting mode cover all 699 source characters exactly once,
+with 33036 Ideal/26220 Display glyph pixels. The first output continuation is
+cloned and its original destroyed before resuming. Original bottomless clients
+retain all 699 characters with full extents 532 Ideal/560 Display and real
+viewport glyphs. Client/record disposal runs inside the original context; GC,
+callback-exception checks and dispatcher cleanup pass through shared-framework
+and self-contained publishes with SDK roots/toolchain PATH removed. The fixture
+uses WPF's 300 native units per DIP and invokes viewport updates for original
+deferred line visuals. Original cell subpages use one column; native multi-column
+subpage behavior has its own callback/query gate. This exercises the original
+cell subpage path directly; the table object handler and public table layout
+remain required. It does not establish public floater/figure text-flow support.
+
+Evidence is archived under tmp/wpf8-support/validation/subpages-20261014.
+Finite balancing/span areas, footnotes and bottomless multi-column subpages are
+still rejected explicitly; subpage updates/comparison/display transfer remain
+unfinished. Floating obstacles/figures, tables, optimal/advanced/incremental/
+interruptible algorithms, full bidi/native language and broader runtime behavior
+remain required for the full WPF goal. Package integration follows.

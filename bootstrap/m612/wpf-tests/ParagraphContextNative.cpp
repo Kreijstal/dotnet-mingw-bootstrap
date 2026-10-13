@@ -15,6 +15,12 @@ static int WINAPI create_object(void* client,void* context,FSCBKOBJ* callbacks,u
 static int WINAPI destroy_object(void* value){if(value!=reinterpret_cast<void*>(100)&&value!=reinterpret_cast<void*>(101))return PTS_tserrInvalidParameter;++destroys;return 0;}
 static int lines_created=0,lines_destroyed=0,breaks_destroyed=0,clients_created=0,clients_destroyed=0,fail_line=-1,columns=1,available_height=80,invalid_columns=false,hard_break=0,keep_mode=0,keep_next=0,para_count=2;
 static bool containers=false,lose_subtrack=false;
+static bool structural_line=false;
+static bool subpage_parent=false;
+using NativeSubpageFinite=int(WINAPI*)(void*,void*,int,void*,void*,int,int,uint32_t,int,int,const FSRECT*,int,const FSCOLUMNINFO*,int,int,void* const*,const int*,int,const int*,const int*,int,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA,FSFMTR*,void**,void**,int*,FSBBOX*,void**,int*);
+static NativeSubpageFinite create_subpage=nullptr;
+static int(WINAPI* destroy_subpage)(void*,void*)=nullptr;
+static int(WINAPI* destroy_subpage_record)(void*,void*)=nullptr;
 static bool block_ui=false,float_obstacle=false,fail_float=false;
 static int float_created=0,float_destroyed=0;
 static int(WINAPI* floater_handler)(const FSFLOATERINIT*,void*)=nullptr;
@@ -32,6 +38,15 @@ static int WINAPI container_format(void*,void*,void* input,int previous,void* na
 }
 static int WINAPI container_destroy_record(void*,void* record){return destroy_subtrack_record(page_context,record);}
 static int WINAPI container_destroy(void* track){return destroy_subtrack(page_context,track);}
+static int WINAPI subpage_format(void*,void*,void* input,int previous,void* name,int,void*,void*,int empty,int suppress,uint32_t direction,FSRECT* rect,void*,FSKCLEAR,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA suppress_break,int,
+    FSFMTR* formatted,void** output,void** br,int* used,FSBBOX* bbox,void** margin_out,FSKCLEAR* clear_out,int* top,int* can_break) {
+    *clear_out=fskclearNone;*can_break=0;FSCOLUMNINFO col{0,rect->du};
+    int status=create_subpage(page_context,input,previous,name,nullptr,empty,suppress,direction,rect->u+rect->du,rect->v+rect->dv,rect,1,&col,0,0,nullptr,nullptr,0,nullptr,nullptr,0,suppress_break,formatted,output,br,used,bbox,margin_out,top);
+    if(!status&&formatted->fForcedProgress)*used=std::max(*used,bbox->fsrc.v+bbox->fsrc.dv-rect->v);
+    if(!status&&lose_subtrack){*output=*br=nullptr;return PTS_tserrCallbackException;}return status;
+}
+static int WINAPI subpage_destroy(void* page){return destroy_subpage(page_context,page);}
+static int WINAPI subpage_destroy_record(void*,void* record){return destroy_subpage_record(page_context,record);}
 static int WINAPI page_geometry(void*,void*,uint32_t* direction,int* header,int* width,int* height,FSRECT* margin) {
     *direction=0;*header=0;*width=columns==2?240:200;*height=140;*margin={10,20,columns==2?210:100,available_height};return 0;
 }
@@ -42,9 +57,9 @@ static int WINAPI column_info(void*,void*,uint32_t,int capacity,FSCOLUMNINFO* ou
     if(capacity!=2)return PTS_tserrInvalidParameter;output[0]={0,100};output[1]={10,invalid_columns?250:100};*actual=2;return 0;
 }
 static int WINAPI main_segment(void*,void*,void** segment){*segment=reinterpret_cast<void*>(77);return 0;}
-static int WINAPI first_para(void*,void* segment,int* found,void** name){if(segment!=reinterpret_cast<void*>(77)&&!containers)return PTS_tserrInvalidParameter;*found=1;*name=segment==reinterpret_cast<void*>(77)?reinterpret_cast<void*>(101):reinterpret_cast<void*>(201);return 0;}
+static int WINAPI first_para(void*,void* segment,int* found,void** name){if(segment!=reinterpret_cast<void*>(77)&&!containers&&!subpage_parent)return PTS_tserrInvalidParameter;*found=1;*name=segment==reinterpret_cast<void*>(77)?reinterpret_cast<void*>(101):reinterpret_cast<void*>(201);return 0;}
 static int WINAPI next_para(void*,void* segment,void* current,int* found,void** next){*found=segment==reinterpret_cast<void*>(77)&&reinterpret_cast<uintptr_t>(current)<uintptr_t(100+para_count);*next=*found?reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(current)+1):nullptr;return 0;}
-static int WINAPI para_properties(void*,void* name,FSPAP* pap){*pap={};pap->idobj=block_ui&&name==reinterpret_cast<void*>(102)?2:containers&&reinterpret_cast<uintptr_t>(name)<200?0:-1;pap->fKeepWithNext=keep_next&&name==reinterpret_cast<void*>(102);if(name==reinterpret_cast<void*>(102)){pap->fBreakPageBefore=hard_break==1;pap->fBreakColumnBefore=hard_break==2;}return 0;}
+static int WINAPI para_properties(void*,void* name,FSPAP* pap){*pap={};pap->idobj=subpage_parent&&reinterpret_cast<uintptr_t>(name)<200?1:block_ui&&name==reinterpret_cast<void*>(102)?2:containers&&reinterpret_cast<uintptr_t>(name)<200?0:-1;pap->fKeepWithNext=keep_next&&name==reinterpret_cast<void*>(102);if(name==reinterpret_cast<void*>(102)){pap->fBreakPageBefore=hard_break==1;pap->fBreakColumnBefore=hard_break==2;}return 0;}
 static int WINAPI para_client(void*,void* name,void** output){++clients_created;*output=name;return 0;}
 static int WINAPI destroy_para_client(void*,void*){++clients_destroyed;return 0;}
 static int WINAPI text_properties(void*,void* name,int,FSTXTPROPS* props){*props={};props->fKeepTogether=keep_mode==2||(keep_mode==1&&name==reinterpret_cast<void*>(102));return 0;}
@@ -54,6 +69,7 @@ static int WINAPI line_format(void*,void*,void*,int,int dcp,void* incoming,uint3
     if(direction||start!=track_start||width!=100||(track_start!=10&&track_start!=120)||track_width!=100||margin!=track_start||hyphen||left||right||last||first!=(dcp==0)||bool(incoming)!=(dcp!=0))return PTS_tserrInvalidParameter;
     ++lines_created;*line=reinterpret_cast<void*>(1000+lines_created);*br=reinterpret_cast<void*>(2000+lines_created);
     *consumed=5;*forced=0;*result=dcp==0?fsflrOutOfSpace:fsflrEndOfParagraph;*ascent=7;*descent=3;*bbox=start;*bbox_width=75;*depend=*reformat=0;
+    if(structural_line&&dcp==0){*ascent=*descent=*bbox_width=0;}
     if(lines_created==fail_line)return PTS_tserrCallbackException;
     return 0;
 }
@@ -159,7 +175,9 @@ int main(int argc,char** argv) {
         destroy_subtrack_record=reinterpret_cast<decltype(destroy_subtrack_record)>(GetProcAddress(dll,"FsDestroySubtrackBreakRecord"));require(destroy_subtrack_record!=nullptr,"subtrack record destruction export");
         methods.pfnDestroyBreakRecord=reinterpret_cast<void*>(container_destroy_record);
         methods.pfnFormatParaFinite=reinterpret_cast<void*>(container_format);methods.pfnDestroyPara=reinterpret_cast<void*>(container_destroy);
-        require(CreateInstalledObjectsInfo(&methods,&methods,&installed,&count)==0,"page installed registration");
+        create_subpage=reinterpret_cast<NativeSubpageFinite>(GetProcAddress(dll,"FsCreateSubpageFinite"));destroy_subpage=reinterpret_cast<decltype(destroy_subpage)>(GetProcAddress(dll,"FsDestroySubpage"));destroy_subpage_record=reinterpret_cast<decltype(destroy_subpage_record)>(GetProcAddress(dll,"FsDestroySubpageBreakRecord"));require(create_subpage&&destroy_subpage&&destroy_subpage_record,"subpage object exports");
+        FSIMETHODS subpage_methods=methods;subpage_methods.pfnFormatParaFinite=reinterpret_cast<void*>(subpage_format);subpage_methods.pfnDestroyPara=reinterpret_cast<void*>(subpage_destroy);subpage_methods.pfnDestroyBreakRecord=reinterpret_cast<void*>(subpage_destroy_record);
+        require(CreateInstalledObjectsInfo(&methods,&subpage_methods,&installed,&count)==0,"page installed registration");
         info.version=0;info.pInstalledObjects=installed;
         auto& gen=info.fscbk.cbkgen;auto& txt=info.fscbk.cbktxt;
         gen.pfnGetPageDimensions=reinterpret_cast<void*>(page_geometry);gen.pfnGetSectionProperties=reinterpret_cast<void*>(section_properties);gen.pfnGetMainTextSegment=reinterpret_cast<void*>(main_segment);gen.pfnGetSectionColumnInfo=reinterpret_cast<void*>(column_info);
@@ -335,6 +353,50 @@ int main(int argc,char** argv) {
         require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrNotImplemented&&!page_handle&&!page_break&&float_created==float_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"floating obstacle rejects without substituting block semantics or leaking clients");
         float_obstacle=block_ui=false;
         std::puts("native block UI: opaque original handler table, full-width bounds, intact deferral/resume, forced terminal progress, query/update/stale state, callback failure and exact cleanup PASS");
+        using SubpageFinite=int(WINAPI*)(void*,void*,int,void*,void*,int,int,uint32_t,int,int,const FSRECT*,int,const FSCOLUMNINFO*,int,int,void* const*,const int*,int,const int*,const int*,int,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA,FSFMTR*,void**,void**,int*,FSBBOX*,void**,int*);
+        using SubpageBottomless=int(WINAPI*)(void*,void*,int,uint32_t,int,int,int,int,int,const FSCOLUMNINFO*,int,void* const*,const int*,int,const int*,const int*,int,FSFMTRBL*,void**,int*,FSBBOX*,void**,int*,int*);
+        using QuerySubpage=int(WINAPI*)(void*,void*,FSSUBPAGEDETAILS*);
+        using QuerySubColumns=int(WINAPI*)(void*,void*,int,FSTRACKDESCRIPTION*,int*);
+        PROC(FsCreateSubpageFinite,SubpageFinite);PROC(FsCreateSubpageBottomless,SubpageBottomless);PROC(FsQuerySubpageDetails,QuerySubpage);PROC(FsQuerySubpageBasicColumnList,QuerySubColumns);
+        PROC(FsDestroySubpage,PageAction);PROC(FsDestroySubpageBreakRecord,PageAction);PROC(FsDuplicateSubpageBreakRecord,CloneRecord);PROC(FsClearUpdateInfoInSubpage,PageAction);
+        FSSUBPAGEDETAILS sub_details{};FSRECT sub_rect{10,20,100,10};FSCOLUMNINFO sub_columns[2]{{0,100},{10,100}};
+        int sub_used=0,sub_top=0;FSBBOX sub_box{};void* sub_margin=nullptr;FSTRACKDESCRIPTION sub_tracks[2]{};
+        auto sub_create=[&](void* input,int count=1){return FsCreateSubpageFinite(context,input,1,reinterpret_cast<void*>(77),nullptr,0,1,0,240,140,&sub_rect,count,sub_columns,0,0,nullptr,nullptr,0,nullptr,nullptr,0,fsksuppresshardbreakbeforefirstparaPageAndColumn,&formatted,&page_handle,&page_break,&sub_used,&sub_box,&sub_margin,&sub_top);};
+        reset_page_counts();incoming_record=nullptr;
+        for(int number=0;number<4;++number) {
+            require(sub_create(incoming_record)==0&&page_handle&&bool(page_break)==(number<3),"finite subpage advances its actual source checkpoint");
+            if(incoming_record)require(FsDestroySubpageBreakRecord(context,incoming_record)==0,"subpage input release");
+            require(FsQueryPageDetails(context,page_handle,&details)==PTS_tserrInvalidQuery&&FsDestroyPage(context,page_handle)==PTS_tserrInvalidQuery,"subpages reject top-level page API ownership");
+            require(FsQuerySubpageDetails(context,page_handle,&sub_details)==0&&sub_details.fSimple&&sub_used==10&&FsQueryTrackParaList(context,sub_details.u.simple.trackdescr.pfstrack,2,paras,&actual_count)==0&&actual_count==1&&FsQueryTextDetails(context,paras[0].pfspara,&text_details)==0&&text_details.u.full.dcpFirst==(number%2)*5&&text_details.u.full.dcpLim==(number%2)*5+5,"subpage queries retain actual per-page character ranges");
+            require(FsClearUpdateInfoInSubpage(context,page_handle)==0&&FsQuerySubpageDetails(context,page_handle,&sub_details)==0&&sub_details.u.simple.trackdescr.fsupdinf.fskupd==fskupdNoChange,"subpage recursive update clearing");
+            if(number==0){void* clone=nullptr;require(FsDuplicateSubpageBreakRecord(context,page_break,&clone)==0&&clone!=page_break&&destroy_subtrack_record(context,clone)==PTS_tserrInvalidBreakRecord&&FsDestroyPageBreakRecord(context,clone)==PTS_tserrInvalidBreakRecord&&FsDestroySubpageBreakRecord(context,page_break)==0,"subpage clones have independent identity and reject other record kinds");page_break=clone;}
+            require(FsDestroySubpage(context,page_handle)==0&&FsQuerySubpageDetails(context,page_handle,&sub_details)==PTS_tserrInvalidQuery,"subpage disposal invalidates layout query");incoming_record=page_break;
+        }
+        require(lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"subpage continuation and clones release every callback resource once");
+        structural_line=true;sub_rect.dv=4;reset_page_counts();incoming_record=nullptr;bool structural_coverage[2][10]{};
+        for(int number=0;number<2;++number){require(sub_create(incoming_record)==0&&formatted.fForcedProgress&&sub_used==4&&bool(page_break)==(number==0),"structural marker prefix preserves forced visible-line progress");if(incoming_record)require(FsDestroySubpageBreakRecord(context,incoming_record)==0,"structural prefix input release");require(FsQuerySubpageDetails(context,page_handle,&sub_details)==0&&FsQueryTrackParaList(context,sub_details.u.simple.trackdescr.pfstrack,2,paras,&actual_count)==0&&actual_count==(number==0?2:1),"zero-height structural source remains a retained paragraph on the page");for(int index=0;index<actual_count;++index){require(FsQueryTextDetails(context,paras[index].pfspara,&text_details)==0,"structural text query");int owner=int(reinterpret_cast<uintptr_t>(paras[index].nmp))-101;for(int at=text_details.u.full.dcpFirst;at<text_details.u.full.dcpLim;++at){require(owner>=0&&owner<2&&at>=0&&at<10&&!structural_coverage[owner][at],"structural/visible source is consumed once");structural_coverage[owner][at]=true;}}require(FsDestroySubpage(context,page_handle)==0,"structural prefix subpage release");incoming_record=page_break;}
+        require(lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"structural and visible lines release all callback resources");structural_line=false;for(const auto& paragraph:structural_coverage)for(bool seen:paragraph)require(seen,"structural and visible source coverage has no gaps");
+        sub_rect.du=210;sub_rect.dv=20;reset_page_counts();
+        require(sub_create(nullptr,2)==0&&!page_break&&sub_used==20&&FsQuerySubpageDetails(context,page_handle,&sub_details)==0&&!sub_details.fSimple&&sub_details.u.complex.cBasicColumns==2,"finite subpage owns a real two-column hierarchy");
+        require(FsQuerySubpageBasicColumnList(context,page_handle,1,sub_tracks,&actual_count)==PTS_tserrInvalidParameter&&!actual_count&&FsQuerySubpageBasicColumnList(context,page_handle,2,sub_tracks,&actual_count)==0&&actual_count==2&&sub_tracks[0].fsrc.u==10&&sub_tracks[1].fsrc.u==120,"subpage columns preserve supplied widths/gaps and reject short arrays");
+        require(FsDestroySubpage(context,page_handle)==0&&lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"column subpage exact teardown");
+        sub_columns[1].durWidth=250;int previous_clients=clients_created;
+        require(sub_create(nullptr,2)==PTS_tserrInvalidGeometry&&!page_handle&&!page_break&&clients_created==previous_clients,"invalid subpage columns reject before client allocation");sub_columns[1].durWidth=100;
+        sub_rect.du=100;sub_rect.dv=10;fail_line=lines_created+2;
+        require(sub_create(nullptr)==PTS_tserrCallbackException&&!page_handle&&!page_break&&!sub_used&&!sub_box.fDefined&&lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"failed subpage clears metric outputs and releases populated line callbacks");fail_line=-1;
+        int uninterruptible=0;reset_page_counts();
+        require(FsCreateSubpageBottomless(context,reinterpret_cast<void*>(77),1,0,240,10,100,20,1,sub_columns,0,nullptr,nullptr,0,nullptr,nullptr,1,&bottomless_result,&page_handle,&sub_used,&sub_box,&sub_margin,&sub_top,&uninterruptible)==0&&sub_used==40&&uninterruptible&&FsQuerySubpageDetails(context,page_handle,&sub_details)==0&&sub_details.u.simple.trackdescr.fsrc.dv==40,"bottomless subpage reports full actual extent and completed uninterruptible formatting");
+        require(FsDestroySubpage(context,page_handle)==0&&lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"bottomless subpage exact teardown");
+        std::puts("native subpages: finite ranges, independent cloned records/kinds, column hierarchy/geometry, recursive update/stale queries, failure rollback, bottomless extent and exact cleanup PASS");
+        subpage_parent=true;available_height=10;reset_page_counts();incoming_record=nullptr;
+        for(int number=0;number<4;++number){require(FsCreatePageFinite(context,incoming_record,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&bool(page_break)==(number<3),"installed subpage objects propagate their typed continuations through root pages");if(incoming_record)require(FsDestroyPageBreakRecord(context,incoming_record)==0,"parent input release");require(FsQueryPageDetails(context,page_handle,&details)==0&&FsQueryTrackParaList(context,details.u.simple.trackdescr.pfstrack,2,paras,&actual_count)==0&&actual_count==1&&paras[0].idobj==1&&FsQuerySubpageDetails(context,paras[0].pfspara,&sub_details)==0,"root paragraph owns actual installed subpage result");require(FsDestroyPage(context,page_handle)==0,"parent subpage page cleanup");incoming_record=page_break;}
+        require(lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"typed child continuations and nested client ownership release once");
+        available_height=4;reset_page_counts();incoming_record=nullptr;
+        for(int number=0;number<4;++number){require(FsCreatePageFinite(context,incoming_record,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&formatted.fForcedProgress&&bool(page_break)==(number<3),"subpage forced ink overhang makes bounded parent progress");if(incoming_record)require(FsDestroyPageBreakRecord(context,incoming_record)==0,"forced subpage parent input release");require(FsQueryPageDetails(context,page_handle,&details)==0&&FsQueryTrackParaList(context,details.u.simple.trackdescr.pfstrack,2,paras,&actual_count)==0&&actual_count==1&&paras[0].dvrUsed==4&&paras[0].fsbbox.fsrc.dv==10,"parent accounts for available height while preserving actual oversized subpage ink");require(FsDestroyPage(context,page_handle)==0,"forced parent page release");incoming_record=page_break;}
+        require(lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"forced nested subpages release resources once");
+        lose_subtrack=true;reset_page_counts();
+        require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrCallbackException&&!page_handle&&!page_break&&lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"lost successful subpage and break outputs roll back complete callback transaction");lose_subtrack=false;subpage_parent=false;
+        std::puts("native installed subpage objects: typed nested continuation, independent root/page lifetime, client ownership and lost-output callback rollback PASS");
         columns=1;require(DestroyDocContext(context)==0&&DestroyInstalledObjectsInfo(installed)==0,"failed page creation leaves no retained resources");
         std::puts("native finite pages: actual callback geometry/ranges/break records, query/update state, foreign/stale handles, exact teardown, partial failure rollback and unsupported paths PASS");
         std::printf("native paragraph records: context=%zu, methods=%zu, callbacks=%zu; copied ownership, callbacks, rollback, invalid states and teardown PASS\n",sizeof(FSCONTEXTINFO),sizeof(FSIMETHODS),sizeof(FSCBK));return 0;
