@@ -8215,3 +8215,52 @@ zero consumer warnings/errors. Evidence is archived under
  tmp/wpf8-support/validation/finite-page-20261013. Package integration follows;
 full pagination, bottomless/advanced paragraph layout and native text/language
 behavior remain required for the full WPF goal.
+
+## 119. Installed release 10: original finite FlowDocument layout and raster
+
+The 2026-10-13 continuation packages section 118 as WindowsDesktop 8.0.0-10.
+Declared/checksummed 0010-finite-text-pages.patch carries page/subtrack/text
+ownership and formatting, source-derived callback signatures, native failure/
+lifecycle fixtures and the original FlowDocument SDK raster gate. Clean pinned
+sources plus all ten patches match the five committed feature files byte for
+byte. The private package workspace rebuilds its own native library, inventory
+and layout, passes the new native/original context checks, and runs the complete
+normal SDK checks including FlowDocument before creating and installing the
+archive. Unchanged managed/graphics/printing outputs remain its own source
+builds. The README's current native-coverage count is also refreshed.
+
+Validation in the CLANG64 package workspace:
+
+```sh
+makepkg --verifysource --force
+source PKGBUILD                 # with srcdir set to this workspace's src/
+_wpf native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+makepkg --repackage --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-10-any.pkg.tar.zst
+/usr/bin/python3 check-staged.py /clang64/lib/dotnet
+bash "$(_driver)/wpf-tests/check-flowdocument-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-finite-page-sdk-check
+bash "$(_driver)/wpf-tests/check-paragraph-context-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-finite-context-sdk-check
+```
+
+All commands pass. The installed 42-managed/eight-native/SDK/legacy payload
+check passes. Original FlowDocument finite-page creation, short/wrapped
+paragraph raster, Ideal/Display formatting, cached page retention across
+compacting GC, end-of-document page count and dispatcher cleanup pass through
+both the installed shared framework and a self-contained publish with SDK
+roots/toolchain PATH removed. Original PTS ABI/context/geometry checks also pass
+for all 281 field sizes/offsets and resource configurations. Private normal
+WPF/tab/inline-object/justification/width/context/FlowDocument/WinForms regression
+gates pass. Consumer builds have zero warnings/errors; source-bootstrap.json
+retains the existing srcdir provenance warning.
+
+Artifact: mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-10-any.pkg.tar.zst.
+SHA-256: 6637f1ad9843dbba8f4ec0c2ba8f2d0ae4cf6438624cbfa8b2d38c7feaec80ef.
+Recipe commit: msys2-ur 9b8ac55; feature commit: 6621bcb.
+Artifact, recipe, metadata, patch and logs are archived under
+ tmp/wpf8-support/validation/finite-page-package-20261013.
+Imported native coverage is 80/139 with 59 absent. FsCreatePageFinite now
+formats real supported text pages, resolving the release 9 entry-point failure.
+Multi-page continuation/page break records, bottomless layout, multiple columns,
+RTL page text, optimal/keep policies and tables/floaters/figures remain open.
+Full bidi/native natural-language and broader runtime paths are also unfinished;
+the full WPF goal stays active.
