@@ -918,6 +918,46 @@ protected:
             std::map<size_t, std::string> interop_attributes, interop_types;
             std::map<size_t, size_t> interop_ends;
             std::set<size_t> interop_closes;
+            for(size_t begin=0;begin+3<tokens.size();++begin) {
+                if(tokens[begin].text!="[" || tokens[begin+1].text=="[") continue;
+                size_t name=begin+1;
+                std::string qualifier;
+                while(name+2<tokens.size() && tokens[name+1].text=="::") { qualifier+=tokens[name].text+"::"; name+=2; }
+                if(tokens[name].text!="DllImport" && tokens[name].text!="DllImportAttribute") continue;
+                if(!qualifier.empty() && qualifier!="System::Runtime::InteropServices::" && qualifier!="Runtime::InteropServices::" && qualifier!="InteropServices::")
+                    throw std::runtime_error("unsupported DllImport namespace");
+                if(tokens[name+1].text!="(") throw std::runtime_error("DllImport requires a literal library name");
+                size_t end=matching(name+1,"(",")");
+                if(end+1>=tokens.size() || tokens[end+1].text!="]") throw std::runtime_error("DllImport must appear individually");
+                std::vector<std::vector<Lexeme>> parts(1);
+                int depth=0;
+                for(size_t j=name+2;j<end;++j) {
+                    if(tokens[j].text=="," && !depth) parts.emplace_back();
+                    else {
+                        if(tokens[j].text=="(") ++depth;
+                        else if(tokens[j].text==")") --depth;
+                        parts.back().push_back(tokens[j]);
+                    }
+                }
+                if(parts[0].size()!=1 || !tok::isStringLiteral(parts[0][0].kind)) throw std::runtime_error("DllImport requires a literal library name");
+                std::string attributes="annotate(\"cli.dllimport\", "+parts[0][0].text+")";
+                std::set<std::string> keys;
+                for(size_t option=1;option<parts.size();++option) {
+                    auto& part=parts[option];
+                    if(part.size()<3 || part[0].kind!=tok::identifier || part[1].text!="=") throw std::runtime_error("DllImport options require named arguments");
+                    auto key=part[0].text;
+                    if(key!="EntryPoint" && key!="CharSet" && key!="CallingConvention" && key!="SetLastError" && key!="ExactSpelling" &&
+                       key!="PreserveSig" && key!="BestFitMapping" && key!="ThrowOnUnmappableChar") throw std::runtime_error("unsupported DllImport option: "+key);
+                    if(!keys.insert(key).second) throw std::runtime_error("duplicate DllImport option: "+key);
+                    if(key=="EntryPoint" && (part.size()!=3 || !tok::isStringLiteral(part[2].kind))) throw std::runtime_error("DllImport EntryPoint requires a literal string");
+                    std::string value;
+                    for(size_t i=2;i<part.size();++i) value+=part[i].text+" ";
+                    attributes+=", annotate("+quote("cli.dllimport."+key)+", "+(key=="EntryPoint" ? value : "static_cast<int>("+value+")")+")";
+                }
+                interop_ends[begin]=end+1; interop_closes.insert(end+1);
+                interop_attributes[begin]="__attribute__(("+attributes+"))";
+                begin=end+1;
+            }
             for (size_t begin = 0; begin+3 < tokens.size(); ++begin) {
                 if (tokens[begin].text != "[") continue;
                 size_t name = begin+1;
@@ -2128,7 +2168,7 @@ class Emitter {
         std::set<std::string> seen;
         for (auto* attr : d->specific_attrs<AnnotateAttr>()) {
             auto name = attr->getAnnotation();
-            unsigned expected = name.starts_with("cli.com.") ? 1 : (name == "cli.preservesig" || name == "cli.reliability") ? 2 : name.starts_with("cli.param.") ? 3 : 0;
+            unsigned expected = name.starts_with("cli.com.") ? 1 : (name == "cli.preservesig" || name == "cli.reliability" || name.starts_with("cli.dllimport")) ? 2 : name.starts_with("cli.param.") ? 3 : 0;
             if (name == "cli.com.visible" && target == 2) expected = 2;
             if(name.starts_with("cli.param.marshal") && target==4) expected=4;
             if (!expected) continue;
@@ -3805,7 +3845,7 @@ class Emitter {
             if (imported == metadata.methods.end()) fail(c, "imported member is absent from metadata");
             sig = imported_signature(imported->second, m);
         } else {
-            if (!f->hasBody() && !(m && m->isPureVirtual()) && !native_function(f) && !delegate_call) fail(c, "calling a function without an emitted definition");
+            if (!f->hasBody() && !(m && m->isPureVirtual()) && !native_function(f) && !annotated(f,"cli.dllimport") && !delegate_call) fail(c, "calling a function without an emitted definition");
             sig = signature(f);
         }
         bool qualified = false;
@@ -4524,6 +4564,51 @@ class Emitter {
             (!native_library.empty() && f->isExternC() && !isa<CXXMethodDecl>(f) && !f->hasBody() && f->isUsed() &&
             !ci.getSourceManager().isInSystemHeader(f->getLocation()));
     }
+    std::string dllimport_string(const FunctionDecl* function,llvm::StringRef name,const std::string& fallback={}) const {
+        const AnnotateAttr* found=nullptr;
+        for(auto* attr:function->specific_attrs<AnnotateAttr>()) if(attr->getAnnotation()==name) {
+            if(found) throw std::runtime_error("duplicate DllImport attribute");
+            found=attr;
+        }
+        if(!found) return fallback;
+        const Expr* argument=found->args_size()==1 ? (*found->args_begin())->IgnoreParenImpCasts() : nullptr;
+        while(auto* constant=dyn_cast_or_null<ConstantExpr>(argument)) argument=constant->getSubExpr()->IgnoreParenImpCasts();
+        auto* literal=dyn_cast_or_null<StringLiteral>(argument);
+        if(!literal || !literal->isOrdinary() || literal->getString().empty() || literal->getString().contains('\0'))
+            throw std::runtime_error("DllImport names require nonempty ordinary string literals without NUL");
+        return literal->getString().str();
+    }
+    std::string dllimport_flags(const FunctionDecl* function) const {
+        auto* method=dyn_cast<CXXMethodDecl>(function);
+        if(!method || !method->isStatic() || method->isVirtual() || function->hasBody() || function->isVariadic() ||
+            !record_annotated(method->getParent(),"cli.ref") || is_interface(method->getParent()))
+            throw std::runtime_error("DllImport requires a static non-variadic bodyless ref-class method");
+        if(function->getReturnType()->isReferenceType() || !interior_element(function->getReturnType()).isNull())
+            throw std::runtime_error("DllImport managed byref returns are unsupported");
+        dllimport_string(function,"cli.dllimport");
+        dllimport_string(function,"cli.dllimport.EntryPoint",function->getNameAsString());
+        auto boolean=[&](llvm::StringRef name,int fallback) {
+            auto value=layout_constant(function,name,fallback);
+            if(value!=0 && value!=1) throw std::runtime_error("DllImport boolean option must be zero or one");
+            return value;
+        };
+        if(!boolean("cli.dllimport.PreserveSig",1)) throw std::runtime_error("DllImport PreserveSig=false is unsupported");
+        auto charset=layout_constant(function,"cli.dllimport.CharSet",1);
+        auto convention=layout_constant(function,"cli.dllimport.CallingConvention",1);
+        if(charset<1 || charset>4) throw std::runtime_error("invalid DllImport CharSet");
+        if(convention<1 || convention>3) throw std::runtime_error("DllImport supports Winapi, Cdecl or StdCall calling conventions");
+        std::string flags=convention==1 ? " winapi" : convention==2 ? " cdecl" : " stdcall";
+        if(charset==2) flags+=" ansi";
+        if(charset==3) flags+=" unicode";
+        if(charset==4) flags+=" autochar";
+        if(boolean("cli.dllimport.SetLastError",0)) flags+=" lasterr";
+        if(boolean("cli.dllimport.ExactSpelling",0)) flags+=" nomangle";
+        for(auto name:{"BestFitMapping","ThrowOnUnmappableChar"}) {
+            auto marker="cli.dllimport."+std::string(name);
+            if(annotated(function,marker)) flags+=std::string(name==std::string("BestFitMapping") ? " bestfit:" : " charmaperror:")+(boolean(marker,0)?"on":"off");
+        }
+        return flags;
+    }
     void validate_native_signature(const FunctionDecl* f) const {
         auto valid = [&](const ValueDecl* declaration, QualType t, bool result) {
             if (result && t->isVoidType()) return;
@@ -4540,6 +4625,10 @@ class Emitter {
     FunctionIR function(FunctionDecl* f) {
         if (pinned(f->getReturnType())) throw std::runtime_error("pin_ptr is restricted to block-scoped locals");
         for (auto* p : f->parameters()) if (pinned(p->getType())) throw std::runtime_error("pin_ptr is restricted to block-scoped locals");
+        if(annotated(f,"cli.dllimport")) {
+            dllimport_flags(f);
+            return {method_name(f),record_name(cast<CXXMethodDecl>(f)->getParent()),declared_type(f),false,0,"",""};
+        }
         if (native_function(f)) {
             validate_native_signature(f);
             return {method_name(f), "", declared_type(f), false, 0, "", ""};
@@ -4655,7 +4744,7 @@ public:
         if (annotated(f, "cli.value.zero")) return true;
         if (isa<CXXConstructorDecl>(f) && method && is_interface(method->getParent())) return true;
         if (f->isImplicit() && method && annotated(method->getParent(), "cli.abstract") && annotated(method->getParent(), "cli.sealed")) return true;
-        if ((f->isImplicit() && !(isa<CXXConstructorDecl>(f) && cast<CXXConstructorDecl>(f)->isDefaultConstructor())) || (!f->doesThisDeclarationHaveABody() && !(method && method->isPureVirtual()) && !native_function(f)) || llvm::StringRef(f->getNameAsString()).starts_with("__cli_")) return true;
+        if ((f->isImplicit() && !(isa<CXXConstructorDecl>(f) && cast<CXXConstructorDecl>(f)->isDefaultConstructor())) || (!f->doesThisDeclarationHaveABody() && !(method && method->isPureVirtual()) && !native_function(f) && !annotated(f,"cli.dllimport")) || llvm::StringRef(f->getNameAsString()).starts_with("__cli_")) return true;
         if (auto* m = dyn_cast<CXXMethodDecl>(f)) if (!record_annotation(m->getParent(), "cli.external:").empty()) return true;
         if (isa<CXXDestructorDecl>(f) && (!method || !record_annotated(method->getParent(), "cli.ref") || is_interface(method->getParent())))
             throw std::runtime_error("destructors currently require source ref classes; value/interface destructor lowering remains unsupported");
@@ -4948,6 +5037,7 @@ public:
         if (!native_library.empty()) il << ".module extern '" << native_library << "'\n";
         std::set<std::string> system_libraries;
         for (auto* function : selected_native_imports) system_libraries.insert(native_imports.at(function->getNameAsString()).library);
+        for(auto* function:functions) if(annotated(function,"cli.dllimport")) system_libraries.insert(dllimport_string(function,"cli.dllimport"));
         for (const auto& library : system_libraries) il << ".module extern '" << library << "'\n";
         for (const auto& entry : guid_constants) {
             const auto& constant = entry.second;
@@ -4982,6 +5072,13 @@ public:
             auto* f = functions[i]; auto& body = ir[i];
             auto* method = dyn_cast<CXXMethodDecl>(f);
             bool cctor = annotated(f, "cli.cctor");
+            if(annotated(f,"cli.dllimport")) {
+                il << "  .method " << emitted_access(f,method->getAccess()) << " hidebysig static pinvokeimpl("
+                   << quote(dllimport_string(f,"cli.dllimport")) << " as " << quote(dllimport_string(f,"cli.dllimport.EntryPoint",f->getNameAsString()))
+                   << dllimport_flags(f) << ") " << declared_type(f) << " '" << f->getNameAsString() << "'(";
+                for(unsigned j=0;j<f->getNumParams();++j) { if(j) il << ", "; il << parameter_signature(f->getParamDecl(j)); }
+                il << ") cil managed preservesig {}\n"; return;
+            }
             if (native_function(f)) {
                 bool system = selected_native_imports.count(f->getCanonicalDecl());
                 auto binding = system ? native_imports.at(f->getNameAsString()) : NativeImport{native_library, f->getNameAsString()};

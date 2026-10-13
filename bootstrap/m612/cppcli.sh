@@ -604,6 +604,31 @@ int main() { CombinedAccess^ c=gcnew CombinedAccess(); return c->OrMethod(); }' 
   reject_case combined-foreign-and '#using "combined-access.dll"
 public ref class Foreign : CombinedAccess { public: int Read() { return AndMethod(); } }; int main() { return 0; }' 'undeclared identifier' --type CombinedAccess
 }
+step_test-dllimport() {
+  local refs=("$CPPCLI_SDK"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
+  local args=(--type System.Runtime.InteropServices.CharSet --type System.Runtime.InteropServices.CallingConvention
+    --type System.Runtime.InteropServices.UnmanagedType --type System.Runtime.InteropServices.SafeHandle
+    --type Microsoft.Win32.SafeHandles.SafeWaitHandle --type System.IntPtr --type System.Text.StringBuilder
+    --reference "$(cygpath -m "${refs[-1]}/System.Runtime.InteropServices.dll")")
+  compile "$(cygpath -m "$src/tests/dllimport.cpp")" --target library "${args[@]}" -o "$(cygpath -m "$testdir/dllimport.dll")"
+  mkdir -p "$testdir/dllimport-consumer"
+  /clang64/bin/clang++.exe -std=c++17 -O2 -shared "$src/tests/dllimport-native.cpp" -o "$testdir/dllimport-consumer/declared-imports-native.dll"
+  cp "$src/tests/DllImportConsumer.cs" "$testdir/dllimport-consumer/Program.cs"
+  cat > "$testdir/dllimport-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="dllimport"><HintPath>../dllimport.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/dllimport-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  cp "$testdir/dllimport-consumer/declared-imports-native.dll" "$testdir/dllimport-consumer/bin/Debug/net8.0/"
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/dllimport-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case dllimport-instance 'public ref class C { public: [DllImport("native.dll")] int Bad(); }; int main() { return 0; }' 'static non-variadic bodyless'
+  reject_case dllimport-body 'public ref class C { public: [DllImport("native.dll")] static int Bad() { return 1; } }; int main() { return 0; }' 'static non-variadic bodyless'
+  reject_case dllimport-preservesig 'public ref class C { public: [DllImport("native.dll",PreserveSig=false)] static int Bad(); }; int main() { return 0; }' 'PreserveSig=false'
+  reject_case dllimport-charset 'public ref class C { public: [DllImport("native.dll",CharSet=99)] static int Bad(); }; int main() { return 0; }' 'invalid DllImport CharSet'
+  reject_case dllimport-option 'public ref class C { public: [DllImport("native.dll",Unknown=true)] static int Bad(); }; int main() { return 0; }' 'unsupported DllImport option'
+  reject_case dllimport-duplicate 'public ref class C { public: [DllImport("native.dll",ExactSpelling=true,ExactSpelling=false)] static int Bad(); }; int main() { return 0; }' 'duplicate DllImport option'
+  reject_case dllimport-target '[DllImport("native.dll")] int Bad(); int main() { return 0; }' 'static non-variadic bodyless'
+}
 step_test-tracking-returns() {
   compile "$(cygpath -m "$src/tests/tracking-returns.cpp")" --target library --type System.GC \
     -o "$(cygpath -m "$testdir/tracking-returns.dll")"

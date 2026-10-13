@@ -6173,3 +6173,53 @@ printing project inputs/66 tree C++ files remain in the combined diagnostic gate
 without a per-file compile count. Native text coverage remains 58/139. Complete
 printing lowering/link/runtime, full layout/text and WindowsDesktop SDK/reference/
 runtime packaging remain required. The WPF packaging goal stays active.
+
+
+## 73. Source DllImport declarations and native marshalling
+
+The 2026-10-13 continuation preserves the original managed DllImport declarations
+instead of dropping their attributes and treating them as bodyless managed
+methods. The adapter converts each supported declaration into typed Clang
+annotations. The emitter validates static, bodyless, non-variadic ref-class
+methods and emits actual pinvokeimpl metadata under the declared owner/access.
+Library and entry-point strings are checked; omitted EntryPoint uses the source
+method name. Winapi/Cdecl/StdCall, Unicode/ANSI/Auto charset, ExactSpelling,
+SetLastError, BestFitMapping and ThrowOnUnmappableChar become CLR import flags.
+Existing parameter In/Out/MarshalAs descriptors remain attached. PreserveSig
+is retained; explicitly false PreserveSig and managed byref returns are rejected.
+Unknown/duplicate options, invalid charset and unsupported declaration targets
+fail rather than silently changing native ABI behavior.
+
+The native fixture is compiled separately by trusted MinGW Clang. Reflection
+checks import flags and private method visibility. Actual native calls validate
+Unicode and surrogate pairs, null strings, default BOOL marshalling, byref output,
+LPArray In/Out mutation, a real SafeWaitHandle, Unicode StringBuilder copy-back,
+ANSI strings and cached Windows last-error. Source methods call their private
+and public imports. All checks repeat across twenty compacting collections.
+Existing COM, LPArray and field-marshalling suites pass, including native
+PRINTER_DEFAULTSW/DOCINFOW layout and concurrent GC checks.
+
+Validation on win11 with the standard compiler/WPF environment:
+
+```sh
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-dllimport
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-dllimport test-com test-array-marshal test-field-marshalling
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh printing-gate
+```
+
+Compiler rebuild and focused runtime/rejection suites pass. Printing passes
+Clang parsing/Sema and advances beyond the original PresentationNative declared
+import calls. Its next failure is `unsupported local declaration` at
+PrintQueue.cpp:3014: IsXpsOMPrintingSupported caches a dynamic initialization in
+a static bool local. That requires persistent storage and initialization semantics,
+not method-entry zeroed locals. The native libraries/exports declared by the
+printing imports still require complete build/link/runtime verification; emitting
+those imports alone does not provide their implementations.
+
+Bash/JSON syntax and git whitespace checks pass. Evidence is archived under
+`tmp/wpf8-support/validation/printing-dllimport-20261013`. Printing retains all
+49 original project inputs/66 tree C++ files in its combined diagnostic scope;
+no per-file compile count or complete System.Printing DLL is claimed. Native
+text coverage stays 58/139. Full printing/native text/layout and WindowsDesktop
+SDK/reference/runtime packaging remain unfinished; the goal stays active.

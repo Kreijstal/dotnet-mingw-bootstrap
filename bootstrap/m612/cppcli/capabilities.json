@@ -269,7 +269,8 @@
     "Instance field MarshalAs native descriptors for selected string/scalar/enum/native-integer/interface forms; actual PRINTER_DEFAULTSW/DOCINFOW native layout, Unicode, enum copy-back and concurrent compacting-GC proof",
     "Nested source delegates in ordinary ref-class owners use real CLR nested identities and public/private/protected visibility; static/instance/deep/byref calls and moving-GC checks",
     "Imported delegate signatures supply metadata-derived CLI source spelling for automatic event accessors; managed references/arrays/generics/byrefs retain handle/tracking sigils without changing native pointer spelling",
-    "Source tracking-reference returns preserve real CLR byrefs to direct managed instance/static fields, nested value fields and array elements; source value reads and aliases, handle slots, finally cleanup, detached owner lifetime and compacting GC validated"
+    "Source tracking-reference returns preserve real CLR byrefs to direct managed instance/static fields, nested value fields and array elements; source value reads and aliases, handle slots, finally cleanup, detached owner lifetime and compacting GC validated",
+    "Bodyless static source ref-class DllImport declarations emit real CLR PInvoke metadata with explicit/default entry points, visibility, Winapi/Cdecl/StdCall, CharSet, last-error, exact spelling and mapping flags; parameter marshalling, SafeHandle, Unicode StringBuilder and native calls across GC validated"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -351,6 +352,7 @@
     "String equality supports actual String handles and literal/null operands; Object/native-buffer operand conversions, String concatenation and user-defined reference operator overload discovery remain incomplete",
     "Interface-to-Object call adaptation requires all arity-compatible candidate positions to be Object; constructor/index-key/property-result/conditional conversions and broader overload selection remain incomplete",
     "Constructor tracking references require exact referent identity; derived-to-base byref aliases remain rejected. General ref-class stack storage, member RAII, delegating constructors and reference-return escape analysis remain incomplete",
-    "Tracking-reference returns require an exact referent and direct managed heap location; stack addresses, byref parameter forwarding, local aliases and general escape analysis remain unsupported. Native reference returns remain rejected"
+    "Tracking-reference returns require an exact referent and direct managed heap location; stack addresses, byref parameter forwarding, local aliases and general escape analysis remain unsupported. Native reference returns remain rejected",
+    "Source DllImport currently requires a static bodyless non-variadic ref-class method; PreserveSig=false, managed byref returns, return-target marshalling attributes, ThisCall/FastCall and mixed attribute lists remain unsupported. Declaring an import does not supply the native library/export"
   ]
 }

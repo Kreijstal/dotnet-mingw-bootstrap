@@ -154,7 +154,8 @@
         "raw fixed-prototype Windows x64 native function-pointer storage and calli with scalar/POD reference arguments",
         "AST/constant-evaluation-based MinGW UUID extraction into stable RVA GUID fields and Clang native sizeof/alignof constants",
         "Explicitly pinned native font records and individual CRT symbol selection, with real record memcpy/native-API/compacting-GC runtime checks",
-        "Selected instance field MarshalAs descriptors with native Win32 printing/document ABI and Unicode/copy-back/GC validation"
+        "Selected instance field MarshalAs descriptors with native Win32 printing/document ABI and Unicode/copy-back/GC validation",
+        "Source managed DllImport declarations with preserved entry point, access, charset/calling convention, exact spelling, mapping/last-error and parameter descriptors; actual Unicode, BOOL, arrays, SafeHandle and StringBuilder native-call validation"
       ],
       "remaining": [
         "native layouts, complete pointer operations and automatic marshalling",
@@ -162,7 +163,7 @@
         "real mixed-mode PE and native-to-managed thunks",
         "MinGW ijwhost port"
       ],
-      "validation": "cppcli.sh test-interop test-pinning; wpf.sh check-directwrite-bridge; cppcli.sh test-com; cppcli.sh test-windows-api test-native-fields test-native-storage test-value-pointers; cppcli.sh test-native-com test-native-allocation; wpf.sh check-native-com check-native-cleanup; cppcli.sh test-function-pointers; wpf.sh check-function-pointer check-dwrite-startup; cppcli.sh test-record-pins; cppcli.sh test-field-marshalling"
+      "validation": "cppcli.sh test-interop test-pinning; wpf.sh check-directwrite-bridge; cppcli.sh test-com; cppcli.sh test-windows-api test-native-fields test-native-storage test-value-pointers; cppcli.sh test-native-com test-native-allocation; wpf.sh check-native-com check-native-cleanup; cppcli.sh test-function-pointers; wpf.sh check-function-pointer check-dwrite-startup; cppcli.sh test-record-pins; cppcli.sh test-field-marshalling; cppcli.sh test-dllimport test-com test-array-marshal test-field-marshalling"
     },
     {
       "stage": 5,
