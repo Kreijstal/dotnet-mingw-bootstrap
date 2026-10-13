@@ -7078,3 +7078,52 @@ Evidence is archived under
 coverage remains 58/139. Full text/layout, printing runtime and WindowsDesktop
 SDK/reference/runtime packaging remain required; the WPF packaging goal stays
 active.
+
+
+## 94. Original printing runtime, XPS writing and implementation integration
+
+The 2026-10-13 continuation adds check-printing-runtime to the complete assembly
+check. Original PrintStringProperty/PrintInt32Property/PrintBooleanProperty/
+PrintByteArrayProperty constructors, getters/setters and PrintPropertyDictionary
+retain Unicode and typed payloads through updates, disposal and GC. Original
+PrintServer/GetPrintQueues enumeration matches direct native EnumPrintersW at
+level four with Local/Connections flags: one queue on the validation host. The
+fixture queries printer state and writes a local XPS file; it sends no print job.
+
+Original XpsDocument.CreateXpsDocumentWriter/Write produces a 120x80 vector
+FixedPage. Package XML has the expected red fill, black two-unit stroke and
+rectangle geometry. WPF opens the resulting XPS and returns one page with the
+correct size. The source-built ConfigurationManager/ProtectedData dependencies
+were added after a dispatcher initialization failure; STA entry and the actual
+WPF managed/native dependencies are present in the runtime fixture.
+
+The dependency graph now maps the original System.Printing reference project to
+the source-built implementation DLL once it exists. Previously even a rebuild
+continued selecting the bootstrap reference; inspecting generated HintPaths
+exposed that, so the graph was corrected and both consumers rebuilt again.
+ReachFramework (285 source inputs) and PresentationFramework (1,345 inputs) now
+compile against build/lib/System.Printing.dll. Their final generated projects
+and graph manifest confirm that identity. Cycle-only references for other
+assembly cycles retain their existing separation from runtime libraries.
+
+Validation on win11 with the standard WPF environment:
+
+```sh
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-printing-runtime
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh build-reach-framework build-presentation-framework check-presentation-framework check-printing-runtime
+```
+
+The final commands pass. Complete printing CLR validation remains 235 loaded
+types and 2,017 prepared bodies with zero failures. Original property and native
+spooler checks and local XPS write/XML/readback pass. PresentationFramework
+controls/dependency properties, XAML, source-generated BAML/named fields,
+verified red compositor pixels and 3,248-type CLR load regressions pass after
+implementation integration. The local XPS artifact is 1,853 bytes.
+
+Evidence is archived under
+`tmp/wpf8-support/validation/printing-runtime-integration-20261013`. Printing
+scope remains 49 original project inputs/66 tree C++ files. This proves the
+exercised runtime paths, not physical printing or every method's behavior.
+Native text coverage remains 58/139; full text/layout and WindowsDesktop
+SDK/reference/runtime packaging remain required. The WPF packaging goal stays
+active.

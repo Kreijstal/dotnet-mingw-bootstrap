@@ -294,7 +294,8 @@
     "Explicit void discard casts evaluate their operands once, discard nonvoid results and preserve nested void calls, volatile native reads, managed/native values, side effects and exceptions",
     "Windows x64 native COM by-value trivial aggregates of 1, 2, 4 or 8 bytes are copied and passed as integer bits; native probes cover float-field bit patterns, register/stack placement, signed unions and actual IStream Seek against a native oracle",
     "Source scoped enum declarations directly inside managed classes emit real nested CLR enum metadata with slash-qualified paths, public/protected/private/assembly access, Flags and wide literals; C# identity, signatures, boxing, Enum APIs and the original printing enum shape pass",
-    "Managed array record typeid operands emit actual CLR vector tokens, including byte, source value and jagged String arrays; the complete original printing project now assembles a DLL, loads 235 types and prepares 2017 method bodies without failures"
+    "Managed array record typeid operands emit actual CLR vector tokens, including byte, source value and jagged String arrays; the complete original printing project now assembles a DLL, loads 235 types and prepares 2017 method bodies without failures",
+    "Original complete printing properties/dictionary and PrintServer enumeration run across GC and disposal; printer names match native Winspool. Original XpsDocumentWriter writes a vector page with checked package XML/colors/geometry and WPF readback. ReachFramework and PresentationFramework rebuild against the actual printing DLL with control/XAML/BAML/pixel regression checks passing"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -310,7 +311,7 @@
     "User finalizer declarations, value/interface destructors, covariance metadata and managed operator metadata remain unsupported",
     "Native bridges require extern-C scalars or unmanaged pointers; bool/automatic marshalling, callbacks and automatic native partitioning are not enabled",
     "Implicit primitive/interface boxing and multi-translation-unit linking remain unimplemented",
-    "The WPF DirectWriteForwarder assembly is compiled and has CLR/native font runtime proofs; System.Printing implementation, remaining desktop assemblies, WPF build tasks, full native rendering/text coverage and WindowsDesktop packaging remain incomplete",
+    "WPF DirectWriteForwarder and System.Printing implementation assemblies compile and have CLR/native runtime proofs; remaining native text/layout coverage and WindowsDesktop SDK/reference/runtime packaging remain incomplete",
     "Value classes currently exclude bases/interfaces, virtual methods, native pointer fields and custom zero-argument constructors",
     "Boxing covers explicit safe_cast to Object and implicit boxing into Object or matching selected value-class handles; handle upcasts, primitive boxes, constrained dispatch and boxed operator overloads remain incomplete",
     "Tracking references exclude constructors, fields and tracking-reference returns; pin_ptr is restricted to primitive block locals and direct local assignments; general intrinsic pointer operations and interior assignments remain incomplete; arithmetic on explicitly spelled native pointers is supported for complete scalar/pointer/trivial POD or GC-free value elements",

@@ -4,7 +4,8 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 class Check {
-    static int Main() {
+    [STAThread]
+    static int Main(string[] args) {
         var assembly=Assembly.Load("System.Printing");
         if(assembly.GetName().Version!=new Version(8,0,0,0) ||
            assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version!="8.0.0.0" ||
@@ -41,6 +42,7 @@ class Check {
         if(!values.Cast<object>().Select(Convert.ToInt32).SequenceEqual(new[]{1,2,5,10}))
             throw new Exception("original printing enum values");
         Console.WriteLine("complete printing metadata and CLR method preparation PASS");
+        if(args.Length!=0 && args[0]=="runtime") PrintingRuntime.Run();
         return 0;
     }
 }

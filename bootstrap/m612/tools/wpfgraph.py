@@ -41,6 +41,14 @@ def main():
         if key in completed: return completed[key]
         if key in active: raise SystemExit('Unbroken WPF source dependency cycle: '+' -> '.join(active+[key]))
         if not path.is_file(): raise SystemExit('Missing upstream WPF project: '+key)
+        # Once the original CLI implementation exists, downstream C# projects
+        # can validate against it instead of the bootstrap reference assembly.
+        if path == (source/'src/Microsoft.DotNet.Wpf/src/System.Printing/ref/System.Printing-ref.csproj').resolve():
+            artifact=build/'lib/System.Printing.dll'
+            if artifact.is_file():
+                completed[key]=artifact; mappings[key]=str(artifact.resolve())
+                print('Using source-built System.Printing implementation for its reference project',flush=True)
+                return artifact
         if path.suffix.lower()=='.vcxproj':
             artifact=build/'lib'/(path.stem+'.dll')
             if path.stem in {'DirectWriteForwarder','System.Printing'} and artifact.is_file():

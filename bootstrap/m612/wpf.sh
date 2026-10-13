@@ -506,11 +506,21 @@ step_build_printing() {
 }
 
 step_check_printing_assembly() {
+  printing_check metadata
+}
+
+step_check_printing_runtime() {
+  printing_check runtime
+}
+
+printing_check() {
+  local mode=$1
   initialize
   [ -s "$build/lib/System.Printing.dll" ] || step_build_printing
   local work=$build/printing-assembly-check
   mkdir -p "$work"
   cp "$here/wpf-tests/PrintingAssembly.cs" "$work/Program.cs"
+  cp "$here/wpf-tests/PrintingRuntime.cs" "$work/PrintingRuntime.cs"
   /usr/bin/python3 - "$build" "$work" "$oob" <<'PY'
 from pathlib import Path
 import sys,subprocess,xml.etree.ElementTree as E
@@ -522,7 +532,7 @@ items=E.SubElement(root,'ItemGroup')
 for name in ('System.Printing','WindowsBase','System.Xaml','DirectWriteForwarder','PresentationCore','PresentationFramework','ReachFramework','UIAutomationTypes','UIAutomationProvider','System.Windows.Input.Manipulations'):
     ref=E.SubElement(items,'Reference',Include=name)
     E.SubElement(ref,'HintPath').text=subprocess.check_output(['cygpath','-m',str(build/'lib'/(name+'.dll'))],text=True).strip()
-for name in ('System.IO.Packaging','System.Security.Permissions','System.DirectoryServices'):
+for name in ('System.IO.Packaging','System.Security.Permissions','System.DirectoryServices','System.Configuration.ConfigurationManager','System.Security.Cryptography.ProtectedData'):
     ref=E.SubElement(items,'Reference',Include=name)
     E.SubElement(ref,'HintPath').text=subprocess.check_output(['cygpath','-m',str(oob/(name+'.dll'))],text=True).strip()
 E.ElementTree(root).write(work/'PrintingAssemblyCheck.csproj',encoding='utf-8')
@@ -531,7 +541,7 @@ PY
     --configfile "$(cygpath -m "$build/NuGet.config")" -v:q -p:UseSharedCompilation=false -p:NuGetAudit=false
   cp "$build/lib/PresentationNative_cor3.dll" "$build/lib/wpfgfx_cor3.dll" "$build/lib/PenImc_cor3.dll" \
     "$build/lib/wpf-dwrite-loader.dll" "$build/lib/wpf-subsetter.dll" "$work/bin/Release/net8.0/"
-  timeout 60 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/PrintingAssemblyCheck.dll")"
+  timeout 60 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/PrintingAssemblyCheck.dll")" "$mode"
 }
 
 step_check_directwrite_assembly() {
