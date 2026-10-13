@@ -7328,3 +7328,42 @@ installation verification remain required. Compiler package evidence is under
 `tmp/wpf8-support/validation/cppcli-package-0.3.0`; desktop evidence is collected
 under `tmp/wpf8-support/validation/windowsdesktop-package-20261013`.
 Full native text/layout remains incomplete and the WPF goal stays active.
+
+
+## 100. Desktop crypto dependencies and runtime closure
+
+The 2026-10-13 clean package build reaches WindowsBase after successfully
+rebuilding WinForms and the initial WPF foundations, then stops because
+System.Security.Cryptography.Xml was omitted from the package's support-library
+set. The recipe now source-builds Xml and its PKCS dependency. The combined
+framework layout includes both implementations instead of leaving their runtime
+availability implicit in the earlier broad development environment.
+
+The desktop inventory records actual assembly dependencies from metadata TypeRef
+resolution scopes and forwarded exported types. The layout requires every such
+managed dependency to exist either in its explicit desktop assembly set or the
+source core shared framework. Unused AssemblyRef declarations in the CLI emitter
+are not treated as runtime requirements; the initial all-AssemblyRef probe
+incorrectly reported unrelated metadata-selection inputs. A deliberate missing
+WindowsBase dependency is rejected before any assembly staging.
+
+Validation on win11 with the standard WPF environment:
+
+```sh
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh layout check-sdk
+# metadata fixture adds Missing.Desktop.Dependency to WindowsBase dependencies
+python3 ~/wpfboot/driver/bootstrap/m612/tools/wpf-layout.py <build> <oob> <source> <sdk> <negative-output> <fixture>
+```
+
+The 42-managed-assembly layout passes its dependency check, both normal offline
+WPF/WinForms builds, shared-framework windows and portable self-contained
+publish/run checks. The negative fixture fails with the expected missing-dependency
+message. Python/Bash syntax and git whitespace checks pass. Evidence is collected
+under `tmp/wpf8-support/validation/desktop-crypto-closure-20261013`.
+
+The package retry in its own source/build tree has now built the two crypto
+libraries, WindowsBase, DirectWriteForwarder and PresentationCore, and is building
+ReachFramework/dependency references. A final source patch/pin must carry the
+layout changes into the package's declared inputs before final package claims.
+Clean package checks/archive/installation and full native text/layout remain
+open. The WPF goal stays active.

@@ -29,7 +29,8 @@ def main():
     forms=('Accessibility','System.Drawing.Common','System.Windows.Forms','System.Windows.Forms.Primitives')
     shared=('Microsoft.Win32.SystemEvents','System.Configuration.ConfigurationManager','System.Diagnostics.EventLog',
             'System.Security.Cryptography.ProtectedData','System.Resources.Extensions','System.Windows.Extensions',
-            'System.IO.Packaging','System.Security.Permissions','System.DirectoryServices')
+            'System.IO.Packaging','System.Security.Permissions','System.DirectoryServices',
+            'System.Security.Cryptography.Pkcs','System.Security.Cryptography.Xml')
     native=('PresentationNative_cor3.dll','wpfgfx_cor3.dll','PenImc_cor3.dll','wpf-dwrite-loader.dll','wpf-subsetter.dll')
     # Include transitive C/C++ runtime dependencies from the trusted MSYS2 seed.
     # Windows-provided libraries remain OS dependencies. Record package owners.
@@ -60,6 +61,10 @@ def main():
     rl=E.Element('FileList',TargetFrameworkIdentifier='.NETCoreApp',TargetFrameworkVersion='8.0',FrameworkName='Microsoft.WindowsDesktop.App')
     provenance=[]
     names=(*wpf,*forms,*shared)
+    core={p.stem for p in (sdk/'shared/Microsoft.NETCore.App').glob('*/*.dll')}
+    missing={name:sorted(set(identities[name]['References'])-set(names)-core) for name in names}
+    missing={name:dependencies for name,dependencies in missing.items() if dependencies}
+    if missing: raise RuntimeError('desktop runtime dependency closure is incomplete: '+json.dumps(missing,sort_keys=True))
     for name in names:
         source=files[name]
         reference=b/name/'obj/Release/net8.0/ref'/source.name
