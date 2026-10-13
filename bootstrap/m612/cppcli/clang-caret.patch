@@ -41,7 +41,7 @@
 +#include "clang/Sema/Lookup.h"
 @@ -34,0 +37 @@
 +#include "clang/Sema/ScopeInfo.h"
-@@ -44,0 +48,43 @@
+@@ -44,0 +48,73 @@
 +
 +// CLI enum operations retain their scoped type identity. Sema still checks
 +// explicit conversions and native operations; ordinary C++ enums are untouched.
@@ -80,12 +80,42 @@
 +      Event->isArrow() ? tok::arrow : tok::period, Scope, SourceLocation(), Member, nullptr);
 +}
 +
++// Inspect resolved managed overload declarations, including inherited methods.
++// Literal arguments in String/Object slots become managed strings; native calls
++// and caller-provided char/wchar buffers retain ordinary C++ semantics.
++static bool cppcliStringSlot(const NamedDecl *Decl, unsigned Index, unsigned Count) {
++  auto *Method = dyn_cast<CXXMethodDecl>(Decl);
++  if (!Method || Index >= Method->getNumParams() || Count > Method->getNumParams() || Count < Method->getMinRequiredArguments()) return false;
++  const CXXRecordDecl *Owner = Method->getParent()->getDefinition();
++  if (!Owner) Owner = Method->getParent();
++  bool Managed = false;
++  for (auto *Attr : Owner->specific_attrs<AnnotateAttr>())
++    Managed |= Attr->getAnnotation() == "cli.ref" || Attr->getAnnotation().starts_with("cli.external:");
++  if (!Managed) return false;
++  QualType Type = Method->getParamDecl(Index)->getType();
++  if (!Type->isPointerType()) return false;
++  auto *Record = Type->getPointeeType()->getAsCXXRecordDecl();
++  return Record && (Record->getQualifiedNameAsString() == "System::String" || Record->getQualifiedNameAsString() == "System::Object");
++}
++
++static bool cppcliStringArgument(Expr *Function, unsigned Index, unsigned Count) {
++  Function = Function->IgnoreParenImpCasts();
++  if (auto *Member = dyn_cast<MemberExpr>(Function))
++    return cppcliStringSlot(Member->getMemberDecl(), Index, Count);
++  if (auto *Reference = dyn_cast<DeclRefExpr>(Function))
++    return cppcliStringSlot(Reference->getDecl(), Index, Count);
++  if (auto *Overloads = dyn_cast<OverloadExpr>(Function))
++    for (auto *Candidate : Overloads->decls())
++      if (cppcliStringSlot(Candidate, Index, Count)) return true;
++  return false;
++}
++
 +static ExprResult cppcliEnumCast(Sema &Actions, Expr *Value, QualType Type,
 +                                SourceLocation Loc) {
 +  return Actions.BuildCStyleCastExpr(
 +      Loc, Actions.Context.getTrivialTypeSourceInfo(Type, Loc), Loc, Value);
 +}
-@@ -181,0 +228,9 @@
+@@ -181,0 +258,9 @@
 +  // MSVC permits CLI enum constants as labels in integral switches. Keep
 +  // that conversion local to case labels: enum-to-integer assignments and
 +  // overload resolution continue to require an explicit source conversion.
@@ -95,7 +125,7 @@
 +      if (Condition->getType()->isIntegerType())
 +        if (auto *Enum = cppcliEnum(Res.get()->getType()))
 +          Res = cppcliEnumCast(Actions, Res.get(), Enum->getIntegerType(), CaseLoc);
-@@ -531,0 +587,78 @@
+@@ -531,0 +617,78 @@
 +        if (!RHS.isInvalid() &&
 +            OpToken.isOneOf(tok::pipeequal, tok::caretequal, tok::ampequal)) {
 +          auto *Enum = cppcliEnum(LHS.get()->getType());
@@ -174,11 +204,11 @@
 +              return ExprError();
 +          }
 +        }
-@@ -534,0 +668,3 @@
+@@ -534,0 +698,3 @@
 +        if (!BinOp.isInvalid() && !CliResult.isNull())
 +          BinOp = cppcliEnumCast(Actions, BinOp.get(), CliResult,
 +                                OpToken.getLocation());
-@@ -1160,0 +1297,10 @@
+@@ -1160,0 +1327,10 @@
 +      QualType CliResult;
 +      if (SavedKind == tok::tilde)
 +        if (auto *Enum = cppcliEnum(Arg->getType()))
@@ -189,10 +219,10 @@
 +              return ExprError();
 +            Arg = Res.get();
 +          }
-@@ -1162,0 +1309,2 @@
+@@ -1162,0 +1339,2 @@
 +      if (!Res.isInvalid() && !CliResult.isNull())
 +        Res = cppcliEnumCast(Actions, Res.get(), CliResult, SavedLoc);
-@@ -1779,2 +1927,53 @@
+@@ -1779,2 +1957,53 @@
 -          LHS = Actions.ActOnArraySubscriptExpr(getCurScope(), LHS.get(), Loc,
 -                                                ArgExprs, RLoc);
 +          // For a managed array handle, ask Sema to resolve the surrogate's
@@ -248,7 +278,7 @@
 +          if (!LHS.isInvalid())
 +            LHS = Actions.ActOnArraySubscriptExpr(getCurScope(), LHS.get(), Loc,
 +                                                  ArgExprs, RLoc);
-@@ -1838,0 +2038,25 @@
+@@ -1838,0 +2068,25 @@
 +      }
 +
 +      // CLI delegate handles call their runtime Invoke method. Let Sema
@@ -273,6 +303,22 @@
 +            LHS = Actions.ActOnMemberAccessExpr(getCurScope(), LHS.get(), Loc,
 +                tok::arrow, Scope, SourceLocation(), Member, nullptr);
 +          }
++        }
+@@ -1892,0 +2147,15 @@
++        for (unsigned Index=0; Index<ArgExprs.size(); ++Index) {
++          if (!isa<StringLiteral>(ArgExprs[Index]->IgnoreParenImpCasts()) ||
++              !cppcliStringArgument(Fn, Index, ArgExprs.size())) continue;
++          CXXScopeSpec ScopeSpec; UnqualifiedId Name;
++          ScopeSpec.MakeGlobal(Actions.Context, Loc);
++          Name.setIdentifier(&PP.getIdentifierTable().get("__cli_literal"), Loc);
++          auto Helper = Actions.ActOnIdExpression(getCurScope(), ScopeSpec,
++              SourceLocation(), Name, true, false);
++          if (Helper.isInvalid()) return ExprError();
++          Expr *Argument = ArgExprs[Index];
++          auto Literal = Actions.ActOnCallExpr(getCurScope(), Helper.get(), Loc,
++              llvm::MutableArrayRef<Expr *>(&Argument, 1), RParLoc);
++          if (Literal.isInvalid()) return ExprError();
++          ArgExprs[Index] = Literal.get();
 +        }
 --- ParseExprCXX.cpp
 +++ ParseExprCXX.cpp

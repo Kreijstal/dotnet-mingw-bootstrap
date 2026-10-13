@@ -82,7 +82,10 @@
         "source native value-pointer and boxed-handle distinction in declaration/expression IL lowering with binding/cast rejection",
         "typed native value-pointer fields/locals/method signatures and conditional/null handling",
         "typed delegate multicast assignment through actual CLR Combine/Remove and managed storage",
-        "instance custom/automatic void events with CLR event metadata, Clang-checked accessor dispatch, virtual/access rules, imported events and out-of-line definitions"
+        "instance custom/automatic void events with CLR event metadata, Clang-checked accessor dispatch, virtual/access rules, imported events and out-of-line definitions",
+        "inherited/instance String/Object literal binding and native RVA character literals",
+        "CLR static source conversion operator declarations/bodies consumed by C#, including out-of-line and tracking-reference operands",
+        "combined CLI access flags for methods, fields and accessors and managed __finally spelling"
       ],
       "remaining": [
         "implicit boxing into interfaces, primitive boxes and boxed-handle conversions",
@@ -92,9 +95,10 @@
         "extended tracking references, nonprimitive pinning and managed pointer operations",
         "general attributes/interface static constructors/multiple translation units",
         "full CLI semantic analysis and metadata type discovery",
-        "for each with unbraced bodies, tracking-reference variables and value/native enumerators"
+        "for each with unbraced bodies, tracking-reference variables and value/native enumerators",
+        "general CLI source implicit conversion/cast selection and complete conversion-operator discovery"
       ],
-      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values test-tracking test-pinning test-boxed-values test-static-fields test-static-properties test-nativeints test-layout test-switch test-generics test-indexers test-named-overrides test-each test-com test-delegates test-type-tokens test-constructors test-paramarrays test-primitive-statics test-guid-object-boxing test-managed-templates test-nested-indexers test-native-storage test-destructors test-value-pointers test-events test-multicast"
+      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values test-tracking test-pinning test-boxed-values test-static-fields test-static-properties test-nativeints test-layout test-switch test-generics test-indexers test-named-overrides test-each test-com test-delegates test-type-tokens test-constructors test-paramarrays test-primitive-statics test-guid-object-boxing test-managed-templates test-nested-indexers test-native-storage test-destructors test-value-pointers test-events test-multicast test-semantic-literals test-conversions test-combined-access test-argument-files"
     },
     {
       "stage": 4,

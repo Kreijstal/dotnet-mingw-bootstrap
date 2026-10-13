@@ -403,6 +403,81 @@ A^ Get() { return nullptr; }
 int main() { A^ a=nullptr; Get()+=a; return 0; }' 'not assignable' "${args[@]}"
   reject_case multicast-object 'int main() { System::Object^ a=nullptr; System::Object^ b=nullptr; a+=b; return 0; }' 'invalid operands' "${args[@]}"
 }
+step_test-semantic-literals() {
+  local refs=("$CPPCLI_SDK"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
+  /clang64/bin/clang++.exe -std=c++17 -O2 -shared "$src/tests/semantic-literals-native.cpp" -o "$testdir/semantic-literals-native.dll"
+  compile "$(cygpath -m "$src/tests/semantic-literals.cpp")" --target library \
+    --type System.Globalization.CultureInfo --type System.Collections.Hashtable --type System.Exception \
+    --reference "$(cygpath -m "${refs[-1]}/System.Collections.NonGeneric.dll")" \
+    --native-library semantic-literals-native.dll \
+    -o "$(cygpath -m "$testdir/semantic-literals.dll")"
+  mkdir -p "$testdir/semantic-literals-consumer"
+  cp "$src/tests/SemanticLiteralsConsumer.cs" "$testdir/semantic-literals-consumer/Program.cs"
+  cat > "$testdir/semantic-literals-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="semantic-literals"><HintPath>../semantic-literals.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/semantic-literals-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  cp "$testdir/semantic-literals-native.dll" "$testdir/semantic-literals-consumer/bin/Debug/net8.0/"
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/semantic-literals-consumer/bin/Debug/net8.0/consumer.dll")"
+}
+step_test-argument-files() {
+  /clang64/bin/python.exe - "$(cygpath -m "$testdir")" "$(cygpath -m "$CPPCLI_SDK")" "$(cygpath -m "$CPPCLI_ILASM")" "$(cygpath -m "$CPPCLI_CLANG")" <<'PY'
+import json,sys
+from pathlib import Path
+work,sdk,ilasm,clang=sys.argv[1:]
+work=Path(work)
+source=work/'JSON arguments λ $.cpp'
+source.write_text('int main() { System::Console::WriteLine(ARG_TEXT); return 0; }\n',encoding='utf-8')
+arguments=[str(source),'-o',str(work/'argument-files.dll'),'--sdk',sdk,'--ilasm',ilasm,'--clang',clang,
+           '-D','ARG_TEXT="JSON: λ $(literal) & quoted \\"text\\""']
+(work/'argument-files.json').write_text(json.dumps(arguments,ensure_ascii=False),encoding='utf-8')
+(work/'argument-files-invalid.json').write_text('[42]',encoding='utf-8')
+PY
+  /clang64/bin/python.exe "$build/cli-clang" --arguments-json "$(cygpath -m "$testdir/argument-files.json")"
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/argument-files.dll")" > "$testdir/argument-files.stdout"
+  tr -d '\r' < "$testdir/argument-files.stdout" > "$testdir/argument-files.actual"
+  printf '%s\n' 'JSON: λ $(literal) & quoted "text"' > "$testdir/argument-files.expected"
+  cmp "$testdir/argument-files.expected" "$testdir/argument-files.actual"
+  if /clang64/bin/python.exe "$build/cli-clang" --arguments-json "$(cygpath -m "$testdir/argument-files-invalid.json")" > "$testdir/argument-files-invalid.log" 2>&1; then
+    die "accepted non-string JSON arguments"
+  fi
+  grep -q 'array of strings' "$testdir/argument-files-invalid.log"
+  log "PASS JSON argument vectors: Unicode/spaced paths, macro quotes/metacharacters, nested metadata transport and invalid vector rejection"
+}
+step_test-conversions() {
+  compile "$(cygpath -m "$src/tests/conversions.cpp")" --target library -o "$(cygpath -m "$testdir/conversions.dll")"
+  mkdir -p "$testdir/conversions-consumer"
+  cp "$src/tests/ConversionsConsumer.cs" "$testdir/conversions-consumer/Program.cs"
+  cat > "$testdir/conversions-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="conversions"><HintPath>../conversions.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/conversions-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/conversions-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case conversion-unrelated 'public ref class C { public: static operator int(double value) { return (int)value; } }; int main() { return 0; }' 'containing type'
+  reject_case conversion-arity 'public ref class C { public: static operator int(C^ value,int other) { return other; } }; int main() { return 0; }' 'one parameter'
+  reject_case conversion-void 'public ref class C { public: static operator void(C^ value) {} }; int main() { return 0; }' 'non-void'
+}
+step_test-combined-access() {
+  compile "$(cygpath -m "$src/tests/combined-access.cpp")" --target library -o "$(cygpath -m "$testdir/combined-access.dll")"
+  cp "$src/tests/imported-combined-access.cpp" "$testdir/imported-combined-access.cpp"
+  compile "$(cygpath -m "$testdir/imported-combined-access.cpp")" --target library --type CombinedAccess \
+    -o "$(cygpath -m "$testdir/imported-combined-access.dll")"
+  mkdir -p "$testdir/combined-access-consumer"
+  cp "$src/tests/CombinedAccessConsumer.cs" "$testdir/combined-access-consumer/Program.cs"
+  cat > "$testdir/combined-access-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="combined-access"><HintPath>../combined-access.dll</HintPath></Reference><Reference Include="imported-combined-access"><HintPath>../imported-combined-access.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/combined-access-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/combined-access-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case combined-local-and 'public ref class C { protected private: int Read() { return 42; } }; int main() { C^ c=gcnew C(); return c->Read(); }' 'protected member'
+  reject_case combined-foreign-or '#using "combined-access.dll"
+int main() { CombinedAccess^ c=gcnew CombinedAccess(); return c->OrMethod(); }' 'protected member' --type CombinedAccess
+  reject_case combined-foreign-and '#using "combined-access.dll"
+public ref class Foreign : CombinedAccess { public: int Read() { return AndMethod(); } }; int main() { return 0; }' 'undeclared identifier' --type CombinedAccess
+}
 step_test-events() {
   local args=(--type System.Delegate --type System.MulticastDelegate --type System.Action)
   compile "$(cygpath -m "$src/tests/events.cpp")" --target library -o "$(cygpath -m "$testdir/events.dll")" "${args[@]}"

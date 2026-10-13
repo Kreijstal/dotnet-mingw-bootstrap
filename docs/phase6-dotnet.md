@@ -4963,3 +4963,78 @@ Evidence is archived under
 coverage remains 58/139; full native layout, printing runtime, WindowsDesktop
 packs and an installable WPF package remain unfinished. Installed compiler
 packages are unchanged; these changes are in the development frontend.
+
+## 54. Printing literals, conversion metadata and combined access
+
+The next 2026-10-13 continuation moves the original printing gate past its
+inherited GetString call, static conversion declarations and combined access
+labels. The private Clang parser inspects actual managed method/overload
+declarations to adapt literal arguments in String/Object slots, including
+inherited instance methods. Clang still checks overloads, arity and other
+argument conversions. Actual Hashtable.Add/ContainsKey calls now store/look up
+managed string keys, matching the original printing delegate table shape.
+
+The native comparison check exposed previously invalid IL for direct native
+literal arguments. Array-to-pointer decay now emits an address of null-terminated
+RVA character data. Managed literal markers and String constructors explicitly
+emit CLR strings. Independently compiled MinGW functions verify narrow/wide
+pointer ABI, raw non-UTF-8/UTF-8 bytes, adjacent literals, embedded nulls, wide
+alignment and retention across GC. This does not establish collectible-assembly
+unload behavior or every mixed native/managed overload policy.
+
+Source static conversion declarations and matching out-of-line definitions now
+emit real specialname op_Implicit/op_Explicit methods. C# callers exercise
+reference/value inputs/results, multiple result types, null behavior and GC.
+A printing-style ref-class tracking-reference operand has a CLR class-byref
+signature, and reflection invokes its actual field-reading body. Invalid
+arity, void results and conversions unrelated to their containing type reject.
+This is conversion **declaration/body/metadata support**: general source CLI
+implicit assignments, argument conversions and cast selection still remain
+unfinished. No synthetic conversion body replaces original implementations.
+
+Both orders of public/protected, protected/private and public/private labels
+map to famorassem, famandassem and assembly flags. Ordinary methods, instance/
+static fields and auto/custom property accessors preserve their CLR access.
+Source same-assembly calls and local derived calls run; a second CLI assembly's
+derived call reaches a family-or-assembly member, while unrelated foreign calls
+and foreign family-and-assembly access reject. Existing event/property access
+checks still pass. Printing's __finally after managed try/catch reuses the
+existing CLR finally implementation; focused return and rethrow paths verify
+cleanup. Native __try/SEH remains outside this proof.
+
+Additional serialization, clone, asynchronous-result, event and dictionary
+types are imported from already source-built dependencies. Importing XPathItem
+preserves XPathNavigator's real base chain when ICloneable is present. The full
+printing argument vector then exceeded Windows/MSYS launch limits; the driver
+and metadata reader now accept UTF-8 JSON argument vectors. The gate records
+both expanded arguments and the actual short invocation. A real executable
+validates Unicode/spaced paths, macro quotes/metacharacters and nested metadata
+transport; non-string argument vectors reject.
+
+Focused commands on win11, with the usual source SDK/ilasm/M612/CLANG64 and
+WPF_BUILD/WPF_CPPCLI_BUILD environment:
+
+```bash
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-semantic-literals test-conversions test-combined-access
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-semantic-literals test-exceptions
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-semantic-literals test-argument-files
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh build-directwrite check-directwrite-assembly printing-gate
+```
+
+The listed cppcli commands pass with zero C# warnings/errors. Earlier
+focused core, native-string, tracking-reference, event and property checks also
+pass. The final WPF command rebuilds and validates DirectWrite: 85 types, 283
+prepared bodies, 81 font families and the original factory, managed COM loaders
+and owned font/face/file paths. It then **fails** in printing Sema, now at
+PrintQueue.cpp:995's incomplete PrintSystemException catch type. Further errors
+show missing implicit primitive/enum boxing into Object parameters, registry/
+exception metadata and definition/base-chain ordering. Previous literal,
+conversion-declaration, combined-label and __finally failures are absent.
+
+Evidence is archived locally under
+`tmp/wpf8-support/validation/printing-literals-conversions-20261013`.
+The gate still covers 49 project inputs/66 original tree C++ files; no complete
+System.Printing implementation DLL, separate-unit link/runtime proof or WPF
+package is produced. Native coverage remains 58/139; full layout, printing
+runtime and WindowsDesktop SDK/packs/installation remain open. Installed
+compiler packages are unchanged.

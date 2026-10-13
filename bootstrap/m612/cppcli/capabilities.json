@@ -220,7 +220,13 @@
     "Typed source/imported delegate += and -= call CLR Delegate.Combine/Remove with assignment conversion/access checks and captured instance/array storage",
     "Instance custom and void automatic managed events emit genuine CLR EventMap/Event/MethodSemantics rows and add/remove/raise accessors; subscription/invocation use Clang member lookup and access checks",
     "Custom event accessor visibility, virtual overrides, out-of-line definitions and typed return/byref raises; metadata-imported events preserve actual accessor method identities",
-    "Automatic event raising snapshots its private delegate backing field and skips empty invocation lists; event reads/assignment/address escape are rejected rather than exposing backing storage"
+    "Automatic event raising snapshots its private delegate backing field and skips empty invocation lists; event reads/assignment/address escape are rejected rather than exposing backing storage",
+    "Clang-resolved managed instance/inherited method literal binding for String/Object parameters preserves typed overload selection; native free calls keep raw character pointer arguments",
+    "Native narrow/UTF-8/wide literals use null-terminated RVA storage with embedded-zero and post-GC native retention checks; managed literal markers and String constructors emit CLR strings directly",
+    "Source static implicit/explicit conversion declarations and matching out-of-line definitions emit CLR specialname op_Implicit/op_Explicit; C# callers execute reference/value, tracking-reference, null and multiple-result conversion bodies",
+    "Combined public/protected, protected/private and public/private access in either order emits famorassem/famandassem/assembly methods, fields and property accessors with source and imported access checks",
+    "Printing-style __finally after managed try/catch uses existing CLR finally lowering and preserves return/rethrow cleanup",
+    "UTF-8 JSON argument vectors transport full printing references/type lists through the CLI driver and metadata reader without Windows command-line overflow; Unicode/path/macro quoting is validated"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -283,6 +289,9 @@
     "Complete DirectWriteForwarder assembly/version/file/informational metadata now match WPF 8.0.0 source-build settings; broader packaging identity still needs integration; CLR JIT preparation proves body validity but does not execute every path",
     "PresentationCore runtime checks cover CLR type loading, matrix/point operations and DirectWrite-backed fonts/glyph metadata; they do not prove a rendered WPF window or cover the missing native text exports",
     "Finalizer lowering covers source ref classes and validated source dispose-pattern inheritance; generic-qualified finalizer owners and arbitrary imported-base finalization patterns remain unverified",
-    "Static events, automatic interface events, automatic non-void events, generic event discovery, ambiguous/aliased automatic delegate signatures and concurrent automatic subscription remain unverified or unsupported; extended qualified event accessor paths remain incomplete"
+    "Static events, automatic interface events, automatic non-void events, generic event discovery, ambiguous/aliased automatic delegate signatures and concurrent automatic subscription remain unverified or unsupported; extended qualified event accessor paths remain incomplete",
+    "CLR conversion-operator emission does not yet implement general source CLI implicit assignment/argument conversion or cast selection; aliases/qualified out-of-line signature matching, native conversions, generic operators and duplicate CLR operator signature coverage remain incomplete",
+    "Managed call literal adaptation currently handles direct method/overload declarations with matching arity and String/Object slots; generic/function-pointer literal binding and mixed native-character/managed overload policies remain incomplete",
+    "Tracking-reference ref-class operand support covers metadata and reads/member access; full automatic storage/lifetime of stack ref-class objects and extended tracking-reference assignments remain unfinished"
   ]
 }

@@ -170,6 +170,12 @@ def main():
               "System.Windows.Xps.Serialization.XpsSerializationXpsDriverDocEventArgs"]
     types += ["System.Windows.Controls.PrintDialog", "System.IndexOutOfRangeException", "System.Threading.ThreadPriority"]
     types += ["System.Collections.ObjectModel.Collection`1"]
+    types += ["System.Runtime.Serialization.IDeserializationCallback", "System.ICloneable"]
+    types += ["System.Xml.XPath.XPathItem", "System.Runtime.Serialization.ISerializable",
+              "System.IAsyncResult", "System.AsyncCallback", "System.Threading.WaitHandle",
+              "System.Windows.Xps.Packaging.PackagingProgressEventArgs"]
+    types += ["System.Threading.AutoResetEvent", "System.Threading.EventWaitHandle", "System.Threading.EventResetMode",
+              "System.Collections.IDictionaryEnumerator", "System.Collections.DictionaryEntry"]
     for name in types:
         command += ["--type", name]
     # SHLWAPI and KERNEL32 both export DelayLoadFailureHook. Keep SHLWAPI
@@ -178,6 +184,9 @@ def main():
     for name in ["kernel32", "advapi32", "winspool", "gdi32", "user32", "ole32"]:
         command += ["--native-import", win(Path("/clang64/lib/lib" + name + ".a"))]
     tree_count = len(list((original / "CPP").rglob("*.cpp")))
+    arguments = work / "arguments.json"
+    arguments.write_text(json.dumps(command[2:], ensure_ascii=False), encoding="utf-8")
+    invocation = command[:2] + ["--arguments-json", win(arguments)]
     (work / "inputs.json").write_text(json.dumps({
         "project": "System.Printing.vcxproj", "projectInputs": inputs,
         "treeCppCount": tree_count,
@@ -189,9 +198,10 @@ def main():
         "sdkFlagSource": "https://raw.githubusercontent.com/microsoft/win32metadata/main/generation/WinSDK/RecompiledIdlHeaders/um/winspool.h",
         "scope": "combined-source compiler diagnostic gate; success does not prove separate-unit linking or printing runtime",
         "command": command,
+        "invocation": invocation,
     }, indent=2) + "\n")
     print(f"System.Printing: {len(inputs)} project compilation inputs; original tree has {tree_count} C++ files", flush=True)
-    return subprocess.run(command).returncode
+    return subprocess.run(invocation).returncode
 
 
 if __name__ == "__main__":

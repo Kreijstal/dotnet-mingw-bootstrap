@@ -48,7 +48,14 @@ def main():
         # turn a successful Unicode-path compilation into an encoding error.
         sys.stdout.reconfigure(encoding="utf-8")
         sys.stderr.reconfigure(encoding="utf-8")
-    ap = argparse.ArgumentParser(description=__doc__)
+    arguments = sys.argv[1:]
+    if arguments and arguments[0] == "--arguments-json":
+        if len(arguments) != 2:
+            raise ValueError("--arguments-json requires a single JSON argument-vector file")
+        arguments = json.loads(Path(arguments[1]).read_text(encoding="utf-8"))
+        if not isinstance(arguments, list) or not all(isinstance(value, str) for value in arguments):
+            raise ValueError("JSON arguments must be an array of strings")
+    ap = argparse.ArgumentParser(description=__doc__, epilog="Use --arguments-json FILE to supply a UTF-8 JSON argument vector without shell quoting or Windows command-length limits.")
     ap.add_argument("input", type=Path)
     ap.add_argument("-o", required=True, type=Path)
     ap.add_argument("-I", action="append", default=[])
@@ -69,7 +76,7 @@ def main():
     ap.add_argument("--ilasm", type=Path, default=os.environ.get("CPPCLI_ILASM"))
     ap.add_argument("--plugin", type=Path)
     ap.add_argument("--metadata-tool", type=Path)
-    a = ap.parse_args()
+    a = ap.parse_args(arguments)
     version = subprocess.check_output([a.clang, "--version"], text=True)
     if "clang version 22.1.8" not in version:
         ap.error("the frontend plugin requires Clang 22.1.8")
@@ -151,7 +158,10 @@ def main():
     references = list({os.path.normcase(str(p.resolve())): p.resolve() for p in references}.values())
     access_file = work / "access.json"
     access_file.write_text(json.dumps({"Assembly": assembly_name, "PublicKey": public_key, "Friends": friends}), encoding="utf-8")
-    run([dotnet, metadata_tool.resolve(), manifest, header, ";".join(types), "--access", access_file, *references])
+    metadata_arguments = work / "metadata-arguments.json"
+    metadata_arguments.write_text(json.dumps([str(value) for value in
+        [manifest, header, ";".join(types), "--access", access_file, *references]], ensure_ascii=False), encoding="utf-8")
+    run([dotnet, metadata_tool.resolve(), "--arguments-json", metadata_arguments])
     # Never suppress Clang diagnostics to make a surrogate parse.
     action("cli-adapt", shim, ["metadata=" + str(manifest), "output=" + str(adapted)])
     action("cli-emit", adapted, ["metadata=" + str(manifest), "output=" + str(il),

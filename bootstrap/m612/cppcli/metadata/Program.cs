@@ -228,6 +228,8 @@ static class Program
     {
         try
         {
+            if(args.Length==2 && args[0]=="--arguments-json")
+                args=JsonSerializer.Deserialize<string[]>(File.ReadAllText(args[1])) ?? throw new Exception("invalid JSON metadata argument vector");
             if (args.Length < 4) throw new Exception("usage: metadata output.json output.hpp type-list assembly...");
             string jsonPath = args[0], headerPath = args[1];
             var wanted = args[2].Split(';', StringSplitOptions.RemoveEmptyEntries).ToHashSet(StringComparer.Ordinal);

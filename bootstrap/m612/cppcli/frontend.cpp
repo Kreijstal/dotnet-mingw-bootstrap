@@ -47,6 +47,11 @@ bool annotated(const Decl* d, llvm::StringRef text) {
     for (auto* a : d->specific_attrs<AnnotateAttr>()) if (a->getAnnotation() == text) return true;
     return false;
 }
+std::string emitted_access(const Decl* declaration, AccessSpecifier access) {
+    auto cli=annotation(declaration,"cli.access:");
+    if(cli=="assembly" || cli=="famorassem" || cli=="famandassem") return cli;
+    return access==AS_private ? "private" : access==AS_protected ? "family" : "public";
+}
 bool record_annotated(const CXXRecordDecl* r, llvm::StringRef name) {
     if (!r) return false;
     if (annotated(r, name) || (r->getDefinition() && annotated(r->getDefinition(), name))) return true;
@@ -610,6 +615,28 @@ protected:
             }
             // Find only CLI class/member declaration boundaries. Clang still
             // parses parameter expressions, default arguments and method bodies.
+            for(size_t pos=0;pos+2<tokens.size();++pos) {
+                if(tokens[pos+2].text!=":") continue;
+                auto first=tokens[pos].text, second=tokens[pos+1].text;
+                std::string combined;
+                if((first=="public" && second=="protected") || (first=="protected" && second=="public")) combined="famorassem";
+                if((first=="private" && second=="protected") || (first=="protected" && second=="private")) combined="famandassem";
+                if((first=="public" && second=="private") || (first=="private" && second=="public")) combined="internal";
+                if(combined.empty()) continue;
+                tokens[pos].text=combined; tokens[pos].kind=tok::identifier;
+                tokens.erase(tokens.begin()+pos+1);
+            }
+            auto cpp_access=[](const std::string& access) {
+                return access=="internal" || access=="famorassem" ? std::string("public") : access=="famandassem" ? std::string("protected") : access;
+            };
+            auto access_annotation=[](const std::string& access) {
+                auto cli=access=="internal" ? "assembly" : access;
+                return access=="internal" || access=="famorassem" || access=="famandassem" ?
+                    "__attribute__((annotate(\"cli.access:"+cli+"\"))) " : std::string();
+            };
+            auto access_label=[](const std::string& access) {
+                return access=="public" || access=="private" || access=="protected" || access=="internal" || access=="famorassem" || access=="famandassem";
+            };
             std::vector<std::string> class_context(tokens.size()), class_access(tokens.size());
             std::vector<unsigned> class_depth(tokens.size());
             std::vector<bool> class_interface(tokens.size(), false);
@@ -627,11 +654,10 @@ protected:
                 bool member_begin = true;
                 std::string access = tokens[i].text == "interface" || tokens[i + 1].text == "struct" ? "public" : "private";
                 for (size_t j = open + 1; j < tokens.size() && depth; ++j) {
-                    bool access_label = depth == 1 && j + 1 < tokens.size() && tokens[j + 1].text == ":" &&
-                        (tokens[j].text == "public" || tokens[j].text == "private" || tokens[j].text == "protected" || tokens[j].text == "internal");
-                    if (access_label) { access = tokens[j].text; member_begin = false; }
+                    bool label = depth == 1 && j + 1 < tokens.size() && tokens[j + 1].text == ":" && access_label(tokens[j].text);
+                    if (label) { access = tokens[j].text; member_begin = false; }
                     else if (depth == 1 && tokens[j].text == ":" && j > open + 1 &&
-                        (tokens[j-1].text == "public" || tokens[j-1].text == "private" || tokens[j-1].text == "protected" || tokens[j-1].text == "internal")) member_begin = true;
+                        access_label(tokens[j-1].text)) member_begin = true;
                     else if (depth == 1 && member_begin && tokens[j].text != "}" && tokens[j].text != ";") { member_starts.insert(j); member_begin = false; }
                     class_context[j] = name; class_access[j] = access;
                     class_interface[j] = tokens[i].text == "interface";
@@ -970,7 +996,7 @@ protected:
                     if (end == tokens.size() || tokens[end].text != "{") throw std::runtime_error("catch requires a block");
                     end = matching(end, "{", "}") + 1;
                 }
-                if (end + 1 >= tokens.size() || tokens[end].text != "finally" || tokens[end + 1].text != "{") continue;
+                if (end + 1 >= tokens.size() || (tokens[end].text != "finally" && tokens[end].text != "__finally") || tokens[end + 1].text != "{") continue;
                 if (catches) cli_structural[begin] = "try { try";
                 cli_structural[end] = std::string(catches ? "} " : "") + "catch (::cli::__finally_marker*)";
                 size_t close = matching(end + 1, "{", "}");
@@ -1047,8 +1073,67 @@ protected:
             };
             std::set<std::pair<std::string, std::string>> property_names;
             std::map<std::pair<std::string, std::string>, std::string> indexed_facades;
+            struct Conversion { size_t open, begin; std::string result, key, owner, kind, name; bool declaration; };
+            std::map<size_t,Conversion> conversions;
+            std::set<std::string> managed_owners;
+            for(const auto& owner:class_context) if(!owner.empty()) managed_owners.insert(owner);
+            std::map<std::string,std::string> conversion_kinds;
+            for(size_t pos=0;pos+2<tokens.size();++pos) {
+                if(tokens[pos].text!="operator") continue;
+                bool explicit_conversion=pos && tokens[pos-1].text=="explicit";
+                bool declaration=class_depth[pos]==1 && !class_context[pos].empty() && pos &&
+                    (tokens[pos-1].text=="static" || (explicit_conversion && pos>=2 && tokens[pos-2].text=="static"));
+                bool qualified=pos>=2 && tokens[pos-1].text=="::" && managed_owners.count(tokens[pos-2].text);
+                if(!declaration && !qualified) continue;
+                size_t open=pos+1;
+                while(open<tokens.size() && tokens[open].text!="(" && tokens[open].text!=";" && tokens[open].text!="{") ++open;
+                if(open==pos+1 || open==tokens.size() || tokens[open].text!="(") continue;
+                if(tokens[pos+1].kind!=tok::identifier && !keyword_types.count(tokens[pos+1].text) && tokens[pos+1].text!="void" && tokens[pos+1].text!="::") continue;
+                auto close=matching(open,"(",")");
+                size_t parameter_end=close;
+                if(parameter_end>open+2 && tokens[parameter_end-1].kind==tok::identifier && tokens[parameter_end-2].text!="::") --parameter_end;
+                std::string result, identity, parameters;
+                for(size_t j=pos+1;j<open;++j) { result+=tokens[j].text+" "; identity+=tokens[j].text; }
+                for(size_t j=open+1;j<parameter_end;++j) parameters+=tokens[j].text;
+                auto owner=declaration ? class_context[pos] : tokens[pos-2].text;
+                auto key=owner+"|"+identity+"|"+parameters;
+                std::string kind=explicit_conversion ? "explicit" : "implicit";
+                if(declaration) {
+                    auto inserted=conversion_kinds.emplace(key,kind);
+                    if(!inserted.second && inserted.first->second!=kind) throw std::runtime_error("duplicate implicit/explicit conversion signature");
+                }
+                size_t begin=pos;
+                if(qualified) {
+                    begin=pos-2;
+                    while(begin>=2 && tokens[begin-1].text=="::" && tokens[begin-2].kind==tok::identifier) begin-=2;
+                }
+                std::string encoded;
+                const char* hex="0123456789ABCDEF";
+                for(unsigned char c:identity) { encoded+=hex[c>>4]; encoded+=hex[c&15]; }
+                conversions.emplace(pos,Conversion{open,begin,result,key,owner,kind,"_cli_conversion_"+encoded,declaration});
+            }
+            std::map<size_t,std::string> conversion_prefix;
+            std::set<size_t> conversion_explicit;
+            for(auto& entry:conversions) {
+                auto& conversion=entry.second;
+                if(!conversion.declaration) {
+                    auto declared=conversion_kinds.find(conversion.key);
+                    if(declared==conversion_kinds.end()) throw std::runtime_error("out-of-line CLI conversion requires a matching declaration");
+                    conversion.kind=declared->second;
+                    conversion_prefix[conversion.begin]=conversion.result+" __attribute__((annotate(\"cli.conversion:"+conversion.kind+"\"))) ";
+                }
+                conversion.name+="_"+conversion.kind;
+                if(conversion.declaration && entry.first && tokens[entry.first-1].text=="explicit") conversion_explicit.insert(entry.first-1);
+            }
             for (size_t i = 0; i < tokens.size(); ++i) {
                 auto& t = tokens[i];
+                if(conversion_prefix.count(i)) emit(t,conversion_prefix[i]);
+                if(conversion_explicit.count(i)) continue;
+                if(auto found=conversions.find(i);found!=conversions.end()) {
+                    const auto& conversion=found->second;
+                    if(conversion.declaration) emit(t,conversion.result+" __attribute__((annotate(\"cli.conversion:"+conversion.kind+"\"))) ");
+                    emit(t,conversion.name); i=conversion.open-1; continue;
+                }
                 if(finalizer_prefix.count(i)) emit(t,finalizer_prefix[i]);
                 if(finalizer_name.count(i)) { emit(t,finalizer_name[i]); ++i; continue; }
                 if (auto attribute = assembly_attributes.find(i); attribute != assembly_attributes.end()) {
@@ -1061,7 +1146,7 @@ protected:
                 }
                 if (layout_attribute_ends.count(i)) {
                     if (layout_fields.count(i)) {
-                        if (class_access[i] == "internal") emit(t, "__attribute__((annotate(\"cli.access:assembly\")))");
+                        emit(t,access_annotation(class_access[i]));
                         emit(t, layout_fields[i]);
                     }
                     i = layout_attribute_ends[i]; continue;
@@ -1070,10 +1155,10 @@ protected:
                 if (cli_structural.count(i)) { emit(t, cli_structural[i]); continue; }
                 if (interface_virtual.count(i)) emit(t, "virtual");
                 if (interface_pure.count(i)) emit(t, "= 0");
-                if (member_starts.count(i) && class_access[i] == "internal" && t.text != "property" &&
+                if (member_starts.count(i) && !access_annotation(class_access[i]).empty() && t.text != "property" &&
                     !((t.text == "virtual" || t.text == "static") && i+1 < tokens.size() && tokens[i+1].text == "property"))
-                    emit(t, "__attribute__((annotate(\"cli.access:assembly\")))");
-                if (t.text == "internal" && class_depth[i] == 1 && i + 1 < tokens.size() && tokens[i+1].text == ":") { emit(t, "public"); continue; }
+                    emit(t,access_annotation(class_access[i]));
+                if (access_label(t.text) && class_depth[i] == 1 && i + 1 < tokens.size() && tokens[i+1].text == ":") { emit(t,cpp_access(t.text)); continue; }
                 if (i >= 2 && tokens[i-1].text == "::" && i + 2 < tokens.size() && tokens[i+1].text == "::" &&
                     (tokens[i+2].text == "get" || tokens[i+2].text == "set" || tokens[i+2].text == "add" ||
                      tokens[i+2].text == "remove" || tokens[i+2].text == "raise")) {
@@ -1128,7 +1213,7 @@ protected:
                         if (end == tokens.size()) throw std::runtime_error("unterminated managed static initializer");
                         std::string field = tokens[equal - 1].text, field_type;
                         for (size_t j = i + 1; j + 1 < equal; ++j) field_type += tokens[j].text + " ";
-                        emit(t, std::string(class_access[i] == "internal" ? "__attribute__((annotate(\"cli.access:assembly\"))) " : "") + "static " + field_type + field + "; private: static " + field_type +
+                        emit(t, access_annotation(class_access[i]) + "static " + field_type + field + "; private: static " + field_type +
                             " __attribute__((annotate(\"cli.static.init:" + field + "\"))) _cli_init_" + field + "() { return");
                         bool string_field=false,literal_initializer=end>equal+1;
                         bool array_initializer=tokens[equal+1].text=="{" && tokens[end-1].text=="}" &&
@@ -1162,7 +1247,7 @@ protected:
                                 (tokens[j+1].text == ")" || tokens[j+1].text == ",")) emit(tokens[j], "__cli_literal(" + tokens[j].text + ")");
                             else emit(tokens[j], tokens[j].text);
                         }
-                        emit(tokens[end], "; } " + (class_access[i] == "internal" ? "public" : class_access[i]) + ":");
+                        emit(tokens[end], "; } " + cpp_access(class_access[i]) + ":");
                         i = end; continue;
                     }
                 }
@@ -1186,7 +1271,7 @@ protected:
                     property_names.insert({class_context[i], property});
                     bool is_static = i && tokens[i-1].text == "static";
                     bool is_virtual = class_interface[i] || (i && tokens[i-1].text == "virtual");
-                    std::string access_attribute = class_access[i] == "internal" ? "__attribute__((annotate(\"cli.access:assembly\"))) " : "";
+                    std::string access_attribute = access_annotation(class_access[i]);
                     for (size_t j = i + 1; j < name; ++j) {
                         if (tokens[j].text=="virtual") { is_virtual=true; continue; }
                         if (tokens[j].text=="static") { is_static=true; continue; }
@@ -1261,7 +1346,7 @@ protected:
                                 parameters+=signature->second.parameters[j]+" "+argument;
                                 arguments+=argument;
                             }
-                            auto access=class_access[i]=="internal" ? "public" : class_access[i];
+                            auto access=cpp_access(class_access[i]);
                             auto modifier=is_virtual ? "virtual " : "";
                             emit(t,"private: "+property_type+" __cli_backing_"+property+"; "+access+":");
                             emit(t,access_attribute+modifier+"void __attribute__((annotate(\"cli.accessor:add\"))) add_"+property+"("+property_type+" value) { __cli_backing_"+property+" += value; }");
@@ -1269,18 +1354,18 @@ protected:
                             emit(t,"private: "+std::string(modifier)+"void __attribute__((annotate(\"cli.accessor:raise\"))) raise_"+property+"("+parameters+") { "+property_type+" saved=__cli_backing_"+property+"; if(saved!=nullptr) saved("+arguments+"); } "+access+":");
                             i=end-1; continue;
                         }
-                        emit(t, "private: " + std::string(is_static ? "static " : "") + property_type + " __cli_backing_" + property + "; " + class_access[i] + ":");
+                        emit(t, "private: " + std::string(is_static ? "static " : "") + property_type + " __cli_backing_" + property + "; " + cpp_access(class_access[i]) + ":");
                         std::string modifier=is_static ? "static " : is_virtual ? "virtual " : "";
-                        emit(t, modifier + property_type + " __attribute__((annotate(\"cli.accessor:get\"))) get_" + property + "() { return __cli_backing_" + property + "; }");
-                        emit(t, modifier + "void __attribute__((annotate(\"cli.accessor:set\"))) set_" + property + "(" + property_type + " value) { __cli_backing_" + property + " = value; }");
+                        emit(t, access_attribute + modifier + property_type + " __attribute__((annotate(\"cli.accessor:get\"))) get_" + property + "() { return __cli_backing_" + property + "; }");
+                        emit(t, access_attribute + modifier + "void __attribute__((annotate(\"cli.accessor:set\"))) set_" + property + "(" + property_type + " value) { __cli_backing_" + property + " = value; }");
                     } else {
                         int depth = 1;
                         std::string accessor_access=class_access[i];
                         for (size_t j = open + 1; j + 1 < end; ++j) {
                             if(depth==1 && j+1<end && tokens[j+1].text==":" &&
-                                (tokens[j].text=="public" || tokens[j].text=="private" || tokens[j].text=="protected" || tokens[j].text=="internal")) {
+                                access_label(tokens[j].text)) {
                                 accessor_access=tokens[j].text;
-                                emit(tokens[j],accessor_access=="internal" ? "public" : accessor_access);
+                                emit(tokens[j],cpp_access(accessor_access));
                                 emit(tokens[j+1],":"); ++j; continue;
                             }
                             if (interop_ends.count(j)) {
@@ -1297,7 +1382,7 @@ protected:
                                 bool explicit_virtual = false;
                                 for (size_t k = j; k < end && tokens[k].text != "("; ++k) explicit_virtual |= tokens[k].text == "virtual";
                                 emit(tokens[j], std::string(is_static ? "static " : is_virtual && !explicit_virtual ? "virtual " : "") +
-                                    (accessor_access=="internal" ? "__attribute__((annotate(\"cli.access:assembly\"))) " : ""));
+                                    access_annotation(accessor_access));
                             }
                             if (cli_structural.count(j)) {
                                 emit(tokens[j], cli_structural[j]);
@@ -1321,7 +1406,7 @@ protected:
                             if (tokens[j].text == "{") ++depth;
                             else if (tokens[j].text == "}") --depth;
                         }
-                        emit(t,(class_access[i]=="internal" ? "public" : class_access[i])+":");
+                        emit(t,cpp_access(class_access[i])+":");
                     }
                     i = end - 1; continue;
                 }
@@ -1428,6 +1513,8 @@ class Emitter {
     std::set<const FunctionDecl*> selected_native_imports;
     struct GuidConstant { std::string name, type, bytes; };
     std::map<std::string, GuidConstant> guid_constants;
+    struct NativeLiteral { std::string name, bytes; unsigned size; };
+    std::map<std::string, NativeLiteral> native_literals;
     unsigned label_count = 0, max_stack = 0;
     int stack = 0;
     struct ControlLabels { std::string stop, next; unsigned depth; };
@@ -1988,11 +2075,17 @@ class Emitter {
         else throw std::runtime_error("unsupported numeric conversion");
         op(instruction, 1, 1);
     }
+    std::string reference_element_type(QualType t) const {
+        if(auto* record=t->getAsCXXRecordDecl(); record && !record_annotated(record,"cli.value") &&
+            (record_annotated(record,"cli.ref") || !record_annotation(record,"cli.external:").empty()))
+            return "class "+record_name(record);
+        return type(t);
+    }
     std::string type(QualType t) const {
         t = t.getCanonicalType();
         if (auto element = static_property_element(t); !element.isNull()) return type(element);
         if (auto element = interior_element(t); !element.isNull()) return type(element) + "&";
-        if (t->isLValueReferenceType()) return type(t->getPointeeType()) + "&";
+        if (t->isLValueReferenceType()) return reference_element_type(t->getPointeeType()) + "&";
         if (auto* r = value_target(t); r && !annotation(r, "cli.nativeint:").empty())
             return annotation(r, "cli.nativeint:") == "unsigned" ? "native unsigned int" : "native int";
         if (auto* enumeration = t->getAs<EnumType>()) {
@@ -2106,6 +2199,8 @@ class Emitter {
         throw std::runtime_error("static property accessor was not declared: " + name);
     }
     std::string method_name(const FunctionDecl* f) const {
+        auto conversion=annotation(f,"cli.conversion:");
+        if(!conversion.empty()) return conversion=="implicit" ? "op_Implicit" : "op_Explicit";
         if (annotated(f, "cli.cctor")) return ".cctor";
         if (isa<CXXConstructorDecl>(f)) return ".ctor";
         if (f->getTemplatedKind() == FunctionDecl::TK_FunctionTemplateSpecialization) {
@@ -2181,6 +2276,23 @@ class Emitter {
         for (char16_t c : utf16) for (unsigned b : {unsigned(c & 255), unsigned(c >> 8)}) bytes << hex[b >> 4] << hex[b & 15] << ' ';
         bytes << ")";
         op(bytes.str(), 0, 1);
+    }
+    void native_literal(const StringLiteral* literal) {
+        if (!ci.getTarget().isLittleEndian()) fail(literal, "native literal storage requires a little-endian target");
+        std::string bytes;
+        const char* hex="0123456789ABCDEF";
+        unsigned width=literal->getCharByteWidth();
+        for(unsigned i=0;i<=literal->getLength();++i) {
+            uint32_t value=i==literal->getLength() ? 0 : literal->getCodeUnit(i);
+            for(unsigned j=0;j<width;++j) { unsigned byte=(value>>(8*j))&255; bytes+=hex[byte>>4]; bytes+=hex[byte&15]; bytes+=' '; }
+        }
+        auto found=native_literals.find(bytes);
+        if(found==native_literals.end()) {
+            auto name="__cpp_cli_literal_"+std::to_string(native_literals.size());
+            found=native_literals.emplace(bytes,NativeLiteral{name,bytes,(literal->getLength()+1)*width}).first;
+        }
+        op("ldsflda valuetype '"+found->second.name+"_type' '"+found->second.name+"'",0,1);
+        op("conv.u",1,1);
     }
     bool native_field(const FieldDecl* field) const {
         return field && native_pod(context.getCanonicalTagType(field->getParent()));
@@ -2459,7 +2571,7 @@ class Emitter {
             llvm::SmallString<32> value; enumeration->getInitVal().toString(value, 10);
             op(std::string(context.getTypeSize(enumeration->getType()) > 32 ? "ldc.i8 " : "ldc.i4 ") + value.str().str(), 0, 1); return;
         }
-        if (auto* p = dyn_cast<ParmVarDecl>(d)) { op("ldarg " + std::to_string(parameters.at(p)), 0, 1); if (p->getType()->isReferenceType()) op("ldobj " + type(p->getType()->getPointeeType()), 1, 1); return; }
+        if (auto* p = dyn_cast<ParmVarDecl>(d)) { op("ldarg " + std::to_string(parameters.at(p)), 0, 1); if (p->getType()->isReferenceType()) op("ldobj " + reference_element_type(p->getType()->getPointeeType()), 1, 1); return; }
         if (auto* v = dyn_cast<VarDecl>(d)) {
             auto literal = annotation(v, "cli.import.constant:");
             if (!literal.empty()) {
@@ -2471,7 +2583,7 @@ class Emitter {
             if (v->isStaticDataMember()) { op("ldsfld " + static_field_signature(v), 0, 1); return; }
             auto it = locals.find(v);
             if (it == locals.end()) fail(at, "global/static storage is not supported yet");
-            op("ldloc " + std::to_string(it->second), 0, 1); if (v->getType()->isReferenceType()) op("ldobj " + type(v->getType()->getPointeeType()), 1, 1); return;
+            op("ldloc " + std::to_string(it->second), 0, 1); if (v->getType()->isReferenceType()) op("ldobj " + reference_element_type(v->getType()->getPointeeType()), 1, 1); return;
         }
         fail(at, "unsupported declaration reference");
     }
@@ -3065,7 +3177,7 @@ class Emitter {
         }
         if (f->getNameAsString() == "__cli_literal") {
             if (c->getNumArgs() != 1 || !isa<StringLiteral>(c->getArg(0)->IgnoreParenImpCasts())) fail(c, "invalid string literal marker");
-            expr(c->getArg(0)); return;
+            string_literal(cast<StringLiteral>(c->getArg(0)->IgnoreParenImpCasts())); return;
         }
         if (f->getNameAsString() == "__cli_empty_params") {
             auto* target = handle_target(c->getType());
@@ -3191,7 +3303,7 @@ class Emitter {
             }
             if (record_name(target) == "[System.Runtime]'System.String'") {
                 if (count == 1 && isa<StringLiteral>(argument(0)->IgnoreParenImpCasts())) {
-                    expr(argument(0));
+                    string_literal(cast<StringLiteral>(argument(0)->IgnoreParenImpCasts()));
                     op("callvirt instance char[] [System.Runtime]System.String::ToCharArray()", 1, 1);
                     op("newobj instance void [System.Runtime]System.String::.ctor(char[])", 1, 1); return;
                 }
@@ -3412,6 +3524,7 @@ class Emitter {
             auto* conversion_method = conversion_call ? dyn_cast_or_null<CXXMethodDecl>(conversion_call->getDirectCallee()) : nullptr;
             bool static_property_conversion = conversion_method && record_annotated(conversion_method->getParent(), "cli.static.property.proxy");
             if (c->getCastKind() == CK_ArrayToPointerDecay) {
+                if (auto* literal=dyn_cast<StringLiteral>(c->getSubExpr()->IgnoreParenImpCasts())) { native_literal(literal); return; }
                 auto* member = dyn_cast<MemberExpr>(strip(c->getSubExpr())->IgnoreParenImpCasts());
                 if (member && native_field(dyn_cast<FieldDecl>(member->getMemberDecl()))) {
                     // Native inline arrays occupy their containing record's
@@ -3607,6 +3720,7 @@ class Emitter {
             const Expr* stripped = arg->IgnoreParenImpCasts();
             if (isa<StringLiteral>(stripped) && record_name(target) != "[System.Runtime]'System.String'")
                 fail(c, "string literals can only initialize String handles");
+            if (auto* literal=dyn_cast<StringLiteral>(stripped)) { string_literal(literal); return; }
             if (auto* other = handle_target(arg->getType()))
                 if (record_name(target) != record_name(other) && !other->isDerivedFrom(target)) fail(c, "invalid managed handle conversion");
             expr(arg); return;
@@ -4035,6 +4149,17 @@ public:
         if (ci.getSourceManager().isInSystemHeader(f->getLocation()) &&
             !(method && (record_annotated(method->getParent(), "cli.ref") || record_annotated(method->getParent(), "cli.value"))) && !native_function(f)) return true;
         validate_interop_attributes(f, 2);
+        if(!annotation(f,"cli.conversion:").empty()) {
+            if(!method || !method->isStatic() || method->getNumParams()!=1 || method->getReturnType()->isVoidType() ||
+                method->getReturnType()->isReferenceType() || (!record_annotated(method->getParent(),"cli.ref") && !record_annotated(method->getParent(),"cli.value")))
+                throw std::runtime_error("CLI conversion requires a managed static method, one parameter and a non-void non-byref result");
+            auto source=method->getParamDecl(0)->getType().getNonReferenceType();
+            auto* from=handle_target(source); if(!from) from=source->getAsCXXRecordDecl();
+            auto* to=handle_target(method->getReturnType()); if(!to) to=method->getReturnType()->getAsCXXRecordDecl();
+            auto* owner=method->getParent()->getCanonicalDecl();
+            if((!from || from->getCanonicalDecl()!=owner) && (!to || to->getCanonicalDecl()!=owner))
+                throw std::runtime_error("CLI conversion must convert from or to its containing type");
+        }
         if (annotated(f, "cli.reliability")) reliability_contract(f);
         if (annotated(f, "cli.com.visible") && layout_constant(f, "cli.com.visible", -1) != 0 && layout_constant(f, "cli.com.visible", -1) != 1)
             throw std::runtime_error("ComVisibleAttribute requires a boolean value");
@@ -4339,6 +4464,13 @@ public:
             il << ".data '" << constant.name << "_data' = bytearray (" << constant.bytes << ")\n"
                << ".field assembly static initonly " << constant.type << " '" << constant.name << "' at '" << constant.name << "_data'\n";
         }
+        for(const auto& entry:native_literals) {
+            const auto& literal=entry.second;
+            il << ".class private explicit ansi sealed '" << literal.name << "_type' extends [System.Runtime]System.ValueType {\n"
+               << "  .pack 1\n  .size " << literal.size << "\n  .field [0] private uint8 '__storage'\n}\n"
+               << ".data '" << literal.name << "_data' = bytearray (" << literal.bytes << ")\n"
+               << ".field assembly static initonly valuetype '" << literal.name << "_type' '" << literal.name << "' at '" << literal.name << "_data'\n";
+        }
         for (const auto& entry : native_records) {
             const auto& layout = context.getASTRecordLayout(entry.second);
             il << ".class public sequential ansi sealed " << entry.first << " extends [System.Runtime]System.ValueType {\n"
@@ -4376,8 +4508,8 @@ public:
                 flags = "virtual " + std::string(class_override ? "" : "newslot ") + (method->isPureVirtual() ? "abstract " : "");
                 if (method->hasAttr<FinalAttr>()) flags += "final ";
             }
-            il << "  .method " << (destructor || cctor || (isa<CXXMethodDecl>(f) && f->getAccess() == AS_private) ? "private" : f->getAccess() == AS_protected ? "family" : annotation(f, "cli.access:") == "assembly" ? "assembly" : "public") << " hidebysig " << flags
-               << (cctor || isa<CXXConstructorDecl>(f) ? "specialname rtspecialname " : !annotation(f, "cli.accessor:").empty() ? "specialname " : "") << (body.instance ? "instance " : "static ")
+            il << "  .method " << (destructor || cctor ? "private" : emitted_access(f,method ? method->getAccess() : AS_public)) << " hidebysig " << flags
+               << (cctor || isa<CXXConstructorDecl>(f) ? "specialname rtspecialname " : !annotation(f, "cli.accessor:").empty() || !annotation(f,"cli.conversion:").empty() ? "specialname " : "") << (body.instance ? "instance " : "static ")
                << declared_type(f) << " '" << body.name << "'(";
             for (unsigned j = 0; j < f->getNumParams(); ++j) { if (j) il << ", "; il << parameter_signature(f->getParamDecl(j)); }
             il << ") cil managed " << (annotated(f, "cli.preservesig") ? "preservesig " : "") << "{\n";
@@ -4515,14 +4647,14 @@ public:
                 if (annotated(field, "cli.event")) continue;
                 il << "  .field ";
                 if (layout == 2) il << '[' << layout_constant(field, "cli.field.offset", -1) << "] ";
-                il << (field->getAccess() == AS_private ? "private " : field->getAccess() == AS_protected ? "family " : annotation(field, "cli.access:") == "assembly" ? "assembly " : "public ")
+                il << (emitted_access(field,field->getAccess())+" ")
                     << declared_type(field) << " '" << field->getNameAsString() << "'\n";
             }
             for (auto* member : r->decls()) if (auto* field = dyn_cast<VarDecl>(member); field && field->isStaticDataMember()) {
                 if (!annotation(field, "cli.static.property:").empty()) continue;
                 if (field->getType()->isReferenceType() || !interior_element(field->getType()).isNull()) throw std::runtime_error("managed pointer static fields are not enabled yet");
                 validate_declarator(field->getTypeSourceInfo());
-                il << "  .field " << (field->getAccess() == AS_private ? "private " : field->getAccess() == AS_protected ? "family " : annotation(field, "cli.access:") == "assembly" ? "assembly " : "public ")
+                il << "  .field " << (emitted_access(field,field->getAccess())+" ")
                     << "static " << declared_type(field) << " '" << field->getNameAsString() << "'\n";
             }
             bool explicit_cctor = false, field_initializers = false;
