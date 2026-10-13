@@ -604,6 +604,22 @@ int main() { CombinedAccess^ c=gcnew CombinedAccess(); return c->OrMethod(); }' 
   reject_case combined-foreign-and '#using "combined-access.dll"
 public ref class Foreign : CombinedAccess { public: int Read() { return AndMethod(); } }; int main() { return 0; }' 'undeclared identifier' --type CombinedAccess
 }
+step_test-ref-locals() {
+  local refs=("$CPPCLI_SDK"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
+  compile "$(cygpath -m "$src/tests/ref-locals.cpp")" --target library --type System.GC --type System.InvalidOperationException \
+    --type System.Collections.Hashtable --reference "$(cygpath -m "${refs[-1]}/System.Collections.NonGeneric.dll")" \
+    -o "$(cygpath -m "$testdir/ref-locals.dll")"
+  mkdir -p "$testdir/ref-locals-consumer"
+  cp "$src/tests/RefLocalsConsumer.cs" "$testdir/ref-locals-consumer/Program.cs"
+  cat > "$testdir/ref-locals-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="ref-locals"><HintPath>../ref-locals.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/ref-locals-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/ref-locals-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case ref-local-copy 'public ref class C { public: C() {} }; int main() { C first; C second=first; return 0; }' 'ref-class local copy construction'
+  reject_case ref-local-disposal 'public ref class C { public: C() {} ~C() {} }; int main() { C value; return 0; }' 'deterministic disposal requires lexical cleanup'
+}
 step_test-native-offsets() {
   compile "$(cygpath -m "$src/tests/native-offsets.cpp")" --target library --native-library native-offsets-oracle.dll \
     -o "$(cygpath -m "$testdir/native-offsets.dll")"

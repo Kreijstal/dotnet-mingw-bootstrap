@@ -462,7 +462,7 @@ static class Program
             header.WriteLine("template<class T> System::Object* __cli_box_object(T);");
             header.WriteLine("template<class T> __attribute__((annotate(\"cli.interface.object\"))) System::Object* __cli_interface_object(T*);");
             header.WriteLine("template<class T> __attribute__((annotate(\"cli.tracking.temporary\"))) T& __cli_tracking_temporary(T&&);");
-            header.WriteLine("template<class T> __attribute__((annotate(\"cli.box\"))) T* __cli_box_value(T);");
+            header.WriteLine("template<class T> __attribute__((annotate(\"cli.box\"))) T* __cli_box_value(const T&);");
             header.WriteLine("template<class T> cli::array<T>* __cli_empty_params();");
             header.WriteLine("template<class A> struct __cli_array_element; template<class T> struct __cli_array_element<cli::array<T,1>*> { using type=T; }; template<class A> A __cli_array_init(const typename __cli_array_element<A>::type*);");
             header.WriteLine("template<class T, class A> T __cli_safe_cast(A); template<class T, class A> T __cli_dynamic_cast(A);");

@@ -275,7 +275,8 @@
     "If condition declarations and C++17 init statements initialize CLR locals before testing the Clang condition; true/else bindings, lexical shadowing, initializer order, null/String handle identity and loop reinitialization validated",
     "Source __try/__finally cleanup lowers Clang SEHTryStmt to CLR finally with protected returns and __leave targets; normal/exception/return/break/continue/nested cleanup, actual Monitor release to another thread and tracked byref GC validated",
     "Property receiver capture through ref-class tracking referents uses actual CLR class local types; getters/setters preserve identity, receiver-before-RHS evaluation and compacting-GC roots. Unconverted nullptr property captures use managed null storage while subsequent native conversions retain typed zero",
-    "Native offsetof constants use Clang constant evaluation and trivial native POD layouts, including SDK records, nested inline-array fields and packed pointer/scalar fields; independently compiled native field addresses agree. Managed facade layouts and dynamic offsets are rejected"
+    "Native offsetof constants use Clang constant evaluation and trivial native POD layouts, including SDK records, nested inline-array fields and packed pointer/scalar fields; independently compiled native field addresses agree. Managed facade layouts and dynamic offsets are rejected",
+    "Ordinary non-disposable source ref-class/ref-struct local declarations allocate CLR objects in tracked class locals; fields/properties/methods, exact tracking-parameter binding and unary percent preserve identity through Hashtable/Object escape and moving GC"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -360,6 +361,7 @@
     "Tracking-reference returns require an exact referent and direct managed heap location; stack addresses, byref parameter forwarding, local aliases and general escape analysis remain unsupported. Native reference returns remain rejected",
     "Source DllImport currently requires a static bodyless non-variadic ref-class method; PreserveSig=false, managed byref returns, return-target marshalling attributes, ThisCall/FastCall and mixed attribute lists remain unsupported. Declaring an import does not supply the native library/export",
     "Static locals require imported Monitor Enter/Exit metadata and ordinary scalar/handle/managed value/trivial POD storage; TLS, byrefs, native arrays, deterministic native cleanup and recursive initializer behavior remain unsupported. Each declaration executes a Monitor acquisition",
-    "SEH lowering supports __try/__finally cleanup using CLR exception semantics; native __except filters, hardware-fault handling, and __leave within finally handlers remain unsupported. While/for/switch condition declarations remain incomplete"
+    "SEH lowering supports __try/__finally cleanup using CLR exception semantics; native __except filters, hardware-fault handling, and __leave within finally handlers remain unsupported. While/for/switch condition declarations remain incomplete",
+    "Ref-class local storage currently excludes implicit copy/move construction and deterministic IDisposable/destructor cleanup; managed ref members, class-value parameters and broader stack semantics remain incomplete. Direct local-constructor native string literals still need contextual adaptation"
   ]
 }

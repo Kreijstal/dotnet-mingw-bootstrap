@@ -6409,3 +6409,56 @@ covers all 49 original project inputs/66 tree C++ files in a combined diagnostic
 gate, without a per-file compile count. Native coverage remains 58/139. Full
 printing/native text/layout and WindowsDesktop SDK/reference/runtime packaging
 remain required. The WPF packaging goal stays active.
+
+
+## 78. Source ref-class locals and unary percent identity
+
+The 2026-10-13 continuation adds function/source location context to body-lowering
+errors. It identifies the InfoAttributeData failure in
+DriverThunkingProfile.RegisterAttributeMap (GenericDriverThunkFilter.cpp:62).
+The original method declares InfoAttributeData infoData(...) and stores
+(Object^)(%infoData) in a Hashtable. InteropInfoLevelProfile.hpp defines this as
+a private namespace ref struct, not a CLR value type or a type nested in another
+class; the earlier section 77 description of a nested ref struct was imprecise.
+
+Ordinary non-disposable source ref-class/ref-struct locals now use CLR class
+locals, with newobj invoking the actual source constructor. Member access and
+tracking binding reuse existing typed field/property/address lowering. Unary
+percent returns that same reference object rather than boxing a copy. The marker
+facade accepts a const reference so Clang does not create a fake native copy
+before the emitter sees the operand; managed value-class operands still emit
+actual CLR copy boxing. Copy/move construction and deterministic disposal remain
+explicitly rejected until their complete semantics are implemented.
+
+The consumer reproduces a private ref struct, its enum/bool constructor, original
+Hashtable/Add/Object percent escape, and post-insertion mutation. Reflection
+checks the real CLR class identity, private visibility and mutated enum value.
+Additional source ref-class locals check fields, properties, instance methods,
+constructor GC, exact tracking parameters and escaped String/object identity over
+twenty compacting collections. The fixture initially exposed a separate local-
+constructor String literal adaptation gap; the final test passes an actual String
+local to that constructor. That contextual literal gap remains open. Existing
+boxed-value, implicit boxing and tracking-temporary suites pass.
+
+Validation on win11 with the standard compiler/WPF environment:
+
+```sh
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-ref-locals test-boxed-values
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-ref-locals test-implicit-boxing test-tracking-temporaries
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh build-directwrite check-directwrite-assembly printing-gate
+```
+
+The focused rebuild/runtime/rejection suites pass. DirectWrite retains its
+85-type/283-prepared-body/81-font-family runtime proof. Printing passes Clang
+parsing/Sema and the original InfoAttributeData local/percent body; it next fails
+at wcslen in PrinterThunkHandler.ThunkIsMetroDriverEnabled,
+InteropPrinterHandler.cpp:3104. That actual CRT symbol needs explicit native
+binding. No complete printing IL/DLL or printing runtime proof is claimed.
+
+Bash/JSON syntax and whitespace checks pass. Evidence is archived under
+`tmp/wpf8-support/validation/printing-ref-locals-20261013`. All 49 original project
+inputs/66 tree C++ files remain in the combined diagnostic gate, without a
+per-file pass count. Native coverage stays 58/139. Full printing lowering/link/
+runtime, text/layout and WindowsDesktop SDK/reference/runtime packaging remain
+required; the WPF packaging goal stays active.

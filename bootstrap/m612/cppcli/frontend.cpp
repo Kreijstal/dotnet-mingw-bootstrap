@@ -2074,6 +2074,9 @@ class Emitter {
         return "valuetype " + name;
     }
     std::string variable_type(const VarDecl* variable) const {
+        if(!isa<ParmVarDecl>(variable)) if(auto* record=variable->getType()->getAsCXXRecordDecl();
+            record && record_annotated(record,"cli.ref") && !record_annotated(record,"cli.value") &&
+            record_annotation(record,"cli.external:").empty()) return reference_element_type(variable->getType());
         if (!native_reference(variable)) return declared_type(variable);
         auto element = variable->getType()->getPointeeType();
         if (!native_storage(element)) throw std::runtime_error("native references require a primitive or proven GC-free value/native layout");
@@ -3539,6 +3542,11 @@ class Emitter {
             op("box valuetype " + record_name(method->getParent()), 1, 1); return;
         }
         if(f->getNameAsString()=="__cli_box_value") {
+            auto* referent=c->getNumArgs()==1 ? c->getArg(0)->getType()->getAsCXXRecordDecl() : nullptr;
+            if(referent && record_annotated(referent,"cli.ref") && !record_annotated(referent,"cli.value") &&
+                handle_target(c->getType()) && referent->getCanonicalDecl()==handle_target(c->getType())->getCanonicalDecl()) {
+                expr(c->getArg(0)); return;
+            }
             auto* value=c->getNumArgs()==1 ? value_target(c->getArg(0)->getType()) : nullptr;
             auto* target=boxed_target(c->getType());
             if(!value || !target || value->getCanonicalDecl()!=target->getCanonicalDecl()) fail(c,"unary % requires a managed value-class operand");
@@ -4173,6 +4181,14 @@ class Emitter {
             return;
         }
         if (auto* c = dyn_cast<CXXConstructExpr>(e)) {
+            if(auto* record=c->getType()->getAsCXXRecordDecl();record && record_annotated(record,"cli.ref") &&
+                record_annotation(record,"cli.external:").empty()) {
+                if(implements_disposable(record)) fail(c,"ref-class local construction with deterministic disposal requires lexical cleanup");
+                auto* constructor=c->getConstructor();
+                if(constructor->isCopyOrMoveConstructor()) fail(c,"ref-class local copy construction is unsupported");
+                for(unsigned i=0;i<c->getNumArgs();++i) constructor_argument(c->getArg(i),constructor->getParamDecl(i));
+                op("newobj "+signature(constructor),c->getNumArgs(),1); return;
+            }
             if(auto element=typed_box_element(c->getType());!element.isNull()) {
                 if(!c->getNumArgs()) { op("ldnull",0,1); return; }
                 if(c->getNumArgs()!=1) fail(c,"typed box construction requires one value");
@@ -5054,7 +5070,12 @@ public:
                     throw std::runtime_error("entry point must be global int main()");
                 entry = true;
             }
-            ir.push_back(function(f));
+            try { ir.push_back(function(f)); }
+            catch(const std::runtime_error& error) {
+                auto loc=ci.getSourceManager().getPresumedLoc(f->getLocation());
+                throw std::runtime_error("while emitting "+f->getQualifiedNameAsString()+
+                    (loc.isValid() ? " at "+std::string(loc.getFilename())+":"+std::to_string(loc.getLine()) : "")+": "+error.what());
+            }
         }
         if (!entry && options.target == "exe") throw std::runtime_error("missing global int main() entry point");
         std::ostringstream il;
