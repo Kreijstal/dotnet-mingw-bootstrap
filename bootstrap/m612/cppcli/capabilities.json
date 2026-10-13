@@ -273,7 +273,8 @@
     "Bodyless static source ref-class DllImport declarations emit real CLR PInvoke metadata with explicit/default entry points, visibility, Winapi/Cdecl/StdCall, CharSet, last-error, exact spelling and mapping flags; parameter marshalling, SafeHandle, Unicode StringBuilder and native calls across GC validated",
     "Ordinary static locals use private CLR static holder fields and Monitor-protected first-reaching initialization, retaining first receiver/arguments and retrying after exceptions; scalar/managed handle/value/byref persistence, lexical isolation and simultaneous callers validated",
     "If condition declarations and C++17 init statements initialize CLR locals before testing the Clang condition; true/else bindings, lexical shadowing, initializer order, null/String handle identity and loop reinitialization validated",
-    "Source __try/__finally cleanup lowers Clang SEHTryStmt to CLR finally with protected returns and __leave targets; normal/exception/return/break/continue/nested cleanup, actual Monitor release to another thread and tracked byref GC validated"
+    "Source __try/__finally cleanup lowers Clang SEHTryStmt to CLR finally with protected returns and __leave targets; normal/exception/return/break/continue/nested cleanup, actual Monitor release to another thread and tracked byref GC validated",
+    "Property receiver capture through ref-class tracking referents uses actual CLR class local types; getters/setters preserve identity, receiver-before-RHS evaluation and compacting-GC roots. Unconverted nullptr property captures use managed null storage while subsequent native conversions retain typed zero"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",

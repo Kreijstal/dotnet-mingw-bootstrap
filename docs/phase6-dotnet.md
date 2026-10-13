@@ -6321,3 +6321,52 @@ covers all 49 original project inputs/66 tree C++ files as a combined gate,
 without a per-file compile count. Native coverage remains 58/139. Full printing,
 text/layout and WindowsDesktop SDK/reference/runtime packaging remain required;
 the WPF packaging goal stays active.
+
+
+## 76. Tracking property receiver and null capture storage
+
+The 2026-10-13 continuation reproduces the printing PrintStringProperty failure
+with a small source ref-class tracking-reference receiver. Clang's property
+semantics capture its referent as a plain record expression; expression_type had
+tried to emit that as a C++ value type. Expression storage now uses the existing
+reference_element_type mapping, retaining the actual CLR class object. Typed
+native managed-value pointers keep their explicit pointer storage path. This does
+not enable general source ref-class values or remove declaration restrictions.
+
+The consumer checks getter/setter identity and single evaluation through percent
+parameters, actual CLR byref metadata, and twenty compacting collections. A
+setter RHS replaces the same handle slot passed as the tracking receiver; the
+original captured object receives the setter while the replacement stays empty.
+Null getter/setter values remain correct. Existing properties and tracking
+constructor tests pass.
+
+The first full gate passes the class capture and reaches unsupported nullptr_t
+storage. Unconverted property null captures now use object locals containing
+managed null; subsequent native null conversions emit typed zero independently.
+The extended consumer checks original source nullptr assignments to both managed
+Object and native void-pointer properties and verifies each setter executes once.
+An attempted assignment-result test was rejected by Clang because these property
+assignments have void result; the final fixture checks standalone setter effects.
+No assignment-result semantics or bypass of that Sema restriction is claimed.
+
+Validation on win11 with the standard compiler/WPF environment:
+
+```sh
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-tracking-properties test-properties test-constructor-tracking
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh printing-gate
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-tracking-properties test-properties test-constructor-tracking
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh printing-gate
+```
+
+The final compiler rebuild and all focused runtime/rejection checks pass. The
+original printing gate passes Clang parsing/Sema and advances beyond class and
+null property captures. Its next failure is unsupported OffsetOfExpr at
+InteropPrinterInfo.cpp:895. Native offsetof layout constants need lowering; a
+complete printing IL/DLL and printing runtime proof remain unfinished.
+
+Bash/JSON syntax and whitespace checks pass. Evidence is archived under
+`tmp/wpf8-support/validation/printing-tracking-properties-20261013`. Scope stays
+49 original project inputs/66 tree C++ files in a combined diagnostic gate,
+without a per-file pass count. Native coverage remains 58/139; full printing,
+layout/text and WindowsDesktop SDK/reference/runtime packaging remain required.
+The WPF packaging goal stays active.

@@ -1929,8 +1929,12 @@ class Emitter {
         return type(declaration->getType());
     }
     std::string expression_type(const Expr* expression) const {
+        // An unconverted nullptr captured by Clang's property semantics has
+        // no CLR signature type. Cache its managed null value; a subsequent
+        // native null conversion still emits its typed zero independently.
+        if(expression->getType()->isNullPtrType()) return "object";
         auto element = native_value_pointer(expression);
-        return element.isNull() ? type(expression->getType()) : type(element) + "*";
+        return element.isNull() ? reference_element_type(expression->getType()) : type(element) + "*";
     }
     void pointer_binding(const Expr* value, const ValueDecl* target) const {
         auto target_type = isa<FunctionDecl>(target) ? cast<FunctionDecl>(target)->getReturnType() : target->getType();

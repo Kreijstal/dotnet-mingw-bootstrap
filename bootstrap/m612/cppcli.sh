@@ -604,6 +604,18 @@ int main() { CombinedAccess^ c=gcnew CombinedAccess(); return c->OrMethod(); }' 
   reject_case combined-foreign-and '#using "combined-access.dll"
 public ref class Foreign : CombinedAccess { public: int Read() { return AndMethod(); } }; int main() { return 0; }' 'undeclared identifier' --type CombinedAccess
 }
+step_test-tracking-properties() {
+  compile "$(cygpath -m "$src/tests/tracking-properties.cpp")" --target library --type System.GC \
+    -o "$(cygpath -m "$testdir/tracking-properties.dll")"
+  mkdir -p "$testdir/tracking-properties-consumer"
+  cp "$src/tests/TrackingPropertiesConsumer.cs" "$testdir/tracking-properties-consumer/Program.cs"
+  cat > "$testdir/tracking-properties-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><AllowUnsafeBlocks>true</AllowUnsafeBlocks><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="tracking-properties"><HintPath>../tracking-properties.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/tracking-properties-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/tracking-properties-consumer/bin/Debug/net8.0/consumer.dll")"
+}
 step_test-seh-finally() {
   local refs=("$CPPCLI_SDK"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
   compile "$(cygpath -m "$src/tests/seh-finally.cpp")" --target library --type System.GC --type System.ArgumentException \
