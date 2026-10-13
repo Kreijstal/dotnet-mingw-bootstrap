@@ -6370,3 +6370,42 @@ Bash/JSON syntax and whitespace checks pass. Evidence is archived under
 without a per-file pass count. Native coverage remains 58/139; full printing,
 layout/text and WindowsDesktop SDK/reference/runtime packaging remain required.
 The WPF packaging goal stays active.
+
+
+## 77. Native offsetof layout constants
+
+The 2026-10-13 continuation emits Clang OffsetOfExpr constants for trivial native
+POD records. Clang's checked record/field/index designator and side-effect-free
+integer constant evaluation determine the value; the emitter preserves its
+32/64-bit integer representation. Managed facade layouts are rejected instead
+of using their surrogate native size. Dynamic offsets remain rejected.
+
+The consumer passes offsets for actual PRINTER_INFO_2W printer-name, security
+and status fields, a nested inline-array element field, and packed pointer/scalar
+fields to a separately compiled native DLL. That oracle compares them against
+actual native object/member address differences. All six locations agree across
+twenty compacting collections. Managed value offsetof and a nonconstant array
+index fail the compiler guards.
+
+Validation on win11 with the standard compiler/WPF environment:
+
+```sh
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-native-offsets
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh printing-gate
+```
+
+The focused rebuild/native runtime/rejection command passes. Printing passes
+Clang parsing/Sema, advances beyond InteropPrinterInfo.cpp:895 and its original
+PRINTER_INFO_2W offsetof expressions, and fails next with unsupported CLI type
+MS::Internal::PrintWin32Thunk::AttributeNameToInfoLevelMapping::InfoAttributeData.
+The original InteropInfoLevelProfile.hpp defines this as a private nested ref
+struct, used in managed attribute-coverage arrays. Its remaining expression/type
+lowering needs investigation; no complete printing IL/DLL is produced.
+
+Bash/JSON syntax and whitespace checks pass. Logs, manifests, IL/DLLs and the
+native oracle are archived under
+`tmp/wpf8-support/validation/printing-native-offsets-20261013`. Printing still
+covers all 49 original project inputs/66 tree C++ files in a combined diagnostic
+gate, without a per-file compile count. Native coverage remains 58/139. Full
+printing/native text/layout and WindowsDesktop SDK/reference/runtime packaging
+remain required. The WPF packaging goal stays active.

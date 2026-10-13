@@ -3862,6 +3862,16 @@ class Emitter {
     }
     void expr(const Expr* original) {
         const Expr* e = strip(original);
+        if(auto* offset=dyn_cast<OffsetOfExpr>(e)) {
+            if(!native_pod(offset->getTypeSourceInfo()->getType()))
+                fail(offset,"offsetof requires a trivial native POD record; managed facade layout cannot be used");
+            Expr::EvalResult evaluated;
+            if(!offset->EvaluateAsInt(evaluated,context,Expr::SE_NoSideEffects))
+                fail(offset,"native offsetof requires a constant offset without side effects");
+            auto bits=context.getTypeSize(offset->getType())>32 ? 64 : 32;
+            op(std::string(bits==64 ? "ldc.i8 " : "ldc.i4 ")+std::to_string(evaluated.Val.getInt().sextOrTrunc(bits).getSExtValue()),0,1);
+            return;
+        }
         if (auto* subscript = dyn_cast<ArraySubscriptExpr>(e)) {
             native_array_address(subscript);
             if (subscript->getType().isVolatileQualified()) op("volatile.");

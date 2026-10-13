@@ -604,6 +604,26 @@ int main() { CombinedAccess^ c=gcnew CombinedAccess(); return c->OrMethod(); }' 
   reject_case combined-foreign-and '#using "combined-access.dll"
 public ref class Foreign : CombinedAccess { public: int Read() { return AndMethod(); } }; int main() { return 0; }' 'undeclared identifier' --type CombinedAccess
 }
+step_test-native-offsets() {
+  compile "$(cygpath -m "$src/tests/native-offsets.cpp")" --target library --native-library native-offsets-oracle.dll \
+    -o "$(cygpath -m "$testdir/native-offsets.dll")"
+  mkdir -p "$testdir/native-offsets-consumer"
+  /clang64/bin/clang++.exe -std=c++17 -O2 -shared "$src/tests/native-offsets-oracle.cpp" -o "$testdir/native-offsets-consumer/native-offsets-oracle.dll"
+  cat > "$testdir/native-offsets-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="native-offsets"><HintPath>../native-offsets.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  cat > "$testdir/native-offsets-consumer/Program.cs" <<'EOF'
+using System;
+for(int i=0;i<20;i++) { GC.Collect(2,GCCollectionMode.Forced,true,true); if(!NativeOffsets.Check()) throw new Exception("native offset mismatch"); }
+Console.WriteLine("native offsetof: actual PRINTER_INFO_2W, nested inline array and packed pointer/scalar offsets match native field addresses across GC PASS");
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/native-offsets-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  cp "$testdir/native-offsets-consumer/native-offsets-oracle.dll" "$testdir/native-offsets-consumer/bin/Debug/net8.0/"
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/native-offsets-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case offset-managed 'public value struct Data { int Value; }; int main() { return __builtin_offsetof(Data,Value); }' 'managed facade layout cannot be used'
+  reject_case offset-dynamic 'struct Data { int Values[3]; }; int Index() { return 1; } int main() { return __builtin_offsetof(Data,Values[Index()]); }' 'constant offset without side effects'
+}
 step_test-tracking-properties() {
   compile "$(cygpath -m "$src/tests/tracking-properties.cpp")" --target library --type System.GC \
     -o "$(cygpath -m "$testdir/tracking-properties.dll")"
