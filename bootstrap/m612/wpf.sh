@@ -311,6 +311,37 @@ step_prepare_bridges() {
   done
 }
 
+step_check_matrix_operators() {
+  initialize
+  local work=$build/matrix-operators
+  mkdir -p "$work"
+  cp "$here/wpf-tests/MatrixOperators.cpp" "$work/MatrixOperators.cpp"
+  cp "$build/lib/WindowsBase.dll" "$work/WindowsBase.dll"
+  bridge_compile "$(cygpath -m "$work/MatrixOperators.cpp")" --target library \
+    --ilasm "$(cygpath -m /clang64/bin/ilasm-dotnet.exe)" \
+    --type System.Windows.Media.Matrix -o "$(cygpath -m "$work/MatrixOperators.dll")"
+  cat > "$work/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="MatrixOperators"><HintPath>MatrixOperators.dll</HintPath></Reference><Reference Include="WindowsBase"><HintPath>WindowsBase.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  cat > "$work/Program.cs" <<'EOF'
+using System;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Windows.Media;
+foreach(var method in typeof(MatrixOperators).GetMethods(BindingFlags.Public|BindingFlags.Static|BindingFlags.DeclaredOnly))
+    RuntimeHelpers.PrepareMethod(method.MethodHandle);
+var left=new Matrix(1,2,3,4,5,6);
+var right=new Matrix(7,8,9,10,11,12);
+var expected=left*right;
+var result=MatrixOperators.Multiply(left,right);
+if(result!=expected || !MatrixOperators.Equal(result,expected) || left.OffsetX!=5 || right.OffsetY!=12)
+    throw new Exception("original WPF Matrix operator result/copy semantics");
+Console.WriteLine("original WPF Matrix multiplication/equality and managed bodies PASS");
+EOF
+  "$sdk/dotnet.exe" build "$(cygpath -m "$work/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Debug/net8.0/consumer.dll")"
+}
 step_check_checked_integers() {
   step_prepare_bridges
   local inc=$source/src/Microsoft.DotNet.Wpf/src/DirectWriteForwarder/CPP/TrueTypeSubsetter/TtfDelta

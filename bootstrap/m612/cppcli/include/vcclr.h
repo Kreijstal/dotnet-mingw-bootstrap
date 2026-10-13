@@ -8,6 +8,15 @@ namespace cli {
 template<class T> class __attribute__((annotate("cli.interior"))) interior_ptr {
 public:
     interior_ptr(T*);
+    template<class U> explicit interior_ptr(U*);
+    template<class U> explicit interior_ptr(interior_ptr<U>);
+    interior_ptr& operator+=(long long);
+    interior_ptr& operator-=(long long);
+    interior_ptr& operator++();
+    interior_ptr operator++(int);
+    interior_ptr& operator--();
+    interior_ptr operator--(int);
+    __attribute__((annotate("cli.interior.address"))) T* operator->() const;
     T& operator*() const;
     T& operator[](long long) const;
 };
@@ -21,6 +30,7 @@ public:
     // Explicit pointer reinterpretation is a CLI intrinsic. Keeping it
     // explicit prevents unrelated pointer types from matching native overloads.
     template<class U> explicit operator U*() const;
+    __attribute__((annotate("cli.interior.address"))) T* operator->() const;
     T& operator*() const;
     T& operator[](long long) const;
 };

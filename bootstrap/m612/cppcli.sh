@@ -1905,6 +1905,24 @@ int main() { int value = StaticAccessorAccess::WriteOnly; return value; }' 'stat
 int main() { return StaticAccessorAccess::get_Hidden(); }' 'protected member' --type StaticAccessorAccess
   log "PASS test-static-properties: CLR static properties, imported read/write and framework getters"
 }
+step_test-interior-records() {
+  compile "$(cygpath -m "$src/tests/interior-records.cpp")" --target library --type System.GC \
+    -o "$(cygpath -m "$testdir/interior-records.dll")"
+  mkdir -p "$testdir/interior-records-consumer"
+  cp "$src/tests/InteriorRecordsConsumer.cs" "$testdir/interior-records-consumer/Program.cs"
+  cat > "$testdir/interior-records-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="interior-records"><HintPath>../interior-records.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/interior-records-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/interior-records-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case interior-arrow-escape 'struct Native { int Value; }; int main() { Native value; interior_ptr<Native> data=&value; Native* raw=data.operator->(); return 0; }' 'cannot escape as raw native pointers'
+  reject_case interior-array-escape 'struct Native { int Values[2]; }; int main() { Native value; interior_ptr<Native> data=&value; int* raw=data->Values; return 0; }' 'require pinning before raw native pointer binding'
+  reject_case interior-record-gc 'struct Bad { System::String^ Text; }; void Read(interior_ptr<Bad> data) {} int main() { return 0; }' 'GC-free native POD elements'
+  reject_case interior-view-const 'int main() { const int value=1; interior_ptr<const int> data=&value; interior_ptr<int> writable=(interior_ptr<int>)data; return 0; }' 'cannot discard element qualifiers'
+  reject_case interior-view-volatile 'int main() { volatile int value=1; interior_ptr<volatile int> data=&value; interior_ptr<int> writable=(interior_ptr<int>)data; return 0; }' 'cannot discard element qualifiers'
+  reject_case interior-view-native 'int main() { int* raw=nullptr; interior_ptr<unsigned char> data=(interior_ptr<unsigned char>)raw; return 0; }' 'not an untracked native pointer'
+}
 step_test-interior-indexing() {
   compile "$(cygpath -m "$src/tests/interior-indexing.cpp")" --target library --type System.GC \
     -o "$(cygpath -m "$testdir/interior-indexing.dll")"

@@ -603,13 +603,19 @@ static class Program
                 }
             }
             if (t.Kind == "value" && !primitiveFacade) {
-                foreach (var m in t.Methods.Where(m => m.Supported && m.Static && m.Return.Il == "bool" &&
-                    (m.Name == "op_Equality" || m.Name == "op_Inequality") && m.Parameters.Length == 2 &&
-                    m.Parameters.All(p => p.Cpp == t.Cpp))) {
-                    // A hidden friend lets Clang select the real CLR equality
-                    // slot instead of considering facade boxing conversions.
-                    w.WriteLine("__attribute__((annotate(\"cli.import:" + Escape(m.Id) + "\"))) friend bool operator" +
-                        (m.Name == "op_Equality" ? "==" : "!=") + "(" + string.Join(", ", m.Parameters.Select(p => p.Cpp)) + ");");
+                var operators=new Dictionary<string,string> {
+                    ["op_Equality"]="==", ["op_Inequality"]="!=", ["op_Addition"]="+", ["op_Subtraction"]="-",
+                    ["op_Multiply"]="*", ["op_Division"]="/", ["op_Modulus"]="%", ["op_BitwiseAnd"]="&",
+                    ["op_BitwiseOr"]="|", ["op_ExclusiveOr"]="^", ["op_LeftShift"]="<<", ["op_RightShift"]=">>",
+                    ["op_LessThan"]="<", ["op_GreaterThan"]=">", ["op_LessThanOrEqual"]="<=", ["op_GreaterThanOrEqual"]=">=",
+                    ["op_UnaryNegation"]="-", ["op_UnaryPlus"]="+", ["op_OnesComplement"]="~", ["op_LogicalNot"]="!"
+                };
+                foreach(var method in t.Methods.Where(m=>m.Supported && m.Static && m.Access=="public" &&
+                    operators.ContainsKey(m.Name) && m.Parameters.Length is 1 or 2 && m.Parameters.Any(p=>p.Cpp==t.Cpp))) {
+                    // Hidden friends let ordinary Clang ADL select the exact
+                    // CLR operator slot, including asymmetric scalar/value forms.
+                    w.WriteLine("__attribute__((annotate(\"cli.import:"+Escape(method.Id)+"\"))) friend "+method.Return.Cpp+" operator"+
+                        operators[method.Name]+"("+string.Join(", ",method.Parameters.Select(p=>p.Cpp))+");");
                 }
             }
             foreach(var e in t.Events.Where(e=>e.Supported))

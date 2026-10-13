@@ -1755,8 +1755,8 @@ class Emitter {
         auto* spec = dyn_cast<ClassTemplateSpecializationDecl>(r);
         if (!spec || spec->getTemplateArgs().size() != 1) throw std::runtime_error("invalid managed pointer intrinsic");
         auto element = spec->getTemplateArgs()[0].getAsType();
-        if (!element->isIntegerType() && !element->isRealFloatingType())
-            throw std::runtime_error("managed pointer intrinsics currently require primitive elements");
+        if (!element->isIntegerType() && !element->isRealFloatingType() && !native_pod(element))
+            throw std::runtime_error("managed pointer intrinsics require primitive or GC-free native POD elements");
         return element;
     }
     QualType static_property_element(QualType t) const {
@@ -1773,6 +1773,30 @@ class Emitter {
             (call->getOperator()==OO_Subscript && call->getNumArgs()==2)) ||
             interior_element(call->getArg(0)->getType()).isNull()) return nullptr;
         return call->getArg(0);
+    }
+    bool tracked_pointer(const Expr* original) const {
+        const Expr* e=strip(original);
+        if(auto* cast=dyn_cast<ImplicitCastExpr>(e)) {
+            if(cast->getCastKind()==CK_ArrayToPointerDecay) return tracked_location(cast->getSubExpr());
+            if(cast->getCastKind()==CK_NoOp) return tracked_pointer(cast->getSubExpr());
+        }
+        if(auto* cast=dyn_cast<ExplicitCastExpr>(e)) return tracked_pointer(cast->getSubExpr());
+        if(auto* unary=dyn_cast<UnaryOperator>(e);unary && unary->getOpcode()==UO_AddrOf) return tracked_location(unary->getSubExpr());
+        if(auto* operation=dyn_cast<CXXOperatorCallExpr>(e))
+            return !pinned(operation->getArg(0)->getType()) && operation->getOperator()==OO_Arrow && operation->getDirectCallee() && annotated(operation->getDirectCallee(),"cli.interior.address");
+        return false;
+    }
+    bool tracked_location(const Expr* original) const {
+        const Expr* e=strip(original)->IgnoreParenImpCasts();
+        if(interior_dereference(e)) return true;
+        if(auto* member=dyn_cast<MemberExpr>(e))
+            return member->isArrow() ? tracked_pointer(member->getBase()) : tracked_location(member->getBase());
+        if(auto* index=dyn_cast<ArraySubscriptExpr>(e)) return tracked_pointer(index->getBase());
+        if(auto* unary=dyn_cast<UnaryOperator>(e);unary && unary->getOpcode()==UO_Deref) return tracked_pointer(unary->getSubExpr());
+        return false;
+    }
+    std::string native_location_type(const Expr* location) const {
+        return tracked_location(location) ? "uint8&" : "native unsigned int";
     }
     QualType native_value_pointer(QualType t, const TypeSourceInfo* info) const {
         if (!t->isPointerType() || !value_target(t->getPointeeType()) ||
@@ -1814,7 +1838,10 @@ class Emitter {
         }
         if (auto* reference = dyn_cast<DeclRefExpr>(e)) return native_value_pointer(reference->getDecl());
         if (auto* member = dyn_cast<MemberExpr>(e)) return native_value_pointer(member->getMemberDecl());
-        if (auto* call = dyn_cast<CallExpr>(e); call && call->getDirectCallee()) return native_value_pointer(call->getDirectCallee());
+        if (auto* call = dyn_cast<CallExpr>(e); call && call->getDirectCallee()) {
+            if(annotated(call->getDirectCallee(),"cli.interior.address")) return {};
+            return native_value_pointer(call->getDirectCallee());
+        }
         if (auto* address = dyn_cast<UnaryOperator>(e); address && address->getOpcode() == UO_AddrOf && value_target(address->getSubExpr()->getType()))
             return address->getSubExpr()->getType();
         if (auto* unary = dyn_cast<UnaryOperator>(e); unary && unary->isIncrementDecrementOp())
@@ -1861,6 +1888,9 @@ class Emitter {
             fail(value, "native value pointers and boxed value handles cannot be implicitly mixed");
     }
     void pointer_value(const Expr* value, const ValueDecl* target) {
+        auto target_type=isa<FunctionDecl>(target) ? cast<FunctionDecl>(target)->getReturnType() : target->getType();
+        if(target_type->isPointerType() && !handle_target(target_type) && tracked_pointer(value))
+            fail(value,"tracked interior addresses require pinning before raw native pointer binding");
         pointer_binding(value, target);
         if (!native_value_pointer(target).isNull() && value->isNullPointerConstant(context, Expr::NPC_ValueDependentIsNotNull)) {
             op("ldc.i4.0", 0, 1); op("conv.u", 1, 1); return;
@@ -2506,7 +2536,7 @@ class Emitter {
     }
     unsigned native_bitfield_location(const MemberExpr* member) {
         auto bits = native_bits(cast<FieldDecl>(member->getMemberDecl()));
-        unsigned pointer = temporary("native unsigned int");
+        unsigned pointer = temporary(native_location_type(member));
         if (member->isArrow()) expr(member->getBase()); else native_address(member->getBase());
         native_offset(bits.offset); op("stloc " + std::to_string(pointer), 1); return pointer;
     }
@@ -2712,6 +2742,7 @@ class Emitter {
             // Recurse so a cast cannot bypass the stable-storage checks below.
             native_address(cast->getSubExpr()); return;
         }
+        if(interior_dereference(e)) { address(e); return; }
         if (auto* subscript = dyn_cast<ArraySubscriptExpr>(e)) { native_array_address(subscript); return; }
         if (native_guid_address(e)) return;
         if (auto* member = dyn_cast<MemberExpr>(e); member && native_field(dyn_cast<FieldDecl>(member->getMemberDecl()))) {
@@ -3005,7 +3036,7 @@ class Emitter {
             }
             if (auto* subscript = dyn_cast<ArraySubscriptExpr>(b->getLHS()->IgnoreParenImpCasts())) {
                 auto token = type(subscript->getType());
-                unsigned pointer = temporary("native unsigned int"), result = temporary(token);
+                unsigned pointer = temporary(native_location_type(subscript)), result = temporary(token);
                 native_array_address(subscript); op("stloc " + std::to_string(pointer), 1);
                 op("ldloc " + std::to_string(pointer), 0, 1);
                 if (subscript->getType().isVolatileQualified()) op("volatile.");
@@ -3026,7 +3057,7 @@ class Emitter {
                         unsigned result = native_bitfield_store(field, pointer, value);
                         op("ldloc " + std::to_string(result), 0, 1); return;
                     }
-                    unsigned pointer = temporary("native unsigned int"), result = temporary(type(field->getType()));
+                    unsigned pointer = temporary(native_location_type(member)), result = temporary(type(field->getType()));
                     native_field_address(member); op("stloc " + std::to_string(pointer), 1);
                     op("ldloc " + std::to_string(pointer), 0, 1); native_field_load(field); apply();
                     op("stloc " + std::to_string(result), 1);
@@ -3382,10 +3413,37 @@ class Emitter {
             if (auto* member = dyn_cast<CXXMemberCallExpr>(c)) receiver = member->getImplicitObjectArgument();
             else if (auto* operation = dyn_cast<CXXOperatorCallExpr>(c)) receiver = operation->getArg(0);
             if (!receiver) fail(c, "managed pointer operation lacks a receiver");
+            if(auto* operation=dyn_cast<CXXOperatorCallExpr>(c); operation &&
+               (operation->getOperator()==OO_PlusEqual || operation->getOperator()==OO_MinusEqual ||
+                operation->getOperator()==OO_PlusPlus || operation->getOperator()==OO_MinusMinus)) {
+                auto* variable=dyn_cast<DeclRefExpr>(receiver->IgnoreParenImpCasts());
+                if(!variable || (!isa<ParmVarDecl>(variable->getDecl()) &&
+                   !(isa<VarDecl>(variable->getDecl()) && cast<VarDecl>(variable->getDecl())->hasLocalStorage())))
+                    fail(c,"managed pointer updates require a local or parameter");
+                auto token=type(receiver->getType());
+                unsigned old=temporary(token);
+                expr(receiver); op("stloc "+std::to_string(old),1);
+                op("ldloc "+std::to_string(old),0,1);
+                auto opcode=operation->getOperator();
+                if(opcode==OO_PlusEqual || opcode==OO_MinusEqual) {
+                    expr(operation->getArg(1)); op("conv.i",1,1);
+                    native_stride(interior_element(receiver->getType())); op("mul",2,1);
+                } else native_stride(interior_element(receiver->getType()));
+                op(opcode==OO_MinusEqual || opcode==OO_MinusMinus ? "sub" : "add",2,1);
+                bool postfix=(opcode==OO_PlusPlus || opcode==OO_MinusMinus) && operation->getNumArgs()==2;
+                store(receiver,!postfix);
+                if(postfix) op("ldloc "+std::to_string(old),0,1);
+                return;
+            }
             if(auto* operation=dyn_cast<CXXOperatorCallExpr>(c); operation && operation->getOperator()==OO_Subscript) {
                 address(operation);
                 if(pinned(receiver->getType()) || interior_element(receiver->getType()).isVolatileQualified()) op("volatile.");
                 op("ldobj "+type(interior_element(receiver->getType())),1,1); return;
+            }
+            if(annotated(method,"cli.interior.address")) {
+                if(!isa<CXXOperatorCallExpr>(c) || method->getOverloadedOperator()!=OO_Arrow)
+                    fail(c,"interior arrow addresses cannot escape as raw native pointers");
+                expr(receiver); return;
             }
             expr(receiver);
             if (isa<CXXConversionDecl>(method) && pinned(receiver->getType()) && c->getType()->isPointerType() && !handle_target(c->getType())) {
@@ -3961,13 +4019,25 @@ class Emitter {
                 if (c->getNumArgs() != 1) fail(c, "managed pointer construction requires one address");
                 auto* arg = strip(c->getArg(0))->IgnoreParenImpCasts();
                 if (isa<CXXNullPtrLiteralExpr>(arg)) { op("ldc.i4.0", 0, 1); op("conv.u", 1, 1); }
-                else if (!interior_element(arg->getType()).isNull()) expr(arg);
-                else if (auto* unary = dyn_cast<UnaryOperator>(arg); unary && unary->getOpcode() == UO_AddrOf) address(unary->getSubExpr());
-                else if (pinned(c->getType()) && arg->getType()->isPointerType() && !handle_target(arg->getType())) {
-                    // CLI pin_ptr is a superset of native pointers. The CLR
-                    // ignores unmanaged/stack addresses when scanning a pinned
-                    // byref; only addresses inside the GC heap pin an object.
+                else if (auto source=interior_element(arg->getType()); !source.isNull()) {
+                    auto target=interior_element(c->getType());
+                    if((source.isConstQualified() && !target.isConstQualified()) ||
+                        (source.isVolatileQualified() && !target.isVolatileQualified()))
+                        fail(c,"managed pointer view cannot discard element qualifiers");
                     expr(arg);
+                }
+                else if (arg->getType()->isPointerType() && !handle_target(arg->getType())) {
+                    auto source=arg->getType()->getPointeeType();
+                    auto target=interior_element(c->getType());
+                    if((source.isConstQualified() && !target.isConstQualified()) ||
+                       (source.isVolatileQualified() && !target.isVolatileQualified()))
+                        fail(c,"managed pointer view cannot discard element qualifiers");
+                    if(auto* unary=dyn_cast<UnaryOperator>(arg); unary && unary->getOpcode()==UO_AddrOf)
+                        address(unary->getSubExpr());
+                    // Pinned CLR byrefs may also hold unmanaged addresses;
+                    // interior views require a proven tracked source.
+                    else if(tracked_pointer(c->getArg(0)) || pinned(c->getType())) expr(c->getArg(0));
+                    else fail(c,"pin_ptr/interior_ptr requires a managed address, not an untracked native pointer");
                 }
                 else fail(c, "pin_ptr/interior_ptr requires a managed address, not an untracked native pointer");
                 return;
@@ -4060,7 +4130,7 @@ class Emitter {
                 }
                 if (auto* subscript = dyn_cast<ArraySubscriptExpr>(u->getSubExpr()->IgnoreParenImpCasts())) {
                     auto token = type(subscript->getType());
-                    unsigned pointer = temporary("native unsigned int"), old = temporary(token), result = temporary(token);
+                    unsigned pointer = temporary(native_location_type(subscript)), old = temporary(token), result = temporary(token);
                     native_array_address(subscript); op("stloc " + std::to_string(pointer), 1);
                     op("ldloc " + std::to_string(pointer), 0, 1);
                     if (subscript->getType().isVolatileQualified()) op("volatile.");
@@ -4100,7 +4170,7 @@ class Emitter {
                             op("ldloc " + std::to_string(u->isPostfix() ? old : result), 0, 1); return;
                         }
                         auto ft = type(field->getType());
-                        unsigned pointer = temporary("native unsigned int"), old = temporary(ft), result = temporary(ft);
+                        unsigned pointer = temporary(native_location_type(member)), old = temporary(ft), result = temporary(ft);
                         native_field_address(member); op("stloc " + std::to_string(pointer), 1);
                         op("ldloc " + std::to_string(pointer), 0, 1); native_field_load(field); op("stloc " + std::to_string(old), 1);
                         op("ldloc " + std::to_string(old), 0, 1);
@@ -4145,7 +4215,7 @@ class Emitter {
             if (c->getCastKind() == CK_PointerToIntegral && (!handle_target(c->getSubExpr()->getType()) || !native_value_pointer(c->getSubExpr()).isNull())) {
                 expr(c->getSubExpr()); numeric_conversion(c->getType(), c->getSubExpr()->getType()); return;
             }
-            if (c->getCastKind() == CK_ConstructorConversion && (value_target(c->getType()) || !typed_box_element(c->getType()).isNull())) { expr(c->getSubExpr()); return; }
+            if (c->getCastKind() == CK_ConstructorConversion && (value_target(c->getType()) || !typed_box_element(c->getType()).isNull() || !interior_element(c->getType()).isNull())) { expr(c->getSubExpr()); return; }
             if (c->getCastKind() == CK_UserDefinedConversion && c->getType()->isPointerType() && !handle_target(c->getType())) {
                 auto* conversion = dyn_cast<CXXMemberCallExpr>(strip(c->getSubExpr()));
                 auto* method = conversion ? dyn_cast_or_null<CXXConversionDecl>(conversion->getDirectCallee()) : nullptr;

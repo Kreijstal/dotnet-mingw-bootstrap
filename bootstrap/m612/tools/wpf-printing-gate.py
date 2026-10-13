@@ -212,7 +212,16 @@ def main():
     types += ["System.Collections.Stack", "System.Windows.Media.ImageBrush", "System.Windows.Media.StyleSimulations",
               "System.Windows.Media.MatrixTransform", "System.Windows.Media.StreamGeometry",
               "System.Windows.Media.GeometryGroup", "System.Windows.Freezable",
-              "System.Windows.Media.Animation.Animatable"]
+              "System.Windows.Media.Animation.Animatable", "System.Windows.Media.CombinedGeometry",
+              "System.Windows.Media.PixelFormats", "System.Windows.Media.Imaging.BitmapPalette",
+              "System.Windows.Media.Imaging.FormatConvertedBitmap", "System.Windows.Media.DrawingVisual",
+              "System.Windows.Media.ContainerVisual", "System.Windows.Media.DrawingContext", "System.Windows.Media.Brushes",
+              "System.Windows.Media.Imaging.RenderTargetBitmap", "System.Windows.Media.CapacityStreamGeometryContext",
+              "System.Windows.Media.StreamGeometryContext", "System.Windows.Media.SweepDirection",
+              "System.Runtime.ConstrainedExecution.CriticalFinalizerObject", "System.Windows.Media.PointCollection",
+              "System.Windows.Media.DoubleCollection", "System.Windows.Media.DashStyle", "System.Windows.Media.DashStyles",
+              "System.Windows.Media.Composition.CompositionResourceManager", "System.Windows.Media.Composition.MilMatrix3x2D",
+              "System.Windows.Xps.Serialization.GeometryHelper"]
     for name in types:
         command += ["--type", name]
     command += ["--source-type", "System.Printing.PrintQueue"]

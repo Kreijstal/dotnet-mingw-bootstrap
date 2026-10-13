@@ -5511,3 +5511,78 @@ remains 49 original printing project inputs/66 tree C++ files; no complete
 System.Printing runtime DLL or WPF package is produced. Native import coverage
 remains 58/139. Full layout, printing runtime and WindowsDesktop
 SDK/targeting/runtime packaging remain required.
+
+
+## 62. WPF value operators and tracked native-record bitmap pointers
+
+The 2026-10-13 continuation exposes supported public imported CLR value unary
+and binary operators as annotated hidden friends. Ordinary Clang ADL selects
+the exact metadata method, including asymmetric scalar/value signatures. The
+real source-built WindowsBase Matrix multiplication and equality execute through
+the bridge, match C# results for two nonidentity matrices, and preserve input
+copies. This is imported operator dispatch, not a complete CLI operator compiler.
+
+Pointer intrinsics now admit proven GC-free native POD elements. Their implicit
+arrow operations retain CLR byrefs; original BITMAPINFO headers, RGBQUAD inline
+arrays, packed fields and indexed updates use actual Clang offsets/layouts.
+Captured native field/array/bitfield locations remain tracked across managed
+calls. Explicit interior views accept tracked addresses and pointer facades,
+reject dropped const/volatile qualifiers, and reject untracked raw pointer
+inputs. Explicit arrow calls and tracked array decay cannot escape into raw
+native pointer bindings without pinning. Managed/GC-bearing record elements
+remain unsupported.
+
+Interior local/parameter ++/-- and +=/-= scale by actual native element layout,
+preserve prefix/postfix results and evaluate offset expressions once. Runtime
+checks use managed byte buffers, the original Windows BITMAPINFO declaration,
+packed native layouts, tracked aliases, GC in index/offset expressions and
+four-byte DWORD stepping. Native record pointer views remain low-level operations
+with caller-owned range/alignment validity; general arithmetic expressions and
+interior return provenance remain unfinished.
+
+The printing gate imports actual CombinedGeometry, PixelFormats, bitmap palette
+and conversion types, drawing and geometry contexts, ContainerVisual, Brushes,
+CriticalFinalizerObject, PointCollection, DoubleCollection, dash styles,
+CompositionResourceManager/MilMatrix3x2D and GeometryHelper. These are actual
+source-built dependencies, including the existing as_friend access boundary.
+The original gate gets past Matrix multiplication, BITMAPINFO arrow operations,
+bitmap interior casts/updates and drawing/geometry base discovery. Its first
+remaining errors are gdipen.cpp:77/128 collection-property indexing, followed
+by further missing gradient/bitmap codec/printing metadata imports.
+
+Validation on win11 (the usual M612/MSYSTEM/WPF_BUILD/WPF_CPPCLI_BUILD environment):
+
+```sh
+CPPCLI_SDK=/clang64/lib/dotnet CPPCLI_ILASM=/clang64/bin/ilasm-dotnet.exe \
+ M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+ bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh \
+ build test-interior-records test-interior-indexing test-pinning
+CPPCLI_SDK=/clang64/lib/dotnet CPPCLI_ILASM=/clang64/bin/ilasm-dotnet.exe \
+ M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+ bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-interior-records
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+ WPF_BUILD=/home/topkek/wpfboot/build \
+ WPF_CPPCLI_BUILD=/home/topkek/dotnetboot/m612/build/cppcli \
+ bash ~/wpfboot/driver/bootstrap/m612/wpf.sh \
+ check-matrix-operators build-directwrite check-directwrite-assembly printing-gate
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+ WPF_BUILD=/home/topkek/wpfboot/build \
+ WPF_CPPCLI_BUILD=/home/topkek/dotnetboot/m612/build/cppcli \
+ bash ~/wpfboot/driver/bootstrap/m612/wpf.sh printing-gate
+```
+
+Both compiler commands pass, including raw escape, GC-bearing element,
+qualification and untracked-pointer rejection checks. The second rebuild removes
+an unreachable duplicate pin initializer branch. The WPF command passes Matrix,
+DirectWrite rebuild and runtime checks (85 types, 283 bodies, 81 font families),
+then fails at printing. A mistyped MilMatrix3x2D namespace in that intermediate
+gate was corrected; the final printing-only gate reaches the remaining errors
+listed above. Bash/Python/JSON syntax and git diff whitespace checks pass.
+
+Logs, manifests, compiler work directories and runtime artifacts are archived at
+`tmp/wpf8-support/validation/printing-operators-records-20261013`. Scope remains
+49 original printing project inputs/66 tree C++ files as a combined diagnostic
+gate, without a per-file compile count or a complete System.Printing DLL.
+Native import coverage remains 58/139; full text/paragraph behavior, printing
+runtime and WindowsDesktop SDK/targeting/runtime packaging remain required.
+No completed WPF package is produced; the goal remains active.
