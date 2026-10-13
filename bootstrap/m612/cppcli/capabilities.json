@@ -214,7 +214,9 @@
     "Imported instance value-field types are defined before containing native surrogates even when inheritance reorders the owners; real inherited SafeHandle/IntPtr protected-field access and disposal pass",
     "Property modifiers are accepted before or after property; virtual override dispatch and static property access pass, and static auto-properties generate private static backing storage plus real CLR static accessors",
     "Source ref-class finalizers support inline/out-of-line and explicit (void) declarations, source-visibility-preserving helpers, explicit own-only and qualified protected-base bang calls and CLR Finalize overrides; native resource tests verify deterministic delete/Dispose, GC/base order, suppression/idempotence, finalizer-only cleanup and base release after a manually observed finalizer exception",
-    "Static String-handle fields initialized by ordinary/wide/adjacent literal tokens now emit real CLR strings through ordered type initialization; ASCII/UTF16/GC checks pass"
+    "Static String-handle fields initialized by ordinary/wide/adjacent literal tokens now emit real CLR strings through ordered type initialization; ASCII/UTF16/GC checks pass",
+    "Static rank-one managed-array aggregate initializers use typed Clang compound-literal AST elements and emit actual CLR newarr/stelem operations; scalar/string/type-token/object/null/empty elements, evaluation order/once/concurrency/shared mutation and GC checks pass",
+    "Property accessor access labels preserve public/internal/protected/private CLR method flags, virtual slots and enclosing-class visibility; same-assembly internal setter use passes and external CLI imports cannot write it"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -226,7 +228,7 @@
     "Indexed properties currently require one index parameter; overloads require the same value type and accessor forms; static indexed/auto-properties and static compound updates remain unsupported",
     "Interface-only implicit Object bases require directly recognized interface names; aliases and unresolved qualified source names still require an explicit Object base; interface-handle Object conversions remain incomplete",
     "Interface methods and property accessors require declarations without bodies; named overrides cover one imported-interface target; source-interface renamed methods, target lists and class-target overrides remain unsupported",
-    "Managed arrays currently require rank one; no aggregate initializers or covariance",
+    "Managed arrays currently require rank one; aggregate initializers cover explicit static array-handle fields only; local/general array initializer forms and covariance remain incomplete",
     "User finalizer declarations, value/interface destructors, covariance metadata and managed operator metadata remain unsupported",
     "Native bridges require extern-C scalars or unmanaged pointers; bool/automatic marshalling, callbacks and automatic native partitioning are not enabled",
     "Implicit primitive/interface boxing and multi-translation-unit linking remain unimplemented",

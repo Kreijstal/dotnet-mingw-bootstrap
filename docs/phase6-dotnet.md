@@ -4821,3 +4821,78 @@ finished WPF package is produced. Evidence is archived under
 `tmp/wpf8-support/validation/printing-finalizers-20261013` locally. Native
 coverage remains 58/139, installed compiler packages are unchanged, and the goal
 remains active.
+
+## 52. Native print properties, typed static arrays and accessor visibility
+
+The next 2026-10-13 continuation supplies the missing EPrintPropertyType,
+PrintPropertyValue, PrintNamedProperty and PrintPropertiesCollection SDK
+declarations, using Microsoft's [winspool.h source ABI](https://raw.githubusercontent.com/microsoft/win32metadata/main/generation/WinSDK/RecompiledIdlHeaders/um/winspool.h).
+A compiler probe determines whether the trusted SDK already has the records;
+the compatibility header is included only when absent. Existing MinGW XPS job
+enumerations are reused. The native check verifies x64 sizes/alignment/offsets
+(property value 24 bytes, union offset 8, named property 32, collection 16),
+reads a real typed blob through the records and resolves the actual
+GetJobNamedPropertyValue export from Winspool. Its read-only invalid-handle
+call returns ERROR_INVALID_HANDLE; no printer or job is opened or created.
+This establishes declarations and a native failure path, not printing success.
+
+Printing then reaches static managed array aggregate initializers. These now
+lower to a typed compound-literal helper for Clang checking and AST collection;
+the emitter creates a real CLR array and stores elements in order. No native
+initializer storage executes. Explicit static rank-one array-handle fields
+support scalar/string/type-token/object/null/empty elements. Tests verify
+side-effect order, once/concurrent initialization, shared mutation, CLR type
+identity and retention after forced GC. Adjacent ordinary/wide string tokens
+are combined before their real CLR literal conversion; a focused rerun passes. Invalid object-to-scalar elements fail
+Clang checking. Explicit numeric conversions remain Clang's conversions.
+Other array initializer forms and covariance remain unfinished.
+
+The initial std::initializer_list approach collided with already flattened
+standard-library declarations in the printing input and was replaced by the
+compound-literal marker. The final metadata header adds no standard-library
+include. Empty array initialization also executes correctly.
+
+Printing's properties mix public getters and internal setters, including
+out-of-line definitions. Access labels within the property body now select
+real public/assembly/family/private CLR method flags. Virtual slots are retained,
+same-assembly setter calls work, and the enclosing class's visibility is
+restored after emitting accessors. C# reflection/runtime checks cover inline
+and out-of-line members. A second CLI assembly importing the public type cannot
+write its internal setter. Existing property/finally and virtual/interface
+checks pass. The gate additionally selects the actual source-built serializer,
+document paginator/page/sequence, Visual and attribute/serialization types.
+
+Validation on win11:
+
+```sh
+CPPCLI_SDK=/clang64/lib/dotnet CPPCLI_ILASM=/clang64/bin/ilasm-dotnet.exe \
+  M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build
+CPPCLI_SDK=/clang64/lib/dotnet CPPCLI_ILASM=/clang64/bin/ilasm-dotnet.exe \
+  M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh \
+  test-array-initializers test-accessor-visibility test-properties test-virtuals
+CPPCLI_SDK=/clang64/lib/dotnet CPPCLI_ILASM=/clang64/bin/ilasm-dotnet.exe \
+  M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-accessor-visibility
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  WPF_CPPCLI_BUILD=/home/topkek/dotnetboot/m612/build/cppcli \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh build-directwrite check-directwrite-assembly
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh printing-gate
+```
+
+Builds and focused runtime/rejection checks pass. Existing virtual fixture
+warnings remain; C# consumers report zero warnings/errors. DirectWrite still
+loads 85 types, prepares 283 bodies and resolves 81 system font families with
+original owned font/face/file and managed COM-loader behavior. The final
+printing-gate command **fails** in Sema, beginning with unsupported event
+syntax in XPSDocumentWriter.hpp:559 and :741. The native SDK check passes first,
+and the previous SDK-record/static-array/accessor failures are absent. Further
+event/attribute/import/body/link/runtime work and all remaining native layout/
+WindowsDesktop packaging requirements are unfinished. No System.Printing
+runtime DLL or completed WPF package is produced. Evidence is archived under
+`tmp/wpf8-support/validation/printing-sdk-arrays-20261013` locally. Native
+coverage remains 58/139 and the goal remains active.

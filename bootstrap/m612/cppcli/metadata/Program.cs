@@ -384,6 +384,7 @@ static class Program
             header.WriteLine("[[noreturn]] void __cli_end_finally();");
             header.WriteLine("template<class T> T* __cli_alloc(T*);");
             header.WriteLine("template<class T> cli::array<T>* __cli_empty_params();");
+            header.WriteLine("template<class A> struct __cli_array_element; template<class T> struct __cli_array_element<cli::array<T,1>*> { using type=T; }; template<class A> A __cli_array_init(const typename __cli_array_element<A>::type*);");
             header.WriteLine("template<class T, class A> T __cli_safe_cast(A); template<class T, class A> T __cli_dynamic_cast(A);");
             header.WriteLine("template<class T> class __attribute__((annotate(\"cli.static.property.proxy\"))) __cli_static_property { public: operator T() const; T operator->() const; __cli_static_property& operator=(T); };");
             header.WriteLine("System::String* __cli_literal(const char*); System::String* __cli_literal(const wchar_t*);");

@@ -369,6 +369,19 @@ int main() { return 0; }' 'unexpected tokens after #using'
 step_test-properties() {
   run_case properties "$src/tests/properties.cpp" $'set\nget\n4\nreceiver\nget\nset\nget\n6\n7\nproperty finally\n2'
 }
+step_test-accessor-visibility() {
+  compile "$(cygpath -m "$src/tests/accessor-visibility.cpp")" --target library -o "$(cygpath -m "$testdir/accessor-visibility.dll")"
+  mkdir -p "$testdir/accessor-visibility-consumer"
+  cp "$src/tests/AccessorVisibilityConsumer.cs" "$testdir/accessor-visibility-consumer/Program.cs"
+  cat > "$testdir/accessor-visibility-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="accessor-visibility"><HintPath>../accessor-visibility.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/accessor-visibility-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/accessor-visibility-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case accessor-internal-import '#using "accessor-visibility.dll"
+int main() { AccessorBox^ value=gcnew AccessorBox(); value->Value=9; return 0; }' 'no setter' --type AccessorBox
+}
 step_test-virtuals() {
   run_case virtuals "$src/tests/virtuals.cpp" $'7\n7\n9\n6\n17\nTrue'
   mkdir -p "$testdir/virtual-consumer"
@@ -1244,6 +1257,20 @@ step_test-value-field-order() {
     'imported SafeHandle inheritance, complete IntPtr value-field dependency, protected access and disposal PASS' \
     --type System.IDisposable --type System.Runtime.InteropServices.SafeHandle \
     --type Microsoft.Win32.SafeHandles.SafeHandleZeroOrMinusOneIsInvalid
+}
+
+step_test-array-initializers() {
+  compile "$(cygpath -m "$src/tests/array-initializers.cpp")" --target library \
+    --type System.Type --type System.RuntimeTypeHandle --type System.Int32 -o "$(cygpath -m "$testdir/array-initializers.dll")"
+  mkdir -p "$testdir/array-initializers-consumer"
+  cp "$src/tests/ArrayInitializersConsumer.cs" "$testdir/array-initializers-consumer/Program.cs"
+  cat > "$testdir/array-initializers-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="array-initializers"><HintPath>../array-initializers.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/array-initializers-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/array-initializers-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case array-init-wrong-element 'public ref class C { static array<int>^ values={gcnew System::Object()}; }; int main() { return 0; }' 'cannot initialize'
 }
 
 step_test-array-marshal() {

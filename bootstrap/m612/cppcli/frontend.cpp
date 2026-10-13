@@ -1093,9 +1093,25 @@ protected:
                         emit(t, std::string(class_access[i] == "internal" ? "__attribute__((annotate(\"cli.access:assembly\"))) " : "") + "static " + field_type + field + "; private: static " + field_type +
                             " __attribute__((annotate(\"cli.static.init:" + field + "\"))) _cli_init_" + field + "() { return");
                         bool string_field=false,literal_initializer=end>equal+1;
+                        bool array_initializer=tokens[equal+1].text=="{" && tokens[end-1].text=="}" &&
+                            std::any_of(tokens.begin()+i+1,tokens.begin()+equal-1,[](const Lexeme& token){return token.text=="array";});
                         for(size_t j=i+1;j+2<equal;++j) string_field|=tokens[j].text=="String" && tokens[j+1].text=="^";
                         for(size_t j=equal+1;j<end;++j) literal_initializer&=tok::isStringLiteral(tokens[j].kind);
-                        if(string_field && literal_initializer) {
+                        if(array_initializer) {
+                            emit(tokens[equal+1],"__cli_array_init<"+field_type+">((typename __cli_array_element<"+field_type+">::type[])");
+                            for(size_t j=equal+1;j<end;++j) {
+                                if(cli_structural.count(j)) { emit(tokens[j],cli_structural[j]); continue; }
+                                if(adapt_allocation(j)) continue;
+                                if(tokens[j].text=="safe_cast") { emit(tokens[j],"__cli_safe_cast"); continue; }
+                                if(string_field && tok::isStringLiteral(tokens[j].kind)) {
+                                    std::string literal=tokens[j].text;
+                                    while(j+1<end && tok::isStringLiteral(tokens[j+1].kind)) literal+=" "+tokens[++j].text;
+                                    emit(tokens[j],"__cli_literal("+literal+")");
+                                }
+                                else emit(tokens[j],tokens[j].text);
+                            }
+                            emit(tokens[end-1],")");
+                        } else if(string_field && literal_initializer) {
                             std::string literal;
                             for(size_t j=equal+1;j<end;++j) literal+=tokens[j].text+" ";
                             emit(tokens[equal+1],"__cli_literal("+literal+")");
@@ -1189,7 +1205,14 @@ protected:
                         emit(t, modifier + "void __attribute__((annotate(\"cli.accessor:set\"))) set_" + property + "(" + property_type + " value) { __cli_backing_" + property + " = value; }");
                     } else {
                         int depth = 1;
+                        std::string accessor_access=class_access[i];
                         for (size_t j = open + 1; j + 1 < end; ++j) {
+                            if(depth==1 && j+1<end && tokens[j+1].text==":" &&
+                                (tokens[j].text=="public" || tokens[j].text=="private" || tokens[j].text=="protected" || tokens[j].text=="internal")) {
+                                accessor_access=tokens[j].text;
+                                emit(tokens[j],accessor_access=="internal" ? "public" : accessor_access);
+                                emit(tokens[j+1],":"); ++j; continue;
+                            }
                             if (interop_ends.count(j)) {
                                 if (interop_attributes.count(j)) emit(tokens[j], interop_attributes[j]);
                                 j = interop_ends[j]; continue;
@@ -1203,7 +1226,8 @@ protected:
                                 tokens[j].text != "private" && tokens[j].text != "public" && tokens[j].text != "protected" && tokens[j].text != ";" && tokens[j].text != "}") {
                                 bool explicit_virtual = false;
                                 for (size_t k = j; k < end && tokens[k].text != "("; ++k) explicit_virtual |= tokens[k].text == "virtual";
-                                emit(tokens[j], std::string(is_static ? "static " : is_virtual && !explicit_virtual ? "virtual " : "") + access_attribute);
+                                emit(tokens[j], std::string(is_static ? "static " : is_virtual && !explicit_virtual ? "virtual " : "") +
+                                    (accessor_access=="internal" ? "__attribute__((annotate(\"cli.access:assembly\"))) " : ""));
                             }
                             if (cli_structural.count(j)) {
                                 emit(tokens[j], cli_structural[j]);
@@ -1221,6 +1245,7 @@ protected:
                             if (tokens[j].text == "{") ++depth;
                             else if (tokens[j].text == "}") --depth;
                         }
+                        emit(t,(class_access[i]=="internal" ? "public" : class_access[i])+":");
                     }
                     i = end - 1; continue;
                 }
@@ -2829,6 +2854,30 @@ class Emitter {
                 op(std::string(bits == 64 ? "ldc.i8 " : "ldc.i4 ") + std::to_string(constant.getSExtValue()), 0, 1);
                 return;
             }
+        }
+        if(f->getNameAsString()=="__cli_array_init") {
+            auto* record=handle_target(c->getType());
+            auto element=record?array_element(record):QualType();
+            if(element.isNull() || c->getNumArgs()!=1) fail(c,"invalid managed array initializer marker");
+            const Expr* initializer=c->getArg(0);
+            while(true) {
+                initializer=initializer->IgnoreParenImpCasts();
+                if(auto* temporary=dyn_cast<MaterializeTemporaryExpr>(initializer)) initializer=temporary->getSubExpr();
+                else if(auto* temporary=dyn_cast<CXXBindTemporaryExpr>(initializer)) initializer=temporary->getSubExpr();
+                else break;
+            }
+            auto* literal=dyn_cast<CompoundLiteralExpr>(initializer);
+            if(!literal) fail(c,"managed array initializer requires a typed compound literal");
+            auto* list=dyn_cast<InitListExpr>(literal->getInitializer());
+            if(!list || !context.getAsConstantArrayType(literal->getType()))
+                fail(c,"managed array initializer elements are not available in the Clang AST");
+            if(list->getNumInits()>INT_MAX) fail(c,"managed array initializer exceeds CLR length range");
+            op("ldc.i4 "+std::to_string(list->getNumInits()),0,1); op("newarr "+type(element),1,1);
+            for(unsigned index=0;index<list->getNumInits();++index) {
+                op("dup",1,2); op("ldc.i4 "+std::to_string(index),0,1); expr(list->getInit(index));
+                op("stelem "+type(element),3);
+            }
+            return;
         }
         auto binding = native_imports.find(f->getNameAsString());
         if (binding != native_imports.end() && f->isExternC() && !isa<CXXMethodDecl>(f) && !f->hasBody() &&

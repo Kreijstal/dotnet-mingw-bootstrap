@@ -40,6 +40,20 @@ def main():
     flags={"PRINTER_ATTRIBUTE_PUSHED_USER":"0x00020000", "PRINTER_ATTRIBUTE_PUSHED_MACHINE":"0x00040000"}
     header.write_text(header.read_text()+"\n"+"".join(
         "#ifndef "+name+"\n#define "+name+" "+value+"\n#endif\n" for name,value in flags.items()))
+    sdk_probe=work/"sdk-property-probe.cpp"
+    sdk_probe.write_text("#include <windows.h>\n#include <winspool.h>\nPrintPropertyValue value;\nPrintPropertiesCollection collection;\n")
+    missing_properties=subprocess.run(["/clang64/bin/clang++.exe","-fsyntax-only",win(sdk_probe)],
+                                      stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode!=0
+    if missing_properties:
+        port=Path(__file__).resolve().parents[1]/"wpf-native/PrintingSdk.h"
+        header.write_text(header.read_text()+'\n#include "'+win(port)+'"\n')
+    check=Path(__file__).resolve().parents[1]/"wpf-tests/PrintingSdk.cpp"
+    sdk_check=work/"sdk-property-check.exe"
+    native=["/clang64/bin/clang++.exe","-std=c++17","-O2",win(check),"-I",win(port.parent if missing_properties else check.parent),"-o",win(sdk_check)]
+    if missing_properties:
+        native += ["-DWPF_MISSING_PRINT_PROPERTIES"]
+    subprocess.run(native,check=True)
+    subprocess.run([str(sdk_check)],check=True)
     inputs = [item.attrib["Include"].replace("\\", "/")
               for item in ET.parse(original / "System.Printing.vcxproj").iter()
               if item.tag.rsplit("}", 1)[-1].lower() == "clcompile" and "Include" in item.attrib]
@@ -128,7 +142,12 @@ def main():
               "System.Windows.Xps.Serialization.RCW.PrintDocumentPackageStatusProvider",
               "System.Text.StringBuilder", "System.ComponentModel.Win32Exception",
               "Microsoft.Win32.SafeHandles.SafeFileHandle", "Microsoft.Win32.SafeHandles.SafeWaitHandle",
-              "System.Runtime.InteropServices.ComTypes.IStream"]
+              "System.Runtime.InteropServices.ComTypes.IStream",
+              "System.Attribute", "System.AttributeTargets", "System.AttributeUsageAttribute",
+              "System.Runtime.Serialization.SerializationInfo", "System.Runtime.Serialization.StreamingContext",
+              "System.Windows.Documents.Serialization.SerializerWriter", "System.Windows.Documents.FixedDocumentSequence",
+              "System.Windows.Documents.DocumentPaginator", "System.Windows.Documents.FixedPage",
+              "System.Windows.Media.Visual", "System.Windows.Documents.Serialization.SerializerWriterCollator"]
     for name in types:
         command += ["--type", name]
     # SHLWAPI and KERNEL32 both export DelayLoadFailureHook. Keep SHLWAPI
@@ -144,6 +163,7 @@ def main():
                             "map legacy copied-SDK annotations to trusted MinGW SAL2 spellings"],
         "legacySalAliases": legacy_sal,
         "missingSdkFlags": flags,
+        "missingPrintPropertyTypes": missing_properties,
         "sdkFlagSource": "https://raw.githubusercontent.com/microsoft/win32metadata/main/generation/WinSDK/RecompiledIdlHeaders/um/winspool.h",
         "scope": "combined-source compiler diagnostic gate; success does not prove separate-unit linking or printing runtime",
         "command": command,
