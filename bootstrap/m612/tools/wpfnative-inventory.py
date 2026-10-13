@@ -61,8 +61,8 @@ def main():
         "requiredExports": {name: dict(item, implemented=name in exports) for name, item in sorted(entries.items())},
         "providedExports": sorted(exports), "missingExports": missing,
         "status": "complete imported symbol coverage" if not missing else "partial source native port; complete text/paragraph layout unavailable",
-        "otherBlockers": ["System.Printing C++/CLI implementation", "remaining text/paragraph/natural-language exports",
-                          "remaining desktop assemblies and WindowsDesktop SDK/framework-pack packaging"],
+        "otherBlockers": ["complete bidi/optimal/text/paragraph/natural-language behavior",
+                          "full runtime/path coverage beyond the installed experimental WindowsDesktop package"],
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2) + "\n")

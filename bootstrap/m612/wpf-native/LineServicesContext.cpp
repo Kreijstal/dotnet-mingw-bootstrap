@@ -53,10 +53,15 @@ struct Line {
     bool has_terminator=false;
 };
 struct BreakRecord { int next,paragraph_first; std::shared_ptr<Context> context; };
+// Source-owned state for paragraph penalty services. Scoring/optimal breaking
+// will use this retained context; resource acquisition does not format text.
+struct PenaltyState { std::shared_ptr<Context> context; };
+struct PenaltyModule { std::shared_ptr<PenaltyState> state; };
 std::mutex gate;
 std::unordered_map<void*,std::shared_ptr<Context>> contexts;
 std::unordered_map<void*,std::shared_ptr<Line>> lines;
 std::unordered_map<void*,std::shared_ptr<BreakRecord>> records;
+std::unordered_map<void*,std::shared_ptr<PenaltyModule>> penalties;
 
 using FetchPap=int (WINAPI *)(void*,int,LsPap*);
 using FetchProps=int (WINAPI *)(void*,int,int,LsLineProps*);
@@ -651,6 +656,29 @@ extern "C" __declspec(dllexport) int WINAPI LoSetDoc(void* handle,int display,in
     auto& context=*found->second;
     context.resolution=*resolution; context.display=display!=0; context.equal_devices=equal_devices!=0;
     context.has_document=true; return LS_None;
+}
+
+extern "C" __declspec(dllexport) int WINAPI LoAcquirePenaltyModule(void* handle,void** output) {
+    if(!output)return LS_NullOutputParameter;*output=nullptr;
+    try {
+        std::lock_guard<std::mutex> lock(gate);auto found=contexts.find(handle);
+        if(found==contexts.end())return LS_InvalidContext;
+        if(found->second->in_use)return LS_ContextInUse;
+        auto state=std::make_shared<PenaltyState>();state->context=found->second;
+        auto module=std::make_shared<PenaltyModule>();module->state=state;
+        void* key=module.get();penalties.emplace(key,module);*output=key;return LS_None;
+    }catch(const std::bad_alloc&){return LS_OutOfMemory;}
+}
+extern "C" __declspec(dllexport) int WINAPI LoGetPenaltyModuleInternalHandle(void* handle,void** output) {
+    if(!output)return LS_NullOutputParameter;*output=nullptr;
+    std::lock_guard<std::mutex> lock(gate);auto found=penalties.find(handle);
+    if(found==penalties.end())return LS_InvalidParameter;
+    *output=found->second->state.get();return LS_None;
+}
+extern "C" __declspec(dllexport) int WINAPI LoDisposePenaltyModule(void* handle) {
+    std::lock_guard<std::mutex> lock(gate);auto found=penalties.find(handle);
+    if(found==penalties.end())return LS_InvalidParameter;
+    penalties.erase(found);return LS_None;
 }
 
 extern "C" __declspec(dllexport) int WINAPI LoSetTabs(void* handle,int incremental,int count,const LsTbd* tabs) {

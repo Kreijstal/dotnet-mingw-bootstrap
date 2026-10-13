@@ -7984,3 +7984,61 @@ Logs, patch/recipe/metadata and the artifact are archived under
 Imported native coverage remains 58/139. Full bidi/paragraph layout,
 hyphenation/compression/optimal algorithms and natural-language behavior remain
 incomplete; the full WPF goal stays active.
+
+
+## 114. Paragraph service contexts and owned LS penalty resources
+
+The 2026-10-13 continuation reproduces original FlowDocument finite-page failure
+in installed release 7 at CreateInstalledObjectsInfo. Source-visible PtsHost
+IDs assign 0/1 to container/subpage and 2/3 to floater/table. The new source
+paragraph module owns opaque registration records with copied container/subpage
+method tables, and document contexts retain original generated FSCONTEXTINFO
+and all callbacks. Source object create/destroy callbacks receive actual client/
+context/flags/IDs. Creation failure rolls back previously created objects, and
+invalid/double-destroy handles reject without dereferencing unregistered data.
+The registration can be released while an existing document independently owns
+its copied tables. This is source-engine registration state, not the private
+legacy installed-array representation or completed page layout.
+
+Managed/native original ABI agrees: context 872, methods 136, callbacks 824 bytes.
+Native tests verify copy isolation, source callbacks, identity snapshots,
+independent retention, rollback and teardown. Original PtsContext construction,
+GC, pooling/release and dispatcher shutdown pass in both formatting modes.
+The fixture initially called Dispose directly; original cache release must be
+queued via PtsCache.ReleaseContext, which clears the owner before disposal.
+The corrected fixture follows that original lifecycle. A missing Media namespace
+in the initial fixture is also corrected before final checks.
+
+The isolated FlowDocument probe next reaches LoAcquirePenaltyModule because
+StructuralCache constructs an optimal-capable PtsContext independently of the
+document's optimal-paragraph property. LoAcquirePenaltyModule now creates a
+real owned wrapper around retained LS context state; internal-handle retrieval
+exposes its opaque state identity and disposal releases it. Native identity/
+retention/invalid/double-release tests pass. Original TextPenaltyModule and
+PtsContext true/false configurations pass in Ideal/Display modes across GC and
+cache shutdown. No penalty scoring or optimal breaking is claimed. A manual
+SDK overlay initially updated only shared native output; updating its runtime
+pack as well completes the portable consumer. Final packaging regenerates both.
+
+Validation with the standard win11 WPF environment:
+
+```sh
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 inventory check-paragraph-context-native check-paragraph-context
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-lineservices-line-native inventory
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh layout check-sdk
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-paragraph-context-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/pts-context-penalty-sdk-check
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-flowdocument-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/flowdocument-context-penalty-check
+```
+
+Final context/SDK checks pass with zero consumer warnings/errors; original
+normal WPF/tab/object/justification/width/WinForms regressions also pass. The
+last FlowDocument command remains a pending gate: it now fails at absent
+FsCreatePageFinite, rather than registration or penalty resource creation.
+A direct DLL copy beside the original installed probe did not override its
+framework native resolution; the isolated SDK selects the actual source DLL.
+Native inventory now reports 65/139 imports provided (seven new resource/context
+exports), with 74 absent. Stale inventory blockers for already-built printing/
+WindowsDesktop packaging are corrected. Evidence is archived under
+ tmp/wpf8-support/validation/paragraph-context-20261013. Page formatting/query/
+break records, full bidi/optimal/natural-language behavior remain open; the full
+WPF goal stays active and this source change still requires a package update.

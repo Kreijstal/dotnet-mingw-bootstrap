@@ -91,6 +91,7 @@ int main(int argc,char** argv) {
 #define PROC(name,type) auto name=reinterpret_cast<type>(GetProcAddress(dll,#name)); require(name!=nullptr,#name)
         PROC(LoCreateContext,CreateContext); PROC(LoDestroyContext,DestroyContext); PROC(LoSetDoc,Doc);
         PROC(LoCreateLine,CreateLine); PROC(LoDisposeLine,DisposeLine); PROC(LoDisplayLine,Display);
+        PROC(LoAcquirePenaltyModule,Acquire); PROC(LoGetPenaltyModuleInternalHandle,Acquire); PROC(LoDisposePenaltyModule,DestroyContext);
         PROC(LoAcquireBreakRecord,Acquire); PROC(LoCloneBreakRecord,Acquire); PROC(LoDisposeBreakRecord,DisposeLine);
         PROC(LoQueryLineCpPpoint,CpQuery); PROC(LoQueryLinePointPcp,PointQuery);
         PROC(LoSetTabs,SetTabs); PROC(LoEnumLine,EnumLine);
@@ -237,7 +238,16 @@ int main(int argc,char** argv) {
         require(LoCreateLine(context,0,0,1,8,nullptr,&info,&line,&depth,&measured)==0&&measured.upStartTrailing==60&&measured.upMinStartTrailing==40,"min/max tab segments retain actual paragraph stop geometry");
         require(LoDisposeLine(line,FALSE)==0,"min/max tab disposal");
         std::puts("native min/max exact column-independent widths, trailing spaces, cross-run words, hard-line paragraph coverage and NBSP boundaries PASS");
+        void* penalty=nullptr;void* second_penalty=nullptr;void* internal=nullptr;void* second_internal=nullptr;
+        require(LoAcquirePenaltyModule(context,&penalty)==0&&LoAcquirePenaltyModule(context,&second_penalty)==0&&penalty&&penalty!=second_penalty,"owned penalty wrappers acquire independently from the original LS context");
+        require(LoGetPenaltyModuleInternalHandle(penalty,&internal)==0&&LoGetPenaltyModuleInternalHandle(second_penalty,&second_internal)==0&&internal&&internal!=second_internal,"each wrapper exposes its real retained source state");
+        require(LoDisposePenaltyModule(penalty)==0&&LoDisposePenaltyModule(penalty)==LS_InvalidParameter,"penalty disposal rejects double release");
+        internal=reinterpret_cast<void*>(1);require(LoGetPenaltyModuleInternalHandle(penalty,&internal)==LS_InvalidParameter&&!internal,"disposed penalty output is empty");
         require(LoDestroyContext(context)==0,"line context disposal");
+        require(LoGetPenaltyModuleInternalHandle(second_penalty,&internal)==0&&internal==second_internal,"remaining module owns context state independently of registration");
+        require(LoDisposePenaltyModule(second_penalty)==0,"last penalty module releases its owned context");
+        penalty=reinterpret_cast<void*>(1);require(LoAcquirePenaltyModule(context,&penalty)==LS_InvalidContext&&!penalty,"destroyed LS context cannot create a penalty wrapper");
+        std::puts("native penalty module acquisition/internal identity, independent retention, invalid outputs and disposal PASS");
         std::puts("native line callbacks, exact metrics/CP-point geometry, query ABI/identity/failure isolation, cross-run word/grapheme wrapping, overflow/emergency policies, trailing spaces and native break-record clone/continuation/ownership PASS");
         return 0;
     } catch(const std::exception& failure) { std::printf("FAIL: %s\n",failure.what()); return 1; }

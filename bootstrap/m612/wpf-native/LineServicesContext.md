@@ -140,3 +140,13 @@ explicit errors.
 Complete hit testing, RTL/nonmonotonic shaping clusters, full bidi and paragraph
 layout require further work. This does not establish full Line Services
 compatibility or complete WPF packaging.
+
+
+LoAcquirePenaltyModule creates an owned wrapper around retained source LS
+context state. LoGetPenaltyModuleInternalHandle exposes that state's opaque
+identity, and LoDisposePenaltyModule releases it with invalid/double-release
+checks. Native lifetime tests and original TextPenaltyModule through PtsContext
+pass in both formatting modes across GC and disposal. These exports implement
+resource ownership; they do not claim penalty scoring or optimal paragraph
+formatting. The paragraph-service context implementation separately retains
+original generated callback/configuration records and installed method tables.

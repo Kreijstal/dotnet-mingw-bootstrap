@@ -116,8 +116,10 @@ step_native_win32() {
     "$source/src/Microsoft.DotNet.Wpf/src/PresentationCore/MS/internal/UnicodeClasses.cs" "$work/ClassificationEnums.h"
   /usr/bin/python3 "$here/tools/wpf-lineservices-header.py" \
     "$source/src/Microsoft.DotNet.Wpf/src/PresentationCore/MS/internal/TextFormatting/LineServices.cs" "$work/LineServicesNative.h"
+  /usr/bin/python3 "$here/tools/wpf-pts-header.py" \
+    "$source/src/Microsoft.DotNet.Wpf/src/PresentationFramework/MS/Internal/PtsHost/Pts.cs" "$work/ParagraphServicesNative.h"
   /clang64/bin/clang++.exe -O2 -shared "$here/wpf-native/PresentationNativeWin32.cpp" \
-    "$here/wpf-native/Classification.cpp" "$here/wpf-native/TextAnalysis.cpp" "$here/wpf-native/LineServicesContext.cpp" -I "$work" \
+    "$here/wpf-native/Classification.cpp" "$here/wpf-native/TextAnalysis.cpp" "$here/wpf-native/LineServicesContext.cpp" "$here/wpf-native/ParagraphServicesContext.cpp" -I "$work" \
     -o "$build/lib/PresentationNative_cor3.dll" -luser32 -lgdi32 -licuuc -licuin
 }
 
@@ -236,6 +238,14 @@ step_check_justification_native() {
   "$work/native-check.exe" "$build/lib/PresentationNative_cor3.dll"
 }
 
+step_check_paragraph_context_native() {
+  local work=$build/paragraph-context-native-check
+  mkdir -p "$work"
+  /clang64/bin/clang++.exe -std=c++17 -O2 "$here/wpf-tests/ParagraphContextNative.cpp" \
+    -I "$build/classification-native" -o "$work/native-check.exe"
+  "$work/native-check.exe" "$build/lib/PresentationNative_cor3.dll"
+}
+
 step_check_text_line() {
   initialize
   local work=$build/text-line-check
@@ -337,6 +347,32 @@ PY
     cp "${WPF_WIDTHS_NATIVE:-$build/lib}/$native.dll" "$work/bin/Release/net8.0/"
   done
   "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/ParagraphWidthsCheck.dll")"
+}
+
+step_check_paragraph_context() {
+  initialize
+  local work=$build/paragraph-context-check
+  mkdir -p "$work"
+  cp "$here/wpf-tests/ParagraphContext.cs" "$work/Program.cs"
+  /usr/bin/python3 - "$work" "$build/lib" "$oob" <<'PY'
+from pathlib import Path
+import subprocess,sys,xml.etree.ElementTree as E
+work,lib,oob=map(Path,sys.argv[1:])
+root=E.Element('Project',Sdk='Microsoft.NET.Sdk');props=E.SubElement(root,'PropertyGroup')
+for name,value in {'TargetFramework':'net8.0','OutputType':'Exe','UseAppHost':'false','EnableNETAnalyzers':'false','NuGetAudit':'false','UseSharedCompilation':'false'}.items():E.SubElement(props,name).text=value
+items=E.SubElement(root,'ItemGroup')
+files={f.stem:f for f in oob.glob('*.dll')}
+files.update({name:lib/(name+'.dll') for name in ('PresentationCore','PresentationFramework','WindowsBase','System.Xaml','DirectWriteForwarder')})
+for name,file in sorted(files.items()):
+    ref=E.SubElement(items,'Reference',Include=name);E.SubElement(ref,'HintPath').text=subprocess.check_output(['cygpath','-m',str(file)],text=True).strip()
+E.ElementTree(root).write(work/'ParagraphContextCheck.csproj',encoding='utf-8')
+PY
+  "$sdk/dotnet.exe" build "$(cygpath -m "$work/ParagraphContextCheck.csproj")" -c Release --configfile "$(cygpath -m "$build/NuGet.config")" -v:q -p:UseSharedCompilation=false
+  local native
+  for native in PresentationNative_cor3 wpfgfx_cor3 wpf-dwrite-loader wpf-subsetter; do
+    cp "${WPF_PTS_NATIVE:-$build/lib}/$native.dll" "$work/bin/Release/net8.0/"
+  done
+  "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/ParagraphContextCheck.dll")"
 }
 
 step_check_text_tabs() {
@@ -786,6 +822,7 @@ step_check_sdk() {
   bash "$here/wpf-tests/check-inline-objects-sdk.sh" "$root" "$build/inline-sdk-check"
   bash "$here/wpf-tests/check-justification-sdk.sh" "$root" "$build/justification-sdk-check"
   bash "$here/wpf-tests/check-paragraph-widths-sdk.sh" "$root" "$build/paragraph-widths-sdk-check"
+  bash "$here/wpf-tests/check-paragraph-context-sdk.sh" "$root" "$build/paragraph-context-sdk-check"
   bash "$here/winforms-tests/check-sdk.sh" "$root" "$build/winforms-sdk-check"
 }
 
