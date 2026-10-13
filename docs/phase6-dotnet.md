@@ -8686,3 +8686,52 @@ zero consumer warnings/errors. Evidence is archived under
 KeepWithNext chains, optimal/forced-line policies, balancing/span areas, tables/
 floaters/figures, advanced/incremental/interruptible algorithms, full bidi/native
 language and broader runtime behavior remain required for the full WPF goal.
+
+## 129. Installed release 15: KeepTogether text paragraphs
+
+The 2026-10-13 continuation packages section 128 as WindowsDesktop 8.0.0-15.
+Declared/checksummed 0015-keep-together-paragraphs.patch applies after the fourteen
+prior patches. Clean pinned sources plus all fifteen patches match the five
+committed feature files byte for byte. The private package tree rebuilds native
+output, inventory and layout, passes keep/resource/native checks, and runs all
+normal SDK gates including original keep comparisons before archive creation and
+installation. Unchanged managed/graphics/printing outputs remain its own source
+builds.
+
+Validation in the CLANG64 package workspace:
+
+```sh
+makepkg --verifysource --force
+source PKGBUILD                 # with srcdir set to this workspace's src/
+_wpf native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+makepkg --repackage --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-15-any.pkg.tar.zst
+/usr/bin/python3 check-staged.py /clang64/lib/dotnet
+bash "$(_driver)/wpf-tests/check-keep-together-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-keep-sdk-check
+bash "$(_driver)/wpf-tests/check-columns-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-keep-columns-sdk-check
+```
+
+All commands pass. Staged/installed 42-managed/eight-native/SDK/legacy payload
+checks pass. Original installed flat/nested WPF comparisons render the same
+paragraph split across pages with keep disabled and intact on page 1 with keep
+enabled, in Ideal/Display. Preceding source remains on page 0. Oversized kept
+paragraphs complete in three rendered pages, and a kept paragraph can move
+intact to the next column on one page. Source/page mappings, disposed-page
+regeneration, glyph placement, compacting GC and dispatcher cleanup pass through
+shared-framework and self-contained publishes with SDK roots/toolchain PATH
+removed. Installed two-column pagination still renders 12 Ideal/9 Display pages
+and covers all 1278 characters exactly once. Private normal WPF/tab/inline-object/
+justification/width/context/finite/bottomless/pagination/columns/hard-break/keep/
+WinForms regressions pass with zero consumer warnings/errors. The existing
+source-bootstrap.json srcdir provenance warning remains.
+
+Artifact: mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-15-any.pkg.tar.zst.
+SHA-256: 164ee7de1b1ced17f16974aa43273e48a59165df19438a44f4973843bd2711da.
+Recipe commit: msys2-ur e5d96a1; feature commit: 8eddd09.
+Artifact, recipe, metadata, patch and logs are archived under
+ tmp/wpf8-support/validation/keep-together-package-20261013.
+Imported native coverage remains 89/139 with 50 absent: KeepTogether is new
+behavior of existing exports. KeepWithNext chains, optimal/forced-line policies,
+balancing/span areas, tables/floaters/figures, advanced/incremental/interruptible
+algorithms, full bidi/native language and broader runtime behavior remain
+incomplete. The full WPF goal stays active.
