@@ -84,3 +84,41 @@ extern "C" __declspec(dllexport) int WINAPI WpfGetParagraphContextState(void* ha
     for(int i=0;i<2;++i){methods[i]=context.installed->methods[i];object_contexts[i]=context.object_contexts[i];}
     return 0;
 }
+// Enumerate source-derived field sizes/offsets for the managed ABI gate. Both
+// union arms are included so a matching outer size cannot hide wrong fields.
+extern "C" __declspec(dllexport) int WINAPI WpfGetParagraphAbiField(int index,const char** type,const char** field,int* size,int* offset) {
+    if(!type||!field||!size||!offset)return PTS_tserrNullOutputParameter;
+    *type=*field=nullptr;*size=*offset=0;
+    constexpr int count=sizeof(WpfParagraphAbiFields)/sizeof(WpfParagraphAbiFields[0]);
+    if(index<0||index>=count)return PTS_tserrInvalidParameter;
+    const auto& value=WpfParagraphAbiFields[index];
+    *type=value.type;*field=value.field;*size=value.size;*offset=value.offset;return 0;
+}
+extern "C" __declspec(dllexport) int WINAPI FsTransformRectangle(uint32_t input,const FSRECT* page,const FSRECT* rect,uint32_t output,FSRECT* result) {
+    if(!result)return PTS_tserrNullOutputParameter;
+    // WPF passes the same ref/out variable at numerous call sites.
+    if(!page||!rect){*result={};return PTS_tserrInvalidParameter;}
+    const FSRECT p=*page,r=*rect;*result={};
+    if(input>7||output>7||p.du<0||p.dv<0||r.du<0||r.dv<0)return PTS_tserrInvalidParameter;
+    using Wide=int64_t;
+    const bool in_vertical=(input&PTS_fUVertical)!=0,out_vertical=(output&PTS_fUVertical)!=0;
+    Wide u=Wide(r.u)-p.u,v=Wide(r.v)-p.v,du=r.du,dv=r.dv;
+    if(input&PTS_fUDirection)u=(in_vertical?p.dv:p.du)-u-du;
+    if(input&PTS_fVDirection)v=(in_vertical?p.du:p.dv)-v-dv;
+    if(in_vertical){std::swap(u,v);std::swap(du,dv);}
+    if(out_vertical){std::swap(u,v);std::swap(du,dv);}
+    if(output&PTS_fUDirection)u=(out_vertical?p.dv:p.du)-u-du;
+    if(output&PTS_fVDirection)v=(out_vertical?p.du:p.dv)-v-dv;
+    u+=p.u;v+=p.v;
+    if(u<INT32_MIN||u>INT32_MAX||v<INT32_MIN||v>INT32_MAX)return PTS_tserrInvalidParameter;
+    *result={int32_t(u),int32_t(v),int32_t(du),int32_t(dv)};return 0;
+}
+extern "C" __declspec(dllexport) int WINAPI FsTransformBbox(uint32_t input,const FSRECT* page,const FSBBOX* bbox,uint32_t output,FSBBOX* result) {
+    if(!result)return PTS_tserrNullOutputParameter;
+    if(!bbox){*result={};return PTS_tserrInvalidParameter;}
+    const FSBBOX original=*bbox;*result={};
+    if(!page||input>7||output>7||page->du<0||page->dv<0)return PTS_tserrInvalidParameter;
+    if(!original.fDefined)return 0;
+    FSRECT transformed{};int status=FsTransformRectangle(input,page,&original.fsrc,output,&transformed);
+    if(!status)*result={original.fDefined,transformed};return status;
+}

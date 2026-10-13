@@ -8088,3 +8088,38 @@ Imported native coverage increases from 58 to 65 of 139 (74 absent), adding
 actual resource/context ownership interfaces. Page formatting/query/break
 records, full bidi/optimal algorithms and natural-language behavior remain
 incomplete; the full WPF goal stays active.
+
+## 116. Page ABI records and paragraph writing-direction transforms
+
+The 2026-10-13 continuation extends the source PTS ABI generator to scoped
+zero-offset explicit unions and int/uint enums. It emits the original page,
+section, track, paragraph, text-detail and single-line records, retaining both
+union arms. Each emitted field has a diagnostic native size/offset entry;
+reflection against original PresentationFramework checks all 277 fields,
+including union fields, rather than only comparing outer record sizes.
+
+PresentationNative now provides FsTransformRectangle and FsTransformBbox.
+Coordinate conversion follows the original Pts.cs direction bits, including
+horizontal/vertical axes and reversed u/v directions. Outputs may alias inputs,
+undefined bounding boxes remain undefined, and wider intermediate arithmetic
+rejects coordinate overflow. Geometry outside page boundaries is preserved.
+This does not implement bidi text shaping or page formatting.
+
+Validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 inventory check-paragraph-context-native check-paragraph-context
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-paragraph-context-native
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-paragraph-context
+```
+
+All commands pass. Native geometry checks compare all 64 input/output direction
+pairs against independent physical corner projection, plus aliasing, undefined/
+zero-width/outside-page bounds, overflow and invalid arguments. The original
+managed PTS imports pass LTR/RTL conversion and return conversion through the
+real CLR marshaler. Original context lifecycle/GC/cache tests still pass, and
+the managed consumer builds with zero warnings/errors. Imported-symbol coverage
+is 67/139, leaving 72 absent. Evidence is archived in
+ tmp/wpf8-support/validation/paragraph-geometry-20261013. FsCreatePageFinite and
+full page formatting, optimal algorithms and native language features remain
+incomplete. A package update is required to install this source change.

@@ -2,6 +2,8 @@
 #include <windows.h>
 #include <cstdio>
 #include <stdexcept>
+#include <algorithm>
+#include <climits>
 #include "ParagraphServicesNative.h"
 static int creates=0,destroys=0,fail_id=-1;
 static void require(bool value,const char* why){if(!value)throw std::runtime_error(why);}
@@ -17,6 +19,44 @@ int main(int argc,char** argv) {
         using Install=int(WINAPI*)(FSIMETHODS*,FSIMETHODS*,void**,int*);using Create=int(WINAPI*)(FSCONTEXTINFO*,void**);using Destroy=int(WINAPI*)(void*);using State=int(WINAPI*)(void*,FSCONTEXTINFO*,FSIMETHODS*,void**);
 #define PROC(name,type) auto name=reinterpret_cast<type>(GetProcAddress(dll,#name));require(name!=nullptr,#name)
         PROC(CreateInstalledObjectsInfo,Install);PROC(DestroyInstalledObjectsInfo,Destroy);PROC(CreateDocContext,Create);PROC(DestroyDocContext,Destroy);PROC(WpfGetParagraphContextState,State);
+        using Transform=int(WINAPI*)(uint32_t,const FSRECT*,const FSRECT*,uint32_t,FSRECT*);
+        using TransformBox=int(WINAPI*)(uint32_t,const FSRECT*,const FSBBOX*,uint32_t,FSBBOX*);
+        PROC(FsTransformRectangle,Transform);PROC(FsTransformBbox,TransformBox);
+        auto equal=[](FSRECT a,FSRECT b){return a.u==b.u&&a.v==b.v&&a.du==b.du&&a.dv==b.dv;};
+        FSRECT page{17,29,900,600},physical{72,103,83,47};
+        // Independent corner projection: construct the axes and origin named
+        // by ES/EN/SE/SW/WS/WN/NE/NW, then project physical corner points.
+        const int ux[]={1,1,0,0,-1,-1,0,0},uy[]={0,0,1,1,0,0,-1,-1};
+        const int vx[]={0,0,1,-1,0,0,1,-1},vy[]={1,-1,0,0,1,-1,0,0};
+        auto project=[&](int direction,FSRECT r) {
+            int originX=(ux[direction]<0||vx[direction]<0)?page.du:0;
+            int originY=(uy[direction]<0||vy[direction]<0)?page.dv:0;
+            int loU=INT_MAX,loV=INT_MAX,hiU=INT_MIN,hiV=INT_MIN;
+            for(int dx:{0,r.du})for(int dy:{0,r.dv}) {
+                int x=r.u+dx-page.u-originX,y=r.v+dy-page.v-originY;
+                int u=x*ux[direction]+y*uy[direction],v=x*vx[direction]+y*vy[direction];
+                loU=std::min(loU,u);hiU=std::max(hiU,u);loV=std::min(loV,v);hiV=std::max(hiV,v);
+            }
+            return FSRECT{page.u+loU,page.v+loV,hiU-loU,hiV-loV};
+        };
+        for(uint32_t in=0;in<8;++in)for(uint32_t out=0;out<8;++out) {
+            FSRECT src=project(in,physical),expected=project(out,physical),actual{};
+            require(FsTransformRectangle(in,&page,&src,out,&actual)==0&&equal(actual,expected),"all writing directions agree with independent physical corner projection");
+            require(FsTransformRectangle(in,&page,&src,out,&src)==0&&equal(src,expected),"rectangle ref/out aliasing");
+            FSBBOX box{1,project(in,physical)};
+            require(FsTransformBbox(in,&page,&box,out,&box)==0&&box.fDefined==1&&equal(box.fsrc,expected),"defined bbox geometry and aliasing");
+        }
+        FSRECT outside{-100,-50,0,20},mirrored{};
+        require(FsTransformRectangle(0,&page,&outside,4,&mirrored)==0&&mirrored.u==1034&&mirrored.v==-50&&mirrored.du==0,"outside-page and zero-width rectangles are retained");
+        FSBBOX undefined{0,{INT_MIN,INT_MAX,-1,-1}},empty{};
+        require(FsTransformBbox(0,&page,&undefined,4,&empty)==0&&!empty.fDefined&&equal(empty.fsrc,FSRECT{}),"undefined bbox does not inspect meaningless coordinates");
+        FSRECT overflow{INT_MIN,0,1,1},invalid{1,2,3,4};
+        require(FsTransformRectangle(0,&page,&overflow,4,&invalid)==PTS_tserrInvalidParameter&&equal(invalid,FSRECT{}),"overflow rejects without narrowing or partial output");
+        require(FsTransformRectangle(8,&page,&physical,0,&invalid)==PTS_tserrInvalidParameter&&equal(invalid,FSRECT{}),"invalid direction rejects and clears output");
+        require(FsTransformRectangle(0,nullptr,&physical,0,&invalid)==PTS_tserrInvalidParameter&&equal(invalid,FSRECT{}),"null geometry rejects");
+        require(FsTransformRectangle(0,&page,&physical,0,nullptr)==PTS_tserrNullOutputParameter,"null output rejects");
+        FSRECT negative{0,0,-1,1};require(FsTransformRectangle(0,&page,&negative,0,&invalid)==PTS_tserrInvalidParameter,"negative extent rejects");
+        std::puts("paragraph geometry: 64 direction pairs, corner projection, aliasing, empty/outside, overflow and invalid arguments PASS");
         FSIMETHODS methods{};methods.pfnCreateContext=reinterpret_cast<void*>(create_object);methods.pfnDestroyContext=reinterpret_cast<void*>(destroy_object);methods.pfnFormatParaFinite=reinterpret_cast<void*>(1234);
         void* installed=nullptr;int count=0;
         require(CreateInstalledObjectsInfo(&methods,&methods,&installed,&count)==0&&installed&&count==4,"source installed object registration");
