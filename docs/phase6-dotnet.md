@@ -6920,3 +6920,32 @@ Evidence is archived under
 49 project inputs/66 tree C++ files without per-file compile counts. Native text
 coverage remains 58/139; full printing, text/layout and WindowsDesktop packaging
 remain required. The WPF packaging goal stays active.
+
+
+## 90. Printing Release configuration fidelity
+
+The 2026-10-13 continuation aligns the original printing diagnostic gate with
+upstream Release preprocessing. The driver verifies NDEBUG in the Release
+ItemDefinitionGroup of eng/WpfArcadeSdk/tools/Wpf.Cpp.props before defining it,
+and records the configuration and source props path in inputs.json. This
+matches the managed WPF builds' Release configuration and removes the debug-only
+assert/_wassert import requirement without changing original printing code.
+
+Validation on win11 with the standard WPF environment:
+
+```sh
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh printing-gate
+```
+
+Python syntax and git whitespace checks pass. The gate passes parsing/Sema,
+advances beyond ThunkStartDocPrinter's native assert and stops at XpsPrintStream::
+Seek (XpsPrintStream.cpp:211). Native COM signature lowering currently rejects
+the eight-byte LARGE_INTEGER by-value argument to IStream::Seek. Correct Windows
+x64 aggregate argument lowering remains required. No complete printing IL/DLL or
+printing runtime proof is produced.
+
+Evidence is archived under
+`tmp/wpf8-support/validation/printing-release-20261013`. Scope remains
+49 project inputs/66 tree C++ files without per-file compile counts. Native text
+coverage remains 58/139; full printing, text/layout and WindowsDesktop packaging
+remain required. The WPF packaging goal stays active.

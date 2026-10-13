@@ -23,6 +23,14 @@ def main():
     args = parser.parse_args()
     root = args.source / "src/Microsoft.DotNet.Wpf/src"
     original = root / "System.Printing"
+    cpp_props = args.source / "eng/WpfArcadeSdk/tools/Wpf.Cpp.props"
+    release_definitions = [item.text or "" for group in ET.parse(cpp_props).getroot()
+                           if group.tag.rsplit("}", 1)[-1] == "ItemDefinitionGroup"
+                           and group.get("Condition") == "'$(Configuration)'=='Release'"
+                           for item in group.iter()
+                           if item.tag.rsplit("}", 1)[-1] == "PreprocessorDefinitions"]
+    if not any("NDEBUG" in item.split(";") for item in release_definitions):
+        raise RuntimeError("upstream WPF Release NDEBUG definition was not found")
     work = args.build / "printing-gate"
     work.mkdir(parents=True, exist_ok=True)
     cpp = work / "CPP"
@@ -250,6 +258,8 @@ def main():
     for name in types:
         command += ["--type", name]
     command += ["--source-type", "System.Printing.PrintQueue"]
+    # Match the upstream Release build, including its native assert policy.
+    command += ["-D", "NDEBUG=1"]
     # SHLWAPI and KERNEL32 both export DelayLoadFailureHook. Keep SHLWAPI
     # bindings pending explicit duplicate-symbol resolution rather than
     # silently selecting one DLL. Used unavailable functions still fail.
@@ -265,6 +275,7 @@ def main():
     invocation = command[:2] + ["--arguments-json", win(arguments)]
     (work / "inputs.json").write_text(json.dumps({
         "project": "System.Printing.vcxproj", "projectInputs": inputs,
+        "configuration": "Release", "configurationSource": str(cpp_props),
         "treeCppCount": tree_count,
         "portPreparation": ["MinGW skips temporary MSVC code-analysis include", "disable MSVC banned-API static analysis",
                             "map legacy copied-SDK annotations to trusted MinGW SAL2 spellings",
