@@ -6006,3 +6006,59 @@ per-file compile count. Native coverage remains 58/139; full printing lowering,
 native link/runtime behavior, full text/layout and WindowsDesktop SDK/reference/
 runtime packaging remain required. The complete WPF package is unfinished and
 the full goal stays active.
+
+
+## 70. Instance field MarshalAs metadata for printing records
+
+The 2026-10-13 continuation accepts MarshalAs annotations on managed instance
+fields and emits actual CLR FieldMarshal descriptors through ilasm field marshal
+syntax. Selected scalar, enum, string, native-integer/pointer and interface
+forms use the same named native type table as parameter metadata. Field-specific
+validation checks storage kinds and rejects unsupported native types/named
+array options. Parameter In/Out annotations retain their parameter-only target
+rules; static-field and return marshalling remain incomplete. No annotation is
+silently discarded.
+
+The runtime fixture produces sequential source ref classes corresponding to
+actual Windows PRINTER_DEFAULTSW and DOCINFOW records. CLR reflection verifies
+LPWStr/SysInt/U4 field descriptors, Marshal.SizeOf checks native sizes 24/40 and
+Marshal.OffsetOf checks pointer/access offsets 8/16. A separately compiled native
+DLL reads Unicode strings including a surrogate pair, a full-width native
+pointer and a high-bit enum, waits during forced compacting GC and changes the
+enum field. C# P/Invoke into that DLL marshals the generated source class and
+copies the enum back, preserving Unicode content. The document record checks
+its declared native size, Unicode/null strings and unsigned type bits. This
+validates real native layout and marshalling, rather than only metadata spelling.
+
+Validation on win11 with the usual compiler and WPF build environment:
+
+```sh
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-field-marshalling
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-field-marshalling
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-layout
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh build-directwrite check-directwrite-assembly printing-gate
+```
+
+The initial frontend build passes, then the native fixture exposes a missing
+stddef.h include for offsetof; explicit standard headers fix it. The subsequent
+focused marshalling command passes all native/reflection/copy-back checks with
+871 confirmed compacting collections inside the native call. Wrong String
+storage and unsupported named array options are rejected. Existing explicit/
+sequential/overlapping/pack/size/charset layout checks and all their rejection
+cases pass. Bash/JSON syntax and whitespace checks pass.
+
+The WPF command retains the complete DirectWrite runtime proof (85 types,
+283 bodies, 81 font families). The original printing combined source still
+passes parsing/Sema, gets past PrinterDefaults/GdiDocInfoW field annotations,
+and fails next in declaration validation with `nested/generic delegate
+declarations are not enabled yet`. The original PrintSystemObject declares
+nested property-change/instantiation delegates, which require the next compiler
+step. Full original printing field emission, complete IL/native linking and
+printing runtime remain unproven; no System.Printing DLL is produced.
+
+Logs, manifests, compiler work files and actual runtime artifacts are archived
+locally under `tmp/wpf8-support/validation/printing-field-marshalling-20261013`.
+Diagnostic scope retains all 49 original project inputs/66 tree C++ files, with
+no per-file compile count. Native text coverage remains 58/139. Full text/layout,
+printing and WindowsDesktop SDK/reference/runtime packaging remain required;
+no completed WPF package is produced and the full goal stays active.

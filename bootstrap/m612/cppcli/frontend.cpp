@@ -2096,6 +2096,7 @@ class Emitter {
             auto name = attr->getAnnotation();
             unsigned expected = name.starts_with("cli.com.") ? 1 : (name == "cli.preservesig" || name == "cli.reliability") ? 2 : name.starts_with("cli.param.") ? 3 : 0;
             if (name == "cli.com.visible" && target == 2) expected = 2;
+            if(name.starts_with("cli.param.marshal") && target==4) expected=4;
             if (!expected) continue;
             if (expected != target) {
                 auto* named=dyn_cast<NamedDecl>(d);
@@ -2105,18 +2106,48 @@ class Emitter {
             if (!seen.insert(name.str()).second) throw std::runtime_error("duplicate interop attribute");
         }
     }
+    const std::map<int64_t,std::string>& native_marshal_types() const {
+        static const std::map<int64_t,std::string> types={
+            {2,"bool"}, {3,"int8"}, {4,"unsigned int8"}, {5,"int16"}, {6,"unsigned int16"},
+            {7,"int32"}, {8,"unsigned int32"}, {9,"int64"}, {10,"unsigned int64"}, {11,"float32"}, {12,"float64"},
+            {19,"bstr"}, {20,"lpstr"}, {21,"lpwstr"}, {22,"lptstr"},
+            {25,"iunknown"}, {26,"idispatch"}, {28,"interface"}, {31,"int"}, {32,"unsigned int"}
+        };
+        return types;
+    }
+    std::string field_marshalling(const FieldDecl* field) const {
+        validate_interop_attributes(field,4);
+        if(!annotated(field,"cli.param.marshal")) return "";
+        for(auto* attr:field->specific_attrs<AnnotateAttr>())
+            if(attr->getAnnotation().starts_with("cli.param.marshal."))
+                throw std::runtime_error("field MarshalAs named array options are not enabled yet");
+        auto value=layout_constant(field,"cli.param.marshal",-1);
+        auto found=native_marshal_types().find(value);
+        if(found==native_marshal_types().end()) throw std::runtime_error("unsupported field MarshalAs unmanaged type");
+        auto t=field->getType();
+        if(value>=19 && value<=22) {
+            if(type(t)!="string") throw std::runtime_error("field string MarshalAs requires a String handle");
+        } else if(value==25 || value==26 || value==28) {
+            if(!handle_target(t) || !native_value_pointer(field).isNull())
+                throw std::runtime_error("field interface MarshalAs requires a managed reference");
+        } else if(value==31 || value==32) {
+            auto* record=value_target(t);
+            if(!(record && !record_annotation(record,"cli.nativeint:").empty()) &&
+                !(t->isPointerType() && !handle_target(t)))
+                throw std::runtime_error("field native-integer MarshalAs requires native-integer or raw pointer storage");
+        } else if(value==11 || value==12) {
+            if(!t->isRealFloatingType()) throw std::runtime_error("field floating MarshalAs requires floating storage");
+        } else if(!t->isIntegerType() && !t->isEnumeralType())
+            throw std::runtime_error("field scalar MarshalAs requires integral or enum storage");
+        return "marshal("+found->second+") ";
+    }
     std::string parameter_signature(const ParmVarDecl* p) const {
         validate_interop_attributes(p, 3);
         std::string result = annotated(p, "cli.param.in") ? "[in] " : "";
         if (annotated(p, "cli.param.out")) result += "[out] ";
         result += variable_type(p);
         if (annotated(p, "cli.param.marshal")) {
-            static const std::map<int64_t, std::string> native_types = {
-                {2,"bool"}, {3,"int8"}, {4,"unsigned int8"}, {5,"int16"}, {6,"unsigned int16"},
-                {7,"int32"}, {8,"unsigned int32"}, {9,"int64"}, {10,"unsigned int64"}, {11,"float32"}, {12,"float64"},
-                {19,"bstr"}, {20,"lpstr"}, {21,"lpwstr"}, {22,"lptstr"},
-                {25,"iunknown"}, {26,"idispatch"}, {28,"interface"}, {31,"int"}, {32,"unsigned int"}
-            };
+            const auto& native_types=native_marshal_types();
             auto value = layout_constant(p, "cli.param.marshal", -1);
             bool index=annotated(p,"cli.param.marshal.SizeParamIndex"), count=annotated(p,"cli.param.marshal.SizeConst"),
                 subtype=annotated(p,"cli.param.marshal.ArraySubType");
@@ -4686,7 +4717,7 @@ public:
                     throw std::runtime_error("layout on inherited managed classes is not enabled yet");
             }
             for (auto* field : r->fields()) {
-                validate_interop_attributes(field, 0);
+                field_marshalling(field);
                 auto offset = layout_constant(field, "cli.field.offset", -1);
                 if (layout == 2 && !annotated(field, "cli.field.offset")) throw std::runtime_error("explicit layout requires FieldOffset on every instance field");
                 if (annotated(field, "cli.field.offset") && (layout != 2 || offset < 0 || offset > INT32_MAX)) throw std::runtime_error("FieldOffset requires explicit layout and a nonnegative Int32 offset");
@@ -4761,7 +4792,7 @@ public:
                     assembly_forwards[external.substr(separator+1)] = external.substr(0,separator);
                 }
             }
-            if (!isa<FunctionDecl>(decl) && !isa<CXXRecordDecl>(decl)) validate_interop_attributes(decl, 0);
+            if (!isa<FunctionDecl>(decl) && !isa<CXXRecordDecl>(decl)) validate_interop_attributes(decl, isa<FieldDecl>(decl) ? 4 : 0);
             if (auto* f = dyn_cast<FunctionDecl>(decl)) VisitFunctionDecl(f);
             else if (auto* r = dyn_cast<CXXRecordDecl>(decl)) {
                 if (r->isThisDeclarationADefinition() && (record_annotated(r, "cli.ref") || record_annotated(r, "cli.value") || !record_annotation(r, "cli.external:").empty())) { VisitCXXRecordDecl(r); collect(r); }
@@ -5061,7 +5092,7 @@ public:
                 il << "  .field ";
                 if (layout == 2) il << '[' << layout_constant(field, "cli.field.offset", -1) << "] ";
                 il << (emitted_access(field,field->getAccess())+" ")
-                    << declared_type(field) << " '" << field->getNameAsString() << "'\n";
+                    << field_marshalling(field) << declared_type(field) << " '" << field->getNameAsString() << "'\n";
             }
             for (auto* member : r->decls()) if (auto* field = dyn_cast<VarDecl>(member); field && field->isStaticDataMember()) {
                 if (!annotation(field, "cli.static.property:").empty()) continue;

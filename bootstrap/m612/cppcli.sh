@@ -604,6 +604,24 @@ int main() { CombinedAccess^ c=gcnew CombinedAccess(); return c->OrMethod(); }' 
   reject_case combined-foreign-and '#using "combined-access.dll"
 public ref class Foreign : CombinedAccess { public: int Read() { return AndMethod(); } }; int main() { return 0; }' 'undeclared identifier' --type CombinedAccess
 }
+step_test-field-marshalling() {
+  /clang64/bin/clang++.exe -std=c++17 -shared -O2 "$src/tests/field-marshalling-native.cpp" -o "$testdir/field-marshalling-native.dll"
+  compile "$(cygpath -m "$src/tests/field-marshalling.cpp")" --target library \
+    --type System.Runtime.InteropServices.LayoutKind --type System.Runtime.InteropServices.CharSet \
+    --type System.Runtime.InteropServices.UnmanagedType -o "$(cygpath -m "$testdir/field-marshalling.dll")"
+  mkdir -p "$testdir/field-marshalling-consumer"
+  cp "$src/tests/FieldMarshallingConsumer.cs" "$testdir/field-marshalling-consumer/Program.cs"
+  cat > "$testdir/field-marshalling-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="field-marshalling"><HintPath>../field-marshalling.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/field-marshalling-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  cp "$testdir/field-marshalling-native.dll" "$testdir/field-marshalling-consumer/bin/Debug/net8.0/"
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/field-marshalling-consumer/bin/Debug/net8.0/consumer.dll")"
+  local enums=(--type System.Runtime.InteropServices.UnmanagedType)
+  reject_case field-marshal-string-type 'using namespace System::Runtime::InteropServices; public ref class Bad { public: [MarshalAs(UnmanagedType::LPWStr)] int Value; }; int main() { return 0; }' 'requires a String handle' "${enums[@]}"
+  reject_case field-marshal-array-options 'using namespace System::Runtime::InteropServices; public ref class Bad { public: [MarshalAs(UnmanagedType::LPWStr, SizeConst=2)] System::String^ Value; }; int main() { return 0; }' 'named array options' "${enums[@]}"
+}
 step_test-constructor-tracking() {
   compile "$(cygpath -m "$src/tests/constructor-tracking.cpp")" --target library --type System.GC --type System.ArgumentException \
     -o "$(cygpath -m "$testdir/constructor-tracking.dll")"
