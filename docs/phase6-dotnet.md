@@ -8507,3 +8507,50 @@ warnings/errors. Evidence is archived under
 Column balancing/span areas, hard/keep/optimal/forced-line policies, tables/
 floaters/figures, incremental/interruptible algorithms, full bidi/native language
 and broader runtime behavior remain required for the full WPF goal.
+
+## 125. Installed release 13: finite multi-column text layout
+
+The 2026-10-13 continuation packages section 124 as WindowsDesktop 8.0.0-13.
+Declared/checksummed 0013-column-layout.patch applies after the twelve earlier
+patches. Clean pinned sources plus all thirteen patches match the six committed
+column feature files byte for byte. The private package tree rebuilds its native
+library, inventory and layout, passes original ABI/context and native column/
+resource/failure checks, and runs normal SDK checks including multi-column
+pagination before packaging and installing. Unchanged managed/graphics/printing
+outputs remain its own source builds.
+
+Validation in the CLANG64 package workspace:
+
+```sh
+makepkg --verifysource --force
+source PKGBUILD                 # with srcdir set to this workspace's src/
+_wpf native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+makepkg --repackage --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-13-any.pkg.tar.zst
+/usr/bin/python3 check-staged.py /clang64/lib/dotnet
+bash "$(_driver)/wpf-tests/check-columns-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-columns-sdk-check
+bash "$(_driver)/wpf-tests/check-pagination-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-columns-pagination-sdk-check
+```
+
+All commands pass. Staged/installed 42-managed/eight-native/SDK/legacy payload
+checks pass. Installed original WPF column pages render 12 Ideal/9 Display pages,
+cover every one of 1278 source characters exactly once, map content positions to
+their pages, render glyphs in both first-page columns with no dark glyphs in the
+gap, and render the red column rule. Original page regeneration, compacting GC
+and dispatcher cleanup pass through the installed shared framework and portable
+publishes with SDK roots/toolchain PATH removed. Installed single-column
+pagination still renders six pages with exact character coverage in both modes.
+Private normal WPF/tab/inline-object/justification/width/context/finite/bottomless/
+pagination/columns/WinForms regression gates pass with zero consumer warnings/
+errors. The source-bootstrap.json srcdir provenance warning remains.
+
+Artifact: mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-13-any.pkg.tar.zst.
+SHA-256: b3e7c79a7706e4a17e009ea45e6d1303d7e84583290572823f10b9cb79eeb33a.
+Recipe commit: msys2-ur 6afec39; feature commit: c951bf4.
+Artifact, recipe, metadata, patch and logs are archived under
+ tmp/wpf8-support/validation/columns-package-20261013.
+Imported native coverage is 89/139 with 50 absent. Multi-column text can now
+continue within a page and onto later pages using original geometry/callbacks.
+Balancing/span areas, hard/keep/optimal/forced-line policies, tables/floaters/
+figures, advanced/incremental/interruptible algorithms, full bidi/native language
+and broader runtime behavior remain incomplete. The full WPF goal stays active.
