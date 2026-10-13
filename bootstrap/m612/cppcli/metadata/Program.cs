@@ -26,7 +26,9 @@ record CliEnumMember(string Name, string Value);
 record CliProperty(string Name, CliType Type, string Getter, string Setter, bool Static, bool Supported) {
     public CliType[] Parameters { get; init; } = Array.Empty<CliType>();
 }
+record CliEvent(string Name, CliType Type, string Add, string Remove, string Raise, bool Static, bool Supported);
 record CliClass(string Assembly, string Name, string Cpp, string Kind, string Base, CliMethod[] Methods, CliProperty[] Properties, string[] Interfaces, CliType? Underlying = null, CliEnumMember[]? EnumMembers = null, CliField[]? Fields = null) {
+    public CliEvent[] Events { get; init; } = Array.Empty<CliEvent>();
     public int GenericArity { get; init; }
     public CliType? BaseType { get; init; }
     public CliType[] InterfaceTypes { get; init; } = Array.Empty<CliType>();
@@ -308,6 +310,17 @@ static class Program
                             (getter ?? setter)?.Static ?? false, ValidName(pn) && sig.ParameterTypes.Length <= 1 &&
                             (getter?.Supported == true || setter?.Supported == true)) { Parameters = sig.ParameterTypes.ToArray() });
                     }
+                    var events = new List<CliEvent>();
+                    foreach(var eh in td.GetEvents()) {
+                        var ed=r.GetEventDefinition(eh); var accessors=ed.GetAccessors();
+                        CliMethod? Accessor(MethodDefinitionHandle h) => h.IsNil ? null : methods.FirstOrDefault(m =>
+                            m.Id==assembly+":"+System.Reflection.Metadata.Ecma335.MetadataTokens.GetToken(h).ToString("x8"));
+                        var add=Accessor(accessors.Adder); var remove=Accessor(accessors.Remover); var raise=Accessor(accessors.Raiser);
+                        string en=r.GetString(ed.Name);
+                        var type=SignatureTypes.EntityType(r,ed.Type);
+                        events.Add(new(en,type,add?.Name ?? "",remove?.Name ?? "",raise?.Name ?? "",add?.Static ?? false,
+                            ValidName(en) && add?.Supported==true && remove?.Supported==true && type.Kind!="unsupported"));
+                    }
                     var baseType = td.BaseType.IsNil ? null : SignatureTypes.EntityType(r, td.BaseType);
                     string baseName = baseType?.Name ?? "";
                     var fields = td.GetFields().Select(fh => (Handle: fh, Field: r.GetFieldDefinition(fh)))
@@ -348,7 +361,7 @@ static class Program
                     var interfaceTypes = td.GetInterfaceImplementations().Select(ih => SignatureTypes.EntityType(r, r.GetInterfaceImplementation(ih).Interface)).ToArray();
                     types.Add(new CliClass(assembly, name, SignatureTypes.CppName(name), baseName == "System.ValueType" ? "value" : (td.Attributes & TypeAttributes.Interface) != 0 ? "interface" : "ref", baseName, methods.ToArray(), properties.ToArray(),
                         interfaceTypes.Where(t => t.Kind != "unsupported").Select(t => t.Name).ToArray(), Fields: fields) { GenericArity = genericArity, BaseType = baseType, InterfaceTypes = interfaceTypes, DefaultMember = defaultMember,
-                            NativeStorageSafe = baseName == "System.ValueType" && NativeStorageSafe(r, td) });
+                            Events=events.ToArray(), NativeStorageSafe = baseName == "System.ValueType" && NativeStorageSafe(r, td) });
                 }
             }
             var found = types.Select(t => t.Name).ToHashSet(StringComparer.Ordinal);
@@ -369,7 +382,9 @@ static class Program
                 var owner = types.FirstOrDefault(c => c.Name == t.Name);
                 return owner == null ? t : t with { Il = t.Il.Replace("'" + t.Name + "'", AssemblyReference(owner.Assembly) + "'" + t.Name + "'") };
             }
-            types = types.Select(t => t with { BaseType = t.BaseType == null ? null : Qualified(t.BaseType), InterfaceTypes = t.InterfaceTypes.Select(Qualified).ToArray(), Fields = t.Fields?.Select(f => f with { Type = Qualified(f.Type), Supported = f.Supported && Available(f.Type) }).ToArray(), Methods = t.Methods.Select(m => m with {
+            types = types.Select(t => t with { Events=t.Events.Select(e=>e with { Type=Qualified(e.Type), Supported=e.Supported && !e.Static && Available(e.Type) &&
+                t.Methods.Any(m=>m.Name==e.Add && m.Supported && m.Parameters.All(Available)) &&
+                t.Methods.Any(m=>m.Name==e.Remove && m.Supported && m.Parameters.All(Available)) }).ToArray(), BaseType = t.BaseType == null ? null : Qualified(t.BaseType), InterfaceTypes = t.InterfaceTypes.Select(Qualified).ToArray(), Fields = t.Fields?.Select(f => f with { Type = Qualified(f.Type), Supported = f.Supported && Available(f.Type) }).ToArray(), Methods = t.Methods.Select(m => m with {
                 Supported = m.Supported && Available(m.Return) && m.Parameters.All(Available),
                 Return = Qualified(m.Return), Parameters = m.Parameters.Select(Qualified).ToArray()
             }).ToArray(), Properties = t.Properties.Select(p => p with {
@@ -526,6 +541,8 @@ static class Program
                         (m.Name == "op_Equality" ? "==" : "!=") + "(" + string.Join(", ", m.Parameters.Select(p => p.Cpp)) + ");");
                 }
             }
+            foreach(var e in t.Events.Where(e=>e.Supported))
+                w.WriteLine("public: __attribute__((annotate(\"cli.event\"), annotate(\"cli.event.add:"+Escape(e.Add)+"\"), annotate(\"cli.event.remove:"+Escape(e.Remove)+"\"), annotate(\"cli.event.raise:"+Escape(e.Raise)+"\"))) " + e.Type.Cpp + " " + e.Name + ";");
             var propertyFacades = new Dictionary<string, string>();
             foreach (var p in t.Properties.Where(p => p.Supported))
             {

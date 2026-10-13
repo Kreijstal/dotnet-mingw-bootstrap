@@ -114,6 +114,9 @@ struct ImportedMethod {
 };
 struct ImportedField { std::string assembly, owner, name, type, constant; };
 struct Metadata {
+    struct DelegateSignature { std::string result; std::vector<std::string> parameters; };
+    std::map<std::string, DelegateSignature> delegates;
+    std::set<std::string> ambiguous_delegates;
     std::map<std::string, ImportedMethod> methods;
     std::map<std::string, ImportedField> fields;
     std::map<std::string, std::string> types;
@@ -159,6 +162,19 @@ struct Metadata {
                 ImportedMethod im{assembly, name, m.getString("Name")->str(),
                     m.getObject("Return")->getString("Il")->str(), {}, m.getBoolean("Static").value_or(false), m.getBoolean("Abstract").value_or(false)};
                 for (auto& p : *m.getArray("Parameters")) im.parameters.push_back(p.getAsObject()->getString("Il")->str());
+                if (c.getString("Base").value_or("") == "System.MulticastDelegate" && im.name == "Invoke") {
+                    DelegateSignature signature{m.getObject("Return")->getString("Cpp")->str(), {}};
+                    for (auto& p : *m.getArray("Parameters")) signature.parameters.push_back(p.getAsObject()->getString("Cpp")->str());
+                    std::string cpp_name = name;
+                    for (size_t pos=0; (pos=cpp_name.find('.',pos))!=std::string::npos;pos+=2) cpp_name.replace(pos,1,"::");
+                    delegates[cpp_name]=signature;
+                    auto short_name=name.substr(name.find_last_of('.')+1);
+                    if (short_name != cpp_name) {
+                        if (ambiguous_delegates.count(short_name) || !delegates.emplace(short_name,signature).second) {
+                            delegates.erase(short_name); ambiguous_delegates.insert(short_name);
+                        }
+                    }
+                }
                 methods.emplace(m.getString("Id")->str(), std::move(im));
             }
             if (auto* fields_list = c.getArray("Fields")) for (auto& field : *fields_list) {
@@ -480,6 +496,8 @@ protected:
                 tokens.insert(tokens.begin()+pos, replacement.begin(), replacement.end());
                 pos += replacement.size()-1;
             }
+            auto delegate_signatures = metadata.delegates;
+            auto ambiguous_delegate_names = metadata.ambiguous_delegates;
             for (size_t pos = tokens.size(); pos-- > 0;) {
                 if (tokens[pos].text != "delegate") continue;
                 // delegate is contextual: original WPF printing APIs also
@@ -498,6 +516,24 @@ protected:
                 std::string result, parameters;
                 for (size_t j = pos+1; j+1 < open; ++j) result += tokens[j].text + " ";
                 for (size_t j = open+1; j < close; ++j) parameters += tokens[j].text + " ";
+                Metadata::DelegateSignature signature{result,{}};
+                size_t parameter=open+1;
+                int parameter_depth=0;
+                for(size_t j=parameter;j<=close;++j) {
+                    if(j<close && (tokens[j].text=="<" || tokens[j].text=="(" || tokens[j].text=="[")) ++parameter_depth;
+                    if(j<close && (tokens[j].text==">" || tokens[j].text==")" || tokens[j].text=="]")) --parameter_depth;
+                    if(j<close && tokens[j].text==">>") parameter_depth-=2;
+                    if(j!=close && (tokens[j].text!="," || parameter_depth)) continue;
+                    size_t end=j;
+                    if(end>parameter+1 && tokens[end-1].kind==tok::identifier && tokens[end-2].text!="::") --end;
+                    std::string type;
+                    for(size_t k=parameter;k<end;++k) type+=tokens[k].text+" ";
+                    if(!type.empty() && type!="void ") signature.parameters.push_back(type);
+                    parameter=j+1;
+                }
+                if (ambiguous_delegate_names.count(name) || !delegate_signatures.emplace(name,signature).second) {
+                    delegate_signatures.erase(name); ambiguous_delegate_names.insert(name);
+                }
                 size_t begin = pos;
                 std::string visibility = "private";
                 if (pos && (tokens[pos-1].text == "public" || tokens[pos-1].text == "private")) { visibility = tokens[pos-1].text; --begin; }
@@ -995,7 +1031,8 @@ protected:
                 if (separators.empty()) return false;
                 size_t split = separators.back();
                 std::string member;
-                if (split+1 < end && (tokens[split+1].text == "get" || tokens[split+1].text == "set")) {
+                if (split+1 < end && (tokens[split+1].text == "get" || tokens[split+1].text == "set" ||
+                    tokens[split+1].text == "add" || tokens[split+1].text == "remove" || tokens[split+1].text == "raise")) {
                     if (separators.size() < 2) throw std::runtime_error("named accessor override requires an interface property");
                     member = tokens[split+1].text + "_" + tokens[split-1].text;
                     split = separators[separators.size()-2];
@@ -1038,7 +1075,8 @@ protected:
                     emit(t, "__attribute__((annotate(\"cli.access:assembly\")))");
                 if (t.text == "internal" && class_depth[i] == 1 && i + 1 < tokens.size() && tokens[i+1].text == ":") { emit(t, "public"); continue; }
                 if (i >= 2 && tokens[i-1].text == "::" && i + 2 < tokens.size() && tokens[i+1].text == "::" &&
-                    (tokens[i+2].text == "get" || tokens[i+2].text == "set")) {
+                    (tokens[i+2].text == "get" || tokens[i+2].text == "set" || tokens[i+2].text == "add" ||
+                     tokens[i+2].text == "remove" || tokens[i+2].text == "raise")) {
                     size_t owner = i-2;
                     if (tokens[owner].text == ">" || tokens[owner].text == ">>") {
                         int angles = 0;
@@ -1055,8 +1093,8 @@ protected:
                         emit(t, tokens[i+2].text + "_" + (t.text == "default" ? "Item" : t.text)); i += 2; continue;
                     }
                 }
-                if (t.text == "static" && i + 1 < tokens.size() && tokens[i+1].text == "property") continue;
-                if (t.text == "virtual" && i + 1 < tokens.size() && tokens[i+1].text == "property") continue;
+                if (t.text == "static" && i + 1 < tokens.size() && (tokens[i+1].text == "property" || tokens[i+1].text == "event")) continue;
+                if (t.text == "virtual" && i + 1 < tokens.size() && (tokens[i+1].text == "property" || tokens[i+1].text == "event")) continue;
                 if (t.text == "=" && class_depth[i] == 1 && i && (tokens[i-1].text == ")" || tokens[i-1].text == "sealed" || tokens[i-1].text == "override"))
                     if (adapt_named_override(i)) continue;
                 if (t.text == "static" && i+3 < tokens.size()) {
@@ -1136,7 +1174,10 @@ protected:
                         (enum_flags.count(i) ? ", annotate(\"cli.flags\")" : "") + "))");
                     i += 2; continue;
                 }
-                if (t.text == "property" && !class_context[i].empty()) {
+                bool cli_member_start = member_starts.count(i) ||
+                    (i && (tokens[i-1].text == "virtual" || tokens[i-1].text == "static"));
+                if ((t.text == "property" || t.text == "event") && class_depth[i] == 1 && cli_member_start && !class_context[i].empty()) {
+                    bool event = t.text == "event";
                     size_t name = i + 1;
                     while (name + 1 < tokens.size() && !((tokens[name].kind == tok::identifier || tokens[name].text == "default") &&
                         (tokens[name + 1].text == "{" || tokens[name + 1].text == ";" || tokens[name + 1].text == "["))) ++name;
@@ -1152,8 +1193,10 @@ protected:
                         property_type += tokens[j].text + " ";
                     }
                     if (is_static && is_virtual) throw std::runtime_error("a static property cannot be virtual");
+                    if (event && is_static) throw std::runtime_error("static events are not enabled yet");
                     size_t open = name + 1;
                     bool indexed = tokens[open].text == "[", default_indexer = indexed && property == "default";
+                    if (event && indexed) throw std::runtime_error("events cannot have index parameters");
                     std::string index_type;
                     if (indexed) {
                         if (is_static) throw std::runtime_error("static indexed properties are not enabled yet");
@@ -1176,8 +1219,8 @@ protected:
                             if (tokens[end].text == "{") ++depth;
                             else if (tokens[end].text == "}") --depth;
                             else if (depth == 1 && end + 1 < tokens.size() && tokens[end + 1].text == "(") {
-                                getter |= tokens[end].text == "get";
-                                setter |= tokens[end].text == "set";
+                                getter |= tokens[end].text == (event ? "add" : "get");
+                                setter |= tokens[end].text == (event ? "remove" : "set");
                             }
                         }
                         if (end == tokens.size() && tokens.back().text != "}") throw std::runtime_error("unterminated property");
@@ -1196,9 +1239,36 @@ protected:
                         if (!inserted.second && inserted.first->second != facade)
                             throw std::runtime_error("overloaded indexed properties require the same value type and accessors");
                     }
-                    if (is_static) emit(t, "static __attribute__((annotate(\"cli.static.property:" + std::string(getter ? "get_" + property : "") + "|" + (setter ? "set_" + property : "") + "\"))) __cli_static_property<" + property_type + "> " + property + ";");
+                    if (event) {
+                        if (!getter || !setter) throw std::runtime_error("events require add and remove accessors");
+                        emit(t, "__attribute__((annotate(\"cli.event\"))) " + property_type + property + ";");
+                    }
+                    else if (is_static) emit(t, "static __attribute__((annotate(\"cli.static.property:" + std::string(getter ? "get_" + property : "") + "|" + (setter ? "set_" + property : "") + "\"))) __cli_static_property<" + property_type + "> " + property + ";");
                     else if (declare_property) emit(t, attribute + ")) " + property_type + (default_indexer ? "__cli_default" : property) + (indexed ? "[]" : "") + ";");
                     if (tokens[name + 1].text == ";") {
+                        if (event) {
+                            if (class_interface[i]) throw std::runtime_error("automatic interface events are not enabled yet");
+                            std::string delegate_type;
+                            for (size_t j=i+1;j<name;++j) if(tokens[j].text!="^" && tokens[j].text!="virtual") delegate_type+=tokens[j].text;
+                            auto signature=delegate_signatures.find(delegate_type);
+                            if(signature==delegate_signatures.end()) throw std::runtime_error("automatic event requires selected delegate signature metadata: "+delegate_type);
+                            auto result=signature->second.result; result.erase(std::remove(result.begin(),result.end(),' '),result.end());
+                            if(result!="void") throw std::runtime_error("automatic events with non-void delegates are not enabled yet");
+                            std::string parameters, arguments;
+                            for(size_t j=0;j<signature->second.parameters.size();++j) {
+                                if(j) { parameters+=", "; arguments+=", "; }
+                                auto argument="__cli_arg"+std::to_string(j);
+                                parameters+=signature->second.parameters[j]+" "+argument;
+                                arguments+=argument;
+                            }
+                            auto access=class_access[i]=="internal" ? "public" : class_access[i];
+                            auto modifier=is_virtual ? "virtual " : "";
+                            emit(t,"private: "+property_type+" __cli_backing_"+property+"; "+access+":");
+                            emit(t,access_attribute+modifier+"void __attribute__((annotate(\"cli.accessor:add\"))) add_"+property+"("+property_type+" value) { __cli_backing_"+property+" += value; }");
+                            emit(t,access_attribute+modifier+"void __attribute__((annotate(\"cli.accessor:remove\"))) remove_"+property+"("+property_type+" value) { __cli_backing_"+property+" -= value; }");
+                            emit(t,"private: "+std::string(modifier)+"void __attribute__((annotate(\"cli.accessor:raise\"))) raise_"+property+"("+parameters+") { "+property_type+" saved=__cli_backing_"+property+"; if(saved!=nullptr) saved("+arguments+"); } "+access+":");
+                            i=end-1; continue;
+                        }
                         emit(t, "private: " + std::string(is_static ? "static " : "") + property_type + " __cli_backing_" + property + "; " + class_access[i] + ":");
                         std::string modifier=is_static ? "static " : is_virtual ? "virtual " : "";
                         emit(t, modifier + property_type + " __attribute__((annotate(\"cli.accessor:get\"))) get_" + property + "() { return __cli_backing_" + property + "; }");
@@ -1234,9 +1304,15 @@ protected:
                                 if (tokens[j].text == "}") --depth;
                                 continue;
                             }
+                            if (j>=2 && j+2<end && tokens[j-1].text=="::" && tokens[j+1].text=="::" &&
+                                property_names.count({tokens[j-2].text,tokens[j].text}) &&
+                                (tokens[j+2].text=="get" || tokens[j+2].text=="set" || tokens[j+2].text=="add" || tokens[j+2].text=="remove" || tokens[j+2].text=="raise")) {
+                                emit(tokens[j],tokens[j+2].text+"_"+tokens[j].text); j+=2; continue;
+                            }
                             if (adapt_allocation(j)) continue;
                             if (tokens[j].text == "safe_cast") { emit(tokens[j], "__cli_safe_cast"); continue; }
-                            if (depth == 1 && j + 1 < end && tokens[j + 1].text == "(" && (tokens[j].text == "get" || tokens[j].text == "set"))
+                            if (depth == 1 && j + 1 < end && tokens[j + 1].text == "(" &&
+                                (event ? (tokens[j].text == "add" || tokens[j].text == "remove" || tokens[j].text == "raise") : (tokens[j].text == "get" || tokens[j].text == "set")))
                                 emit(tokens[j], "__attribute__((annotate(\"cli.accessor:" + tokens[j].text + "\"))) " + tokens[j].text + "_" + property);
                             else if (tok::isStringLiteral(tokens[j].kind) && call_context[j] && j > 0 && j + 1 < tokens.size() &&
                                 (tokens[j - 1].text == "(" || tokens[j - 1].text == ",") &&
@@ -2232,6 +2308,7 @@ class Emitter {
             return;
         }
         if (auto* member = dyn_cast<MemberExpr>(e)) {
+            if (annotated(member->getMemberDecl(), "cli.event")) fail(e, "events can only be used through add/remove/raise accessors");
             auto* field = dyn_cast<FieldDecl>(member->getMemberDecl());
             if (!field) fail(e, "value address requires an instance field");
             if (native_field(field)) { native_field_address(member); return; }
@@ -2497,6 +2574,8 @@ class Emitter {
     }
     void store(const Expr* target, bool retain) {
         target = target->IgnoreParenImpCasts();
+        if (auto* member = dyn_cast<MemberExpr>(target); member && annotated(member->getMemberDecl(), "cli.event"))
+            fail(target, "events can only be used through add/remove/raise accessors");
         if (auto* pointer = interior_dereference(target)) {
             auto token = type(target->getType());
             unsigned value = temporary(token); op("stloc " + std::to_string(value), 1);
@@ -2567,13 +2646,16 @@ class Emitter {
         else fail(target, "unsupported assignment target");
     }
     void binary(const BinaryOperator* b) {
+        auto* delegate = handle_target(b->getLHS()->getType());
+        bool multicast = delegate && record_annotated(delegate, "cli.delegate") &&
+            (b->getOpcode() == BO_AddAssign || b->getOpcode() == BO_SubAssign);
         if (native_pointer_binary(b)) return;
         if ((b->getLHS()->getType()->isPointerType() || b->getRHS()->getType()->isPointerType()) &&
             !handle_target(b->getLHS()->getType()) && !handle_target(b->getRHS()->getType()) &&
             b->getOpcode() != BO_Assign && b->getOpcode() != BO_EQ && b->getOpcode() != BO_NE)
             fail(b, "unmanaged pointer arithmetic and ordering are not enabled yet");
         if ((handle_target(b->getLHS()->getType()) || handle_target(b->getRHS()->getType())) &&
-            b->getOpcode() != BO_Assign && b->getOpcode() != BO_EQ && b->getOpcode() != BO_NE)
+            b->getOpcode() != BO_Assign && b->getOpcode() != BO_EQ && b->getOpcode() != BO_NE && !multicast)
             fail(b, "managed handle arithmetic and ordering are unsupported");
         if (b->getOpcode() == BO_Assign) {
             const ValueDecl* declaration = nullptr;
@@ -2584,7 +2666,7 @@ class Emitter {
             store(b->getLHS(), true); return;
         }
         if (auto* compound = dyn_cast<CompoundAssignOperator>(b)) {
-            if (b->getLHS()->getType()->isPointerType())
+            if (b->getLHS()->getType()->isPointerType() && !multicast)
                 fail(b, "unmanaged pointer arithmetic and ordering are not enabled yet");
             auto computation = compound->getComputationResultType();
             bool unsigned_operation = computation->isUnsignedIntegerType();
@@ -2608,6 +2690,14 @@ class Emitter {
             unsigned rhs = temporary(expression_type(b->getRHS()));
             expr(b->getRHS()); op("stloc " + std::to_string(rhs), 1);
             auto apply = [&] {
+                if (multicast) {
+                    op("ldloc " + std::to_string(rhs), 0, 1);
+                    op(std::string("call class [System.Runtime]System.Delegate [System.Runtime]System.Delegate::") +
+                        (b->getOpcode() == BO_AddAssign ? "Combine" : "Remove") +
+                        "(class [System.Runtime]System.Delegate, class [System.Runtime]System.Delegate)", 2, 1);
+                    op("castclass " + record_token(delegate), 1, 1);
+                    return;
+                }
                 numeric_conversion(compound->getComputationLHSType(), b->getLHS()->getType());
                 op("ldloc " + std::to_string(rhs), 0, 1);
                 if (b->getOpcode() == BO_ShlAssign || b->getOpcode() == BO_ShrAssign) op("conv.i4", 1, 1);
@@ -3385,6 +3475,7 @@ class Emitter {
         }
         if (auto* member = dyn_cast<MemberExpr>(e)) {
             auto* field = dyn_cast<FieldDecl>(member->getMemberDecl());
+            if (field && annotated(field, "cli.event")) fail(e, "events can only be used through add/remove/raise accessors");
             if (!field) fail(e, "unsupported managed member expression");
             if (native_field(field)) {
                 if (field->isBitField()) native_bitfield_load(field, native_bitfield_location(member));
@@ -4421,6 +4512,7 @@ public:
             if (annotated(r, "cli.layout.Pack")) il << "  .pack " << layout_constant(r, "cli.layout.Pack", 0) << "\n";
             if (annotated(r, "cli.layout.Size")) il << "  .size " << layout_constant(r, "cli.layout.Size", 0) << "\n";
             for (auto* field : r->fields()) {
+                if (annotated(field, "cli.event")) continue;
                 il << "  .field ";
                 if (layout == 2) il << '[' << layout_constant(field, "cli.field.offset", -1) << "] ";
                 il << (field->getAccess() == AS_private ? "private " : field->getAccess() == AS_protected ? "family " : annotation(field, "cli.access:") == "assembly" ? "assembly " : "public ")
@@ -4444,6 +4536,33 @@ public:
             }
             for (size_t i = 0; i < functions.size(); ++i) if (ir[i].owner == record_name(r)) emit_function(i);
             emit_cleanup(r);
+            for (auto* field : r->fields()) if (annotated(field, "cli.event")) {
+                auto* delegate=handle_target(field->getType());
+                auto* invoke=delegate_invoke(delegate);
+                if (!invoke) throw std::runtime_error("event type must be a managed delegate");
+                std::map<std::string,const CXXMethodDecl*> accessors;
+                for(auto* method:r->methods()) for(const auto* kind:{"add","remove","raise"})
+                    if(method->getNameAsString()==std::string(kind)+"_"+field->getNameAsString()) {
+                        auto inserted=accessors.emplace(kind,method->getCanonicalDecl());
+                        if(!inserted.second && inserted.first->second!=method->getCanonicalDecl()) throw std::runtime_error("duplicate event accessor");
+                    }
+                if(!accessors.count("add") || !accessors.count("remove")) throw std::runtime_error("event requires add/remove accessors");
+                for(const auto& entry:accessors) {
+                    auto* method=entry.second;
+                    if(method->isStatic()) throw std::runtime_error("static event accessors are not enabled yet");
+                    if(entry.first!="raise") {
+                        if(!method->getReturnType()->isVoidType()) throw std::runtime_error("event add/remove accessors must return void");
+                        if(method->getNumParams()!=1 || type(method->getParamDecl(0)->getType())!=type(field->getType())) throw std::runtime_error("event accessor delegate type mismatch");
+                    } else {
+                        if(type(method->getReturnType())!=type(invoke->getReturnType())) throw std::runtime_error("event raise signature mismatch");
+                        if(method->getNumParams()!=invoke->getNumParams()) throw std::runtime_error("event raise signature mismatch");
+                        for(unsigned j=0;j<method->getNumParams();++j) if(type(method->getParamDecl(j)->getType())!=type(invoke->getParamDecl(j)->getType())) throw std::runtime_error("event raise signature mismatch");
+                    }
+                }
+                il << "  .event " << type(field->getType()) << " '" << field->getNameAsString() << "' {\n";
+                for(const auto& entry:accessors) il << "    ." << (entry.first=="add" ? "addon" : entry.first=="remove" ? "removeon" : "fire") << " " << signature(entry.second) << "\n";
+                il << "  }\n";
+            }
             for (auto* member : r->decls()) if (auto* property = dyn_cast<VarDecl>(member); property && !annotation(property, "cli.static.property:").empty()) {
                 auto names = annotation(property, "cli.static.property:"); auto bar = names.find('|');
                 il << "  .property " << type(property->getType()) << " '" << property->getNameAsString() << "'() {\n";

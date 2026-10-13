@@ -4896,3 +4896,70 @@ WindowsDesktop packaging requirements are unfinished. No System.Printing
 runtime DLL or completed WPF package is produced. Evidence is archived under
 `tmp/wpf8-support/validation/printing-sdk-arrays-20261013` locally. Native
 coverage remains 58/139 and the goal remains active.
+
+## 53. Managed events and delegate multicast for original printing sources
+
+The 2026-10-13 continuation implements typed delegate `+=`/`-=` through actual
+CLR Delegate.Combine/Remove. The private Clang parser asks Sema to check the
+assignment's conversion, lvalue and constness before preserving the CLI
+compound operation. The emitter retains captured receiver/index storage and
+casts the returned delegate to the original CLR delegate identity. Runtime
+checks cover invocation order, duplicate and multicast-subsequence removal,
+null/absent handlers, immutable original lists, instance/static/array storage,
+assignment expression values, single receiver/RHS evaluation, byref arguments,
+imported Action, handler exceptions and GC retention. Four invalid inputs reject.
+
+Instance events now emit genuine CLR event/accessor metadata. Custom event
+bodies retain their source add/remove/raise methods; automatic void events
+generate private delegate storage, add/remove bodies and private raising that
+snapshots the list and skips an empty list. Parser dispatch resolves the real
+accessor through Clang member lookup, so protected/private access and virtual
+overrides remain checked. Metadata imports read actual event accessor identities
+from source-built assemblies. The facade itself is never emitted as a field;
+reading, assigning or taking its address rejects rather than exposing storage.
+This follows the event/accessor model documented in Microsoft's
+[C++/CLI event examples](https://learn.microsoft.com/en-us/cpp/dotnet/how-to-use-events-in-cpp-cli?view=msvc-170).
+
+C# and a second CLI assembly subscribe/unsubscribe and run actual automatic
+and custom events. Checks also cover internal accessor flags and imported
+internal rejection, protected raising, virtual dispatch, typed custom return
+values, byref/imported delegate signatures, out-of-line accessors, reentrant
+subscription changes during dispatch, empty lists, metadata and GC. Eight
+invalid event inputs reject. Static events, automatic interface/non-void events,
+generic/ambiguous/aliased signature discovery, extended qualified accessor paths
+and concurrent automatic subscription remain unsupported or unverified.
+
+The source printing gate adds real serialization event types, graphics types,
+PrintTicketManager, page-range types and Collection metadata from already
+source-built dependencies. It now passes the previous XPSDocumentWriter event
+syntax failures. That progress exposed an existing contextual-property bug:
+the parameter named `property` in PrintServer::GetDataFromServer was treated as
+a property declaration. Adaptation now requires a member declaration boundary;
+ordinary parameter/field names `property` and `event` survive compilation.
+
+Validation on win11 uses the source SDK and ilasm with the usual M612/CLANG64
+environment:
+
+```bash
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-events test-multicast
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-events test-multicast test-properties test-delegates test-enums
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-events test-properties test-static-properties test-accessor-visibility
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh build-directwrite check-directwrite-assembly printing-gate
+```
+
+The compiler builds and focused runtime/rejection checks pass; C# consumers
+report zero warnings/errors. The WPF command rebuilds and validates the complete
+DirectWrite bridge: 85 types, 283 prepared bodies, 81 font families and the
+original factory/COM loader/font/face/file ownership checks. It then **fails**
+at printing-gate: the first source error is inherited ResourceManager.GetString
+literal conversion in PrintQueue.hpp:1627. Further diagnostics include missing
+ICloneable metadata, `protected private` access syntax and static CLI conversion
+operators in PrintSystemAttributeValue.hpp. No System.Printing implementation
+assembly is produced. The gate still covers 49 original project inputs/66 tree
+C++ files as a combined diagnostic input, not separate-unit link/runtime proof.
+
+Evidence is archived under
+`tmp/wpf8-support/validation/printing-events-20261013` locally. Native import
+coverage remains 58/139; full native layout, printing runtime, WindowsDesktop
+packs and an installable WPF package remain unfinished. Installed compiler
+packages are unchanged; these changes are in the development frontend.

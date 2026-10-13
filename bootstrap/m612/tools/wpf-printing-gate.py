@@ -148,6 +148,28 @@ def main():
               "System.Windows.Documents.Serialization.SerializerWriter", "System.Windows.Documents.FixedDocumentSequence",
               "System.Windows.Documents.DocumentPaginator", "System.Windows.Documents.FixedPage",
               "System.Windows.Media.Visual", "System.Windows.Documents.Serialization.SerializerWriterCollator"]
+    types += ["System.ComponentModel.AsyncCompletedEventArgs", "System.ComponentModel.ProgressChangedEventArgs"]
+    types += ["System.Windows.Documents.Serialization." + name for name in
+              ["WritingPrintTicketRequiredEventHandler", "WritingProgressChangedEventHandler",
+               "WritingCompletedEventHandler", "WritingCancelledEventHandler",
+               "WritingPrintTicketRequiredEventArgs", "WritingProgressChangedEventArgs",
+               "WritingCompletedEventArgs", "WritingCancelledEventArgs",
+               "WritingProgressChangeLevel"]]
+    types += ["System.Windows.Xps.Serialization.PrintTicketLevel"]
+    types += ["System.Windows.Xps.Serialization." + name for name in
+              ["XpsSerializationPrintTicketRequiredEventArgs", "XpsSerializationCompletedEventArgs",
+               "XpsSerializationProgressChangedEventArgs", "XpsWritingProgressChangeLevel",
+               "PackageSerializationManager", "XpsSerializationPrintTicketRequiredEventHandler",
+               "MXDWSerializationManager"]]
+    types += ["System.Windows.Xps.Packaging.IXpsFixedDocumentSequenceReader",
+              "System.Windows.Media.Geometry", "System.Windows.Media.Matrix", "System.Windows.Media.Brush",
+              "System.Windows.Media.Pen", "System.Windows.Media.GlyphRun", "System.Windows.Media.Imaging.BitmapSource"]
+    types += ["System.Printing.ValidationResult", "System.Printing.PrintTicketScope",
+              "System.Windows.Controls.PageRangeSelection", "System.Windows.Controls.PageRange",
+              "System.Printing.PrintTicketManager",
+              "System.Windows.Xps.Serialization.XpsSerializationXpsDriverDocEventArgs"]
+    types += ["System.Windows.Controls.PrintDialog", "System.IndexOutOfRangeException", "System.Threading.ThreadPriority"]
+    types += ["System.Collections.ObjectModel.Collection`1"]
     for name in types:
         command += ["--type", name]
     # SHLWAPI and KERNEL32 both export DelayLoadFailureHook. Keep SHLWAPI

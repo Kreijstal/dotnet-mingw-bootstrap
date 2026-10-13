@@ -382,6 +382,65 @@ EOF
   reject_case accessor-internal-import '#using "accessor-visibility.dll"
 int main() { AccessorBox^ value=gcnew AccessorBox(); value->Value=9; return 0; }' 'no setter' --type AccessorBox
 }
+step_test-multicast() {
+  local args=(--type System.Delegate --type System.MulticastDelegate --type System.Action)
+  compile "$(cygpath -m "$src/tests/multicast.cpp")" --target library -o "$(cygpath -m "$testdir/multicast.dll")" "${args[@]}"
+  mkdir -p "$testdir/multicast-consumer"
+  cp "$src/tests/MulticastConsumer.cs" "$testdir/multicast-consumer/Program.cs"
+  cat > "$testdir/multicast-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="multicast"><HintPath>../multicast.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/multicast-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/multicast-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case multicast-wrong-type 'public delegate void A(int value);
+public delegate void B(int value);
+int main() { A^ a=nullptr; B^ b=nullptr; a+=b; return 0; }' 'incompatible pointer types' "${args[@]}"
+  reject_case multicast-const 'public delegate void A(int value);
+int main() { A^ const a=nullptr; A^ b=nullptr; a+=b; return 0; }' 'const-qualified' "${args[@]}"
+  reject_case multicast-rvalue 'public delegate void A(int value);
+A^ Get() { return nullptr; }
+int main() { A^ a=nullptr; Get()+=a; return 0; }' 'not assignable' "${args[@]}"
+  reject_case multicast-object 'int main() { System::Object^ a=nullptr; System::Object^ b=nullptr; a+=b; return 0; }' 'invalid operands' "${args[@]}"
+}
+step_test-events() {
+  local args=(--type System.Delegate --type System.MulticastDelegate --type System.Action)
+  compile "$(cygpath -m "$src/tests/events.cpp")" --target library -o "$(cygpath -m "$testdir/events.dll")" "${args[@]}"
+  cp "$src/tests/imported-events.cpp" "$testdir/imported-events.cpp"
+  compile "$(cygpath -m "$testdir/imported-events.cpp")" --target library -o "$(cygpath -m "$testdir/imported-events.dll")" \
+    --type EventSource --type Changed "${args[@]}"
+  mkdir -p "$testdir/events-consumer"
+  cp "$src/tests/EventsConsumer.cs" "$testdir/events-consumer/Program.cs"
+  cat > "$testdir/events-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="events"><HintPath>../events.dll</HintPath></Reference><Reference Include="imported-events"><HintPath>../imported-events.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/events-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/events-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case event-read 'public delegate void D(int value);
+public ref class E { public: event D^ Changed; };
+int main() { E^ e=gcnew E(); D^ d=e->Changed; return 0; }' 'events can only' "${args[@]}"
+  reject_case event-assign 'public delegate void D(int value);
+public ref class E { public: event D^ Changed; };
+int main() { E^ e=gcnew E(); e->Changed=nullptr; return 0; }' 'events can only' "${args[@]}"
+  reject_case event-raise-private 'public delegate void D(int value);
+public ref class E { public: event D^ Changed; };
+int main() { E^ e=gcnew E(); e->Changed(42); return 0; }' 'private member' "${args[@]}"
+  reject_case event-wrong-handler 'public delegate void D(int value);
+public delegate void Other(int value);
+public ref class E { public: event D^ Changed; };
+int main() { E^ e=gcnew E(); Other^ d=nullptr; e->Changed+=d; return 0; }' 'cannot initialize' "${args[@]}"
+  reject_case event-bad-accessor 'public delegate void D(int value);
+public ref class E { public: event D^ Changed { void add(int value) {} void remove(D^ value) {} } };
+int main() { return 0; }' 'event accessor delegate type mismatch' "${args[@]}"
+  reject_case event-imported-protected '#using "events.dll"
+int main() { EventSource^ e=gcnew EventSource(); e->Custom(42); return 0; }' 'protected member' --type EventSource --type Changed "${args[@]}"
+  reject_case event-imported-internal '#using "events.dll"
+int main() { EventSource^ e=gcnew EventSource(); Changed^ d=nullptr; e->InternalEvent+=d; return 0; }' 'no member named' --type EventSource --type Changed "${args[@]}"
+  reject_case event-bad-raise 'public delegate void D(int value);
+public ref class E { public: event D^ Changed { void add(D^ value) {} void remove(D^ value) {} void raise(double value) {} } };
+int main() { return 0; }' 'event raise signature mismatch' "${args[@]}"
+}
 step_test-virtuals() {
   run_case virtuals "$src/tests/virtuals.cpp" $'7\n7\n9\n6\n17\nTrue'
   mkdir -p "$testdir/virtual-consumer"
