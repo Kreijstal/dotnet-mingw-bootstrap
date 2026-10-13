@@ -122,7 +122,7 @@ for name in ('GetPageDimensions', 'GetSectionProperties', 'GetMainTextSegment',
              'GetFirstPara', 'GetNextPara', 'GetParaProperties', 'CreateParaclient',
              'DestroyParaclient', 'GetTextProperties', 'FormatLine', 'DestroyLine',
              'DestroyLineBreakRecord', 'DestroyMcsclient', 'ObjFormatParaFinite',
-             'ObjDestroyPara', 'ObjFormatParaBottomless', 'ObjDestroyBreakRecord', 'GetSectionColumnInfo'):
+             'ObjDestroyPara', 'ObjFormatParaBottomless', 'ObjDestroyBreakRecord', 'GetSectionColumnInfo', 'DuplicateMcsclient'):
     match = re.search(r'\bdelegate\s+int\s+' + name + r'\s*\((.*?)\)\s*;', text, re.S)
     if not match:
         raise SystemExit('Missing source callback: ' + name)

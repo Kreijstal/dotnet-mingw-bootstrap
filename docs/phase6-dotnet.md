@@ -8735,3 +8735,49 @@ behavior of existing exports. KeepWithNext chains, optimal/forced-line policies,
 balancing/span areas, tables/floaters/figures, advanced/incremental/interruptible
 algorithms, full bidi/native language and broader runtime behavior remain
 incomplete. The full WPF goal stays active.
+
+## 130. KeepWithNext heading chains and margin-preserving rollback
+
+The 2026-10-13 continuation implements FSPAP KeepWithNext chains. The formatter
+retains the immutable source position at the beginning of each chain; if no
+content of the following paragraph fits, it removes accepted chain members,
+recomputes retained height/ink and resumes the chain in the next area. Earlier
+source stays on the current page. Original DuplicateMcsclient/DestroyMcsclient
+callbacks preserve and release the margin-collapsing state before the chain, so
+rollback does not substitute the deferred group's margin state. Oversized chains
+that start at a fresh area can relax the constraint for bounded progress. Explicit
+page/column breaks retain precedence over incompatible keep constraints.
+
+The original Paragraph.KeepWithNext contract also implies that its own paragraph
+is unbroken. Native subtrack formatting reads original owner paragraph properties
+and propagates this constraint to its builtin text child, while keeping nested
+fresh-area logic from section 128. Bottomless formatting has no finite keep
+boundary. These are behaviors of existing exports: coverage remains 89/139 with
+50 absent; ABI records still match all 283 original field sizes/offsets.
+
+Validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-paragraph-context-native
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-keep-next-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/keep-next-sdk-check
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-sdk
+```
+
+All final commands pass. Native tests verify accepted heading rollback, exact
+preceding/chain source preservation, intact resume and accepted/speculative
+callback teardown. Original WPF compares one- and three-heading chains with keep
+false/true in flat/nested Section documents, Ideal/Display. Disabled headings
+remain on page 0; enabled chains move with their body to page 1. Every source
+character maps to the required page, rendered pages regenerate across compacting
+GC, and oversized chains complete in two pages. Additional cases check nonzero
+collapsed margins (with an intact following body), an unbroken multi-line heading,
+and heading/body glyphs together in the second column on a single page. The
+raster gate accepts colored text as well as black ink. Normal shared-framework
+and self-contained publishes run with SDK roots/toolchain PATH removed and pass
+dispatcher cleanup. step_check_sdk now includes the chain gate; the earlier
+normal WPF/finite/bottomless/pagination/column/hard-break/KeepTogether/WinForms
+regressions pass with zero consumer warnings/errors. Evidence is archived under
+ tmp/wpf8-support/validation/keep-next-20261013. Package integration follows.
+Optimal/forced-line policies, balancing/span areas, tables/floaters/figures,
+advanced/incremental/interruptible algorithms, full bidi/native language and
+broader runtime behavior remain required for the full WPF goal.

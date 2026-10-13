@@ -13,7 +13,7 @@ static int WINAPI create_object(void* client,void* context,FSCBKOBJ* callbacks,u
     *output=reinterpret_cast<void*>(100+id);return 0;
 }
 static int WINAPI destroy_object(void* value){if(value!=reinterpret_cast<void*>(100)&&value!=reinterpret_cast<void*>(101))return PTS_tserrInvalidParameter;++destroys;return 0;}
-static int lines_created=0,lines_destroyed=0,breaks_destroyed=0,clients_created=0,clients_destroyed=0,fail_line=-1,columns=1,available_height=80,invalid_columns=false,hard_break=0,keep_mode=0;
+static int lines_created=0,lines_destroyed=0,breaks_destroyed=0,clients_created=0,clients_destroyed=0,fail_line=-1,columns=1,available_height=80,invalid_columns=false,hard_break=0,keep_mode=0,keep_next=0,para_count=2;
 static bool containers=false,lose_subtrack=false;
 static void* page_context=nullptr;
 using SubtrackFormat=int(WINAPI*)(void*,void*,int,void*,int,void*,void*,int,int,uint32_t,const FSRECT*,void*,FSKCLEAR,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA,FSFMTR*,void**,void**,int*,FSBBOX*,void**,FSKCLEAR*,int*);
@@ -40,8 +40,8 @@ static int WINAPI column_info(void*,void*,uint32_t,int capacity,FSCOLUMNINFO* ou
 }
 static int WINAPI main_segment(void*,void*,void** segment){*segment=reinterpret_cast<void*>(77);return 0;}
 static int WINAPI first_para(void*,void* segment,int* found,void** name){if(segment!=reinterpret_cast<void*>(77)&&!containers)return PTS_tserrInvalidParameter;*found=1;*name=segment==reinterpret_cast<void*>(77)?reinterpret_cast<void*>(101):reinterpret_cast<void*>(201);return 0;}
-static int WINAPI next_para(void*,void* segment,void* current,int* found,void** next){*found=segment==reinterpret_cast<void*>(77)&&current==reinterpret_cast<void*>(101);*next=*found?reinterpret_cast<void*>(102):nullptr;return 0;}
-static int WINAPI para_properties(void*,void* name,FSPAP* pap){*pap={};pap->idobj=containers&&reinterpret_cast<uintptr_t>(name)<200?0:-1;if(name==reinterpret_cast<void*>(102)){pap->fBreakPageBefore=hard_break==1;pap->fBreakColumnBefore=hard_break==2;}return 0;}
+static int WINAPI next_para(void*,void* segment,void* current,int* found,void** next){*found=segment==reinterpret_cast<void*>(77)&&reinterpret_cast<uintptr_t>(current)<uintptr_t(100+para_count);*next=*found?reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(current)+1):nullptr;return 0;}
+static int WINAPI para_properties(void*,void* name,FSPAP* pap){*pap={};pap->idobj=containers&&reinterpret_cast<uintptr_t>(name)<200?0:-1;pap->fKeepWithNext=keep_next&&name==reinterpret_cast<void*>(102);if(name==reinterpret_cast<void*>(102)){pap->fBreakPageBefore=hard_break==1;pap->fBreakColumnBefore=hard_break==2;}return 0;}
 static int WINAPI para_client(void*,void* name,void** output){++clients_created;*output=name;return 0;}
 static int WINAPI destroy_para_client(void*,void*){++clients_destroyed;return 0;}
 static int WINAPI text_properties(void*,void* name,int,FSTXTPROPS* props){*props={};props->fKeepTogether=keep_mode==2||(keep_mode==1&&name==reinterpret_cast<void*>(102));return 0;}
@@ -198,6 +198,14 @@ int main(int argc,char** argv) {
         require(FsDestroyPageBreakRecord(context,incoming_record)==0&&FsDestroyPage(context,page_handle)==0&&lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"kept and speculative line/break/client resources are released exactly once");
         keep_mode=0;available_height=10;
         std::puts("native keep-together: intact deferral/resume, preceding source preservation, oversized kept paragraph progress and exact teardown PASS");
+        para_count=3;keep_next=1;available_height=40;reset_page_counts();
+        require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&page_break,"keep-with-next chain rolls back an already accepted heading when following text cannot fit");
+        require(FsQueryPageDetails(context,page_handle,&details)==0&&FsQueryTrackParaList(context,details.u.simple.trackdescr.pfstrack,2,paras,&actual_count)==0&&actual_count==1&&paras[0].nmp==reinterpret_cast<void*>(101),"heading is removed from the preceding page without dropping prefix content");
+        require(FsDestroyPage(context,page_handle)==0,"keep-chain first page release");incoming_record=page_break;
+        require(FsCreatePageFinite(context,incoming_record,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&!page_break&&FsQueryPageDetails(context,page_handle,&details)==0&&FsQueryTrackParaList(context,details.u.simple.trackdescr.pfstrack,2,paras,&actual_count)==0&&actual_count==2&&paras[0].nmp==reinterpret_cast<void*>(102)&&paras[1].nmp==reinterpret_cast<void*>(103),"heading and following paragraph resume together from chain start");
+        require(FsDestroyPageBreakRecord(context,incoming_record)==0&&FsDestroyPage(context,page_handle)==0&&lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"accepted, rolled-back and resumed keep-chain handles are released exactly once");
+        keep_next=0;para_count=2;available_height=10;
+        std::puts("native keep-with-next: accepted heading rollback, intact chain resume, preceding content preservation and exact callback cleanup PASS");
         using CloneRecord=int(WINAPI*)(void*,void*,void**);
         PROC(FsDuplicateSubtrackBreakRecord,CloneRecord);reset_page_counts();
         FSRECT small{10,20,100,10};void* subtrack=nullptr;void* subrecord=nullptr;void* clone=nullptr;void* margin=nullptr;int used=0,top_space=0;FSBBOX bbox{};FSKCLEAR clear{};

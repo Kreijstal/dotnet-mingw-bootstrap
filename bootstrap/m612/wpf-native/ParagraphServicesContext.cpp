@@ -289,11 +289,12 @@ int merge_bbox(FSBBOX& box,const FSBBOX& add) {
 }
 
 int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const FSRECT& rect,
-    const std::shared_ptr<Continuation>& input,std::shared_ptr<Continuation>& output,bool bottomless,bool force) {
+    const std::shared_ptr<Continuation>& input,std::shared_ptr<Continuation>& output,bool bottomless,bool force,bool keep_self=false) {
     auto context=para->context;auto& cb=context->info.fscbk.cbktxt;void* client=context->info.pfsclient;
     if(!cb.pfnGetTextProperties||!cb.pfnFormatLine||!cb.pfnDestroyLine||!cb.pfnDestroyLineBreakRecord)return PTS_tserrInvalidParameter;
     FSTXTPROPS props{};int status=reinterpret_cast<PtsGetTextProperties>(cb.pfnGetTextProperties)(client,para->desc.nmp,0,&props);
     if(status)return status;
+    if(keep_self)props.fKeepTogether=1;
     if(props.fswdir!=direction||props.fDropCap||props.fVerticalGrid||props.fOptimizeParagraph)return PTS_tserrNotImplemented;
     auto text=std::make_shared<TextData>(context);text->direction=direction;para->text=text;
     int dcp=input?input->dcp:props.dcpStartContent,used=0,fit=0;bool overflow=false,ended=false;
@@ -347,7 +348,7 @@ int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const F
 }
 
 int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t direction,const FSRECT& rect,
-    int suppress,void* incoming,std::shared_ptr<TrackData>& result,void** margin_output,bool bottomless=false,const std::shared_ptr<Continuation>& input={},bool empty_ok=false,bool previous_page=true,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA suppress_break=fsksuppresshardbreakbeforefirstparaPageAndColumn) {
+    int suppress,void* incoming,std::shared_ptr<TrackData>& result,void** margin_output,bool bottomless=false,const std::shared_ptr<Continuation>& input={},bool empty_ok=false,bool previous_page=true,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA suppress_break=fsksuppresshardbreakbeforefirstparaPageAndColumn,bool keep_self=false) {
     auto& cb=context->info.fscbk.cbkgen;void* client=context->info.pfsclient;
     if(!segment||direction!=PTS_fswdirES||rect.du<=0||rect.dv<0||int64_t(rect.u)+rect.du>INT32_MAX||int64_t(rect.v)+rect.dv>INT32_MAX)return PTS_tserrNotImplemented;
     if(!cb.pfnGetFirstPara||!cb.pfnGetNextPara||!cb.pfnGetParaProperties||!cb.pfnCreateParaclient||!cb.pfnDestroyParaclient||!context->info.fscbk.cbkobj.pfnDestroyMcsclient)return PTS_tserrInvalidParameter;
@@ -361,11 +362,11 @@ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t 
     active.push_back(key);
     struct Pop {std::vector<std::pair<void*,void*>>& value;~Pop(){value.pop_back();}} pop{active};
     std::unordered_set<void*> visited;MarginOwner margin{context};void* input_margin=incoming;
+    int chain_start=-1;MarginOwner chain_margin{context};std::shared_ptr<Continuation> chain_position;
     while(found) {
         if(!name||!visited.insert(name).second)return PTS_tserrInvalidClientOutput;
         FSPAP props{};status=reinterpret_cast<PtsGetParaProperties>(cb.pfnGetParaProperties)(client,name,&props);if(status)return status;
         if(props.idobj!=-1&&props.idobj!=0)return PTS_tserrNotImplemented;
-        if(props.fKeepWithNext)return PTS_tserrNotImplemented;
         bool first=track->paras.empty();
         bool continued=input&&first&&(input->child||input->dcp>0);
         bool page_break=!bottomless&&!continued&&props.fBreakPageBefore&&!(first&&suppress_break==fsksuppresshardbreakbeforefirstparaPageAndColumn);
@@ -376,13 +377,24 @@ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t 
             track->stop=page_break?(first?fmtrNoProgressPageBreakBeforePara:fmtrBrokenPageBreakBeforePara):(first?fmtrNoProgressColumnBreakBeforePara:fmtrBrokenColumnBreakBeforePara);
             break;
         }
+        if(!bottomless&&props.fKeepWithNext&&chain_start<0) {
+            chain_start=int(track->paras.size());
+            if(input&&chain_start==0)chain_position=input;
+            else {chain_position=std::make_shared<Continuation>();chain_position->context=context;chain_position->segment=segment;chain_position->paragraph=name;}
+            chain_margin.reset();
+            if(input_margin) {
+                auto duplicate=context->info.fscbk.cbkobj.pfnDuplicateMcsclient;if(!duplicate)return PTS_tserrInvalidParameter;
+                status=reinterpret_cast<PtsDuplicateMcsclient>(duplicate)(client,input_margin,&chain_margin.value);if(status)return status;
+                if(!chain_margin.value)return PTS_tserrInvalidClientOutput;
+            }
+        }
         auto para=std::make_shared<ParaData>();para->context=context;para->desc.nmp=name;para->desc.idobj=props.idobj;para->desc.fsupdinf.fskupd=fskupdNew;
         status=reinterpret_cast<PtsCreateParaclient>(cb.pfnCreateParaclient)(client,name,&para->desc.pfsparaclient);if(status)return status;
         if(!para->desc.pfsparaclient)return PTS_tserrInvalidClientOutput;
         FSRECT available=rect;available.v+=track->used;available.dv-=track->used;
         std::shared_ptr<Continuation> next_position;FSFMTRKSTOP next_stop=fmtrBrokenOutOfSpace;
         auto resume=(input&&track->paras.empty())?input:std::shared_ptr<Continuation>{};
-        if(props.idobj==-1)status=format_text(para,direction,available,resume,next_position,bottomless,!empty_ok&&track->paras.empty());
+        if(props.idobj==-1)status=format_text(para,direction,available,resume,next_position,bottomless,!empty_ok&&track->paras.empty(),keep_self||props.fKeepWithNext);
         else {
             auto& methods=context->installed->methods[0];
             if(!(bottomless?methods.pfnFormatParaBottomless:methods.pfnFormatParaFinite)||!methods.pfnDestroyPara)return PTS_tserrInvalidParameter;
@@ -414,10 +426,19 @@ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t 
         }
         if(status)return status;
         if(para->desc.dvrUsed<0||para->desc.dvrUsed>available.dv)return PTS_tserrInvalidClientOutput;
+        if(!bottomless&&next_position&&para->desc.dvrUsed==0&&chain_start>=0&&(chain_start>0||empty_ok)) {
+            // None of the following paragraph fits. Remove accepted members
+            // of the keep chain and resume from its original immutable start.
+            track->paras.resize(chain_start);track->used=0;track->bbox={};
+            for(const auto& accepted:track->paras){track->used+=accepted->desc.dvrUsed;status=merge_bbox(track->bbox,accepted->desc.fsbbox);if(status)return status;}
+            margin.reset();margin.value=chain_margin.value;chain_margin.value=nullptr;
+            track->continuation=chain_position;track->stop=track->paras.empty()?fmtrNoProgressOutOfSpace:fmtrBrokenOutOfSpace;break;
+        }
         if(para->desc.dvrUsed>0||!next_position){track->used+=para->desc.dvrUsed;status=merge_bbox(track->bbox,para->desc.fsbbox);if(status)return status;track->paras.push_back(para);}
         if(next_position){next_position->segment=segment;track->continuation=next_position;if(next_stop==fmtrBrokenPageBreakBeforePara||next_stop==fmtrNoProgressPageBreakBeforePara)track->stop=track->paras.empty()?fmtrNoProgressPageBreakBeforePara:fmtrBrokenPageBreakBeforePara;
             else if(next_stop==fmtrBrokenColumnBreakBeforePara||next_stop==fmtrNoProgressColumnBreakBeforePara)track->stop=track->paras.empty()?fmtrNoProgressColumnBreakBeforePara:fmtrBrokenColumnBreakBeforePara;
             else track->stop=track->paras.empty()?fmtrNoProgressOutOfSpace:fmtrBrokenOutOfSpace;break;}
+        if(!props.fKeepWithNext){chain_start=-1;chain_position.reset();chain_margin.reset();}
         void* next=nullptr;status=reinterpret_cast<PtsGetNextPara>(cb.pfnGetNextPara)(client,segment,name,&found,&next);if(status)return status;name=next;
     }
     if(bottomless)track->rect.dv=track->used;
@@ -467,7 +488,9 @@ extern "C" __declspec(dllexport) int WINAPI FsFormatSubtrackFinite(void* context
     if(break_input){input=lookup_owned(records,context_handle,break_input);if(!input||input->page)return PTS_tserrInvalidBreakRecord;}
     try {
         std::shared_ptr<TrackData> track;MarginOwner margin{context};
-        int status=format_track(context,segment,direction,*rect,suppress,margin_input,track,&margin.value,false,input?input->position:nullptr,empty_ok!=0,previous_page!=0,suppress_break);if(status)return status;
+        FSPAP owner{};auto properties=context->info.fscbk.cbkgen.pfnGetParaProperties;if(!properties)return PTS_tserrInvalidParameter;
+        int status=reinterpret_cast<PtsGetParaProperties>(properties)(context->info.pfsclient,segment,&owner);if(status)return status;
+        status=format_track(context,segment,direction,*rect,suppress,margin_input,track,&margin.value,false,input?input->position:nullptr,empty_ok!=0,previous_page!=0,suppress_break,owner.fKeepWithNext!=0);if(status)return status;
         track->subtrack=true;
         if(callback_tracks)callback_tracks->push_back(track);
         {std::lock_guard<std::mutex> lock(gate);tracks.emplace(track.get(),track);}
