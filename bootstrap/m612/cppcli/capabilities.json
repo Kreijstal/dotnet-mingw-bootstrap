@@ -254,7 +254,11 @@
     "Imported public CLR value unary/binary operator hidden friends with exact metadata overload dispatch; original WPF Matrix multiplication/equality runtime proof",
     "GC-free native POD interior/pinned elements and arrow/nested/inline-array access with tracked CLR locations; explicit tracked pointer views retain const/volatile qualification",
     "Interior pointer local/parameter prefix/postfix increment/decrement and scaled compound offsets retain CLR byrefs across collection and evaluate offsets once",
-    "Resolved non-indexed instance property getter results support managed collection/array indexing before nested subscript lookup; original WPF DashStyle.Dashes indexing and single-evaluation fixture checks"
+    "Resolved non-indexed instance property getter results support managed collection/array indexing before nested subscript lookup; original WPF DashStyle.Dashes indexing and single-evaluation fixture checks",
+    "Object-typed managed indexed-property keys box scalar/enum operands after placeholder resolution and retain normal getter access/overload checks; real SortedList keyed struct copies/unboxing and GC validation",
+    "Object-to-managed-value C-style/static casts dispatch actual CLR unbox.any with copied value, wrong-type and null checks",
+    "Windows metadata Char signatures use the same wchar_t representation as System.Char, including generic/array API signatures; Unicode String.CopyTo Char-array check",
+    "Explicit member default[index] spelling adapts to the existing managed default property facade, retaining actual getter/setter metadata"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -326,7 +330,7 @@
     "Local array initialization currently recognizes explicit array<T>^ declarations ending with a semicolon; aliases, nested/generic String element detection, arbitrary parenthesized literal elements and general array covariance remain incomplete",
     "Source-owned signature support currently permits ordinary reference types only and validates the defining assembly name; full version/public-key identity checks, source-owned value/generic/nested types and imported inheritance from source-owned types remain incomplete or rejected",
     "Managed return/literal-store conversion does not yet cover all constructor/initializer/conditional/interface conversions or property results needing additional placeholder resolution",
-    "Object unboxing recognizes direct Object-typed operands with primitive/CLI enum targets; ValueType/interface operands, native numeric-pointer casts, general typed-box-to-scalar cast discovery and user-defined implicit conversions remain incomplete",
+    "Object unboxing recognizes direct Object operands with primitive/CLI enum/managed value targets; ValueType/interface operands, native numeric-pointer casts, general typed-box-to-scalar cast discovery and user-defined implicit conversions remain incomplete",
     "Typed scalar/enum boxes have direct signature/import evidence; nested array/generic/byref imports of these boxes, dependent element types, primitive/Enum-specific arrow members and native IntPtr/UIntPtr boxing remain incomplete; native storage/pointers to boxes are rejected",
     "Managed constructor conversion covers parenthesized direct bases, single-argument fields and new expressions without declarator chunks; braced/delegating/general direct initialization, broader boxing overload selection and aliased/inherited imported accessor owner discovery remain incomplete",
     "Primitive instance lookup requires the corresponding primitive metadata import; general primitive/enum/interface boxing overload resolution and mutating/byref-like primitive APIs remain incomplete; unary percent currently requires a managed value class, and general braced/direct/conditional initialization remains unfinished",

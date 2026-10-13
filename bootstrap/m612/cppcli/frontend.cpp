@@ -1046,6 +1046,11 @@ protected:
                 size_t close = matching(end + 1, "{", "}");
                 cli_structural[close] = "::__cli_end_finally(); }";
             }
+            auto adapt_default_index = [&](size_t pos) {
+                if(tokens[pos].text!="default" || !pos || pos+1>=tokens.size() ||
+                    (tokens[pos-1].text!="->" && tokens[pos-1].text!=".") || tokens[pos+1].text!="[") return false;
+                emit(tokens[pos],"__cli_default"); return true;
+            };
             auto adapt_allocation = [&](size_t& i) {
                 if (tokens[i].text != "gcnew") return false;
                 auto& t = tokens[i];
@@ -1331,6 +1336,7 @@ protected:
                             emit(tokens[equal+1],"__cli_literal("+literal+")");
                         } else for (size_t j = equal + 1; j < end; ++j) {
                             if (cli_structural.count(j)) { emit(tokens[j], cli_structural[j]); continue; }
+                            if (adapt_default_index(j)) continue;
                             if (adapt_allocation(j)) continue;
                             if (tokens[j].text == "safe_cast") { emit(tokens[j], "__cli_safe_cast"); continue; }
                             if (tok::isStringLiteral(tokens[j].kind) && call_context[j] &&
@@ -1527,6 +1533,7 @@ protected:
                                 (tokens[j+2].text=="get" || tokens[j+2].text=="set" || tokens[j+2].text=="add" || tokens[j+2].text=="remove" || tokens[j+2].text=="raise")) {
                                 emit(tokens[j],tokens[j+2].text+"_"+tokens[j].text); j+=2; continue;
                             }
+                            if (adapt_default_index(j)) continue;
                             if (adapt_allocation(j)) continue;
                             if (tokens[j].text == "safe_cast") { emit(tokens[j], "__cli_safe_cast"); continue; }
                             if (depth == 1 && j + 1 < end && tokens[j + 1].text == "(" &&
@@ -1610,6 +1617,7 @@ protected:
                     i = end - 1;
                     continue;
                 }
+                if (adapt_default_index(i)) continue;
                 if (adapt_allocation(i)) continue;
                 if (tok::isStringLiteral(t.kind) && call_context[i] && i > 0 && i + 1 < tokens.size() &&
                     (tokens[i - 1].text == "(" || tokens[i - 1].text == ",") &&

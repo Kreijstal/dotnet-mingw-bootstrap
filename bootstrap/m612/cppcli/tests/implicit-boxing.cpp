@@ -1,5 +1,14 @@
 using namespace System;
 public enum class BoxFlags : unsigned int { High=0x80000000, Low=1 };
+public value struct BoxRecord { int Red; double Offset; };
+public ref class SortedSlot {
+public:
+    Collections::SortedList^ Values;
+    property Object^ Entry {
+        Object^ get() { return Values->default[0.25]; }
+        void set(Object^ value) { Values->default[0.25]=value; }
+    }
+};
 public ref class ObjectSlot {
 public:
     Object^ Field;
@@ -32,6 +41,8 @@ public:
     static BoxFlags UnboxFlag(Object^ value) { return (BoxFlags)value; }
     static BoxFlags UnboxFlagStatic(Object^ value) { return static_cast<BoxFlags>(value); }
     static bool UnboxBool(Object^ value) { return (bool)value; }
+    static BoxRecord UnboxRecord(Object^ value) { return (BoxRecord)value; }
+    static BoxRecord UnboxRecordStatic(Object^ value) { return static_cast<BoxRecord>(value); }
     static int UnboxProperty(ObjectSlot^ target) { return (int)target->Value; }
     static String^ ReturnText() { return L"東京" L" 😀"; }
     static String^ StoreText() { String^ value=nullptr; value=L"RAW"; return value; }
@@ -47,5 +58,16 @@ public:
         Collections::Hashtable^ values=gcnew Collections::Hashtable();
         values->Add("key",value);
         return values->get_Item("key");
+    }
+    static int Keys;
+    static double Key() { ++Keys; GC::Collect(); return 0.25; }
+    static Object^ Sorted(BoxRecord record) {
+        Collections::SortedList^ values=gcnew Collections::SortedList();
+        values[Key()]=record;
+        GC::Collect();
+        SortedSlot^ slot=gcnew SortedSlot();
+        slot->Values=values;
+        slot->Entry=values->default[Key()];
+        return slot->Entry;
     }
 };

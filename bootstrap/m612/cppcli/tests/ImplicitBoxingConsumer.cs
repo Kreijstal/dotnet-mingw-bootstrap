@@ -26,6 +26,13 @@ int operands=ImplicitBoxes.Operands;
 var numbers=ImplicitBoxes.Numbers();
 if(string.Join(",",numbers)!="1,2,3" || ImplicitBoxes.Operands!=operands+3 || ImplicitBoxes.Empty().Length!=0) throw new Exception("local array order/empty semantics");
 if((int)ImplicitBoxes.Dictionary(46)!=46) throw new Exception("actual Hashtable boxing");
+var sourceRecord=new BoxRecord {Red=43,Offset=1.5};
+var boxedRecord=ImplicitBoxes.Sorted(sourceRecord);
+sourceRecord.Red=99;
+if(ImplicitBoxes.Keys!=2 || boxedRecord.GetType()!=typeof(BoxRecord) || ImplicitBoxes.UnboxRecord(boxedRecord).Red!=43 ||
+    ImplicitBoxes.UnboxRecordStatic(boxedRecord).Offset!=1.5) throw new Exception("SortedList Object index boxing/value-copy/unbox semantics");
+try { ImplicitBoxes.UnboxRecord("wrong"); throw new Exception("wrong record unbox accepted"); } catch(InvalidCastException) {}
+try { ImplicitBoxes.UnboxRecord(null); throw new Exception("null record unbox accepted"); } catch(NullReferenceException) {}
 if((int)ImplicitBoxes.Int32(target,0)!=0 || ImplicitBoxes.Int32(target,0).GetType()!=typeof(int)) throw new Exception("zero numeric value lost");
 GC.Collect(); GC.WaitForPendingFinalizers();
 if((int)i!=42 || (BoxFlags)flag!=BoxFlags.High) throw new Exception("GC or enum storage");

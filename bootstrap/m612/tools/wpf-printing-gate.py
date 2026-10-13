@@ -230,7 +230,12 @@ def main():
               "System.Windows.Media.ImageSource", "System.Windows.Media.TileBrush", "System.Windows.Media.BrushMappingMode",
               "System.Windows.Media.TileMode", "System.Windows.Media.Stretch", "System.Windows.Media.AlignmentX",
               "System.Windows.Media.AlignmentY", "System.Windows.Media.GradientSpreadMethod",
-              "System.Windows.Media.ColorInterpolationMode"]
+              "System.Windows.Media.ColorInterpolationMode", "System.Windows.Media.RectangleGeometry",
+              "System.Windows.Media.IntersectionDetail", "System.Windows.Media.ToleranceType",
+              "System.Windows.Vector", "System.Uri", "System.UriKind", "System.IO.Path", "System.IO.File",
+              "System.Text.Encoding", "System.Random", "System.Windows.FontStyle", "System.Windows.FontStyles",
+              "System.Windows.FontWeight", "System.Windows.FontWeights", "System.Windows.FontStretch",
+              "System.Windows.FontStretches"]
     for name in types:
         command += ["--type", name]
     command += ["--source-type", "System.Printing.PrintQueue"]

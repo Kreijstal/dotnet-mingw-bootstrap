@@ -606,7 +606,7 @@ public ref class Foreign : CombinedAccess { public: int Read() { return AndMetho
 }
 step_test-implicit-boxing() {
   local refs=("$CPPCLI_SDK"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
-  compile "$(cygpath -m "$src/tests/implicit-boxing.cpp")" --target library --type System.Collections.Hashtable \
+  compile "$(cygpath -m "$src/tests/implicit-boxing.cpp")" --target library --type System.Collections.Hashtable --type System.Collections.SortedList --type System.GC \
     --reference "$(cygpath -m "${refs[-1]}/System.Collections.NonGeneric.dll")" -o "$(cygpath -m "$testdir/implicit-boxing.dll")"
   mkdir -p "$testdir/implicit-boxing-consumer"
   cp "$src/tests/ImplicitBoxingConsumer.cs" "$testdir/implicit-boxing-consumer/Program.cs"

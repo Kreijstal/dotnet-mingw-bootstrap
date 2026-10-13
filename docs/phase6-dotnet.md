@@ -5637,3 +5637,73 @@ All 49 original project inputs/66 printing tree C++ files remain in the combined
 gate. No complete System.Printing runtime DLL or WPF package is produced. Native
 coverage remains 58/139; full layout/printing/runtime and WindowsDesktop
 SDK/targeting/runtime packaging remain required, and the full goal stays active.
+
+
+## 64. Printing Object index keys, value unboxing and canonical Char arrays
+
+The 2026-10-13 continuation resolves indexed-property argument placeholders and
+uses the actual getter overload declarations to box arithmetic/enum operands
+when the selected argument position is unambiguously System.Object. Native and
+typed indexers retain normal Sema. This fixes original SortedList operations
+such as `stops[stop->Offset]` without changing the source or treating numeric
+keys as pointers. Normal source managed value-to-Object conversion supplies the
+stored Color value. Explicit `->default[index]` / `.default[index]` member
+spelling adapts to the existing default property facade in ordinary expressions,
+member initializers and accessor bodies; declaration and switch default tokens
+remain unchanged.
+
+Object-targeted C-style/static cast discovery now recognizes actual managed
+value declarations as well as primitives/CLI enums. It uses existing safe-cast
+lowering to emit CLR unbox.any. The runtime fixture stores a value struct under
+a side-effecting double key in actual SortedList, checks copied data after source
+mutation, retrieves it through explicit default syntax and source get/set
+accessors, verifies exactly two side-effecting key calls across GC, and checks
+both successful casts plus wrong-type/null CLR exceptions.
+
+Metadata Char signatures now use Windows' wchar_t, matching the existing
+System.Char primitive facade. Previously the metadata reader used char16_t for
+array/generic method signatures while source System.Char resolved to wchar_t,
+which made original GlyphRun.Characters.CopyTo reject its actual array<Char>.
+The focused API fixture calls real String.CopyTo into array<System.Char> and
+verifies a Unicode string including a surrogate pair through a C# char[] consumer.
+This preserves CLR char signatures and the Windows ABI; other target platforms
+remain outside the current frontend scope.
+
+The printing gate adds actual RectangleGeometry, IntersectionDetail,
+ToleranceType, Vector, Uri/UriKind, Path/File, Encoding, Random and font style,
+weight and stretch types. Original Point subtraction becomes unambiguous with
+Vector imported. The gate gets past Object index-key errors, Color casts,
+IsMappingConsistent/Char-array CopyTo, explicit font-cache default syntax and
+those imports. Remaining observed errors begin with gdirt.cpp:744's temporary
+GeometryProxy tracking-reference binding, then String/native-literal comparison,
+property-produced enum bitwise operations, native calls using interior record
+pointers, further ManualResetEvent/COMException imports and interface-to-Object
+argument conversions. No complete System.Printing assembly is emitted.
+
+Validation on win11 (with the usual CPPCLI_SDK/CPPCLI_ILASM/M612/MSYSTEM and WPF
+build variables):
+
+```sh
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-implicit-boxing test-nested-indexers test-indexers
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-implicit-boxing test-nested-indexers test-indexers
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-implicit-boxing test-primitive-array-apis test-nested-indexers test-indexers
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-implicit-boxing
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh build-directwrite check-directwrite-assembly printing-gate
+```
+
+The first command rebuilds successfully, then fails in the C# fixture because
+`record` was a contextual keyword at the start of a statement. Renaming that
+fixture variable fixes it; the second and third commands pass all focused
+runtime and rejection checks. The fourth rebuild includes explicit default
+syntax in accessor bodies and passes its real SortedList/runtime checks. The
+final WPF command passes DirectWrite rebuild, 85 types, 283 prepared bodies,
+81 font families and ownership/loader checks; printing still fails on the
+remaining errors above. Bash/Python/JSON syntax and whitespace checks pass.
+
+Logs, manifests and compiled runtime artifacts are archived locally under
+`tmp/wpf8-support/validation/printing-value-char-20261013`. All 49 printing
+project inputs/66 tree C++ files remain in the combined diagnostic gate; no
+per-file pass count, complete printing runtime or finished WPF package is
+claimed. Native coverage remains 58/139. Full text/paragraph and printing
+behavior plus WindowsDesktop SDK/targeting/runtime packaging remain required;
+the full goal stays active.

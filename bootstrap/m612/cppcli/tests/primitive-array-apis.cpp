@@ -33,6 +33,11 @@ public:
     static String^ Unsigned(unsigned int value,Globalization::CultureInfo^ culture) { return value.ToString(culture); }
     static String^ UnsignedLong(unsigned long long value,Globalization::CultureInfo^ culture) { return value.ToString(culture); }
     static String^ Char(wchar_t value) { return value.ToString(); }
+    static array<System::Char>^ Characters(String^ text) {
+        array<System::Char>^ values=gcnew array<System::Char>(text->Length);
+        text->CopyTo(0,values,0,text->Length);
+        return values;
+    }
     static String^ Float(float value,Globalization::CultureInfo^ culture) { return value.ToString(culture); }
     static bool Equal(int left,int right) { return left.Equals(right); }
     static bool EqualObject(int left,Object^ right) { return left.Equals(right); }

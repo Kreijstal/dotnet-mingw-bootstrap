@@ -61,7 +61,7 @@ sealed class SignatureTypes : ISignatureTypeProvider<CliType, object?>
     {
         PrimitiveTypeCode.Void => new("void", "void", "primitive"),
         PrimitiveTypeCode.Boolean => new("bool", "bool", "primitive"),
-        PrimitiveTypeCode.Char => new("char", "char16_t", "primitive"),
+        PrimitiveTypeCode.Char => new("char", "wchar_t", "primitive"),
         PrimitiveTypeCode.SByte => new("int8", "signed char", "primitive"),
         PrimitiveTypeCode.Byte => new("uint8", "unsigned char", "primitive"),
         PrimitiveTypeCode.Int16 => new("int16", "short", "primitive"),

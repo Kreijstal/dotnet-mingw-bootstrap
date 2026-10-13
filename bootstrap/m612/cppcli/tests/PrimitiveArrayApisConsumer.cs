@@ -7,6 +7,7 @@ foreach(var type in typeof(PrimitiveArrayApis).Assembly.GetTypes())
     foreach(var method in type.GetMethods(BindingFlags.Public|BindingFlags.NonPublic|BindingFlags.Static|BindingFlags.Instance|BindingFlags.DeclaredOnly))
         if(!method.IsAbstract && method.GetMethodBody()!=null) RuntimeHelpers.PrepareMethod(method.MethodHandle);
 var culture=new CultureInfo("fr-FR");
+if(new string(PrimitiveArrayApis.Characters("東京 λ 😀"))!="東京 λ 😀") throw new Exception("metadata Char array/System.Char CopyTo identity");
 if(PrimitiveArrayApis.Format(-17,culture)!=(-17).ToString(culture) || PrimitiveArrayApis.Receivers!=1 ||
    PrimitiveArrayApis.FormatDouble(12.5,"F2",culture)!=12.5.ToString("F2",culture) ||
    PrimitiveArrayApis.FormatLong(long.MinValue,culture)!=long.MinValue.ToString(culture)) throw new Exception("primitive formatting/evaluation");
