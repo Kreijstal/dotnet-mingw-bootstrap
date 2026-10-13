@@ -19,13 +19,15 @@ static void* page_context=nullptr;
 using SubtrackFormat=int(WINAPI*)(void*,void*,int,void*,int,void*,void*,int,int,uint32_t,const FSRECT*,void*,FSKCLEAR,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA,FSFMTR*,void**,void**,int*,FSBBOX*,void**,FSKCLEAR*,int*);
 static SubtrackFormat format_subtrack=nullptr;
 static int(WINAPI* destroy_subtrack)(void*,void*)=nullptr;
+static int(WINAPI* destroy_subtrack_record)(void*,void*)=nullptr;
 static int WINAPI container_format(void*,void*,void* input,int previous,void* name,int area,void* footnote,void* geometry,int empty,int suppress,uint32_t direction,FSRECT* rect,void* margin,FSKCLEAR clear,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA suppress_break,int,
     FSFMTR* formatted,void** output,void** br,int* used,FSBBOX* bbox,void** margin_out,FSKCLEAR* clear_out,int* top,int* can_break) {
     *can_break=0;
     int status=format_subtrack(page_context,input,previous,name,area,footnote,geometry,empty,suppress,direction,rect,margin,clear,suppress_break,formatted,output,br,used,bbox,margin_out,clear_out,top);
-    if(!status&&lose_subtrack){*output=nullptr;return PTS_tserrCallbackException;}
+    if(!status&&lose_subtrack){*output=*br=nullptr;return PTS_tserrCallbackException;}
     return status;
 }
+static int WINAPI container_destroy_record(void*,void* record){return destroy_subtrack_record(page_context,record);}
 static int WINAPI container_destroy(void* track){return destroy_subtrack(page_context,track);}
 static int WINAPI page_geometry(void*,void*,uint32_t* direction,int* header,int* width,int* height,FSRECT* margin) {
     *direction=0;*header=0;*width=200;*height=140;*margin={10,20,100,available_height};return 0;
@@ -128,6 +130,8 @@ int main(int argc,char** argv) {
         PROC(FsQueryTextDetails,QueryText);PROC(FsQueryLineListSingle,QueryLines);PROC(FsClearUpdateInfoInPage,PageAction);
         format_subtrack=reinterpret_cast<SubtrackFormat>(GetProcAddress(dll,"FsFormatSubtrackFinite"));destroy_subtrack=FsDestroySubtrack;
         require(format_subtrack!=nullptr,"finite subtrack export");
+        destroy_subtrack_record=reinterpret_cast<decltype(destroy_subtrack_record)>(GetProcAddress(dll,"FsDestroySubtrackBreakRecord"));require(destroy_subtrack_record!=nullptr,"subtrack record destruction export");
+        methods.pfnDestroyBreakRecord=reinterpret_cast<void*>(container_destroy_record);
         methods.pfnFormatParaFinite=reinterpret_cast<void*>(container_format);methods.pfnDestroyPara=reinterpret_cast<void*>(container_destroy);
         require(CreateInstalledObjectsInfo(&methods,&methods,&installed,&count)==0,"page installed registration");
         info.version=0;info.pInstalledObjects=installed;
@@ -163,11 +167,37 @@ int main(int argc,char** argv) {
         require(FsDestroyPage(context,page_handle)==0&&clients_destroyed==4&&lines_destroyed==4&&breaks_destroyed==4,"recursive container teardown releases child tracks and callback handles");
         reset_page_counts();lose_subtrack=true;
         require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrCallbackException&&!page_handle&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"object callback failure after successful subtrack export rolls back a reset out handle");
-        containers=false;lose_subtrack=false;
+        available_height=10;reset_page_counts();
+        require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrCallbackException&&!page_handle&&!page_break&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"object callback failure resets both partial subtrack and continuation outputs without leaking either");
+        available_height=80;containers=false;lose_subtrack=false;
         reset_page_counts();fail_line=2;page_handle=reinterpret_cast<void*>(1);page_break=reinterpret_cast<void*>(1);
         require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrCallbackException&&!page_handle&&!page_break&&lines_created==lines_destroyed&&lines_created==breaks_destroyed&&clients_created==clients_destroyed,"partial callback allocation failure rolls back line/client/break ownership");
         fail_line=-1;available_height=10;reset_page_counts();
-        require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrNotImplemented&&!page_handle&&!page_break&&lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"page overflow rejects without pretending the remaining text was consumed and releases partial lines");
+        PROC(FsDestroyPageBreakRecord,PageAction);
+        void* incoming_record=nullptr;
+        for(int number=0;number<4;++number) {
+            require(FsCreatePageFinite(context,incoming_record,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&page_handle,"finite continuation formats the next real page");
+            if(incoming_record)require(FsDestroyPageBreakRecord(context,incoming_record)==0,"input record can be released after continuation");
+            require(FsQueryPageDetails(context,page_handle,&details)==0,"paginated page details");
+            require(FsQueryTrackParaList(context,details.u.simple.trackdescr.pfstrack,2,paras,&actual_count)==0&&actual_count==1,"one accepted text line/paragraph per short page");
+            require(paras[0].nmp==reinterpret_cast<void*>(101+number/2)&&FsQueryTextDetails(context,paras[0].pfspara,&text_details)==0&&text_details.u.full.dcpFirst==(number%2)*5&&text_details.u.full.dcpLim==(number%2)*5+5,"four pages cover both source paragraphs exactly once without gaps/overlap");
+            require((number<3)==bool(page_break)&&formatted.kstop==(number<3?fmtrBrokenOutOfSpace:fmtrGoalReached),"page result and continuation identity agree with source exhaustion");
+            require(FsDestroyPage(context,page_handle)==0,"page can be disposed while its independent continuation remains");incoming_record=page_break;
+        }
+        require(!incoming_record&&lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"pagination releases speculative and accepted lines and independent records exactly once");
+        std::puts("native finite pagination: four-page exact source coverage, real break records, input/page-independent lifetime and complete callback cleanup PASS");
+        using CloneRecord=int(WINAPI*)(void*,void*,void**);
+        PROC(FsDuplicateSubtrackBreakRecord,CloneRecord);reset_page_counts();
+        FSRECT small{10,20,100,10};void* subtrack=nullptr;void* subrecord=nullptr;void* clone=nullptr;void* margin=nullptr;int used=0,top_space=0;FSBBOX bbox{};FSKCLEAR clear{};
+        require(format_subtrack(context,nullptr,0,reinterpret_cast<void*>(77),0,nullptr,nullptr,0,1,0,&small,nullptr,fskclearNone,fsksuppresshardbreakbeforefirstparaNone,&formatted,&subtrack,&subrecord,&used,&bbox,&margin,&clear,&top_space)==0&&subrecord&&used==10,"standalone finite subtrack exports a continuation");
+        require(FsDuplicateSubtrackBreakRecord(context,subrecord,&clone)==0&&clone&&clone!=subrecord,"subtrack clone has independent wrapper identity");
+        require(destroy_subtrack_record(context,subrecord)==0&&destroy_subtrack(context,subtrack)==0,"original subtrack and record can be released before their clone");
+        require(DestroyDocContext(context)==PTS_tserrInvalidPtsContext&&FsDestroyPageBreakRecord(context,clone)==PTS_tserrInvalidBreakRecord,"clone retains context and rejects the wrong record destruction kind");
+        require(format_subtrack(context,clone,1,reinterpret_cast<void*>(77),0,nullptr,nullptr,0,1,0,&small,nullptr,fskclearNone,fsksuppresshardbreakbeforefirstparaNone,&formatted,&subtrack,&subrecord,&used,&bbox,&margin,&clear,&top_space)==0&&used==10,"clone retains original line-break state and resumes after page/subtrack destruction");
+        require(destroy_subtrack_record(context,clone)==0&&destroy_subtrack_record(context,clone)==PTS_tserrInvalidBreakRecord&&destroy_subtrack(context,subtrack)==0&&destroy_subtrack_record(context,subrecord)==0,"cloned and continued records tear down independently and reject double release");
+        require(lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"subtrack cloning releases every callback handle exactly once");
+        clone=reinterpret_cast<void*>(1);require(FsDuplicateSubtrackBreakRecord(context,reinterpret_cast<void*>(1),&clone)==PTS_tserrInvalidBreakRecord&&!clone,"invalid clone clears output without dereferencing");
+        std::puts("native continuation cloning: independent identities, retained resume state/context, wrong/stale records, reset-output rollback and exact teardown PASS");
         available_height=80;columns=2;reset_page_counts();
         require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrNotImplemented&&!page_handle&&!page_break&&!lines_created,"unfinished multicolumn formatting rejects before fabricated output");
         columns=1;available_height=10;reset_page_counts();

@@ -8361,3 +8361,54 @@ the full layout tree. Finite multi-page continuation/break records, advanced
 paragraph/incremental/interruptible algorithms, multiple columns, RTL page text,
 full bidi/optimal/native language behavior and broader runtime paths remain
 incomplete. The full WPF goal stays active.
+
+## 122. Finite multi-page text continuation and independent break-record ownership
+
+The 2026-10-13 continuation replaces the finite-page overflow rejection with
+actual continuation through original paragraph/container/line callbacks.
+Continuation nodes retain the segment/paragraph position, character offset,
+original line-break state and nested container record. Shared owned line-break
+records outlive disposed pages and are released once after all dependent pages/
+continuations are gone. FsDestroyPageBreakRecord, FsDestroySubtrackBreakRecord
+and FsDuplicateSubtrackBreakRecord provide original record lifetime APIs;
+subtrack duplicates have independent wrapper identities and share immutable
+continuation state. Wrong record kinds, stale handles and foreign contexts reject
+without dereferencing client memory.
+
+Finite formatting retains only accepted lines. Bounded lookahead checks the
+original minimum widow/orphan line counts; speculative lines and output break
+records are disposed, while the continuation begins at the first unaccepted
+character. At a full track, a new paragraph can be deferred without claiming
+that it was formatted. A resumed original container receives its own subtrack
+record and preserves the original managed margin/padding and chunk callbacks.
+Reset-output callback failures now roll back both subtracks and their records.
+Tiny pages that cannot fit one line still reject; hard/keep/optimal/multicolumn
+policies and forced oversized-line progress remain unfinished.
+
+Validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-paragraph-context-native
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-pagination-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/pagination-sdk-check
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-paragraph-context-native inventory layout check-sdk
+```
+
+All commands pass. Native tests cover four short pages with exact paragraph/
+character ranges, input/page-independent record lifetime, cloned subtrack resume
+after original release, context retention, wrong/double record disposal and exact
+callback cleanup. The original WPF paginator renders six pages in both Ideal
+and Display modes. Its original ITextView.TextSegments cover every one of 1278
+source characters exactly once; DynamicDocumentPaginator.GetPageNumber agrees
+for every forward-affinity character position. Page-boundary pointer affinity
+uses WPF's original Contains contract; backward pointers can belong to the
+previous page at the shared boundary. All pages render real glyphs (58293 total
+dark pixels Ideal, 45806 Display), disposed early pages regenerate after later
+records exist, and page/break-record dispatcher cleanup passes across compacting
+GC. Normal shared-framework and self-contained publishes with SDK roots/toolchain
+PATH removed pass. step_check_sdk now includes the pagination gate alongside
+finite placement, scrolling/editor and earlier WPF/WinForms tests; consumer
+builds have zero warnings/errors. Imported native coverage is 86/139 with 53
+absent. Evidence is archived under
+ tmp/wpf8-support/validation/pagination-20261013. Package integration follows;
+advanced layout, full bidi/optimal/native language and broader runtime behavior
+remain required for the full WPF goal.
