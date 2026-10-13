@@ -604,6 +604,21 @@ int main() { CombinedAccess^ c=gcnew CombinedAccess(); return c->OrMethod(); }' 
   reject_case combined-foreign-and '#using "combined-access.dll"
 public ref class Foreign : CombinedAccess { public: int Read() { return AndMethod(); } }; int main() { return 0; }' 'undeclared identifier' --type CombinedAccess
 }
+step_test-managed-sizeof() {
+  local refs=("$CPPCLI_SDK"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
+  local args=(--type System.Runtime.InteropServices.StructLayoutAttribute --type System.Runtime.InteropServices.LayoutKind
+    --type System.Runtime.InteropServices.FieldOffsetAttribute --reference "$(cygpath -m "${refs[-1]}/System.Runtime.InteropServices.dll")")
+  compile "$(cygpath -m "$src/tests/managed-sizeof.cpp")" --target library "${args[@]}" -o "$(cygpath -m "$testdir/managed-sizeof.dll")"
+  mkdir -p "$testdir/managed-sizeof-consumer"
+  cp "$src/tests/ManagedSizeOfConsumer.cs" "$testdir/managed-sizeof-consumer/Program.cs"
+  cat > "$testdir/managed-sizeof-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="managed-sizeof"><HintPath>../managed-sizeof.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/managed-sizeof-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/managed-sizeof-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case alignof-managed 'public value struct Data { int Value; }; int main() { return alignof(Data); }' 'managed records require CLR layout support'
+}
 step_test-floating-bools() {
   compile "$(cygpath -m "$src/tests/floating-bools.cpp")" --target library -o "$(cygpath -m "$testdir/floating-bools.dll")"
   mkdir -p "$testdir/floating-bools-consumer"
@@ -1198,7 +1213,7 @@ step_test-function-pointers() {
   reject_case function-pointer-bool 'int main() { bool (*pointer)()=nullptr; return pointer(); }' 'native function pointer signatures require scalars'
   reject_case function-pointer-managed 'using namespace System; int main() { int (*pointer)(Object^)=nullptr; return pointer(nullptr); }' 'native function pointer signatures require scalars'
   run_case native-sizeof "$src/tests/native-sizeof.cpp" 'native sizeof/alignof, SDK layout and unevaluated operands OK'
-  reject_case sizeof-managed 'public value struct Value { int Field; }; int main() { return sizeof(Value); }' 'managed records require CLR layout support'
+  reject_case sizeof-managed 'public ref class Value { public: int Field; }; int main() { return sizeof(Value); }' 'managed records require CLR layout support'
 }
 step_test-native-allocation() {
   /clang64/bin/clang++.exe -std=c++17 -shared -O2 "$src/tests/native-allocation-native.cpp" -o "$testdir/cppcli-native-allocation.dll"

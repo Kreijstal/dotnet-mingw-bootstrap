@@ -6739,3 +6739,40 @@ scope remains all 49 original project inputs/66 tree C++ files, without per-file
 compile counts. Native coverage stays 58/139; full printing, layout/text and
 WindowsDesktop SDK/reference/runtime packaging remain required. The WPF
 packaging goal stays active.
+
+
+## 85. CLR managed-value sizeof
+
+The 2026-10-13 continuation emits CLR sizeof for managed value types, followed
+by unsigned widening when the source expression has 64-bit size_t type. The
+operand remains unevaluated. This uses actual runtime layout rather than the
+native surrogate's fields, alignment, size or interface bases. Managed ref-class
+sizeof and managed record alignof remain rejected.
+
+The consumer compares sequential, explicit 32-byte and reference-containing
+value layouts against source-built Unsafe.SizeOf. A builder call inside sizeof
+must not execute, and multiplied size_t values retain their width. All checks
+pass. Existing native sizeof/alignof and actual function-pointer ABI tests pass;
+the previous sizeof rejection now targets a ref class, while a dedicated managed
+alignof rejection remains.
+
+Validation on win11 with the standard compiler/WPF environment:
+
+```sh
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-managed-sizeof test-function-pointers
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh printing-gate
+```
+
+The focused rebuild/runtime/rejection command passes, with the expected upstream
+warning for sizeof's unevaluated increment fixture. Printing passes Clang parsing/
+Sema and the original TriVertex sizing in FillLinearGradient. It next fails at
+RenderGlyphRun (gditextrt.cpp:164), where an existing interior_ptr local is assigned
+a newly constructed view. Interior-pointer assignment lowering remains required;
+no complete printing IL/DLL or printing runtime proof is produced.
+
+Bash/JSON syntax and whitespace checks pass. Evidence is archived under
+`tmp/wpf8-support/validation/printing-managed-sizeof-20261013`. Scope remains all
+49 original project inputs/66 tree C++ files in the combined diagnostic gate,
+without per-file compile counts. Native text coverage stays 58/139; full printing,
+layout/text and WindowsDesktop SDK/reference/runtime packaging remain required.
+The WPF packaging goal stays active.

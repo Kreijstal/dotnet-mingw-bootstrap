@@ -3915,6 +3915,11 @@ class Emitter {
         if (auto* trait = dyn_cast<UnaryExprOrTypeTraitExpr>(e)) {
             auto argument = trait->getTypeOfArgument();
             auto* record = argument->getAsCXXRecordDecl();
+            if(trait->getKind()==UETT_SizeOf && value_target(argument)) {
+                op("sizeof "+type(argument),0,1);
+                if(context.getTypeSize(trait->getType())>32) op("conv.u8",1,1);
+                return;
+            }
             if (record && (record_annotated(record, "cli.ref") || record_annotated(record, "cli.value") || !record_annotation(record, "cli.external:").empty()) &&
                 record_annotation(record, "cli.nativeint:").empty())
                 fail(trait, "sizeof/alignof managed records require CLR layout support; facade C++ size cannot be used");
