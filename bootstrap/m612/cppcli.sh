@@ -1863,6 +1863,7 @@ using System.Reflection;
 using System.Runtime.ConstrainedExecution;
 if (TypeTokens.Source() != typeof(TokenMarker) || TypeTokens.Value() != typeof(TokenValue) || TypeTokens.Mode() != typeof(TokenMode) ||
     TypeTokens.Text() != typeof(string) || TypeTokens.Integer() != typeof(int) || TypeTokens.Wide() != typeof(ulong) ||
+    TypeTokens.ArrayRecord() != typeof(byte[]) || TypeTokens.ValueArrayRecord() != typeof(TokenValue[]) || TypeTokens.JaggedArrayRecord() != typeof(string[][]) ||
     TypeTokens.Array() != typeof(int[]) || TypeTokens.Pointer() != typeof(float).MakePointerType() ||
     TypeTokens.Generic() != typeof(List<string>) || TypeTokens.Nested() != typeof(List<List<int>>))
     throw new Exception("managed type token identity mismatch");

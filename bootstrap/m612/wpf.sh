@@ -498,6 +498,42 @@ step_printing_gate() {
     }
 }
 
+step_build_printing() {
+  step_printing_gate
+  /clang64/bin/ilasm-dotnet.exe "$(cygpath -m "$build/printing-gate/System.Printing.il")" -dll -quiet -nologo \
+    "-output=$(cygpath -m "$build/printing-gate/System.Printing.dll")"
+  cp "$build/printing-gate/System.Printing.dll" "$build/lib/"
+}
+
+step_check_printing_assembly() {
+  initialize
+  [ -s "$build/lib/System.Printing.dll" ] || step_build_printing
+  local work=$build/printing-assembly-check
+  mkdir -p "$work"
+  cp "$here/wpf-tests/PrintingAssembly.cs" "$work/Program.cs"
+  /usr/bin/python3 - "$build" "$work" "$oob" <<'PY'
+from pathlib import Path
+import sys,subprocess,xml.etree.ElementTree as E
+build,work,oob=map(Path,sys.argv[1:])
+root=E.Element('Project',Sdk='Microsoft.NET.Sdk'); props=E.SubElement(root,'PropertyGroup')
+for name,value in {'TargetFramework':'net8.0','OutputType':'Exe','UseAppHost':'false','EnableNETAnalyzers':'false','NuGetAudit':'false'}.items():
+    E.SubElement(props,name).text=value
+items=E.SubElement(root,'ItemGroup')
+for name in ('System.Printing','WindowsBase','System.Xaml','DirectWriteForwarder','PresentationCore','PresentationFramework','ReachFramework','UIAutomationTypes','UIAutomationProvider','System.Windows.Input.Manipulations'):
+    ref=E.SubElement(items,'Reference',Include=name)
+    E.SubElement(ref,'HintPath').text=subprocess.check_output(['cygpath','-m',str(build/'lib'/(name+'.dll'))],text=True).strip()
+for name in ('System.IO.Packaging','System.Security.Permissions','System.DirectoryServices'):
+    ref=E.SubElement(items,'Reference',Include=name)
+    E.SubElement(ref,'HintPath').text=subprocess.check_output(['cygpath','-m',str(oob/(name+'.dll'))],text=True).strip()
+E.ElementTree(root).write(work/'PrintingAssemblyCheck.csproj',encoding='utf-8')
+PY
+  "$sdk/dotnet.exe" build "$(cygpath -m "$work/PrintingAssemblyCheck.csproj")" -c Release \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -v:q -p:UseSharedCompilation=false -p:NuGetAudit=false
+  cp "$build/lib/PresentationNative_cor3.dll" "$build/lib/wpfgfx_cor3.dll" "$build/lib/PenImc_cor3.dll" \
+    "$build/lib/wpf-dwrite-loader.dll" "$build/lib/wpf-subsetter.dll" "$work/bin/Release/net8.0/"
+  timeout 60 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/PrintingAssemblyCheck.dll")"
+}
+
 step_check_directwrite_assembly() {
   initialize
   [ -s "$build/lib/DirectWriteForwarder.dll" ] || step_build_directwrite

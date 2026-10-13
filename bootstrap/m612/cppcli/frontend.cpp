@@ -2338,6 +2338,7 @@ class Emitter {
             return record_token(target);
         }
         if (auto* record = t->getAsCXXRecordDecl()) {
+            if (auto element=array_element(record); !element.isNull()) return type(element)+"[]";
             if (!record->getDefinition() && record_annotation(record, "cli.external:").empty()) throw std::runtime_error("incomplete managed typeid operand");
             if (!record_annotation(record, "cli.nativeint:").empty()) return type(t);
             return record_token(record);

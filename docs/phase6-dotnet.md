@@ -7037,3 +7037,44 @@ Evidence is archived under
 `tmp/wpf8-support/validation/printing-nested-enums-20261013`. Native text coverage
 remains 58/139; full printing, text/layout and WindowsDesktop packaging remain
 required. The WPF packaging goal stays active.
+
+
+## 93. CLR array record tokens and complete printing DLL
+
+The 2026-10-13 continuation maps array<T>::typeid record operands to the actual
+CLR vector type. Handle aliases already took that path; record operands had
+incorrectly emitted an undefined native C++ template surrogate. The focused C#
+consumer now verifies byte arrays, source managed-value arrays and jagged String
+arrays alongside the existing handle-array/generic/primitive/pointer/reliability
+checks. The compiler rebuild and all runtime/rejection checks pass.
+
+New WPF build-printing/check-printing-assembly steps assemble the original
+combined project IL, stage System.Printing.dll in the runtime library directory
+and validate versions, the original ReachFramework friend identity, every CLR
+type, all eligible managed methods/constructors/module methods and the actual
+nested printing enum. The check app includes the source-built WPF/out-of-band
+managed dependencies and WPF native loader/subsetter/graphics/pen libraries.
+Initial stronger checks exposed missing Packaging and native DWrite loader
+fixtures; adding the real dependencies eliminates those cascaded failures.
+
+Validation on win11 with the standard compiler/WPF environment:
+
+```sh
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-type-tokens
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh build-printing check-printing-assembly
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-printing-assembly
+```
+
+The original printing project now produces a real DLL: **235 CLR types load and
+2,017 method bodies prepare with zero failures**. Assembly/file/informational
+versions and the original nested enum values pass. This is assembly/loading/JIT
+evidence, not an end-to-end print job proof. Original property/spooler runtime
+checks and implementation dependency integration are the next steps. Scope is
+49 original project inputs/66 tree C++ files; no independent per-file-linking
+claim is made.
+
+Evidence is archived under
+`tmp/wpf8-support/validation/printing-array-type-tokens-20261013`. Native text
+coverage remains 58/139. Full text/layout, printing runtime and WindowsDesktop
+SDK/reference/runtime packaging remain required; the WPF packaging goal stays
+active.
