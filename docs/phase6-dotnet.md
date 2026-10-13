@@ -7850,3 +7850,46 @@ baseline fails as expected. Evidence is archived under
 modes, ink insertion, compression/optimal algorithms and full bidi/paragraph
 layout remain open. The package update is still required; the full goal stays
 active.
+
+
+## 111. Installed release 6 with source inter-word justification
+
+The 2026-10-13 continuation packages section 110 as WindowsDesktop 8.0.0-6.
+Its declared/checksummed 0006-interword-justification.patch carries the ABI
+generator, native engine and native/public/SDK fixtures. A clean pinned archive
+plus all six declared patches matches committed feature/check sources byte for
+byte. The private package tree rebuilds PresentationNative, then passes exact
+justification ABI/geometry/limits/error tests, public justification and existing
+native line/object checks before fresh layout and ordinary SDK verification.
+Unchanged managed/graphics/printing artifacts remain its earlier source builds.
+
+Validation from the CLANG64 package workspace:
+
+```sh
+makepkg --verifysource --force
+source PKGBUILD                 # with srcdir set to this workspace's src/
+_wpf native-win32 check-justification-native check-text-justification check-lineservices-line-native check-inline-objects-native layout check-sdk
+makepkg --repackage --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-6-any.pkg.tar.zst
+python3 check-staged.py /clang64/lib/dotnet
+bash "$(_driver)/wpf-tests/check-justification-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-justification-sdk-check
+```
+
+All final commands pass with zero consumer warnings/errors. Normal private WPF,
+tab, inline-object, justification and WinForms projects build and publish. The
+installed normal UseWPF justification consumer verifies Latin/Indic expansion
+in Ideal/Display modes, strict visible/caret/selection geometry, final/hard/no-
+opportunity line policy, source coverage and actual justified TextBlock raster/
+point hits after GC. Its portable self-contained publish runs with SDK roots/
+toolchain PATH removed. The staged/installed 42-managed/pack/native-seed checker
+passes. The known srcdir warning remains only source-bootstrap.json provenance.
+
+Artifact: mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-6-any.pkg.tar.zst.
+SHA-256: 71236ca4f99f0d0ca8a58d8f75c1c1827791171efa010a3798964122e6d41058.
+Recipe commit: msys2-ur 8adcd79; feature commit: 7019152.
+Logs, patch/recipe/metadata and the local artifact are archived under
+ tmp/wpf8-support/validation/justification-package-20261013.
+Imported native coverage remains 58/139. Advanced justification modes/ink
+insertion/compression/optimal algorithms, aligned-tab justification and full
+bidi/paragraph/natural-language behavior remain incomplete. This improves the
+experimental package while the full WPF goal stays active.
