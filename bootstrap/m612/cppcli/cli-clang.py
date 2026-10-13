@@ -15,7 +15,11 @@ def run(command):
 
 def native_imports(libraries, reader):
     imports = {}
-    for library in libraries:
+    for selection in libraries:
+        symbol_filter, library = selection if isinstance(selection, tuple) else (None, selection)
+        if symbol_filter is not None and not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", symbol_filter):
+            raise ValueError("invalid native import symbol selector: " + symbol_filter)
+        selected = False
         output = subprocess.check_output([reader, str(library.resolve())], text=True)
         for block in re.split(r"(?m)^File: ", output)[1:]:
             lines = block.splitlines()
@@ -34,11 +38,15 @@ def native_imports(libraries, reader):
                 if not line.startswith("Symbol: "): continue
                 symbol = line.removeprefix("Symbol: ")
                 if symbol.startswith("__imp_"): continue
+                if symbol_filter is not None and symbol != symbol_filter: continue
+                selected = True
                 binding = {"library": dll, "entry": entry}
                 old = imports.get(symbol)
                 if old and {k: v.lower() for k, v in old.items()} != {k: v.lower() for k, v in binding.items()}:
                     raise ValueError("ambiguous native import symbol: " + symbol)
                 imports[symbol] = binding
+        if symbol_filter is not None and not selected:
+            raise ValueError("native import symbol unavailable: " + symbol_filter + " in " + str(library))
     return imports
 
 
@@ -71,6 +79,7 @@ def main():
     ap.add_argument("--framework", choices=["windowsforms"], help="reference the source-built Windows Forms pack and select its runtime framework")
     ap.add_argument("--native-library", default="", help="DLL supplying used extern-C functions through a split native bridge")
     ap.add_argument("--native-import", action="append", default=[], type=Path, help="trusted x64 MinGW import archive supplying named native DLL bindings")
+    ap.add_argument("--native-import-symbol", action="append", nargs=2, default=[], metavar=("SYMBOL", "ARCHIVE"), help="import only one named code symbol from a trusted x64 archive")
     ap.add_argument("--llvm-readobj", default="llvm-readobj", help="LLVM reader used to inspect native COFF import libraries")
     ap.add_argument("--clang", default=os.environ.get("CPPCLI_CLANG", "clang++"))
     ap.add_argument("--sdk", type=Path, default=os.environ.get("CPPCLI_SDK"))
@@ -123,7 +132,8 @@ def main():
     work = output.parent / (output.name + ".work")
     work.mkdir(parents=True, exist_ok=True)
     native_manifest = work / "native-imports.json"
-    native_manifest.write_text(json.dumps({"version": 1, "imports": native_imports(a.native_import, a.llvm_readobj)}, sort_keys=True), encoding="utf-8")
+    native_selections = a.native_import + [(symbol, Path(library)) for symbol, library in a.native_import_symbol]
+    native_manifest.write_text(json.dumps({"version": 1, "imports": native_imports(native_selections, a.llvm_readobj)}, sort_keys=True), encoding="utf-8")
     manifest, header = work / "metadata.json", work / "metadata.hpp"
     adapted, il = work / "adapted.cpp", work / "assembly.il"
     # LLVM's in-process crash recovery treats MinGW C++ exceptions raised by a

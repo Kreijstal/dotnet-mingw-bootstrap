@@ -261,7 +261,8 @@
     "Explicit member default[index] spelling adapts to the existing managed default property facade, retaining actual getter/setter metadata",
     "Directly constructed source ref-class temporaries bind exact source percent tracking-reference call parameters through GC-tracked handle slots; direct/delegate/multiple argument mutation, exception and retained identity checks",
     "Typed String-handle equality/inequality, nulls and literal comparisons bind source-metadata String CLR operator slots, including non-interned equal strings and property getter results",
-    "Property-produced scoped enum reads resolve through Sema before ordinary bitwise lowering; unsigned payload and getter-once runtime checks"
+    "Property-produced scoped enum reads resolve through Sema before ordinary bitwise lowering; unsigned payload and getter-once runtime checks",
+    "Explicit native archive symbol selection imports requested x64 code bindings and rejects missing or conflicting symbols; real memcpy with other system libraries validated"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",

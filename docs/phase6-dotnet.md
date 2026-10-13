@@ -5810,3 +5810,68 @@ C++ files as one diagnostic gate, without a per-file pass count or complete
 System.Printing DLL. Native text coverage remains 58/139; full text/paragraph/
 printing behavior and WindowsDesktop SDK/reference/runtime packaging still
 require work. No complete WPF package is produced; the full goal stays active.
+
+
+## 67. Explicit native font-record pins and selected CRT import symbols
+
+The 2026-10-13 continuation ports the original printing native font-record call
+sites with explicit pin_ptr<ENUMLOGFONTEXDV> locals. The reviewed
+`wpf-native/printing/0001-pin-native-font-record-calls.patch` changes two memcpy
+sources and CreateFontIndirectEx's argument. The same interior records retain
+all existing field mutation/cache behavior; the pins keep any managed backing
+buffer stable until the method's lexical cleanup. The gate applies this patch
+to its freshly copied private CPP tree, leaving the original source checkout
+untouched. It is recorded in inputs.json's portPreparation.
+
+This keeps the existing ban on raw interior-pointer escape. ECMA-372 §12.3.6–7
+and §14.7 define tracking/pinning behavior and disallow interior-to-native
+pointer conversion while permitting native pointer conversion through pins:
+https://www.ecma-international.org/wp-content/uploads/ECMA-372_1st_edition_december_2005.pdf
+No general implicit interior-pointer cast or automatic call pinning is claimed.
+
+The driver adds `--native-import-symbol SYMBOL ARCHIVE`, using the same trusted
+x64 named COFF code import parsing as complete archive imports. It includes only
+the requested symbol, rejects missing/invalid selectors and retains conflicting
+binding rejection. Printing selects memcpy from MSYS2 libmsvcrt.a alongside the
+six existing Windows system archives. The first full-CRT import attempt failed
+because __C_specific_handler had multiple DLL bindings; selecting the actual
+required copy routine avoids importing unrelated symbols without silently
+choosing between conflicting DLLs.
+
+The runtime fixture uses original Windows ENUMLOGFONTEXDV and LOGFONT records
+with actual native layouts. Managed byte buffers are viewed through tracked
+interior pointers and explicitly pinned before native calls. A separately built
+native DLL checks Unicode face-name fields, waits while a background collector
+forces compacting collections, copies the complete record and updates its font
+height. The bridge reads those actual bytes, calls imported memcpy for another
+complete snapshot and checks equality. It also calls real CreateFontIndirectExW,
+reads its logical font height through GetObjectW, and verifies successful
+DeleteObject in a finally block. All eligible CLR bodies are prepared.
+
+Validation on win11 with the standard compiler/WPF build environment:
+
+```sh
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-record-pins
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-record-pins
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-record-pins
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh build-directwrite check-directwrite-assembly printing-gate
+```
+
+The focused compiler build configures the changed driver; Ninja has no C++ work
+to do. The final record check passes real native/GDI operations, 2,786 confirmed
+compacting collections inside native calls and missing-symbol rejection. Earlier
+record runs passed 2,581/2,223/3,011 collections while the selected-symbol and GDI
+checks were added. Bash/Python/JSON syntax and whitespace checks pass. The WPF
+command passes DirectWrite rebuild/load (85 types, 283 prepared bodies, 81 font
+families), applies the private source patch and gets past all three native font
+record call conversion errors. It still fails first at XpsCompatiblePrinter.cpp
+interface-to-Object arguments, then FixedDocument/FixedPage Object conversions
+and further XPS packaging/event metadata gaps. No complete printing IL/runtime
+assembly is emitted.
+
+Logs, manifests, patched source and runtime artifacts are archived locally under
+`tmp/wpf8-support/validation/printing-record-pins-20261013`. Scope remains all
+49 original project inputs/66 printing tree C++ files as a combined diagnostic
+gate; a per-file pass count is not claimed. Native text coverage stays 58/139.
+Full layout, printing runtime, WindowsDesktop SDK/reference/runtime packs and
+installed WPF packaging remain required. The full goal remains active.

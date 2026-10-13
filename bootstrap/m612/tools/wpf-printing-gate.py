@@ -27,6 +27,10 @@ def main():
     work.mkdir(parents=True, exist_ok=True)
     cpp = work / "CPP"
     shutil.copytree(original / "CPP", cpp, dirs_exist_ok=True)
+    font_patch = Path(__file__).resolve().parents[1] / "wpf-native/printing/0001-pin-native-font-record-calls.patch"
+    # Work on the private source copy. Strip the original project prefix so
+    # the reviewed patch applies without changing the source checkout.
+    subprocess.run(["patch", "--batch", "--forward", "-p6", "-d", str(cpp), "-i", str(font_patch.resolve())], check=True)
     # This temporary MSVC code-analysis include has no runtime declarations.
     # MinGW's Windows headers already provide the SAL annotations used here.
     header = cpp / "Win32Inc.hpp"
@@ -245,6 +249,9 @@ def main():
     # silently selecting one DLL. Used unavailable functions still fail.
     for name in ["kernel32", "advapi32", "winspool", "gdi32", "user32", "ole32"]:
         command += ["--native-import", win(Path("/clang64/lib/lib" + name + ".a"))]
+    # Select the actual CRT copy routine without adding unrelated exports that
+    # overlap other system archives (for example __C_specific_handler).
+    command += ["--native-import-symbol", "memcpy", win(Path("/clang64/lib/libmsvcrt.a"))]
     tree_count = len(list((original / "CPP").rglob("*.cpp")))
     arguments = work / "arguments.json"
     arguments.write_text(json.dumps(command[2:], ensure_ascii=False), encoding="utf-8")
@@ -255,7 +262,8 @@ def main():
         "portPreparation": ["MinGW skips temporary MSVC code-analysis include", "disable MSVC banned-API static analysis",
                             "map legacy copied-SDK annotations to trusted MinGW SAL2 spellings",
                             "remove MinGW DocumentEvent macro collision with original managed property",
-                            "restore Windows min/max macros omitted by MinGW in C++ mode"],
+                            "restore Windows min/max macros omitted by MinGW in C++ mode",
+                            "printing 0001: explicitly pin font records for native memcpy/CreateFontIndirectEx calls"],
         "legacySalAliases": legacy_sal,
         "missingSdkFlags": flags,
         "missingPrintPropertyTypes": missing_properties,

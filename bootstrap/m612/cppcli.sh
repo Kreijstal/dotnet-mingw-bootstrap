@@ -604,6 +604,24 @@ int main() { CombinedAccess^ c=gcnew CombinedAccess(); return c->OrMethod(); }' 
   reject_case combined-foreign-and '#using "combined-access.dll"
 public ref class Foreign : CombinedAccess { public: int Read() { return AndMethod(); } }; int main() { return 0; }' 'undeclared identifier' --type CombinedAccess
 }
+step_test-record-pins() {
+  /clang64/bin/clang++.exe -std=c++17 -shared -O2 "$src/tests/record-pins-native.cpp" -o "$testdir/cppcli-record-pins.dll"
+  compile "$(cygpath -m "$src/tests/record-pins.cpp")" --target library --native-library cppcli-record-pins.dll \
+    --native-import "$(cygpath -m /clang64/lib/libkernel32.a)" \
+    --native-import "$(cygpath -m /clang64/lib/libgdi32.a)" \
+    --native-import-symbol memcpy "$(cygpath -m /clang64/lib/libmsvcrt.a)" -o "$(cygpath -m "$testdir/record-pins.dll")"
+  mkdir -p "$testdir/record-pins-consumer"
+  cp "$src/tests/RecordPinsConsumer.cs" "$testdir/record-pins-consumer/Program.cs"
+  cat > "$testdir/record-pins-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="record-pins"><HintPath>../record-pins.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/record-pins-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  cp "$testdir/cppcli-record-pins.dll" "$testdir/record-pins-consumer/bin/Debug/net8.0/"
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/record-pins-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case native-import-missing-symbol 'int main() { return 0; }' 'native import symbol unavailable' \
+    --native-import-symbol CppCliDefinitelyMissing "$(cygpath -m /clang64/lib/libmsvcrt.a)"
+}
 step_test-string-enum-properties() {
   compile "$(cygpath -m "$src/tests/string-enum-properties.cpp")" --target library --type System.GC \
     -o "$(cygpath -m "$testdir/string-enum-properties.dll")"
