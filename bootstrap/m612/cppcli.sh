@@ -71,7 +71,7 @@ template<> struct SystemTrait<float> {}; int main() { return 0; }' 'cannot be sp
   run_case branches "$src/tests/branches.cpp" $'False\nTrue\nTrue\n1\n12\n25'
   reject_case unknown 'using namespace System; int main() { int n = missing; return n; }' 'undeclared identifier'
   reject_case mismatch 'using namespace System; int main() { int n = "wrong"; return n; }' 'cannot initialize'
-  reject_case outside 'using namespace System; int main() { do {} while (false); return 0; }' 'unsupported AST statement'
+  reject_case outside 'int main() { asm volatile("nop"); return 0; }' 'unsupported AST statement'
   reject_case missing-return 'using namespace System; int broken() { int n = 0; } int main() { return broken(); }' 'does not return'
   log "PASS test-core: Clang parsing, metadata overloads, control flow, macros/includes, Unicode, negative checks"
 }

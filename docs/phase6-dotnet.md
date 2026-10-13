@@ -7226,3 +7226,31 @@ Evidence is archived under
 is concrete and tested, but an MSYS2 recipe/clean package build, remaining native
 text/paragraph/NLS behavior and full runtime coverage remain required. Imported
 PresentationNative coverage stays 58/139. The WPF packaging goal stays active.
+
+
+## 97. Compiler package refresh prerequisite
+
+The 2026-10-13 continuation refreshes the C++/CLI package recipe for the WPF
+compiler source and adds the missing installed include/vcclr.h intrinsic header.
+The clean compiler build succeeds. The package check revealed that test-core
+still expected do/while to be unsupported, although section 81 implemented it.
+That stale negative fixture now uses explicitly unsupported native inline
+assembly. The original do-loop runtime fixtures remain positive coverage.
+
+Validation on win11 in the private cppcli-0.3.0 package work tree:
+
+```sh
+makepkg --noconfirm --force
+makepkg --noextract --force --noconfirm
+```
+
+The first check stops at the obsolete do-loop rejection. After applying the
+single fixture correction to the private extracted source for diagnosis, the
+retry passes the normal core/object/property/virtual/array/exception/interop/
+enum/value/tracking/adapter checks and the added nested enum/native local-array/
+native COM aggregate/interior assignment/inline pin/type-token/managed-sizeof
+fixtures. It creates a 0.3.0 candidate archive. This diagnostic candidate is not
+a final pinned package: the recipe/source archive must be repinned to this
+committed correction and built cleanly before installation or final packaging
+claims. The tested SDK/shared/targeting/runtime layout from section 96 remains
+unchanged. Full WPF distribution packaging and native text/layout are open.
