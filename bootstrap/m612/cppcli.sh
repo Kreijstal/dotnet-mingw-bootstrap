@@ -604,6 +604,22 @@ int main() { CombinedAccess^ c=gcnew CombinedAccess(); return c->OrMethod(); }' 
   reject_case combined-foreign-and '#using "combined-access.dll"
 public ref class Foreign : CombinedAccess { public: int Read() { return AndMethod(); } }; int main() { return 0; }' 'undeclared identifier' --type CombinedAccess
 }
+step_test-tracking-returns() {
+  compile "$(cygpath -m "$src/tests/tracking-returns.cpp")" --target library --type System.GC \
+    -o "$(cygpath -m "$testdir/tracking-returns.dll")"
+  mkdir -p "$testdir/tracking-returns-consumer"
+  cp "$src/tests/TrackingReturnsConsumer.cs" "$testdir/tracking-returns-consumer/Program.cs"
+  cat > "$testdir/tracking-returns-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="tracking-returns"><HintPath>../tracking-returns.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/tracking-returns-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/tracking-returns-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case tracking-return-stack 'int% Bad() { int value=1; return value; } int main() { return 0; }' 'must refer directly to managed heap storage'
+  reject_case tracking-return-forward 'int% Bad(int% value) { return value; } int main() { return 0; }' 'must refer directly to managed heap storage'
+  reject_case tracking-return-alias 'public ref class Owner { public: int Value; }; int% Bad(Owner^ owner) { int% alias=owner->Value; return alias; } int main() { return 0; }' 'must refer directly to managed heap storage'
+  reject_case tracking-return-native 'int& Bad() { static int value=1; return value; } int main() { return 0; }' 'native reference returns'
+}
 step_test-nested-delegates() {
   compile "$(cygpath -m "$src/tests/nested-delegates.cpp")" --target library \
     --type System.Delegate --type System.MulticastDelegate --type System.GC --type System.EventHandler --type System.EventArgs \
@@ -2100,7 +2116,7 @@ int main() { int n = 5; Example::Tracking::Change(n); Console::WriteLine(n); ret
 EOF
   run_case tracking-reference "$testdir/tracking-reference.cpp" 8 --type Example.Tracking --type Example.Coordinate
   reject_case native-reference 'public ref class Owner { public: int Value; }; void f(int& n) {} void Bad(Owner^ owner) { f(owner->Value); } int main() { return 0; }' 'native reference cannot bind to movable managed storage'
-  reject_case reference-return 'int% f(int% n) { return n; } int main() { return 0; }' 'returning tracking references'
+  reject_case reference-return 'int% f(int% n) { return n; } int main() { return 0; }' 'tracking reference return must refer directly'
 }
 for step in $steps; do "step_$step"; done
 

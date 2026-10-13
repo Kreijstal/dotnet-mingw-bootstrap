@@ -268,7 +268,8 @@
     "Constructor tracking-reference parameters emit actual CLR byrefs and pass exact referent addresses through allocation, value construction and base initializers; dereferenced ref-class handles use tracked handle slots",
     "Instance field MarshalAs native descriptors for selected string/scalar/enum/native-integer/interface forms; actual PRINTER_DEFAULTSW/DOCINFOW native layout, Unicode, enum copy-back and concurrent compacting-GC proof",
     "Nested source delegates in ordinary ref-class owners use real CLR nested identities and public/private/protected visibility; static/instance/deep/byref calls and moving-GC checks",
-    "Imported delegate signatures supply metadata-derived CLI source spelling for automatic event accessors; managed references/arrays/generics/byrefs retain handle/tracking sigils without changing native pointer spelling"
+    "Imported delegate signatures supply metadata-derived CLI source spelling for automatic event accessors; managed references/arrays/generics/byrefs retain handle/tracking sigils without changing native pointer spelling",
+    "Source tracking-reference returns preserve real CLR byrefs to direct managed instance/static fields, nested value fields and array elements; source value reads and aliases, handle slots, finally cleanup, detached owner lifetime and compacting GC validated"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -349,6 +350,7 @@
     "Tracking temporary call adaptation requires exact source ref-class percent parameters and consistent arity-compatible overload slots; imported types, native references, ref-class copy construction and deterministic disposal cleanup remain unsupported",
     "String equality supports actual String handles and literal/null operands; Object/native-buffer operand conversions, String concatenation and user-defined reference operator overload discovery remain incomplete",
     "Interface-to-Object call adaptation requires all arity-compatible candidate positions to be Object; constructor/index-key/property-result/conditional conversions and broader overload selection remain incomplete",
-    "Constructor tracking references require exact referent identity; derived-to-base byref aliases remain rejected. General ref-class stack storage, member RAII, delegating constructors and reference-return escape analysis remain incomplete"
+    "Constructor tracking references require exact referent identity; derived-to-base byref aliases remain rejected. General ref-class stack storage, member RAII, delegating constructors and reference-return escape analysis remain incomplete",
+    "Tracking-reference returns require an exact referent and direct managed heap location; stack addresses, byref parameter forwarding, local aliases and general escape analysis remain unsupported. Native reference returns remain rejected"
   ]
 }

@@ -6120,3 +6120,56 @@ without a per-file compile count. Native coverage stays 58/139. Full printing
 lowering/link/runtime, full text/layout and WindowsDesktop SDK/reference/runtime
 packaging remain required. No completed WPF package is produced; the full goal
 stays active.
+
+
+## 72. Managed heap tracking-reference returns
+
+The 2026-10-13 continuation implements source percent return declarations with
+actual CLR byref metadata. Return bodies require an exact referent type and a
+direct managed heap location: instance/static fields, nested value fields rooted
+in a managed owner, or managed array elements. Stack addresses, forwarded byref
+parameters and local aliases remain rejected; native ampersand returns still
+fail explicitly. This is a bounded heap-location rule, not full escape analysis.
+Ordinary source calls load the referred value, while alias bindings and value
+field receivers retain the returned address. Protected returns store the byref
+through finally cleanup.
+
+The initial fixture produced a DLL but failed at its array return: a generic
+reference-call branch bypassed the managed-array intrinsic and emitted ldelem
+instead of ldelema. Address dispatch now handles array/interior intrinsics first,
+and ordinary byref loads apply only to source tracking returns, imported methods
+and the existing typed-box/tracking-temporary markers. Native reference facades
+keep their prior behavior. The arrays regression fixture also now spells its
+ToCharArray result as System::Char, matching the canonical Windows Char mapping
+introduced in section 64.
+
+The final consumer prepares managed bodies and mutates returned scalar, nested
+value, static, managed-handle and array locations. It checks source reads and
+writes through returned value fields, out-of-line percent definitions, finally
+execution, a detached heap owner retained only by its returned byref, and twenty
+forced compacting collections. Null and out-of-range array returns raise the
+actual CLR exceptions. Existing tracking parameters/temporaries, interior
+indexing and typed-box paths pass their runtime and rejection checks.
+
+Validation on win11 with the standard compiler/WPF environment:
+
+```sh
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-tracking-returns test-tracking test-tracking-temporaries
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-tracking-returns test-arrays test-interior-indexing test-scalar-boxes
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh build-directwrite check-directwrite-assembly printing-gate
+```
+
+Both focused compiler commands pass. DirectWrite passes its existing 85-type,
+283-prepared-body and 81-font-family scope. The printing gate passes Clang
+parsing/Sema and advances beyond the original GeometryProxy.GetGeometryData
+tracking return. Its next failure is the unbound declared DllImport method
+PresentationNativeUnsafeNativeMethods::IsStartXpsPrintJobSupportedImpl in
+InteropWin32ApiThunk.hpp:313. Managed source DllImport declaration support and
+its native implementations need further work; no full printing DLL is produced.
+
+Evidence is archived under
+`tmp/wpf8-support/validation/printing-tracking-returns-20261013`. All 49 original
+printing project inputs/66 tree C++ files remain in the combined diagnostic gate,
+without a per-file compile count. Native text coverage remains 58/139. Complete
+printing lowering/link/runtime, full layout/text and WindowsDesktop SDK/reference/
+runtime packaging remain required. The WPF packaging goal stays active.

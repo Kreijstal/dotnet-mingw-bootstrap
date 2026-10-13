@@ -27,7 +27,7 @@ int main() {
     boxes[1] = gcnew Box(9);
     Console::WriteLine(boxes[1]->Value);
     String^ text = gcnew String("cli");
-    array<char16_t>^ chars = text->ToCharArray();
+    array<System::Char>^ chars = text->ToCharArray();
     Console::WriteLine(chars->Length);
     Console::WriteLine(chars[1]);
     Object^ object = values;

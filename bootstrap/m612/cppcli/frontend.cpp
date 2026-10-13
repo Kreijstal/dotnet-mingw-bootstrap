@@ -2056,6 +2056,37 @@ class Emitter {
         }
         return false;
     }
+    bool tracking_return(const FunctionDecl* function) const {
+        if(!function->getReturnType()->isLValueReferenceType() || !function->getTypeSourceInfo()) return false;
+        auto& sm=ci.getSourceManager();
+        for(auto loc=function->getTypeSourceInfo()->getTypeLoc();!loc.isNull();loc=loc.getNextTypeLoc()) {
+            auto ref=loc.getAs<ReferenceTypeLoc>();
+            if(ref.isNull()) continue;
+            auto sigil=sm.getSpellingLoc(ref.getSigilLoc());
+            return sigil.isValid() && sm.isWrittenInMainFile(sigil) && *sm.getCharacterData(sigil)=='%';
+        }
+        return false;
+    }
+    bool heap_reference_location(const Expr* original) const {
+        const Expr* e=strip(original)->IgnoreParenImpCasts();
+        if(array_subscript(e)) return true;
+        if(auto* ref=dyn_cast<DeclRefExpr>(e)) {
+            auto* variable=dyn_cast<VarDecl>(ref->getDecl());
+            return variable && variable->isStaticDataMember();
+        }
+        if(auto* member=dyn_cast<MemberExpr>(e);member && isa<FieldDecl>(member->getMemberDecl())) {
+            if(auto* owner=handle_target(member->getBase()->getType());owner && !record_annotated(owner,"cli.value") &&
+                (record_annotated(owner,"cli.ref") || !record_annotation(owner,"cli.external:").empty())) return true;
+            if(!member->isArrow() && value_target(member->getBase()->getType())) return heap_reference_location(member->getBase());
+        }
+        return false;
+    }
+    bool managed_reference_call(const CallExpr* call) const {
+        auto* function=call->getDirectCallee();
+        return function && function->getReturnType()->isReferenceType() &&
+            (tracking_return(function) || !annotation(function,"cli.import:").empty() ||
+             annotated(function,"cli.tracking.temporary") || annotated(function,"cli.typed.box.address"));
+    }
     int64_t layout_constant(const Decl* d, llvm::StringRef name, int64_t fallback) const {
         const AnnotateAttr* found = nullptr;
         for (auto* attr : d->specific_attrs<AnnotateAttr>()) if (attr->getAnnotation() == name) {
@@ -2648,8 +2679,6 @@ class Emitter {
     }
     void address(const Expr* original) {
         const Expr* e = strip(original)->IgnoreParenImpCasts();
-        if(auto* call=dyn_cast<CallExpr>(e);call && call->getDirectCallee() && annotated(call->getDirectCallee(),"cli.tracking.temporary")) { this->call(call); return; }
-        if(auto* call=dyn_cast<CallExpr>(e);call && call->getDirectCallee() && annotated(call->getDirectCallee(),"cli.typed.box.address")) { this->call(call); return; }
         if (auto* pointer = interior_dereference(e)) {
             expr(pointer);
             auto* operation=cast<CXXOperatorCallExpr>(e);
@@ -2699,6 +2728,9 @@ class Emitter {
         if (auto* subscript = array_subscript(e)) {
             auto slots = capture_array(subscript); load_array_location(slots);
             op("ldelema " + type(subscript->getType()), 2, 1); return;
+        }
+        if(auto* call=dyn_cast<CallExpr>(e);call && managed_reference_call(call)) {
+            this->call(call); return;
         }
         unsigned slot = temporary(type(e->getType()));
         expr(e); op("stloc " + std::to_string(slot), 1); op("ldloca " + std::to_string(slot), 0, 1);
@@ -4079,7 +4111,8 @@ class Emitter {
         }
         if (auto* c = dyn_cast<CallExpr>(e)) {
             call(c);
-            if(c->getDirectCallee() && annotated(c->getDirectCallee(),"cli.typed.box.address")) op("ldobj "+type(c->getType()),1,1);
+            if(managed_reference_call(c))
+                op("ldobj "+reference_element_type(c->getType()),1,1);
             return;
         }
         if (auto* c = dyn_cast<CXXConstructExpr>(e)) {
@@ -4385,7 +4418,13 @@ class Emitter {
             if (!interior_element(current->getReturnType()).isNull() &&
                 (!r->getRetValue() || !heap_interior_return(r->getRetValue())))
                 fail(s, "interior pointer return must refer directly to managed heap storage; local aliases and stack addresses cannot escape");
-            if (r->getRetValue()) pointer_value(r->getRetValue(), current);
+            if(current->getReturnType()->isReferenceType()) {
+                if(!r->getRetValue() || !heap_reference_location(r->getRetValue()))
+                    fail(s,"tracking reference return must refer directly to managed heap storage; local aliases, parameters and stack addresses cannot escape");
+                if(!context.hasSameUnqualifiedType(r->getRetValue()->IgnoreParenImpCasts()->getType(),current->getReturnType()->getPointeeType()))
+                    fail(s,"tracking reference return requires the exact referent type");
+                address(r->getRetValue());
+            } else if (r->getRetValue()) pointer_value(r->getRetValue(), current);
             if (exception_depth) {
                 if (return_label.empty()) return_label = label();
                 if (r->getRetValue()) {
@@ -4556,6 +4595,7 @@ class Emitter {
                (handle_target(f->getReturnType()) || !typed_box_element(f->getReturnType()).isNull()) && native_value_pointer(f).isNull() ? "ldnull" : "ldc.i4.0", 0, 1);
             if (!native_value_pointer(f).isNull()) op("conv.u", 1, 1);
             if (!interior_element(f->getReturnType()).isNull()) op("conv.u", 1, 1);
+            if(f->getReturnType()->isReferenceType()) op("conv.u",1,1);
             op("ret", 1);
         } // Unreachable for correctly-returning non-void functions except main.
         if (!return_label.empty()) {
@@ -4626,7 +4666,7 @@ public:
             if (!is_interface(base->getParent()) && !method->hasAttr<OverrideAttr>()) throw std::runtime_error("managed class overrides require an explicit override specifier");
             if (is_interface(base->getParent()) && method->getAccess() != AS_public) throw std::runtime_error("implicit interface implementations must be public");
         }
-        if (f->getReturnType()->isReferenceType()) throw std::runtime_error("returning tracking references is not enabled yet");
+        if (f->getReturnType()->isReferenceType() && !tracking_return(f)) throw std::runtime_error("native reference returns are not enabled yet");
         if (pinned(f->getReturnType())) throw std::runtime_error("pin_ptr is restricted to block-scoped locals");
         validate_declarator(f->getTypeSourceInfo());
         for (auto* p : f->parameters()) validate_declarator(p->getTypeSourceInfo());
