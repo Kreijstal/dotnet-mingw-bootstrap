@@ -83,7 +83,9 @@ def main():
     generator=sdk/'packs/Microsoft.WindowsDesktop.App.Ref/8.0.0-bootstrap.7.0.20/analyzers/dotnet/cs/System.Windows.Forms.Analyzers.CSharp.dll'
     analyzers=ref/'analyzers/dotnet/cs'; analyzers.mkdir(parents=True,exist_ok=True)
     shutil.copy2(generator,analyzers/generator.name)
-    E.SubElement(fl,'File',Type='Analyzer',Language='cs',Path='analyzers/dotnet/cs/'+generator.name,Profile='WindowsForms')
+    forms_list=E.parse(sdk/'packs/Microsoft.WindowsDesktop.App.Ref/8.0.0-bootstrap.7.0.20/data/FrameworkList.xml')
+    analyzer=next(entry for entry in forms_list.getroot() if entry.get('Type')=='Analyzer' and Path(entry.get('Path','')).name==generator.name)
+    E.SubElement(fl,'File',**dict(analyzer.attrib))
     for element in (fl,rl): E.indent(element)
     E.ElementTree(fl).write(ref/'data/FrameworkList.xml',encoding='utf-8')
     E.ElementTree(rl).write(runtime/'data/RuntimeList.xml',encoding='utf-8')

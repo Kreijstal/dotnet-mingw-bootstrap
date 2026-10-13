@@ -7254,3 +7254,35 @@ a final pinned package: the recipe/source archive must be repinned to this
 committed correction and built cleanly before installation or final packaging
 claims. The tested SDK/shared/targeting/runtime layout from section 96 remains
 unchanged. Full WPF distribution packaging and native text/layout are open.
+
+
+## 98. Combined desktop analyzer metadata and profile regression
+
+The 2026-10-13 continuation validates the approved WinForms interim app against
+the new combined WPF desktop SDK, in addition to the WPF application. Its first
+build exposed missing assembly/version/token attributes in the WinForms analyzer
+FrameworkList entry: ResolveTargetingPackAssets threw NullReferenceException.
+The layout now retains the original source-built analyzer descriptor from the
+installed WinForms targeting pack. WPF filtering had previously hidden this
+metadata defect. check-sdk now runs both profile consumers by default.
+
+Validation on win11 with the standard WPF environment:
+
+```sh
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh layout check-sdk
+bash ~/wpfboot/driver/bootstrap/m612/winforms-tests/check-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/build/winforms-sdk-check
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-sdk
+```
+
+The final combined gate passes WPF shared-framework/BAML/window/raster checks,
+portable self-contained WPF publish/run with SDK roots/toolchain PATH removed,
+and WinForms application-generation/window/control/resource/event/GDI+ checks in
+both framework-dependent and self-contained modes. Builds have zero warnings/
+errors. Syntax and whitespace checks pass. Evidence is archived under
+`tmp/wpf8-support/validation/combined-desktop-sdk-20261013`.
+
+The compiler package diagnostic candidate from section 97 contains the required
+vcclr.h header and passes its expanded checks. Its final archive must still be
+repinned to the committed fixture correction and built cleanly. WPF MSYS2 recipe/
+clean package build and full native text/layout behavior remain open. The WPF
+packaging goal stays active.

@@ -632,6 +632,7 @@ step_check_sdk() {
   rm -rf "$root/sdk/8.0.131/Sdks/Microsoft.NET.Sdk.WindowsDesktop"
   cp -a "${WPF_LAYOUT:-$build/layout}/." "$root/"
   bash "$here/wpf-tests/check-sdk.sh" "$root" "$build/sdk-check"
+  bash "$here/winforms-tests/check-sdk.sh" "$root" "$build/winforms-sdk-check"
 }
 
 step_build_shipping_managed() {
