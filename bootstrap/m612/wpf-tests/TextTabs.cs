@@ -95,6 +95,40 @@ class Check {
             position+=line.Length;++count;if(count>30)throw new Exception("tab wrapping did not end");
         }
         if(position!=wrapped.Text.Length+1 || count<2)throw new Exception("tab wrapping coverage");
+        foreach(bool split in new[]{false,true}) {
+            foreach(var alignment in new[]{TextTabAlignment.Left,TextTabAlignment.Center,TextTabAlignment.Right,TextTabAlignment.Character}) {
+                foreach(double stop in new[]{100.0,160.0}) {
+                    var source=new TabSource("कि\talpha beta.gamma delta",split);
+                    var paragraph=new TabParagraph(new[]{new TextTabProperties(alignment,stop,'.','.')},true);
+                    int cp=0,lines=0,overflow=0;TextLineBreak previous=null;
+                    try {
+                        while(cp<=source.Text.Length) {
+                            using var line=formatter.FormatLine(source,cp,125,paragraph,previous);
+                            int end=cp+line.Length;
+                            if(line.Length<=0 || end>source.Text.Length+1)throw new Exception("aligned wrap lost source progress");
+                            if(end<source.Text.Length && (char.IsLowSurrogate(source.Text[end]) || CharUnicodeInfo.GetUnicodeCategory(source.Text,end)==UnicodeCategory.SpacingCombiningMark || CharUnicodeInfo.GetUnicodeCategory(source.Text,end)==UnicodeCategory.NonSpacingMark))throw new Exception("aligned wrap split a grapheme");
+                            if(line.Width>125.02) {
+                                if(cp>=source.Text.Length || source.Text[cp]!='\t' || line.Length!=1)throw new Exception("avoidable aligned wrap overflow");
+                                ++overflow;
+                            }
+                            if(cp==0 && stop==100 && alignment==TextTabAlignment.Right) {
+                                if(line.Length<=3)throw new Exception("aligned wrap dropped a fitting retained field");
+                                Near(line.WidthIncludingTrailingWhitespace,100,"retained right field ends at its stop");
+                            }
+                            GC.Collect(2,GCCollectionMode.Forced,true,true);
+                            var glyphs=line.GetIndexedGlyphRuns().ToArray();
+                            if(glyphs.Sum(run=>run.TextSourceLength)!=Math.Min(line.Length,source.Text.Length-cp))throw new Exception("aligned wrap enumeration lost source units");
+                            var visual=new DrawingVisual();using(var drawing=visual.RenderOpen())line.Draw(drawing,new Point(10,10),InvertAxes.None);
+                            var bitmap=new RenderTargetBitmap(240,80,96,96,PixelFormats.Pbgra32);bitmap.Render(visual);
+                            previous?.Dispose();previous=line.GetTextLineBreak();if(previous!=null){using var clone=previous.Clone();}
+                            cp=end;++lines;if(lines>30)throw new Exception("aligned wrapping did not terminate");
+                        }
+                    } finally { previous?.Dispose(); }
+                    if(cp!=source.Text.Length+1 || lines<2)throw new Exception("aligned wrap source coverage");
+                    Console.WriteLine($"public aligned wrapping {alignment}, stop={stop}, split={split}: {lines} lines, {overflow} indivisible tab overflows PASS");
+                }
+            }
+        }
         Console.WriteLine("public TextFormatter aligned/incremental tabs, cross-run fields, leaders, caret/selection/enumeration, raster, wrapping and moving GC PASS");
     }
 }

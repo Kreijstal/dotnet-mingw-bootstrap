@@ -83,11 +83,16 @@ continue after the last explicit stop. Tab caret/selection geometry retains the
 actual gap. Original EnumTab preserves source CP, leader and geometry, while
 leaders are measured and drawn using original text callbacks. The public test
 covers WPF's four exposed alignments, one-run/split fields, dotted leaders,
-incremental stops, ordinary wrapping and drawing/enumeration across GC. A wrap
-that cuts an aligned field and moves its stop beyond the column still returns
-NotImplemented; aligned-field wrapping needs a dedicated break strategy. Leaders
-currently repeat whole measured characters centered in the gap; exact legacy
-leader spacing and non-LTR tab behavior require further validation.
+incremental stops, aligned-field wrapping and drawing/enumeration across GC.
+Each legal Unicode break candidate aligns only its retained field. The selected
+prefix is remeasured/reshaped and its real visible width rechecked; if contextual
+advances make it wider, an earlier legal candidate is tried. A leading
+indivisible tab/word outside the column advances with unavoidable overflow under
+the selected wrapping policy. Native/public checks cover fitting retained fields,
+out-of-column tabs, cloned continuation records and complete source coverage.
+Candidate evaluation scans retained fields and needs optimization for long tabbed
+paragraphs. Leaders currently repeat whole measured characters centered in the
+gap; exact legacy leader spacing and non-LTR tab behavior require validation.
 
 Optimal/min-max formatting, inline objects, bidi reversal objects and
 justification remain unsupported and return explicit errors.

@@ -129,43 +129,47 @@ int prefix_width(const Run& run,size_t end,int64_t& width) {
     return LS_None;
 }
 
-// Tab locations are relative to the paragraph origin. Measure the entire
-// following field, across client runs, before selecting an aligned stop.
+// Tab locations are relative to the paragraph origin. A break candidate
+// aligns only its retained field, across client runs, rather than the rest
+// of the paragraph that will move to the following line.
+int tab_target(const Line& line,size_t index,int64_t x,int end_cp,int64_t& target,uint16_t& leader) {
+    const Context& context=*line.context;
+    leader=0;
+    for(const auto& stop:context.tabs) {
+        if(stop.ur<=x) continue;
+        int64_t field=0;
+        bool aligned=false;
+        if(stop.lskt) {
+            WCHAR align=stop.lskt==3?L'.':stop.wchCharTab;
+            for(size_t j=index+1;j<line.runs.size() && !line.runs[j].tab;++j) {
+                const auto& next=line.runs[j];
+                if(next.cp>=end_cp) break;
+                size_t end=std::min<size_t>(next.text.size(),end_cp-next.cp);
+                if(stop.lskt>=3) {
+                    auto found=std::find(next.text.begin(),next.text.begin()+end,align);
+                    if(found!=next.text.begin()+end) { end=found-next.text.begin(); aligned=true; }
+                }
+                int status=prefix_width(next,end,field); if(status) return status;
+                if(aligned) break;
+            }
+        }
+        target=static_cast<int64_t>(stop.ur)-(stop.lskt==1?field/2:field);
+        if(target<=x) continue;
+        leader=stop.wchTabLeader; return LS_None;
+    }
+    if(context.incremental_tab<=0) return LS_InvalidFormatterResult;
+    int64_t after=context.tabs.empty()?x:std::max<int64_t>(x,context.tabs.back().ur);
+    target=(after/context.incremental_tab+1)*context.incremental_tab;
+    return LS_None;
+}
+
 int layout_tabs(Line& line,int start,int& total) {
     int64_t x=start;
-    const Context& context=*line.context;
     for(size_t i=0;i<line.runs.size();++i) {
         auto& run=line.runs[i];
         if(run.tab && !run.hidden) {
-            bool selected=false;
             int64_t target=0;
-            run.leader=0;
-            for(const auto& stop:context.tabs) {
-                if(stop.ur<=x) continue;
-                int64_t field=0;
-                bool aligned=false;
-                if(stop.lskt) {
-                    WCHAR align=stop.lskt==3?L'.':stop.wchCharTab;
-                    for(size_t j=i+1;j<line.runs.size() && !line.runs[j].tab;++j) {
-                        const auto& next=line.runs[j];
-                        size_t end=next.text.size();
-                        if(stop.lskt>=3) {
-                            auto found=std::find(next.text.begin(),next.text.end(),align);
-                            if(found!=next.text.end()) { end=found-next.text.begin(); aligned=true; }
-                        }
-                        int status=prefix_width(next,end,field); if(status) return status;
-                        if(aligned) break;
-                    }
-                }
-                target=static_cast<int64_t>(stop.ur)-(stop.lskt==1?field/2:field);
-                if(target<=x) continue;
-                run.leader=stop.wchTabLeader; selected=true; break;
-            }
-            if(!selected) {
-                if(context.incremental_tab<=0) return LS_InvalidFormatterResult;
-                int64_t after=context.tabs.empty()?x:std::max<int64_t>(x,context.tabs.back().ur);
-                target=(after/context.incremental_tab+1)*context.incremental_tab;
-            }
+            int status=tab_target(line,i,x,INT_MAX,target,run.leader); if(status) return status;
             if(target>x+INT_MAX || target>INT_MAX) return LS_InvalidFormatterResult;
             run.width=static_cast<int>(target-x); run.widths.assign(1,run.width);
         }
@@ -173,6 +177,25 @@ int layout_tabs(Line& line,int start,int& total) {
         if(x<INT_MIN || x>INT_MAX) return LS_InvalidFormatterResult;
     }
     total=static_cast<int>(x); return LS_None;
+}
+
+int candidate_width(const Line& line,int count,int visible,int64_t& width) {
+    int64_t x=line.widths.upStartMainText;
+    int end_cp=line.first+count,visible_cp=line.first+visible;
+    for(size_t i=0;i<line.runs.size();++i) {
+        const auto& run=line.runs[i];
+        if(run.cp>=visible_cp) break;
+        if(run.tab && !run.hidden) {
+            int64_t target=0; uint16_t leader=0;
+            int status=tab_target(line,i,x,end_cp,target,leader); if(status) return status;
+            x=target;
+        } else {
+            size_t end=std::min<size_t>(run.text.size(),visible_cp-run.cp);
+            int status=prefix_width(run,end,x); if(status) return status;
+        }
+        if(x<INT_MIN || x>INT_MAX) return LS_InvalidFormatterResult;
+    }
+    width=x-line.widths.upStartMainText; return LS_None;
 }
 
 std::shared_ptr<Line> get_line(void* handle) {
@@ -201,7 +224,10 @@ int trailing_width(const Run& run,bool& all_spaces) {
 }
 
 // Prefix widths are meaningful only at complete glyph-cluster boundaries.
-int choose_wrap(const std::vector<Run>& runs,int allowance,bool emergency) {
+int choose_wrap(const Line& line,int allowance,bool emergency,int max_cut,bool& unavoidable) {
+    const auto& runs=line.runs;
+    unavoidable=false;
+    bool tabs=std::any_of(runs.begin(),runs.end(),[](const Run& run) { return run.tab && !run.hidden; });
     std::vector<UChar> text;
     std::vector<int64_t> width{0};
     std::vector<bool> boundary{true};
@@ -230,25 +256,29 @@ int choose_wrap(const std::vector<Run>& runs,int allowance,bool emergency) {
     if(U_FAILURE(error) || !iterator) return -1;
     int chosen=0,first_break=0;
     for(int point=ubrk_first(iterator);(point=ubrk_next(iterator))!=UBRK_DONE;) {
-        if(!boundary[point]) continue;
+        if(point>max_cut || !boundary[point]) continue;
         if(!first_break) first_break=point;
         int visible=point;
         while(visible>0 && text[visible-1]==L' ') --visible;
         while(visible>0 && !boundary[visible]) --visible;
-        if(width[visible]<=allowance) chosen=point;
+        int64_t actual=width[visible];
+        if(tabs && candidate_width(line,point,visible,actual)) { ubrk_close(iterator); return -1; }
+        if(actual<=allowance) chosen=point;
     }
     ubrk_close(iterator);
-    if(chosen || !emergency) return chosen?chosen:first_break;
+    if(chosen || !emergency) { unavoidable=!chosen; return chosen?chosen:first_break; }
     error=U_ZERO_ERROR;
     iterator=ubrk_open(UBRK_CHARACTER,"root",text.data(),static_cast<int>(text.size()),&error);
     if(U_FAILURE(error) || !iterator) return -1;
     first_break=0;
     for(int point=ubrk_first(iterator);(point=ubrk_next(iterator))!=UBRK_DONE;) {
-        if(!boundary[point]) continue;
+        if(point>max_cut || !boundary[point]) continue;
         if(!first_break) first_break=point;
-        if(width[point]<=allowance) chosen=point;
+        int64_t actual=width[point];
+        if(tabs && candidate_width(line,point,point,actual)) { ubrk_close(iterator); return -1; }
+        if(actual<=allowance) chosen=point;
     }
-    ubrk_close(iterator); return chosen?chosen:first_break;
+    ubrk_close(iterator); unavoidable=!chosen; return chosen?chosen:first_break;
 }
 
 struct Cell {
@@ -496,31 +526,46 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
         // Fetch through the separator before finding Unicode breaks: a client
         // run boundary can be in the middle of a word or grapheme.
         if((paragraph.grpf&0x40) && total>column-properties.durRightBreak && limit==0) {
-            int cut=choose_wrap(result->runs,column-properties.durRightBreak-properties.durLeft,
-                (paragraph.grpf&0x80000)==0 || (flags&4));
-            if(cut<=0) return LS_InvalidFormatterResult;
-            int text_end=cp;
-            for(const auto& item:result->runs) text_end+=static_cast<int>(item.text.size());
-            bool truncated=cp+cut<text_end;
-            int remaining=cut;
-            size_t keep=0;
-            for(auto& item:result->runs) {
-                int length=static_cast<int>(item.text.size());
-                if(remaining<=0) break;
-                if(remaining<length) {
-                    item.text.resize(remaining);
-                    status=measure_run(*context,item); if(status) return status;
-                    length=remaining;
+            int max_cut=INT_MAX;
+            for(;;) {
+                bool unavoidable=false;
+                int cut=choose_wrap(*result,column-properties.durRightBreak-properties.durLeft,
+                    (paragraph.grpf&0x80000)==0 || (flags&4),max_cut,unavoidable);
+                if(cut<=0) return LS_InvalidFormatterResult;
+                Line candidate=*result;
+                int text_end=cp;
+                for(const auto& item:candidate.runs) text_end+=static_cast<int>(item.text.size());
+                bool truncated=cp+cut<text_end;
+                int remaining=cut;
+                size_t keep=0;
+                for(auto& item:candidate.runs) {
+                    int length=static_cast<int>(item.text.size());
+                    if(remaining<=0) break;
+                    if(remaining<length) {
+                        item.text.resize(remaining);
+                        status=measure_run(*context,item); if(status) return status;
+                        length=remaining;
+                    }
+                    remaining-=length; ++keep;
                 }
-                remaining-=length; ++keep;
+                candidate.runs.resize(keep);
+                if(truncated) { candidate.info.endr=0; candidate.has_terminator=false; }
+                status=layout_tabs(candidate,properties.durLeft,total); if(status) return status;
+                int visible=total;
+                for(auto item=candidate.runs.rbegin();item!=candidate.runs.rend();++item) {
+                    bool all_spaces=false;
+                    visible-=trailing_width(*item,all_spaces);
+                    if(!all_spaces) break;
+                }
+                // Reshaping a retained prefix can change contextual advances.
+                // Recheck the real retained geometry and try an earlier legal
+                // candidate if it no longer fits. Only the first indivisible
+                // unit/word may overflow, matching the selected wrapping policy.
+                if(visible>column-properties.durRightBreak && !unavoidable) { max_cut=cut-1; continue; }
+                *result=std::move(candidate);
+                if(truncated) position=cp+cut;
+                break;
             }
-            result->runs.resize(keep);
-            if(truncated) { result->info.endr=0; result->has_terminator=false; position=cp+cut; }
-            status=layout_tabs(*result,properties.durLeft,total); if(status) return status;
-            // Aligned fields can move after a wrap cuts their text. Do not
-            // silently return a line whose recomputed stop exceeds its column.
-            if(total>column-properties.durRightBreak && std::any_of(result->runs.begin(),result->runs.end(),
-                [](const Run& run) { return run.tab; })) return LS_NotImplemented;
             total=properties.durLeft; trailing=total;
             result->info.dvpAscent=result->info.dvpDescent=result->info.dvpMultiLineHeight=0;
             result->info.EffectsFlags=0;

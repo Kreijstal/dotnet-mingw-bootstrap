@@ -13,6 +13,7 @@ static std::wstring sample=L"abc  \u2029";
 static uint32_t paragraph_flags=0;
 static int run_length=9600;
 static bool uniform_width=false;
+static bool contextual_widths=false;
 static bool decorate=false;
 static int decoration_error=0;
 struct DecorationCall { uint32_t kind; int x,y,width,thickness; };
@@ -50,7 +51,7 @@ static int WINAPI fetch(void*,int cp,int,void*,WCHAR* buffer,int capacity,int* u
 static int WINAPI metrics(void*,uint32_t,int,int,LsTxM* value) { *value={12,8,20,0}; return 0; }
 static int WINAPI widths(void*,uint32_t,int,WCHAR* text,int count,int,int,int* values,int* total,int* fitted) {
     *total=0; *fitted=count;
-    for(int i=0;i<count;++i) { values[i]=uniform_width?10:text[i]==L'a'?10:text[i]==L'b'?20:text[i]==L'c'?30:5; *total+=values[i]; }
+    for(int i=0;i<count;++i) { values[i]=contextual_widths&&count<6?15:uniform_width?10:text[i]==L'a'?10:text[i]==L'b'?20:text[i]==L'c'?30:5; *total+=values[i]; }
     return 0;
 }
 static int WINAPI draw(void*,uint32_t,LSPOINT* point,WCHAR* text,int* values,int count,int,uint32_t,LSPOINT*,LsHeights* height,int width,LSRECT*) {
@@ -162,6 +163,9 @@ int main(int argc,char** argv) {
         paragraph_flags=0x40;
         require(LoCreateLine(context,0,0,34,0,nullptr,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==3,"emergency wrap advances complete graphemes");
         require(LoDisposeLine(line,FALSE)==0,"emergency line disposal");
+        sample=L"abcdef\u2029";run_length=9600;contextual_widths=true;
+        require(LoCreateLine(context,0,0,34,0,nullptr,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==2&&measured.upLimLine==34,"changed retained-prefix advances retry an earlier fitting candidate");
+        require(LoDisposeLine(line,FALSE)==0,"remeasured prefix line disposal");contextual_widths=false;
         sample=L"a\u0301b\u2029"; run_length=1;
         require(LoCreateLine(context,0,0,5,0,nullptr,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==2,"combining grapheme spans client runs at tiny width");
         require(LoQueryLineCpPpoint(line,0,1,&sub,&queried_depth,&cell)==LS_NotImplemented&&queried_depth==0,"cross-run caret ownership remains explicit rather than splitting a grapheme");
@@ -198,7 +202,20 @@ int main(int argc,char** argv) {
         sample=L"a\tb.c\u2029";paragraph_flags=0x40;
         LsTbd right_stop{2,100,0,0};
         require(LoSetTabs(tab_context,40,1,&right_stop)==0,"aligned wrap tab setup");line=reinterpret_cast<void*>(1);
-        require(LoCreateLine(tab_context,0,0,80,0,nullptr,&info,&line,&depth,&measured)==LS_NotImplemented&&!line,"aligned field wrap cannot fabricate a fitting line after moving the stop");
+        require(LoCreateLine(tab_context,0,0,80,0,nullptr,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==1&&measured.upLimLine==14,"out-of-column aligned stop breaks before tab");
+        require(LoDisposeLine(line,FALSE)==0,"before-tab line disposal");
+        require(LoCreateLine(tab_context,1,0,80,0,nullptr,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==2&&measured.upLimLine==100,"indivisible first tab outside column advances with explicit overflow");
+        require(LoDisposeLine(line,FALSE)==0,"overflow tab line disposal");
+        uniform_width=true;sample=L"a\tabc def\u2029";
+        right_stop.ur=60;
+        require(LoSetTabs(tab_context,40,1,&right_stop)==0,"right aligned retained field setup");
+        require(LoCreateLine(tab_context,0,0,70,0,nullptr,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==6&&measured.upLimLine==60&&measured.upStartTrailing==50,"right aligned wrap chooses fitting retained field rather than full paragraph");
+        require(LoQueryLineCpPpoint(line,1,1,&sub,&queried_depth,&cell)==0&&cell.pointUvStartCell.x==14&&cell.dupCell==6,"wrapped tab retains recomputed gap geometry");
+        require(LoAcquireBreakRecord(line,&record)==0&&LoCloneBreakRecord(record,&clone)==0,"aligned wrap continuation owns cloned break record");
+        require(LoDisposeLine(line,FALSE)==0&&LoDisposeBreakRecord(record,FALSE)==0,"aligned wrap original line/record disposal");
+        require(LoCreateLine(tab_context,6,0,70,0,clone,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==10&&measured.upLimLine==34,"aligned wrap clone resumes complete remaining field");
+        require(LoDisposeLine(line,FALSE)==0&&LoDisposeBreakRecord(clone,FALSE)==0,"aligned wrap continuation disposal");
+        uniform_width=false;
         paragraph_flags=0;
         require(LoSetTabs(tab_context,0,0,nullptr)==0,"zero incremental tab setup");line=reinterpret_cast<void*>(1);
         require(LoCreateLine(tab_context,0,0,1000,0,nullptr,&info,&line,&depth,&measured)==LS_InvalidFormatterResult&&!line,"missing tab stops reject without fabricated geometry");

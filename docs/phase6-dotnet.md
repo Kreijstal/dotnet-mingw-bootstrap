@@ -7599,3 +7599,49 @@ Logs, patch/recipe/metadata and the artifact are archived under
 Imported native coverage remains 58/139. Aligned-field wrapping, bidi, full
 paragraph layout, justification/objects and natural-language behavior remain
 required; this improves the experimental package and leaves the full goal active.
+
+
+## 106. Retained-field tab wrapping and remeasured prefix validation
+
+The 2026-10-13 continuation replaces the aligned-wrap rejection with candidate
+measurement using only the field retained by each legal Unicode break. Full
+paragraph tab gaps cannot predict the position of a shortened aligned field.
+A shared tab-target helper now computes both retained and candidate geometry.
+Trailing spaces are excluded from visible allowance while remaining in the
+candidate's field alignment. Existing grapheme/shaping-cluster boundaries still
+filter candidates. After shortening, actual remeasurement/reshaping and tab
+layout validate the retained visible width. If contextual advances grow beyond
+the column, an earlier legal candidate is tried before registering a line.
+The selected wrapping policy still permits unavoidable first-unit/word overflow;
+an out-of-column leading tab advances on its own rather than failing or stalling.
+
+The original installed release 3 library reproduces NotImplemented on the
+expanded public fixture. Native checks now prove a right-stop field retained on
+the first line with exact end/trailing widths/tab gap, independent cloned native
+continuation records, a break before an out-of-column tab and progress across
+that indivisible tab. A callback fixture changes retained-prefix advances: the
+engine rejects the now-too-wide three-character candidate and returns the
+fitting two-character prefix. Existing wrapping/geometry/decoration tests pass.
+
+Validation with the standard win11 WPF environment:
+
+```sh
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-lineservices-line-native check-text-tabs check-text-line
+WPF_TAB_NATIVE=/clang64/lib/dotnet/shared/Microsoft.WindowsDesktop.App/8.0.0-bootstrap.wpf.8.0.0 bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-text-tabs
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-text-tabs
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-lineservices-line-native check-text-tabs check-text-line check-text-decorations
+```
+
+The old installed-native command fails with expected NotImplemented; final
+source commands pass. Public aligned wrapping covers all four WPF alignments,
+whole/split fields and 100/160-pixel stops in a 125-pixel column. In-column cases
+use three/four lines without overflow; out-of-column cases cover the source in
+five lines with exactly one indivisible leading-tab overflow. Checks cover
+retained right-stop identity, source-backed glyph enumeration, grapheme-safe
+progress, continuation clone/disposal, drawing/raster and moving GC.
+
+Evidence is archived under tmp/wpf8-support/validation/aligned-wrap-20261013.
+Imported native coverage remains 58/139. Candidate evaluation scans fields and
+needs a performance improvement for long tabbed paragraphs; full bidi/paragraph
+layout and exact legacy leader spacing remain open. Packaging this change is
+still required, and the full WPF goal stays active.
