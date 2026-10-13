@@ -7548,3 +7548,54 @@ Full bidi tabs and exact private legacy leader spacing remain open. Evidence is
 archived under tmp/wpf8-support/validation/text-tabs-20261013. Imported native
 coverage remains 58/139 because these are behaviors of existing exports. The
 updated package is still required; the full WPF goal remains active.
+
+
+## 105. Installed release 3: tab/font resources and ordinary SDK consumers
+
+The 2026-10-13 continuation packages section 104 as WindowsDesktop 8.0.0-3.
+Its declared/checksummed 0003-tabs-and-composite-fonts.patch carries the native
+engine, planner, fixtures and SDK check. A clean local pinned archive plus all
+three declared patches matches the committed feature/test sources byte for byte.
+The private package tree rebuilds PresentationCore and PresentationNative, then
+passes native/public tab, text, decoration and fresh framework-layout checks.
+Unchanged managed/graphics/printing inputs remain its own earlier source builds.
+
+The new check-text-tabs-sdk.sh compiles the fixture as a normal net8.0-windows
+UseWPF application, with an empty package feed and no hand-added implementation
+references. It loads the installed/overlaid shared framework, verifies all four
+original composite resources, and passes tab metrics/caret/selection/enumeration,
+leaders/pixels/wrapping/GC. The same app publishes self-contained; its
+PresentationCore bytes equal the source SDK framework implementation, and it
+runs with DOTNET_ROOT/DOTNET_ROOT_X64 and toolchain PATH removed. step_check_sdk
+now includes this consumer alongside the original WPF and WinForms checks.
+
+Validation from the CLANG64 private package workspace:
+
+```sh
+makepkg --verifysource --force
+source PKGBUILD                 # with srcdir set to this workspace's src/
+_wpf build-presentation-core native-win32 check-lineservices-line-native check-text-tabs check-text-line check-text-decorations layout
+_wpf check-sdk
+makepkg --repackage --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-3-any.pkg.tar.zst
+python3 check-staged.py /clang64/lib/dotnet
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-text-tabs-sdk.sh /clang64/lib/dotnet ~/wpfboot/installed-tabs-sdk-check
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-sdk.sh /clang64/lib/dotnet ~/wpfboot/installed-fonts-sdk-check
+```
+
+Final checks pass with zero consumer warnings/errors, including the private
+normal SDK WPF/tab/WinForms build/publish checks and installed SDK consumers.
+After incorporating the SDK check into declared source inputs, final source
+verification/repackage/reinstallation and the 42-managed/native payload hash
+check pass. Installed shared-framework and app-local tab applications are rerun
+successfully after that final reinstall. The known srcdir warning remains only
+source-bootstrap.json provenance. The package is about 162 MiB installed.
+
+Artifact: mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-3-any.pkg.tar.zst.
+SHA-256: d79cd5a4783638a32018725eaa236680d2786c4ca8c443943ec8b525b4a99415.
+Recipe commit: msys2-ur 9e04be1. Source feature/check commits: a6b3a1d/3f80c49.
+Logs, patch/recipe/metadata and the artifact are archived under
+ tmp/wpf8-support/validation/text-tabs-package-20261013.
+Imported native coverage remains 58/139. Aligned-field wrapping, bidi, full
+paragraph layout, justification/objects and natural-language behavior remain
+required; this improves the experimental package and leaves the full goal active.
