@@ -8599,3 +8599,49 @@ Package integration follows. Keep/optimal/forced-line policies, balancing/span
 areas, tables/floaters/figures, advanced/incremental/interruptible algorithms,
 full bidi/native language and broader runtime behavior remain required for the
 full WPF goal.
+
+## 127. Installed release 14: explicit paragraph page/column boundaries
+
+The 2026-10-13 continuation packages section 126 as WindowsDesktop 8.0.0-14.
+Declared/checksummed 0014-explicit-paragraph-breaks.patch applies after the
+thirteen prior patches. Clean pinned sources plus all fourteen patches match
+the five committed feature files byte for byte. The private package tree
+rebuilds native output, inventory and layout, passes resource/break/native
+checks, and runs all normal SDK gates including flat/nested paragraph boundary
+placement before creating and installing the archive. Unchanged managed/
+graphics/printing outputs remain its own source builds.
+
+Validation in the CLANG64 package workspace:
+
+```sh
+makepkg --verifysource --force
+source PKGBUILD                 # with srcdir set to this workspace's src/
+_wpf native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+makepkg --repackage --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-14-any.pkg.tar.zst
+/usr/bin/python3 check-staged.py /clang64/lib/dotnet
+bash "$(_driver)/wpf-tests/check-hard-breaks-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-hard-break-sdk-check
+bash "$(_driver)/wpf-tests/check-columns-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-hard-break-columns-sdk-check
+```
+
+All commands pass. Staged/installed 42-managed/eight-native/SDK/legacy payload
+checks pass. Installed original WPF flat/nested Section cases render first-block
+suppression and explicit column/page destinations in Ideal/Display, map all 56
+characters to the correct page, and pass compacting GC/dispatcher cleanup through
+shared-framework and self-contained publishes with SDK roots/toolchain PATH
+removed. Installed multi-column pagination still covers all 1278 characters
+exactly once across 12 Ideal/9 Display pages and passes glyph/gap/rule checks.
+Private normal WPF/tab/inline-object/justification/width/context/finite/bottomless/
+pagination/columns/hard-break/WinForms regressions pass with zero consumer
+warnings/errors. The source-bootstrap.json srcdir provenance warning remains.
+
+Artifact: mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-14-any.pkg.tar.zst.
+SHA-256: 1540deb4007c9a7c337488f5337cb8be0adf24f764cbef6f1b790d9296f92a47.
+Recipe commit: msys2-ur 99fe34d; feature commit: 6593d4a.
+Artifact, recipe, metadata, patch and logs are archived under
+ tmp/wpf8-support/validation/hard-breaks-package-20261013.
+Imported native coverage remains 89/139 with 50 absent: this release implements
+additional behavior of existing exports. Keep/optimal/forced-line policies,
+balancing/span areas, tables/floaters/figures, advanced/incremental/interruptible
+algorithms, full bidi/native language and broader runtime behavior remain
+incomplete. The full WPF goal stays active.
