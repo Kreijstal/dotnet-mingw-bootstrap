@@ -38,6 +38,14 @@ int main() {
         *pin = 17;
         if (values[0] != 17 || managed[0] != 110) return 5;
         pin = nullptr;
+        array<unsigned int>^ steps=gcnew array<unsigned int>(4);
+        pin_ptr<unsigned int> walk=&steps[1];
+        walk+=2; *walk=42;
+        walk-=2; ++walk; *walk=31;
+        pin_ptr<unsigned int> previous=walk++;
+        GC::Collect(); *previous+=2;
+        --walk; walk--; GC::Collect(); *walk=17;
+        if(steps[1]!=17 || steps[2]!=33 || steps[3]!=42) return 8;
     } finally { delete[] values; }
     Console::WriteLine("native pointer pin initialization, const parameters, managed/native reassignment and GC OK");
     return 0;

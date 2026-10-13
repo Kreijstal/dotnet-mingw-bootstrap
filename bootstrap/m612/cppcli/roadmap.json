@@ -106,7 +106,9 @@
         "Scalar/enum Object key conversions for managed indexers, resolved property operands and managed-value Object unboxing",
         "Canonical Windows System.Char metadata signatures and explicit member default-index spelling",
         "Ref-class construction temporaries passed to exact source tracking-reference parameters with tracked CLR handle locations and moving-GC checks",
-        "Source-metadata String equality operators with managed literal/null adaptation and placeholder resolution for String/enum property read operations"
+        "Source-metadata String equality operators with managed literal/null adaptation and placeholder resolution for String/enum property read operations",
+        "Managed interface handle Object conversions with exact identity and boxed-implementation preservation",
+        "Pinned pointer prefix/postfix/compound offset update facades and CLR pin-local cleanup, exercised by original XPS stream buffer updates"
       ],
       "remaining": [
         "implicit boxing into interfaces and complete boxed-handle/primitive-member conversions",
@@ -119,7 +121,7 @@
         "for each with unbraced bodies, tracking-reference variables and value/native enumerators",
         "general CLI source implicit conversion/cast selection and complete conversion-operator discovery"
       ],
-      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values test-tracking test-pinning test-boxed-values test-static-fields test-static-properties test-nativeints test-layout test-switch test-generics test-indexers test-named-overrides test-each test-com test-delegates test-type-tokens test-constructors test-paramarrays test-primitive-statics test-guid-object-boxing test-managed-templates test-nested-indexers test-native-storage test-destructors test-value-pointers test-events test-multicast test-semantic-literals test-conversions test-combined-access test-argument-files test-implicit-boxing test-source-owned-types test-scalar-boxes test-printing-accessors test-nested-imports test-primitive-array-apis test-interior-indexing test-interior-records; wpf.sh check-matrix-operators; cppcli.sh test-tracking-temporaries; cppcli.sh test-string-enum-properties test-enums"
+      "validation": "cppcli.sh test-properties test-virtuals test-arrays test-exceptions test-enums test-values test-tracking test-pinning test-boxed-values test-static-fields test-static-properties test-nativeints test-layout test-switch test-generics test-indexers test-named-overrides test-each test-com test-delegates test-type-tokens test-constructors test-paramarrays test-primitive-statics test-guid-object-boxing test-managed-templates test-nested-indexers test-native-storage test-destructors test-value-pointers test-events test-multicast test-semantic-literals test-conversions test-combined-access test-argument-files test-implicit-boxing test-source-owned-types test-scalar-boxes test-printing-accessors test-nested-imports test-primitive-array-apis test-interior-indexing test-interior-records; wpf.sh check-matrix-operators; cppcli.sh test-tracking-temporaries; cppcli.sh test-string-enum-properties test-enums; cppcli.sh test-interface-object"
     },
     {
       "stage": 4,

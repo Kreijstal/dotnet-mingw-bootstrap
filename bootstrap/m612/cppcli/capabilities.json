@@ -262,7 +262,9 @@
     "Directly constructed source ref-class temporaries bind exact source percent tracking-reference call parameters through GC-tracked handle slots; direct/delegate/multiple argument mutation, exception and retained identity checks",
     "Typed String-handle equality/inequality, nulls and literal comparisons bind source-metadata String CLR operator slots, including non-interned equal strings and property getter results",
     "Property-produced scoped enum reads resolve through Sema before ordinary bitwise lowering; unsigned payload and getter-once runtime checks",
-    "Explicit native archive symbol selection imports requested x64 code bindings and rejects missing or conflicting symbols; real memcpy with other system libraries validated"
+    "Explicit native archive symbol selection imports requested x64 code bindings and rejects missing or conflicting symbols; real memcpy with other system libraries validated",
+    "Source/imported managed interface handles convert to Object in unambiguous calls, returns, local initialization and existing Object stores without reboxing; runtime identity/null/typed-overload/dispatch/moving-GC checks",
+    "Pinned pointer prefix/postfix increment/decrement and scaled compound updates use tracked pointer lowering and existing block cleanup; managed array stepping/mutation across GC verified"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -341,6 +343,7 @@
     "Native-integer pointer conversions require supported raw target storage; general opaque/nontrivial/GC-bearing target forms remain incomplete. Source inherited accessor discovery currently uses recognized base names; general aliases, namespaces and generic base graphs remain unfinished",
     "Managed pointer indexing and local/parameter updates are low-level operations with caller-owned range validity; primitives and GC-free native POD records are supported. Managed record elements, general pointer expression arithmetic and broader interior return provenance remain incomplete; tracked addresses cannot bind raw native pointers without pinning",
     "Tracking temporary call adaptation requires exact source ref-class percent parameters and consistent arity-compatible overload slots; imported types, native references, ref-class copy construction and deterministic disposal cleanup remain unsupported",
-    "String equality supports actual String handles and literal/null operands; Object/native-buffer operand conversions, String concatenation and user-defined reference operator overload discovery remain incomplete"
+    "String equality supports actual String handles and literal/null operands; Object/native-buffer operand conversions, String concatenation and user-defined reference operator overload discovery remain incomplete",
+    "Interface-to-Object call adaptation requires all arity-compatible candidate positions to be Object; constructor/index-key/property-result/conditional conversions and broader overload selection remain incomplete"
   ]
 }

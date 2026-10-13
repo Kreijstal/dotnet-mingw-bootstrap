@@ -3507,6 +3507,12 @@ class Emitter {
             if(c->getNumArgs()!=1 || !boxable(c->getArg(0)->getType())) fail(c,"Object boxing requires a primitive, managed enum or value operand");
             expr(c->getArg(0)); op("box "+type(c->getArg(0)->getType()),1,1); return;
         }
+        if(annotated(f,"cli.interface.object")) {
+            auto* record=c->getNumArgs()==1 ? handle_target(c->getArg(0)->getType()) : nullptr;
+            if(!record || !record_annotated(record,"cli.interface") || !native_value_pointer(c->getArg(0)).isNull())
+                fail(c,"interface Object conversion requires a managed interface handle");
+            expr(c->getArg(0)); return;
+        }
         if (f->getNameAsString() == "__cli_empty_params") {
             auto* target = handle_target(c->getType());
             auto element = target ? array_element(target) : QualType();

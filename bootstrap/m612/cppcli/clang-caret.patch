@@ -168,7 +168,7 @@
 +#include "clang/Sema/Lookup.h"
 @@ -34,0 +37 @@
 +#include "clang/Sema/ScopeInfo.h"
-@@ -44,0 +48,287 @@
+@@ -44,0 +48,308 @@
 +
 +// CLI enum operations retain their scoped type identity. Sema still checks
 +// explicit conversions and native operations; ordinary C++ enums are untouched.
@@ -254,6 +254,7 @@
 +    // normal Sema, where broader boxing overload resolution remains pending.
 +    if(Record && Record->getQualifiedNameAsString()!="System::Object" &&
 +        Record->getQualifiedNameAsString()!="System::Enum" && Record->getQualifiedNameAsString()!="System::ValueType" &&
++        (Argument->getType()->isArithmeticType() || Argument->getType()->isEnumeralType()) &&
 +        !Argument->isNullPointerConstant(Actions.Context,Expr::NPC_ValueDependentIsNotNull)) {
 +      bool Reference=false,Interface=false;
 +      auto *Owner=Record->getDefinition(); if(!Owner) Owner=Record;
@@ -325,6 +326,24 @@
 +static bool cppcliNamedHandle(QualType Type, StringRef Name) {
 +  auto *Record=Type->isPointerType() ? Type->getPointeeType()->getAsCXXRecordDecl() : nullptr;
 +  return Record && Record->getQualifiedNameAsString()==Name;
++}
++
++static bool cppcliInterfaceHandle(QualType Type) {
++  auto *Record=Type->isPointerType() ? Type->getPointeeType()->getAsCXXRecordDecl() : nullptr;
++  if(!Record) return false;
++  if(Record->getDefinition()) Record=Record->getDefinition();
++  for(auto *Attr:Record->specific_attrs<AnnotateAttr>()) if(Attr->getAnnotation()=="cli.interface") return true;
++  return false;
++}
++
++static ExprResult cppcliInterfaceObject(Sema &Actions, Scope *CurrentScope,
++    Preprocessor &PP, Expr *Argument, SourceLocation Loc) {
++  CXXScopeSpec Global; Global.MakeGlobal(Actions.Context,Loc);
++  UnqualifiedId Name; Name.setIdentifier(&PP.getIdentifierTable().get("__cli_interface_object"),Loc);
++  auto Helper=Actions.ActOnIdExpression(CurrentScope,Global,SourceLocation(),Name,true,false);
++  if(Helper.isInvalid()) return ExprError();
++  return Actions.ActOnCallExpr(CurrentScope,Helper.get(),Loc,
++      MutableArrayRef<Expr *>(&Argument,1),Argument->getEndLoc());
 +}
 +
 +// Resolve the scalar width/kind, then let the selected metadata facade carry
@@ -403,6 +422,8 @@
 +ExprResult cppcliConvertReturn(Sema &Actions, Scope *CurrentScope,
 +    Preprocessor &PP, Expr *Argument, QualType Target, SourceLocation Loc) {
 +  bool Object=cppcliNamedHandle(Target,"System::Object");
++  if(Object && cppcliInterfaceHandle(Argument->getType()))
++    return cppcliInterfaceObject(Actions,CurrentScope,PP,Argument,Loc);
 +  if(Object && (Argument->getType()->isArithmeticType() || Argument->getType()->isEnumeralType()))
 +    return cppcliBoxObject(Actions,CurrentScope,PP,Argument,Loc);
 +  if((Object || cppcliNamedHandle(Target,"System::String")) && isa<StringLiteral>(Argument->IgnoreParenImpCasts())) {
@@ -719,7 +740,7 @@
 +                tok::arrow, Scope, SourceLocation(), Member, nullptr);
 +          }
 +        }
-@@ -1892,0 +2337,43 @@
+@@ -1892,0 +2337,50 @@
 +        for(unsigned Index=0;Index<ArgExprs.size();++Index) {
 +          if(!cppcliTrackingTemporaryArgument(Actions,PP,Fn,ArgExprs[Index],Index,ArgExprs.size())) continue;
 +          CXXScopeSpec Global; Global.MakeGlobal(Actions.Context,Loc);
@@ -746,6 +767,13 @@
 +              llvm::MutableArrayRef<Expr *>(&Argument, 1), RParLoc);
 +          if (Literal.isInvalid()) return ExprError();
 +          ArgExprs[Index] = Literal.get();
++        }
++        for(unsigned Index=0;Index<ArgExprs.size();++Index) {
++          if(!cppcliInterfaceHandle(ArgExprs[Index]->getType()) ||
++              !cppcliObjectArgument(Actions,Fn,ArgExprs[Index],Index,ArgExprs.size())) continue;
++          auto Converted=cppcliInterfaceObject(Actions,getCurScope(),PP,ArgExprs[Index],Loc);
++          if(Converted.isInvalid()) return ExprError();
++          ArgExprs[Index]=Converted.get();
 +        }
 +        for (unsigned Index=0; Index<ArgExprs.size(); ++Index) {
 +          auto Type = ArgExprs[Index]->getType();

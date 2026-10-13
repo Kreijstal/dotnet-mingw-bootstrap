@@ -5875,3 +5875,74 @@ Logs, manifests, patched source and runtime artifacts are archived locally under
 gate; a per-file pass count is not claimed. Native text coverage stays 58/139.
 Full layout, printing runtime, WindowsDesktop SDK/reference/runtime packs and
 installed WPF packaging remain required. The full goal remains active.
+
+
+## 68. Interface Object identity, XPS metadata and complete printing Sema gate
+
+The 2026-10-13 continuation converts source/imported managed interface handles
+to Object through a validated identity intrinsic. It emits the same CLR object
+reference, including an interface reference to an already boxed value; it does
+not rebox or treat that reference as a native adjusted base pointer. Resolved
+Object call slots adapt only when all arity-compatible candidates require
+Object. Return/local and existing Object field/property store adaptation reuse
+the same conversion. Typed interface overloads retain ordinary Sema. The
+existing unrelated-reference overload filter is now limited to scalar/enum
+arguments, preserving typed alternatives for reference operands. Constructor,
+indexed-key, property-result/conditional and broader conversion selection remain
+unfinished.
+
+The fixture checks source interface dispatch, exact object identity, copied
+reference storage in locals/fields/properties, operand counts, nulls and typed
+interface-vs-Object overload selection. An imported IDisposable method path
+accepts an actual MemoryStream and an already boxed C# struct implementation,
+verifying identity without reboxing. Eligible CLR bodies are prepared and
+retained references survive forced compacting GC. Native record pointers cannot
+implicitly initialize Object. Existing primitive/enum/value boxing checks pass.
+
+Printing imports actual FrameworkContentElement/ContentElement and
+FrameworkElement/UIElement bases, so FixedDocument/FixedPage/FixedDocumentSequence
+use their real CLR inheritance for Object arguments. It imports the actual XPS
+fixed-document/page reader interfaces, ReadOnlyCollection and completed/progress
+event delegate types, plus Application and ThreadStart. No replacement metadata
+or runtime implementation is introduced.
+
+Private printing source patch 0002 corrects four TranslateProgressChangeLevel
+switch labels to the actual XpsWritingProgressChangeLevel enum. The upstream
+input and output enums share values 0..3; returned values and method behavior
+are unchanged. The gate applies both reviewed printing source patches to its
+fresh private CPP copy and records the preparation. This preserves scoped enum
+assignment rules rather than adding a general implicit cross-enum conversion.
+Pinned pointer +=/-= and prefix/postfix ++/-- declarations now expose the
+existing tracked update lowering. This fixes the original XPS stream write-loop
+buffer increments. The native-pin fixture validates four-byte strides,
+prefix/postfix/compound updates, old-pointer identity and managed array mutations
+across GC, retaining existing lexical pin cleanup.
+
+Validation on win11 with the usual compiler and WPF build environment:
+
+```sh
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-interface-object test-implicit-boxing
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-native-pins
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh build-directwrite check-directwrite-assembly printing-gate
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh printing-gate
+```
+
+Both focused compiler commands pass, including runtime and rejection checks.
+The WPF command passes the unchanged complete DirectWrite runtime scope
+(85 types, 283 bodies, 81 font families), then advances through successive XPS
+metadata errors. After the final imports and pin updates, the printing-only gate
+passes Clang parsing/Sema for the complete combined source and enters the
+AST-to-IL frontend. HandleTranslationUnit skips that frontend whenever Clang has
+an earlier error; the observed frontend diagnostic therefore confirms this
+stage boundary. It now fails in declaration validation with `tracking references
+in constructors are not enabled yet`. This is not a complete IL/assembly build,
+a per-file compile count, native link proof or printing runtime check.
+
+Bash/Python/JSON syntax and whitespace checks pass. Logs, manifests, patched
+source and runtime artifacts are archived locally under
+`tmp/wpf8-support/validation/printing-interface-xps-20261013`. All 49 original
+project inputs/66 tree C++ files remain in the diagnostic scope. Full printing
+lowering/link/runtime and the previously open full text/layout and WindowsDesktop
+SDK/reference/runtime packaging remain required. Native text coverage remains
+58/139; no complete System.Printing DLL or WPF package is produced, and the full
+goal stays active.

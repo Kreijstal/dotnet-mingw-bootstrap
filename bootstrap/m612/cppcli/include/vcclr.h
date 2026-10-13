@@ -26,6 +26,12 @@ public:
     pin_ptr(T*);
     pin_ptr(interior_ptr<T>);
     pin_ptr(decltype(nullptr));
+    pin_ptr& operator+=(long long);
+    pin_ptr& operator-=(long long);
+    pin_ptr& operator++();
+    pin_ptr operator++(int);
+    pin_ptr& operator--();
+    pin_ptr operator--(int);
     operator T*() const;
     // Explicit pointer reinterpretation is a CLI intrinsic. Keeping it
     // explicit prevents unrelated pointer types from matching native overloads.

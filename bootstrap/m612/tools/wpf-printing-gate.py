@@ -27,10 +27,11 @@ def main():
     work.mkdir(parents=True, exist_ok=True)
     cpp = work / "CPP"
     shutil.copytree(original / "CPP", cpp, dirs_exist_ok=True)
-    font_patch = Path(__file__).resolve().parents[1] / "wpf-native/printing/0001-pin-native-font-record-calls.patch"
+    source_patches = Path(__file__).resolve().parents[1] / "wpf-native/printing"
     # Work on the private source copy. Strip the original project prefix so
     # the reviewed patch applies without changing the source checkout.
-    subprocess.run(["patch", "--batch", "--forward", "-p6", "-d", str(cpp), "-i", str(font_patch.resolve())], check=True)
+    for source_patch in sorted(source_patches.glob("000*.patch")):
+        subprocess.run(["patch", "--batch", "--forward", "-p6", "-d", str(cpp), "-i", str(source_patch.resolve())], check=True)
     # This temporary MSVC code-analysis include has no runtime declarations.
     # MinGW's Windows headers already provide the SAL annotations used here.
     header = cpp / "Win32Inc.hpp"
@@ -173,7 +174,8 @@ def main():
               ["XpsSerializationPrintTicketRequiredEventArgs", "XpsSerializationCompletedEventArgs",
                "XpsSerializationProgressChangedEventArgs", "XpsWritingProgressChangeLevel",
                "PackageSerializationManager", "XpsSerializationPrintTicketRequiredEventHandler",
-               "MXDWSerializationManager"]]
+               "MXDWSerializationManager", "XpsSerializationCompletedEventHandler",
+               "XpsSerializationProgressChangedEventHandler"]]
     types += ["System.Windows.Xps.Packaging.IXpsFixedDocumentSequenceReader",
               "System.Windows.Media.Geometry", "System.Windows.Media.Matrix", "System.Windows.Media.Brush",
               "System.Windows.Media.Pen", "System.Windows.Media.GlyphRun", "System.Windows.Media.Imaging.BitmapSource"]
@@ -240,7 +242,11 @@ def main():
               "System.Text.Encoding", "System.Random", "System.Windows.FontStyle", "System.Windows.FontStyles",
               "System.Windows.FontWeight", "System.Windows.FontWeights", "System.Windows.FontStretch",
               "System.Windows.FontStretches", "System.Threading.ManualResetEvent",
-              "System.Runtime.InteropServices.COMException"]
+              "System.Runtime.InteropServices.COMException", "System.Windows.FrameworkContentElement",
+              "System.Windows.ContentElement", "System.Windows.FrameworkElement", "System.Windows.UIElement",
+              "System.Windows.Xps.Packaging.IXpsFixedDocumentReader", "System.Windows.Xps.Packaging.IXpsFixedPageReader",
+              "System.Collections.ObjectModel.ReadOnlyCollection`1", "System.Windows.Application",
+              "System.Threading.ThreadStart"]
     for name in types:
         command += ["--type", name]
     command += ["--source-type", "System.Printing.PrintQueue"]
@@ -263,7 +269,8 @@ def main():
                             "map legacy copied-SDK annotations to trusted MinGW SAL2 spellings",
                             "remove MinGW DocumentEvent macro collision with original managed property",
                             "restore Windows min/max macros omitted by MinGW in C++ mode",
-                            "printing 0001: explicitly pin font records for native memcpy/CreateFontIndirectEx calls"],
+                            "printing 0001: explicitly pin font records for native memcpy/CreateFontIndirectEx calls",
+                            "printing 0002: use the actual XPS enum for progress switch case labels"],
         "legacySalAliases": legacy_sal,
         "missingSdkFlags": flags,
         "missingPrintPropertyTypes": missing_properties,

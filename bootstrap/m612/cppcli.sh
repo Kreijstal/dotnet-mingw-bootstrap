@@ -604,6 +604,19 @@ int main() { CombinedAccess^ c=gcnew CombinedAccess(); return c->OrMethod(); }' 
   reject_case combined-foreign-and '#using "combined-access.dll"
 public ref class Foreign : CombinedAccess { public: int Read() { return AndMethod(); } }; int main() { return 0; }' 'undeclared identifier' --type CombinedAccess
 }
+step_test-interface-object() {
+  compile "$(cygpath -m "$src/tests/interface-object.cpp")" --target library --type System.IDisposable --type System.GC \
+    -o "$(cygpath -m "$testdir/interface-object.dll")"
+  mkdir -p "$testdir/interface-object-consumer"
+  cp "$src/tests/InterfaceObjectConsumer.cs" "$testdir/interface-object-consumer/Program.cs"
+  cat > "$testdir/interface-object-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="interface-object"><HintPath>../interface-object.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/interface-object-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/interface-object-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case interface-object-native 'struct Native {}; public ref class Calls { public: static void Read(System::Object^ value) {} }; int main() { Native value; Calls::Read(&value); return 0; }' 'cannot initialize'
+}
 step_test-record-pins() {
   /clang64/bin/clang++.exe -std=c++17 -shared -O2 "$src/tests/record-pins-native.cpp" -o "$testdir/cppcli-record-pins.dll"
   compile "$(cygpath -m "$src/tests/record-pins.cpp")" --target library --native-library cppcli-record-pins.dll \
