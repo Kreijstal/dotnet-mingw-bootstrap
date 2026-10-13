@@ -7457,3 +7457,45 @@ Evidence is archived under tmp/wpf8-support/validation/text-decorations-20261013
 This changes behavior of existing exports; imported coverage remains 58/139.
 The package update is still required to deliver the new native implementation.
 The full WPF goal remains active.
+
+
+## 103. Installed WindowsDesktop release 2 with text decorations
+
+The 2026-10-13 continuation packages section 102 as WindowsDesktop 8.0.0-2.
+The recipe declares a checksum-verified 0002-text-decorations.patch against its
+pinned bootstrap archive and adds native/public decoration checks to check().
+The patch is applied to the package's existing private source tree, followed by
+a focused native rebuild, native/public text checks and fresh framework layout.
+Previously compiled unchanged managed/graphics/printing inputs are reused.
+The initial manual recipe-helper invocation lacked makepkg's srcdir variable;
+setting it to the private src directory corrects that invocation before any
+rebuild. No private build is restarted because of an observation timeout.
+
+Validation from the CLANG64 package workspace:
+
+```sh
+makepkg --verifysource --force
+source PKGBUILD                 # with srcdir set to this workspace's src/
+_wpf native-win32 check-lineservices-line-native check-text-decorations check-text-line layout
+makepkg --repackage --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-2-any.pkg.tar.zst
+python3 check-staged.py /clang64/lib/dotnet
+WPF_DECORATION_NATIVE=/clang64/lib/dotnet/shared/Microsoft.WindowsDesktop.App/8.0.0-bootstrap.wpf.8.0.0 bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-text-decorations
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-sdk.sh /clang64/lib/dotnet ~/wpfboot/installed-decorations-sdk-check
+```
+
+All final commands pass. Installed native output now passes the same four
+public decoration raster cases that failed against release 1. The installed
+payload verifier checks all 42 managed/reference pairs and native hashes.
+Ordinary offline WPF SDK compilation, real BAML fields/window/raster output and
+self-contained publish/run with SDK roots/toolchain PATH removed pass with zero
+consumer warnings/errors. The srcdir reference warning remains the existing
+provenance path in source-bootstrap.json; no runtime/import dependency uses it.
+
+Artifact: mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-2-any.pkg.tar.zst.
+SHA-256: 4abc137973c35af10dc5d38d2d605faa432bcc3ca582aa4447f6029202f1fc2e.
+Logs, declared recipe/patch/source metadata and the local artifact are archived
+under tmp/wpf8-support/validation/text-decorations-package-20261013.
+Imported PresentationNative coverage stays 58/139. Full bidi, paragraph layout
+and remaining text/natural-language behavior remain required; the goal stays
+active.
