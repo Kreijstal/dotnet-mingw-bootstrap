@@ -5171,3 +5171,77 @@ package is produced. All 49 original project inputs/66 tree C++ files remain in
 the diagnostic gate; native coverage remains 58/139. Complete native layout,
 printing runtime and WindowsDesktop packaging remain open; installed compiler
 packages are unchanged.
+
+## 57. Clang-resolved primitive and enum box handles for printing
+
+The 2026-10-13 continuation implements typed scalar/enum handles such as
+`Int32^` and `PrintQueueAttributes^`. The private parser asks Clang for the
+declaration's resolved base type and instantiates a reference facade only for
+primitive or annotated managed-enum types. Scalar aliases, qualified aliases,
+enum aliases and typedefs of boxed handles retain their identities. Comma
+declarators restart from the original base type. Fundamental sign/width
+spellings before a caret use the existing selected System primitive aliases;
+identifier expressions and native stars stay in Clang's ordinary grammar.
+Native XOR with a variable named Int32 and mixed scalar/handle/native-pointer
+declarations are covered. There is no lexical list of enum or alias names.
+
+The facade contributes no runtime class. Its signatures use genuine
+System.ValueType references with the boxed element and IsBoxed optional
+modifiers, matching the existing value-class handle representation. Direct
+metadata imports reconstruct primitive/enum facades from those modifiers.
+Implicit scalar boxing and named gcnew allocation emit CLR box operations;
+copying, Object conversion and equality preserve reference identity. Checked
+Object/static/C-style/safe casts use castclass, dynamic casts use isinst, and
+safe scalar unboxing uses unbox.any. Null is retained until dereference, which
+raises NullReferenceException; wrong box types raise InvalidCastException.
+Boxed zero remains a true handle condition. Object virtual methods dispatch on
+the real box. The C++ facade has one pointer-sized layout member so source
+sizeof/alignof agrees with native handle size; native storage/pointers to these
+GC references are rejected.
+
+Dereference uses a tracked CLR address from unbox, then ldobj/stobj. Tracking
+aliases survive collection and mutation updates the shared box. Assignment,
+compound updates and prefix/postfix operations capture the receiver once;
+compound arithmetic loads the boxed payload rather than treating its address
+as a number. All twelve primitive identities/payloads, unsigned enum high bits,
+GC rooting, field/property/constructor storage, handle equality and direct
+external boxed APIs execute in source-built CoreCLR. The C# consumer prepares
+every eligible managed method in the fixture and verifies its optional
+modifiers and absence of emitted facade types. Native-pointer, mismatched-box,
+native-enum-caret and boxed-native-storage rejection checks pass. Existing
+BoxPoint/DateTime boxes and implicit Object boxing regressions also pass.
+
+Commands on win11 use CPPCLI_SDK=/clang64/lib/dotnet,
+CPPCLI_ILASM=/clang64/bin/ilasm-dotnet.exe, M612=/home/topkek/dotnetboot/m612,
+MSYSTEM=CLANG64, WPF_BUILD=/home/topkek/wpfboot/build and
+WPF_CPPCLI_BUILD=/home/topkek/dotnetboot/m612/build/cppcli:
+
+```bash
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-scalar-boxes
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-boxed-values test-implicit-boxing
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh build-directwrite check-directwrite-assembly printing-gate
+```
+
+The focused compiler/CLR checks pass with zero C# warnings/errors. The final
+WPF command passes complete DirectWrite generation/assembly, loads 85 types,
+prepares 283 managed bodies and finds 81 actual font families, then **fails**
+in printing Sema. The original typed enum-handle and Int32-handle initialization,
+Object return and dynamic-cast failures are absent. The first remaining errors
+are qualified Hashtable default-accessor syntax at
+PrintSystemAttributeValue.cpp:4433/4445, a literal base-constructor argument at
+PrintSystemUtil.cpp:27, and missing PrinterHResult/nested Facility imports in
+PrintServer.cpp. Importing the actually used ArgumentOutOfRangeException exposes
+later primitive member, array GetEnumerator/SetValue, literal, additional
+metadata and IntPtr/native-cast gates rather than hiding them behind an unknown
+exception type. These are not skipped or replaced with stubs.
+
+Direct scalar/enum box signatures are proven; nested array/generic/byref box
+imports, dependent element types, primitive/Enum-specific arrow members and
+native IntPtr/UIntPtr boxing remain incomplete. No full System.Printing runtime
+DLL or WPF package is produced. The diagnostic scope remains 49 original
+printing project inputs/66 tree C++ files, with no per-file pass/fail claim.
+Native import coverage remains 58/139. Complete layout, printing runtime and
+WindowsDesktop SDK/targeting/runtime packaging remain required.
+
+Evidence is archived locally under
+`tmp/wpf8-support/validation/printing-scalar-boxes-20261013`.

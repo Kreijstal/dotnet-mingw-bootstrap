@@ -105,7 +105,7 @@ def main():
         if file.stem in {"System.Xaml", "WindowsBase", "PresentationCore", "PresentationFramework", "ReachFramework"}:
             continue
         command += ["--reference", win(file)]
-    types = ["System.Exception", "System.SystemException", "System.ArgumentException", "System.ArgumentNullException",
+    types = ["System.Exception", "System.SystemException", "System.ArgumentException", "System.ArgumentNullException", "System.ArgumentOutOfRangeException",
              "System.InvalidOperationException", "System.NotSupportedException", "System.NotImplementedException",
              "System.ObjectDisposedException", "System.OutOfMemoryException", "System.IDisposable", "System.MarshalByRefObject",
              "System.Boolean", "System.Int32", "System.UInt32", "System.Int64", "System.Double", "System.Enum", "System.Type",

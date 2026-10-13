@@ -388,6 +388,7 @@ static class Program
                 return true;
             }
             bool Available(CliType t) => t.Kind == "primitive" || t.Kind == "pointer" || t.Kind == "typeparam" ||
+                (t.Kind == "boxed" && t.Name.StartsWith("System.") && PrimitiveAliases.ContainsKey(t.Name[7..])) ||
                 SourceAvailable(t) ||
                 ((t.Kind == "ref" || t.Kind == "value" || t.Kind == "boxed") && found.Contains(t.Name)) ||
                 (t.Kind == "generic" && t.Element != null && Available(t.Element) && t.Arguments.All(Available)) ||
@@ -400,7 +401,10 @@ static class Program
                         Il = t.Kind == "generic" ? element.Il + "<" + string.Join(", ", arguments.Select(a => a.Il)) + ">" :
                             t.Kind == "array" ? element.Il + "[]" : t.Kind == "byref" ? element.Il + "&" : t.Il };
                 }
+                if(t.Kind=="boxed" && t.Name.StartsWith("System.") && PrimitiveAliases.TryGetValue(t.Name[7..],out var primitive))
+                    return t with { Cpp="__cli_handle<"+primitive+">", Il=t.Il.Replace("'"+t.Name+"'","[System.Runtime]'"+t.Name+"'") };
                 var owner = types.FirstOrDefault(c => c.Name == t.Name);
+                if(t.Kind=="boxed" && owner?.Kind=="enum") t=t with { Cpp="__cli_handle<"+SignatureTypes.CppName(t.Name)+">" };
                 return owner == null ? t : t with { Il = t.Il.Replace("'" + t.Name + "'", AssemblyReference(owner.Assembly) + "'" + t.Name + "'") };
             }
             types = types.Select(t => t with { Events=t.Events.Select(e=>e with { Type=Qualified(e.Type), Supported=e.Supported && !e.Static && Available(e.Type) &&
@@ -418,7 +422,8 @@ static class Program
             header.WriteLine("namespace System { class Object; class String; }");
             header.WriteLine("namespace cli { template<class T, int Rank = 1> class array; class __attribute__((annotate(\"cli.finally\"))) __finally_marker {}; }");
             header.WriteLine("[[noreturn]] void __cli_end_finally();");
-            header.WriteLine("template<class T> T* __cli_alloc(T*);");
+            header.WriteLine("template<class T> class __cli_handle; template<bool B,class T,class F> struct __cli_select { using type=F; }; template<class T,class F> struct __cli_select<true,T,F> { using type=T; }; template<class T> typename __cli_select<__is_arithmetic(T)||__is_enum(T),__cli_handle<T>,T*>::type __cli_alloc(T*);");
+            header.WriteLine("template<class T> class __attribute__((annotate(\"cli.typed.box\"))) __cli_handle { void* __cli_reference_layout; public: __cli_handle(); __cli_handle(T); __cli_handle(decltype(nullptr)); explicit __cli_handle(System::Object*); __attribute__((annotate(\"cli.typed.box.identity\"))) operator System::Object*() const; __attribute__((annotate(\"cli.typed.box.identity\"))) System::Object* operator->() const; __attribute__((annotate(\"cli.typed.box.address\"))) T& operator*() const; __attribute__((annotate(\"cli.typed.box.truth\"))) explicit operator bool() const; __attribute__((annotate(\"cli.typed.box.null\"))) bool operator==(decltype(nullptr)) const; __attribute__((annotate(\"cli.typed.box.nonnull\"))) bool operator!=(decltype(nullptr)) const; };");
             header.WriteLine("template<class T> System::Object* __cli_box_object(T);");
             header.WriteLine("template<class T> cli::array<T>* __cli_empty_params();");
             header.WriteLine("template<class A> struct __cli_array_element; template<class T> struct __cli_array_element<cli::array<T,1>*> { using type=T; }; template<class A> A __cli_array_init(const typename __cli_array_element<A>::type*);");

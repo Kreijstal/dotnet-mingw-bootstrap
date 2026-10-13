@@ -481,7 +481,7 @@ protected:
                 if (!keyword_types.count(tokens[pos].text) || (pos && keyword_types.count(tokens[pos-1].text))) continue;
                 size_t end = pos; std::string spelling;
                 while (end < tokens.size() && keyword_types.count(tokens[end].text)) { if (!spelling.empty()) spelling += " "; spelling += tokens[end++].text; }
-                if (end >= tokens.size() || tokens[end].text != "::") continue;
+                if (end >= tokens.size() || (tokens[end].text != "::" && tokens[end].text != "^")) continue;
                 std::string managed;
                 bool is_unsigned = spelling.rfind("unsigned", 0) == 0;
                 auto plain = spelling;
@@ -1470,9 +1470,14 @@ protected:
                 if (t.text == "safe_cast") { emit(t, "__cli_safe_cast"); continue; }
                 if (t.text == "dynamic_cast" && i + 1 < tokens.size() && tokens[i + 1].text == "<") {
                     size_t end = i + 2;
-                    while (end < tokens.size() && tokens[end].text != ">") ++end;
-                    bool handle = false;
-                    for (size_t j = i + 2; j < end; ++j) if (tokens[j].text == "^") handle = true;
+                    unsigned depth=1;
+                    bool handle=false;
+                    for(;end<tokens.size() && depth;++end) {
+                        if(tokens[end].text=="<") ++depth;
+                        else if(tokens[end].text==">") --depth;
+                        else if(tokens[end].text==">>") depth=depth>1 ? depth-2 : 0;
+                        if(tokens[end].text=="^" || tokens[end].text=="__cli_handle") handle=true;
+                    }
                     if (handle) { emit(t, "__cli_dynamic_cast"); continue; }
                 }
                 if ((t.text == "public" || t.text == "private") && i + 2 < tokens.size() &&
@@ -1635,6 +1640,24 @@ class Emitter {
     const CXXRecordDecl* boxed_target(QualType type) const {
         auto* r = handle_target(type);
         return r && record_annotated(r, "cli.value") ? r : nullptr;
+    }
+    QualType typed_box_element(QualType type) const {
+        auto* record=type->getAsCXXRecordDecl();
+        auto* spec=dyn_cast_or_null<ClassTemplateSpecializationDecl>(record);
+        if(!spec || !record_annotated(spec,"cli.typed.box")) return {};
+        return spec->getTemplateArgs()[0].getAsType();
+    }
+    std::string typed_box_token(QualType element) const {
+        if(auto* enumeration=element->getAs<EnumType>()) {
+            auto* decl=enumeration->getDecl();
+            if(!annotated(decl,"cli.enum") && !(decl->getDefinition() && annotated(decl->getDefinition(),"cli.enum"))) throw std::runtime_error("typed boxes require a managed enum");
+            return "class [System.Runtime]System.ValueType modopt("+enum_name(decl)+") modopt([System.Runtime.CompilerServices.VisualC]System.Runtime.CompilerServices.IsBoxed)";
+        }
+        auto il=type(element);
+        static const std::map<std::string,std::string> names={{"bool","Boolean"},{"int8","SByte"},{"uint8","Byte"},{"char","Char"},{"int16","Int16"},{"uint16","UInt16"},{"int32","Int32"},{"uint32","UInt32"},{"int64","Int64"},{"uint64","UInt64"},{"float32","Single"},{"float64","Double"}};
+        auto found=names.find(il);
+        if(found==names.end()) throw std::runtime_error("unsupported scalar box element");
+        return "class [System.Runtime]System.ValueType modopt([System.Runtime]System."+found->second+") modopt([System.Runtime.CompilerServices.VisualC]System.Runtime.CompilerServices.IsBoxed)";
     }
     const CXXMethodDecl* delegate_invoke(const CXXRecordDecl* record) const {
         if (!record_annotated(record, "cli.delegate")) return nullptr;
@@ -1848,7 +1871,7 @@ class Emitter {
         auto* r = t->getAsCXXRecordDecl();
         if (!r) return false;
         if (record_annotated(r, "cli.pin") || record_annotated(r, "cli.interior") || record_annotated(r, "cli.array") ||
-            record_annotated(r, "cli.static.property.proxy")) return false;
+            record_annotated(r, "cli.static.property.proxy") || record_annotated(r, "cli.typed.box")) return false;
         if (record_annotated(r, "cli.value") && !record_annotation(r, "cli.external:").empty())
             return record_annotated(r, "cli.native.storage.safe");
         r = r->getDefinition();
@@ -2140,6 +2163,7 @@ class Emitter {
     }
     std::string type(QualType t) const {
         t = t.getCanonicalType();
+        if(auto element=typed_box_element(t);!element.isNull()) return typed_box_token(element);
         if (auto element = static_property_element(t); !element.isNull()) return type(element);
         if (auto element = interior_element(t); !element.isNull()) return type(element) + "&";
         if (t->isLValueReferenceType()) return reference_element_type(t->getPointeeType()) + "&";
@@ -2222,6 +2246,11 @@ class Emitter {
                     throw std::runtime_error("boxed native integers are not enabled yet");
                 continue;
             }
+            if (!typed_box_element(pointer.getType()->getPointeeType()).isNull())
+                throw std::runtime_error("pointers to typed boxed handles are not supported; use a tracking reference");
+            if (star.isValid() && sm.isWrittenInMainFile(star) && *sm.getCharacterData(star) == '^' &&
+                (pointer.getType()->getPointeeType()->isArithmeticType() || pointer.getType()->getPointeeType()->isEnumeralType()))
+                throw std::runtime_error("scalar caret must resolve to a supported primitive or managed enum box");
             if (!handle_target(pointer.getType())) continue;
             if (star.isValid() && sm.isWrittenInMainFile(star) && *sm.getCharacterData(star) == '*') {
                 if (value_target(pointer.getType()->getPointeeType())) {
@@ -2454,6 +2483,7 @@ class Emitter {
     }
     void address(const Expr* original) {
         const Expr* e = strip(original)->IgnoreParenImpCasts();
+        if(auto* call=dyn_cast<CallExpr>(e);call && call->getDirectCallee() && annotated(call->getDirectCallee(),"cli.typed.box.address")) { this->call(call); return; }
         if (auto* pointer = interior_dereference(e)) { expr(pointer); return; }
         if (auto* subscript = dyn_cast<ArraySubscriptExpr>(e)) { native_array_address(subscript); return; }
         if (auto* unary = dyn_cast<UnaryOperator>(e); unary && unary->getOpcode() == UO_Deref && native_pointer(unary->getSubExpr())) {
@@ -2743,6 +2773,11 @@ class Emitter {
     }
     void store(const Expr* target, bool retain) {
         target = target->IgnoreParenImpCasts();
+        if(auto* call=dyn_cast<CallExpr>(target);call && call->getDirectCallee() && annotated(call->getDirectCallee(),"cli.typed.box.address")) {
+            auto token=type(target->getType()); auto slot=temporary(token);
+            op("stloc "+std::to_string(slot),1); this->call(call); op("ldloc "+std::to_string(slot),0,1); op("stobj "+token,2);
+            if(retain) op("ldloc "+std::to_string(slot),0,1); return;
+        }
         if (auto* member = dyn_cast<MemberExpr>(target); member && annotated(member->getMemberDecl(), "cli.event"))
             fail(target, "events can only be used through add/remove/raise accessors");
         if (auto* pointer = interior_dereference(target)) {
@@ -2921,6 +2956,15 @@ class Emitter {
                 op("stfld " + field_signature(field), 2); op("ldloc " + std::to_string(result), 0, 1); return;
             }
             auto* target = b->getLHS()->IgnoreParenImpCasts();
+            if(auto* box=dyn_cast<CallExpr>(target);box && box->getDirectCallee() && annotated(box->getDirectCallee(),"cli.typed.box.address")) {
+                auto token=type(target->getType());
+                unsigned location=temporary(token+"&"), result=temporary(token);
+                address(target); op("stloc "+std::to_string(location),1);
+                op("ldloc "+std::to_string(location),0,1); op("ldobj "+token,1,1); apply();
+                op("stloc "+std::to_string(result),1);
+                op("ldloc "+std::to_string(location),0,1); op("ldloc "+std::to_string(result),0,1); op("stobj "+token,2);
+                op("ldloc "+std::to_string(result),0,1); return;
+            }
             if (auto* receiver = interior_dereference(target)) {
                 auto token = type(target->getType());
                 unsigned pointer = temporary(token + "&"), result = temporary(token);
@@ -3096,6 +3140,30 @@ class Emitter {
         if (native_guid_address(c)) { op("ldobj " + type(c->getType()), 1, 1); return; }
         auto* f = c->getDirectCallee();
         if (!f) { native_indirect_call(c); return; }
+        if(auto* method=dyn_cast<CXXMethodDecl>(f);method && record_annotated(method->getParent(),"cli.typed.box")) {
+            const Expr* receiver=nullptr;
+            if(auto* member=dyn_cast<CXXMemberCallExpr>(c)) receiver=member->getImplicitObjectArgument();
+            else if(auto* operation=dyn_cast<CXXOperatorCallExpr>(c);operation && operation->getNumArgs()) receiver=operation->getArg(0);
+            if(!receiver) fail(c,"typed box operation requires a receiver");
+            if(method->isCopyAssignmentOperator()) {
+                expr(c->getArg(1)); store(receiver,true); return;
+            }
+            expr(receiver);
+            if(annotated(f,"cli.typed.box.identity")) return;
+            if(annotated(f,"cli.typed.box.address")) {
+                auto element=typed_box_element(context.getCanonicalTagType(method->getParent()));
+                op("unbox "+type(element),1,1); return;
+            }
+            bool equal=annotated(f,"cli.typed.box.null");
+            if(equal || annotated(f,"cli.typed.box.nonnull") || annotated(f,"cli.typed.box.truth")) {
+                if(equal || annotated(f,"cli.typed.box.nonnull")) expr(c->getArg(c->getNumArgs()-1));
+                else op("ldnull",0,1);
+                op("ceq",2,1);
+                if(!equal) { op("ldc.i4.0",0,1); op("ceq",2,1); }
+                return;
+            }
+            fail(c,"unsupported typed box operation");
+        }
         if (auto* member = dyn_cast<CXXMemberCallExpr>(c); member && member->getMethodDecl()->isVirtual() &&
             native_com_interface(member->getMethodDecl()->getParent())) {
             native_com_call(member, member->getMethodDecl()); return;
@@ -3290,7 +3358,7 @@ class Emitter {
         }
         if (auto* opcall = dyn_cast<CXXOperatorCallExpr>(c)) {
             if (opcall->getOperator() == OO_Arrow) { expr(opcall->getArg(0)); return; }
-            if (opcall->getOperator() == OO_Equal && opcall->getNumArgs() == 2 && (handle_target(opcall->getArg(0)->getType()) || value_target(opcall->getArg(0)->getType()) || native_pod(opcall->getArg(0)->getType()))) {
+            if (opcall->getOperator() == OO_Equal && opcall->getNumArgs() == 2 && (handle_target(opcall->getArg(0)->getType()) || value_target(opcall->getArg(0)->getType()) || !typed_box_element(opcall->getArg(0)->getType()).isNull() || native_pod(opcall->getArg(0)->getType()))) {
                 expr(opcall->getArg(1)); store(opcall->getArg(0), true); return;
             }
         }
@@ -3299,7 +3367,16 @@ class Emitter {
             if (!native_value_pointer(c->getArg(0)).isNull()) fail(c, "native value pointers cannot be used as managed cast operands");
             auto* target = handle_target(c->getType());
             bool safe = f->getNameAsString() == "__cli_safe_cast";
+            if(auto element=typed_box_element(c->getType());!element.isNull()) {
+                if(!handle_target(c->getArg(0)->getType()) && typed_box_element(c->getArg(0)->getType()).isNull()) fail(c,"typed box cast requires a managed reference");
+                expr(c->getArg(0)); op(std::string(safe ? "castclass " : "isinst ")+type(element),1,1); return;
+            }
             QualType source_type = c->getArg(0)->getType();
+            if(!typed_box_element(source_type).isNull()) {
+                if(safe && boxable(c->getType())) { expr(c->getArg(0)); op("unbox.any "+type(c->getType()),1,1); return; }
+                if(!target) fail(c,"boxed source cast requires a managed reference or supported value target");
+                expr(c->getArg(0)); op(std::string(safe ? "castclass " : "isinst ")+reference_token(c->getType()),1,1); return;
+            }
             if (safe && type(source_type) == type(c->getType())) { expr(c->getArg(0)); return; }
             if (safe && (source_type->isArithmeticType() || source_type->isEnumeralType()) &&
                 (c->getType()->isArithmeticType() || c->getType()->isEnumeralType())) {
@@ -3324,9 +3401,18 @@ class Emitter {
             return;
         }
         if (f->getNameAsString() == "__cli_alloc") {
+            auto* allocation = c->getNumArgs() == 1 ? dyn_cast<CXXNewExpr>(c->getArg(0)->IgnoreParenImpCasts()) : nullptr;
+            if(auto element=typed_box_element(c->getType());!element.isNull()) {
+                if(!allocation || allocation->isArray() || allocation->getNumPlacementArgs() || !context.hasSameUnqualifiedType(element,allocation->getAllocatedType())) fail(c,"scalar box allocation requires a matching single value");
+                if(auto* initializer=allocation->getInitializer()) expr(initializer);
+                else {
+                    auto value=type(element);
+                    op(value=="int64" || value=="uint64" ? "ldc.i8 0" : value=="float32" ? "ldc.r4 0" : value=="float64" ? "ldc.r8 0" : "ldc.i4.0",0,1);
+                }
+                op("box "+type(element),1,1); return;
+            }
             auto* target = handle_target(c->getType());
             if (!target) fail(c, "allocation marker has no managed type");
-            auto* allocation = c->getNumArgs() == 1 ? dyn_cast<CXXNewExpr>(c->getArg(0)->IgnoreParenImpCasts()) : nullptr;
             auto* construction = allocation ? allocation->getConstructExpr() : nullptr;
             if (!construction || allocation->isArray()) fail(c, "allocation has no Clang-resolved managed constructor");
             auto* selected = construction->getConstructor();
@@ -3610,8 +3696,8 @@ class Emitter {
             else if (c->getCastKind() == CK_IntegralCast || c->getCastKind() == CK_IntegralToFloating || c->getCastKind() == CK_FloatingCast || c->getCastKind() == CK_FloatingToIntegral) {
                 numeric_conversion(c->getType(), c->getSubExpr()->getType());
             } else if (c->getCastKind() != CK_LValueToRValue && c->getCastKind() != CK_NoOp && c->getCastKind() != CK_ArrayToPointerDecay && c->getCastKind() != CK_FunctionToPointerDecay &&
-                       !(c->getCastKind() == CK_ConstructorConversion && (handle_target(c->getType()) || !interior_element(c->getType()).isNull())) &&
-                       !(c->getCastKind() == CK_UserDefinedConversion && (c->getType()->isPointerType() || static_property_conversion)) &&
+                       !(c->getCastKind() == CK_ConstructorConversion && (handle_target(c->getType()) || !typed_box_element(c->getType()).isNull() || !interior_element(c->getType()).isNull())) &&
+                       !(c->getCastKind() == CK_UserDefinedConversion && (c->getType()->isPointerType() || static_property_conversion || (conversion_method && record_annotated(conversion_method->getParent(), "cli.typed.box")))) &&
                        !(c->getCastKind() == CK_BitCast && c->getType()->isPointerType() && !handle_target(c->getType())) &&
                        !((c->getCastKind() == CK_DerivedToBase || c->getCastKind() == CK_UncheckedDerivedToBase || c->getCastKind() == CK_NullToPointer) && handle_target(c->getType())))
                 fail(c, std::string("unsupported implicit conversion: ") + c->getCastKindName());
@@ -3734,8 +3820,22 @@ class Emitter {
             }
             op("ldloc " + std::to_string(slot), 0, 1); return;
         }
-        if (auto* c = dyn_cast<CallExpr>(e)) { call(c); return; }
+        if (auto* c = dyn_cast<CallExpr>(e)) {
+            call(c);
+            if(c->getDirectCallee() && annotated(c->getDirectCallee(),"cli.typed.box.address")) op("ldobj "+type(c->getType()),1,1);
+            return;
+        }
         if (auto* c = dyn_cast<CXXConstructExpr>(e)) {
+            if(auto element=typed_box_element(c->getType());!element.isNull()) {
+                if(!c->getNumArgs()) { op("ldnull",0,1); return; }
+                if(c->getNumArgs()!=1) fail(c,"typed box construction requires one value");
+                auto* argument=c->getArg(0);
+                if(argument->getType()->isNullPtrType()) { op("ldnull",0,1); return; }
+                if(!typed_box_element(argument->getType()).isNull()) { expr(argument); return; }
+                if(handle_target(argument->getType())) { expr(argument); op("castclass "+type(element),1,1); return; }
+                if(type(argument->getType())!=type(element)) fail(c,"typed box value must match its element type");
+                expr(argument); op("box "+type(element),1,1); return;
+            }
             if (native_pod(c->getType())) {
                 if (!c->getConstructor()->isTrivial()) fail(c, "native POD storage cannot execute a nontrivial native constructor");
                 if (c->getConstructor()->isCopyOrMoveConstructor() && c->getNumArgs() == 1) { expr(c->getArg(0)); return; }
@@ -3814,6 +3914,18 @@ class Emitter {
                 expr(u->getSubExpr()); op("ldobj " + type(u->getType()), 1, 1); return;
             }
             if (u->isIncrementDecrementOp()) {
+                auto* target=u->getSubExpr()->IgnoreParenImpCasts();
+                if(auto* box=dyn_cast<CallExpr>(target);box && box->getDirectCallee() && annotated(box->getDirectCallee(),"cli.typed.box.address")) {
+                    auto token=type(target->getType());
+                    unsigned location=temporary(token+"&"), old=temporary(token), result=temporary(token);
+                    address(target); op("stloc "+std::to_string(location),1);
+                    op("ldloc "+std::to_string(location),0,1); op("ldobj "+token,1,1); op("stloc "+std::to_string(old),1);
+                    op("ldloc "+std::to_string(old),0,1);
+                    op(token=="int64" || token=="uint64" ? "ldc.i8 1" : token=="float32" ? "ldc.r4 1" : token=="float64" ? "ldc.r8 1" : "ldc.i4.1",0,1);
+                    op(u->isIncrementOp() ? "add" : "sub",2,1); numeric_conversion(target->getType()); op("stloc "+std::to_string(result),1);
+                    op("ldloc "+std::to_string(location),0,1); op("ldloc "+std::to_string(result),0,1); op("stobj "+token,2);
+                    op("ldloc "+std::to_string(u->isPostfix() ? old : result),0,1); return;
+                }
                 if (native_pointer(u->getSubExpr())) {
                     native_pointer_update(u->getSubExpr(), nullptr, u->isDecrementOp(), u->isPostfix()); return;
                 }
@@ -3921,7 +4033,7 @@ class Emitter {
             if (c->getCastKind() == CK_PointerToIntegral && (!handle_target(c->getSubExpr()->getType()) || !native_value_pointer(c->getSubExpr()).isNull())) {
                 expr(c->getSubExpr()); numeric_conversion(c->getType(), c->getSubExpr()->getType()); return;
             }
-            if (c->getCastKind() == CK_ConstructorConversion && value_target(c->getType())) { expr(c->getSubExpr()); return; }
+            if (c->getCastKind() == CK_ConstructorConversion && (value_target(c->getType()) || !typed_box_element(c->getType()).isNull())) { expr(c->getSubExpr()); return; }
             if (c->getCastKind() == CK_UserDefinedConversion && c->getType()->isPointerType() && !handle_target(c->getType())) {
                 auto* conversion = dyn_cast<CXXMemberCallExpr>(strip(c->getSubExpr()));
                 auto* method = conversion ? dyn_cast_or_null<CXXConversionDecl>(conversion->getDirectCallee()) : nullptr;
@@ -4171,7 +4283,7 @@ class Emitter {
         } else {
             std::string result = type(f->getReturnType());
             op(result == "int64" || result == "uint64" ? "ldc.i8 0" : result == "float32" ? "ldc.r4 0" : result == "float64" ? "ldc.r8 0" :
-               handle_target(f->getReturnType()) && native_value_pointer(f).isNull() ? "ldnull" : "ldc.i4.0", 0, 1);
+               (handle_target(f->getReturnType()) || !typed_box_element(f->getReturnType()).isNull()) && native_value_pointer(f).isNull() ? "ldnull" : "ldc.i4.0", 0, 1);
             if (!native_value_pointer(f).isNull()) op("conv.u", 1, 1);
             if (!interior_element(f->getReturnType()).isNull()) op("conv.u", 1, 1);
             op("ret", 1);

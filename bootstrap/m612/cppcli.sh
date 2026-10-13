@@ -1590,6 +1590,37 @@ EOF
   run_case boxing-exceptions "$testdir/boxing-exceptions.cpp" $'1\n2' --type System.InvalidCastException --type System.NullReferenceException
   reject_case value-base 'public value struct Bad : System::Object {}; int main() { return 0; }' 'value types with bases'
 }
+step_test-scalar-boxes() {
+  run_case scalar-boxes "$src/tests/scalar-boxes.cpp" $'42\n7\n2147483648\nTrue\nTrue\n17\n19\n0\nTrue\nFalse\n24\n10\n10\nnull box OK\nwrong box OK' \
+    --type System.GC --type System.NullReferenceException --type System.InvalidCastException
+  mkdir -p "$testdir/scalar-boxes-consumer"
+  cp "$src/tests/ScalarBoxesConsumer.cs" "$testdir/scalar-boxes-consumer/Program.cs"
+  cat > "$testdir/scalar-boxes-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="scalar-boxes"><HintPath>../scalar-boxes.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/scalar-boxes-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/scalar-boxes-consumer/bin/Debug/net8.0/consumer.dll")"
+  cat > "$testdir/scalar-boxes-imported.cpp" <<'EOF'
+#using "scalar-boxes.dll"
+using namespace System;
+int main() {
+    Int32^ box=7;
+    Int32^ alias=ScalarBoxes::Echo(box);
+    *alias=29;
+    Console::WriteLine(*box);
+    ScalarFlags^ flag=ScalarFlags::High;
+    ScalarFlags^ copy=ScalarBoxes::EchoEnum(flag);
+    Console::WriteLine(static_cast<unsigned int>(*copy));
+    return 0;
+}
+EOF
+  run_case scalar-boxes-imported "$testdir/scalar-boxes-imported.cpp" $'29\n2147483648' --type ScalarBoxes --type ScalarFlags --type ScalarBoxSlot
+  reject_case scalar-wrong-native-pointer 'int main() { int value=42; int* pointer=&value; System::Int32^ box=pointer; return 0; }' 'no viable conversion'
+  reject_case scalar-wrong-box 'int main() { System::Int32^ i=42; System::Double^ d=i; return 0; }' 'no viable conversion'
+  reject_case scalar-native-enum 'enum class Native { One=1 }; int main() { Native^ value=nullptr; return 0; }' 'scalar caret must resolve'
+  reject_case scalar-box-native-storage 'typedef System::Int32^ Box; int main() { Box* pointer=nullptr; return 0; }' 'pointers to typed boxed handles'
+}
 step_test-boxed-values() {
   log "Boxed value handles, alias/mutation semantics and WPF DateTime pattern"
   run_case boxed-values "$src/tests/boxed-values.cpp" $'4\n7\n9\n12\n12\n0\n5\nnull box OK\n504911232000000000' \

@@ -234,7 +234,10 @@
     "Explicit source-owned ordinary reference types join imported signature availability with defining-assembly-name checks, forward declarations and required real source definitions; external constructors/returns/properties/arrays/byrefs and CLR callbacks are validated",
     "Primitive/enum returns to Object emit CLR boxing; direct managed String/Object literal returns and String/Object/array stores use typed literal construction",
     "C-style and static casts from Object to primitive/CLI enum targets resolve a real typed safe_cast marker through Clang template lookup and emit CLR unbox.any; wrong-type/null behavior is checked",
-    "CLI unboxing hooks preserve empty native vector parse expressions; mmintrin inclusion and the complete DirectWrite bridge are regression gates"
+    "CLI unboxing hooks preserve empty native vector parse expressions; mmintrin inclusion and the complete DirectWrite bridge are regression gates",
+    "Primitive and managed-enum caret handles use Clang-resolved types, including scalar/enum aliases and boxed typedefs; native stars and expression XOR retain C++ semantics",
+    "Scalar/enum boxes use CLR ValueType/element/IsBoxed metadata; implicit boxing, named gcnew, Object/static/C-style/safe/dynamic casts, null/truth/equality and Object virtual dispatch preserve box identity",
+    "Scalar box dereference, tracking aliases, assignments and compound/prefix/postfix updates use CLR unbox/ldobj/stobj and tracked byrefs; receivers evaluate once and all primitive payloads, GC, direct metadata imports and C# APIs are checked"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -306,6 +309,7 @@
     "Local array initialization currently recognizes explicit array<T>^ declarations ending with a semicolon; aliases, nested/generic String element detection, arbitrary parenthesized literal elements and general array covariance remain incomplete",
     "Source-owned signature support currently permits ordinary reference types only and validates the defining assembly name; full version/public-key identity checks, source-owned value/generic/nested types and imported inheritance from source-owned types remain incomplete or rejected",
     "Managed return/literal-store conversion does not yet cover all constructor/initializer/conditional/interface conversions or property results needing additional placeholder resolution",
-    "Object unboxing recognizes direct Object-typed operands with primitive/CLI enum targets; ValueType/interface operands, native numeric-pointer casts, typed primitive handles and general user-defined cast/implicit conversion discovery remain incomplete"
+    "Object unboxing recognizes direct Object-typed operands with primitive/CLI enum targets; ValueType/interface operands, native numeric-pointer casts, general typed-box-to-scalar cast discovery and user-defined implicit conversions remain incomplete",
+    "Typed scalar/enum boxes have direct signature/import evidence; nested array/generic/byref imports of these boxes, dependent element types, primitive/Enum-specific arrow members and native IntPtr/UIntPtr boxing remain incomplete; native storage/pointers to boxes are rejected"
   ]
 }

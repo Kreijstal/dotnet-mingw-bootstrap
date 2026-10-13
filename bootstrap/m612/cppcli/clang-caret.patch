@@ -21,16 +21,89 @@
 +void clang::cppcliParseAST(Sema &S, bool PrintStats, bool SkipFunctionBodies) {
 --- ParseDecl.cpp
 +++ ParseDecl.cpp
-@@ -6318 +6318 @@
+@@ -13,0 +14 @@
++#include "clang/AST/Attr.h"
+@@ -6296,0 +6298,55 @@
++// Scalar caret handles are selected from Clang's resolved declaration type.
++// The temporary facade is a CLR reference; source native stars retain their
++// ordinary C++ type. Each comma declarator starts from the original base type.
++static QualType cppcliScalarBoxElement(QualType Type) {
++  if (Type.isNull()) return {};
++  auto *Specialization = dyn_cast_or_null<ClassTemplateSpecializationDecl>(
++      Type->getAsCXXRecordDecl());
++  if (!Specialization || Specialization->getSpecializedTemplate()->getName() != "__cli_handle") return {};
++  return Specialization->getTemplateArgs()[0].getAsType();
++}
++
++static void cppcliSetDeclSpecType(Sema &Actions, DeclSpec &Spec, QualType Type,
++    SourceLocation Loc) {
++  Spec.ClearTypeSpecType();
++  const char *Previous = nullptr; unsigned Diagnostic = 0;
++  auto *Info = Actions.Context.getTrivialTypeSourceInfo(Type, Loc);
++  Spec.SetTypeSpecType(DeclSpec::TST_typename, Loc, Previous, Diagnostic,
++      Actions.CreateParsedType(Type, Info), Actions.Context.getPrintingPolicy());
++}
++
++static bool cppcliScalarBox(Sema &Actions, Scope *CurrentScope,
++    Preprocessor &PP, AttributeFactory &Factory, Declarator &D, SourceLocation Loc) {
++  // Fundamental sign/width combinations are normalized by the token adapter
++  // to selected System primitive aliases before they reach this hook.
++  auto &Spec = D.getMutableDeclSpec();
++  if (Spec.getTypeSpecWidth() != TypeSpecifierWidth::Unspecified ||
++      Spec.getTypeSpecSign() != TypeSpecifierSign::Unspecified) return false;
++  ParsedAttributes Empty(Factory);
++  Declarator Probe(Spec, Empty, DeclaratorContext::TypeName);
++  auto *Info = Actions.GetTypeForDeclarator(Probe);
++  if (!Info) return false;
++  auto Type = Info->getType();
++  bool Scalar = Type->isArithmeticType();
++  if (auto *Enum = Type->getAs<EnumType>()) {
++    auto *Decl = Enum->getDecl()->getDefinition();
++    if (!Decl) Decl = Enum->getDecl();
++    for (auto *Attr : Decl->specific_attrs<AnnotateAttr>())
++      Scalar |= Attr->getAnnotation() == "cli.enum";
++  }
++  if (!Scalar) return false;
++  auto *Identifier = &PP.getIdentifierTable().get("__cli_handle");
++  LookupResult Lookup(Actions, Identifier, Loc, Sema::LookupOrdinaryName);
++  Actions.LookupQualifiedName(Lookup, Actions.Context.getTranslationUnitDecl());
++  auto *Template = Lookup.isSingleResult() ?
++      dyn_cast<ClassTemplateDecl>(Lookup.getFoundDecl()) : nullptr;
++  if (!Template) return false;
++  TemplateArgumentListInfo Arguments(Loc, Loc);
++  Arguments.addArgument(TemplateArgumentLoc(TemplateArgument(Type), Info));
++  auto Box = Actions.CheckTemplateIdType(ElaboratedTypeKeyword::None,
++      TemplateName(Template), Loc, Arguments, CurrentScope, false);
++  if (Box.isNull()) return false;
++  cppcliSetDeclSpecType(Actions, Spec, Box, Loc);
++  return true;
++}
++
+@@ -6297,0 +6354,8 @@
++  auto &Spec = D.getMutableDeclSpec();
++  if (Spec.getTypeSpecType() == DeclSpec::TST_typename &&
++      PP.getSourceManager().isWrittenInMainFile(Spec.getTypeSpecTypeLoc()) &&
++      *PP.getSourceManager().getCharacterData(Spec.getTypeSpecTypeLoc()) == '^') {
++    auto Type = Sema::GetTypeFromParser(Spec.getRepAsType());
++    if (auto Element = cppcliScalarBoxElement(Type); !Element.isNull())
++      cppcliSetDeclSpecType(Actions, Spec, Element, Spec.getTypeSpecTypeLoc());
++  }
+@@ -6318 +6382 @@
 -  if (Kind == tok::amp)
 +  if (Kind == tok::amp || Kind == tok::percent)
-@@ -6461 +6461,4 @@
+@@ -6440,0 +6505,2 @@
++  bool ScalarBox = Kind == tok::caret && !getLangOpts().Blocks &&
++      cppcliScalarBox(Actions, getCurScope(), PP, AttrFactory, D, Tok.getLocation());
+@@ -6461 +6527,7 @@
 -    if (Kind == tok::star)
 +    // This parser is private to the CLI frontend. Clang has already resolved
 +    // declaration/type context, so expression XOR remains untouched. Preserve
 +    // the caret source location for managed-type validation by the AST plugin.
-+    if (Kind == tok::star || (Kind == tok::caret && !getLangOpts().Blocks))
-@@ -6527 +6530 @@
++    if (ScalarBox) {
++      if (DS.getTypeQualifiers()) D.setInvalidType();
++      // The handle is already represented by the reference facade in DeclSpec.
++    } else if (Kind == tok::star || (Kind == tok::caret && !getLangOpts().Blocks))
+@@ -6527 +6599 @@
 -                                                Kind == tok::amp),
 +                                                Kind == tok::amp || Kind == tok::percent),
 --- ParseExpr.cpp
