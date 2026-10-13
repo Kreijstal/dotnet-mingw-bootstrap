@@ -21,8 +21,8 @@ using NativeSubpageFinite=int(WINAPI*)(void*,void*,int,void*,void*,int,int,uint3
 static NativeSubpageFinite create_subpage=nullptr;
 static int(WINAPI* destroy_subpage)(void*,void*)=nullptr;
 static int(WINAPI* destroy_subpage_record)(void*,void*)=nullptr;
-static bool block_ui=false,float_obstacle=false,fail_float=false,attached_float=false,attached_right=false;
-static int float_created=0,float_destroyed=0;
+static bool block_ui=false,float_obstacle=false,fail_float=false,attached_float=false,attached_right=false,multiple_float=false,multiple_opposite=false;
+static int float_created=0,float_destroyed=0,float_fail_at=-1;
 static int(WINAPI* floater_handler)(const FSFLOATERINIT*,void*)=nullptr;
 static void* page_context=nullptr;
 using SubtrackFormat=int(WINAPI*)(void*,void*,int,void*,int,void*,void*,int,int,uint32_t,const FSRECT*,void*,FSKCLEAR,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA,FSFMTR*,void**,void**,int*,FSBBOX*,void**,FSKCLEAR*,int*);
@@ -67,7 +67,7 @@ static int WINAPI line_format(void*,void*,void*,int,int dcp,void* incoming,uint3
     int start,int width,int track_start,int track_width,int margin,int hyphen,int left,int right,int first,int last,int suppress,
     void** line,int* consumed,void** br,int* forced,FSFLRES* result,int* ascent,int* descent,int* bbox,int* bbox_width,int* depend,int* reformat) {
     if(direction||(!attached_float&&(start!=track_start||width!=100))||(track_start!=10&&track_start!=120)||track_width!=100||margin!=track_start||hyphen||left||right||last||first!=(dcp==0)||bool(incoming)!=(dcp!=0))return PTS_tserrInvalidParameter;
-    if(attached_float&&(width!=60||start!=(attached_right?10:50)))return PTS_tserrInvalidParameter;
+    if(attached_float&&(width!=(multiple_opposite?20:60)||start!=(attached_right?10:50)))return PTS_tserrInvalidParameter;
     ++lines_created;*line=reinterpret_cast<void*>(1000+lines_created);*br=reinterpret_cast<void*>(2000+lines_created);
     *consumed=5;*forced=0;*result=dcp==0?fsflrOutOfSpace:fsflrEndOfParagraph;*ascent=7;*descent=3;*bbox=start;*bbox_width=75;*depend=*reformat=0;
     if(structural_line&&dcp==0){*ascent=*descent=*bbox_width=0;}
@@ -77,7 +77,7 @@ static int WINAPI line_format(void*,void*,void*,int,int dcp,void* incoming,uint3
 static int WINAPI destroy_line(void*,void*){++lines_destroyed;return 0;}
 static int WINAPI destroy_break(void*,void*){++breaks_destroyed;return 0;}
 static int WINAPI destroy_margin(void*,void*){return 0;}
-static int WINAPI block_props(void*,void*,uint32_t,FSFLOATERPROPS* output){*output={};output->fFloat=float_obstacle||attached_float;output->fskwr=attached_float?fskwrBoth:fskwrNone;output->fskfloatalignment=attached_right?fskfloatalignMax:fskfloatalignMin;return 0;}
+static int WINAPI block_props(void*,void* name,uint32_t,FSFLOATERPROPS* output){*output={};output->fFloat=float_obstacle||attached_float;output->fskwr=attached_float?fskwrBoth:fskwrNone;output->fskfloatalignment=(attached_right||(multiple_opposite&&name==reinterpret_cast<void*>(302)))?fskfloatalignMax:fskfloatalignMin;return 0;}
 static int WINAPI block_margin(void*,void*,void*,uint32_t,void*,int,int* output){*output=0;return 0;}
 static int WINAPI block_after(void*,void*,void*,uint32_t,void*,void** output){*output=nullptr;return 0;}
 static int WINAPI block_destroy(void*){++float_destroyed;return 0;}
@@ -87,7 +87,7 @@ static int WINAPI block_finite(void*,void* para,void*,int,void*,void*,int empty,
     *formatted={};*content=*br=nullptr;*used_width=*used_height=*polygons=*vertices=0;*box={};
     if(height<25&&empty){formatted->kstop=fmtrNoProgressOutOfSpace;return 0;}
     ++float_created;*content=para;*used_width=attached_float?40:width;*used_height=25;*box={1,{0,0,*used_width,25}};formatted->fForcedProgress=height<25;
-    return fail_float?PTS_tserrCallbackException:0;
+    return (fail_float||float_created==float_fail_at)?PTS_tserrCallbackException:0;
 }
 static int WINAPI block_handler(void*,int id,void* output) {
     if(id!=2)return PTS_tserrInvalidParameter;
@@ -96,8 +96,8 @@ static int WINAPI block_handler(void*,int id,void* output) {
     cb.pfnDestroyFloaterContentBreakRecord=reinterpret_cast<void*>(block_destroy_break);cb.pfnGetMCSClientAfterFloater=reinterpret_cast<void*>(block_after);
     return floater_handler(&init,output);
 }
-static int WINAPI attached_count(void*,void* name,int dcp,int* count){*count=attached_float&&name==reinterpret_cast<void*>(101)&&dcp==0?1:0;return 0;}
-static int WINAPI attached_objects(void*,void*,int,int capacity,void** names,int* kinds,int* anchors,int* actual,int* ended){if(capacity!=1)return PTS_tserrInvalidParameter;names[0]=reinterpret_cast<void*>(301);kinds[0]=2;anchors[0]=0;*actual=1;*ended=0;return 0;}
+static int WINAPI attached_count(void*,void* name,int dcp,int* count){*count=attached_float&&name==reinterpret_cast<void*>(101)&&dcp==0?(multiple_float?2:1):0;return 0;}
+static int WINAPI attached_objects(void*,void*,int,int capacity,void** names,int* kinds,int* anchors,int* actual,int* ended){if(capacity!=(multiple_float?2:1))return PTS_tserrInvalidParameter;for(int index=0;index<capacity;++index){names[index]=reinterpret_cast<void*>(301+index);kinds[index]=2;anchors[index]=index;}*actual=capacity;*ended=0;return 0;}
 static int WINAPI attached_in_line(void*,void*,void*,int,int,int,int,int* count){*count=0;return 0;}
 static void reset_page_counts(){lines_created=lines_destroyed=breaks_destroyed=clients_created=clients_destroyed=0;}
 
@@ -451,10 +451,23 @@ int main(int argc,char** argv) {
             require(FsClearUpdateInfoInPage(context,page_handle)==0&&FsQueryAttachedObjectList(context,paras[0].pfspara,1,&object,&actual_count)==0&&object.fsupdinf.fskupd==fskupdNoChange,"attachment update state clears with its page");
             require(FsDestroyPage(context,page_handle)==0&&FsQueryAttachedObjectList(context,paras[0].pfspara,1,&object,&actual_count)==PTS_tserrInvalidQuery&&float_created==1&&float_destroyed==1&&lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"attached content/client/line lifetime and stale text-query rejection");
         }
+        multiple_float=true;attached_right=false;
+        for(bool opposite:{false,true}) {
+            multiple_opposite=opposite;reset_page_counts();float_created=float_destroyed=0;
+            require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&!page_break,"multiple original attachments format in source order");
+            require(FsQueryPageDetails(context,page_handle,&details)==0&&FsQueryTrackParaList(context,details.u.simple.trackdescr.pfstrack,2,paras,&actual_count)==0&&actual_count==1&&paras[0].dvrUsed==(opposite?25:50),"multiple floater paragraph extent includes actual collision-free placements");
+            FSATTACHEDOBJECTDESCRIPTION objects[2]{};require(FsQueryAttachedObjectList(context,paras[0].pfspara,1,objects,&actual_count)==PTS_tserrInvalidParameter&&!actual_count&&FsQueryAttachedObjectList(context,paras[0].pfspara,2,objects,&actual_count)==0&&actual_count==2,"multiple attachment query capacity and actual count");
+            FSFLOATERDETAILS first{},second{};require(FsQueryFloaterDetails(context,objects[0].pfspara,&first)==0&&FsQueryFloaterDetails(context,objects[1].pfspara,&second)==0&&first.fsrcFloater.u==10&&first.fsrcFloater.v==20&&second.fsrcFloater.u==(opposite?70:10)&&second.fsrcFloater.v==(opposite?20:45),"same-edge rectangles stack and opposite edges share nonoverlapping row");
+            require(FsDestroyPage(context,page_handle)==0&&float_created==2&&float_destroyed==2&&lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"multiple attached content and clients release once");
+        }
+        multiple_opposite=false;float_fail_at=2;reset_page_counts();float_created=float_destroyed=0;
+        require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrCallbackException&&!page_handle&&!page_break&&float_created==2&&float_destroyed==2&&clients_created==clients_destroyed,"later populated floater failure releases prior accepted and current speculative attachments");float_fail_at=-1;
+        available_height=40;reset_page_counts();float_created=float_destroyed=0;
+        require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrNotImplemented&&!page_handle&&!page_break&&float_created==2&&float_destroyed==2&&clients_created==clients_destroyed,"unsupported multi-floater overflow retains no partial page or attachments");available_height=80;multiple_float=false;
         fail_float=true;reset_page_counts();float_created=float_destroyed=0;
         require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrCallbackException&&!page_handle&&!page_break&&float_created==float_destroyed&&lines_created==lines_destroyed&&clients_created==clients_destroyed,"populated attached-content callback failure tears down all owned objects");
         fail_float=attached_float=attached_right=false;para_count=2;
-        std::puts("native attached floaters: original callbacks, left/right rectangular wrapping, attached count/query/update/capacity, stale handles, partial failure and exact cleanup PASS");
+        std::puts("native attached floaters: original callbacks, multiple collision-free placements/later failure, left/right rectangular wrapping, attached count/query/update/capacity, stale handles, partial failure and exact cleanup PASS");
         columns=1;require(DestroyDocContext(context)==0&&DestroyInstalledObjectsInfo(installed)==0,"failed page creation leaves no retained resources");
         std::puts("native finite pages: actual callback geometry/ranges/break records, query/update state, foreign/stale handles, exact teardown, partial failure rollback and unsupported paths PASS");
         std::printf("native paragraph records: context=%zu, methods=%zu, callbacks=%zu; copied ownership, callbacks, rollback, invalid states and teardown PASS\n",sizeof(FSCONTEXTINFO),sizeof(FSIMETHODS),sizeof(FSCBK));return 0;

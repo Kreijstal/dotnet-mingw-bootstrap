@@ -346,7 +346,6 @@ int attached_before_line(const std::shared_ptr<ParaData>& para,int dcp,uint32_t 
     if(!cb.pfnGetNumberAttachedObjectsBeforeTextLine)return 0;
     int count=0,status=reinterpret_cast<PtsGetNumberAttachedObjectsBeforeTextLine>(cb.pfnGetNumberAttachedObjectsBeforeTextLine)(client,para->desc.nmp,dcp,&count);if(status)return status;
     if(count<0)return PTS_tserrInvalidClientOutput;if(!count)return 0;
-    if(count>1)return PTS_tserrNotImplemented;
     if(!cb.pfnGetAttachedObjectsBeforeTextLine)return PTS_tserrInvalidParameter;
     std::vector<void*> names(count);std::vector<int> kinds(count),anchors(count);int actual=0,ended=0;
     status=reinterpret_cast<PtsGetAttachedObjectsBeforeTextLine>(cb.pfnGetAttachedObjectsBeforeTextLine)(client,para->desc.nmp,dcp,count,names.data(),kinds.data(),anchors.data(),&actual,&ended);if(status)return status;
@@ -356,24 +355,40 @@ int attached_before_line(const std::shared_ptr<ParaData>& para,int dcp,uint32_t 
         if(kinds[index]!=2||!names[index]||anchors[index]<dcp)return PTS_tserrNotImplemented;
         auto& attached=para->text->attached;
         if(std::any_of(attached.begin(),attached.end(),[&](const AttachedData& value){return value.para->desc.nmp==names[index];}))continue;
-        if(!attached.empty())return PTS_tserrNotImplemented;
         auto child=std::make_shared<ParaData>();child->context=context;child->desc.nmp=names[index];child->desc.idobj=2;child->desc.fsupdinf.fskupd=fskupdNew;
         status=reinterpret_cast<PtsCreateParaclient>(context->info.fscbk.cbkgen.pfnCreateParaclient)(client,names[index],&child->desc.pfsparaclient);if(status)return status;
         if(!child->desc.pfsparaclient)return PTS_tserrInvalidClientOutput;
         std::shared_ptr<Continuation> next;MarginOwner margin{context};FSFLOATERPROPS props{};
         status=format_block_ui(child,direction,rect,nullptr,bottomless,!force,1,fsksuppresshardbreakbeforefirstparaPageAndColumn,next,&margin.value,true,&props);if(status)return status;
         if(next)return PTS_tserrNotImplemented;
+        auto& candidate=child->floater->details.fsrcFloater;
+        int64_t placed=candidate.v;
+        // Keep each object's requested horizontal edge. If its rectangle
+        // collides with an earlier object, move it below that rectangle.
+        // Opposite edges can share a row when their rectangles do not overlap.
+        for(;;){int64_t next_top=placed;
+            for(const auto& previous:attached){const auto& obstacle=previous.para->floater->details.fsrcFloater;
+                bool horizontal=int64_t(candidate.u)<int64_t(obstacle.u)+obstacle.du&&int64_t(obstacle.u)<int64_t(candidate.u)+candidate.du;
+                if(horizontal&&placed<int64_t(obstacle.v)+obstacle.dv&&int64_t(obstacle.v)<placed+candidate.dv)next_top=std::max(next_top,int64_t(obstacle.v)+obstacle.dv);
+            }
+            if(next_top==placed)break;placed=next_top;
+        }
+        if(placed+candidate.dv>INT32_MAX||(!bottomless&&placed+candidate.dv>int64_t(rect.v)+rect.dv))return PTS_tserrNotImplemented;
+        int64_t shift=placed-candidate.v;
+        auto& box=child->desc.fsbbox;
+        if(box.fDefined&&(int64_t(box.fsrc.v)+shift<INT32_MIN||int64_t(box.fsrc.v)+shift+box.fsrc.dv>INT32_MAX))return PTS_tserrInvalidGeometry;
+        candidate.v=int(placed);if(box.fDefined)box.fsrc.v=int(int64_t(box.fsrc.v)+shift);
         attached.push_back({anchors[index],props,child});
     }
     return 0;
 }
-int line_area(const TextData& text,const FSRECT& rect,int& used,int& u,int& width) {
+int line_area(const TextData& text,const FSRECT& rect,int& used,int& u,int& width,int height_hint=0) {
     // Each retained rectangle excludes space until its bottom edge. When no
     // allowed side has space, advance vertically past the active obstacle.
     for(;;) {
         int64_t left=rect.u,right=int64_t(rect.u)+rect.du;int next=INT32_MAX;bool active=false;
         for(const auto& object:text.attached){const auto& obstacle=object.para->floater->details.fsrcFloater;int bottom=obstacle.v+obstacle.dv;
-            if(obstacle.v>rect.v+used||bottom<=rect.v+used)continue;active=true;next=std::min(next,bottom);
+            if(int64_t(obstacle.v)>=int64_t(rect.v)+used+std::max(1,height_hint)||bottom<=rect.v+used)continue;active=true;next=std::min(next,bottom);
             bool at_left=obstacle.u==rect.u,at_right=int64_t(obstacle.u)+obstacle.du==int64_t(rect.u)+rect.du;
             auto wrap=object.props.fskwr;
             if(wrap==fskwrNone){left=right;continue;}
@@ -396,12 +411,12 @@ int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const F
     if(keep_self)props.fKeepTogether=1;
     if(props.fswdir!=direction||props.fDropCap||props.fVerticalGrid||props.fOptimizeParagraph)return PTS_tserrNotImplemented;
     auto text=std::make_shared<TextData>(context);text->direction=direction;para->text=text;
-    int dcp=input?input->dcp:props.dcpStartContent,used=0,fit=0;bool overflow=false,ended=false;
+    int dcp=input?input->dcp:props.dcpStartContent,used=0,fit=0,height_hint=0;bool overflow=false,ended=false;
     std::shared_ptr<LineBreakData> previous=input?input->line_break:nullptr;text->incoming=previous;
     while(true) {
         int max_anchor=-1;FSRECT object_area=rect;object_area.v+=used;object_area.dv=std::max(0,rect.dv-used);
         status=attached_before_line(para,dcp,direction,object_area,bottomless,force&&used==0,max_anchor);if(status)return status;
-        int line_u=rect.u,line_width=rect.du;status=line_area(*text,rect,used,line_u,line_width);if(status)return status;
+        int line_u=rect.u,line_width=rect.du;status=line_area(*text,rect,used,line_u,line_width,height_hint);if(status)return status;
         text->lines.emplace_back();text->breaks.push_back(std::make_shared<LineBreakData>(context));
         auto& line=text->lines.back();auto& br=text->breaks.back();
         line.dcpFirst=dcp;line.urStart=line_u;line.dur=line_width;line.vrStart=rect.v+used;
@@ -415,6 +430,13 @@ int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const F
         int64_t height=int64_t(line.dvrAscent)+line.dvrDescent;
         // Structural-marker lines can consume source without visible height.
         if(height<0||height>INT32_MAX-int64_t(rect.v)-used)return PTS_tserrInvalidGeometry;
+        int next_used=used,next_u=line_u,next_width=line_width;
+        status=line_area(*text,rect,next_used,next_u,next_width,int(height));if(status)return status;
+        if(next_used>used||next_u>line_u||int64_t(next_u)+next_width<int64_t(line_u)+line_width){
+            reinterpret_cast<PtsDestroyLine>(cb.pfnDestroyLine)(client,line.pfslineclient);line.pfslineclient=nullptr;
+            text->lines.pop_back();text->breaks.pop_back();used=next_used;height_hint=std::max(height_hint,int(height));continue;
+        }
+        height_hint=0;
         line.dcpLim=dcp+consumed;dcp=line.dcpLim;previous=br;
         if(cb.pfnGetNumberAttachedObjectsInTextLine){int objects=0;status=reinterpret_cast<PtsGetNumberAttachedObjectsInTextLine>(cb.pfnGetNumberAttachedObjectsInTextLine)(client,line.pfslineclient,para->desc.nmp,line.dcpFirst,line.dcpLim,max_anchor>=0,max_anchor,&objects);if(status)return status;if(objects)return PTS_tserrNotImplemented;}
         if(!overflow && height<=int64_t(rect.dv)-used)++fit;else overflow=true;

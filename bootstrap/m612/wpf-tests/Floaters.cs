@@ -45,6 +45,30 @@ class Check {
             using(var first=paginator.GetPage(0)){var regenerated=Raster(first.Visual);int red=0;for(int i=0;i<regenerated.Length;i+=4)if(regenerated[i+3]>150&&regenerated[i+2]>200&&regenerated[i]<60&&regenerated[i+1]<60)++red;if(red<1000)throw new Exception("disposed floater page must regenerate actual floating content");}
             Console.WriteLine($"original floater {mode}, {alignment}: {pages} pages, {floatingRun.Text.Length+bodyRun.Text.Length} source characters covered exactly once, original page mapping/regeneration/GC PASS");
         }
+        foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display})
+        foreach(bool opposite in new[]{false,true}) {
+            var firstRun=new Run("First floating content");var secondRun=new Run("Second floating content");var body=new Run(string.Join(" ",Enumerable.Range(0,100).Select(i=>$"multi{i:D3}")));
+            Floater Make(Run run,Brush background,double width,HorizontalAlignment alignment)=>new Floater(new Paragraph(run){Foreground=Brushes.Blue,Margin=new Thickness(0)}){Background=background,Padding=new Thickness(4),Margin=new Thickness(0),Width=width,HorizontalAlignment=alignment};
+            var paragraph=new Paragraph(Make(firstRun,Brushes.Red,100,HorizontalAlignment.Left)){Margin=new Thickness(0)};paragraph.Inlines.Add(Make(secondRun,Brushes.Lime,140,opposite?HorizontalAlignment.Right:HorizontalAlignment.Left));paragraph.Inlines.Add(body);
+            var document=new FlowDocument(paragraph){FontFamily=new FontFamily("Segoe UI"),FontSize=18,PagePadding=new Thickness(10),ColumnWidth=double.PositiveInfinity};TextOptions.SetTextFormattingMode(document,mode);
+            var paginator=(DynamicDocumentPaginator)((IDocumentPaginatorSource)document).DocumentPaginator;paginator.PageSize=new Size(400,260);
+            var ranges=new List<(int Page,TextPointer Start,TextPointer End)>();int pages=0;
+            for(;pages<20;++pages){using var page=paginator.GetPage(pages);if(page==DocumentPage.Missing)break;var pixels=Raster(page.Visual);
+                var red=new List<(int X,int Y)>();var green=new List<(int X,int Y)>();
+                for(int y=0;y<220;++y)for(int x=0;x<400;++x){int i=(y*400+x)*4;if(pixels[i+3]<150)continue;if(pixels[i+2]>200&&pixels[i]<60&&pixels[i+1]<60)red.Add((x,y));if(pixels[i+1]>200&&pixels[i]<60&&pixels[i+2]<60)green.Add((x,y));}
+                if(pages==0){if(red.Count<1000||green.Count<1000)throw new Exception("both original floaters must render");int redBottom=red.Max(p=>p.Y),greenTop=green.Min(p=>p.Y);
+                    if(opposite){if(red.Min(p=>p.X)!=10||green.Max(p=>p.X)!=389||red.Min(p=>p.Y)!=greenTop)throw new Exception("opposite edge floaters must share a nonoverlapping row");}
+                    else if(red.Min(p=>p.X)!=10||green.Min(p=>p.X)!=10||greenTop<=redBottom)throw new Exception("same-edge floaters must retain alignment without overlap");
+                    int overlap=0,host=0;foreach(var points in new[]{red,green}){int left=points.Min(p=>p.X),right=points.Max(p=>p.X),top=points.Min(p=>p.Y),bottom=points.Max(p=>p.Y);for(int y=top;y<=bottom;++y)for(int x=0;x<400;++x){int i=(y*400+x)*4;if(pixels[i+3]>150&&pixels[i]<70&&pixels[i+1]<70&&pixels[i+2]<70){if(x>=left&&x<=right)++overlap;else ++host;}}}if(overlap!=0||host<100)throw new Exception("host text must flow around both actual obstacle extents");
+                    Console.WriteLine($"original multiple floaters {mode}, opposite={opposite}: red bottom={redBottom}, green top={greenTop}, zero rectangle/host overlap, {host} host glyph pixels beside obstacles PASS");
+                }else if(red.Count!=0||green.Count!=0)throw new Exception("multiple intact floaters must not repeat after continuation");
+                var view=((IServiceProvider)page).GetService(viewType);foreach(var segment in (IEnumerable)viewType.GetProperty("TextSegments").GetValue(view)){var t=segment.GetType();var flags=BindingFlags.Instance|BindingFlags.Public|BindingFlags.NonPublic;ranges.Add((pages,(TextPointer)t.GetProperty("Start",flags).GetValue(segment),(TextPointer)t.GetProperty("End",flags).GetValue(segment)));}GC.Collect(2,GCCollectionMode.Forced,true,true);
+            }
+            if(pages<2||pages>=20||!paginator.IsPageCountValid)throw new Exception("multiple floater pagination must complete");
+            foreach(var run in new[]{firstRun,secondRun,body})for(int at=0;at<run.Text.Length;++at){var position=run.ContentStart.GetPositionAtOffset(at,LogicalDirection.Forward);var owners=ranges.Where(r=>position.CompareTo(r.Start)>=0&&position.CompareTo(r.End)<0).ToArray();if(owners.Length!=1||paginator.GetPageNumber(position)!=owners[0].Page)throw new Exception("multiple floater exact source/page ownership at "+at);}
+            using(var first=paginator.GetPage(0)){var bytes=Raster(first.Visual);int red=0,green=0;for(int i=0;i<bytes.Length;i+=4){if(bytes[i+3]<150)continue;if(bytes[i+2]>200&&bytes[i]<60&&bytes[i+1]<60)++red;if(bytes[i+1]>200&&bytes[i]<60&&bytes[i+2]<60)++green;}if(red<1000||green<1000)throw new Exception("multiple floater page must regenerate both original objects");}
+            Console.WriteLine($"original multiple floaters {mode}, opposite={opposite}: {pages} pages, {firstRun.Text.Length+secondRun.Text.Length+body.Text.Length} characters covered exactly once, page mapping/regeneration/GC PASS");
+        }
         foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display}) {
             var floatingRun=new Run("Original scrolling floater");var bodyRun=new Run(string.Join(" ",Enumerable.Range(0,130).Select(i=>$"scroll{i:D3}")));
             var floater=new Floater(new Paragraph(floatingRun){Margin=new Thickness(0),Foreground=Brushes.Blue}){Width=120,HorizontalAlignment=HorizontalAlignment.Left,Margin=new Thickness(0),Padding=new Thickness(4),Background=Brushes.Red};

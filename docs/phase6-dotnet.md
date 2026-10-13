@@ -9472,3 +9472,58 @@ complex center wrapping, clear policies, figures/tables, comparison/display
 transfer, balancing/span areas/footnotes, advanced/optimal/partial incremental/
 interruptible algorithms, full bidi/native language and broader runtime behavior
 remain incomplete. The full WPF goal stays active.
+
+
+## 144. Multiple rectangular floaters and line-height-aware obstacle bands
+
+The 2026-10-14 continuation removes the single before-line floater restriction.
+Original attachment callbacks enumerate all objects in source order. Each retains
+its requested horizontal edge; a collision moves a later rectangle below the
+earlier overlapping rectangle. Opposite-edge rectangles share a row when their
+horizontal extents are disjoint. Full placement geometry is validated before
+retaining the candidate. A multi-object set that needs unsupported page-overflow
+handling still returns an explicit error and releases all candidates.
+
+Line exclusion now considers the actual vertical band occupied by a formatted
+line. If that band intersects another obstacle that reduces the allowed width,
+the formatter destroys the provisional line/break and formats again with a
+height hint. Refinement narrows the accepted area monotonically, preserving the
+same source position until a line is accepted. This prevents a line that starts
+above a wider second floater from overlapping it below. Once an obstacle ends,
+subsequent lines regain the available track width.
+
+Validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-paragraph-context-native
+MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-floaters-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/multiple-floaters-sdk-check'
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-paragraph-context-native inventory layout check-sdk
+```
+
+Native gates check two real attachment records, same-edge stacked positions,
+opposite-edge shared-row positions, constrained host line widths, actual used
+height, capacity queries and exact content/client/line cleanup. A populated
+second-content callback failure destroys the previous retained attachment and
+the speculative second object once. Unsupported placement overflow returns no
+partial page and releases both objects.
+
+Original WPF documents render red/green floaters with different widths and blue
+content while black host glyphs flow around both rectangles without overlap.
+Same-edge left rectangles stack; opposite-edge rectangles retain the left/right
+page edges on one row. Ideal same-edge red bottom is y=88 and green top y=90;
+Display y=92/93. Opposite-edge green starts y=10. Each case completes three pages
+and covers all 944 source characters exactly once; original GetPageNumber agrees.
+Disposed first pages regenerate both actual colored objects across GC. Existing
+single-floater and scrolling-edit checks pass through shared-framework and
+self-contained publishes with SDK roots/toolchain PATH removed and dispatcher
+shutdown. The existing floater SDK gate includes all multiple-object cases.
+
+Final source evidence is archived under
+ tmp/wpf8-support/validation/multiple-floaters-20261014. Imported coverage remains
+103/139 with 36 absent and original ABI checks remain 335: this changes behavior
+of existing exports. Later in-line anchors, split/deferred floater content and
+cross-paragraph flow, complex center wrapping/clear policies, figures/tables,
+comparison/display transfer, balancing/span areas/footnotes, advanced/optimal/
+partial incremental/interruptible algorithms, full bidi/native language and
+broader runtime behavior remain required for the full WPF goal. Package
+integration follows.
