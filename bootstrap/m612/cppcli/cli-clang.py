@@ -141,6 +141,11 @@ def main():
             command += ["-Xclang", "-plugin-arg-" + name, "-Xclang", arg]
         if include_header:
             command += ["-include", header]
+        if name == "cli-adapt":
+            # MSVC exposes these forms as language intrinsics. Preprocess the
+            # compatibility declarations once with the source so an explicit
+            # vcclr.h include shares its guard rather than duplicating AST types.
+            command += ["-include", build / "include/vcclr.h"]
         command += [input_path]
         run(command)
     shim, reference_file = work / "shim.cpp", work / "references.json"

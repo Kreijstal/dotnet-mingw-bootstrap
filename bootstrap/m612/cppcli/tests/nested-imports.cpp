@@ -7,6 +7,7 @@ public:
     static NestedContract::Outer::Flags Echo(NestedContract::Outer::Flags value) {
         return NestedPeer::Api::Echo(NestedContract::Outer::Echo(value));
     }
+    static NestedContract::Outer::Flags Default() { return NestedContract::Outer::Default; }
     static int Facility(int value) { return static_cast<int>(NestedContract::Outer::Facility(value)); }
     static String^ Node(String^ text) {
         NestedContract::Outer::Node^ node=gcnew NestedContract::Outer::Node(text);

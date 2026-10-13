@@ -59,3 +59,19 @@ public:
     static int Typed(int value) { return (gcnew TypedConstructor(value))->Value; }
     static ArgumentOutOfRangeException^ Range(int value) { return gcnew ArgumentOutOfRangeException("value",value,"message"); }
 };
+public delegate void NameWriter(String^ value);
+public ref class PropertyRoot {
+    String^ _name;
+public:
+    property String^ Name {
+        String^ get() { return _name; }
+    protected:
+        void set(String^ value) { _name=value; }
+    }
+};
+public ref class PropertyMid : PropertyRoot {};
+public ref class PropertyLeaf : PropertyMid {
+public:
+    NameWriter^ Bind() { return gcnew NameWriter(this,&PropertyLeaf::Name::set); }
+    String^ ReadBase() { return PropertyLeaf::Name::get(); }
+};

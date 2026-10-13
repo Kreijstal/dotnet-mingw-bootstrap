@@ -1116,6 +1116,35 @@ protected:
                 i = end-1; return true;
             };
             std::set<std::pair<std::string, std::string>> property_names;
+            std::map<std::string,std::vector<std::string>> source_bases;
+            for(size_t pos=0;pos+3<tokens.size();++pos) {
+                if((tokens[pos].text!="ref" && tokens[pos].text!="value" && tokens[pos].text!="interface") ||
+                    (tokens[pos+1].text!="class" && tokens[pos+1].text!="struct")) continue;
+                auto owner=tokens[pos+2].text;
+                size_t at=pos+3;
+                while(at<tokens.size() && tokens[at].text!="{" && tokens[at].text!=";" && tokens[at].text!=":") ++at;
+                if(at==tokens.size() || tokens[at].text!=":") continue;
+                std::string base; unsigned angles=0;
+                for(++at;at<tokens.size() && tokens[at].text!="{" && tokens[at].text!=";";++at) {
+                    auto text=tokens[at].text;
+                    if(text=="<") ++angles;
+                    else if(text==">") { if(angles) --angles; }
+                    else if(text==">>") angles=angles>1 ? angles-2 : 0;
+                    else if(!angles && text==",") { if(!base.empty()) source_bases[owner].push_back(base); base.clear(); }
+                    else if(!angles && tokens[at].kind==tok::identifier && text!="public" && text!="private" && text!="protected" && text!="virtual") base=text;
+                }
+                if(!base.empty()) source_bases[owner].push_back(base);
+            }
+            auto source_property=[&](const std::string& owner,const std::string& name) {
+                std::set<std::string> visited;
+                std::function<bool(const std::string&)> find=[&](const std::string& type) {
+                    if(!visited.insert(type).second) return false;
+                    if(property_names.count({type,name})) return true;
+                    for(const auto& base:source_bases[type]) if(find(base)) return true;
+                    return false;
+                };
+                return find(owner);
+            };
             std::map<std::pair<std::string, std::string>, std::string> indexed_facades;
             struct Conversion { size_t open, begin; std::string result, key, owner, kind, name; bool declaration; };
             std::map<size_t,Conversion> conversions;
@@ -1218,7 +1247,7 @@ protected:
                             }
                         }
                     }
-                    if (property_names.count({tokens[owner].text, t.text})) {
+                    if (source_property(tokens[owner].text,t.text)) {
                         emit(t, tokens[i+2].text + "_" + (t.text == "default" ? "Item" : t.text)); i += 2; continue;
                     }
                     size_t first=owner;
@@ -3282,6 +3311,17 @@ class Emitter {
             if (auto* opcall = dyn_cast<CXXOperatorCallExpr>(c); opcall && opcall->getOperator() == OO_Arrow) { expr(opcall->getArg(0)); return; }
             fail(c, "unsupported static property operation");
         }
+        if(annotated(f,"cli.nativeint.pointer")) {
+            auto* member=dyn_cast<CXXMemberCallExpr>(c);
+            auto* method=dyn_cast_or_null<CXXConversionDecl>(f);
+            auto result=c->getType();
+            if(!member || !method || record_annotation(method->getParent(),"cli.nativeint:").empty() || !result->isPointerType() || handle_target(result))
+                fail(c,"native integer conversion requires a raw native pointer target");
+            auto element=result->getPointeeType();
+            if(!element->isVoidType() && !element->isFunctionType() && !native_storage(element))
+                fail(c,"native integer pointer targets require native or GC-free storage");
+            expr(member->getImplicitObjectArgument()); op("conv.u",1,1); return;
+        }
         if (annotated(f, "cli.box.object")) {
             auto* member = dyn_cast<CXXMemberCallExpr>(c);
             auto* method = dyn_cast<CXXMethodDecl>(f);
@@ -4094,7 +4134,7 @@ class Emitter {
             if (c->getCastKind() == CK_UserDefinedConversion && c->getType()->isPointerType() && !handle_target(c->getType())) {
                 auto* conversion = dyn_cast<CXXMemberCallExpr>(strip(c->getSubExpr()));
                 auto* method = conversion ? dyn_cast_or_null<CXXConversionDecl>(conversion->getDirectCallee()) : nullptr;
-                if (!method || !record_annotated(method->getParent(), "cli.pin")) fail(c, "explicit native pointer conversion requires a pin_ptr intrinsic");
+                if (!method || (!record_annotated(method->getParent(), "cli.pin") && !annotated(method,"cli.nativeint.pointer"))) fail(c, "explicit native pointer conversion requires a pin_ptr or native-integer intrinsic");
                 expr(c->getSubExpr()); return;
             }
             if (c->getCastKind() == CK_BitCast && c->getType()->isPointerType() && !handle_target(c->getType()) &&

@@ -244,7 +244,11 @@
     "Clang-resolved builtin scalar instance receivers bind selected primitive metadata overloads through typed CLR boxes; all twelve primitive kinds, culture-aware formatting, typed/Object equality, comparison/hash/GetType, aliases, receiver-once and the original printing Enum.Parse pattern execute",
     "Rank-one array facades inherit the actual imported System.Array API when selected; real GetEnumerator, SetValue/GetValue, length/rank/bounds/clone calls preserve CLR boxing, element checks, null/bounds exceptions and GC lifetimes",
     "Object argument boxing excludes impossible non-null scalar conversions to unrelated managed reference-class alternatives while preserving typed/interface/Enum/ValueType and null overload candidates",
-    "Unary percent on managed value-class operands emits typed CLR box copies; local copy initialization resolves String/Object targets before literal conversion or scalar boxing, preserves literal-zero null initialization, native literal storage and binary remainder"
+    "Unary percent on managed value-class operands emits typed CLR box copies; local copy initialization resolves String/Object targets before literal conversion or scalar boxing, preserves literal-zero null initialization, native literal storage and binary remainder",
+    "Explicit IntPtr/UIntPtr conversions to supported raw native pointer types preserve native bits and receiver-once semantics; void/typed/const casts, high unsigned bits and actual native-memory writes execute while implicit and managed-reference reinterpretations fail",
+    "Qualified source property accessors follow recognized source base declarations; inherited getters and protected setter method pointers bind genuine CLR delegates across intermediate classes, preserve access checks and retain GC targets",
+    "The adapter preprocesses intrinsic pin_ptr/interior_ptr declarations once with the source, sharing vcclr include guards; explicit includes and concurrent moving-GC pinning regressions pass",
+    "Imported enum-typed literal fields expose correctly cast C++ constants while retaining original CLR type/token/value metadata; original WPF geometry/pen defaults and high unsigned nested enum constants are checked"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -319,6 +323,7 @@
     "Object unboxing recognizes direct Object-typed operands with primitive/CLI enum targets; ValueType/interface operands, native numeric-pointer casts, general typed-box-to-scalar cast discovery and user-defined implicit conversions remain incomplete",
     "Typed scalar/enum boxes have direct signature/import evidence; nested array/generic/byref imports of these boxes, dependent element types, primitive/Enum-specific arrow members and native IntPtr/UIntPtr boxing remain incomplete; native storage/pointers to boxes are rejected",
     "Managed constructor conversion covers parenthesized direct bases, single-argument fields and new expressions without declarator chunks; braced/delegating/general direct initialization, broader boxing overload selection and aliased/inherited imported accessor owner discovery remain incomplete",
-    "Primitive instance lookup requires the corresponding primitive metadata import; general primitive/enum/interface boxing overload resolution and mutating/byref-like primitive APIs remain incomplete; unary percent currently requires a managed value class, and general braced/direct/conditional initialization remains unfinished"
+    "Primitive instance lookup requires the corresponding primitive metadata import; general primitive/enum/interface boxing overload resolution and mutating/byref-like primitive APIs remain incomplete; unary percent currently requires a managed value class, and general braced/direct/conditional initialization remains unfinished",
+    "Native-integer pointer conversions require supported raw target storage; general opaque/nontrivial/GC-bearing target forms remain incomplete. Source inherited accessor discovery currently uses recognized base names; general aliases, namespaces and generic base graphs remain unfinished"
   ]
 }

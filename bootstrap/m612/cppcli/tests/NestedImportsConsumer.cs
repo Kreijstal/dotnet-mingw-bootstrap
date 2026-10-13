@@ -6,7 +6,7 @@ using NestedContract;
 foreach(var type in typeof(NestedBridge).Assembly.GetTypes())
     foreach(var method in type.GetMethods(BindingFlags.Public|BindingFlags.NonPublic|BindingFlags.Static|BindingFlags.Instance|BindingFlags.DeclaredOnly))
         if(!method.IsAbstract && method.GetMethodBody()!=null) RuntimeHelpers.PrepareMethod(method.MethodHandle);
-if(NestedBridge.Echo(Outer.Flags.High)!=Outer.Flags.High || NestedBridge.Facility(unchecked((int)0x80070005))!=7) throw new Exception("nested enum CLR identity/return");
+if(NestedBridge.Default()!=Outer.Flags.High || NestedBridge.Echo(Outer.Flags.High)!=Outer.Flags.High || NestedBridge.Facility(unchecked((int)0x80070005))!=7) throw new Exception("nested enum CLR identity/return");
 if(NestedBridge.Node("node")!="node" || NestedBridge.Point(41)!=42 || NestedBridge.Detail("deep")!="deep") throw new Exception("nested constructor/field/property/value/deep path");
 if(NestedBridge.LiteralNode()!="RAW") throw new Exception("nested constructor literal");
 ValueType box=NestedBridge.Box(Outer.Flags.High);

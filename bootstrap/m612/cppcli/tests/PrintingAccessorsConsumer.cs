@@ -20,8 +20,12 @@ var custom=new QualifiedCustom(); custom.WriteBase(1,44);
 if(custom.ReadBase(1)!=44 || custom[1]!=44 || custom.TitleBase()!="original title") throw new Exception("metadata-selected default/named accessor");
 var dispatch=new OverrideTable(); dispatch.WriteBase("key",45);
 if((int)dispatch.ReadBase("key")!=45 || (string)dispatch["key"]!="override") throw new Exception("qualified base call dispatched virtually");
+var leaf=new PropertyLeaf();
+var writer=leaf.Bind(); writer("inherited");
+if(leaf.ReadBase()!="inherited" || leaf.Name!="inherited") throw new Exception("inherited property-qualified delegate/getter lookup");
 GC.Collect(); GC.WaitForPendingFinalizers();
 if(inline.Name!="RAW" || (int)table.ReadBase("key")!=43) throw new Exception("GC storage");
+writer("after GC"); if(leaf.Name!="after GC") throw new Exception("inherited delegate GC target");
 Console.WriteLine("printing accessors: source/imported base literal constructors, fields/boxing, native literals, actual ResourceManager/Hashtable, custom default/named metadata and base dispatch PASS");
 public class OverrideTable : QualifiedTable {
     public override object this[object key] { get=>"override"; set=>base[key]=value; }

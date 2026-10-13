@@ -197,6 +197,14 @@ def main():
               "System.Windows.Xps.Serialization.XpsOMSerializationManagerAsync",
               "System.Printing.PageImageableArea", "System.Nullable`1"]
     types += ["System.Printing.PrinterHResult+Facility", "System.EntryPointNotFoundException"]
+    types += ["System.Runtime.CompilerServices.RuntimeCompatibilityAttribute", "System.IO.FileShare",
+              "System.Math", "System.Windows.Media.Color", "System.Windows.Int32Rect",
+              "Microsoft.Internal.AlphaFlattener.Utility"]
+    types += ["System.Windows.Media.Geometry+PathGeometryData", "System.Windows.Media.PathGeometry",
+              "System.Windows.Media.FillRule", "System.Windows.Media.GlyphTypeface",
+              "System.Windows.Media.PixelFormat", "System.Windows.Media.Transform",
+              "System.Windows.Media.SolidColorBrush", "System.Windows.Media.PenLineCap",
+              "System.Windows.Media.PenLineJoin"]
     for name in types:
         command += ["--type", name]
     command += ["--source-type", "System.Printing.PrintQueue"]

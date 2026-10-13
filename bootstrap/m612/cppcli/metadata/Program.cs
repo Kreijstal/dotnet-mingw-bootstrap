@@ -431,9 +431,13 @@ static class Program
                 if(t.Kind=="boxed" && owner?.Kind=="enum") t=t with { Cpp="__cli_handle<"+SignatureTypes.CppName(t.Name)+">" };
                 return owner == null ? t : t with { Il = t.Il.Replace(SignatureTypes.IlName(t.Name), AssemblyReference(owner.Assembly) + SignatureTypes.IlName(t.Name)) };
             }
+            CliConstant? QualifiedConstant(CliField field) {
+                if(field.Constant==null || !types.Any(t=>t.Kind=="enum" && t.Name==field.Type.Name)) return field.Constant;
+                return field.Constant with { Cpp="static_cast<"+field.Type.Cpp+">("+field.Constant.Cpp+")" };
+            }
             types = types.Select(t => t with { Events=t.Events.Select(e=>e with { Type=Qualified(e.Type), Supported=e.Supported && !e.Static && Available(e.Type) &&
                 t.Methods.Any(m=>m.Name==e.Add && m.Supported && m.Parameters.All(Available)) &&
-                t.Methods.Any(m=>m.Name==e.Remove && m.Supported && m.Parameters.All(Available)) }).ToArray(), BaseType = t.BaseType == null ? null : Qualified(t.BaseType), InterfaceTypes = t.InterfaceTypes.Select(Qualified).ToArray(), Fields = t.Fields?.Select(f => f with { Type = Qualified(f.Type), Supported = f.Supported && Available(f.Type) }).ToArray(), Methods = t.Methods.Select(m => m with {
+                t.Methods.Any(m=>m.Name==e.Remove && m.Supported && m.Parameters.All(Available)) }).ToArray(), BaseType = t.BaseType == null ? null : Qualified(t.BaseType), InterfaceTypes = t.InterfaceTypes.Select(Qualified).ToArray(), Fields = t.Fields?.Select(f => f with { Type = Qualified(f.Type), Constant=QualifiedConstant(f), Supported = f.Supported && Available(f.Type) }).ToArray(), Methods = t.Methods.Select(m => m with {
                 Supported = m.Supported && Available(m.Return) && m.Parameters.All(Available),
                 Return = Qualified(m.Return), Parameters = m.Parameters.Select(Qualified).ToArray()
             }).ToArray(), Properties = t.Properties.Select(p => p with {
@@ -540,6 +544,8 @@ static class Program
                 w.WriteLine("using "+child.Name[(child.Name.LastIndexOf('+')+1)..]+" = "+SignatureTypes.CppName(child.Name)+";");
             if (t.Name == "System.Object") w.WriteLine("virtual ~Object() noexcept(false) = default;");
             if (t.Name == "System.String") w.WriteLine("String(const char*); String(const wchar_t*);");
+            if(t.Name is "System.IntPtr" or "System.UIntPtr")
+                w.WriteLine("template<class __cli_native_target> __attribute__((annotate(\"cli.nativeint.pointer\"))) explicit operator __cli_native_target*() const;");
             if (t.Kind == "value" && !t.Methods.Any(m => m.Name == ".ctor" && m.Parameters.Length == 0 && m.Supported))
                 w.WriteLine("__attribute__((annotate(\"cli.value.zero\"))) " + name + "() {}");
             if (t.Kind == "value") {

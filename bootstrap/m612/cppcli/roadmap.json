@@ -96,7 +96,9 @@
         "Non-generic public/friend nested metadata imports with declaring-type closure, real CLR nested identities and external TypeRef ownership",
         "Primitive instance metadata overload dispatch and culture-aware formatting; imported System.Array API inheritance and actual runtime enumeration/stores/metrics/clone",
         "Object argument boxing filters impossible scalar/reference-class alternatives; typed and null alternatives retain normal Sema",
-        "Unary percent value-class box copies and resolved local String/Object copy initialization"
+        "Unary percent value-class box copies and resolved local String/Object copy initialization",
+        "Explicit native-integer raw pointer casts, recognized source inherited property accessor/delegate lookup and automatic guarded pointer intrinsics",
+        "Imported enum-valued constant facades retain typed CLR metadata and correct native C++ initialization"
       ],
       "remaining": [
         "implicit boxing into interfaces and complete boxed-handle/primitive-member conversions",

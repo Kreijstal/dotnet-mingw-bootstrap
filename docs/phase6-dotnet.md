@@ -5389,3 +5389,67 @@ The diagnostic scope remains 49 original printing project inputs/66 tree C++
 files. No complete System.Printing runtime DLL or WPF package is produced.
 Native import coverage remains 58/139; full layout, printing runtime and
 WindowsDesktop SDK/targeting/runtime packaging remain required.
+
+## 60. Native integer casts, inherited accessors and GDI metadata
+
+The next 2026-10-13 continuation resolves the printing IntPtr/native-pointer
+casts with explicit conversion facades on the actual imported IntPtr/UIntPtr
+types. Clang selects the destination pointer type, and a marked conversion emits
+the original native integer bits with conv.u. No boxed-reference reinterpretation
+is used. Supported void, typed and const native targets retain full pointer
+width, unsigned high bits and single receiver evaluation. A typed pointer writes
+to actual Marshal-allocated memory and the original Marshal API reads the value.
+Implicit conversion and casts to managed String handles are rejected; readonly
+native-integer fields keep their existing access checks. Opaque/nontrivial or
+GC-bearing target forms remain incomplete or rejected.
+
+Qualified source property selectors now follow recognized source base
+declarations. The original PrintSystemJobInfo::Name::set method pointer passes
+Sema. A fixture with an intermediate base binds a CLR String delegate to the
+inherited protected setter, calls an inherited getter through the derived
+qualifier and verifies the delegate target after GC. A private base setter
+remains inaccessible. General source aliases/namespaces/generic base discovery
+are still incomplete.
+
+The adapter now preprocesses the pin_ptr/interior_ptr compatibility declarations
+with the source, exposing the forms that MSVC supplies as language intrinsics.
+Explicit vcclr.h includes share the same preprocessing guard. Adding the header
+only to the later AST pass was rejected during validation because it duplicated
+already adapted declarations; the final driver includes it once in cli-adapt.
+Existing Unicode/native-array pinning and concurrent compacting-GC checks pass.
+
+The printing gate imports actually used RuntimeCompatibilityAttribute, FileShare,
+Math, Color, Int32Rect and AlphaFlattener Utility metadata, followed by
+Geometry.PathGeometryData, PathGeometry, FillRule, GlyphTypeface, PixelFormat,
+Transform, SolidColorBrush and pen enums. Source assembly identities and friend
+access are retained; no empty namespace or runtime placeholder supplies these
+types. The geometry/pen imports expose enum-valued literal fields. Their C++
+facades now cast the metadata constant to its actual enum type, retaining the
+original CLR field type/token/value. A separately source-built nested enum
+constant with its unsigned high bit set passes CLR identity/payload checks.
+
+Validation on win11 uses the source SDK/ilasm/M612/CLANG64 and WPF environment
+recorded in §57:
+
+```bash
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-nativeints test-printing-accessors test-pinning
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-nested-imports
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh build-directwrite check-directwrite-assembly printing-gate
+```
+
+The focused runtime, metadata and rejection checks pass with zero C#
+warnings/errors. Complete DirectWrite generation/assembly still passes, with
+85 types loaded, 283 managed bodies prepared and 81 font families found. The
+final printing gate **fails** first at gdidevice.h:45/60's interior_ptr indexing.
+The preceding native integer casts, inherited Name setter, missing namespaces
+and geometry/pen enum-constant failures are absent. Later errors include
+additional metadata, legacy-device interface availability, native min/max
+compatibility and further drawing operations. The gate does not skip original
+bodies or replace them with stubs.
+
+Evidence is archived locally under
+`tmp/wpf8-support/validation/printing-nativeint-accessor-20261013`.
+Diagnostic scope remains 49 original printing project inputs/66 tree C++ files.
+No complete System.Printing runtime DLL or WPF package is produced. Native
+import coverage remains 58/139; complete layout, printing runtime and
+WindowsDesktop SDK/targeting/runtime packaging remain required.

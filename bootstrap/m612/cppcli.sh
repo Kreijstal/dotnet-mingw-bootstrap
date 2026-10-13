@@ -444,7 +444,7 @@ EOF
   cp "$src/tests/printing-accessors.cpp" "$testdir/printing-accessors.cpp"
   /clang64/bin/clang++.exe -shared -O2 "$src/tests/semantic-literals-native.cpp" -o "$testdir/printing-accessors-native.dll"
   local args=(--type System.Resources.ResourceManager --type System.Reflection.Assembly --type System.Type --type System.ArgumentOutOfRangeException \
-    --type System.Collections.Hashtable --type AccessorContract.BaseTable \
+    --type System.Collections.Hashtable --type AccessorContract.BaseTable --type System.Delegate --type System.MulticastDelegate \
     --reference "$(cygpath -m "${refs[-1]}/System.Collections.NonGeneric.dll")" \
     --reference "$(cygpath -m "$testdir/AccessorContract.dll")")
   compile "$(cygpath -m "$testdir/printing-accessors.cpp")" --target library "${args[@]}" \
@@ -460,6 +460,7 @@ EOF
   reject_case accessor-private-setter '#using "AccessorContract.dll"
 public ref class Child : AccessorContract::BaseTable { public: void Write() { AccessorContract::BaseTable::Title::set("bad"); } }; int main() { return 0; }' 'no selected accessor' "${args[@]}"
   reject_case initializer-private-constructor 'public ref class Base { private: Base(System::String^ text) {} }; public ref class Child : Base { public: Child():Base("private") {} }; int main() { return 0; }' 'private constructor'
+  reject_case inherited-private-setter 'public ref class Root { public: property int Value { int get() { return 0; } private: void set(int value) {} } }; public ref class Child : Root { public: void Write() { Child::Value::set(1); } }; int main() { return 0; }' 'private member'
 }
 step_test-nested-imports() {
   mkdir -p "$testdir/nested-contract" "$testdir/nested-peer" "$testdir/nested-imports-consumer"
@@ -472,6 +473,7 @@ using System.Runtime.CompilerServices;
 namespace NestedContract;
 public class Outer {
     public enum Flags : uint { High=0x80000000, Low=1 }
+    public const Flags Default=Flags.High;
     public static Flags Echo(Flags value)=>value;
     public static Flags Facility(int value)=>(Flags)((value>>16)&0x1fff);
     public class Node {
@@ -1921,12 +1923,16 @@ if (NativeInts.Unsigned(0xffffffffffffffffUL) != new UIntPtr(0xffffffffffffffffU
 var api = typeof(NativeInts);
 if (api.GetMethod("Make").ReturnType != typeof(IntPtr) || api.GetMethod("Bits").GetParameters()[0].ParameterType != typeof(IntPtr))
     throw new Exception("native integer signature width/type lost");
-Console.WriteLine("native integer API metadata OK");
+if(NativeInts.Raw(new IntPtr(-1))!=ulong.MaxValue || NativeInts.Receivers!=1 || NativeInts.RawUnsigned(new UIntPtr(0x8000000000000001UL))!=0x8000000000000001UL || NativeInts.TypedCast()!=0x44332211)
+    throw new Exception("native integer pointer cast width, receiver evaluation or memory write");
+Console.WriteLine("native integer API metadata and pointer casts OK");
 EOF
   "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/nativeint-consumer/consumer.csproj")" -nologo -v:q \
     --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false -p:NuGetAudit=false
   "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/nativeint-consumer/bin/Debug/net8.0/consumer.dll")"
   reject_case readonly-imported-static 'using namespace System; int main() { IntPtr::Zero = IntPtr(1); return 0; }' 'readonly imported fields cannot be assigned'
+  reject_case nativeint-implicit-pointer 'int main() { void* pointer=System::IntPtr(42); return 0; }' 'ambiguous'
+  reject_case nativeint-managed-target 'int main() { System::String^ value=static_cast<System::String^>(System::IntPtr(42)); return 0; }' 'raw native pointer target'
   log "PASS test-nativeints: pointer-sized signatures and native memory copying"
 }
 step_test-tracking() {
