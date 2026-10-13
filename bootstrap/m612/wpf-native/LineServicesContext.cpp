@@ -43,6 +43,8 @@ struct Line {
     LsLInfo info{};
     LsLineWidths widths{};
     int first=0,paragraph_first=0;
+    Run terminator;
+    bool has_terminator=false;
 };
 struct BreakRecord { int next,paragraph_first; std::shared_ptr<Context> context; };
 std::mutex gate;
@@ -184,6 +186,86 @@ int choose_wrap(const std::vector<Run>& runs,int allowance,bool emergency) {
     ubrk_close(iterator); return chosen?chosen:first_break;
 }
 
+struct Cell {
+    const Run* run;
+    int cp,length,x,width,glyphs,run_x;
+};
+
+int text_cells(const Line& line,std::vector<Cell>& cells) {
+    // A query cell names one client run. Until cross-run caret ownership is
+    // implemented, reject graphemes crossing those runs rather than splitting
+    // a user-perceived character at an artificial buffer boundary.
+    if(line.runs.size()>1) {
+        std::vector<UChar> text;
+        for(const auto& run:line.runs) text.insert(text.end(),run.text.begin(),run.text.end());
+        UErrorCode error=U_ZERO_ERROR;
+        auto* raw=ubrk_open(UBRK_CHARACTER,"root",text.data(),static_cast<int>(text.size()),&error);
+        if(U_FAILURE(error) || !raw) return LS_InvalidFormatterResult;
+        std::unique_ptr<UBreakIterator,decltype(&ubrk_close)> iterator(raw,ubrk_close);
+        int end=0;
+        for(const auto& run:line.runs) {
+            end+=static_cast<int>(run.text.size());
+            if(!ubrk_isBoundary(raw,end)) return LS_NotImplemented;
+        }
+    }
+    int x=line.widths.upStartMainText;
+    for(const auto& run:line.runs) {
+        if(run.flow!=0) return LS_NotImplemented;
+        int run_x=x;
+        UErrorCode error=U_ZERO_ERROR;
+        auto* raw=ubrk_open(UBRK_CHARACTER,"root",reinterpret_cast<const UChar*>(run.text.data()),
+            static_cast<int>(run.text.size()),&error);
+        if(U_FAILURE(error) || !raw) return LS_InvalidFormatterResult;
+        std::unique_ptr<UBreakIterator,decltype(&ubrk_close)> iterator(raw,ubrk_close);
+        for(size_t start=0;start<run.text.size();) {
+            size_t end=static_cast<size_t>(ubrk_following(raw,static_cast<int>(start)));
+            if(end>run.text.size() || end<=start) return LS_InvalidFormatterResult;
+            if(run.shaped) {
+                while(end<run.text.size() && run.clusters[end]==run.clusters[end-1]) {
+                    int next=ubrk_following(raw,static_cast<int>(end));
+                    if(next==UBRK_DONE) { end=run.text.size(); break; }
+                    end=static_cast<size_t>(next);
+                }
+            }
+            int width=0,glyphs=0;
+            if(!run.hidden) {
+                if(run.shaped) {
+                    unsigned first=run.clusters[start],last=end<run.text.size()?run.clusters[end]:run.advances.size();
+                    if(first>last || last>run.advances.size()) return LS_NotImplemented;
+                    glyphs=last-first;
+                    for(unsigned glyph=first;glyph<last;++glyph) width+=run.advances[glyph];
+                } else {
+                    glyphs=static_cast<int>(end-start);
+                    for(size_t i=start;i<end;++i) width+=run.widths[i];
+                }
+            }
+            cells.push_back({&run,run.cp+static_cast<int>(start),static_cast<int>(end-start),x,width,glyphs,run_x});
+            x+=width; start=end;
+        }
+    }
+    if(line.has_terminator) cells.push_back({&line.terminator,line.terminator.cp,1,x,0,0,x});
+    return LS_None;
+}
+
+void fill_query(const Line& line,const Cell& cell,LsQSubInfo& sub,LsTextCell& text) {
+    const Run& run=*cell.run;
+    sub={}; text={};
+    sub.lstflowSubLine=run.flow; sub.lscpFirstSubLine=line.first;
+    sub.lsdcpSubLine=line.info.cpLimToContinue-line.first;
+    sub.pointUvStartSubLine={line.widths.upStartMainText,0};
+    sub.lsHeightsPresSubLine={line.info.dvpAscent,line.info.dvpDescent,line.info.dvpMultiLineHeight};
+    sub.dupSubLine=line.widths.upLimLine-line.widths.upStartMainText;
+    sub.idobj=run.properties.idObj; sub.plsrun=reinterpret_cast<void*>(run.id);
+    sub.lscpFirstRun=run.cp; sub.lsdcpRun=static_cast<int>(run.text.size());
+    sub.pointUvStartRun={cell.run_x,0};
+    sub.lsHeightsPresRun={run.metrics.dvAscent,run.metrics.dvDescent,run.metrics.dvMultiLineHeight};
+    sub.dupRun=run.width;
+    sub.pointUvStartObj=sub.pointUvStartRun; sub.lsHeightsPresObj=sub.lsHeightsPresRun; sub.dupObj=run.width;
+    text.lscpStartCell=cell.cp; text.lscpEndCell=cell.cp+cell.length-1;
+    text.pointUvStartCell={cell.x,0}; text.dupCell=cell.width;
+    text.cCharsInCell=cell.length; text.cGlyphsInCell=cell.glyphs;
+}
+
 // The source formatter's control vocabulary uses stable, single Unicode
 // characters. A future line engine interprets these same markers explicitly.
 WCHAR paragraph[]={0x2029,0},line[]={0x2028,0},hidden[]={0x2060,0},nbsp[]={0x00A0,0};
@@ -320,6 +402,7 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
             if(count==1 && (text[0]==0x2028 || text[0]==0x2029)) {
                 if(position==INT_MAX) return LS_InvalidFormatterResult;
                 result->info.endr=text[0]==0x2029?2:4;
+                run.hidden=true; result->terminator=std::move(run); result->has_terminator=true;
                 ended=true; ++position; break;
             }
             if(limit>0 && position-cp+count>limit) count=limit-(position-cp);
@@ -364,7 +447,7 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
                 remaining-=length; ++keep;
             }
             result->runs.resize(keep);
-            if(truncated) { result->info.endr=0; position=cp+cut; }
+            if(truncated) { result->info.endr=0; result->has_terminator=false; position=cp+cut; }
             total=properties.durLeft; trailing=total;
             result->info.dvpAscent=result->info.dvpDescent=result->info.dvpMultiLineHeight=0;
             result->info.EffectsFlags=0;
@@ -426,6 +509,47 @@ extern "C" __declspec(dllexport) int WINAPI LoDisposeBreakRecord(void* handle,BO
     std::lock_guard<std::mutex> lock(gate);
     auto found=records.find(handle); if(found==records.end()) return LS_InvalidBreakRecord;
     records.erase(found); return LS_None;
+}
+
+extern "C" __declspec(dllexport) int WINAPI LoQueryLineCpPpoint(void* handle,int cp,int capacity,
+    LsQSubInfo* sub,int* depth,LsTextCell* text) {
+    if(!depth || !text) return LS_NullOutputParameter;
+    *depth=0; *text={};
+    if(capacity<=0 || !sub) return LS_InvalidParameter;
+    *sub={};
+    auto line=get_line(handle); if(!line) return LS_InvalidLine;
+    if(cp<line->first || cp>=line->info.cpLimToContinue) return LS_WrongGivenCp;
+    try {
+        std::vector<Cell> cells;
+        int status=text_cells(*line,cells); if(status) return status;
+        for(const auto& cell:cells) if(cp>=cell.cp && cp<cell.cp+cell.length) {
+            fill_query(*line,cell,*sub,*text); *depth=1; return LS_None;
+        }
+        return LS_WrongGivenCp;
+    } catch(const std::bad_alloc&) { return LS_OutOfMemory; }
+}
+
+extern "C" __declspec(dllexport) int WINAPI LoQueryLinePointPcp(void* handle,const LSPOINT* point,int capacity,
+    LsQSubInfo* sub,int* depth,LsTextCell* text) {
+    if(!depth || !text) return LS_NullOutputParameter;
+    *depth=0; *text={};
+    if(capacity<=0 || !sub) return LS_InvalidParameter;
+    *sub={};
+    if(!point) return LS_InvalidParameter;
+    auto line=get_line(handle); if(!line) return LS_InvalidLine;
+    try {
+        std::vector<Cell> cells;
+        int status=text_cells(*line,cells); if(status) return status;
+        if(cells.empty()) return LS_WrongGivenCp;
+        const Cell* chosen=nullptr;
+        for(const auto& cell:cells) {
+            if(cell.width<=0) continue;
+            chosen=&cell;
+            if(static_cast<int64_t>(point->x)<static_cast<int64_t>(cell.x)+cell.width) break;
+        }
+        if(!chosen) chosen=&cells.front();
+        fill_query(*line,*chosen,*sub,*text); *depth=1; return LS_None;
+    } catch(const std::bad_alloc&) { return LS_OutOfMemory; }
 }
 
 extern "C" __declspec(dllexport) int WINAPI LoDisplayLine(void* handle,LSPOINT* origin,uint32_t mode,LSRECT* clip) {

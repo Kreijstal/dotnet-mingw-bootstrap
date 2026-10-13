@@ -57,8 +57,20 @@ foreign contexts fail. WPF's ordinary single-line public GetTextLineBreak path
 passes a null native line pointer, so the native test separately exercises these
 exports rather than relying on public formatting to prove record ownership.
 
+LoQueryLineCpPpoint and LoQueryLinePointPcp return real retained character/
+grapheme/shaping-cluster cells, their measured advances and original client run
+identities. The one supported subline contains the original run and line
+geometry. Point queries clamp to the first/last positive-width cell; paragraph
+separators retain their own zero-width position and original run identity.
+The original nested query layouts are generated from LineServices.cs:
+LsQSubInfo 120 bytes and LsTextCell 40 bytes on x64. Public Indic leading/trailing
+hits, caret navigation, distances and selection rectangles pass after GC.
+Queries reject RTL/nonmonotonic cluster maps and graphemes spanning client runs;
+cross-run caret ownership remains unfinished even though wrapping respects
+those graphemes.
+
 Optimal/min-max formatting, inline objects, bidi reversal objects, tabs,
 justification and decorations remain unsupported and return explicit errors.
-Geometric hit testing, RTL/nonmonotonic shaping clusters, full bidi and paragraph
+Complete hit testing, RTL/nonmonotonic shaping clusters, full bidi and paragraph
 layout require further work. This does not establish full Line Services
 compatibility or complete WPF packaging.

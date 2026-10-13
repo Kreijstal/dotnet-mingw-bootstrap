@@ -8,7 +8,8 @@ source,output=map(Path,sys.argv[1:])
 text=source.read_text()
 primitive={'uint':'uint32_t','int':'int32_t','ushort':'uint16_t','char':'uint16_t','IntPtr':'void*'}
 records=('EscStringInfo','LsTbd','LsDevRes','LsIMethods','LscbkRedefined','LsContextInfo',
-         'LsPap','LsLineProps','LsChp','LsTxM','LsHeights','LSPOINT','LSRECT','LsLInfo','LsLineWidths')
+         'LsPap','LsLineProps','LsChp','LsTxM','LsHeights','LSPOINT','LSRECT','LsLInfo','LsLineWidths',
+         'LsQSubInfo','LsTextCell')
 lines=['// Generated from original WPF LineServices.cs.','#pragma once','#include <cstdint>']
 for name in records:
     match=re.search(r'\bstruct\s+'+name+r'\s*\{(.*?)\n    \}',text,re.S)
@@ -18,7 +19,8 @@ for name in records:
     lines.append('struct '+name+' {')
     for kind,field in fields:
         if kind not in primitive:
-            if re.search(r'\benum\s+'+kind+r'\b',text): native='int32_t'
+            if kind in records: native=kind
+            elif re.search(r'\benum\s+'+kind+r'\b',text): native='int32_t'
             elif re.search(r'\bdelegate\s+\w+\s+'+kind+r'\s*\(',text): native='void*'
             else: raise SystemExit('Unsupported LS ABI field: '+kind+' '+field)
         else: native=primitive[kind]

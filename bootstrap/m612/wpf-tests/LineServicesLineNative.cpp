@@ -44,10 +44,13 @@ int main(int argc,char** argv) {
         using DisposeLine=int (WINAPI *)(void*,BOOL);
         using Display=int (WINAPI *)(void*,LSPOINT*,uint32_t,LSRECT*);
         using Acquire=int (WINAPI *)(void*,void**);
+        using CpQuery=int (WINAPI *)(void*,int,int,LsQSubInfo*,int*,LsTextCell*);
+        using PointQuery=int (WINAPI *)(void*,const LSPOINT*,int,LsQSubInfo*,int*,LsTextCell*);
 #define PROC(name,type) auto name=reinterpret_cast<type>(GetProcAddress(dll,#name)); require(name!=nullptr,#name)
         PROC(LoCreateContext,CreateContext); PROC(LoDestroyContext,DestroyContext); PROC(LoSetDoc,Doc);
         PROC(LoCreateLine,CreateLine); PROC(LoDisposeLine,DisposeLine); PROC(LoDisplayLine,Display);
         PROC(LoAcquireBreakRecord,Acquire); PROC(LoCloneBreakRecord,Acquire); PROC(LoDisposeBreakRecord,DisposeLine);
+        PROC(LoQueryLineCpPpoint,CpQuery); PROC(LoQueryLinePointPcp,PointQuery);
         LsContextInfo config{}; config.version=4; config.pfnFetchPap=reinterpret_cast<void*>(pap);
         config.pfnGetRunTextMetrics=reinterpret_cast<void*>(metrics); config.pfnGetRunCharWidths=reinterpret_cast<void*>(widths);
         config.pfnDrawTextRun=reinterpret_cast<void*>(draw);
@@ -58,9 +61,23 @@ int main(int argc,char** argv) {
         require(LoCreateLine(context,0,0,1000,0,nullptr,&info,&line,&depth,&measured)==0&&line&&depth==1,"measured line creation");
         require(info.cpLimToContinue==6&&info.endr==2&&info.dvrAscent==12&&info.dvrDescent==8&&info.dvrMultiLineHeight==20,"callback-derived line metrics and paragraph end");
         require(measured.upStartMainText==4&&measured.upLimLine==74&&measured.upStartTrailing==64,"callback-derived width and trailing spaces");
+        LsQSubInfo sub{}; LsTextCell cell{}; int queried_depth=0;
+        require(sizeof(LsQSubInfo)==120&&sizeof(LsTextCell)==40,"original nested query ABI layouts");
+        require(LoQueryLineCpPpoint(line,2,1,&sub,&queried_depth,&cell)==0&&queried_depth==1&&cell.lscpStartCell==2&&cell.lscpEndCell==2&&cell.pointUvStartCell.x==34&&cell.dupCell==30,"character position yields exact measured cell");
+        require(sub.plsrun==reinterpret_cast<void*>(5)&&sub.pointUvStartRun.x==4&&sub.dupRun==70&&sub.lsdcpSubLine==6,"query retains original run identity and geometry");
+        LSPOINT query{24,100};
+        require(LoQueryLinePointPcp(line,&query,1,&sub,&queried_depth,&cell)==0&&cell.lscpStartCell==1&&cell.pointUvStartCell.x==14&&cell.dupCell==20,"point yields exact measured cell independent of vertical coordinate");
+        query.x=-100;
+        require(LoQueryLinePointPcp(line,&query,1,&sub,&queried_depth,&cell)==0&&cell.lscpStartCell==0,"point before text clamps to first cell");
+        query.x=10000;
+        require(LoQueryLinePointPcp(line,&query,1,&sub,&queried_depth,&cell)==0&&cell.lscpStartCell==4,"point after text clamps to last visible cell");
+        require(LoQueryLineCpPpoint(line,5,1,&sub,&queried_depth,&cell)==0&&cell.dupCell==0&&cell.pointUvStartCell.x==74&&sub.plsrun==reinterpret_cast<void*>(8),"paragraph separator has actual zero-width position and run identity");
+        require(LoQueryLineCpPpoint(line,6,1,&sub,&queried_depth,&cell)==LS_WrongGivenCp&&queried_depth==0&&cell.cCharsInCell==0,"out-of-range CP fails with empty output");
+        require(LoQueryLineCpPpoint(line,0,0,&sub,&queried_depth,&cell)==LS_InvalidParameter,"insufficient query depth rejected");
         LSPOINT origin{0,12}; LSRECT clip{-100,-100,1000,1000};
         require(LoDisplayLine(line,&origin,1,&clip)==0&&draws==1,"retained text/widths/metrics drawing callback");
         require(LoDisposeLine(line,FALSE)==0&&LoDisposeLine(line,FALSE)==LS_InvalidLine,"owned line disposal");
+        require(LoQueryLineCpPpoint(line,0,1,&sub,&queried_depth,&cell)==LS_InvalidLine&&queried_depth==0,"disposed line query fails without dereferencing handle");
         abort_fetch=true; line=reinterpret_cast<void*>(1);
         require(LoCreateLine(context,0,0,1000,0,nullptr,&info,&line,&depth,&measured)==LS_ClientAbort&&!line,"callback abort propagated without fabricated line");
         abort_fetch=false; uniform_width=true; paragraph_flags=0x40;
@@ -88,12 +105,13 @@ int main(int argc,char** argv) {
         require(LoDisposeLine(line,FALSE)==0,"emergency line disposal");
         sample=L"a\u0301b\u2029"; run_length=1;
         require(LoCreateLine(context,0,0,5,0,nullptr,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==2,"combining grapheme spans client runs at tiny width");
+        require(LoQueryLineCpPpoint(line,0,1,&sub,&queried_depth,&cell)==LS_NotImplemented&&queried_depth==0,"cross-run caret ownership remains explicit rather than splitting a grapheme");
         require(LoDisposeLine(line,FALSE)==0,"grapheme line disposal");
         sample=L"a  \u2029";
         require(LoCreateLine(context,0,0,14,0,nullptr,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==4&&info.endr==2&&measured.upStartTrailing==14,"trailing spaces across runs retain paragraph end");
         require(LoDisposeLine(line,FALSE)==0,"trailing line disposal");
         require(LoDestroyContext(context)==0,"line context disposal");
-        std::puts("native line callbacks, exact metrics, cross-run word/grapheme wrapping, overflow/emergency policies, trailing spaces, native break-record clone/continuation/ownership and failure isolation PASS");
+        std::puts("native line callbacks, exact metrics/CP-point geometry, query ABI/identity/failure isolation, cross-run word/grapheme wrapping, overflow/emergency policies, trailing spaces and native break-record clone/continuation/ownership PASS");
         return 0;
     } catch(const std::exception& failure) { std::printf("FAIL: %s\n",failure.what()); return 1; }
 }

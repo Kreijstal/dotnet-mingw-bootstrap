@@ -49,6 +49,22 @@ class Check {
         var again=line.GetIndexedGlyphRuns().ToArray();
         if(again.Length!=runs.Length || again[0].GlyphRun.GlyphIndices.Count!=runs[0].GlyphRun.GlyphIndices.Count)
             throw new Exception("retained shaped line enumeration failed after GC");
+        double start=line.GetDistanceFromCharacterHit(new CharacterHit(0,0));
+        double endDistance=line.GetDistanceFromCharacterHit(new CharacterHit(0,2));
+        if(Math.Abs(start)>0.01 || Math.Abs(endDistance-line.Width)>0.01)
+            throw new Exception("Indic cluster caret geometry does not match shaped width");
+        var leading=line.GetCharacterHitFromDistance(line.Width*0.1);
+        var trailing=line.GetCharacterHitFromDistance(line.Width*0.9);
+        if(leading.FirstCharacterIndex!=0 || leading.TrailingLength!=0 || trailing.FirstCharacterIndex!=0 || trailing.TrailingLength!=2)
+            throw new Exception("Indic point hit test splits the shaping cluster");
+        var nextHit=line.GetNextCaretCharacterHit(new CharacterHit(0,0));
+        var previousHit=line.GetPreviousCaretCharacterHit(new CharacterHit(0,2));
+        if(nextHit.FirstCharacterIndex!=0 || nextHit.TrailingLength!=2 || previousHit.FirstCharacterIndex!=0 || previousHit.TrailingLength!=0)
+            throw new Exception("Indic caret navigation splits the shaping cluster");
+        var bounds=line.GetTextBounds(0,2).ToArray();
+        if(bounds.Length==0 || Math.Abs(bounds.Sum(bound=>bound.Rectangle.Width)-line.Width)>0.01)
+            throw new Exception("Indic selection rectangle does not match shaped width");
+        Console.WriteLine("public Indic cluster caret distance, leading/trailing point hits, forward/backward caret navigation and selection bounds PASS");
         Console.WriteLine($"public source TextFormatter: length={line.Length}, width={line.Width:F3}, height={line.Height:F3}, {runs.Length} indexed glyph runs; original shaping/enumeration/GC PASS");
         foreach(string text in new[]{"alpha beta gamma delta", "कि कि कि कि", "कि"}) {
             var wrapped=new Source(text);

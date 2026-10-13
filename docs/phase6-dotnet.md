@@ -4504,3 +4504,41 @@ layout, optimal/min-max formatting, hit testing, inline objects, tabs,
 justification/decorations, System.Printing implementation and WindowsDesktop
 packaging remain unfinished. Evidence is archived locally under
 `tmp/wpf8-support/validation/lineservices-wrap-20261013`. The goal remains active.
+
+## 47. Retained text geometry, caret hits and selection bounds
+
+The same continuation adds LoQueryLineCpPpoint and LoQueryLinePointPcp.
+Queries derive nominal/grapheme or shaped cluster cells from actual retained
+character widths, cluster maps and glyph advances. They return the exact cell
+position, length and width plus original client run identity and one-subline
+geometry. Point queries clamp outside text to the first/last positive-width
+cell; CP queries validate their range. A retained paragraph separator has its
+own zero-width position and actual client run identity. Invalid/disposed lines
+and insufficient output depth fail with cleared result outputs.
+
+The ABI generator now supports nested records and derives LsQSubInfo and
+LsTextCell from original LineServices.cs. Native x64 checks verify their 120-
+and 40-byte layouts and exact Latin cell positions/advances/run identities.
+Public WPF Indic tests run after forced GC: leading/trailing distances match
+original shaped width, point hits and forward/backward navigation preserve
+the two-code-unit cluster, and selection bounds match measured width.
+
+Validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh \
+  native-win32 check-lineservices-line-native check-text-line inventory
+```
+
+All steps pass; the C# consumer has zero warnings/errors. Native imported
+coverage is **58/139**, with **81 missing**. Queries explicitly reject RTL/
+nonmonotonic cluster maps and graphemes crossing client runs because their
+caret ownership is not yet implemented. This establishes real caret/selection
+behavior for the validated nominal/shaped paths, not complete text editing or
+bidi support. Optimal/min-max layout, inline objects, tabs, justification,
+decorations, paragraph/NLS exports, printing and WindowsDesktop packaging
+remain unfinished. Evidence is archived under
+`tmp/wpf8-support/validation/lineservices-caret-20261013` locally. The goal remains
+active.
