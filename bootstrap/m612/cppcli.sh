@@ -604,6 +604,43 @@ int main() { CombinedAccess^ c=gcnew CombinedAccess(); return c->OrMethod(); }' 
   reject_case combined-foreign-and '#using "combined-access.dll"
 public ref class Foreign : CombinedAccess { public: int Read() { return AndMethod(); } }; int main() { return 0; }' 'undeclared identifier' --type CombinedAccess
 }
+step_test-global-scalars() {
+  compile "$(cygpath -m "$src/tests/global-scalars.cpp")" --target library -o "$(cygpath -m "$testdir/global-scalars.dll")"
+  mkdir -p "$testdir/global-scalars-consumer"
+  cp "$src/tests/GlobalScalarsConsumer.cs" "$testdir/global-scalars-consumer/Program.cs"
+  cat > "$testdir/global-scalars-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="global-scalars"><HintPath>../global-scalars.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/global-scalars-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/global-scalars-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case global-mutable 'int value=7; int main() { return value; }' 'global/static storage is not supported'
+  reject_case global-volatile 'const volatile int value=7; int main() { return value; }' 'global/static storage is not supported'
+  reject_case global-dynamic 'int Read() { return 7; } const int value=Read(); int main() { return value; }' 'global/static storage is not supported'
+}
+step_test-do-loops() {
+  compile "$(cygpath -m "$src/tests/do-loops.cpp")" --target library --type System.GC -o "$(cygpath -m "$testdir/do-loops.dll")"
+  mkdir -p "$testdir/do-loops-consumer"
+  cp "$src/tests/DoLoopsConsumer.cs" "$testdir/do-loops-consumer/Program.cs"
+  cat > "$testdir/do-loops-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="do-loops"><HintPath>../do-loops.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/do-loops-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/do-loops-consumer/bin/Debug/net8.0/consumer.dll")"
+}
+step_test-base-value-initializers() {
+  compile "$(cygpath -m "$src/tests/base-value-initializers.cpp")" --target library --type System.IntPtr --type System.GC \
+    --type System.ArgumentException -o "$(cygpath -m "$testdir/base-value-initializers.dll")"
+  mkdir -p "$testdir/base-value-initializers-consumer"
+  cp "$src/tests/BaseValueInitializersConsumer.cs" "$testdir/base-value-initializers-consumer/Program.cs"
+  cat > "$testdir/base-value-initializers-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="base-value-initializers"><HintPath>../base-value-initializers.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/base-value-initializers-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/base-value-initializers-consumer/bin/Debug/net8.0/consumer.dll")"
+}
 step_test-static-member-receivers() {
   compile "$(cygpath -m "$src/tests/static-member-receivers.cpp")" --target library --type System.IntPtr --type System.GC \
     -o "$(cygpath -m "$testdir/static-member-receivers.dll")"

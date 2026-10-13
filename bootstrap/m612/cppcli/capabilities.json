@@ -278,7 +278,10 @@
     "Native offsetof constants use Clang constant evaluation and trivial native POD layouts, including SDK records, nested inline-array fields and packed pointer/scalar fields; independently compiled native field addresses agree. Managed facade layouts and dynamic offsets are rejected",
     "Ordinary non-disposable source ref-class/ref-struct local declarations allocate CLR objects in tracked class locals; fields/properties/methods, exact tracking-parameter binding and unary percent preserve identity through Hashtable/Object escape and moving GC",
     "Original printing CRT wcslen and memset calls bind selectively from the trusted MinGW msvcrt archive; actual UTF-16/NUL/MULTI_SZ lengths, pinned text/byte buffers, fill return pointers, byte truncation, sentinel bounds and zero-count behavior validated",
-    "Static managed field/property reads through instance member syntax retain side-effectful receiver evaluation and actual static CLR dispatch; source fields/getters, null reference receivers and imported IntPtr.Size through value/call receivers validated"
+    "Static managed field/property reads through instance member syntax retain side-effectful receiver evaluation and actual static CLR dispatch; source fields/getters, null reference receivers and imported IntPtr.Size through value/call receivers validated",
+    "Managed base constructor initialization resolves Clang cleanup/temporary/parenthesized wrappers before lowering the selected constructor; actual IntPtr builder arguments preserve single evaluation, base/member/body order, GC and exception propagation",
+    "Do/while loops lower to body-first CLR branches with continue targets at the condition and protected-region-aware break/return; first iteration, evaluation counts, nesting, GC and finally cleanup validated",
+    "Nonvolatile namespace/file-scope const arithmetic/enum reads emit Clang-proven side-effect-free scalar constants with signed/unsigned width and IEEE floating representation; original pixel epsilon, negative zero/subnormal and comparison boundaries validated"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -365,6 +368,7 @@
     "Static locals require imported Monitor Enter/Exit metadata and ordinary scalar/handle/managed value/trivial POD storage; TLS, byrefs, native arrays, deterministic native cleanup and recursive initializer behavior remain unsupported. Each declaration executes a Monitor acquisition",
     "SEH lowering supports __try/__finally cleanup using CLR exception semantics; native __except filters, hardware-fault handling, and __leave within finally handlers remain unsupported. While/for/switch condition declarations remain incomplete",
     "Ref-class local storage currently excludes implicit copy/move construction and deterministic IDisposable/destructor cleanup; managed ref members, class-value parameters and broader stack semantics remain incomplete. Direct local-constructor native string literals still need contextual adaptation",
-    "Instance-spelled static member support currently covers reads; address/store/compound paths and broader static-property forms remain incomplete"
+    "Instance-spelled static member support currently covers reads; address/store/compound paths and broader static-property forms remain incomplete",
+    "File-scope scalar support is constant reads only; mutable/volatile/dynamic storage, address identity, aggregate globals and non-finite floating constants remain incomplete"
   ]
 }

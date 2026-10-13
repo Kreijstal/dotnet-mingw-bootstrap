@@ -2934,6 +2934,22 @@ class Emitter {
             if (!annotation(v, "cli.static.property:").empty()) { op("call " + signature(static_property_method(v, false)), 0, 1); return; }
             if (v->isStaticDataMember() || static_locals.count(v)) { op("ldsfld " + static_field_signature(v), 0, 1); return; }
             auto it = locals.find(v);
+            if(it==locals.end() && v->isFileVarDecl() && v->getType().isConstQualified() && !v->getType().isVolatileQualified() && v->hasInit() &&
+                (v->getType()->isArithmeticType() || v->getType()->isEnumeralType())) {
+                Expr::EvalResult evaluated;
+                if(v->getInit()->EvaluateAsRValue(evaluated,context,Expr::SE_NoSideEffects)) {
+                    if(evaluated.Val.isInt()) {
+                        auto value=evaluated.Val.getInt(); unsigned bits=context.getTypeSize(v->getType())>32 ? 64 : 32;
+                        auto constant=value.isSigned() ? value.sextOrTrunc(bits) : value.zextOrTrunc(bits);
+                        op(std::string(bits==64 ? "ldc.i8 " : "ldc.i4 ")+std::to_string(constant.getSExtValue()),0,1); return;
+                    }
+                    if(evaluated.Val.isFloat() && (context.getTypeSize(v->getType())==32 || context.getTypeSize(v->getType())==64)) {
+                        llvm::SmallString<64> digits; evaluated.Val.getFloat().toString(digits);
+                        if(evaluated.Val.getFloat().isZero()) digits= evaluated.Val.getFloat().isNegative() ? "-0.0" : "0.0";
+                        op(std::string(context.getTypeSize(v->getType())==32 ? "ldc.r4 " : "ldc.r8 ")+digits.str().str(),0,1); return;
+                    }
+                }
+            }
             if (it == locals.end()) fail(at, "global/static storage is not supported yet");
             op("ldloc " + std::to_string(it->second), 0, 1); if (v->getType()->isReferenceType()) op("ldobj " + reference_element_type(v->getType()->getPointeeType()), 1, 1); return;
         }
@@ -4621,6 +4637,10 @@ class Emitter {
             if (exception_depth != found->second.second) fail(s, "switch labels cannot enter a protected or pinned scope");
             mark(found->second.first);
             statement(branch->getSubStmt());
+        } else if(auto* loop=dyn_cast<DoStmt>(s)) {
+            auto body=label(), check=label(), done=label(); mark(body);
+            control_labels.push_back({done,check,exception_depth}); statement(loop->getBody()); control_labels.pop_back();
+            mark(check); expr(loop->getCond()); op("brtrue "+body,1); mark(done);
         } else if (auto* w = dyn_cast<WhileStmt>(s)) {
             if (w->getConditionVariable()) fail(s, "while condition variable is not supported yet");
             auto check = label(), done = label(); mark(check);
@@ -4742,7 +4762,7 @@ class Emitter {
             bool base_initialized = false;
             for (auto* init : constructor->inits()) {
                 if (init->isBaseInitializer() && !is_interface(init->getBaseClass()->getAsCXXRecordDecl())) {
-                    auto* construct = dyn_cast<CXXConstructExpr>(init->getInit());
+                    auto* construct = dyn_cast<CXXConstructExpr>(strip(init->getInit())->IgnoreParenImpCasts());
                     if (!construct) fail(init->getInit(), "unsupported managed base initializer");
                     op("ldarg.0", 0, 1);
                     for(unsigned i=0;i<construct->getNumArgs();++i)

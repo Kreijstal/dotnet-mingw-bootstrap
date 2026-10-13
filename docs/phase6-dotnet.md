@@ -6542,3 +6542,52 @@ consumers, logs and original manifests are archived under
 gate, without a per-file pass count. Native coverage stays 58/139. Full printing,
 layout/text and WindowsDesktop SDK/reference/runtime packaging remain required;
 the WPF packaging goal stays active.
+
+
+## 81. Wrapped base initializers, do loops and scalar globals
+
+The 2026-10-13 continuation resolves the selected managed base constructor after
+stripping Clang cleanup/temporary/parenthesis wrappers, reusing existing exact
+argument lowering. The source IntPtr builder consumer validates single argument
+evaluation, base/member/body order, GC and exception propagation. Tracking
+constructor regressions pass. Printing advances past
+PrinterInfoOneSafeMemoryHandle's original base initializer.
+
+Its next failure is CopyFileStreamToPrinter's DoStmt. Do/while now emits a body-
+first loop, condition-targeted continue and protected-region-aware break/return.
+Tests check a false initial condition still executes once, exact condition counts,
+nested loops and finally cleanup across continue, break and return. Existing
+exception tests pass. Printing advances to AreClosePixel's PixelEpsilon global.
+
+Nonvolatile file/namespace const arithmetic/enum reads now emit side-effect-free
+Clang-evaluated scalar constants. Signed/unsigned widening preserves the declared
+integer representation; floating values use round-trip IL text. The first scalar
+consumer finds that -0 text loses its sign in ilasm; explicit -0.0 fixes that.
+The final test compares exact pixel-threshold bits, negative zero, the smallest
+double subnormal, unsigned maximum/narrow values, bool/signed/float values and
+threshold boundary behavior. Mutable, volatile and dynamic global reads remain
+rejected. This does not implement writable/addressable/aggregate global storage.
+
+Validation on win11 with the standard compiler/WPF environment:
+
+```sh
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-base-value-initializers test-constructor-tracking
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-do-loops test-exceptions test-base-value-initializers
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-global-scalars
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-global-scalars test-do-loops test-base-value-initializers
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh printing-gate
+```
+
+Final focused rebuild/runtime/rejection commands pass. Original printing gate
+iterations advance through the base initializer, stream-copy loop and scalar
+constant. The latest passes Clang parsing/Sema and fails at TransformBounds's
+delete [] vertex (utils.cpp:251). vertex is a managed Point array, so its portable
+source treatment needs review; the compiler's managed array-delete restriction
+has not been silently removed. No complete printing IL/DLL is produced.
+
+Bash/JSON syntax and whitespace checks pass. Evidence is archived under
+`tmp/wpf8-support/validation/printing-initializers-loops-scalars-20261013`.
+Diagnostic scope remains 49 original project inputs/66 tree C++ files, without a
+per-file compile count. Native coverage stays 58/139. Full printing, layout/text
+and WindowsDesktop SDK/reference/runtime packaging remain required; the WPF
+packaging goal stays active.
