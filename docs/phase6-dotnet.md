@@ -7758,3 +7758,48 @@ Imported native coverage remains 58/139. Position-dependent objects after aligne
 tabs still reject pending circular measurement support; full bidi/paragraph
 layout and justification remain open. The package update is still required.
 The full WPF goal stays active.
+
+
+## 109. Installed release 5: original inline objects and UI containers
+
+The 2026-10-13 continuation packages section 108 as WindowsDesktop 8.0.0-5.
+The recipe declares/checksums 0005-inline-objects-and-sdk-isolation.patch,
+including the source ABI generator, native engine, native/public/SDK fixtures
+and SDK-overlay isolation correction. The clean pinned archive plus all five
+patches matches committed feature inputs byte for byte. Its private source tree
+rebuilds PresentationNative and passes source native/public object checks,
+existing line/tab checks and fresh framework/pack layout. Unchanged managed,
+graphics and printing artifacts remain the package's earlier source builds.
+
+Validation from the CLANG64 package workspace:
+
+```sh
+makepkg --verifysource --force
+source PKGBUILD                 # with srcdir set to this workspace's src/
+_wpf native-win32 check-inline-objects-native check-inline-objects check-lineservices-line-native check-text-tabs layout check-sdk
+makepkg --repackage --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-5-any.pkg.tar.zst
+python3 check-staged.py /clang64/lib/dotnet
+bash "$(_driver)/wpf-tests/check-inline-objects-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-inline-sdk-check
+```
+
+All final commands pass. Normal private SDK WPF/tab/inline/WinForms projects
+build and publish with zero consumer warnings/errors. The installed normal
+UseWPF consumer verifies original fixed/flexible TextEmbeddedObject metrics,
+remaining width, backing-span caret/selection, glyph enumeration, wrapping,
+callback exceptions and original TextBlock InlineUIContainer layout/raster/hits
+across GC. Its self-contained publish executes with SDK roots/toolchain PATH
+removed and verifies the source PresentationCore implementation bytes. Native
+checks prove all 16 source break-condition combinations and original record/
+callback ABI. The staged/installed 42-managed/pack/native-seed verifier passes.
+The known srcdir warning remains only source-bootstrap.json provenance.
+
+Artifact: mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-5-any.pkg.tar.zst.
+SHA-256: ca3c27646edb6a10fa89f75ed58f742f58809185929d437c04a124dd3a61d5fa.
+Recipe commit: msys2-ur f0bc320; feature commit: 5b6ab43.
+Logs, declared patch/recipe/metadata and the artifact are archived under
+ tmp/wpf8-support/validation/inline-objects-package-20261013.
+Imported native coverage remains 58/139. Position-dependent objects after
+aligned tabs, bidi/paragraph layout, justification and natural-language behavior
+remain incomplete. This delivers inline-object behavior in the experimental
+package while the full WPF goal remains active.
