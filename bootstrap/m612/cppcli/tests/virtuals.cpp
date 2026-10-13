@@ -23,7 +23,7 @@ protected:
     int value;
 public:
     PropertyBase() : value(7) {}
-    virtual property int Value {
+    property virtual int Value {
         int get() { return value; }
         void set(int next) { value = next; }
     }

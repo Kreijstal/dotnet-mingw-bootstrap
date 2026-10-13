@@ -5,12 +5,13 @@ private ref class InternalState abstract sealed {
     static int _value = 40;
 internal:
     static int Read() { return _value; }
-    static property int Value { int get(); void set(int value); }
+    property static int Value { int get(); void set(int value); }
 };
 int InternalState::Value::get() { return _value; }
 void InternalState::Value::set(int value) { _value = value; }
 public ref class StaticProperties abstract sealed {
 public:
+    property static int Automatic;
     static property int Value {
         int get() { return InternalState::Value; }
         void set(int value) { InternalState::Value = value; }
@@ -22,6 +23,9 @@ public:
 };
 }
 int main() {
+    if(Example::StaticProperties::Automatic!=0) return 1;
+    Example::StaticProperties::Automatic=42;
+    if(Example::StaticProperties::Automatic!=42) return 2;
     Console::WriteLine(Example::StaticProperties::Value);
     Example::StaticProperties::Value = 42;
     Console::WriteLine(Example::StaticProperties::Value);

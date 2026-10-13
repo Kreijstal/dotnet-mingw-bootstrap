@@ -22,7 +22,7 @@ public ref class Explicit {
     static int _seed = 40;
     static int _value = _seed + 2;
     static int _runs;
-    static Explicit() { _value += 1; _runs += 1; }
+    static Explicit(void) { _value += 1; _runs += 1; }
 public:
     int Snapshot;
     Explicit(int value) : Snapshot(value) {}
@@ -31,11 +31,11 @@ public:
 };
 public ref class OutOfLine abstract sealed {
     static int _value = 41;
-    static OutOfLine();
+    static OutOfLine(void);
 public:
     static int Read() { return _value; }
 };
-static OutOfLine::OutOfLine() { _value += 1; }
+static OutOfLine::OutOfLine(void) { _value += 1; }
 public value struct ValueInitialization {
     static int _value = 41;
     static ValueInitialization() { _value += 1; }

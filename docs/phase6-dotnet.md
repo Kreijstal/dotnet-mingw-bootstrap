@@ -4648,3 +4648,96 @@ Other printing/compiler/native/desktop requirements remain open. Evidence is
 archived locally under `tmp/wpf8-support/validation/printing-gate-20261013`.
 Installed compiler packages are unchanged; this is the development frontend.
 The goal remains active.
+
+## 50. Sized native arrays and further printing frontend compatibility
+
+The next 2026-10-13 continuation implements MarshalAs LPArray parameter
+metadata with SizeParamIndex, SizeConst and ArraySubType. The adapter separates
+one positional argument from supported named options and preserves their
+constant expressions without narrowing to Int32. The emitter validates array
+parameters, zero-based parameter indices, integral size parameters, compressed
+integer count bounds, supported element types and duplicate options. Original
+source ilasm's nativeType grammar supplies the array descriptor: explicit
+`[count + parameter]` preserves the size-index-specified flag, including index
+zero. Fixed counts, inferred element types and explicit subtypes are retained.
+String parameter marshal names (BSTR/LPStr/LPWStr/LPTStr) are also recognized.
+Field/return marshalling, other options and general DllImport declarations are
+not implemented by this change.
+
+The runtime test exposes a real CLI COM interface to a native MinGW caller.
+CLR constructs arrays with the requested parameter/fixed/combined lengths,
+including zero-sized input and zero parameter contribution to a fixed count.
+The managed implementation checks the actual Length. In/out mutations copy
+back only the requested prefix; untouched tail sentinels prove bounds.
+Reflection verifies descriptors and IN/OUT flags. Repeated calls after forced
+GC pass. Nine malformed declarations fail: non-array targets, invalid indices,
+nonintegral size parameters, negative/nonconstant/overflowing counts,
+overflowing indices, duplicate options and array options on scalar marshalling.
+
+The original printing gate gets past its LPArray failure and exposes an
+explicit `(void)` static constructor. The adapter now accepts that zero-argument
+spelling for inline and out-of-line declarations/definitions. Existing CLR
+ordering/concurrency/once/failure-poisoning tests pass with both `(void)` and
+`()` forms. Ordinary parameters and initializer lists remain rejected.
+
+Printing then reaches ordinary Clang semantic checking. Its copied SDK headers
+use legacy SAL annotations; the gate maps them to trusted MinGW SAL2 spellings
+and records the aliases. Callback/typefix markers are static-analysis-only.
+Two missing Vista connection flag values are taken from Microsoft's
+[winspool.h source](https://raw.githubusercontent.com/microsoft/win32metadata/main/generation/WinSDK/RecompiledIdlHeaders/um/winspool.h)
+and supplied only when the trusted SDK lacks them. Original CLR metadata types
+used by XML, packaging, drawing, tracing and interoperability are selected from
+the already source-built dependencies; namespace/type placeholders are not
+fabricated. A failed optional NameValueCollection import was removed because
+the printing sources do not use that type.
+
+A metadata ordering defect placed SafeHandle's protected IntPtr value field
+before IntPtr was defined when its derived class was visited early. Definition
+ordering now visits selected instance value-field dependencies as well as
+bases/interfaces. A real CLI-derived SafeHandle reads its protected handle,
+uses the inherited invalid/closed state and disposes successfully. Printing's
+`property virtual` spelling also needed its modifier removed from the surrogate
+property type; modifiers now work on either side of property. Virtual dispatch
+and static access tests pass. Static auto-properties now generate private
+static backing fields and real static CLR accessors; default zero, mutation and
+cross-assembly property consumption pass.
+
+Validation on win11:
+
+```sh
+/clang64/bin/cmake.exe --build ~/dotnetboot/m612/build/cppcli --target cli_ast -j2
+CPPCLI_SDK=/clang64/lib/dotnet CPPCLI_ILASM=/clang64/bin/ilasm-dotnet.exe \
+  M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-array-marshal test-static-fields
+CPPCLI_SDK=/clang64/lib/dotnet CPPCLI_ILASM=/clang64/bin/ilasm-dotnet.exe \
+  M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-value-field-order
+CPPCLI_SDK=/clang64/lib/dotnet CPPCLI_ILASM=/clang64/bin/ilasm-dotnet.exe \
+  M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-virtuals test-static-properties test-com
+CPPCLI_SDK=/clang64/lib/dotnet CPPCLI_ILASM=/clang64/bin/ilasm-dotnet.exe \
+  M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-static-properties
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh printing-gate
+```
+
+Rebuilds and focused tests pass, including existing COM/HRESULT regressions.
+C# and second-CLI-assembly callers verify the static auto-property's default,
+mutation and accessor identity. `wpf.sh build-directwrite
+check-directwrite-assembly` also passes with the updated frontend: 85 types,
+283 prepared bodies and 81 system font families, plus original managed COM
+loaders and real font/face/file ownership. It runs with the same M612/MSYSTEM/
+WPF_BUILD/WPF_CPPCLI_BUILD settings as §49.
+The final printing-gate command **fails** in ordinary Sema. Remaining observed
+failures include System.Printing.Interop namespace availability at the first
+unit's using directive, source `!PrinterDefaults(void)` finalizers, literal
+String static initializers, further imported types/attributes and layout
+options. The previous virtual-property/auto-property, SAL, SDK flag and IntPtr
+ordering errors have been removed from the gate output. No System.Printing
+runtime DLL or finished WPF package is produced. Native coverage remains the
+previous 58/139; complete layout/printing/desktop requirements remain open.
+Evidence is archived locally under
+`tmp/wpf8-support/validation/printing-arrays-20261013`. The development frontend
+is changed; installed compiler packages are unchanged. The goal remains active.

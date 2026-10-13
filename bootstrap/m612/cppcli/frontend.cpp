@@ -844,15 +844,32 @@ protected:
                     auto attr = interop_name(tokens[name].text);
                     if (attr.empty() || !seen_attributes.insert(attr).second) throw std::runtime_error("unsupported or duplicate interop attribute");
                     cursor = name+1;
-                    std::string argument;
+                    std::string argument, marshal_options;
                     if (cursor < close && tokens[cursor].text == "(") {
                         auto end = matching(cursor, "(", ")");
+                        std::vector<std::vector<Lexeme>> parts(1);
                         int depth = 0;
                         for (size_t j = cursor+1; j < end; ++j) {
-                            if (tokens[j].text == "," && !depth) throw std::runtime_error(tokens[begin].file+":"+std::to_string(tokens[begin].line)+": "+attr+": interop attributes currently take one positional argument");
-                            if (tokens[j].text == "(") ++depth;
-                            else if (tokens[j].text == ")") --depth;
-                            argument += tokens[j].text + " ";
+                            if (tokens[j].text == "," && !depth) parts.emplace_back();
+                            else {
+                                if (tokens[j].text == "(") ++depth;
+                                else if (tokens[j].text == ")") --depth;
+                                parts.back().push_back(tokens[j]);
+                            }
+                        }
+                        for (const auto& token:parts.front()) argument+=token.text+" ";
+                        std::set<std::string> seen_options;
+                        for (size_t option=1;option<parts.size();++option) {
+                            const auto& part=parts[option];
+                            if (attr!="MarshalAs" || part.size()<3 || part[0].kind!=tok::identifier || part[1].text!="=")
+                                throw std::runtime_error(tokens[begin].file+":"+std::to_string(tokens[begin].line)+": "+attr+": interop attributes require supported named options after one positional argument");
+                            auto key=part[0].text;
+                            if (key!="SizeParamIndex" && key!="SizeConst" && key!="ArraySubType")
+                                throw std::runtime_error("unsupported MarshalAs named option: "+key);
+                            if (!seen_options.insert(key).second) throw std::runtime_error("duplicate MarshalAs named option: "+key);
+                            std::string value;
+                            for (size_t i=2;i<part.size();++i) value+=part[i].text+" ";
+                            marshal_options+=", annotate("+quote("cli.param.marshal."+key)+", ("+value+"))";
                         }
                         cursor = end+1;
                     }
@@ -870,6 +887,7 @@ protected:
                         attr == "ClassInterface" ? "cli.com.class" : attr == "ComVisible" ? "cli.com.visible" :
                         attr == "PreserveSig" ? "cli.preservesig" : attr == "In" ? "cli.param.in" : attr == "Out" ? "cli.param.out" : "cli.param.marshal";
                     attributes += ", annotate(" + quote(marker) + (argument.empty() ? "" : ", " + (attr == "Guid" ? argument : "static_cast<int>(" + argument + ")")) + ")";
+                    attributes += marshal_options;
                     if (cursor < close) {
                         if (tokens[cursor].text != ",") throw std::runtime_error("unsupported interop attribute arguments");
                         ++cursor;
@@ -1026,8 +1044,10 @@ protected:
                     bool local_ctor = class_depth[i] == 1 && name == i+1 && tokens[name].text == class_context[i];
                     bool qualified_ctor = class_depth[i] == 0 && name >= i+3 && tokens[name].text == tokens[name-2].text;
                     if ((local_ctor || qualified_ctor) && tokens[name+1].text == "(") {
-                        if (tokens[name+2].text != ")") throw std::runtime_error("a managed static constructor takes no parameters");
-                        if (tokens[name+3].text == ":") throw std::runtime_error("a managed static constructor cannot have an initializer list");
+                        size_t close=name+2;
+                        if (tokens[close].text=="void" && close+1<tokens.size() && tokens[close+1].text==")") ++close;
+                        if (tokens[close].text != ")") throw std::runtime_error(t.file+":"+std::to_string(t.line)+": a managed static constructor takes no parameters");
+                        if (close+1<tokens.size() && tokens[close+1].text == ":") throw std::runtime_error("a managed static constructor cannot have an initializer list");
                         emit(t, std::string(local_ctor ? "static " : "") + "void __attribute__((annotate(\"cli.cctor\")))");
                         for (size_t j = i+1; j < name; ++j) emit(tokens[j], tokens[j].text);
                         emit(tokens[name], "_cli_type_initializer"); i = name; continue;
@@ -1082,7 +1102,12 @@ protected:
                     bool is_static = i && tokens[i-1].text == "static";
                     bool is_virtual = class_interface[i] || (i && tokens[i-1].text == "virtual");
                     std::string access_attribute = class_access[i] == "internal" ? "__attribute__((annotate(\"cli.access:assembly\"))) " : "";
-                    for (size_t j = i + 1; j < name; ++j) property_type += tokens[j].text + " ";
+                    for (size_t j = i + 1; j < name; ++j) {
+                        if (tokens[j].text=="virtual") { is_virtual=true; continue; }
+                        if (tokens[j].text=="static") { is_static=true; continue; }
+                        property_type += tokens[j].text + " ";
+                    }
+                    if (is_static && is_virtual) throw std::runtime_error("a static property cannot be virtual");
                     size_t open = name + 1;
                     bool indexed = tokens[open].text == "[", default_indexer = indexed && property == "default";
                     std::string index_type;
@@ -1130,10 +1155,10 @@ protected:
                     if (is_static) emit(t, "static __attribute__((annotate(\"cli.static.property:" + std::string(getter ? "get_" + property : "") + "|" + (setter ? "set_" + property : "") + "\"))) __cli_static_property<" + property_type + "> " + property + ";");
                     else if (declare_property) emit(t, attribute + ")) " + property_type + (default_indexer ? "__cli_default" : property) + (indexed ? "[]" : "") + ";");
                     if (tokens[name + 1].text == ";") {
-                        if (is_static) throw std::runtime_error("static auto-properties are not enabled yet");
-                        emit(t, "private: " + property_type + " __cli_backing_" + property + "; " + class_access[i] + ":");
-                        emit(t, std::string(is_virtual ? "virtual " : "") + property_type + " __attribute__((annotate(\"cli.accessor:get\"))) get_" + property + "() { return __cli_backing_" + property + "; }");
-                        emit(t, std::string(is_virtual ? "virtual " : "") + "void __attribute__((annotate(\"cli.accessor:set\"))) set_" + property + "(" + property_type + " value) { __cli_backing_" + property + " = value; }");
+                        emit(t, "private: " + std::string(is_static ? "static " : "") + property_type + " __cli_backing_" + property + "; " + class_access[i] + ":");
+                        std::string modifier=is_static ? "static " : is_virtual ? "virtual " : "";
+                        emit(t, modifier + property_type + " __attribute__((annotate(\"cli.accessor:get\"))) get_" + property + "() { return __cli_backing_" + property + "; }");
+                        emit(t, modifier + "void __attribute__((annotate(\"cli.accessor:set\"))) set_" + property + "(" + property_type + " value) { __cli_backing_" + property + " = value; }");
                     } else {
                         int depth = 1;
                         for (size_t j = open + 1; j + 1 < end; ++j) {
@@ -1653,12 +1678,44 @@ class Emitter {
             static const std::map<int64_t, std::string> native_types = {
                 {2,"bool"}, {3,"int8"}, {4,"unsigned int8"}, {5,"int16"}, {6,"unsigned int16"},
                 {7,"int32"}, {8,"unsigned int32"}, {9,"int64"}, {10,"unsigned int64"}, {11,"float32"}, {12,"float64"},
+                {19,"bstr"}, {20,"lpstr"}, {21,"lpwstr"}, {22,"lptstr"},
                 {25,"iunknown"}, {26,"idispatch"}, {28,"interface"}, {31,"int"}, {32,"unsigned int"}
             };
             auto value = layout_constant(p, "cli.param.marshal", -1);
-            auto found = native_types.find(value);
-            if (found == native_types.end()) throw std::runtime_error("unsupported MarshalAs unmanaged type");
-            result += " marshal(" + found->second + ")";
+            bool index=annotated(p,"cli.param.marshal.SizeParamIndex"), count=annotated(p,"cli.param.marshal.SizeConst"),
+                subtype=annotated(p,"cli.param.marshal.ArraySubType");
+            if (value==42) { // UnmanagedType.LPArray, encoded as NATIVE_TYPE_ARRAY.
+                auto* record=handle_target(p->getType());
+                if (!record || array_element(record).isNull()) throw std::runtime_error("LPArray requires a managed array parameter");
+                std::string element;
+                if (subtype) {
+                    auto found=native_types.find(layout_constant(p,"cli.param.marshal.ArraySubType",-1));
+                    if (found==native_types.end()) throw std::runtime_error("unsupported LPArray ArraySubType");
+                    element=found->second;
+                }
+                int64_t length=count?layout_constant(p,"cli.param.marshal.SizeConst",-1):0;
+                if (length<0 || length>0x1fffffff) throw std::runtime_error("LPArray SizeConst is outside the CLI compressed-integer range");
+                std::string size=count?std::to_string(length):"";
+                if (index) {
+                    int64_t parameter=layout_constant(p,"cli.param.marshal.SizeParamIndex",-1);
+                    auto* owner=dyn_cast<FunctionDecl>(p->getDeclContext());
+                    if (!owner || parameter<0 || parameter>32767 || parameter>=owner->getNumParams())
+                        throw std::runtime_error("LPArray SizeParamIndex does not name a valid parameter");
+                    auto type=owner->getParamDecl(static_cast<unsigned>(parameter))->getType().getNonReferenceType();
+                    if (!type->isIntegerType() || type->isBooleanType()) throw std::runtime_error("LPArray size parameter must have an integral type");
+                    // Explicit zero preserves the SizeParamIndex-specified flag
+                    // in original ilasm's nativeType [ count + parameter ] rule.
+                    size=std::to_string(length)+" + "+std::to_string(parameter);
+                }
+                result+=" marshal("+element+"["+size+"])";
+            } else {
+                if (index || count || subtype) throw std::runtime_error("MarshalAs array options require LPArray");
+                auto found = native_types.find(value);
+                if (found == native_types.end()) throw std::runtime_error("unsupported MarshalAs unmanaged type");
+                result += " marshal(" + found->second + ")";
+            }
+        } else if (annotated(p,"cli.param.marshal.SizeParamIndex") || annotated(p,"cli.param.marshal.SizeConst") || annotated(p,"cli.param.marshal.ArraySubType")) {
+            throw std::runtime_error("MarshalAs array options require a MarshalAs declaration");
         }
         return result;
     }

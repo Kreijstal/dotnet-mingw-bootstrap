@@ -1219,6 +1219,42 @@ EOF
   reject_case com-boxed-nativeint 'using namespace System; public ref class C { public: static void F(IntPtr^ value) {} }; int main() { return 0; }' 'boxed native integers' "${args[@]}"
   log "PASS test-com: actual COM interface dispatch, native BOOL/uint64 and HRESULT preservation/translation"
 }
+step_test-value-field-order() {
+  run_case value-field-order "$src/tests/value-field-order.cpp" \
+    'imported SafeHandle inheritance, complete IntPtr value-field dependency, protected access and disposal PASS' \
+    --type System.IDisposable --type System.Runtime.InteropServices.SafeHandle \
+    --type Microsoft.Win32.SafeHandles.SafeHandleZeroOrMinusOneIsInvalid
+}
+
+step_test-array-marshal() {
+  local refs=("$CPPCLI_SDK"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
+  local args=(--type System.Runtime.InteropServices.ComInterfaceType --type System.Runtime.InteropServices.UnmanagedType
+    --type System.Runtime.InteropServices.GuidAttribute --type System.Runtime.InteropServices.InterfaceTypeAttribute
+    --type System.Runtime.InteropServices.ClassInterfaceType --type System.Runtime.InteropServices.ClassInterfaceAttribute
+    --type System.Runtime.InteropServices.ComVisibleAttribute
+    --reference "$(cygpath -m "${refs[-1]}/System.Runtime.InteropServices.dll")")
+  compile "$(cygpath -m "$src/tests/array-marshal.cpp")" --target library "${args[@]}" -o "$(cygpath -m "$testdir/array-marshal.dll")"
+  mkdir -p "$testdir/array-marshal-consumer"
+  /clang64/bin/clang++.exe -std=c++17 -O2 -shared "$src/tests/array-marshal-native.cpp" -o "$testdir/array-marshal-consumer/array-marshal-native.dll"
+  cp "$src/tests/ArrayMarshalConsumer.cs" "$testdir/array-marshal-consumer/Program.cs"
+  cat > "$testdir/array-marshal-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="array-marshal"><HintPath>../array-marshal.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/array-marshal-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  cp "$testdir/array-marshal-consumer/array-marshal-native.dll" "$testdir/array-marshal-consumer/bin/Debug/net8.0/"
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/array-marshal-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case array-marshal-non-array 'public interface class I { void F([MarshalAs(System::Runtime::InteropServices::UnmanagedType::LPArray,SizeParamIndex=1)] int value,int count); }; int main() { return 0; }' 'LPArray requires a managed array' "${args[@]}"
+  reject_case array-marshal-index 'public interface class I { void F([MarshalAs(System::Runtime::InteropServices::UnmanagedType::LPArray,SizeParamIndex=2)] array<int>^ value,int count); }; int main() { return 0; }' 'SizeParamIndex does not name a valid parameter' "${args[@]}"
+  reject_case array-marshal-size-type 'public interface class I { void F([MarshalAs(System::Runtime::InteropServices::UnmanagedType::LPArray,SizeParamIndex=1)] array<int>^ value,double count); }; int main() { return 0; }' 'size parameter must have an integral type' "${args[@]}"
+  reject_case array-marshal-negative 'public interface class I { void F([MarshalAs(System::Runtime::InteropServices::UnmanagedType::LPArray,SizeConst=-1)] array<int>^ value); }; int main() { return 0; }' 'SizeConst is outside' "${args[@]}"
+  reject_case array-marshal-nonconstant 'int count=3; public interface class I { void F([MarshalAs(System::Runtime::InteropServices::UnmanagedType::LPArray,SizeConst=count)] array<int>^ value); }; int main() { return 0; }' 'constant expression' "${args[@]}"
+  reject_case array-marshal-overflow 'public interface class I { void F([MarshalAs(System::Runtime::InteropServices::UnmanagedType::LPArray,SizeConst=4294967299ULL)] array<int>^ value); }; int main() { return 0; }' 'SizeConst is outside' "${args[@]}"
+  reject_case array-marshal-index-overflow 'public interface class I { void F([MarshalAs(System::Runtime::InteropServices::UnmanagedType::LPArray,SizeParamIndex=4294967297ULL)] array<int>^ value,int count); }; int main() { return 0; }' 'SizeParamIndex does not name a valid parameter' "${args[@]}"
+  reject_case array-marshal-duplicate 'public interface class I { void F([MarshalAs(System::Runtime::InteropServices::UnmanagedType::LPArray,SizeConst=1,SizeConst=2)] array<int>^ value); }; int main() { return 0; }' 'duplicate MarshalAs named option' "${args[@]}"
+  reject_case array-marshal-scalar-option 'public interface class I { void F([MarshalAs(System::Runtime::InteropServices::UnmanagedType::I4,SizeConst=3)] int value); }; int main() { return 0; }' 'array options require LPArray' "${args[@]}"
+  log "PASS test-array-marshal: real CLR native array marshalling and invalid-input rejection"
+}
 step_test-each() {
   log "For each collection/array iteration with real CLR finally cleanup"
   mkdir -p "$testdir/each-fixture" "$testdir/each-consumer"
@@ -1406,6 +1442,10 @@ using System;
 using System.Reflection;
 using Example;
 if (StaticProperties.Value != 40 || StaticProperties.Text != "static text") throw new Exception("incorrect static property metadata");
+if (StaticProperties.Automatic != 0 || !typeof(StaticProperties).GetProperty("Automatic").GetMethod.IsStatic)
+    throw new Exception("static auto-property default or accessor identity lost");
+StaticProperties.Automatic=43;
+if (StaticProperties.Automatic != 43) throw new Exception("static auto-property C# mutation lost");
 StaticProperties.Value = 99;
 if (StaticProperties.Value != 99 || StaticProperties.ReadInternal() != 99) throw new Exception("static setter lost storage");
 var internalType = typeof(StaticProperties).Assembly.GetType("Example.InternalState");
@@ -1427,6 +1467,9 @@ EOF
 #using "static-properties.dll"
 using namespace System;
 int main() {
+    if(Example::StaticProperties::Automatic!=0) return 1;
+    Example::StaticProperties::Automatic=44;
+    if(Example::StaticProperties::Automatic!=44) return 2;
     Console::WriteLine(Example::StaticProperties::Value);
     Example::StaticProperties::Value = 61;
     Console::WriteLine(Example::StaticProperties::Value);

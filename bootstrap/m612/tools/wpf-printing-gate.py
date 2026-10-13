@@ -35,6 +35,11 @@ def main():
     if old not in text:
         raise SystemExit("System.Printing code-analysis include changed; review port preparation")
     header.write_text(text.replace(old, "#if !defined(__MINGW32__)\n" + old + "\n#endif"))
+    # These two Vista printer flags are missing from the trusted MinGW header.
+    # Values: Microsoft's win32metadata RecompiledIdlHeaders/um/winspool.h.
+    flags={"PRINTER_ATTRIBUTE_PUSHED_USER":"0x00020000", "PRINTER_ATTRIBUTE_PUSHED_MACHINE":"0x00040000"}
+    header.write_text(header.read_text()+"\n"+"".join(
+        "#ifndef "+name+"\n#define "+name+" "+value+"\n#endif\n" for name,value in flags.items()))
     inputs = [item.attrib["Include"].replace("\\", "/")
               for item in ET.parse(original / "System.Printing.vcxproj").iter()
               if item.tag.rsplit("}", 1)[-1].lower() == "clcompile" and "Include" in item.attrib]
@@ -57,6 +62,18 @@ def main():
         command += ["-I", win(include)]
     for define in ["UNICODE=1", "_UNICODE=1", "_CLR_NETCORE=1", "DDBANNED_H=1"]:
         command += ["-D", define]
+    # The copied SDK headers still use pre-SAL2 annotation spellings.
+    # These affect static analysis only; retain all native declarations.
+    legacy_sal = {"__callback": "", "__in": "_In_", "__out": "_Out_", "__inout": "_Inout_",
+                  "__in_opt": "_In_opt_", "__out_opt": "_Out_opt_", "__inout_opt": "_Inout_opt_",
+                  "__success(x)": "_Success_(x)", "__in_bcount(x)": "_In_reads_bytes_(x)",
+                  "__in_ecount(x)": "_In_reads_(x)", "__out_bcount(x)": "_Out_writes_bytes_(x)",
+                  "__out_ecount(x)": "_Out_writes_(x)", "__inout_bcount(x)": "_Inout_updates_bytes_(x)",
+                  "__inout_ecount(x)": "_Inout_updates_(x)", "__in_bcount_opt(x)": "_In_reads_bytes_opt_(x)",
+                  "__in_ecount_opt(x)": "_In_reads_opt_(x)", "__out_bcount_opt(x)": "_Out_writes_bytes_opt_(x)",
+                  "__out_ecount_opt(x)": "_Out_writes_opt_(x)", "__typefix(type)": ""}
+    for name, replacement in legacy_sal.items():
+        command += ["-D", name + "=" + replacement]
     # Preserve the upstream #using/as_friend boundaries and source identities.
     for macro, name in [("SYSTEMXAML_DLL", "System.Xaml"), ("WINDOWSBASE_DLL", "WindowsBase"),
                         ("PRESENTATIONCORE_DLL", "PresentationCore"),
@@ -86,6 +103,22 @@ def main():
              "System.Windows.Threading.DispatcherObject", "System.Windows.Threading.Dispatcher",
              "System.Windows.DependencyObject", "System.Windows.Point", "System.Windows.Size", "System.Windows.Rect",
              "System.Printing.PrintTicket", "System.Printing.PrintCapabilities"]
+    types += ["System.Byte", "System.Char", "System.Guid", "System.Single", "System.UInt64",
+              "System.Runtime.InteropServices.LayoutKind", "System.Runtime.InteropServices.CharSet",
+              "System.Runtime.InteropServices.UnmanagedType", "System.Runtime.InteropServices.CallingConvention",
+              "System.Runtime.InteropServices.StructLayoutAttribute", "System.Runtime.InteropServices.FieldOffsetAttribute",
+              "System.Runtime.InteropServices.CriticalHandle", "Microsoft.Win32.SafeHandles.SafeHandleZeroOrMinusOneIsInvalid",
+              "System.Xml.XmlDocument", "System.Xml.XmlNode", "System.Xml.XmlReader", "System.Xml.XmlWriter",
+              "System.Xml.XPath.XPathNavigator", "System.Xml.Serialization.XmlSerializer",
+              "System.IO.Packaging.Package", "System.Windows.Documents.FixedDocument",
+              "System.Windows.Xps.Serialization.XpsSerializationManager", "System.Windows.Xps.Packaging.XpsDocument",
+              "System.Drawing.Printing.PrinterSettings", "MS.Internal.Invariant",
+              "MS.Internal.Telemetry.PresentationCore.XpsOMPrintingTraceLogger"]
+    types += ["System.Collections.Generic.Dictionary`2", "System.Collections.Generic.List`1",
+              "System.Collections.Generic.IEnumerable`1", "System.Collections.Generic.IEnumerator`1",
+              "System.Collections.Generic.KeyValuePair`2", "System.Collections.Generic.ICollection`1",
+              "System.Collections.Generic.IDictionary`2", "System.Collections.Generic.IList`1", "System.Collections.Generic.Queue`1",
+              "System.Windows.Xps.Packaging.PackagingAction", "System.Windows.Xps.Serialization.XpsDocumentEventType"]
     for name in types:
         command += ["--type", name]
     # SHLWAPI and KERNEL32 both export DelayLoadFailureHook. Keep SHLWAPI
@@ -97,7 +130,11 @@ def main():
     (work / "inputs.json").write_text(json.dumps({
         "project": "System.Printing.vcxproj", "projectInputs": inputs,
         "treeCppCount": tree_count,
-        "portPreparation": ["MinGW skips temporary MSVC code-analysis include", "disable MSVC banned-API static analysis"],
+        "portPreparation": ["MinGW skips temporary MSVC code-analysis include", "disable MSVC banned-API static analysis",
+                            "map legacy copied-SDK annotations to trusted MinGW SAL2 spellings"],
+        "legacySalAliases": legacy_sal,
+        "missingSdkFlags": flags,
+        "sdkFlagSource": "https://raw.githubusercontent.com/microsoft/win32metadata/main/generation/WinSDK/RecompiledIdlHeaders/um/winspool.h",
         "scope": "combined-source compiler diagnostic gate; success does not prove separate-unit linking or printing runtime",
         "command": command,
     }, indent=2) + "\n")

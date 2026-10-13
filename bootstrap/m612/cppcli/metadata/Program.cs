@@ -398,6 +398,13 @@ static class Program
                 if (parent != null) Define(parent);
                 var interfaces = t.InterfaceTypes.Where(i => types.Any(p => p.Name == i.Name)).ToArray();
                 foreach (var i in interfaces) Define(types.First(p => p.Name == i.Name));
+                // A native surrogate field stored by value needs its complete
+                // definition, even if inheritance pulled this owner forward.
+                foreach (var field in t.Fields ?? Array.Empty<CliField>()) {
+                    if (field.Static || !field.Supported || field.Type.Kind != "value") continue;
+                    var dependency=types.FirstOrDefault(p=>p.Name==field.Type.Name);
+                    if (dependency!=null) Define(dependency);
+                }
                 WriteClass(header, t, false, parent != null, interfaces);
             }
             foreach (var t in types) Define(t);
