@@ -41,7 +41,7 @@
 +#include "clang/Sema/Lookup.h"
 @@ -34,0 +37 @@
 +#include "clang/Sema/ScopeInfo.h"
-@@ -44,0 +48,73 @@
+@@ -44,0 +48,119 @@
 +
 +// CLI enum operations retain their scoped type identity. Sema still checks
 +// explicit conversions and native operations; ordinary C++ enums are untouched.
@@ -110,12 +110,58 @@
 +  return false;
 +}
 +
++// Leave overload sets with typed alternatives to normal Sema. Boxing an
++// arithmetic/enum argument is unambiguous when every arity-compatible method
++// declares this position as System.Object.
++static bool cppcliObjectArgument(Expr *Function, unsigned Index, unsigned Count) {
++  bool Found = false, AllObject = true;
++  auto Inspect = [&](const NamedDecl *Decl) {
++    auto *Method = dyn_cast<CXXMethodDecl>(Decl);
++    if (!Method || Index >= Method->getNumParams() || Count > Method->getNumParams() ||
++        Count < Method->getMinRequiredArguments()) return;
++    Found = true;
++    auto Type = Method->getParamDecl(Index)->getType();
++    auto *Record = Type->isPointerType() ? Type->getPointeeType()->getAsCXXRecordDecl() : nullptr;
++    AllObject &= cppcliStringSlot(Method, Index, Count) && Record &&
++                 Record->getQualifiedNameAsString() == "System::Object";
++  };
++  Function = Function->IgnoreParenImpCasts();
++  if (auto *Member = dyn_cast<MemberExpr>(Function)) Inspect(Member->getMemberDecl());
++  else if (auto *Reference = dyn_cast<DeclRefExpr>(Function)) Inspect(Reference->getDecl());
++  else if (auto *Overloads = dyn_cast<OverloadExpr>(Function))
++    for (auto *Candidate : Overloads->decls()) Inspect(Candidate);
++  return Found && AllObject;
++}
++
++static bool cppcliObjectTarget(Expr *Value) {
++  QualType Type=Value->getType();
++  Expr *Base=Value->IgnoreParens();
++  while (auto *Subscript=dyn_cast<MSPropertySubscriptExpr>(Base)) Base=Subscript->getBase()->IgnoreParens();
++  if(auto *Property=dyn_cast<MSPropertyRefExpr>(Base)) {
++    Type=Property->getPropertyDecl()->getType();
++    if(Type->isIncompleteArrayType()) Type=cast<ArrayType>(Type.getTypePtr())->getElementType();
++  }
++  auto *Record=Type->isPointerType() ? Type->getPointeeType()->getAsCXXRecordDecl() : nullptr;
++  return Record && Record->getQualifiedNameAsString()=="System::Object";
++}
++
++static ExprResult cppcliBoxObject(Sema &Actions, Scope *CurrentScope,
++    Preprocessor &PP, Expr *Argument, SourceLocation Loc) {
++  CXXScopeSpec Global; UnqualifiedId Name;
++  Global.MakeGlobal(Actions.Context,Loc);
++  Name.setIdentifier(&PP.getIdentifierTable().get("__cli_box_object"),Loc);
++  auto Helper=Actions.ActOnIdExpression(CurrentScope,Global,SourceLocation(),Name,true,false);
++  if(Helper.isInvalid()) return ExprError();
++  return Actions.ActOnCallExpr(CurrentScope,Helper.get(),Loc,
++      llvm::MutableArrayRef<Expr *>(&Argument,1),Argument->getEndLoc());
++}
++
 +static ExprResult cppcliEnumCast(Sema &Actions, Expr *Value, QualType Type,
 +                                SourceLocation Loc) {
 +  return Actions.BuildCStyleCastExpr(
 +      Loc, Actions.Context.getTrivialTypeSourceInfo(Type, Loc), Loc, Value);
 +}
-@@ -181,0 +258,9 @@
+@@ -181,0 +304,9 @@
 +  // MSVC permits CLI enum constants as labels in integral switches. Keep
 +  // that conversion local to case labels: enum-to-integer assignments and
 +  // overload resolution continue to require an explicit source conversion.
@@ -125,7 +171,7 @@
 +      if (Condition->getType()->isIntegerType())
 +        if (auto *Enum = cppcliEnum(Res.get()->getType()))
 +          Res = cppcliEnumCast(Actions, Res.get(), Enum->getIntegerType(), CaseLoc);
-@@ -531,0 +617,78 @@
+@@ -531,0 +663,83 @@
 +        if (!RHS.isInvalid() &&
 +            OpToken.isOneOf(tok::pipeequal, tok::caretequal, tok::ampequal)) {
 +          auto *Enum = cppcliEnum(LHS.get()->getType());
@@ -156,6 +202,11 @@
 +                Binary->getType());
 +            continue;
 +          }
++        }
++        if (!RHS.isInvalid() && OpToken.is(tok::equal) && cppcliObjectTarget(LHS.get()) &&
++            (RHS.get()->getType()->isArithmeticType() || RHS.get()->getType()->isEnumeralType())) {
++          RHS=cppcliBoxObject(Actions,getCurScope(),PP,RHS.get(),OpToken.getLocation());
++          if(RHS.isInvalid()) return ExprError();
 +        }
 +        if (!RHS.isInvalid() && OpToken.isOneOf(tok::plusequal, tok::minusequal) && cppcliEvent(LHS.get())) {
 +          auto Accessor = cppcliEventAccessor(Actions, getCurScope(), PP, LHS.get(),
@@ -204,11 +255,11 @@
 +              return ExprError();
 +          }
 +        }
-@@ -534,0 +698,3 @@
+@@ -534,0 +749,3 @@
 +        if (!BinOp.isInvalid() && !CliResult.isNull())
 +          BinOp = cppcliEnumCast(Actions, BinOp.get(), CliResult,
 +                                OpToken.getLocation());
-@@ -1160,0 +1327,10 @@
+@@ -1160,0 +1378,10 @@
 +      QualType CliResult;
 +      if (SavedKind == tok::tilde)
 +        if (auto *Enum = cppcliEnum(Arg->getType()))
@@ -219,10 +270,10 @@
 +              return ExprError();
 +            Arg = Res.get();
 +          }
-@@ -1162,0 +1339,2 @@
+@@ -1162,0 +1390,2 @@
 +      if (!Res.isInvalid() && !CliResult.isNull())
 +        Res = cppcliEnumCast(Actions, Res.get(), CliResult, SavedLoc);
-@@ -1779,2 +1957,53 @@
+@@ -1779,2 +2008,53 @@
 -          LHS = Actions.ActOnArraySubscriptExpr(getCurScope(), LHS.get(), Loc,
 -                                                ArgExprs, RLoc);
 +          // For a managed array handle, ask Sema to resolve the surrogate's
@@ -278,7 +329,7 @@
 +          if (!LHS.isInvalid())
 +            LHS = Actions.ActOnArraySubscriptExpr(getCurScope(), LHS.get(), Loc,
 +                                                  ArgExprs, RLoc);
-@@ -1838,0 +2068,25 @@
+@@ -1838,0 +2119,25 @@
 +      }
 +
 +      // CLI delegate handles call their runtime Invoke method. Let Sema
@@ -304,7 +355,7 @@
 +                tok::arrow, Scope, SourceLocation(), Member, nullptr);
 +          }
 +        }
-@@ -1892,0 +2147,15 @@
+@@ -1892,0 +2198,31 @@
 +        for (unsigned Index=0; Index<ArgExprs.size(); ++Index) {
 +          if (!isa<StringLiteral>(ArgExprs[Index]->IgnoreParenImpCasts()) ||
 +              !cppcliStringArgument(Fn, Index, ArgExprs.size())) continue;
@@ -320,6 +371,31 @@
 +          if (Literal.isInvalid()) return ExprError();
 +          ArgExprs[Index] = Literal.get();
 +        }
++        for (unsigned Index=0; Index<ArgExprs.size(); ++Index) {
++          auto Type = ArgExprs[Index]->getType();
++          if ((!Type->isArithmeticType() && !Type->isEnumeralType()) ||
++              !cppcliObjectArgument(Fn, Index, ArgExprs.size())) continue;
++          CXXScopeSpec ScopeSpec; UnqualifiedId Name;
++          ScopeSpec.MakeGlobal(Actions.Context, Loc);
++          Name.setIdentifier(&PP.getIdentifierTable().get("__cli_box_object"), Loc);
++          auto Helper = Actions.ActOnIdExpression(getCurScope(), ScopeSpec,
++              SourceLocation(), Name, true, false);
++          if (Helper.isInvalid()) return ExprError();
++          Expr *Argument = ArgExprs[Index];
++          auto Boxed = Actions.ActOnCallExpr(getCurScope(), Helper.get(), Loc,
++              llvm::MutableArrayRef<Expr *>(&Argument, 1), RParLoc);
++          if (Boxed.isInvalid()) return ExprError();
++          ArgExprs[Index] = Boxed.get();
++        }
+@@ -1910,0 +2247,8 @@
++      if (!LHS.isInvalid() && OpKind==tok::period && cppcliEnum(LHS.get()->getType()) && Tok.is(tok::identifier)) {
++        auto Name=Tok.getIdentifierInfo()->getName();
++        if(Name=="ToString" || Name=="GetHashCode" || Name=="Equals" || Name=="GetType") {
++          LHS=cppcliBoxObject(Actions,getCurScope(),PP,LHS.get(),OpLoc);
++          if(LHS.isInvalid()) return ExprError();
++          OpKind=tok::arrow;
++        }
++      }
 --- ParseExprCXX.cpp
 +++ ParseExprCXX.cpp
 @@ -12,0 +13 @@

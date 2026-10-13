@@ -5038,3 +5038,69 @@ System.Printing implementation DLL, separate-unit link/runtime proof or WPF
 package is produced. Native coverage remains 58/139; full layout, printing
 runtime and WindowsDesktop SDK/packs/installation remain open. Installed
 compiler packages are unchanged.
+
+## 55. Implicit Object boxing, enum calls and local arrays for printing
+
+The next 2026-10-13 continuation implements primitive/enum boxing in managed
+Object method slots without competing typed overloads, Object field/array
+assignments and Object property setters. The private parser builds a typed
+boxing marker before normal Clang call/assignment checking; the IL emitter
+emits actual CLR box instructions. Access checks still reject a private setter,
+and an unmanaged pointer cannot become Object through this path. Broader
+initializer/return/constructor/interface boxing and general boxing overload
+resolution remain unfinished.
+
+Runtime checks verify Int32, Boolean, UInt64, Single, Double, Char and enum CLR
+type identities/payloads, zero, copied box values, field/array/property storage,
+actual Hashtable calls, field-assignment expression results, receiver/operand
+evaluation once, typed-overload preservation and GC. Two invalid cases reject.
+CLI enum ToString/GetHashCode/Equals/GetType member lookup now boxes the receiver
+and resolves Object's methods through Clang; enum virtual dispatch is exercised
+against C# ToString/GetHashCode/Equals results. Native enums are untouched, and
+Enum-specific methods/format overloads still need typed discovery.
+
+Explicit local array<T>^ brace declarations now use the existing typed array
+initializer backend. Checks cover the printing shape `{downLevelPropertyName}`,
+adjacent String literals, gcnew String elements followed by more literals,
+null elements, scalar element order/once and empty arrays. The static String
+array path also preserves native literals inside constructors instead of
+wrapping their arguments as String handles. Existing static-array and value/
+property/enum regressions pass. Alias/covariant/generic element discovery and
+all managed array initializer forms remain incomplete.
+
+The previously incomplete PrintSystemException/PrintCommitAttributesException
+types are real C# implementation types in ReachFramework; the gate now imports
+those definitions and their base chain. Registry, reflection, XPS serialization,
+packaging-policy, nullable and related metadata come from already source-built
+dependencies. The private SDK preparation removes MinGW's DocumentEvent macro
+collision: every implementation use of that spelling is a managed property or
+an unchanged DllImport entry-point string, and native declarations remain intact.
+
+Validated commands on win11 with the usual source SDK/ilasm/M612/CLANG64 and
+WPF_BUILD/WPF_CPPCLI_BUILD environment:
+
+```bash
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-implicit-boxing test-array-initializers
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-boxed-values test-properties test-enums
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh build-directwrite check-directwrite-assembly printing-gate
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh printing-gate
+```
+
+The cppcli checks pass; managed consumer builds have zero warnings/errors. The
+full DirectWrite regression again loads 85 types, prepares 283 bodies and
+enumerates 81 font families with original factory/COM loader/font/face/file
+ownership checks. The complete printing gate still **fails**. Its first source
+error is PrintQueue.cpp:4481's NgcSerializationManager constructor, whose real
+signature takes System.Printing.PrintQueue from the assembly being built. The
+metadata importer currently filters that signature because it only recognizes
+selected imported types; the real source-owned type must join signature
+availability without importing a duplicate implementation. PrintDialog.PrintQueue
+has the same dependency. Later errors expose literal stores into String slots,
+Object-return boxing and Object-to-enum cast/unboxing gaps.
+
+Evidence is archived locally under
+`tmp/wpf8-support/validation/printing-boxing-arrays-20261013`. The gate retains
+all 49 original project inputs/66 tree C++ files; no System.Printing runtime
+DLL or completed WPF package is claimed. Native import coverage remains 58/139,
+and complete native layout, printing/link/runtime and WindowsDesktop packaging
+remain open. Installed compiler packages are unchanged.

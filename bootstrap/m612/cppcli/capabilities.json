@@ -226,7 +226,11 @@
     "Source static implicit/explicit conversion declarations and matching out-of-line definitions emit CLR specialname op_Implicit/op_Explicit; C# callers execute reference/value, tracking-reference, null and multiple-result conversion bodies",
     "Combined public/protected, protected/private and public/private access in either order emits famorassem/famandassem/assembly methods, fields and property accessors with source and imported access checks",
     "Printing-style __finally after managed try/catch uses existing CLR finally lowering and preserves return/rethrow cleanup",
-    "UTF-8 JSON argument vectors transport full printing references/type lists through the CLI driver and metadata reader without Windows command-line overflow; Unicode/path/macro quoting is validated"
+    "UTF-8 JSON argument vectors transport full printing references/type lists through the CLI driver and metadata reader without Windows command-line overflow; Unicode/path/macro quoting is validated",
+    "Primitive and enum Object boxing in managed method slots without competing typed overloads, Object field/array assignments and Object property setters; actual CLR box preserves value/type and evaluation once",
+    "Source/imported CLI enum ToString, GetHashCode, Equals and GetType member lookup uses boxed Object virtual dispatch; native enums are not adapted",
+    "Explicit rank-one local array brace initializers reuse typed CLR array construction; direct String literals, variables, constructor elements, null, empty arrays and evaluation order are checked",
+    "Static String array initializers preserve native literal arguments inside gcnew String constructors and resume managed literal conversion for following elements"
   ],
   "limitations": [
     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
@@ -292,6 +296,9 @@
     "Static events, automatic interface events, automatic non-void events, generic event discovery, ambiguous/aliased automatic delegate signatures and concurrent automatic subscription remain unverified or unsupported; extended qualified event accessor paths remain incomplete",
     "CLR conversion-operator emission does not yet implement general source CLI implicit assignment/argument conversion or cast selection; aliases/qualified out-of-line signature matching, native conversions, generic operators and duplicate CLR operator signature coverage remain incomplete",
     "Managed call literal adaptation currently handles direct method/overload declarations with matching arity and String/Object slots; generic/function-pointer literal binding and mixed native-character/managed overload policies remain incomplete",
-    "Tracking-reference ref-class operand support covers metadata and reads/member access; full automatic storage/lifetime of stack ref-class objects and extended tracking-reference assignments remain unfinished"
+    "Tracking-reference ref-class operand support covers metadata and reads/member access; full automatic storage/lifetime of stack ref-class objects and extended tracking-reference assignments remain unfinished",
+    "Implicit Object boxing is not yet general initializer/return/constructor/byref/interface conversion; managed method overload sets with non-Object alternatives retain normal Clang selection and broader boxing overload resolution remains unfinished",
+    "Enum member boxing currently covers Object methods; Enum-specific overloads such as HasFlag and format/provider ToString need additional typed lookup",
+    "Local array initialization currently recognizes explicit array<T>^ declarations ending with a semicolon; aliases, nested/generic String element detection, arbitrary parenthesized literal elements and general array covariance remain incomplete"
   ]
 }

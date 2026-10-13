@@ -478,6 +478,21 @@ int main() { CombinedAccess^ c=gcnew CombinedAccess(); return c->OrMethod(); }' 
   reject_case combined-foreign-and '#using "combined-access.dll"
 public ref class Foreign : CombinedAccess { public: int Read() { return AndMethod(); } }; int main() { return 0; }' 'undeclared identifier' --type CombinedAccess
 }
+step_test-implicit-boxing() {
+  local refs=("$CPPCLI_SDK"/packs/Microsoft.NETCore.App.Ref/*/ref/net8.0)
+  compile "$(cygpath -m "$src/tests/implicit-boxing.cpp")" --target library --type System.Collections.Hashtable \
+    --reference "$(cygpath -m "${refs[-1]}/System.Collections.NonGeneric.dll")" -o "$(cygpath -m "$testdir/implicit-boxing.dll")"
+  mkdir -p "$testdir/implicit-boxing-consumer"
+  cp "$src/tests/ImplicitBoxingConsumer.cs" "$testdir/implicit-boxing-consumer/Program.cs"
+  cat > "$testdir/implicit-boxing-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="implicit-boxing"><HintPath>../implicit-boxing.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/implicit-boxing-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/implicit-boxing-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case boxing-native-pointer 'public ref class Slot { public: void Set(System::Object^ value) {} }; int main() { Slot^ s=gcnew Slot(); void* p=nullptr; s->Set(p); return 0; }' 'cannot initialize'
+  reject_case boxing-private-setter 'public ref class Slot { public: property System::Object^ Value { System::Object^ get() { return nullptr; } private: void set(System::Object^ value) {} } }; int main() { Slot^ s=gcnew Slot(); s->Value=42; return 0; }' 'private member'
+}
 step_test-events() {
   local args=(--type System.Delegate --type System.MulticastDelegate --type System.Action)
   compile "$(cygpath -m "$src/tests/events.cpp")" --target library -o "$(cygpath -m "$testdir/events.dll")" "${args[@]}"

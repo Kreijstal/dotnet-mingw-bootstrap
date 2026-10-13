@@ -40,6 +40,11 @@ def main():
     flags={"PRINTER_ATTRIBUTE_PUSHED_USER":"0x00020000", "PRINTER_ATTRIBUTE_PUSHED_MACHINE":"0x00040000"}
     header.write_text(header.read_text()+"\n"+"".join(
         "#ifndef "+name+"\n#define "+name+" "+value+"\n#endif\n" for name,value in flags.items()))
+    # The upstream implementation uses DocumentEvent only as a managed
+    # property or a DllImport entry-point string. MinGW's generic API macro
+    # otherwise rewrites the property to DocumentEventW; native declarations
+    # and the literal P/Invoke entry point remain intact.
+    header.write_text(header.read_text()+"\n#ifdef DocumentEvent\n#undef DocumentEvent\n#endif\n")
     sdk_probe=work/"sdk-property-probe.cpp"
     sdk_probe.write_text("#include <windows.h>\n#include <winspool.h>\nPrintPropertyValue value;\nPrintPropertiesCollection collection;\n")
     missing_properties=subprocess.run(["/clang64/bin/clang++.exe","-fsyntax-only",win(sdk_probe)],
@@ -176,6 +181,21 @@ def main():
               "System.Windows.Xps.Packaging.PackagingProgressEventArgs"]
     types += ["System.Threading.AutoResetEvent", "System.Threading.EventWaitHandle", "System.Threading.EventResetMode",
               "System.Collections.IDictionaryEnumerator", "System.Collections.DictionaryEntry"]
+    types += ["System.Printing.PrintSystemException", "System.Printing.PrintCommitAttributesException",
+              "System.Printing.PrintQueueException", "System.Printing.PrintServerException",
+              "System.Printing.PrintJobException", "System.IO.IOException",
+              "Microsoft.Win32.Registry", "Microsoft.Win32.RegistryKey", "Microsoft.Win32.RegistryValueKind"]
+    types += ["System.SystemException", "System.MarshalByRefObject", "System.Reflection.MemberInfo",
+              "System.Reflection.ICustomAttributeProvider"]
+    types += ["System.StringComparison", "System.Windows.Xps.Packaging.PackagingProgressEventHandler"]
+    types += ["System.Windows.Xps.Serialization." + name for name in
+              ["NgcSerializationManager", "NgcSerializationManagerAsync", "XpsSerializationManagerAsync",
+               "XpsPackagingPolicy", "BasePackagingPolicy",
+               "FontSubsetterCommitPolicies", "XpsSerializationXpsDriverDocEventHandler"]]
+    types += ["System.Windows.Xps.Packaging.PackageInterleavingOrder", "System.Windows.Xps.Packaging.XpsOMPackagingPolicy"]
+    types += ["System.Windows.Xps.Serialization.XpsOMSerializationManager",
+              "System.Windows.Xps.Serialization.XpsOMSerializationManagerAsync",
+              "System.Printing.PageImageableArea", "System.Nullable`1"]
     for name in types:
         command += ["--type", name]
     # SHLWAPI and KERNEL32 both export DelayLoadFailureHook. Keep SHLWAPI
@@ -191,7 +211,8 @@ def main():
         "project": "System.Printing.vcxproj", "projectInputs": inputs,
         "treeCppCount": tree_count,
         "portPreparation": ["MinGW skips temporary MSVC code-analysis include", "disable MSVC banned-API static analysis",
-                            "map legacy copied-SDK annotations to trusted MinGW SAL2 spellings"],
+                            "map legacy copied-SDK annotations to trusted MinGW SAL2 spellings",
+                            "remove MinGW DocumentEvent macro collision with original managed property"],
         "legacySalAliases": legacy_sal,
         "missingSdkFlags": flags,
         "missingPrintPropertyTypes": missing_properties,

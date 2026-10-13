@@ -1222,16 +1222,24 @@ protected:
                         for(size_t j=equal+1;j<end;++j) literal_initializer&=tok::isStringLiteral(tokens[j].kind);
                         if(array_initializer) {
                             emit(tokens[equal+1],"__cli_array_init<"+field_type+">((typename __cli_array_element<"+field_type+">::type[])");
+                            unsigned array_depth=0;
                             for(size_t j=equal+1;j<end;++j) {
-                                if(cli_structural.count(j)) { emit(tokens[j],cli_structural[j]); continue; }
+                                if(cli_structural.count(j)) {
+                                    if(tokens[j].text==")" || tokens[j].text=="}") --array_depth;
+                                    emit(tokens[j],cli_structural[j]); continue;
+                                }
                                 if(adapt_allocation(j)) continue;
                                 if(tokens[j].text=="safe_cast") { emit(tokens[j],"__cli_safe_cast"); continue; }
-                                if(string_field && tok::isStringLiteral(tokens[j].kind)) {
+                                if(string_field && array_depth==1 && tok::isStringLiteral(tokens[j].kind)) {
                                     std::string literal=tokens[j].text;
                                     while(j+1<end && tok::isStringLiteral(tokens[j+1].kind)) literal+=" "+tokens[++j].text;
                                     emit(tokens[j],"__cli_literal("+literal+")");
                                 }
-                                else emit(tokens[j],tokens[j].text);
+                                else {
+                                    if(tokens[j].text=="(" || tokens[j].text=="{" || tokens[j].text=="[") ++array_depth;
+                                    else if(tokens[j].text==")" || tokens[j].text=="}" || tokens[j].text=="]") --array_depth;
+                                    emit(tokens[j],tokens[j].text);
+                                }
                             }
                             emit(tokens[end-1],")");
                         } else if(string_field && literal_initializer) {
@@ -1249,6 +1257,48 @@ protected:
                         }
                         emit(tokens[end], "; } " + cpp_access(class_access[i]) + ":");
                         i = end; continue;
+                    }
+                }
+                if(t.text=="=" && i>=4 && i+1<tokens.size() && tokens[i+1].text=="{" &&
+                    tokens[i-1].kind==tok::identifier && tokens[i-2].text=="^" &&
+                    (tokens[i-3].text==">" || tokens[i-3].text==">>")) {
+                    size_t begin=i-3;
+                    int angles=0;
+                    for(;;) {
+                        if(tokens[begin].text==">") ++angles;
+                        else if(tokens[begin].text==">>") angles+=2;
+                        else if(tokens[begin].text=="<" && --angles==0) break;
+                        if(!begin) break;
+                        --begin;
+                    }
+                    if(begin && tokens[begin-1].text=="array") {
+                        --begin;
+                        while(begin>=2 && tokens[begin-1].text=="::" && tokens[begin-2].kind==tok::identifier) begin-=2;
+                        auto end=matching(i+1,"{","}");
+                        if(end+1<tokens.size() && tokens[end+1].text==";") {
+                            std::string array_type;
+                            bool string_element=false;
+                            for(size_t j=begin;j<i-1;++j) { array_type+=tokens[j].text+" "; string_element|=tokens[j].text=="String" && j+1<i && tokens[j+1].text=="^"; }
+                            emit(t,"= __cli_array_init<"+array_type+">((typename __cli_array_element<"+array_type+">::type[]){");
+                            unsigned depth=0;
+                            for(size_t j=i+2;j<end;++j) {
+                                if(cli_structural.count(j)) {
+                                    if(tokens[j].text==")" || tokens[j].text=="}") --depth;
+                                    emit(tokens[j],cli_structural[j]); continue;
+                                }
+                                if(adapt_allocation(j)) continue;
+                                if(tokens[j].text=="safe_cast") { emit(tokens[j],"__cli_safe_cast"); continue; }
+                                if(string_element && !depth && tok::isStringLiteral(tokens[j].kind)) {
+                                    std::string literal=tokens[j].text;
+                                    while(j+1<end && tok::isStringLiteral(tokens[j+1].kind)) literal+=" "+tokens[++j].text;
+                                    emit(tokens[j],"__cli_literal("+literal+")"); continue;
+                                }
+                                if(tokens[j].text=="(" || tokens[j].text=="{" || tokens[j].text=="[") ++depth;
+                                else if(tokens[j].text==")" || tokens[j].text=="}" || tokens[j].text=="]") --depth;
+                                emit(tokens[j],tokens[j].text);
+                            }
+                            emit(tokens[end],"})"); i=end; continue;
+                        }
                     }
                 }
                 if (!class_context[i].empty() && t.text == "abstract" && i && tokens[i - 1].text == ")") { emit(t, "= 0"); continue; }
@@ -3178,6 +3228,10 @@ class Emitter {
         if (f->getNameAsString() == "__cli_literal") {
             if (c->getNumArgs() != 1 || !isa<StringLiteral>(c->getArg(0)->IgnoreParenImpCasts())) fail(c, "invalid string literal marker");
             string_literal(cast<StringLiteral>(c->getArg(0)->IgnoreParenImpCasts())); return;
+        }
+        if (f->getNameAsString() == "__cli_box_object") {
+            if(c->getNumArgs()!=1 || !boxable(c->getArg(0)->getType())) fail(c,"Object boxing requires a primitive, managed enum or value operand");
+            expr(c->getArg(0)); op("box "+type(c->getArg(0)->getType()),1,1); return;
         }
         if (f->getNameAsString() == "__cli_empty_params") {
             auto* target = handle_target(c->getType());
