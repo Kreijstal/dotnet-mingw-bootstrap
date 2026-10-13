@@ -130,6 +130,7 @@ int main(int argc,char** argv) {
         using PageAction=int(WINAPI*)(void*,void*);
         PROC(FsCreatePageFinite,PageCreate);PROC(FsDestroyPage,PageAction);PROC(FsDestroySubtrack,PageAction);
         PROC(FsQueryPageDetails,QueryPage);PROC(FsQueryTrackDetails,QueryTrack);PROC(FsQueryTrackParaList,QueryParas);
+        PROC(FsQuerySubtrackParaList,QueryParas);
         PROC(FsQueryTextDetails,QueryText);PROC(FsQueryLineListSingle,QueryLines);PROC(FsClearUpdateInfoInPage,PageAction);
         format_subtrack=reinterpret_cast<SubtrackFormat>(GetProcAddress(dll,"FsFormatSubtrackFinite"));destroy_subtrack=FsDestroySubtrack;
         require(format_subtrack!=nullptr,"finite subtrack export");
@@ -190,6 +191,22 @@ int main(int argc,char** argv) {
         require(!incoming_record&&lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"pagination releases speculative and accepted lines and independent records exactly once");
         keep_mode=0;
         std::puts("native finite pagination: four-page exact source coverage, real break records, input/page-independent lifetime and complete callback cleanup PASS");
+        for(bool nested:{false,true})for(int height:{4,0}) {
+        containers=nested;available_height=height;reset_page_counts();incoming_record=nullptr;
+        for(int number=0;number<4;++number) {
+            require(FsCreatePageFinite(context,incoming_record,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&page_handle&&formatted.fForcedProgress,"undersized page accepts one source line and reports forced progress");
+            if(incoming_record)require(FsDestroyPageBreakRecord(context,incoming_record)==0,"forced input record release");
+            require(FsQueryPageDetails(context,page_handle,&details)==0&&FsQueryTrackParaList(context,details.u.simple.trackdescr.pfstrack,2,paras,&actual_count)==0&&actual_count==1&&paras[0].dvrUsed==height,"forced layout accounts for available vertical extent without dropping its client line");
+            void* text_handle=paras[0].pfspara;
+            if(nested)require(FsQuerySubtrackParaList(context,text_handle,2,paras,&actual_count)==0&&actual_count==1,"forced container retains its real text child"),text_handle=paras[0].pfspara;
+            require(FsQueryTextDetails(context,text_handle,&text_details)==0&&text_details.u.full.cLines==1&&text_details.u.full.dcpFirst==(number%2)*5&&text_details.u.full.dcpLim==(number%2)*5+5,"forced pages advance actual character ranges exactly once");
+            require((number<3)==bool(page_break),"last oversized line does not fabricate another continuation");
+            require(FsDestroyPage(context,page_handle)==0,"forced page disposal");incoming_record=page_break;
+        }
+        require(!incoming_record&&lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"forced and speculative callback resources tear down once");
+        }
+        containers=false;
+        std::puts("native forced progress: undersized/zero-height flat/nested pages, real accepted line/ranges, available extent, terminal continuation and exact cleanup PASS");
         available_height=30;keep_mode=1;reset_page_counts();
         require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&page_break,"keep-together paragraph is deferred rather than partially consumed");
         require(FsQueryPageDetails(context,page_handle,&details)==0&&FsQueryTrackParaList(context,details.u.simple.trackdescr.pfstrack,2,paras,&actual_count)==0&&actual_count==1&&paras[0].nmp==reinterpret_cast<void*>(101),"first page retains preceding text and no fragment of the kept paragraph");

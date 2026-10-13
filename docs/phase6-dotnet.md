@@ -8829,3 +8829,45 @@ behavior to existing exports. Optimal/forced-line policies, balancing/span areas
 tables/floaters/figures, advanced/incremental/interruptible algorithms, full
 bidi/native language and broader runtime behavior remain incomplete. The full
 WPF goal stays active.
+
+
+## 132. Forced progress for undersized finite pages
+
+The 2026-10-13 continuation accepts one actual original client line when a
+fresh finite area cannot fit any line. Accepted line ascent/descent and ink
+bounds remain real; paragraph used height is bounded by the available extent.
+The forced-progress flag propagates through original container callbacks,
+subtracks, columns and the page result. Deferred paragraphs in already occupied
+areas retain the existing no-progress behavior and original resume position.
+A forced nonterminal line retains its continuation even when bounded lookahead
+formatted only that line; an accepted terminal line does not manufacture an
+extra break record. Zero-height accepted clients remain owned by the track.
+
+Validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-paragraph-context-native
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-forced-progress-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/forced-sdk-check
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-paragraph-context-native inventory layout check-sdk
+```
+
+Native checks verify four-page exact source consumption in flat/nested tracks
+with four-unit and zero-height areas, forced-result propagation, terminal record
+absence and exact accepted/speculative callback resource cleanup. Original WPF
+checks use 400x10 pages with 32-unit paragraph line height. Flat/nested documents
+with keep constraints false/true finish in three pages, retain the requested
+page size, cover all 61 characters exactly once and preserve content/page mapping
+in Ideal/Display. A taller export bitmap observes actual oversized line ink,
+including its portion below the physical page boundary: 3161 pixels Ideal and
+2988 Display across the three pages. This is retained-line evidence, not a claim
+that all glyph ink fits inside a ten-unit physical page. Disposed early/late page
+regeneration, compacting GC and dispatcher cleanup pass through normal shared
+framework and self-contained publishes with SDK roots/toolchain PATH removed.
+The source SDK gate now includes forced progress alongside the previous normal
+WPF/tab/inline-object/justification/width/context/finite/bottomless/pagination/
+columns/hard-break/keep/keep-next/WinForms gates. Final source regression results
+and inventory are archived under tmp/wpf8-support/validation/forced-progress-20261013.
+Package integration follows. Imported native coverage stays 89/139 with 50 absent.
+Optimal line policies, balancing/span areas, tables/floaters/figures, advanced/
+incremental/interruptible algorithms, full bidi/native language and broader
+runtime behavior remain required for the full WPF goal.

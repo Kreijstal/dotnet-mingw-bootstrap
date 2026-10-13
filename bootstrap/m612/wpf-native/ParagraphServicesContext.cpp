@@ -180,6 +180,7 @@ struct TextData {
 struct ParaData {
     std::shared_ptr<Context> context;
     FSPARADESCRIPTION desc{};
+    bool forced_progress=false;
     std::shared_ptr<TextData> text;
     ~ParaData() {
         if(desc.idobj==0 && desc.pfspara)
@@ -198,6 +199,7 @@ struct TrackData {
     int used=0;
     std::shared_ptr<Continuation> continuation;
     FSFMTRKSTOP stop=fmtrGoalReached;
+    bool forced_progress=false;
     bool subtrack=false;
     FSKUPDATE update=fskupdNew;
     std::vector<std::shared_ptr<ParaData>> paras;
@@ -221,6 +223,7 @@ struct PageData {
     bool bottomless=false;
     std::shared_ptr<Continuation> continuation;
     FSFMTRKSTOP stop=fmtrGoalReached;
+    bool forced_progress=false;
 };
 std::unordered_map<void*,std::shared_ptr<TrackData>> tracks;
 std::unordered_map<void*,std::weak_ptr<TextData>> texts;
@@ -327,13 +330,16 @@ int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const F
             fit=std::max(0,int(text->lines.size())-props.cMinLinesAfterBreak);
         if(fit<props.cMinLinesBeforeBreak)fit=0;
         if(!fit&&force)fit=fitting;
+        if(!fit&&force&&!text->lines.empty()){fit=1;para->forced_progress=true;}
         // A new keep-together paragraph that does not fit the remaining area
         // is deferred intact. At a fresh area, an oversized paragraph must
         // still split so pagination makes progress rather than looping.
         if(props.fKeepTogether&&!force&&!input)fit=0;
-        output=std::make_shared<Continuation>();output->context=context;output->paragraph=para->desc.nmp;
-        output->dcp=fit?text->lines[fit-1].dcpLim:(input?input->dcp:props.dcpStartContent);
-        output->line_break=fit?text->breaks[fit-1]:text->incoming;
+        if(fit<int(text->lines.size())||!ended) {
+            output=std::make_shared<Continuation>();output->context=context;output->paragraph=para->desc.nmp;
+            output->dcp=fit?text->lines[fit-1].dcpLim:(input?input->dcp:props.dcpStartContent);
+            output->line_break=fit?text->breaks[fit-1]:text->incoming;
+        }
         for(size_t i=fit;i<text->lines.size();++i)if(text->lines[i].pfslineclient)reinterpret_cast<PtsDestroyLine>(cb.pfnDestroyLine)(client,text->lines[i].pfslineclient);
         text->lines.resize(fit);text->breaks.resize(fit);
     }
@@ -342,7 +348,7 @@ int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const F
         int height=line.dvrAscent+line.dvrDescent;used+=height;
         FSBBOX bbox{1,{line.urBBox,line.vrStart,line.durBBox,height}};status=merge_bbox(para->desc.fsbbox,bbox);if(status)return status;
     }
-    para->desc.pfspara=text.get();para->desc.dvrUsed=used;
+    para->desc.pfspara=text.get();para->desc.dvrUsed=para->forced_progress?std::min(used,rect.dv):used;
     {std::lock_guard<std::mutex> lock(gate);texts[text.get()]=text;}
     return 0;
 }
@@ -412,6 +418,7 @@ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t 
                 status=reinterpret_cast<PtsObjFormatParaFinite>(methods.pfnFormatParaFinite)(context->object_contexts[0],para->desc.pfsparaclient,child_input,child_input&&previous_page?1:0,name,0,nullptr,nullptr,
                     (empty_ok||!track->paras.empty())?1:0,suppress&&track->paras.empty(),direction,&available,input_margin,fskclearNone,first?suppress_break:fsksuppresshardbreakbeforefirstparaNone,0,
                     &fmtr,&para->desc.pfspara,&break_output,&para->desc.dvrUsed,&para->desc.fsbbox,&margin_next,&clear,&para->desc.dvrTopSpace,&can_break);
+                para->forced_progress=fmtr.fForcedProgress!=0;
                 pending.claimed_record=status?nullptr:break_output;
                 if(!status && break_output) {
                     auto child=lookup_owned(records,context.get(),break_output);
@@ -434,7 +441,7 @@ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t 
             margin.reset();margin.value=chain_margin.value;chain_margin.value=nullptr;
             track->continuation=chain_position;track->stop=track->paras.empty()?fmtrNoProgressOutOfSpace:fmtrBrokenOutOfSpace;break;
         }
-        if(para->desc.dvrUsed>0||!next_position){track->used+=para->desc.dvrUsed;status=merge_bbox(track->bbox,para->desc.fsbbox);if(status)return status;track->paras.push_back(para);}
+        if(para->desc.dvrUsed>0||!next_position||para->forced_progress){track->forced_progress=track->forced_progress||para->forced_progress;track->used+=para->desc.dvrUsed;status=merge_bbox(track->bbox,para->desc.fsbbox);if(status)return status;track->paras.push_back(para);}
         if(next_position){next_position->segment=segment;track->continuation=next_position;if(next_stop==fmtrBrokenPageBreakBeforePara||next_stop==fmtrNoProgressPageBreakBeforePara)track->stop=track->paras.empty()?fmtrNoProgressPageBreakBeforePara:fmtrBrokenPageBreakBeforePara;
             else if(next_stop==fmtrBrokenColumnBreakBeforePara||next_stop==fmtrNoProgressColumnBreakBeforePara)track->stop=track->paras.empty()?fmtrNoProgressColumnBreakBeforePara:fmtrBrokenColumnBreakBeforePara;
             else track->stop=track->paras.empty()?fmtrNoProgressOutOfSpace:fmtrBrokenOutOfSpace;break;}
@@ -497,7 +504,7 @@ extern "C" __declspec(dllexport) int WINAPI FsFormatSubtrackFinite(void* context
         std::shared_ptr<BreakData> outgoing;
         try {if(track->continuation)outgoing=make_record(context,track->continuation,false);}
         catch(...){{std::lock_guard<std::mutex> lock(gate);tracks.erase(track.get());}throw;}
-        *output=track.get();*used=track->used;*bbox=track->bbox;*margin_output=margin.value;margin.value=nullptr;formatted->kstop=track->stop;*break_output=outgoing?outgoing.get():nullptr;return 0;
+        *output=track.get();*used=track->used;*bbox=track->bbox;*margin_output=margin.value;margin.value=nullptr;formatted->kstop=track->stop;formatted->fForcedProgress=track->forced_progress;*break_output=outgoing?outgoing.get():nullptr;return 0;
     }catch(const std::bad_alloc&){return PTS_tserrOutOfMemory;}
 }
 extern "C" __declspec(dllexport) int WINAPI FsDestroySubtrack(void* context_handle,void* handle) {
@@ -523,7 +530,7 @@ int build_page(const std::shared_ptr<Context>& context,void* section,bool bottom
     auto& details=page->details;details.fskupd=fskupdNew;
     if(columns==1) {
         status=format_track(context,segment,direction,rect,1,nullptr,page->track,&margin.value,bottomless,input);if(status)return status;
-        details.fSimple=1;page->continuation=page->track->continuation;page->stop=page->track->stop;
+        details.fSimple=1;page->continuation=page->track->continuation;page->stop=page->track->stop;page->forced_progress=page->track->forced_progress;
         auto& desc=details.u.simple.trackdescr;desc.fsupdinf.fskupd=fskupdNew;desc.nms=segment;desc.fsrc=page->track->rect;desc.fsbbox=page->track->bbox;desc.pfstrack=page->track.get();
     } else {
         if(!cb.pfnGetSectionColumnInfo)return PTS_tserrInvalidParameter;
@@ -547,7 +554,7 @@ int build_page(const std::shared_ptr<Context>& context,void* section,bool bottom
                 stop_page=stop==fmtrBrokenPageBreakBeforePara||stop==fmtrNoProgressPageBreakBeforePara;
                 if(track->stop==fmtrNoProgressOutOfSpace)return PTS_tserrNotImplemented;
             }
-            status=merge_bbox(desc.fsbbox,track->bbox);if(status)return status;data->columns.push_back(track);
+            page->forced_progress=page->forced_progress||track->forced_progress;status=merge_bbox(desc.fsbbox,track->bbox);if(status)return status;data->columns.push_back(track);
         }
         page->track=data->columns.back();page->continuation=continuation;page->stop=stop;
         details.fSimple=0;auto& body=details.u.complex;body.fswdirPageProper=direction;body.fsupdinfPageBody.fskupd=fskupdNew;
@@ -578,7 +585,7 @@ extern "C" __declspec(dllexport) int WINAPI FsCreatePageFinite(void* context_han
         if(page->stop==fmtrNoProgressOutOfSpace)return PTS_tserrNotImplemented;
         std::shared_ptr<BreakData> outgoing;if(page->continuation)outgoing=make_record(context,page->continuation,true,section);
         try {register_page(page);}catch(...){if(outgoing)destroy_record(context_handle,outgoing.get(),true);throw;}
-        formatted->kstop=page->stop;*output=page.get();*break_output=outgoing?outgoing.get():nullptr;return 0;
+        formatted->kstop=page->stop;formatted->fForcedProgress=page->forced_progress;*output=page.get();*break_output=outgoing?outgoing.get():nullptr;return 0;
     }catch(const std::bad_alloc&){return PTS_tserrOutOfMemory;}
 }
 extern "C" __declspec(dllexport) int WINAPI FsCreatePageBottomless(void* context_handle,void* section,FSFMTRBL* formatted,void** output) {
@@ -612,7 +619,7 @@ extern "C" __declspec(dllexport) int WINAPI FsUpdateBottomlessPage(void* context
         std::shared_ptr<TrackData> previous=page->track;
         {std::lock_guard<std::mutex> lock(gate);
             tracks.emplace(replacement->track.get(),replacement->track);
-            tracks.erase(previous.get());page->track=replacement->track;page->details=replacement->details;page->continuation=replacement->continuation;page->stop=replacement->stop;}
+            tracks.erase(previous.get());page->track=replacement->track;page->details=replacement->details;page->continuation=replacement->continuation;page->stop=replacement->stop;page->forced_progress=replacement->forced_progress;}
         // Retain page identity while replacing layout atomically. The old
         // clients/lines are released outside the registry lock after success.
         return 0;

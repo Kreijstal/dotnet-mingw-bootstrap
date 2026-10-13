@@ -830,6 +830,7 @@ step_check_sdk() {
   bash "$here/wpf-tests/check-hard-breaks-sdk.sh" "$root" "$build/hard-breaks-sdk-check"
   bash "$here/wpf-tests/check-keep-together-sdk.sh" "$root" "$build/keep-together-sdk-check"
   bash "$here/wpf-tests/check-keep-next-sdk.sh" "$root" "$build/keep-next-sdk-check"
+  bash "$here/wpf-tests/check-forced-progress-sdk.sh" "$root" "$build/forced-sdk-check"
   bash "$here/winforms-tests/check-sdk.sh" "$root" "$build/winforms-sdk-check"
 }
 
