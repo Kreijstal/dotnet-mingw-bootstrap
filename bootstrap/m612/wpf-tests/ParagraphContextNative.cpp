@@ -13,7 +13,7 @@ static int WINAPI create_object(void* client,void* context,FSCBKOBJ* callbacks,u
     *output=reinterpret_cast<void*>(100+id);return 0;
 }
 static int WINAPI destroy_object(void* value){if(value!=reinterpret_cast<void*>(100)&&value!=reinterpret_cast<void*>(101))return PTS_tserrInvalidParameter;++destroys;return 0;}
-static int lines_created=0,lines_destroyed=0,breaks_destroyed=0,clients_created=0,clients_destroyed=0,fail_line=-1,columns=1,available_height=80,invalid_columns=false;
+static int lines_created=0,lines_destroyed=0,breaks_destroyed=0,clients_created=0,clients_destroyed=0,fail_line=-1,columns=1,available_height=80,invalid_columns=false,hard_break=0;
 static bool containers=false,lose_subtrack=false;
 static void* page_context=nullptr;
 using SubtrackFormat=int(WINAPI*)(void*,void*,int,void*,int,void*,void*,int,int,uint32_t,const FSRECT*,void*,FSKCLEAR,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA,FSFMTR*,void**,void**,int*,FSBBOX*,void**,FSKCLEAR*,int*);
@@ -41,7 +41,7 @@ static int WINAPI column_info(void*,void*,uint32_t,int capacity,FSCOLUMNINFO* ou
 static int WINAPI main_segment(void*,void*,void** segment){*segment=reinterpret_cast<void*>(77);return 0;}
 static int WINAPI first_para(void*,void* segment,int* found,void** name){if(segment!=reinterpret_cast<void*>(77)&&!containers)return PTS_tserrInvalidParameter;*found=1;*name=segment==reinterpret_cast<void*>(77)?reinterpret_cast<void*>(101):reinterpret_cast<void*>(201);return 0;}
 static int WINAPI next_para(void*,void* segment,void* current,int* found,void** next){*found=segment==reinterpret_cast<void*>(77)&&current==reinterpret_cast<void*>(101);*next=*found?reinterpret_cast<void*>(102):nullptr;return 0;}
-static int WINAPI para_properties(void*,void* name,FSPAP* pap){*pap={};pap->idobj=containers&&reinterpret_cast<uintptr_t>(name)<200?0:-1;return 0;}
+static int WINAPI para_properties(void*,void* name,FSPAP* pap){*pap={};pap->idobj=containers&&reinterpret_cast<uintptr_t>(name)<200?0:-1;if(name==reinterpret_cast<void*>(102)){pap->fBreakPageBefore=hard_break==1;pap->fBreakColumnBefore=hard_break==2;}return 0;}
 static int WINAPI para_client(void*,void* name,void** output){++clients_created;*output=name;return 0;}
 static int WINAPI destroy_para_client(void*,void*){++clients_destroyed;return 0;}
 static int WINAPI text_properties(void*,void*,int,FSTXTPROPS* props){*props={};return 0;}
@@ -218,6 +218,18 @@ int main(int argc,char** argv) {
         require(FsQuerySectionBasicColumnList(context,section_desc.pfssection,1,column_desc,&actual_count)==PTS_tserrInvalidParameter&&!actual_count,"short column query rejects without partial output");
         require(FsClearUpdateInfoInPage(context,page_handle)==0&&FsQuerySectionBasicColumnList(context,section_desc.pfssection,2,column_desc,&actual_count)==0&&column_desc[0].fsupdinf.fskupd==fskupdNoChange&&column_desc[1].fsupdinf.fskupd==fskupdNoChange,"update clearing propagates through every column");
         require(FsDestroyPage(context,page_handle)==0&&FsQuerySectionDetails(context,section_desc.pfssection,&section_details)==PTS_tserrInvalidQuery&&lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"page teardown invalidates section/columns and releases all callback resources");
+        available_height=80;hard_break=1;reset_page_counts();
+        require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&page_break&&formatted.kstop==fmtrBrokenPageBreakBeforePara,"explicit page break before a paragraph stops the page despite spare column space");
+        require(FsQueryPageDetails(context,page_handle,&details)==0&&FsQueryPageSectionList(context,page_handle,1,&section_desc,&actual_count)==0&&FsQuerySectionBasicColumnList(context,section_desc.pfssection,2,column_desc,&actual_count)==0,"page-break section/column query");
+        require(FsQueryTrackDetails(context,column_desc[1].pfstrack,&track_details)==0&&track_details.cParas==0,"page break leaves remaining columns empty without consuming following text");
+        require(FsDestroyPage(context,page_handle)==0,"explicit page-break page release");incoming_record=page_break;
+        require(FsCreatePageFinite(context,incoming_record,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&!page_break&&formatted.kstop==fmtrGoalReached,"pending page break is suppressed exactly once at the destination page start");
+        require(FsDestroyPageBreakRecord(context,incoming_record)==0&&FsDestroyPage(context,page_handle)==0&&lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"explicit page-break continuation cleanup");
+        hard_break=2;reset_page_counts();
+        require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&!page_break&&formatted.kstop==fmtrGoalReached,"explicit column break resumes within the same page");
+        require(FsQueryPageSectionList(context,page_handle,1,&section_desc,&actual_count)==0&&FsQuerySectionBasicColumnList(context,section_desc.pfssection,2,column_desc,&actual_count)==0&&FsQueryTrackParaList(context,column_desc[1].pfstrack,2,paras,&actual_count)==0&&actual_count==1&&paras[0].nmp==reinterpret_cast<void*>(102),"column-break paragraph starts at the second column without duplication");
+        require(FsDestroyPage(context,page_handle)==0&&lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"explicit column-break cleanup");hard_break=0;
+        std::puts("native explicit breaks: page stop/skipped columns, column resume, destination suppression, exact character ownership and record cleanup PASS");
         invalid_columns=true;reset_page_counts();
         require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrInvalidGeometry&&!page_handle&&!page_break&&!clients_created,"invalid column extents reject before client allocation");
         invalid_columns=false;fail_line=4;reset_page_counts();

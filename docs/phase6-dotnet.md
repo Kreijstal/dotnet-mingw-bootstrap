@@ -8554,3 +8554,48 @@ continue within a page and onto later pages using original geometry/callbacks.
 Balancing/span areas, hard/keep/optimal/forced-line policies, tables/floaters/
 figures, advanced/incremental/interruptible algorithms, full bidi/native language
 and broader runtime behavior remain incomplete. The full WPF goal stays active.
+
+## 126. Explicit paragraph page/column breaks through nested containers
+
+The 2026-10-13 continuation implements original FSPAP BreakPageBefore and
+BreakColumnBefore behavior for finite text tracks. A page break stops the whole
+page and preserves empty remaining columns; a column break resumes in the next
+column. Original suppression flags apply at the destination: page start
+suppresses page/column breaks on the first block, column start suppresses the
+already-satisfied column break. A continued paragraph does not repeat a break
+that was already applied before its first chunk. Bottomless documents ignore
+these finite-only boundaries.
+
+Container callbacks retain and propagate the exact page/column stop reason and
+original suppression argument through FsFormatSubtrackFinite. A no-progress
+resumed container preserves its existing immutable continuation rather than
+restarting its children. Page-level continuation/stop state is now independent
+of trailing empty column tracks, so skipping columns for a hard page break cannot
+lose the next paragraph. These improve existing exports; native coverage remains
+89/139 with 50 absent.
+
+Validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-paragraph-context-native
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-hard-breaks-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/hard-break-sdk-check
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh inventory layout check-sdk
+```
+
+All commands pass. Native tests verify explicit page stops despite spare column
+space, empty skipped columns, same-page column resume, exact-once destination
+suppression and callback/break-record cleanup. Original WPF tests cover flat
+paragraphs and the same paragraphs inside a nested Section, both Ideal and
+Display. First-block page/column flags do not create a blank first page; red/blue
+paragraphs occupy separate columns on page 0; green/black paragraphs occupy page
+1 in order. All 56 source characters map to the expected page, colored glyph
+bounds verify placement and compacting GC/dispatcher cleanup pass. Shared-
+framework and portable publishes run with SDK roots/toolchain PATH removed.
+The raster fixture distinguishes neutral black ink from antialiased green ink.
+step_check_sdk includes the hard-break gate; earlier normal WPF/finite/bottomless/
+pagination/columns/WinForms regressions pass with zero consumer warnings/errors.
+Evidence is archived under tmp/wpf8-support/validation/hard-breaks-20261013.
+Package integration follows. Keep/optimal/forced-line policies, balancing/span
+areas, tables/floaters/figures, advanced/incremental/interruptible algorithms,
+full bidi/native language and broader runtime behavior remain required for the
+full WPF goal.
