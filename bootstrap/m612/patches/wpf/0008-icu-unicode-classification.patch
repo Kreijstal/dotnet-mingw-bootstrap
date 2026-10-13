@@ -1,0 +1,89 @@
+--- a/src/Microsoft.DotNet.Wpf/src/PresentationCore/MS/internal/Classification.cs
++++ b/src/Microsoft.DotNet.Wpf/src/PresentationCore/MS/internal/Classification.cs
+@@ -172,53 +172,28 @@
+     /// </summary>    
+     internal static class Classification
+     {
+-        /// <summary>
+-        /// This structure has a cloned one in the unmanaged side. Doing any change in this
+-        /// structure should have the same change on unmanaged side too.
+-        /// </summary>
++        // Source port: ICU supplies the properties consumed by this managed
++        // classifier, through an explicit ABI rather than legacy MIL tables.
+         [StructLayout(LayoutKind.Sequential)]
+-        internal unsafe struct CombiningMarksClassificationData
+-        {
+-            internal IntPtr CombiningCharsIndexes; // Two dimentional array of base char classes,
+-            internal int    CombiningCharsIndexesTableLength;
+-            internal int    CombiningCharsIndexesTableSegmentLength;
+-            
+-            internal IntPtr CombiningMarkIndexes; // Combining mark classes array, with length = length
+-            internal int    CombiningMarkIndexesTableLength;
+-            
+-            internal IntPtr CombinationChars; // Two dimentional array of combined characters
+-            internal int    CombinationCharsBaseCount;
+-            internal int    CombinationCharsMarkCount;
+-        }
+-        
+-        /// <summary>
+-        /// This structure has a cloned one in the unmanaged side. doing any change in  that
+-        /// structure should have same change in the unmanaged side too.
+-        /// </summary>    
+-        [StructLayout(LayoutKind.Sequential)]
+-        internal unsafe struct RawClassificationTables
++        internal struct ClassificationTableView
+         {
+             internal IntPtr UnicodeClasses;
+             internal IntPtr CharacterAttributes;
+-            internal IntPtr Mirroring;
+-            internal CombiningMarksClassificationData CombiningMarksClassification;
+-        };
+-
+-        [DllImport(DllImport.PresentationNative, EntryPoint="MILGetClassificationTables")]
+-        internal static extern void MILGetClassificationTables(out RawClassificationTables ct);
++            internal int CharacterAttributeCount;
++        }
++
++        [DllImport(DllImport.PresentationNative, EntryPoint="WpfGetClassificationTables")]
++        internal static extern int GetClassificationTables(out ClassificationTableView tables);
+         static Classification()
+         {
+-            unsafe 
+-            {
+-                RawClassificationTables ct = new RawClassificationTables();
+-                MILGetClassificationTables(out ct);
+-
+-                _unicodeClassTable   = new SecurityCriticalData<IntPtr>(ct.UnicodeClasses);
+-                _charAttributeTable  = new SecurityCriticalData<IntPtr>(ct.CharacterAttributes);
+-                _mirroredCharTable   = new SecurityCriticalData<IntPtr>(ct.Mirroring);
+-                
+-                _combiningMarksClassification = new SecurityCriticalData<CombiningMarksClassificationData>(ct.CombiningMarksClassification);
+-            }
++            ClassificationTableView tables;
++            Marshal.ThrowExceptionForHR(GetClassificationTables(out tables));
++            if (tables.UnicodeClasses == IntPtr.Zero || tables.CharacterAttributes == IntPtr.Zero ||
++                tables.CharacterAttributeCount <= 0 || tables.CharacterAttributeCount > short.MaxValue)
++                throw new InvalidOperationException("Invalid native Unicode classification tables");
++            _unicodeClassTable = new SecurityCriticalData<IntPtr>(tables.UnicodeClasses);
++            _charAttributeTable = new SecurityCriticalData<IntPtr>(tables.CharacterAttributes);
++            _characterAttributeCount = tables.CharacterAttributeCount;
+         }
+ 
+         /// <summary>
+@@ -417,14 +392,13 @@
+         {   
+             unsafe 
+             { 
+-                Invariant.Assert(charClass >= 0 && charClass < (int) UnicodeClass.Max);
++                Invariant.Assert(charClass >= 0 && charClass < _characterAttributeCount);
+                 return CharAttributeTable[charClass]; 
+             }
+         }
+ 
+         static private readonly SecurityCriticalData<IntPtr>  _unicodeClassTable;
+         static private readonly SecurityCriticalData<IntPtr> _charAttributeTable;
+-        static private readonly SecurityCriticalData<IntPtr> _mirroredCharTable;
+-        static private readonly SecurityCriticalData<CombiningMarksClassificationData> _combiningMarksClassification;
++        static private readonly int _characterAttributeCount;
+     }
+ }

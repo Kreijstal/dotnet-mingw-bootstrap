@@ -4208,3 +4208,67 @@ remaining assemblies, SDK/framework packs and installed packaging remain open.
 Logs, manifests, generated resources/DLLs, debugger evidence and PNG are archived
 under `tmp/wpf8-support/validation/themes-window-20261013` locally. The goal
 remains active.
+
+## 42. ICU-backed source classification and the next text-layout gate
+
+The 2026-10-13 continuation ports managed Classification to an explicit
+`WpfGetClassificationTables` native ABI. The original repository exposes the
+legacy MIL table layout but not its table data. The source port supplies the
+properties actually read by the managed classifier, using trusted MSYS2 ICU;
+it does not fabricate a MILGetClassificationTables export or guessed legacy
+mirroring/composition tables. Those unused fields were removed from the managed
+source. Classification.md records the ABI, property mapping and limitations.
+
+The native view has two pointers and an integer count (**24 bytes on x64**).
+Every one of the **1,114,112 Unicode code-point values**, including standalone
+UTF16 surrogate entries, maps through real plane/block pointers to a packed
+**eight-byte CharacterAttribute**. Deduplication produces **464 classes** with
+the installed ICU. Script/flag/item/bidi numbers are generated from original
+UnicodeClasses.cs. Unsupported modern script IDs remain Default and complex;
+RTL, combining marks, controls and contextual scripts stay outside the fast
+text path. LineBreak stores ICU's property value, currently unused by managed
+Classification callers. The old managed bidi engine has no isolate classes;
+full isolate semantics and a future line-service adapter need additional work.
+
+Native validation checks every code-point value for class bounds, bidi,
+line-break, digit/letter/space/ideographic/extended properties and script/item
+ranges against ICU. Eight concurrent callers repeatedly verify stable native
+table pointers/counts. The C# peer walks every scalar-table index and every
+UTF16 entry, verifies native/managed structure sizes/offsets, known script IDs,
+Latin/RTL/CJK/space/digit/line-break flags, supplementary combining marks,
+joiners and variation selectors, and repeats a lookup after forced GC.
+
+PresentationCore rebuilds from the same **1,337 C# inputs** with the classifier
+source patch. Its **2,289 CLR types** load (two old table structs were replaced
+by one explicit native view). Real font-family/glyph metadata and matrix checks
+pass again. The shown, themed shape-content window still passes with the new
+native DLL. The text window now gets past classification and fails at the
+original TextStore initializer's missing **LoGetEscString**. That is retained as
+the next real Line Services gate; no escape-string or line-layout export is
+stubbed to make the check pass.
+
+Validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 build-presentation-core
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-classification inventory
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 \
+  WPF_BUILD=/home/topkek/wpfboot/build \
+  bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-presentation-core check-window
+```
+
+These checks pass with zero warnings/errors in the managed peers. The separate
+check-window-text step fails as described. The patched-source native inventory
+now measures **39/139 required imports implemented**, with **100 missing**;
+the new ICU ABI replaces one original import rather than claiming binary
+compatibility with MIL's legacy table contract. The inventory description now
+distinguishes demonstrated shape rendering from unfinished complete text/layout.
+Logs, original classifier source, generated enums, native DLL/IL metadata and
+the failure evidence are archived under
+`tmp/wpf8-support/validation/classification-20261013` locally. Printing, complete
+text/paragraph/natural-language support, remaining desktop assemblies and
+WindowsDesktop packaging remain unfinished. The goal remains active.

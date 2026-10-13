@@ -109,13 +109,45 @@ PY
 }
 
 step_native_win32() {
+  step_prepare_bridges
+  local work=$build/classification-native
+  mkdir -p "$work"
+  /usr/bin/python3 "$here/tools/wpf-classification-header.py" \
+    "$source/src/Microsoft.DotNet.Wpf/src/PresentationCore/MS/internal/UnicodeClasses.cs" "$work/ClassificationEnums.h"
   /clang64/bin/clang++.exe -O2 -shared "$here/wpf-native/PresentationNativeWin32.cpp" \
-    -o "$build/lib/PresentationNative_cor3.dll" -luser32 -lgdi32
+    "$here/wpf-native/Classification.cpp" -I "$work" \
+    -o "$build/lib/PresentationNative_cor3.dll" -luser32 -lgdi32 -licuuc
 }
 
 step_inventory() {
   /usr/bin/python3 "$here/tools/wpfnative-inventory.py" "$source" "$build/lib/PresentationNative_cor3.dll" \
     "$build/native-coverage.json"
+}
+
+step_check_classification() {
+  local native=$build/classification-native
+  /clang64/bin/clang++.exe -std=c++17 -O2 "$here/wpf-tests/ClassificationNative.cpp" -I "$native" \
+    -o "$native/check.exe" -licuuc
+  "$native/check.exe" "$build/lib/PresentationNative_cor3.dll"
+  local work=$build/classification-check
+  mkdir -p "$work"
+  cp "$here/wpf-tests/Classification.cs" "$work/Program.cs"
+  /usr/bin/python3 - "$work" "$build/lib" <<'PY'
+from pathlib import Path
+import subprocess,sys,xml.etree.ElementTree as E
+work,lib=map(Path,sys.argv[1:])
+def win(p): return subprocess.check_output(['cygpath','-m',str(p.resolve())],text=True).strip()
+root=E.Element('Project',Sdk='Microsoft.NET.Sdk'); pg=E.SubElement(root,'PropertyGroup')
+for key,value in {'TargetFramework':'net8.0','OutputType':'Exe','UseAppHost':'false','EnableNETAnalyzers':'false','NuGetAudit':'false','UseSharedCompilation':'false'}.items(): E.SubElement(pg,key).text=value
+items=E.SubElement(root,'ItemGroup')
+for name in ('PresentationCore','WindowsBase','System.Xaml','DirectWriteForwarder'):
+    item=E.SubElement(items,'Reference',Include=name); E.SubElement(item,'HintPath').text=win(lib/(name+'.dll'))
+E.ElementTree(root).write(work/'ClassificationCheck.csproj',encoding='utf-8')
+PY
+  "$sdk/dotnet.exe" build "$(cygpath -m "$work/ClassificationCheck.csproj")" -c Release \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -v:q
+  cp "$build/lib/PresentationNative_cor3.dll" "$build/lib/wpf-dwrite-loader.dll" "$build/lib/wpf-subsetter.dll" "$work/bin/Release/net8.0/"
+  "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/ClassificationCheck.dll")"
 }
 
 step_prepare_gfx() {
@@ -178,8 +210,8 @@ bridge_compile() {
 step_prepare_bridges() {
   local patchfile
   for patchfile in "$here"/patches/wpf/*.patch; do
-    if ! patch --dry-run -R -p1 -d "$source" -i "$patchfile" >/dev/null 2>&1; then
-      patch -p1 -d "$source" -i "$patchfile"
+    if ! patch --batch --force --dry-run -R -p1 -d "$source" -i "$patchfile" >/dev/null 2>&1; then
+      patch --batch --forward -p1 -d "$source" -i "$patchfile"
     fi
   done
 }

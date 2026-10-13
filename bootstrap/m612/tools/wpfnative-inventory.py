@@ -60,9 +60,9 @@ def main():
         "scope": "C# DllImport declarations naming PresentationNative; dynamic lookups and native callers need a separate audit",
         "requiredExports": {name: dict(item, implemented=name in exports) for name, item in sorted(entries.items())},
         "providedExports": sorted(exports), "missingExports": missing,
-        "status": "complete imported symbol coverage" if not missing else "partial Win32 replacement; rendering unavailable",
-        "otherBlockers": ["DirectWriteForwarder C++/CLI bridge", "System.Printing C++/CLI bridge",
-                          "managed renderer/framework and matching native graphics version", "WPF XAML build tasks and SDK layout"],
+        "status": "complete imported symbol coverage" if not missing else "partial source native port; complete text/paragraph layout unavailable",
+        "otherBlockers": ["System.Printing C++/CLI implementation", "remaining text/paragraph/natural-language exports",
+                          "remaining desktop assemblies and WindowsDesktop SDK/framework-pack packaging"],
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2) + "\n")
