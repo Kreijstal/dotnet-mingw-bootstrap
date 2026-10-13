@@ -20,7 +20,8 @@ class TabRunProperties:TextRunProperties {
 class TabParagraph:TextParagraphProperties {
     readonly IList<TextTabProperties> tabs;
     readonly bool wrap;
-    public TabParagraph(IList<TextTabProperties> value=null,bool wrap=false) { tabs=value;this.wrap=wrap; }
+    readonly double increment;
+    public TabParagraph(IList<TextTabProperties> value=null,bool wrap=false,double increment=80) { tabs=value;this.wrap=wrap;this.increment=increment; }
     public override FlowDirection FlowDirection=>FlowDirection.LeftToRight;
     public override TextAlignment TextAlignment=>TextAlignment.Left;
     public override double LineHeight=>0;
@@ -29,7 +30,7 @@ class TabParagraph:TextParagraphProperties {
     public override TextWrapping TextWrapping=>wrap?TextWrapping.Wrap:TextWrapping.NoWrap;
     public override TextMarkerProperties TextMarkerProperties=>null;
     public override double Indent=>0;
-    public override double DefaultIncrementalTab=>80;
+    public override double DefaultIncrementalTab=>increment;
     public override IList<TextTabProperties> Tabs=>tabs;
 }
 class TabSource:TextSource {
@@ -130,5 +131,13 @@ class Check {
             }
         }
         Console.WriteLine("public TextFormatter aligned/incremental tabs, cross-run fields, leaders, caret/selection/enumeration, raster, wrapping and moving GC PASS");
+        foreach(bool split in new[]{false,true}) {
+            var source=new TabSource("कि\talpha beta.gamma delta",split);
+            var paragraph=new TabParagraph(new[]{new TextTabProperties(TextTabAlignment.Right,100,0,'.')},true,0);
+            using var line=formatter.FormatLine(source,0,125,paragraph,null);
+            if(line.Length<=3 || line.Width>125.02)throw new Exception("explicit-only aligned stop lost fitting retained prefix");
+            Near(line.WidthIncludingTrailingWhitespace,100,"explicit-only retained right field");
+            Console.WriteLine($"public explicit-only aligned wrap, split={split}, length={line.Length} PASS");
+        }
     }
 }

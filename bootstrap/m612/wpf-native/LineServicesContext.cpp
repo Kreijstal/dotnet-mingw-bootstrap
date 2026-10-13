@@ -257,12 +257,16 @@ int choose_wrap(const Line& line,int allowance,bool emergency,int max_cut,bool& 
     int chosen=0,first_break=0;
     for(int point=ubrk_first(iterator);(point=ubrk_next(iterator))!=UBRK_DONE;) {
         if(point>max_cut || !boundary[point]) continue;
-        if(!first_break) first_break=point;
         int visible=point;
         while(visible>0 && text[visible-1]==L' ') --visible;
         while(visible>0 && !boundary[visible]) --visible;
         int64_t actual=width[visible];
-        if(tabs && candidate_width(line,point,visible,actual)) { ubrk_close(iterator); return -1; }
+        if(tabs) {
+            int status=candidate_width(line,point,visible,actual);
+            if(status==LS_InvalidFormatterResult) continue; // No usable stop for this retained field.
+            if(status) { ubrk_close(iterator); return -1; }
+        }
+        if(!first_break) first_break=point;
         if(actual<=allowance) chosen=point;
     }
     ubrk_close(iterator);
@@ -273,9 +277,13 @@ int choose_wrap(const Line& line,int allowance,bool emergency,int max_cut,bool& 
     first_break=0;
     for(int point=ubrk_first(iterator);(point=ubrk_next(iterator))!=UBRK_DONE;) {
         if(point>max_cut || !boundary[point]) continue;
-        if(!first_break) first_break=point;
         int64_t actual=width[point];
-        if(tabs && candidate_width(line,point,point,actual)) { ubrk_close(iterator); return -1; }
+        if(tabs) {
+            int status=candidate_width(line,point,point,actual);
+            if(status==LS_InvalidFormatterResult) continue;
+            if(status) { ubrk_close(iterator); return -1; }
+        }
+        if(!first_break) first_break=point;
         if(actual<=allowance) chosen=point;
     }
     ubrk_close(iterator); unavoidable=!chosen; return chosen?chosen:first_break;
@@ -522,10 +530,17 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
             if(limit>0 && position-cp>=limit) ended=true;
         }
         if(!ended) return LS_TooLongParagraph;
-        status=layout_tabs(*result,properties.durLeft,total); if(status) return status;
+        bool needs_tab_layout=false;
+        status=layout_tabs(*result,properties.durLeft,total);
+        if(status) {
+            // With no incremental fallback, a long full field can miss all
+            // explicit stops even though a shorter wrapped field fits one.
+            if(status!=LS_InvalidFormatterResult || !(paragraph.grpf&0x40) || limit || context->tabs.empty()) return status;
+            needs_tab_layout=true;
+        }
         // Fetch through the separator before finding Unicode breaks: a client
         // run boundary can be in the middle of a word or grapheme.
-        if((paragraph.grpf&0x40) && total>column-properties.durRightBreak && limit==0) {
+        if((paragraph.grpf&0x40) && (needs_tab_layout || total>column-properties.durRightBreak) && limit==0) {
             int max_cut=INT_MAX;
             for(;;) {
                 bool unavoidable=false;
@@ -550,7 +565,11 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
                 }
                 candidate.runs.resize(keep);
                 if(truncated) { candidate.info.endr=0; candidate.has_terminator=false; }
-                status=layout_tabs(candidate,properties.durLeft,total); if(status) return status;
+                status=layout_tabs(candidate,properties.durLeft,total);
+                if(status) {
+                    if(status==LS_InvalidFormatterResult && cut>1 && !context->tabs.empty()) { max_cut=cut-1; continue; }
+                    return status;
+                }
                 int visible=total;
                 for(auto item=candidate.runs.rbegin();item!=candidate.runs.rend();++item) {
                     bool all_spaces=false;

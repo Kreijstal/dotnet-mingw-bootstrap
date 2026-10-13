@@ -7640,6 +7640,16 @@ five lines with exactly one indivisible leading-tab overflow. Checks cover
 retained right-stop identity, source-backed glyph enumeration, grapheme-safe
 progress, continuation clone/disposal, drawing/raster and moving GC.
 
+Before final package installation, WPF's original paragraph-property validation
+confirms zero incremental-tab distance is allowed. The initial private release 4
+native output still fails the new explicit-only retained-field test: the full
+field misses its right stop and has no incremental fallback. The engine now
+lets wrapped explicit-stop candidates proceed, skips candidates without usable
+stops, and retries if actual prefix remeasurement loses a stop. Native checks
+and whole/split public explicit-only cases pass (retained first-line length 9).
+The final narrow command is native-win32 check-lineservices-line-native
+check-text-tabs; existing text-line checks also pass with this correction.
+
 Evidence is archived under tmp/wpf8-support/validation/aligned-wrap-20261013.
 Imported native coverage remains 58/139. Candidate evaluation scans fields and
 needs a performance improvement for long tabbed paragraphs; full bidi/paragraph

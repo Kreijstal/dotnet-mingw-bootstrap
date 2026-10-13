@@ -90,7 +90,10 @@ advances make it wider, an earlier legal candidate is tried. A leading
 indivisible tab/word outside the column advances with unavoidable overflow under
 the selected wrapping policy. Native/public checks cover fitting retained fields,
 out-of-column tabs, cloned continuation records and complete source coverage.
-Candidate evaluation scans retained fields and needs optimization for long tabbed
+Explicit-only stops with zero incremental distance are evaluated per retained
+field even if the full field has no fallback stop. Candidates without usable
+stops are skipped; invalid configurations still fail. Candidate evaluation
+scans retained fields and needs optimization for long tabbed
 paragraphs. Leaders currently repeat whole measured characters centered in the
 gap; exact legacy leader spacing and non-LTR tab behavior require validation.
 

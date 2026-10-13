@@ -215,6 +215,9 @@ int main(int argc,char** argv) {
         require(LoDisposeLine(line,FALSE)==0&&LoDisposeBreakRecord(record,FALSE)==0,"aligned wrap original line/record disposal");
         require(LoCreateLine(tab_context,6,0,70,0,clone,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==10&&measured.upLimLine==34,"aligned wrap clone resumes complete remaining field");
         require(LoDisposeLine(line,FALSE)==0&&LoDisposeBreakRecord(clone,FALSE)==0,"aligned wrap continuation disposal");
+        require(LoSetTabs(tab_context,0,1,&right_stop)==0,"explicit-only aligned tab setup");
+        require(LoCreateLine(tab_context,0,0,70,0,nullptr,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==6&&measured.upLimLine==60,"explicit-only stop fits retained prefix despite missing full-field fallback");
+        require(LoDisposeLine(line,FALSE)==0,"explicit-only wrapped line disposal");
         uniform_width=false;
         paragraph_flags=0;
         require(LoSetTabs(tab_context,0,0,nullptr)==0,"zero incremental tab setup");line=reinterpret_cast<void*>(1);
