@@ -254,7 +254,8 @@ def main():
               "System.Windows.ContentElement", "System.Windows.FrameworkElement", "System.Windows.UIElement",
               "System.Windows.Xps.Packaging.IXpsFixedDocumentReader", "System.Windows.Xps.Packaging.IXpsFixedPageReader",
               "System.Collections.ObjectModel.ReadOnlyCollection`1", "System.Windows.Application",
-              "System.Threading.ThreadStart"]
+              "System.Threading.ThreadStart", "System.Runtime.CompilerServices.InternalsVisibleToAttribute",
+              "System.Reflection.AssemblyFileVersionAttribute", "System.Reflection.AssemblyInformationalVersionAttribute"]
     for name in types:
         command += ["--type", name]
     command += ["--source-type", "System.Printing.PrintQueue"]

@@ -1646,6 +1646,20 @@ using namespace System; void Bad(array<Byte>^ bytes) { pin_ptr<Byte> data = &byt
 using namespace System; void Bad(String^ text) { pin_ptr<const wchar_t> data = PtrToStringChars(text); char* raw = static_cast<char*>(data); } int main() { return 0; }' 'cannot discard element const'
   log "PASS test-pinning: Unicode strings and mutable arrays survive concurrent compacting GC in native calls"
 }
+step_test-nested-enums() {
+  compile "$(cygpath -m "$src/tests/nested-enums.cpp")" --target library --type System.Array --type System.Enum --type System.Type \
+    -o "$(cygpath -m "$testdir/nested-enums.dll")"
+  mkdir -p "$testdir/nested-enums-consumer"
+  cp "$src/tests/NestedEnumsConsumer.cs" "$testdir/nested-enums-consumer/Program.cs"
+  cat > "$testdir/nested-enums-consumer/consumer.csproj" <<'EOF'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="nested-enums"><HintPath>../nested-enums.dll</HintPath></Reference></ItemGroup></Project>
+EOF
+  "$CPPCLI_SDK/dotnet.exe" build "$(cygpath -m "$testdir/nested-enums-consumer/consumer.csproj")" -nologo -v:q \
+    --configfile "$(cygpath -m "$build/NuGet.config")" -p:UseSharedCompilation=false
+  "$CPPCLI_SDK/dotnet.exe" "$(cygpath -m "$testdir/nested-enums-consumer/bin/Debug/net8.0/consumer.dll")"
+  reject_case nested-enum-private 'public ref class Host { enum class Hidden { Value=1 }; }; int main() { return (int)Host::Hidden::Value; }' 'private member'
+  reject_case native-enum-typeid 'enum class Native { Value=1 }; int main() { Native::typeid; return 0; }' 'native enum typeid metadata' --type System.Type
+}
 step_test-enums() {
   run_case enums "$src/tests/enums.cpp" $'2\n-5\n5000000002\n5\n1' --type System.DayOfWeek
   mkdir -p "$testdir/enum-consumer"

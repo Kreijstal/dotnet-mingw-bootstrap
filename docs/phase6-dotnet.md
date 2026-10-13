@@ -6995,3 +6995,45 @@ Evidence is archived under
 remains 49 project inputs/66 tree C++ files without per-file compile counts.
 Native text coverage remains 58/139; full printing, text/layout and
 WindowsDesktop packaging remain required. The WPF packaging goal stays active.
+
+
+## 92. Source nested managed enums and complete printing IL
+
+The 2026-10-13 continuation recognizes scoped enum declarations directly inside
+managed classes without requiring a namespace-level visibility prefix. It emits
+their real nested CLR enum metadata inside the declaring type, preserving source
+public/protected/private/internal access and slash-qualified type tokens. Flags
+attributes also accept that nested declaration shape. Native scoped enums outside
+managed members retain their native interpretation and typeid rejection.
+
+A C# consumer verifies declaring types and deep nested paths, same-named enums in
+different owners, ushort and wide signed/unsigned literal bits, Flags metadata,
+method signatures, actual boxing/unboxing, Enum.GetValues/Parse, nonpublic access
+flags and the original private printing-owner shape across GC. Existing top-level
+enum metadata, imported reference and primitive static/native-shadow checks pass.
+The initial fixture omitted its System.Type metadata selection; it was added
+before the final passing tests. An enum access annotation was moved after the
+scoped enum keyword to avoid an ignored-attribute warning.
+
+Validation on win11 with the standard compiler/WPF environment:
+
+```sh
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh build test-nested-enums test-enums
+bash ~/dotnetboot/repo/bootstrap/m612/cppcli.sh test-primitive-statics
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh printing-gate
+/clang64/bin/ilasm-dotnet.exe E:/msys64/home/topkek/wpfboot/build/printing-gate/System.Printing.il -dll -quiet -nologo -output=E:/msys64/home/topkek/wpfboot/build/printing-gate/System.Printing.dll
+```
+
+The compiler rebuild and focused runtime/rejection checks pass. Printing moves
+past its method-body emission to assembly metadata. Selecting the existing
+InternalsVisibleTo, AssemblyFileVersion and AssemblyInformationalVersion
+attribute constructors completes the combined gate: it now emits full printing
+IL from all 49 project inputs/66 tree C++ files. The next, stronger ilasm check
+fails on an undefined cli.array<Byte> surrogate type referenced by array typeid
+operands. Array record type tokens need actual CLR vector identities. No complete
+printing DLL, CLR loading/JIT proof or printing runtime proof is produced yet.
+
+Evidence is archived under
+`tmp/wpf8-support/validation/printing-nested-enums-20261013`. Native text coverage
+remains 58/139; full printing, text/layout and WindowsDesktop packaging remain
+required. The WPF packaging goal stays active.

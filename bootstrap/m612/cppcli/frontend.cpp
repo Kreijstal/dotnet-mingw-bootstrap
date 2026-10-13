@@ -870,8 +870,11 @@ protected:
                     }
                     if (tokens[close].text != "]") throw std::runtime_error("FlagsAttribute must appear individually");
                     size_t enumeration = close+1;
-                    if (enumeration+3 >= tokens.size() || (tokens[enumeration].text != "public" && tokens[enumeration].text != "private") ||
-                        tokens[enumeration+1].text != "enum" || (tokens[enumeration+2].text != "class" && tokens[enumeration+2].text != "struct"))
+                    size_t keyword = enumeration;
+                    if (keyword < tokens.size() && (tokens[keyword].text == "public" || tokens[keyword].text == "private")) ++keyword;
+                    bool nested = enumeration < tokens.size() && class_depth[enumeration] == 1 && !class_context[enumeration].empty();
+                    if (keyword+2 >= tokens.size() || (!nested && keyword==enumeration) ||
+                        tokens[keyword].text != "enum" || (tokens[keyword+1].text != "class" && tokens[keyword+1].text != "struct"))
                         throw std::runtime_error("FlagsAttribute must precede a managed enum declaration");
                     if (!enum_flags.insert(enumeration).second) throw std::runtime_error("duplicate FlagsAttribute");
                     layout_attribute_ends[begin] = close; begin = close; continue;
@@ -1276,7 +1279,7 @@ protected:
                 if (cli_structural.count(i)) { emit(t, cli_structural[i]); continue; }
                 if (interface_virtual.count(i)) emit(t, "virtual");
                 if (interface_pure.count(i)) emit(t, "= 0");
-                if (member_starts.count(i) && !access_annotation(class_access[i]).empty() && t.text != "property" &&
+                if (member_starts.count(i) && !access_annotation(class_access[i]).empty() && t.text != "property" && t.text != "enum" &&
                     !((t.text == "virtual" || t.text == "static") && i+1 < tokens.size() && tokens[i+1].text == "property"))
                     emit(t,access_annotation(class_access[i]));
                 if (access_label(t.text) && class_depth[i] == 1 && i + 1 < tokens.size() && tokens[i+1].text == ":") { emit(t,cpp_access(t.text)); continue; }
@@ -1440,6 +1443,13 @@ protected:
                     emit(t, "enum class __attribute__((annotate(\"cli.enum\"), annotate(\"cli.visibility:" + t.text + "\")" +
                         (enum_flags.count(i) ? ", annotate(\"cli.flags\")" : "") + "))");
                     i += 2; continue;
+                }
+                if (t.text == "enum" && i+2 < tokens.size() && class_depth[i] == 1 && !class_context[i].empty() &&
+                    (tokens[i+1].text == "class" || tokens[i+1].text == "struct")) {
+                    emit(t, "enum class __attribute__((annotate(\"cli.enum\")" +
+                        (enum_flags.count(i) ? std::string(", annotate(\"cli.flags\")") : std::string()) + ")) " +
+                        access_annotation(class_access[i]));
+                    ++i; continue;
                 }
                 bool cli_member_start = member_starts.count(i) ||
                     (i && (tokens[i-1].text == "virtual" || tokens[i-1].text == "static"));
@@ -2390,6 +2400,8 @@ class Emitter {
         if (!ext.empty()) {
             auto bar = ext.find('|'); return assembly_reference(ext.substr(0, bar)) + imported_type_name(ext.substr(bar+1));
         }
+        if (auto* parent=dyn_cast<CXXRecordDecl>(enumeration->getDeclContext()))
+            return record_name(parent)+"/'"+enumeration->getNameAsString()+"'";
         std::string name = enumeration->getQualifiedNameAsString();
         for (size_t at; (at = name.find("::")) != std::string::npos;) name.replace(at, 2, ".");
         return "'" + name + "'";
@@ -5205,7 +5217,6 @@ public:
             }
             else if (auto* enumeration = dyn_cast<EnumDecl>(decl)) {
                 if (enumeration->isThisDeclarationADefinition() && annotated(enumeration, "cli.enum") && annotation(enumeration, "cli.external:").empty()) {
-                    if (isa<CXXRecordDecl>(enumeration->getDeclContext())) throw std::runtime_error("nested managed enum metadata is not enabled yet");
                     enums.push_back(enumeration);
                 }
             }
@@ -5392,9 +5403,13 @@ public:
             if (cctor) emit_static_initializers(method->getParent());
             il << body.code << "  }\n";
         };
-        for (auto* enumeration : enums) {
-            il << ".class " << (annotation(enumeration, "cli.visibility:") == "private" ? "private" : "public")
-               << " auto ansi sealed " << enum_name(enumeration) << " extends [System.Runtime]System.Enum {\n";
+        auto emit_enum = [&](const EnumDecl* enumeration) {
+            bool nested=isa<CXXRecordDecl>(enumeration->getDeclContext());
+            auto visibility=nested ? "nested "+emitted_access(enumeration,enumeration->getAccess()) :
+                (annotation(enumeration,"cli.visibility:")=="private" ? std::string("private") : std::string("public"));
+            auto name=nested ? "'"+enumeration->getNameAsString()+"'" : enum_name(enumeration);
+            il << ".class " << visibility
+               << " auto ansi sealed " << name << " extends [System.Runtime]System.Enum {\n";
             if (annotated(enumeration, "cli.flags")) il << "  .custom instance void [System.Runtime]System.FlagsAttribute::.ctor() = (01 00 00 00)\n";
             il << "  .field public specialname rtspecialname " << type(enumeration->getIntegerType()) << " value__\n";
             for (auto* member : enumeration->enumerators()) {
@@ -5403,7 +5418,8 @@ public:
                    << "' = " << type(enumeration->getIntegerType()) << "(" << value.str().str() << ")\n";
             }
             il << "}\n";
-        }
+        };
+        for (auto* enumeration : enums) if (!isa<CXXRecordDecl>(enumeration->getDeclContext())) emit_enum(enumeration);
         auto emit_cleanup = [&](const CXXRecordDecl* r) {
             auto* destructor = source_destructor(r);
             auto* finalizer = source_finalizer(r);
@@ -5611,6 +5627,7 @@ public:
                 }
             }
             for (auto* child : records) if (child->getDeclContext() == r) emit_record(child);
+            for (auto* enumeration : enums) if (enumeration->getDeclContext() == r) emit_enum(enumeration);
             il << "}\n";
         };
         for (auto* r : records) if (!isa<CXXRecordDecl>(r->getDeclContext())) emit_record(r);
