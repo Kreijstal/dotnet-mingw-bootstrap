@@ -9089,3 +9089,56 @@ still rejected explicitly; subpage updates/comparison/display transfer remain
 unfinished. Floating obstacles/figures, tables, optimal/advanced/incremental/
 interruptible algorithms, full bidi/native language and broader runtime behavior
 remain required for the full WPF goal. Package integration follows.
+
+
+## 137. Installed release 19: finite and bottomless subpages
+
+The 2026-10-14 continuation packages section 136 as WindowsDesktop 8.0.0-19.
+Declared/checksummed 0019-subpage-layout.patch applies after the eighteen previous
+patches. Clean pinned sources plus all nineteen patches match the six committed
+feature files byte for byte. The private package tree rebuilds native output,
+inventory and layout, passes 326 original ABI field checks, context/line-service
+regressions, native subpage/ownership/source-progress gates and every normal SDK
+gate before archive creation and installation. Unchanged managed/graphics/
+printing outputs remain its own source builds.
+
+Validation in the CLANG64 package workspace:
+
+```sh
+makepkg --verifysource --force
+source PKGBUILD                 # with srcdir set to this workspace's src/
+_wpf native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+makepkg --repackage --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-19-any.pkg.tar.zst
+/usr/bin/python3 check-staged.py /clang64/lib/dotnet
+bash "$(_driver)/wpf-tests/check-subpages-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-subpages-sdk-check
+bash "$(_driver)/wpf-tests/check-block-ui-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-subpages-block-ui-sdk-check
+```
+
+All final commands pass. Staged/installed 42-managed/eight-native/SDK/legacy
+payload checks pass. Installed original table-cell subpage clients render four
+finite chunks in Ideal/Display, cover all 699 source characters exactly once,
+clone and destroy the first output continuation before resuming, retain 33036/
+26220 glyph pixels and dispose original clients across GC. Bottomless original
+clients retain all source characters, real viewport glyphs and full 532/560-unit
+extents. Scoped original callbacks report no cleanup exception, and dispatcher
+shutdown passes. These checks use the original cell subpage path directly;
+public table/floater/figure layout still requires its object/text-flow handlers.
+Normal shared-framework and self-contained publishes run with SDK roots/toolchain
+PATH removed. Installed BlockUIContainer deferral, margin/child bounds, point
+hit/events, tiny/empty blocks, second-column placement and child-resize regressions
+pass. Private normal WPF/tab/inline-object/justification/width/context/finite/
+bottomless/pagination/columns/hard-break/keep/keep-next/forced/block/subpage/
+WinForms regressions pass with zero consumer warnings/errors. The existing
+source-bootstrap.json srcdir provenance warning remains.
+
+Artifact: mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-19-any.pkg.tar.zst.
+SHA-256: 910324b2e2a8a62f645c9f89eec1f7bf5590ca1cf36a244265a52d568f5792e2.
+Recipe commit: msys2-ur caf9986; feature commit: b0334f5.
+Artifact, recipe, metadata, patch and validation logs are archived under
+ tmp/wpf8-support/validation/subpages-package-20261014.
+Imported native coverage is 99/139 with 40 absent. Subpage updates/comparison/
+display transfer, balancing/span areas/footnotes, floating obstacles/figures,
+tables, optimal/advanced/incremental/interruptible algorithms, full bidi/native
+language and broader runtime behavior remain incomplete. The full WPF goal
+stays active.
