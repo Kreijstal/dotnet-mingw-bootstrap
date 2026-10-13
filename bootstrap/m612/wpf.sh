@@ -220,6 +220,14 @@ step_check_lineservices_line_native() {
   "$work/native-check.exe" "$build/lib/PresentationNative_cor3.dll"
 }
 
+step_check_inline_objects_native() {
+  local work=$build/inline-objects-native-check
+  mkdir -p "$work"
+  /clang64/bin/clang++.exe -std=c++17 -O2 "$here/wpf-tests/InlineObjectsNative.cpp" \
+    -I "$build/classification-native" -o "$work/native-check.exe"
+  "$work/native-check.exe" "$build/lib/PresentationNative_cor3.dll"
+}
+
 step_check_text_line() {
   initialize
   local work=$build/text-line-check
@@ -295,6 +303,32 @@ PY
     cp "${WPF_TAB_NATIVE:-$build/lib}/$native.dll" "$work/bin/Release/net8.0/"
   done
   "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/TabsCheck.dll")"
+}
+
+step_check_inline_objects() {
+  initialize
+  local work=$build/inline-objects-check
+  mkdir -p "$work"
+  cp "$here/wpf-tests/InlineObjects.cs" "$work/Program.cs"
+  /usr/bin/python3 - "$work" "$build/lib" "$oob" <<'PY'
+from pathlib import Path
+import subprocess,sys,xml.etree.ElementTree as E
+work,lib,oob=map(Path,sys.argv[1:])
+root=E.Element('Project',Sdk='Microsoft.NET.Sdk');props=E.SubElement(root,'PropertyGroup')
+for name,value in {'TargetFramework':'net8.0','OutputType':'Exe','UseAppHost':'false','EnableNETAnalyzers':'false','NuGetAudit':'false','UseSharedCompilation':'false'}.items():E.SubElement(props,name).text=value
+items=E.SubElement(root,'ItemGroup')
+files={f.stem:f for f in oob.glob('*.dll')}
+files.update({name:lib/(name+'.dll') for name in ('PresentationCore','PresentationFramework','WindowsBase','System.Xaml','DirectWriteForwarder')})
+for name,file in sorted(files.items()):
+    ref=E.SubElement(items,'Reference',Include=name);E.SubElement(ref,'HintPath').text=subprocess.check_output(['cygpath','-m',str(file)],text=True).strip()
+E.ElementTree(root).write(work/'InlineObjectsCheck.csproj',encoding='utf-8')
+PY
+  "$sdk/dotnet.exe" build "$(cygpath -m "$work/InlineObjectsCheck.csproj")" -c Release --configfile "$(cygpath -m "$build/NuGet.config")" -v:q -p:UseSharedCompilation=false
+  local native
+  for native in PresentationNative_cor3 wpfgfx_cor3 wpf-dwrite-loader wpf-subsetter; do
+    cp "${WPF_INLINE_NATIVE:-$build/lib}/$native.dll" "$work/bin/Release/net8.0/"
+  done
+  "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/InlineObjectsCheck.dll")"
 }
 
 step_prepare_gfx() {
@@ -676,16 +710,20 @@ EOF
 }
 
 step_check_sdk() {
-  local root=$build/sdk-check-root
+  local root=$build/sdk-check-root desktop_version=8.0.0-bootstrap.wpf.8.0.0
   if [ ! -s "${WPF_LAYOUT:-$build/layout}/shared/Microsoft.WindowsDesktop.App/8.0.0-bootstrap.wpf.8.0.0/PresentationFramework.dll" ]; then step_layout; fi
   rm -rf "${root:?}"
   mkdir -p "$root"
   cp -al "$sdk/." "$root/"
   # Unlink the SDK overlay before copying to avoid modifying installed hardlinks.
-  rm -rf "$root/sdk/8.0.131/Sdks/Microsoft.NET.Sdk.WindowsDesktop"
+  rm -rf "$root/sdk/8.0.131/Sdks/Microsoft.NET.Sdk.WindowsDesktop" \
+    "$root/shared/Microsoft.WindowsDesktop.App/$desktop_version" \
+    "$root/packs/Microsoft.WindowsDesktop.App.Ref/$desktop_version" \
+    "$root/packs/Microsoft.WindowsDesktop.App.Runtime.win-x64/$desktop_version"
   cp -a "${WPF_LAYOUT:-$build/layout}/." "$root/"
   bash "$here/wpf-tests/check-sdk.sh" "$root" "$build/sdk-check"
   bash "$here/wpf-tests/check-text-tabs-sdk.sh" "$root" "$build/tabs-sdk-check"
+  bash "$here/wpf-tests/check-inline-objects-sdk.sh" "$root" "$build/inline-sdk-check"
   bash "$here/winforms-tests/check-sdk.sh" "$root" "$build/winforms-sdk-check"
 }
 

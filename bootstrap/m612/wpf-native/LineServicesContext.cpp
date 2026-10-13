@@ -37,6 +37,10 @@ struct Run {
     std::vector<GlyphOffset> offsets;
     bool shaped=false,hidden=false,tab=false;
     uint16_t leader=0;
+    bool embedded=false,position_used=false;
+    InlineInit object_handler{};
+    ObjDim object_metrics{};
+    int break_before=1,break_after=1;
 };
 struct Line {
     std::shared_ptr<Context> context;
@@ -67,8 +71,35 @@ using UnderlineInfo=int (WINAPI *)(void*,uint32_t,LsHeights*,int,LsULInfo*);
 using StrikeInfo=int (WINAPI *)(void*,uint32_t,LsHeights*,int,LsStInfo*);
 using DrawDecoration=int (WINAPI *)(void*,uint32_t,uint32_t,LSPOINT*,int,int,int,uint32_t,LSRECT*);
 using EnumTabCallback=int (WINAPI *)(void*,uint32_t,int,WCHAR*,uint16_t,int,int,int,LSPOINT*,LsHeights*,int);
+using ObjectHandler=int (WINAPI *)(void*,uint32_t,InlineInit*);
+using FormatObject=int (WINAPI *)(void*,uint32_t,int,int,int,ObjDim*,int*,int*,int*,int*);
+using DrawObject=int (WINAPI *)(void*,uint32_t,LSPOINT*,int,int);
+
+int format_object(Context& context,Run& run,int position,int margin) {
+    if(!context.info.pfnGetObjectHandlerInfo) return LS_NotImplemented;
+    int status=reinterpret_cast<ObjectHandler>(context.info.pfnGetObjectHandlerInfo)(context.info.pols,1,&run.object_handler);
+    if(status) return status;
+    if(run.object_handler.dwVersion || !run.object_handler.pfnFormat || !run.object_handler.pfnDraw) return LS_InvalidFormatterResult;
+    int first=0,used=0;
+    status=reinterpret_cast<FormatObject>(run.object_handler.pfnFormat)(context.info.pols,
+        static_cast<uint32_t>(run.id),run.cp,position,margin,&run.object_metrics,&first,&used,&run.break_before,&run.break_after);
+    if(status) return status;
+    const auto& reference=run.object_metrics.heightsRef;
+    const auto& height=run.object_metrics.heightsPres;
+    auto valid=[](const LsHeights& value) {
+        return value.dvAscent>=0 && value.dvDescent>=0 && value.dvMultiLineHeight>=0 &&
+            static_cast<int64_t>(value.dvAscent)+value.dvDescent==value.dvMultiLineHeight;
+    };
+    if(run.object_metrics.dur<0 || !valid(reference) || !valid(height) ||
+        run.break_before<0 || run.break_before>3 || run.break_after<0 || run.break_after>3 ||
+        (first!=0 && first!=1) || (used!=0 && used!=1)) return LS_InvalidFormatterResult;
+    run.width=run.object_metrics.dur; run.widths.assign(run.text.size(),0); run.widths[0]=run.width;
+    run.metrics={height.dvAscent,height.dvDescent,height.dvMultiLineHeight,0};
+    run.position_used=used!=0; return LS_None;
+}
 
 int measure_run(Context& context,Run& run) {
+    if(run.embedded) return LS_None; // Objects are formatted atomically at their pen position.
     int count=static_cast<int>(run.text.size()),flow=run.flow,status=0;
     run.width=0; run.widths.assign(count,0);
     if(!run.hidden) {
@@ -251,12 +282,26 @@ int choose_wrap(const Line& line,int allowance,bool emergency,int max_cut,bool& 
             }
         }
     }
+    std::vector<int> before(text.size()+1,-1),after(text.size()+1,-1);
+    for(const auto& run:runs) if(run.embedded) {
+        before[run.cp-line.first]=run.break_before;
+        after[run.cp-line.first+run.text.size()]=run.break_after;
+    }
+    auto allowed=[&](int point,bool natural) {
+        int left=after[point],right=before[point];
+        if(left<0 && right<0) return natural;
+        if(left<0) left=natural?2:1;
+        if(right<0) right=point==static_cast<int>(text.size())?3:natural?2:1;
+        // Original LineBreakCondition combination table: Always wins over
+        // restraint; Desired breaks unless restrained; Possible/Possible does not.
+        return left==3 || right==3 || ((left!=0 && right!=0) && (left==2 || right==2));
+    };
     UErrorCode error=U_ZERO_ERROR;
     auto* iterator=ubrk_open(UBRK_LINE,"root",text.data(),static_cast<int>(text.size()),&error);
     if(U_FAILURE(error) || !iterator) return -1;
     int chosen=0,first_break=0;
-    for(int point=ubrk_first(iterator);(point=ubrk_next(iterator))!=UBRK_DONE;) {
-        if(point>max_cut || !boundary[point]) continue;
+    for(int point=1;point<=static_cast<int>(text.size()) && point<=max_cut;++point) {
+        if(!boundary[point] || !allowed(point,ubrk_isBoundary(iterator,point))) continue;
         int visible=point;
         while(visible>0 && text[visible-1]==L' ') --visible;
         while(visible>0 && !boundary[visible]) --visible;
@@ -276,7 +321,7 @@ int choose_wrap(const Line& line,int allowance,bool emergency,int max_cut,bool& 
     if(U_FAILURE(error) || !iterator) return -1;
     first_break=0;
     for(int point=ubrk_first(iterator);(point=ubrk_next(iterator))!=UBRK_DONE;) {
-        if(point>max_cut || !boundary[point]) continue;
+        if(point>max_cut || !boundary[point] || !allowed(point,true)) continue;
         int64_t actual=width[point];
         if(tabs) {
             int status=candidate_width(line,point,point,actual);
@@ -338,7 +383,7 @@ int text_cells(const Line& line,std::vector<Cell>& cells) {
                     glyphs=last-first;
                     for(unsigned glyph=first;glyph<last;++glyph) width+=run.advances[glyph];
                 } else {
-                    glyphs=static_cast<int>(end-start);
+                    glyphs=run.embedded?0:static_cast<int>(end-start);
                     for(size_t i=start;i<end;++i) width+=run.widths[i];
                 }
             }
@@ -498,7 +543,9 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
                 buffer.resize(count);
             }
             if(!text) return LS_InvalidCpContentFetched;
-            if(run.properties.idObj!=0xFFFF) return LS_NotImplemented;
+            if(run.properties.idObj!=0xFFFF && run.properties.idObj!=1) return LS_NotImplemented;
+            run.embedded=run.properties.idObj==1;
+            if(run.embedded && count!=1) return LS_InvalidDcpFetched;
             run.hidden=hidden_flag!=0 || (run.properties.flags&0x10000)!=0;
             run.text.assign(text,text+count); run.widths.resize(count);
             if(count==1 && (text[0]==0x2028 || text[0]==0x2029)) {
@@ -513,7 +560,13 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
             if(tab==text) { count=1; run.tab=true; }
             else if(tab!=text+count) count=static_cast<int>(tab-text);
             run.text.resize(count); run.widths.resize(count);
-            status=measure_run(*context,run);
+            if(run.embedded) {
+                status=layout_tabs(*result,properties.durLeft,total); if(status) return status;
+                status=format_object(*context,run,total,LS_IdealInfiniteWidth);
+                if(status) return status;
+                if(run.position_used && std::any_of(result->runs.begin(),result->runs.end(),[](const Run& value) { return value.tab; }) &&
+                    std::any_of(context->tabs.begin(),context->tabs.end(),[](const LsTbd& value) { return value.lskt!=0; })) return LS_NotImplemented;
+            } else status=measure_run(*context,run);
             if(status) return status;
             result->info.dvpAscent=std::max(result->info.dvpAscent,run.metrics.dvAscent);
             result->info.dvpDescent=std::max(result->info.dvpDescent,run.metrics.dvDescent);
@@ -700,7 +753,10 @@ extern "C" __declspec(dllexport) int WINAPI LoDisplayLine(void* handle,LSPOINT* 
         LsHeights height{run.metrics.dvAscent,run.metrics.dvDescent,run.metrics.dvMultiLineHeight};
         int status=0;
         if(!run.hidden) {
-            if(run.tab) {
+            if(run.embedded) {
+                status=reinterpret_cast<DrawObject>(run.object_handler.pfnDraw)(context.info.pols,
+                    static_cast<uint32_t>(run.id),&point,run.flow,run.width);
+            } else if(run.tab) {
                 if(run.leader && run.width) {
                     if(!context.info.pfnDrawTextRun) return LS_NotImplemented;
                     WCHAR leader=run.leader; int advance=0,measured=0,fitted=0;
@@ -789,7 +845,7 @@ extern "C" __declspec(dllexport) int WINAPI LoEnumLine(void* handle,BOOL reverse
     for(const auto& run:line->runs) { starts.push_back(x); x+=run.width; }
     for(size_t index=0;index<line->runs.size();++index) {
         size_t position=reverse?line->runs.size()-index-1:index;
-        auto& run=line->runs[position]; if(run.hidden) continue;
+        auto& run=line->runs[position]; if(run.hidden || run.embedded) continue;
         LSPOINT point{starts[position],origin->y};
         LsHeights height{run.metrics.dvAscent,run.metrics.dvDescent,run.metrics.dvMultiLineHeight};
         if(run.tab) {

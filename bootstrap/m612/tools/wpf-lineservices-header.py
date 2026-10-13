@@ -9,7 +9,7 @@ text=source.read_text()
 primitive={'uint':'uint32_t','int':'int32_t','ushort':'uint16_t','char':'uint16_t','IntPtr':'void*'}
 records=('EscStringInfo','LsTbd','LsDevRes','LsIMethods','LscbkRedefined','LsContextInfo',
          'LsPap','LsLineProps','LsChp','LsTxM','LsHeights','LSPOINT','LSRECT','LsLInfo','LsLineWidths',
-         'LsQSubInfo','LsTextCell','LsULInfo','LsStInfo')
+         'LsQSubInfo','LsTextCell','LsULInfo','LsStInfo','ObjDim','InlineInit')
 lines=['// Generated from original WPF LineServices.cs.','#pragma once','#include <cstdint>']
 for name in records:
     match=re.search(r'\bstruct\s+'+name+r'\s*\{(.*?)\n    \}',text,re.S)
@@ -29,4 +29,7 @@ for name in records:
 body=re.search(r'\benum\s+LsErr\s*\{(.*?)\n    \}',text,re.S).group(1)
 for key,value in re.findall(r'\b(\w+)\s*=\s*(-?\d+)\s*[,\n]',body):
     lines.append(f'constexpr int32_t LS_{key} = {value};')
+infinite=re.search(r'const int\s+IdealInfiniteWidth\s*=\s*(0x[0-9A-Fa-f]+|\d+)',text)
+if not infinite: raise SystemExit('Missing original IdealInfiniteWidth')
+lines.append(f'constexpr int32_t LS_IdealInfiniteWidth = {infinite.group(1)};')
 output.write_text('\n'.join(lines)+'\n')

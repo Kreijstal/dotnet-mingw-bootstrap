@@ -7700,3 +7700,61 @@ Imported native coverage remains 58/139; full bidi/paragraph layout, inline
 objects/justification and natural-language behavior remain incomplete. This
 removes the documented aligned-field wrapping rejection while leaving the full
 WPF goal active.
+
+
+## 108. Original inline object callbacks, source break table and UI containers
+
+The 2026-10-13 continuation replaces the native inline-object rejection for
+original object ID 1 with original GetObjectHandlerInfo, InlineFormat and
+InlineDraw callbacks. ObjDim/InlineInit and IdealInfiniteWidth are generated
+from original LineServices.cs. The native engine validates callback records and
+dimensions, measures at the preceding pen position, retains atomic object width
+and line metrics, and draws through the original managed callback. Queries keep
+object identity/dimensions with zero glyphs; glyph enumeration skips objects
+and preserves actual source indices for surrounding text. One LS character can
+represent a longer backing-source object span through original WPF mappings.
+
+Word/emergency wrapping applies the original TextAndFontProperties.cs break
+combination table at object edges. Always allows a break even against restraint;
+Desired permits a break unless restrained; Possible/Possible prohibits it.
+This is source-table break eligibility, not an invented hard paragraph break.
+The native test uses the literal source matrix reordered to native enum values,
+and checks all 16 adjacent-object combinations through actual line creation.
+It also checks 24-byte InlineInit/28-byte ObjDim layouts, identities/metrics/pen
+origins, zero-glyph object cells, format/draw errors and invalid-dimension outputs.
+
+The public fixture uses original TextEmbeddedObject with a three-character
+backing span. Fixed/flexible widths are 70/60 pixels, remaining width 173.047;
+blue raster counts are 2100/1800. It verifies baseline/caret/selection geometry,
+source glyph indices around the object, wrapping without splitting its span,
+compacting GC and original format/draw exception propagation. Original TextBlock
+with a real InlineUIContainer/Border measures a 45x20 child, renders 880 red
+pixels and returns a real point hit after GC.
+
+The installed release 4 native library reproduces NotImplemented on the public
+fixture. Final source validation with the standard win11 WPF environment:
+
+```sh
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-lineservices-line-native
+WPF_INLINE_NATIVE=/clang64/lib/dotnet/shared/Microsoft.WindowsDesktop.App/8.0.0-bootstrap.wpf.8.0.0 bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-inline-objects
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-inline-objects
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-inline-objects-native check-text-tabs check-text-line check-text-decorations
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-inline-objects-native
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh layout check-sdk
+```
+
+All final source commands pass; the old installed-native command fails with the
+expected NotImplemented. The normal SDK check now includes an ordinary offline
+UseWPF inline-object consumer and self-contained publish with SDK roots/toolchain
+PATH removed. All normal WPF/tab/inline/WinForms checks pass with zero consumer
+warnings/errors. SDK validation also unlinks the exact replacement shared/ref/
+runtime desktop directories before overlaying source output onto its hardlink
+clone. Otherwise an installed WPF seed at the same framework version could be
+modified by the overlay. Before/after installed native/ref/runtime SHA checks
+pass, proving this corrected check leaves those installed inputs unchanged.
+
+Evidence is archived under tmp/wpf8-support/validation/inline-objects-20261013.
+Imported native coverage remains 58/139. Position-dependent objects after aligned
+tabs still reject pending circular measurement support; full bidi/paragraph
+layout and justification remain open. The package update is still required.
+The full WPF goal stays active.

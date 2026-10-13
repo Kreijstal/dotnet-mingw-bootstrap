@@ -97,8 +97,23 @@ scans retained fields and needs optimization for long tabbed
 paragraphs. Leaders currently repeat whole measured characters centered in the
 gap; exact legacy leader spacing and non-LTR tab behavior require validation.
 
-Optimal/min-max formatting, inline objects, bidi reversal objects and
-justification remain unsupported and return explicit errors.
+Inline objects (original object ID 1) obtain source InlineInit format/draw
+callbacks through GetObjectHandlerInfo. Source-generated ObjDim/InlineInit
+records preserve the original x64 ABI. Format receives the actual preceding pen
+position and original infinite margin; valid object dimensions contribute line
+metrics and a retained atomic width. Draw receives its original identity, flow,
+width and baseline origin. Queries retain object ID/geometry with zero glyphs;
+glyph enumeration omits objects and preserves source positions around them.
+Wrapping applies the original LineBreakCondition combination table at object
+edges, including all 16 adjacent-object cases. Public tests cover fixed/flexible
+sizes, a three-character source span, remaining width, caret/selection, wrapping,
+callback exceptions and original TextBlock InlineUIContainer rendering/hit tests
+across GC. Position-dependent objects following aligned tabs still explicitly
+reject while that circular measurement path is unfinished; ordinary text and
+left/incremental-tab positions use retained preceding geometry.
+
+Optimal/min-max formatting, bidi reversal objects and justification remain
+unsupported and return explicit errors.
 Complete hit testing, RTL/nonmonotonic shaping clusters, full bidi and paragraph
 layout require further work. This does not establish full Line Services
 compatibility or complete WPF packaging.
