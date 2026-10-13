@@ -826,6 +826,7 @@ step_check_sdk() {
   bash "$here/wpf-tests/check-flowdocument-sdk.sh" "$root" "$build/flowdocument-sdk-check"
   bash "$here/wpf-tests/check-bottomless-sdk.sh" "$root" "$build/bottomless-sdk-check"
   bash "$here/wpf-tests/check-pagination-sdk.sh" "$root" "$build/pagination-sdk-check"
+  bash "$here/wpf-tests/check-columns-sdk.sh" "$root" "$build/columns-sdk-check"
   bash "$here/winforms-tests/check-sdk.sh" "$root" "$build/winforms-sdk-check"
 }
 

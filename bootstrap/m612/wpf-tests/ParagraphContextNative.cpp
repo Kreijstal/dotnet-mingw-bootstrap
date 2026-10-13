@@ -13,7 +13,7 @@ static int WINAPI create_object(void* client,void* context,FSCBKOBJ* callbacks,u
     *output=reinterpret_cast<void*>(100+id);return 0;
 }
 static int WINAPI destroy_object(void* value){if(value!=reinterpret_cast<void*>(100)&&value!=reinterpret_cast<void*>(101))return PTS_tserrInvalidParameter;++destroys;return 0;}
-static int lines_created=0,lines_destroyed=0,breaks_destroyed=0,clients_created=0,clients_destroyed=0,fail_line=-1,columns=1,available_height=80;
+static int lines_created=0,lines_destroyed=0,breaks_destroyed=0,clients_created=0,clients_destroyed=0,fail_line=-1,columns=1,available_height=80,invalid_columns=false;
 static bool containers=false,lose_subtrack=false;
 static void* page_context=nullptr;
 using SubtrackFormat=int(WINAPI*)(void*,void*,int,void*,int,void*,void*,int,int,uint32_t,const FSRECT*,void*,FSKCLEAR,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA,FSFMTR*,void**,void**,int*,FSBBOX*,void**,FSKCLEAR*,int*);
@@ -30,10 +30,13 @@ static int WINAPI container_format(void*,void*,void* input,int previous,void* na
 static int WINAPI container_destroy_record(void*,void* record){return destroy_subtrack_record(page_context,record);}
 static int WINAPI container_destroy(void* track){return destroy_subtrack(page_context,track);}
 static int WINAPI page_geometry(void*,void*,uint32_t* direction,int* header,int* width,int* height,FSRECT* margin) {
-    *direction=0;*header=0;*width=200;*height=140;*margin={10,20,100,available_height};return 0;
+    *direction=0;*header=0;*width=columns==2?240:200;*height=140;*margin={10,20,columns==2?210:100,available_height};return 0;
 }
 static int WINAPI section_properties(void*,void*,int* page,uint32_t* direction,int* balance,int* cols,int* segments,int* heights) {
     *page=0;*direction=0;*balance=0;*cols=columns;*segments=*heights=0;return 0;
+}
+static int WINAPI column_info(void*,void*,uint32_t,int capacity,FSCOLUMNINFO* output,int* actual) {
+    if(capacity!=2)return PTS_tserrInvalidParameter;output[0]={0,100};output[1]={10,invalid_columns?250:100};*actual=2;return 0;
 }
 static int WINAPI main_segment(void*,void*,void** segment){*segment=reinterpret_cast<void*>(77);return 0;}
 static int WINAPI first_para(void*,void* segment,int* found,void** name){if(segment!=reinterpret_cast<void*>(77)&&!containers)return PTS_tserrInvalidParameter;*found=1;*name=segment==reinterpret_cast<void*>(77)?reinterpret_cast<void*>(101):reinterpret_cast<void*>(201);return 0;}
@@ -45,9 +48,9 @@ static int WINAPI text_properties(void*,void*,int,FSTXTPROPS* props){*props={};r
 static int WINAPI line_format(void*,void*,void*,int,int dcp,void* incoming,uint32_t direction,
     int start,int width,int track_start,int track_width,int margin,int hyphen,int left,int right,int first,int last,int suppress,
     void** line,int* consumed,void** br,int* forced,FSFLRES* result,int* ascent,int* descent,int* bbox,int* bbox_width,int* depend,int* reformat) {
-    if(direction||start!=10||width!=100||track_start!=10||track_width!=100||margin!=10||hyphen||left||right||last||first!=(dcp==0)||bool(incoming)!=(dcp!=0))return PTS_tserrInvalidParameter;
+    if(direction||start!=track_start||width!=100||(track_start!=10&&track_start!=120)||track_width!=100||margin!=track_start||hyphen||left||right||last||first!=(dcp==0)||bool(incoming)!=(dcp!=0))return PTS_tserrInvalidParameter;
     ++lines_created;*line=reinterpret_cast<void*>(1000+lines_created);*br=reinterpret_cast<void*>(2000+lines_created);
-    *consumed=5;*forced=0;*result=dcp==0?fsflrOutOfSpace:fsflrEndOfParagraph;*ascent=7;*descent=3;*bbox=10;*bbox_width=75;*depend=*reformat=0;
+    *consumed=5;*forced=0;*result=dcp==0?fsflrOutOfSpace:fsflrEndOfParagraph;*ascent=7;*descent=3;*bbox=start;*bbox_width=75;*depend=*reformat=0;
     if(lines_created==fail_line)return PTS_tserrCallbackException;
     return 0;
 }
@@ -136,7 +139,7 @@ int main(int argc,char** argv) {
         require(CreateInstalledObjectsInfo(&methods,&methods,&installed,&count)==0,"page installed registration");
         info.version=0;info.pInstalledObjects=installed;
         auto& gen=info.fscbk.cbkgen;auto& txt=info.fscbk.cbktxt;
-        gen.pfnGetPageDimensions=reinterpret_cast<void*>(page_geometry);gen.pfnGetSectionProperties=reinterpret_cast<void*>(section_properties);gen.pfnGetMainTextSegment=reinterpret_cast<void*>(main_segment);
+        gen.pfnGetPageDimensions=reinterpret_cast<void*>(page_geometry);gen.pfnGetSectionProperties=reinterpret_cast<void*>(section_properties);gen.pfnGetMainTextSegment=reinterpret_cast<void*>(main_segment);gen.pfnGetSectionColumnInfo=reinterpret_cast<void*>(column_info);
         gen.pfnGetFirstPara=reinterpret_cast<void*>(first_para);gen.pfnGetNextPara=reinterpret_cast<void*>(next_para);gen.pfnGetParaProperties=reinterpret_cast<void*>(para_properties);
         gen.pfnCreateParaclient=reinterpret_cast<void*>(para_client);gen.pfnDestroyParaclient=reinterpret_cast<void*>(destroy_para_client);
         txt.pfnGetTextProperties=reinterpret_cast<void*>(text_properties);txt.pfnFormatLine=reinterpret_cast<void*>(line_format);
@@ -198,8 +201,29 @@ int main(int argc,char** argv) {
         require(lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"subtrack cloning releases every callback handle exactly once");
         clone=reinterpret_cast<void*>(1);require(FsDuplicateSubtrackBreakRecord(context,reinterpret_cast<void*>(1),&clone)==PTS_tserrInvalidBreakRecord&&!clone,"invalid clone clears output without dereferencing");
         std::puts("native continuation cloning: independent identities, retained resume state/context, wrong/stale records, reset-output rollback and exact teardown PASS");
-        available_height=80;columns=2;reset_page_counts();
-        require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrNotImplemented&&!page_handle&&!page_break&&!lines_created,"unfinished multicolumn formatting rejects before fabricated output");
+        available_height=20;columns=2;reset_page_counts();
+        using QuerySections=int(WINAPI*)(void*,void*,int,FSSECTIONDESCRIPTION*,int*);
+        using QuerySection=int(WINAPI*)(void*,void*,FSSECTIONDETAILS*);
+        using QueryColumns=int(WINAPI*)(void*,void*,int,FSTRACKDESCRIPTION*,int*);
+        PROC(FsQueryPageSectionList,QuerySections);PROC(FsQuerySectionDetails,QuerySection);PROC(FsQuerySectionBasicColumnList,QueryColumns);
+        require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&page_handle&&!page_break&&formatted.kstop==fmtrGoalReached,"two-column page fills both original source tracks");
+        require(FsQueryPageDetails(context,page_handle,&details)==0&&!details.fSimple&&details.u.complex.cSections==1,"column page reports complex section hierarchy");
+        FSSECTIONDESCRIPTION section_desc{};FSSECTIONDETAILS section_details{};FSTRACKDESCRIPTION column_desc[2]{};
+        require(FsQueryPageSectionList(context,page_handle,1,&section_desc,&actual_count)==0&&actual_count==1&&FsQuerySectionDetails(context,section_desc.pfssection,&section_details)==0&&section_details.fFootnotesAsPagenotes&&section_details.u.withpagenotes.cBasicColumns==2,"section query reports owned actual columns");
+        require(FsQuerySectionBasicColumnList(context,section_desc.pfssection,2,column_desc,&actual_count)==0&&actual_count==2&&column_desc[0].fsrc.u==10&&column_desc[1].fsrc.u==120&&column_desc[0].fsrc.du==100&&column_desc[1].fsrc.du==100,"callback column widths and gap define exact page coordinates");
+        for(int col=0;col<2;++col) {
+            require(FsQueryTrackParaList(context,column_desc[col].pfstrack,2,paras,&actual_count)==0&&actual_count==1&&paras[0].nmp==reinterpret_cast<void*>(101+col),"column continuation covers the next paragraph without restarting");
+            require(FsQueryLineListSingle(context,paras[0].pfspara,2,lines,&actual_count)==0&&actual_count==2&&lines[0].urStart==10+110*col&&lines[0].vrStart==20,"queried glyph lines occupy their own columns");
+        }
+        require(FsQuerySectionBasicColumnList(context,section_desc.pfssection,1,column_desc,&actual_count)==PTS_tserrInvalidParameter&&!actual_count,"short column query rejects without partial output");
+        require(FsClearUpdateInfoInPage(context,page_handle)==0&&FsQuerySectionBasicColumnList(context,section_desc.pfssection,2,column_desc,&actual_count)==0&&column_desc[0].fsupdinf.fskupd==fskupdNoChange&&column_desc[1].fsupdinf.fskupd==fskupdNoChange,"update clearing propagates through every column");
+        require(FsDestroyPage(context,page_handle)==0&&FsQuerySectionDetails(context,section_desc.pfssection,&section_details)==PTS_tserrInvalidQuery&&lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"page teardown invalidates section/columns and releases all callback resources");
+        invalid_columns=true;reset_page_counts();
+        require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrInvalidGeometry&&!page_handle&&!page_break&&!clients_created,"invalid column extents reject before client allocation");
+        invalid_columns=false;fail_line=4;reset_page_counts();
+        require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrCallbackException&&!page_handle&&!page_break&&lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"later-column callback failure rolls back earlier-column ownership");
+        fail_line=-1;available_height=80;
+        std::puts("native column pages: exact source continuation/geometry, owned section/track hierarchy, capacity/update/stale queries, invalid bounds and later-column rollback PASS");
         columns=1;available_height=10;reset_page_counts();
         using BottomlessCreate=int(WINAPI*)(void*,void*,FSFMTRBL*,void**);
         using BottomlessUpdate=int(WINAPI*)(void*,void*,void*,FSFMTRBL*);

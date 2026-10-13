@@ -8459,3 +8459,51 @@ Imported native coverage is 86/139 with 53 absent. Finite text continuation is
 now real; tiny-page forced progress, hard/keep/optimal policies, multiple columns,
 advanced/incremental/interruptible paragraph algorithms, full bidi/native language
 and broader runtime behavior remain incomplete. The full WPF goal stays active.
+
+## 124. Original multi-column text pages and section query hierarchy
+
+The 2026-10-13 continuation reads original GetSectionColumnInfo callback widths/
+gaps and formats finite tracks sequentially across the columns. Continuation
+from the previous page enters the first column; subsequent columns resume the
+same source position with the correct same-page break flag. Completed documents
+retain empty trailing tracks without restarting their text. Before client
+allocation, the complete column geometry is validated against page margins.
+
+Complex pages own a real section and every column track. FsQueryPageSectionList,
+FsQuerySectionDetails and FsQuerySectionBasicColumnList expose original ABI
+records used by WPF to arrange/render columns and their rules. Resource teardown
+invalidates the whole section/column hierarchy; update clearing propagates to
+all tracks/paragraphs, and later-column failures unwind earlier ownership.
+The source ABI generator supports pointer callback parameters and FSCOLUMNINFO;
+all 283 field sizes/offsets match the original managed types. Single-column and
+bottomless paths retain their existing record representation. Imported native
+coverage rises to 89/139 (three new queries, 50 absent).
+
+Validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 inventory
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-paragraph-context-native check-paragraph-context
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-columns-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/columns-sdk-check
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-paragraph-context-native inventory layout check-sdk
+```
+
+All commands pass. Native tests verify exact callback widths/gaps, per-column
+paragraph/line identity and page coordinates, real section/track counts, capacity
+and stale query rejection, recursive update clearing, invalid bounds before
+allocation and cleanup of a failure in the later column. The original WPF
+paginator renders two fixed columns with a 30-unit gap and red 2-unit rule,
+creating 12 pages in Ideal and 9 in Display. Every one of 1278 source characters
+belongs to exactly one original ITextView page range and maps to that page through
+DynamicDocumentPaginator. Raster checks require glyph pixels in both first-page
+columns, zero dark glyph pixels in the gap, and at least 100 red rule pixels
+(observed 400). All pages render text; totals are 59629 dark pixels Ideal and
+45806 Display. Disposed-page regeneration, compacting GC and dispatcher cleanup
+pass through normal shared-framework and self-contained SDK publishes with SDK
+roots/toolchain PATH removed. step_check_sdk now includes the column gate; the
+single-column/bottomless/earlier WPF/WinForms regressions pass with zero consumer
+warnings/errors. Evidence is archived under
+ tmp/wpf8-support/validation/columns-20261013. Package integration follows.
+Column balancing/span areas, hard/keep/optimal/forced-line policies, tables/
+floaters/figures, incremental/interruptible algorithms, full bidi/native language
+and broader runtime behavior remain required for the full WPF goal.
