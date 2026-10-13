@@ -7655,3 +7655,48 @@ Imported native coverage remains 58/139. Candidate evaluation scans fields and
 needs a performance improvement for long tabbed paragraphs; full bidi/paragraph
 layout and exact legacy leader spacing remain open. Packaging this change is
 still required, and the full WPF goal stays active.
+
+
+## 107. Installed release 4 with aligned-field wrapping
+
+The 2026-10-13 continuation packages section 106 as WindowsDesktop 8.0.0-4.
+The declared/checksummed 0004-aligned-field-wrapping.patch contains the native
+engine and expanded native/public fixtures. A clean pinned source archive plus
+all four declared patches matches committed feature sources byte for byte.
+The package's own native engine is rebuilt and its source fixtures pass before
+fresh framework layout and ordinary SDK checks. The initial draft rebuild/checks
+pass, then the explicit-only zero-increment case is corrected before installation.
+The final declared patch/source staging is verified and rebuilt again; unchanged
+managed/graphics/printing artifacts remain the package's own source builds.
+
+Validation from the CLANG64 package workspace:
+
+```sh
+makepkg --verifysource --force
+source PKGBUILD                 # with srcdir set to this workspace's src/
+_wpf native-win32 check-lineservices-line-native check-text-tabs layout check-sdk
+makepkg --repackage --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-4-any.pkg.tar.zst
+python3 check-staged.py /clang64/lib/dotnet
+bash "$(_driver)/wpf-tests/check-text-tabs-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-aligned-wrap-sdk-check
+```
+
+All final commands pass, including zero-warning/error normal WPF/tab/WinForms
+SDK builds and self-contained publishes. Installed normal UseWPF consumers
+exercise all four alignments, whole/split fields, in/out-of-column stops, source
+coverage, continuation/enumeration/raster/GC and explicit-only stops. A leading
+indivisible tab outside the column is the only permitted overflow in the fixture;
+right-stop retained fields otherwise fit. The self-contained app runs with SDK
+roots/toolchain PATH removed. The 42-managed/pack/native-seed payload checker
+passes before packaging and after installation. The existing srcdir warning
+remains only source-bootstrap.json provenance.
+
+Artifact: mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-4-any.pkg.tar.zst.
+SHA-256: 9bfc4c1b3a0753ad0f96f816916ba7ddc38f3c40a2155707cba7e53d06f17820.
+Recipe commit: msys2-ur c69f6bb; feature commits: de03298/6ae3563.
+Logs, declared recipe/patch/metadata and the artifact are archived under
+ tmp/wpf8-support/validation/aligned-wrap-package-20261013.
+Imported native coverage remains 58/139; full bidi/paragraph layout, inline
+objects/justification and natural-language behavior remain incomplete. This
+removes the documented aligned-field wrapping rejection while leaving the full
+WPF goal active.
