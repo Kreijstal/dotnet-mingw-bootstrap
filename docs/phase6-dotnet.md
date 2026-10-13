@@ -8123,3 +8123,47 @@ is 67/139, leaving 72 absent. Evidence is archived in
  tmp/wpf8-support/validation/paragraph-geometry-20261013. FsCreatePageFinite and
 full page formatting, optimal algorithms and native language features remain
 incomplete. A package update is required to install this source change.
+
+## 117. Installed release 9: paragraph geometry and page ABI validation
+
+The 2026-10-13 continuation packages section 116 as WindowsDesktop 8.0.0-9.
+Declared/checksummed 0009-paragraph-geometry-and-page-abi.patch applies to the
+pinned bootstrap archive after the eight earlier patches. Clean application
+matches the four committed feature files byte for byte. The package workspace
+rebuilds its own PresentationNative and refreshes inventory, layout and native/
+managed paragraph checks before running the normal SDK regression gates.
+
+Validation in the CLANG64 package workspace:
+
+```sh
+makepkg --verifysource --force
+source PKGBUILD                 # with srcdir set to this workspace's src/
+_wpf native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+makepkg --repackage --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-9-any.pkg.tar.zst
+python3 check-staged.py /clang64/lib/dotnet
+bash "$(_driver)/wpf-tests/check-paragraph-context-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-paragraph-geometry-sdk-check
+bash "$(_driver)/wpf-tests/check-flowdocument-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-flowdocument-geometry-check
+```
+
+Package and installed payload checks pass for 42 managed implementations/
+references, eight native libraries, SDK tasks and legacy framework versions.
+Private normal WPF/tab/inline-object/justification/width/context/WinForms SDK
+build/publish/runtime gates pass. Installed original PTS types match all 277
+native ABI fields, including nested union arms; LTR/RTL transforms and context
+lifecycle/compacting-GC checks pass through the shared framework and a portable
+publish with SDK roots/toolchain PATH removed. Consumer builds have zero
+warnings/errors. The existing source-bootstrap.json srcdir provenance warning
+remains. The last command is a pending diagnostic gate and exits 127 with
+EntryPointNotFoundException for FsCreatePageFinite; no completed page-layout
+claim is made.
+
+Artifact: mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-9-any.pkg.tar.zst.
+SHA-256: aa7b1cba3024bf5138cf6df11aec4b6bad55acf9b5cf5037e756d015f7f05266.
+Recipe commit: msys2-ur ad7e848; feature commit: 0f44e8a.
+Artifact, recipe, metadata, patch and validation logs are archived under
+ tmp/wpf8-support/validation/paragraph-geometry-package-20261013.
+Imported native coverage is 67/139 with 72 absent. FsCreatePageFinite, page/
+paragraph formatting and query/break-record services, full bidi/optimal
+algorithms and native natural-language behavior remain unfinished. The full
+WPF goal stays active.
