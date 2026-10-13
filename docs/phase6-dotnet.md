@@ -9242,3 +9242,63 @@ comparison/display transfer, subtrack updates, balancing/span areas/footnotes,
 optimal/advanced/partial incremental/interruptible algorithms, full bidi/native
 language and broader runtime behavior remain incomplete. The full WPF goal
 stays active.
+
+
+## 140. Bottomless subtrack updates and vertical synchronization
+
+The 2026-10-14 continuation implements FsUpdateBottomlessSubtrack and
+FsSynchronizeBottomlessSubtrack for supported LTR subtracks. Creation records
+whether a track is finite or bottomless, so update/sync reject other handle
+kinds. Full replacement retains the exported track identity while moving old
+owned paragraphs/lines into a temporary tree for callback teardown outside the
+registry lock. Failed formatting preserves the existing tree and resets output
+metrics/margins. Geometry/area/clear constraints retain explicit rejections.
+Completed updates report uninterruptible completion; this adds full-tree
+replacement, not a partial-paragraph or interruptible formatting algorithm.
+
+Synchronization first builds and validates a complete shift plan. It moves root
+and nested subtrack rectangles, paragraph/track boxes, line start coordinates
+and nonfloating block rectangles without creating new line handles or consuming
+source. It preserves local coordinates inside subpages while moving their outer
+paragraph bounds. Overflow rejects before any geometry changes. Visual update
+flags request regeneration using original cached line data rather than claiming
+an exact incremental visual comparison.
+
+Validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-paragraph-context-native
+MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-subtracks-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/subtracks-update-sdk-check'
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh inventory layout check-sdk
+```
+
+Native gates verify stable track identity, actual source/extent/position changes,
+invalidated superseded text records, exact old-resource release, partial
+populated callback failure, clean outputs, prior-tree retention, invalid-width/
+stale rejection and exact final cleanup. A shift moves line coordinates while
+retaining line identities and keeping formatting callback counts unchanged.
+An overflowing shift preserves all old query coordinates; unsupported geometry/
+RTL rejects, and reverse synchronization restores the previous position.
+
+The normal SDK fixture constructs an original ContainerParagraph/ContainerParaClient
+for an attached Section, drives original format/update/arrange/viewport/visual
+methods, and exercises the original PtsHost synchronization callback. It checks
+both formatting modes with zero and nonzero margins/padding. After appending
+640 characters, changing width 380->280 and moving the paragraph, all 1339
+characters appear exactly once through actual native text paragraph ranges,
+not merely the enclosing container edges. Height grows 532->1383.2 Ideal and
+560->1456 Display without padding; padded cases grow 540->1604 and 568->1688.
+The original client retains its track handle and produces changed glyph raster.
+Synchronization moves the same geometry/viewport by another 15 units without
+losing source. Original margin-state disposal, client/track/paragraph cleanup,
+callback-exception checks and compacting GC pass. Shared-framework and
+self-contained publishes with SDK roots/toolchain PATH removed pass dispatcher
+shutdown. The SDK gate now includes check-subtracks-sdk.sh.
+
+Final source regression evidence is archived under
+ tmp/wpf8-support/validation/subtrack-update-20261014. Imported native coverage
+rises to 102/139 with 37 absent; original ABI checks remain 326. Comparison/
+display transfer, balancing/span areas/footnotes, public floating obstacles/
+figures/tables, optimal/advanced/partial incremental/interruptible algorithms,
+full bidi/native language and broader runtime behavior remain required for the
+full WPF goal. Package integration follows.

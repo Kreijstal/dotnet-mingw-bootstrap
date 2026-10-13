@@ -223,6 +223,7 @@ struct TrackData {
     FSFMTRKSTOP stop=fmtrGoalReached;
     bool forced_progress=false;
     bool subtrack=false;
+    bool bottomless=false;
     FSKUPDATE update=fskupdNew;
     std::vector<std::shared_ptr<ParaData>> paras;
 };
@@ -463,7 +464,7 @@ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t 
     auto& cb=context->info.fscbk.cbkgen;void* client=context->info.pfsclient;
     if(!segment||direction!=PTS_fswdirES||rect.du<=0||rect.dv<0||int64_t(rect.u)+rect.du>INT32_MAX||int64_t(rect.v)+rect.dv>INT32_MAX)return PTS_tserrNotImplemented;
     if(!cb.pfnGetFirstPara||!cb.pfnGetNextPara||!cb.pfnGetParaProperties||!cb.pfnCreateParaclient||!cb.pfnDestroyParaclient||!context->info.fscbk.cbkobj.pfnDestroyMcsclient)return PTS_tserrInvalidParameter;
-    auto track=std::make_shared<TrackData>(context);track->segment=segment;track->rect=rect;
+    auto track=std::make_shared<TrackData>(context);track->segment=segment;track->rect=rect;track->bottomless=bottomless;
     int found=0,status=0;void* name=nullptr;
     if(input){if(input->segment!=segment)return PTS_tserrInvalidBreakRecord;name=input->paragraph;found=1;}
     else {status=reinterpret_cast<PtsGetFirstPara>(cb.pfnGetFirstPara)(client,segment,&found,&name);if(status)return status;}
@@ -735,6 +736,67 @@ extern "C" __declspec(dllexport) int WINAPI FsFormatSubtrackBottomless(void* con
         {std::lock_guard<std::mutex> lock(gate);tracks.emplace(track.get(),track);}
         *output=track.get();*used=track->used;*bbox=track->bbox;*margin_output=margin.value;margin.value=nullptr;return 0;
     }catch(const std::bad_alloc&){return PTS_tserrOutOfMemory;}
+}
+extern "C" __declspec(dllexport) int WINAPI FsUpdateBottomlessSubtrack(void* context_handle,void* handle,void* segment,int area,void* geometry,int suppress,uint32_t direction,
+    int u,int width,int v,void* margin_input,FSKCLEAR clear,int interruptible,FSFMTRBL* formatted,int* used,FSBBOX* bbox,
+    void** margin_output,FSKCLEAR* clear_output,int* top_space,int* uninterruptible) {
+    if(!formatted||!used||!bbox||!margin_output||!clear_output||!top_space||!uninterruptible)return PTS_tserrNullOutputParameter;
+    *formatted=fmtrblGoalReached;*margin_output=nullptr;*used=*top_space=*uninterruptible=0;*bbox={};*clear_output=fskclearNone;
+    auto track=lookup_owned(tracks,context_handle,handle);
+    if(!track||!track->subtrack||!track->bottomless||track->segment!=segment)return PTS_tserrInvalidQuery;
+    if(area||geometry||clear!=fskclearNone)return PTS_tserrNotImplemented;if(v<0)return PTS_tserrInvalidGeometry;
+    try {
+        FSRECT rect{u,v,width,INT32_MAX-v};std::shared_ptr<TrackData> replacement;MarginOwner margin{track->context};
+        int status=format_track(track->context,segment,direction,rect,suppress,margin_input,replacement,&margin.value,true);if(status)return status;
+        {
+            std::lock_guard<std::mutex> lock(gate);
+            // Keep the exported track identity and move the old owned clients
+            // into the temporary tree for teardown outside the registry lock.
+            std::swap(track->rect,replacement->rect);std::swap(track->bbox,replacement->bbox);
+            std::swap(track->used,replacement->used);track->paras.swap(replacement->paras);
+            track->continuation.swap(replacement->continuation);
+            std::swap(track->stop,replacement->stop);std::swap(track->forced_progress,replacement->forced_progress);
+            track->update=fskupdNew;
+        }
+        *used=track->used;*bbox=track->bbox;*margin_output=margin.value;margin.value=nullptr;*uninterruptible=1;return 0;
+    }catch(const std::bad_alloc&){return PTS_tserrOutOfMemory;}
+}
+namespace {
+struct TrackShift {
+    int delta;
+    std::vector<std::pair<int32_t*,int32_t>> values;
+    std::vector<std::shared_ptr<TrackData>> owners;
+    std::unordered_set<TrackData*> visited;
+    int add(int32_t& value,int64_t extent=0) {
+        int64_t shifted=int64_t(value)+delta;
+        if(extent<0||shifted<INT32_MIN||shifted>INT32_MAX||shifted+extent>INT32_MAX)return PTS_tserrInvalidGeometry;
+        values.emplace_back(&value,int32_t(shifted));return 0;
+    }
+    int box(FSBBOX& value){return value.fDefined?add(value.fsrc.v,value.fsrc.dv):0;}
+    int collect(const std::shared_ptr<TrackData>& track) {
+        if(!visited.insert(track.get()).second)return PTS_tserrInvalidClientOutput;
+        owners.push_back(track);
+        int status=add(track->rect.v,track->rect.dv);if(status)return status;
+        status=box(track->bbox);if(status)return status;
+        for(const auto& para:track->paras) {
+            status=box(para->desc.fsbbox);if(status)return status;
+            if(para->text)for(auto& line:para->text->lines){status=add(line.vrStart,int64_t(line.dvrAscent)+line.dvrDescent);if(status)return status;}
+            if(para->floater){auto& rect=para->floater->details.fsrcFloater;status=add(rect.v,rect.dv);if(status)return status;}
+            if(para->desc.idobj==0){auto child=lookup_owned(tracks,track->context.get(),para->desc.pfspara);if(!child)return PTS_tserrInvalidQuery;status=collect(child);if(status)return status;}
+            // Subpage content uses its own local coordinate system. Its outer
+            // paragraph bbox moves here; its local tracks remain unchanged.
+        }
+        return 0;
+    }
+    void apply(){for(const auto& item:values)*item.first=item.second;for(const auto& track:owners){track->update=fskupdNew;for(const auto& para:track->paras){para->desc.fsupdinf.fskupd=fskupdNew;if(para->floater)para->floater->details.fskupdContent=fskupdNew;}}}
+};
+}
+extern "C" __declspec(dllexport) int WINAPI FsSynchronizeBottomlessSubtrack(void* context_handle,void* handle,void* geometry,uint32_t direction,int shift) {
+    auto track=lookup_owned(tracks,context_handle,handle);
+    if(!track||!track->subtrack||!track->bottomless)return PTS_tserrInvalidQuery;
+    if(geometry||direction!=PTS_fswdirES)return PTS_tserrNotImplemented;
+    try {TrackShift plan{shift};int status=plan.collect(track);if(status)return status;std::lock_guard<std::mutex> lock(gate);plan.apply();return 0;}
+    catch(const std::bad_alloc&){return PTS_tserrOutOfMemory;}
 }
 extern "C" __declspec(dllexport) int WINAPI FsUpdateBottomlessPage(void* context_handle,void* handle,void* section,FSFMTRBL* formatted) {
     if(!formatted)return PTS_tserrNullOutputParameter;*formatted=fmtrblGoalReached;
