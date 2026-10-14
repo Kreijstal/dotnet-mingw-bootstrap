@@ -11354,3 +11354,68 @@ fields. Legacy spelling/NLS, unsupported cultures and spelling-changing hyphens,
 general column spans, footnotes, optimal/interruptible formatting and advanced
 layout/bidi remain unfinished. This is an experimental WPF package; the broader
 WPF goal remains active.
+
+
+## 176. Original paragraph cache sessions and feasible breakpoint alternatives
+
+The 2026-10-14 continuation implements LoCreateParaBreakingSession,
+LoCreateBreaks, LoDisposeParaBreakingSession and LoRelievePenaltyResource using
+the original managed ABI. The LS generator derives the original LsBreaks record
+(32 bytes on x64), including pointer arrays. Sessions prefetch the original
+FullTextState run mapping through paragraph end, including soft line separators.
+Returned candidate lines and cloned break records retain independent context
+ownership; detached penalty resources belong to their actual session. Failed
+source callbacks/invalid requests clear outputs and roll back provisional lines.
+Unknown external penalty restriction pointers are rejected without dereferencing.
+
+Breakpoint enumeration visits ICU Unicode line opportunities and whole glyph
+clusters, reconstructing each prefix through original fetch/font/shaping
+callbacks before testing actual width. The session's paragraph width and original
+right-break margin honor narrower per-line limits. Tab geometry and dictionary
+hyphen candidates use existing measured callbacks. Emergency grapheme breaking
+and indivisible-word overflow remain distinct, with correct forced-break flags
+and paragraph separators. Each candidate owns actual line/penalty state; the
+best-fit index uses local normalized squared raggedness, hyphen and forced-break
+costs. This is the candidate/cache substrate, not completed paragraph-wide
+optimization: PTS still explicitly rejects fOptimizeParagraph.
+
+The managed mixed-script continuation test exposed an opening bidi control
+attached to the previous source break: cached CP-to-LSCP mapping returned 15
+while the native record retained 16. Break geometry now leaves openings with the
+next line and includes closing controls with the preceding line, matching the
+original GetBreakpointInternalCp contract. Existing native bidi, cloned records,
+query geometry, tabs, hyphenation and decoration regressions pass after that fix.
+
+Native fixture validation covers the original HRESULT/error and array ABI,
+two feasible word boundaries with distinct penalties, best-fit identity,
+detachment, cloned continuation after prior line/record disposal, final paragraph
+state, a candidate surviving session disposal, transactional callback failure,
+stale handles and emergency/overflow policies. The final native checks pass:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 inventory check-paragraph-breaks-native check-lineservices-line-native
+```
+
+The normal offline SDK consumer invokes original internal CreateParagraphCache,
+FormatBreakpoints and RecreateLine via reflection. Forty cases span Ideal/Display,
+LTR/RTL, whole/single-character runs and five inputs: multiple Latin words,
+combining-mark/emoji text, long-word emergency breaks, soft separators and mixed
+Hebrew/Arabic. Every feasible candidate reconstructs to its exact source length,
+fits actual width, covers glyph source positions (excluding separators), and
+renders real pixels. Selected independent cloned continuations cover each
+paragraph once through compacting GC. Cache width exceeds per-line width by 60
+DIPs to validate the original right-margin narrowing contract. All forty cases
+pass in shared-framework and portable self-contained execution, with zero build
+warnings/errors:
+
+```sh
+MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-paragraph-breaks-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/paragraph-breaks-sdk-check'
+```
+
+The new consumer is included in check-sdk (27 WPF gates total). Focused evidence
+is archived under `tmp/wpf8-support/validation/paragraph-breaks-20261014`.
+Imported coverage is 126/139 with 13 absent; paragraph ABI remains 470 fields.
+Full source/private regressions and package integration follow. Paragraph-wide
+scoring/PTS optimal-line reconstruction, external penalty restrictions, general
+column spans, footnotes, advanced layout/bidi and legacy NLS remain unfinished.
+The WPF goal stays active.

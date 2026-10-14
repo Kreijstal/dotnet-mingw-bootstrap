@@ -44,6 +44,12 @@ struct Run {
     ObjDim object_metrics{};
     int break_before=1,break_after=1;
 };
+struct BreakPenalty {
+    int first=0,next=0,width=0,target=0;
+    bool forced=false,hyphenated=false,terminal=false;
+    double cost=0;
+};
+struct ParaSession;
 struct Line {
     std::shared_ptr<Context> context;
     std::vector<Run> runs;
@@ -52,6 +58,18 @@ struct Line {
     int first=0,paragraph_first=0,base_flow=0,initial_level=0;
     Run terminator;
     bool has_terminator=false;
+    bool justified=false;
+    std::shared_ptr<BreakPenalty> penalty;
+    std::weak_ptr<ParaSession> penalty_session;
+    bool detached_penalty=false;
+};
+struct ParaSession {
+    std::shared_ptr<Context> context;
+    int first=0,end=0,width=0;
+    bool in_use=false;
+    std::vector<LsLInfo> information;
+    std::vector<void*> line_handles,penalty_handles;
+    std::vector<std::shared_ptr<BreakPenalty>> detached;
 };
 struct BreakRecord { int next,paragraph_first; std::shared_ptr<Context> context; int level=0; };
 // Source-owned state for paragraph penalty services. Scoring/optimal breaking
@@ -63,6 +81,7 @@ std::unordered_map<void*,std::shared_ptr<Context>> contexts;
 std::unordered_map<void*,std::shared_ptr<Line>> lines;
 std::unordered_map<void*,std::shared_ptr<BreakRecord>> records;
 std::unordered_map<void*,std::shared_ptr<PenaltyModule>> penalties;
+std::unordered_map<void*,std::shared_ptr<ParaSession>> sessions;
 
 using FetchPap=int (WINAPI *)(void*,int,LsPap*);
 using FetchProps=int (WINAPI *)(void*,int,int,LsLineProps*);
@@ -392,7 +411,13 @@ int break_geometry(const Line& line,BreakGeometry& geometry) {
     auto& text=geometry.text;auto& width=geometry.width;auto& boundary=geometry.boundary;
     int consumed=0;
     for(const auto& run:runs) {
-        if(run.level_delta){consumed+=int(run.text.size());geometry.raw.back()=consumed;continue;}
+        if(run.level_delta){
+            consumed+=int(run.text.size());
+            // WPF maps a source boundary before an opening reverse but after
+            // closing reverses. Openings therefore belong to the next line.
+            if(run.level_delta<0)geometry.raw.back()=consumed;
+            continue;
+        }
         for(size_t i=0;i<run.text.size();++i)geometry.raw.push_back(++consumed);
         int64_t before=width.back();
         text.insert(text.end(),run.text.begin(),run.text.end());
@@ -802,6 +827,7 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
         status=reinterpret_cast<FetchProps>(context->callbacks.pfnFetchLineProps)(context->info.pols,cp,cp==result->paragraph_first,&properties);
         if(status) return status;
         if((paragraph.fJustify && paragraph.lskj!=0) || (paragraph.grpf&0x1000)) return LS_NotImplemented;
+        result->justified=paragraph.fJustify!=0;
         result->widths.upStartMainText=properties.durLeft;
         int position=cp,total=properties.durLeft,trailing=properties.durLeft;
         int flow=paragraph.lstflow;
@@ -979,6 +1005,168 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
         *info=result->info;*widths=result->widths;*depth=1;for(const auto& run:result->runs)*depth=std::max(*depth,run.level-(result->base_flow==4?1:0)+1);*output=line_handle;
         return LS_None;
     } catch(const std::bad_alloc&) { return LS_OutOfMemory; }
+}
+
+extern "C" __declspec(dllexport) int WINAPI LoCreateParaBreakingSession(void* handle,int cp,int width,
+    void* previous,void** output,BOOL* justified) {
+    if(!output || !justified)return LS_NullOutputParameter;
+    *output=nullptr;*justified=FALSE;
+    if(cp<0 || width<=0 || width>LS_IdealInfiniteWidth)return LS_InvalidParameter;
+    try {
+        auto session=std::make_shared<ParaSession>();
+        LsLInfo info{};LsLineWidths widths{};int depth=0;void* whole=nullptr;
+        // Prefetch the original managed FullTextState's runs as well as validating
+        // the source. Its CP-to-LSCP mapping needs these runs before CreateBreaks.
+        int status=LoCreateLine(handle,cp,0,LS_IdealInfiniteWidth,0,previous,&info,&whole,&depth,&widths);
+        if(status)return status;
+        {
+            std::lock_guard<std::mutex> lock(gate);
+            auto line=lines.at(whole);lines.erase(whole);
+            session->context=line->context;session->first=cp;session->end=info.cpLimToContinue;session->width=width;
+            *justified=line->justified;
+        }
+        // A soft line separator ends a line, not the paragraph cache. Prefetch
+        // the remaining hard lines so later LSCP mappings include their runs.
+        while(info.endr==4) {
+            int next=info.cpLimToContinue;
+            status=LoCreateLine(handle,next,0,LS_IdealInfiniteWidth,0,nullptr,&info,&whole,&depth,&widths);
+            if(status){*justified=FALSE;return status;}
+            {std::lock_guard<std::mutex> lock(gate);lines.erase(whole);}
+            if(info.cpLimToContinue<=next){*justified=FALSE;return LS_InvalidFormatterResult;}
+            session->end=info.cpLimToContinue;
+        }
+        {std::lock_guard<std::mutex> lock(gate);sessions.emplace(session.get(),session);*output=session.get();}
+        return LS_None;
+    } catch(const std::bad_alloc&) { *justified=FALSE;return LS_OutOfMemory; }
+}
+
+extern "C" __declspec(dllexport) int WINAPI LoDisposeParaBreakingSession(void* handle,BOOL) {
+    std::lock_guard<std::mutex> lock(gate);auto found=sessions.find(handle);
+    if(found==sessions.end())return LS_InvalidParameter;
+    if(found->second->in_use)return LS_ContextInUse;
+    // Returned lines and cloned break records retain their own context/lifetime.
+    sessions.erase(found);return LS_None;
+}
+
+extern "C" __declspec(dllexport) int WINAPI LoCreateBreaks(void* handle,int cp,void* previous,
+    void* session_handle,void* restriction,LsBreaks* output,int* best) {
+    if(!output || !best)return LS_NullOutputParameter;
+    *output={};*best=0;
+    std::shared_ptr<ParaSession> session;
+    {
+        std::lock_guard<std::mutex> lock(gate);auto found=sessions.find(session_handle);
+        if(found==sessions.end())return LS_InvalidParameter;
+        auto context=contexts.find(handle);if(context==contexts.end())return LS_InvalidContext;
+        session=found->second;
+        if(context->second!=session->context)return LS_MismatchLineContext;
+        if(session->in_use)return LS_ContextInUse;
+        if(cp<session->first || cp>=session->end)return LS_WrongCpFirstForGetBreaks;
+        if(restriction)return LS_NotImplemented; // No foreign/unknown penalty pointer is dereferenced.
+        session->in_use=true;
+    }
+    struct Active {
+        std::shared_ptr<ParaSession> session;
+        std::vector<void*> provisional;
+        bool committed=false;
+        ~Active(){std::lock_guard<std::mutex> lock(gate);if(!committed)for(void* key:provisional)lines.erase(key);session->in_use=false;}
+    } active{session};
+    try {
+        LsLInfo full_info{};LsLineWidths full_widths{};int depth=0;void* whole=nullptr;
+        int status=LoCreateLine(handle,cp,0,LS_IdealInfiniteWidth,0,previous,&full_info,&whole,&depth,&full_widths);
+        if(status)return status;
+        // Erase the provisional registration before any allocation can fail.
+        std::shared_ptr<Line> full;
+        {std::lock_guard<std::mutex> lock(gate);full=lines.at(whole);lines.erase(whole);}
+        full->paragraph_first=session->first;
+        LsLineProps properties{};LsPap paragraph{};
+        status=reinterpret_cast<FetchProps>(session->context->callbacks.pfnFetchLineProps)(session->context->info.pols,cp,cp==session->first,&properties);
+        if(status)return status;
+        status=reinterpret_cast<FetchPap>(session->context->info.pfnFetchPap)(session->context->info.pols,cp,&paragraph);
+        if(status)return status;
+        int64_t available=int64_t(session->width)-properties.durRightBreak-properties.durLeft;
+        if(available<0 || available>INT_MAX)return LS_InvalidFormatterResult;
+        BreakGeometry geometry;status=break_geometry(*full,geometry);if(status)return status;
+        UErrorCode error=U_ZERO_ERROR;
+        std::unique_ptr<UBreakIterator,decltype(&ubrk_close)> iterator(ubrk_open(UBRK_LINE,"root",geometry.text.data(),int(geometry.text.size()),&error),ubrk_close);
+        if(U_FAILURE(error)||!iterator)return LS_InvalidFormatterResult;
+        struct Candidate {int cut;bool forced;std::shared_ptr<Run> marker;bool overflow=false;};
+        std::vector<Candidate> candidates;
+        for(int point=1;point<=int(geometry.text.size());++point) {
+            if(!geometry.boundary[point] || !geometry.allowed(point,ubrk_isBoundary(iterator.get(),point)))continue;
+            int cut=geometry.raw[point];
+            if(point==int(geometry.text.size()) && full->has_terminator)cut=full_info.cpLimToContinue-cp;
+            candidates.push_back({cut,false,{}});
+        }
+        if(geometry.text.empty() && full->has_terminator)candidates.push_back({full_info.cpLimToContinue-cp,false,{}});
+        if((paragraph.grpf&0x100000)&&!properties.fProhibitHyphenation) {
+            for(int maximum=INT_MAX;maximum>0;) {
+                int cut=0;Run marker;
+                status=hyphen_opportunity(*full,int(available),maximum,0,true,cut,marker);if(status)return status;
+                if(!cut)break;candidates.push_back({cut,false,std::make_shared<Run>(std::move(marker))});maximum=cut-1;
+            }
+        }
+        std::sort(candidates.begin(),candidates.end(),[](const Candidate& a,const Candidate& b){return a.cut<b.cut || (a.cut==b.cut && bool(a.marker)<bool(b.marker));});
+        candidates.erase(std::unique(candidates.begin(),candidates.end(),[](const Candidate& a,const Candidate& b){return a.cut==b.cut&&bool(a.marker)==bool(b.marker);}),candidates.end());
+        std::vector<LsLInfo> information;std::vector<void*> line_handles,penalty_handles;
+        double best_cost=std::numeric_limits<double>::infinity();int best_index=0;
+        auto add=[&](const Candidate& candidate)->int {
+            LsLInfo info{};LsLineWidths widths{};void* key=nullptr;int count=0;
+            // Prefix reconstruction reshapes the actual retained clusters. A
+            // nominal full-paragraph width alone cannot establish feasibility.
+            int result=LoCreateLine(handle,cp,candidate.cut,session->width,0,previous,&info,&key,&count,&widths);
+            if(result)return result;
+            std::shared_ptr<Line> line;
+            {std::lock_guard<std::mutex> lock(gate);line=lines.at(key);lines.erase(key);}
+            line->paragraph_first=session->first;line->info.fFirstLineInPara=cp==session->first;
+            if(candidate.marker) {
+                if(int64_t(line->widths.upLimLine)+candidate.marker->width>INT_MAX)return LS_InvalidFormatterResult;
+                line->runs.push_back(*candidate.marker);line->has_terminator=false;line->info.endr=1;
+                line->widths.upLimLine+=candidate.marker->width;line->widths.upStartTrailing=line->widths.upLimLine;
+            }
+            int64_t visible=int64_t(line->widths.upStartTrailing)-properties.durLeft;
+            if(!candidate.overflow && visible>available)return LS_None;
+            if(line->info.cpLimToContinue<=cp)return LS_InvalidFormatterResult;
+            auto penalty=std::make_shared<BreakPenalty>();penalty->first=cp;penalty->next=line->info.cpLimToContinue;
+            penalty->width=int(visible);penalty->target=int(available);penalty->forced=candidate.forced;
+            penalty->hyphenated=bool(candidate.marker);penalty->terminal=line->info.endr==2||line->info.endr==4;
+            double slack=double(available-visible)/std::max<int64_t>(1,available);
+            penalty->cost=penalty->terminal?0:slack*slack;
+            if(penalty->hyphenated)penalty->cost+=0.1;
+            if(penalty->forced)penalty->cost+=1000;
+            line->penalty=penalty;line->penalty_session=session;line->info.fForcedBreak=candidate.forced;
+            // Reserve rollback ownership before publishing a handle.
+            active.provisional.push_back(key);
+            {std::lock_guard<std::mutex> lock(gate);lines.emplace(key,line);}
+            int index=int(information.size());information.push_back(line->info);line_handles.push_back(key);penalty_handles.push_back(penalty.get());
+            if(penalty->cost<best_cost || (penalty->cost==best_cost&&penalty->next>information[best_index].cpLimToContinue)){best_cost=penalty->cost;best_index=index;}
+            return LS_None;
+        };
+        for(const auto& candidate:candidates){status=add(candidate);if(status)return status;}
+        if(information.empty()) {
+            bool unavoidable=false;int cut=choose_wrap(*full,int(available),(paragraph.grpf&0x80000)==0,INT_MAX,unavoidable);
+            if(cut<=0)return LS_InvalidFormatterResult;
+            bool emergency=(paragraph.grpf&0x80000)==0;
+            if(!geometry.raw.empty() && cut==geometry.raw.back() && full->has_terminator)cut=full_info.cpLimToContinue-cp;
+            status=add({cut,emergency,{},true});if(status)return status;
+        }
+        if(information.empty())return LS_InvalidFormatterResult;
+        session->information.swap(information);session->line_handles.swap(line_handles);session->penalty_handles.swap(penalty_handles);
+        output->cBreaks=int(session->information.size());output->plslinfoArray=session->information.data();
+        output->pplolineArray=session->line_handles.data();output->plinepenaltyArray=session->penalty_handles.data();
+        *best=best_index;active.committed=true;return LS_None;
+    } catch(const std::bad_alloc&) {return LS_OutOfMemory;}
+}
+
+extern "C" __declspec(dllexport) int WINAPI LoRelievePenaltyResource(void* handle) {
+    std::lock_guard<std::mutex> lock(gate);auto found=lines.find(handle);
+    if(found==lines.end())return LS_InvalidLine;
+    auto line=found->second;if(!line->penalty)return LS_InvalidParameter;
+    if(line->detached_penalty)return LS_None;
+    try {
+        // The paragraph owns detached penalties until its session is disposed.
+        if(auto owner=line->penalty_session.lock()){owner->detached.push_back(line->penalty);line->detached_penalty=true;return LS_None;}
+        return LS_InvalidParameter;
+    }catch(const std::bad_alloc&){return LS_OutOfMemory;}
 }
 
 extern "C" __declspec(dllexport) int WINAPI LoDisposeLine(void* handle,BOOL) {

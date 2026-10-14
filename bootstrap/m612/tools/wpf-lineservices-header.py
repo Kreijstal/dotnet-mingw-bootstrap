@@ -10,7 +10,7 @@ primitive={'uint':'uint32_t','int':'int32_t','ushort':'uint16_t','char':'uint16_
 records=('EscStringInfo','LsTbd','LsDevRes','LsIMethods','LscbkRedefined','LsContextInfo',
          'LsPap','LsLineProps','LsChp','LsTxM','LsHeights','LSPOINT','LSRECT','LsLInfo','LsLineWidths',
          'LsQSubInfo','LsTextCell','LsULInfo','LsStInfo','ObjDim','InlineInit',
-         'LsNeighborInfo','LsCharRunInfo','LsGlyphRunInfo','LsHyph')
+         'LsNeighborInfo','LsCharRunInfo','LsGlyphRunInfo','LsHyph','LsBreaks')
 lines=['// Generated from original WPF LineServices.cs.','#pragma once','#include <cstdint>']
 for name in records:
     match=re.search(r'\bstruct\s+'+name+r'\s*\{(.*?)\n    \}',text,re.S)
@@ -22,6 +22,7 @@ for name in records:
         if kind.endswith('*'):
             pointee=kind[:-1]
             if pointee in primitive: native=primitive[pointee]+'*'
+            elif pointee in records: native=pointee+'*'
             elif pointee=='GlyphOffset': native='void*' # external record; pointer ABI only
             else: raise SystemExit('Unsupported LS pointer field: '+kind+' '+field)
             lines.append('    '+native+' '+field+';')
