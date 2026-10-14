@@ -11497,3 +11497,73 @@ break alternatives. It does not complete PTS optimal paragraph formatting:
 paragraph-wide scoring/reconstruction and external penalty restrictions are the
 next integration work. General column spans, footnotes, advanced layout/bidi and
 legacy NLS remain open. The WPF goal remains active.
+
+
+## 178. Source paragraph-wide optimization through original PTS callbacks
+
+The 2026-10-14 continuation enables FlowDocument.IsOptimalParagraphEnabled in
+the source paragraph engine. The ABI generator derives original FSLINEVARIANT
+and CreateParaBreakingSession/DestroyParaBreakingSession/FormatLineVariants/
+ReconstructLineVariant signatures from Pts.cs, adding nine field checks (479
+paragraph ABI fields total). Layout no longer rejects fOptimizeParagraph before
+formatting. Original managed callbacks supply feasible source breaks, independent
+records and opaque penalty resources; a registry validates penalty identity
+before source PTS accesses the private score/width/hyphen state.
+
+A topologically ordered dynamic program minimizes the complete remaining
+paragraph: normalized squared raggedness, 0.01 per line, the existing hyphen/
+forced-break costs and an extra 0.1 for consecutive hyphens. Finite consecutive-
+hyphen caps are represented in graph state; unlimited caps retain just the
+previous-hyphen bit. Each winning node owns its incoming record and predecessor;
+unselected breakpoint clients/records are disposed through original callbacks.
+Only the chosen source lengths are reconstructed through ReconstructLineVariant.
+Session ownership stays with text data, and reconstructed lines/records use the
+existing pagination, widow/orphan/keep and page lifetime code. Changed line-area
+width/origin recomputes the remaining path. This optimizes fixed-width segments;
+it does not claim a single global optimum over arbitrary changing object areas.
+
+Original optimal properties select mixed justification. The line engine accepts
+that mode through existing expansion callbacks; candidate prefixes use nominal
+widths while public prefix reconstruction applies final justification. Explicit
+source-length reconstruction asks the current original lexical callback whether
+the final real text CP is a dictionary break, measures the current font's marker
+and appends a zero-source-length glyph. No stale session hint is used across
+source/culture owners. Dictionary markers preserve continuation/source identity
+and the mixed justification path retains their advance.
+
+The public consumer uses ordinary original FlowDocument APIs, with original
+text-view line results/caret/page services inspected via reflection. Its fixed
+Consolas paragraph has six independently enumerated feasible partitions. In all
+four text-mode/direction combinations, the selected cuts are
+12/20/29/37/46/53, while greedy wrapping chooses 12/20/29/40/46/53. Independent
+exhaustive width measurements prove the minimum for the stated score: Ideal
+0.670051 versus greedy 0.750675; Display 0.701247 versus greedy 0.779486.
+This checks paragraph-wide improvement rather than merely enabling the flag.
+
+Twenty-eight public document cases per execution include greedy/optimized
+counterexamples, five-page continuations covering 161 source characters,
+dictionary reconstruction painting two inserted glyphs for 38 source characters,
+justified rows actually reaching the column width, mixed Hebrew/Arabic text and
+two-column three-page continuations. All exact source/page positions, actual
+pixels, caret/point queries, disposed-page regeneration and compacting GC pass.
+The full matrix and four exhaustive proofs run in shared-framework and portable
+self-contained execution with zero compiler warnings/errors:
+
+```sh
+MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-optimal-paragraph-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/optimal-paragraph-sdk-check'
+```
+
+The final narrow native rebuild/checks also pass:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 inventory check-paragraph-breaks-native check-lineservices-line-native
+```
+
+Focused evidence is under `tmp/wpf8-support/validation/optimal-paragraph-20261014`.
+The new consumer is in check-sdk, bringing the suite to 29 WPF consumers (the
+standard SDK application plus 28 feature gates). Full source/private regressions
+and package integration follow. Imported coverage remains 126/139 with 13 absent:
+this adds behavior to existing exports. The score is explicit and does not claim
+Microsoft-identical stretchability/compression/ink insertion. Global variable-
+width object constraints, external penalty restrictions, advanced layout/bidi,
+general column spans, footnotes and legacy NLS remain unfinished. WPF stays active.

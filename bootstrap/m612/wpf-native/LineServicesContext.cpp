@@ -82,6 +82,7 @@ std::unordered_map<void*,std::shared_ptr<Line>> lines;
 std::unordered_map<void*,std::shared_ptr<BreakRecord>> records;
 std::unordered_map<void*,std::shared_ptr<PenaltyModule>> penalties;
 std::unordered_map<void*,std::shared_ptr<ParaSession>> sessions;
+std::unordered_map<void*,std::weak_ptr<BreakPenalty>> break_penalties;
 
 using FetchPap=int (WINAPI *)(void*,int,LsPap*);
 using FetchProps=int (WINAPI *)(void*,int,int,LsLineProps*);
@@ -174,6 +175,16 @@ int measure_run(Context& context,Run& run) {
         }
     }
     return LS_None;
+}
+
+int measure_hyphen(Context& context,const Run& owner,int cp,Run& marker) {
+    marker=owner;marker.cp=cp;
+    marker.text.assign(1,context.info.wchHyphen?context.info.wchHyphen:L'-');
+    marker.synthetic=true;marker.level_delta=0;marker.shaped=false;
+    marker.glyphs.clear();marker.clusters.clear();marker.characters.clear();
+    marker.advances.clear();marker.nominal_advances.clear();marker.offsets.clear();
+    marker.glyph_properties.clear();marker.expansion.clear();
+    return measure_run(context,marker);
 }
 
 int prefix_width(const Run& run,size_t end,int64_t& width) {
@@ -514,8 +525,7 @@ int hyphen_opportunity(const Line& line,int allowance,int max_cut,int natural,bo
             if(at==geometry.raw.end())continue;size_t index=size_t(at-geometry.raw.begin());raw=*at;
             if(raw>max_cut||!geometry.boundary[index]||raw<=cut||(!natural_overflow&&raw<=natural))continue;
             auto owner=std::find_if(line.runs.begin(),line.runs.end(),[&](const Run& run){return !run.hidden&&!run.embedded&&!run.tab&&hyphen>=run.cp&&hyphen<run.cp+int(run.text.size());});if(owner==line.runs.end())continue;
-            Run next=*owner;next.cp=hyphen;next.text.assign(1,context.info.wchHyphen?context.info.wchHyphen:L'-');next.synthetic=true;next.level_delta=0;next.shaped=false;next.glyphs.clear();next.clusters.clear();next.characters.clear();next.advances.clear();next.nominal_advances.clear();next.offsets.clear();next.glyph_properties.clear();next.expansion.clear();
-            status=measure_run(context,next);if(status)return status;
+            Run next;status=measure_hyphen(context,*owner,hyphen,next);if(status)return status;
             if(geometry.width[index]+next.width<=allowance){cut=raw;marker=std::move(next);}
         }
         start=end;
@@ -829,7 +839,7 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
         if(!previous_break) result->paragraph_first=paragraph.cpFirst;
         status=reinterpret_cast<FetchProps>(context->callbacks.pfnFetchLineProps)(context->info.pols,cp,cp==result->paragraph_first,&properties);
         if(status) return status;
-        if((paragraph.fJustify && paragraph.lskj!=0) || (paragraph.grpf&0x1000)) return LS_NotImplemented;
+        if((paragraph.fJustify && paragraph.lskj!=0 && paragraph.lskj!=4) || (paragraph.grpf&0x1000)) return LS_NotImplemented;
         result->justified=paragraph.fJustify!=0;
         result->widths.upStartMainText=properties.durLeft;
         int position=cp,total=properties.durLeft,trailing=properties.durLeft;
@@ -986,8 +996,29 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
             trailing-=trailing_width(*item,all_spaces);
             if(!all_spaces) break;
         }
+        if(limit>0 && !(flags&0x40000000u) && result->info.endr==0 && (paragraph.grpf&0x100000) && !properties.fProhibitHyphenation && context->info.pfnGetNextHyphenOpp) {
+            auto owner=std::find_if(result->runs.rbegin(),result->runs.rend(),[](const Run& run){return !run.hidden&&!run.embedded&&!run.tab&&!run.text.empty();});
+            if(owner!=result->runs.rend()) {
+                int last=owner->cp+int(owner->text.size())-1,found=0,at=0;LsHyph detail{};
+                // Reconstructed lines have an explicit source length. Ask the
+                // current source/culture whether this exact final text CP is a
+                // dictionary break; no stale cache hint crosses document owners.
+                status=reinterpret_cast<HyphenOpportunity>(context->info.pfnGetNextHyphenOpp)(context->info.pols,last,1,&found,&at,&detail);if(status)return status;
+                if(found && (found!=1||at!=last))return LS_WrongHyphenationPosition;
+                if(found && detail.kysr!=0)return LS_NotImplemented;
+                if(found) {
+                    Run marker;status=measure_hyphen(*context,*owner,last,marker);if(status)return status;
+                    if(int64_t(total)+marker.width>INT_MAX)return LS_InvalidFormatterResult;
+                    total+=marker.width;trailing=total;result->info.endr=1;
+                    result->info.dvpAscent=std::max(result->info.dvpAscent,marker.metrics.dvAscent);
+                    result->info.dvpDescent=std::max(result->info.dvpDescent,marker.metrics.dvDescent);
+                    result->info.dvpMultiLineHeight=std::max(result->info.dvpMultiLineHeight,marker.metrics.dvMultiLineHeight);
+                    result->runs.push_back(std::move(marker));
+                }
+            }
+        }
         int minimum_total=total,minimum_trailing=trailing;
-        if(!minmax && paragraph.fJustify && (result->info.endr==0||result->info.endr==1) && limit==0) {
+        if(!minmax && paragraph.fJustify && (result->info.endr==0||result->info.endr==1) && !(flags&0x40000000u)) {
             int64_t target=static_cast<int64_t>(column)-properties.durRightJustify;
             if(target<INT_MIN || target>INT_MAX) return LS_InvalidFormatterResult;
             status=justify_line(*result,static_cast<int>(target),total,trailing); if(status) return status;
@@ -1048,6 +1079,7 @@ extern "C" __declspec(dllexport) int WINAPI LoDisposeParaBreakingSession(void* h
     if(found==sessions.end())return LS_InvalidParameter;
     if(found->second->in_use)return LS_ContextInUse;
     // Returned lines and cloned break records retain their own context/lifetime.
+    for(const auto& penalty:found->second->detached)if(penalty.use_count()==1)break_penalties.erase(penalty.get());
     sessions.erase(found);return LS_None;
 }
 
@@ -1071,7 +1103,7 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateBreaks(void* handle,int cp,v
         std::shared_ptr<ParaSession> session;
         std::vector<void*> provisional;
         bool committed=false;
-        ~Active(){std::lock_guard<std::mutex> lock(gate);if(!committed)for(void* key:provisional)lines.erase(key);session->in_use=false;}
+        ~Active(){std::lock_guard<std::mutex> lock(gate);if(!committed)for(void* key:provisional){auto at=lines.find(key);if(at!=lines.end()){break_penalties.erase(at->second->penalty.get());lines.erase(at);}}session->in_use=false;}
     } active{session};
     try {
         LsLInfo full_info{};LsLineWidths full_widths{};int depth=0;void* whole=nullptr;
@@ -1116,7 +1148,9 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateBreaks(void* handle,int cp,v
             LsLInfo info{};LsLineWidths widths{};void* key=nullptr;int count=0;
             // Prefix reconstruction reshapes the actual retained clusters. A
             // nominal full-paragraph width alone cannot establish feasibility.
-            int result=LoCreateLine(handle,cp,candidate.cut,session->width,0,previous,&info,&key,&count,&widths);
+            // Candidate scores use nominal widths. Public prefix reconstruction
+            // applies the selected paragraph's mixed/inter-word justification.
+            int result=LoCreateLine(handle,cp,candidate.cut,session->width,0x40000000u,previous,&info,&key,&count,&widths);
             if(result)return result;
             std::shared_ptr<Line> line;
             {std::lock_guard<std::mutex> lock(gate);line=lines.at(key);lines.erase(key);}
@@ -1139,7 +1173,7 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateBreaks(void* handle,int cp,v
             line->penalty=penalty;line->penalty_session=session;line->info.fForcedBreak=candidate.forced;
             // Reserve rollback ownership before publishing a handle.
             active.provisional.push_back(key);
-            {std::lock_guard<std::mutex> lock(gate);lines.emplace(key,line);}
+            {std::lock_guard<std::mutex> lock(gate);lines.emplace(key,line);break_penalties.emplace(penalty.get(),penalty);}
             int index=int(information.size());information.push_back(line->info);line_handles.push_back(key);penalty_handles.push_back(penalty.get());
             if(penalty->cost<best_cost || (penalty->cost==best_cost&&penalty->next>information[best_index].cpLimToContinue)){best_cost=penalty->cost;best_index=index;}
             return LS_None;
@@ -1175,7 +1209,19 @@ extern "C" __declspec(dllexport) int WINAPI LoRelievePenaltyResource(void* handl
 extern "C" __declspec(dllexport) int WINAPI LoDisposeLine(void* handle,BOOL) {
     std::lock_guard<std::mutex> lock(gate);
     auto found=lines.find(handle); if(found==lines.end()) return LS_InvalidLine;
+    if(found->second->penalty && (!found->second->detached_penalty || found->second->penalty_session.expired()))break_penalties.erase(found->second->penalty.get());
     lines.erase(found); return LS_None;
+}
+
+// Shared source implementation interface for PTS scoring. Opaque managed
+// penalty pointers are validated against our registry before accessing data.
+extern "C" int WINAPI WpfReadBreakPenalty(void* handle,double* cost,int* width,int* hyphenated) {
+    if(!cost||!width||!hyphenated)return LS_NullOutputParameter;
+    *cost=0;*width=0;*hyphenated=0;
+    std::lock_guard<std::mutex> lock(gate);auto found=break_penalties.find(handle);
+    if(found==break_penalties.end())return LS_InvalidParameter;
+    auto penalty=found->second.lock();if(!penalty){break_penalties.erase(found);return LS_InvalidParameter;}
+    *cost=penalty->cost;*width=penalty->width;*hyphenated=penalty->hyphenated;return LS_None;
 }
 
 extern "C" __declspec(dllexport) int WINAPI LoAcquireBreakRecord(void* handle,void** output) {

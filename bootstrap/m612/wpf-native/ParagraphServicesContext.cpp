@@ -9,7 +9,11 @@
 #include <unordered_set>
 #include <algorithm>
 #include <atomic>
+#include <map>
+#include <limits>
+#include <cmath>
 #include "ParagraphServicesNative.h"
+extern "C" int WINAPI WpfReadBreakPenalty(void*,double*,int*,int*);
 namespace {
 struct InstalledObjects { FSIMETHODS methods[2]; };
 // The handler record is opaque to managed callers. Both its producer and
@@ -200,6 +204,12 @@ struct FigureData { FSFIGUREPROPS props{}; FSFIGUREDETAILS details{}; };
 struct ParaData;
 struct AttachedData { int anchor=0; FSFLOATERPROPS props{}; std::shared_ptr<ParaData> para; };
 struct CompositeLineData;
+struct OptimalSession {
+    std::shared_ptr<Context> context;
+    void* handle=nullptr;
+    explicit OptimalSession(std::shared_ptr<Context> value):context(std::move(value)){++context->resources;}
+    ~OptimalSession(){if(handle)reinterpret_cast<PtsDestroyParaBreakingSession>(context->info.fscbk.cbktxt.pfnDestroyParaBreakingSession)(context->info.pfsclient,handle);--context->resources;}
+};
 struct TextData {
     std::shared_ptr<Context> context;
     explicit TextData(std::shared_ptr<Context> value):context(std::move(value)){++context->resources;}
@@ -207,6 +217,8 @@ struct TextData {
     std::vector<FSLINEDESCRIPTIONSINGLE> lines;
     std::vector<std::shared_ptr<CompositeLineData>> rows;
     bool composite=false;
+    bool optimal=false;
+    std::vector<std::shared_ptr<OptimalSession>> optimal_sessions;
     // Output break records include the last record, which is not necessarily
     // referenced by another line. Retain each record exactly once.
     std::vector<std::shared_ptr<LineBreakData>> breaks;
@@ -217,7 +229,7 @@ struct TextData {
         erase_text(this);
         auto& cb=context->info.fscbk.cbktxt;void* client=context->info.pfsclient;
         for(auto& line:lines)if(line.pfslineclient)reinterpret_cast<PtsDestroyLine>(cb.pfnDestroyLine)(client,line.pfslineclient);
-        attached.clear();pending_floaters.clear();breaks.clear();incoming.reset();
+        attached.clear();pending_floaters.clear();breaks.clear();incoming.reset();optimal_sessions.clear();
         --context->resources;
     }
 };
@@ -595,6 +607,78 @@ int line_area(const TextData& text,const FSRECT& rect,int& used,int& u,int& widt
     }
 }
 
+// Candidate graphs use original managed PTS callbacks. Every edge retains an
+// independent incoming break record; only the chosen path is reconstructed.
+struct OptimalPath {
+    std::map<int,int> lengths;
+    int width=-1,u=0;
+};
+int optimize_text(const std::shared_ptr<ParaData>& para,TextData& text,const FSTXTPROPS& props,
+    int first,const std::shared_ptr<LineBreakData>& incoming,uint32_t direction,int u,int width,
+    const FSRECT& rect,OptimalPath& path) {
+    auto context=para->context;auto& cb=context->info.fscbk.cbktxt;void* client=context->info.pfsclient;
+    if(!cb.pfnCreateParaBreakingSession||!cb.pfnDestroyParaBreakingSession||!cb.pfnFormatLineVariants||!cb.pfnReconstructLineVariant)return PTS_tserrInvalidParameter;
+    auto session=std::make_shared<OptimalSession>(context);int justified=0;
+    int status=reinterpret_cast<PtsCreateParaBreakingSession>(cb.pfnCreateParaBreakingSession)(client,para->desc.pfsparaclient,para->desc.nmp,0,first,incoming?incoming->handle:nullptr,direction,rect.u,rect.du,rect.u,&session->handle,&justified);
+    if(status)return status;if(!session->handle)return PTS_tserrInvalidClientOutput;
+    struct Node {
+        int cp=0,hyphens=0,length=0;
+        double cost=std::numeric_limits<double>::infinity();
+        std::shared_ptr<Node> parent;
+        std::shared_ptr<LineBreakData> incoming;
+    };
+    std::map<std::pair<int,int>,std::shared_ptr<Node>> graph;
+    auto root=std::make_shared<Node>();root->cp=first;root->cost=0;root->incoming=incoming;graph[{first,0}]=root;
+    std::shared_ptr<Node> finish;
+    struct Variants {
+        std::shared_ptr<Context> context;
+        std::vector<FSLINEVARIANT> values;
+        explicit Variants(std::shared_ptr<Context> c):context(std::move(c)),values(16){}
+        void clear(){auto& cb=context->info.fscbk.cbktxt;void* client=context->info.pfsclient;for(auto& v:values){if(v.pfslineclient)reinterpret_cast<PtsDestroyLine>(cb.pfnDestroyLine)(client,v.pfslineclient);if(v.pfsbreakreclineclient)reinterpret_cast<PtsDestroyLineBreakRecord>(cb.pfnDestroyLineBreakRecord)(client,v.pfsbreakreclineclient);v={};}}
+        ~Variants(){clear();}
+    } variants(context);
+    for(auto at=graph.begin();at!=graph.end();++at) {
+        auto node=at->second;
+        if(finish&&node->cp>=finish->cp)continue;
+        if(!std::isfinite(node->cost))continue;
+        int count=0,best=0;
+        for(;;) {
+            status=reinterpret_cast<PtsFormatLineVariants>(cb.pfnFormatLineVariants)(client,session->handle,node->cp,node->incoming?node->incoming->handle:nullptr,direction,u,width,1,0,0,node->cp==props.dcpStartContent,0,0,nullptr,int(variants.values.size()),variants.values.data(),&count,&best);
+            if(status)return status;
+            if(count<=0||best<0||best>=count)return PTS_tserrInvalidClientOutput;
+            if(size_t(count)<=variants.values.size())break;
+            variants.clear();variants.values.resize(size_t(count));
+        }
+        for(int i=0;i<count;++i) {
+            auto& v=variants.values[i];
+            if(!v.pfslineclient||v.dcpLine<=0||int64_t(node->cp)+v.dcpLine>INT_MAX||v.dvrAscent<0||v.dvrDescent<0)return PTS_tserrInvalidClientOutput;
+            double edge_cost=0;int actual_width=0,hyphenated=0;
+            if(WpfReadBreakPenalty(v.ptsLinePenaltyInfo,&edge_cost,&actual_width,&hyphenated)||!std::isfinite(edge_cost)||edge_cost<0||actual_width<0)return PTS_tserrInvalidClientOutput;
+            int hyphens=hyphenated?(props.cMaxConsecutiveHyphens==INT_MAX?1:node->hyphens+1):0;
+            if(hyphenated&&props.cMaxConsecutiveHyphens>=0&&hyphens>props.cMaxConsecutiveHyphens)continue;
+            double cost=node->cost+edge_cost+0.01;
+            if(hyphenated&&node->hyphens)cost+=0.1;
+            int next=node->cp+v.dcpLine;
+            bool terminal=v.fslres>=fsflrEndOfParagraph&&v.fslres<=fsflrEndOfParagraphClearBoth;
+            if(!terminal&&!v.pfsbreakreclineclient)return PTS_tserrInvalidClientOutput;
+            auto key=std::make_pair(next,hyphens);auto found=graph.find(key);
+            if(found!=graph.end()&&cost>=found->second->cost)continue;
+            auto winner=found==graph.end()?std::make_shared<Node>():found->second;
+            std::shared_ptr<LineBreakData> record;
+            if(v.pfsbreakreclineclient){record=std::make_shared<LineBreakData>(context);record->handle=v.pfsbreakreclineclient;v.pfsbreakreclineclient=nullptr;}
+            winner->cp=next;winner->hyphens=hyphens;winner->length=v.dcpLine;winner->parent=node;winner->incoming=record;winner->cost=cost;
+            if(found==graph.end())graph.emplace(key,winner);
+            if(terminal&&(!finish||cost<finish->cost))finish=winner;
+        }
+        variants.clear();
+    }
+    if(!finish)return PTS_tserrInvalidFormatterResult;
+    OptimalPath result;result.width=width;result.u=u;
+    for(auto node=finish;node->parent;node=node->parent)result.lengths[node->parent->cp]=node->length;
+    if(result.lengths.empty())return PTS_tserrInvalidFormatterResult;
+    text.optimal_sessions.push_back(session);path=std::move(result);return 0;
+}
+
 int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const FSRECT& rect,
     const std::shared_ptr<Continuation>& input,std::shared_ptr<Continuation>& output,bool bottomless,bool force,bool keep_self=false,bool previous_page=true) {
     auto context=para->context;auto& cb=context->info.fscbk.cbktxt;void* client=context->info.pfsclient;
@@ -603,14 +687,14 @@ int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const F
     if(status)return status;
     if(keep_self)props.fKeepTogether=1;
     para->keep_together=props.fKeepTogether!=0;para->min_lines_before_break=std::max(1,props.cMinLinesBeforeBreak);
-    if((props.fswdir!=PTS_fswdirES&&props.fswdir!=PTS_fswdirWS)||props.fDropCap||props.fVerticalGrid||props.fOptimizeParagraph)return PTS_tserrNotImplemented;
+    if((props.fswdir!=PTS_fswdirES&&props.fswdir!=PTS_fswdirWS)||props.fDropCap||props.fVerticalGrid)return PTS_tserrNotImplemented;
     if(props.fswdir!=direction){
         FSRECT page=FigureGeometry::current?FigureGeometry::current->page:rect,converted{};
         status=FsTransformRectangle(direction,&page,&rect,props.fswdir,&converted);if(status)return status;
         status=format_text(para,props.fswdir,converted,input,output,bottomless,force,keep_self,previous_page);if(status)return status;
         FSBBOX box{};status=FsTransformBbox(props.fswdir,&page,&para->desc.fsbbox,direction,&box);if(!status)para->desc.fsbbox=box;return status;
     }
-    auto text=std::make_shared<TextData>(context);text->direction=props.fswdir;para->text=text;
+    auto text=std::make_shared<TextData>(context);text->direction=props.fswdir;text->optimal=props.fOptimizeParagraph!=0;para->text=text;OptimalPath optimal_path;
     int dcp=input?input->dcp:props.dcpStartContent,used=0,fit=0,height_hint=0;bool overflow=false,ended=false,deferred=false;
     std::shared_ptr<LineBreakData> previous=input?input->line_break:nullptr;text->incoming=previous;
     if(input)for(const auto& pending:input->floaters) {
@@ -634,7 +718,15 @@ int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const F
             line.dcpFirst=dcp;line.urStart=line_u;line.dur=line_width;line.vrStart=rect.v+used;
             line.pfsbreakreclineclient=previous?previous->handle:nullptr;line.fTreatedAsFirst=first_in_para;
             int consumed=0,dependent=0,reformat=0;FSFLRES result{};
-            status=reinterpret_cast<PtsFormatLine>(cb.pfnFormatLine)(client,para->desc.pfsparaclient,para->desc.nmp,0,dcp,line.pfsbreakreclineclient,direction,
+            if(props.fOptimizeParagraph) {
+                if(optimal_path.width!=line_width||optimal_path.u!=line_u||!optimal_path.lengths.count(dcp)) {
+                    status=optimize_text(para,*text,props,dcp,previous,direction,line_u,line_width,rect,optimal_path);if(status)return status;
+                }
+                consumed=optimal_path.lengths.at(dcp);line.fAllowHyphenation=1;
+                status=reinterpret_cast<PtsReconstructLineVariant>(cb.pfnReconstructLineVariant)(client,para->desc.pfsparaclient,para->desc.nmp,0,dcp,line.pfsbreakreclineclient,consumed,direction,
+                    line_u,line_width,rect.u,rect.du,rect.u,1,0,0,line.fTreatedAsFirst,0,used==0,
+                    &line.pfslineclient,&br->handle,&line.fForceBroken,&result,&line.dvrAscent,&line.dvrDescent,&line.urBBox,&line.durBBox,&dependent,&reformat);
+            } else status=reinterpret_cast<PtsFormatLine>(cb.pfnFormatLine)(client,para->desc.pfsparaclient,para->desc.nmp,0,dcp,line.pfsbreakreclineclient,direction,
                 line_u,line_width,rect.u,rect.du,rect.u,0,0,0,line.fTreatedAsFirst,0,used==0,
                 &line.pfslineclient,&consumed,&br->handle,&line.fForceBroken,&result,&line.dvrAscent,&line.dvrDescent,&line.urBBox,&line.durBBox,&dependent,&reformat);
             if(status)return status;
@@ -1605,7 +1697,7 @@ extern "C" __declspec(dllexport) int WINAPI FsQueryTableObjCellList(void* contex
 }
 extern "C" __declspec(dllexport) int WINAPI FsQueryTextDetails(void* context,void* handle,FSTEXTDETAILS* output) {
     if(!output)return PTS_tserrNullOutputParameter;*output={};auto text=find_text(context,handle);if(!text)return PTS_tserrInvalidQuery;
-    output->fsktd=fsktdFull;auto& value=output->u.full;value.fswdir=text->direction;value.fsklines=fsklinesNormal;value.cLines=int(text->rows.size());value.fLinesComposite=text->composite;
+    output->fsktd=fsktdFull;auto& value=output->u.full;value.fswdir=text->direction;value.fsklines=text->optimal?fsklinesOptimal:fsklinesNormal;value.cLines=int(text->rows.size());value.fLinesComposite=text->composite;
     value.cAttachedObjects=int(text->attached.size());
     if(!text->lines.empty()){value.dcpFirst=text->lines.front().dcpFirst;value.dcpLim=text->lines.back().dcpLim;}return 0;
 }

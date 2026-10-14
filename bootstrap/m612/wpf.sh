@@ -859,6 +859,7 @@ step_check_sdk() {
   bash "$here/wpf-tests/check-composite-lines-sdk.sh" "$root" "$build/composite-lines-sdk-check"
   bash "$here/wpf-tests/check-hyphenation-sdk.sh" "$root" "$build/hyphenation-sdk-check"
   bash "$here/wpf-tests/check-paragraph-breaks-sdk.sh" "$root" "$build/paragraph-breaks-sdk-check"
+  bash "$here/wpf-tests/check-optimal-paragraph-sdk.sh" "$root" "$build/optimal-paragraph-sdk-check"
   bash "$here/wpf-tests/check-finite-updates-sdk.sh" "$root" "$build/finite-updates-sdk-check"
   bash "$here/wpf-tests/check-bidi-sdk.sh" "$root" "$build/bidi-sdk-check"
   bash "$here/wpf-tests/check-rtl-pages-sdk.sh" "$root" "$build/rtl-pages-sdk-check"
