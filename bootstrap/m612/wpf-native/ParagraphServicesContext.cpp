@@ -1032,9 +1032,12 @@ int format_table(const std::shared_ptr<ParaData>& para,uint32_t direction,const 
     auto& cb=handler.init;auto& fetch=cb.tablecbkfetch;auto& cells=cb.tablecbkcell;auto& table=cb.tableobjcbk;
     if(!table.pfnGetTableProperties||!table.pfnAutofitTable||!table.pfnGetMCSClientAfterTable||!fetch.pfnGetFirstRow||!fetch.pfnGetNextRow||!fetch.pfnGetRowProperties||!fetch.pfnGetCells||!cells.pfnDestroyCell||!cells.pfnDestroyCellBreakRecord||!cells.pfnSetCellHeight||!(bottomless?cells.pfnFormatCellBottomless:cells.pfnFormatCellFinite))return PTS_tserrInvalidParameter;
     FSTABLEOBJPROPS props{};status=reinterpret_cast<PtsGetTableProperties>(table.pfnGetTableProperties)(client,para->desc.nmp,direction,&props);if(status)return status;
-    if(props.fFloat||props.fskclear!=fskclearNone||props.fswdirTable!=direction||props.ktablealignment!=fsktableobjAlignLeft||props.dvrCaptionTop||props.dvrCaptionBottom||props.durCaptionLeft||props.durCaptionRight)return PTS_tserrNotImplemented;
+    if(props.fFloat||props.fskclear!=fskclearNone||(props.fswdirTable!=PTS_fswdirES&&props.fswdirTable!=PTS_fswdirWS)||props.ktablealignment!=fsktableobjAlignLeft||props.dvrCaptionTop||props.dvrCaptionBottom||props.durCaptionLeft||props.durCaptionRight)return PTS_tserrNotImplemented;
+    // Table placement and margin collapse use the parent track coordinates.
+    // Rows and cell subpages use the independently requested table direction.
+    const uint32_t table_direction=props.fswdirTable;
     for(int which=0;which<2;++which){void* callback=which?fetch.pfnGetFirstFooterRow:fetch.pfnGetFirstHeaderRow;if(callback){int found=0;void* name=nullptr;status=reinterpret_cast<PtsGetFirstHeaderRow>(callback)(client,para->desc.nmp,0,&found,&name);if(status)return status;if(found)return PTS_tserrNotImplemented;}}
-    if(fetch.pfnGetDistributionKind){FSKTABLEHEIGHTDISTRIBUTION distribution{};status=reinterpret_cast<PtsGetDistributionKind>(fetch.pfnGetDistributionKind)(client,para->desc.nmp,direction,&distribution);if(status)return status;if(distribution!=fskdistributeUnchanged)return PTS_tserrNotImplemented;}
+    if(fetch.pfnGetDistributionKind){FSKTABLEHEIGHTDISTRIBUTION distribution{};status=reinterpret_cast<PtsGetDistributionKind>(fetch.pfnGetDistributionKind)(client,para->desc.nmp,table_direction,&distribution);if(status)return status;if(distribution!=fskdistributeUnchanged)return PTS_tserrNotImplemented;}
     int width=0,top=0;status=reinterpret_cast<PtsAutofitTable>(table.pfnAutofitTable)(client,para->desc.pfsparaclient,para->desc.nmp,direction,rect.du,&width);if(status)return status;
     if(width<0||int64_t(rect.u)+width>INT32_MAX)return PTS_tserrInvalidClientOutput;
     status=reinterpret_cast<PtsConvertMcsclient>(obj.pfnConvertMcsclient)(client,para->desc.pfsparaclient,para->desc.nmp,direction,input_margin,suppress,&top);if(status)return status;
@@ -1046,7 +1049,7 @@ int format_table(const std::shared_ptr<ParaData>& para,uint32_t direction,const 
     while(found){
         if(!name||!visited.insert(name).second)return PTS_tserrInvalidClientOutput;
         void* next=nullptr;int has_next=0;status=reinterpret_cast<PtsGetNextRow>(fetch.pfnGetNextRow)(client,para->desc.nmp,name,&has_next,&next);if(status)return status;if(has_next&&!next)return PTS_tserrInvalidClientOutput;
-        FSTABLEROWPROPS row_props{};status=reinterpret_cast<PtsGetRowProperties>(fetch.pfnGetRowProperties)(client,name,direction,&row_props);if(status)return status;
+        FSTABLEROWPROPS row_props{};status=reinterpret_cast<PtsGetRowProperties>(fetch.pfnGetRowProperties)(client,name,table_direction,&row_props);if(status)return status;
         if(row_props.cCells<0||(row_props.cCells>0&&width==0))return PTS_tserrInvalidClientOutput;
         int above=data->rows.empty()?(first_table?row_props.dvrAboveTopRow:row_props.dvrAboveRowBreak):row_props.dvrAboveRow;
         int below=has_next?row_props.dvrBelowRow:row_props.dvrBelowBottomRow;
@@ -1059,7 +1062,7 @@ int format_table(const std::shared_ptr<ParaData>& para,uint32_t direction,const 
         status=reinterpret_cast<PtsGetCells>(fetch.pfnGetCells)(client,name,row_props.cCells,names.data(),merge.data());if(status)return status;
         if(std::any_of(merge.begin(),merge.end(),[](FSTABLEKCELLMERGE value){return value!=fskcellmergeNo;})){
             if(resumed)return PTS_tserrNotImplemented;
-            SpanRowInput group{name,row_props,names,merge};status=format_span_group(para,data,direction,rect,top,used,bottomless,empty_ok,first_table,std::move(group),next,has_next,input&&input->table_row==name?input:nullptr,output);if(status)return status;
+            SpanRowInput group{name,row_props,names,merge};status=format_span_group(para,data,table_direction,rect,top,used,bottomless,empty_ok,first_table,std::move(group),next,has_next,input&&input->table_row==name?input:nullptr,output);if(status)return status;
             if(output)break;name=next;found=has_next;continue;
         }
         if(row_props.fskrowheight!=fskrowheightNatural&&!(row_props.cCells==0&&row_props.fskrowheight==fskrowheightExactNoBreak&&row_props.dvrRowHeightRestriction==0))return PTS_tserrNotImplemented;
@@ -1070,8 +1073,8 @@ int format_table(const std::shared_ptr<ParaData>& para,uint32_t direction,const 
             if(resumed&&input->table_cells[i].done){row->cells.push_back(nullptr);continue;}
             void* cell_input=resumed&&input->table_cells[i].record?input->table_cells[i].record->handle:nullptr;
             auto cell=std::make_shared<TableCellData>(context);cell->callbacks=cells;cell->name=names[i];CallbackTracks pending;
-            if(bottomless){FSFMTRBL formatted{};status=reinterpret_cast<PtsFormatCellBottomless>(cells.pfnFormatCellBottomless)(client,para->desc.pfsparaclient,names[i],direction,&formatted,&cell->handle,&cell->height);if(!status&&formatted!=fmtrblGoalReached)status=PTS_tserrNotImplemented;}
-            else {FSFMTR formatted{};status=reinterpret_cast<PtsFormatCellFinite>(cells.pfnFormatCellFinite)(client,para->desc.pfsparaclient,cell_input,names[i],nullptr,row_empty_ok,direction,0,available,&formatted,&cell->handle,&cell->record,&cell->height);
+            if(bottomless){FSFMTRBL formatted{};status=reinterpret_cast<PtsFormatCellBottomless>(cells.pfnFormatCellBottomless)(client,para->desc.pfsparaclient,names[i],table_direction,&formatted,&cell->handle,&cell->height);if(!status&&formatted!=fmtrblGoalReached)status=PTS_tserrNotImplemented;}
+            else {FSFMTR formatted{};status=reinterpret_cast<PtsFormatCellFinite>(cells.pfnFormatCellFinite)(client,para->desc.pfsparaclient,cell_input,names[i],nullptr,row_empty_ok,table_direction,0,available,&formatted,&cell->handle,&cell->record,&cell->height);
                 row_forced=row_forced||formatted.fForcedProgress;
                 if(!status&&(cell->record||formatted.kstop!=fmtrGoalReached)){
                     if(row_empty_ok)defer=true;
@@ -1092,7 +1095,7 @@ int format_table(const std::shared_ptr<ParaData>& para,uint32_t direction,const 
         if(defer){output=std::make_shared<Continuation>();output->context=context;output->paragraph=para->desc.nmp;output->table_row=name;if(resumed)output->table_cells=input->table_cells;if(!data->rows.empty()){auto& last=data->rows.back();last->details.fskboundaryBelow=fsktablerowboundaryBreak;}break;}
         for(size_t i=0;i<row->cells.size();++i){const auto& cell=row->cells[i];if(!cell)continue;
             void* cell_input=resumed&&input->table_cells[i].record?input->table_cells[i].record->handle:nullptr;
-            status=reinterpret_cast<PtsSetCellHeight>(cells.pfnSetCellHeight)(cell->handle,para->desc.pfsparaclient,cell_input,cell->name,cell->record!=nullptr,direction,height);if(status)return status;
+            status=reinterpret_cast<PtsSetCellHeight>(cells.pfnSetCellHeight)(cell->handle,para->desc.pfsparaclient,cell_input,cell->name,cell->record!=nullptr,table_direction,height);if(status)return status;
         }
         row->details.fForcedRow=row_forced;para->forced_progress=para->forced_progress||row_forced;
         row->description.u.dvrRow=above+height+below;row->details.fskboundaryAbove=data->rows.empty()?(first_table?fsktablerowboundaryOuter:fsktablerowboundaryBreak):fsktablerowboundaryInner;
@@ -1108,7 +1111,7 @@ int format_table(const std::shared_ptr<ParaData>& para,uint32_t direction,const 
         }
         name=next;found=has_next;
     }
-    data->details.fsnmTable=para->desc.nmp;data->details.fsrcTableObj={rect.u,rect.v+top,width,used};data->details.fswdirTable=direction;data->details.fskupdTableProper=fskupdNew;data->details.pfstableProper=data.get();data->proper={used,int(data->rows.size())};
+    data->details.fsnmTable=para->desc.nmp;data->details.fsrcTableObj={rect.u,rect.v+top,width,used};data->details.fswdirTable=table_direction;data->details.fskupdTableProper=fskupdNew;data->details.pfstableProper=data.get();data->proper={used,int(data->rows.size())};
     para->desc.pfspara=data.get();para->desc.dvrTopSpace=top;para->desc.dvrUsed=data->rows.empty()&&output?0:para->forced_progress?std::min(top+used,rect.dv):top+used;
     if(used)para->desc.fsbbox={1,data->details.fsrcTableObj};
     if(!output){status=reinterpret_cast<PtsGetMCSClientAfterTable>(table.pfnGetMCSClientAfterTable)(client,para->desc.pfsparaclient,para->desc.nmp,direction,input_margin,margin_output);if(status)return status;}

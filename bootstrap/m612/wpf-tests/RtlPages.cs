@@ -68,14 +68,15 @@ class Check {
             Console.WriteLine($"original horizontal RTL scrolling {mode} {direction}: extent {extent:F1}->{scroll.ExtentHeight:F1}, top/end/edited glyphs, full scrolling and original cleanup PASS");window.Close();GC.Collect(2,GCCollectionMode.Forced,true,true);
         }
         foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display})
-        foreach(var direction in new[]{FlowDirection.LeftToRight,FlowDirection.RightToLeft}) {
-            var table=new Table{CellSpacing=2,Margin=new Thickness(0)};table.Columns.Add(new TableColumn{Width=new GridLength(150)});table.Columns.Add(new TableColumn{Width=new GridLength(150)});var group=new TableRowGroup();table.RowGroups.Add(group);
+        foreach(var direction in new[]{FlowDirection.LeftToRight,FlowDirection.RightToLeft})
+        foreach(var tableDirection in new[]{FlowDirection.LeftToRight,FlowDirection.RightToLeft}) {
+            var table=new Table{CellSpacing=2,Margin=new Thickness(0),FlowDirection=tableDirection};table.Columns.Add(new TableColumn{Width=new GridLength(150)});table.Columns.Add(new TableColumn{Width=new GridLength(150)});var group=new TableRowGroup();table.RowGroups.Add(group);
             var row=new TableRow();group.Rows.Add(row);row.Cells.Add(new TableCell(new Paragraph(new Run("אבג first")){Margin=new Thickness(0)}){Background=Brushes.Red,Padding=new Thickness(4)});row.Cells.Add(new TableCell(new Paragraph(new Run("مرحبا second")){Margin=new Thickness(0)}){Background=Brushes.Blue,Padding=new Thickness(4)});
             var document=new FlowDocument(table){FlowDirection=direction,FontFamily=new FontFamily("Segoe UI"),FontSize=18,PagePadding=new Thickness(18,10,34,10)};TextOptions.SetTextFormattingMode(document,mode);
             var paginator=((IDocumentPaginatorSource)document).DocumentPaginator;paginator.PageSize=new Size(400,220);using var page=paginator.GetPage(0);var image=new RenderTargetBitmap(400,220,96,96,PixelFormats.Pbgra32);image.Render(page.Visual);var pixels=new byte[400*220*4];image.CopyPixels(pixels,1600,0);long redX=0,blueX=0;int red=0,blue=0,black=0;
             for(int y=0;y<220;++y)for(int x=0;x<400;++x){int at=(y*400+x)*4;if(pixels[at+3]>150&&pixels[at]<60&&pixels[at+1]<60&&pixels[at+2]<60)++black;if(pixels[at+3]>150&&pixels[at+2]>200&&pixels[at]<60&&pixels[at+1]<60){++red;redX+=x;}if(pixels[at+3]>150&&pixels[at]>200&&pixels[at+2]<60&&pixels[at+1]<60){++blue;blueX+=x;}}
-            if(red<1000||blue<1000||black<100||(direction==FlowDirection.RightToLeft?(double)redX/red<(double)blueX/blue:(double)redX/red>(double)blueX/blue))throw new Exception("RTL table cell reading order/background geometry");
-            Console.WriteLine($"original horizontal RTL table {mode} {direction}: logical first/second cell backgrounds, original subpage glyphs and arrangement PASS");
+            if(red<1000||blue<1000||black<100||(tableDirection==FlowDirection.RightToLeft?(double)redX/red<(double)blueX/blue:(double)redX/red>(double)blueX/blue))throw new Exception("RTL table cell reading order/background geometry");
+            Console.WriteLine($"original horizontal RTL table {mode}, page={direction}, table={tableDirection}: logical first/second cell backgrounds, original subpage glyphs and arrangement PASS");
         }
         Dispatcher.CurrentDispatcher.InvokeShutdown();
         Console.WriteLine("original multi-page FlowDocument pagination and page/break-record dispatcher cleanup PASS");

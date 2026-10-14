@@ -170,13 +170,16 @@ static int WINAPI block_finite(void*,void* para,void* input,int previous,void*,v
     }
     return (fail_float||float_created==float_fail_at)?PTS_tserrCallbackException:0;
 }
-static int WINAPI table_props(void*,void*,uint32_t direction,FSTABLEOBJPROPS* props){*props={};props->fswdirTable=direction;return 0;}
+static int table_direction_override=-1,table_row_direction_calls=0,table_cell_direction_calls=0,table_height_direction_calls=0;
+static void check_table_direction(uint32_t direction,int& calls){if(table_direction_override>=0){require(direction==uint32_t(table_direction_override),"row/cell callbacks must receive the table direction independently of its parent track");++calls;}}
+static int WINAPI table_props(void*,void*,uint32_t direction,FSTABLEOBJPROPS* props){*props={};props->fswdirTable=table_direction_override<0?direction:uint32_t(table_direction_override);return 0;}
 static int WINAPI table_fit(void*,void*,void*,uint32_t,int width,int* output){*output=width;return 0;}
 static int WINAPI table_first(void*,void*,int* found,void** name){*found=table_rows_count>0;*name=*found?reinterpret_cast<void*>(501):nullptr;return 0;}
 static int WINAPI table_next(void*,void*,void* current,int* found,void** name){auto n=reinterpret_cast<uintptr_t>(current);*found=n<uintptr_t(500+table_rows_count);*name=*found?reinterpret_cast<void*>(n+1):nullptr;return 0;}
-static int WINAPI table_row_props(void*,void*,uint32_t,FSTABLEROWPROPS* props){*props={};props->cCells=2;props->dvrAboveRow=props->dvrBelowRow=props->dvrAboveTopRow=props->dvrBelowBottomRow=props->dvrAboveRowBreak=props->dvrBelowRowBreak=1;return 0;}
+static int WINAPI table_row_props(void*,void*,uint32_t direction,FSTABLEROWPROPS* props){check_table_direction(direction,table_row_direction_calls);*props={};props->cCells=2;props->dvrAboveRow=props->dvrBelowRow=props->dvrAboveTopRow=props->dvrBelowBottomRow=props->dvrAboveRowBreak=props->dvrBelowRowBreak=1;return 0;}
 static int WINAPI table_get_cells(void*,void* row,int count,void** names,FSTABLEKCELLMERGE* merge){if(count!=2)return PTS_tserrInvalidParameter;auto n=reinterpret_cast<uintptr_t>(row);for(int i=0;i<2;++i){names[i]=reinterpret_cast<void*>(table_spans?(i==0?602+n-501:601):601+(n-501)*2+i);merge[i]=table_spans&&i==1?(n==501?(malformed_span?fskcellmergeMiddle:fskcellmergeFirst):n==503?fskcellmergeLast:fskcellmergeMiddle):fskcellmergeNo;}return 0;}
 static int WINAPI table_cell_format(void*,void*,void* input,void* name,void*,int empty,uint32_t direction,int extra,int available,FSFMTR* formatted,void** output,void** br,int* height){
+    check_table_direction(direction,table_cell_direction_calls);
     *formatted={};*output=*br=nullptr;*height=0;if((input&&!split_table_cells&&!long_span)||extra)return PTS_tserrInvalidParameter;if(empty&&available<20){formatted->kstop=fmtrNoProgressOutOfSpace;return 0;}
     FSRECT rect{10,20,100,available};FSCOLUMNINFO column{0,100};FSBBOX bbox{};void* margin=nullptr;int top=0;void* page=nullptr;
     inside_table_cell=true;short_table_cell=split_table_cells&&name==reinterpret_cast<void*>(601);long_table_cell=long_span&&name==reinterpret_cast<void*>(601);int status=create_subpage(page_context,input,input?1:0,name,nullptr,empty,1,direction,200,20+available,&rect,1,&column,0,0,nullptr,nullptr,0,nullptr,nullptr,0,fsksuppresshardbreakbeforefirstparaNone,formatted,&page,br,height,&bbox,&margin,&top);inside_table_cell=false;short_table_cell=false;long_table_cell=false;
@@ -188,7 +191,7 @@ static int WINAPI table_cell_format(void*,void*,void* input,void* name,void*,int
 }
 static int WINAPI table_cell_bottomless(void* client,void* table,void* name,uint32_t direction,FSFMTRBL* formatted,void** output,int* height){FSFMTR finite{};void* br=nullptr;int status=table_cell_format(client,table,nullptr,name,nullptr,0,direction,0,long_span?200:80,&finite,output,&br,height);*formatted=fmtrblGoalReached;if(br)return PTS_tserrInvalidClientOutput;if(!status&&name==reinterpret_cast<void*>(601))*height=long_span?150:45;return status;}
 static int WINAPI table_destroy_cell(void* handle){auto cell=static_cast<MockTableCell*>(handle);int status=destroy_subpage(page_context,cell->page);delete cell;++table_cells_destroyed;return status;}
-static int WINAPI table_set_height(void*,void*,void*,void* name,int,uint32_t,int height){if(table_spans){if(name==reinterpret_cast<void*>(601))span_set_height=height;if(long_span)return height>=0?0:PTS_tserrInvalidClientOutput;return height==(name==reinterpret_cast<void*>(601)?64:20)?0:PTS_tserrInvalidClientOutput;}return (split_table_cells?height>=0&&height<=20:height==20)?0:PTS_tserrInvalidClientOutput;}
+static int WINAPI table_set_height(void*,void*,void*,void* name,int,uint32_t direction,int height){check_table_direction(direction,table_height_direction_calls);if(table_spans){if(name==reinterpret_cast<void*>(601))span_set_height=height;if(long_span)return height>=0?0:PTS_tserrInvalidClientOutput;return height==(name==reinterpret_cast<void*>(601)?64:20)?0:PTS_tserrInvalidClientOutput;}return (split_table_cells?height>=0&&height<=20:height==20)?0:PTS_tserrInvalidClientOutput;}
 static int table_footnote_calls=0;
 static int WINAPI table_cell_footnotes(void* handle,int* count){++table_footnote_calls;return subpage_footnotes(page_context,static_cast<MockTableCell*>(handle)->page,count);}
 static int WINAPI table_clear_cell(void* handle){return clear_cell_subpage(page_context,static_cast<MockTableCell*>(handle)->page);}
@@ -787,6 +790,19 @@ int main(int argc,char** argv) {
         PROC(FsQueryTableObjDetails,QueryTable);PROC(FsQueryTableObjTableProperDetails,QueryTableProper);PROC(FsQueryTableObjRowList,QueryTableRows);PROC(FsQueryTableObjRowDetails,QueryTableRow);PROC(FsQueryTableObjCellList,QueryTableCells);
         table_mode=true;para_count=1;available_height=48;reset_page_counts();table_cells_created=table_cells_destroyed=0;
         FSTABLEOBJDETAILS table_details{};FSTABLEDETAILS table_proper{};FSTABLEROWDESCRIPTION table_rows[3]{};FSTABLEROWDETAILS table_row{};void* cell_handles[2]{};FSKUPDATE cell_updates[2]{};FSTABLEKCELLMERGE cell_merges[2]{};
+        for(uint32_t parent_direction:{0u,4u})for(int own_direction:{0,4})for(bool spans:{false,true}){
+            table_direction_override=own_direction;text_direction=own_direction;table_spans=spans;reset_page_counts();table_cells_created=table_cells_destroyed=0;
+            table_row_direction_calls=table_cell_direction_calls=table_height_direction_calls=0;
+            FSRECT table_area{10,20,100,80};
+            int table_status=format_subtrack(context,nullptr,0,reinterpret_cast<void*>(77),0,nullptr,nullptr,0,1,parent_direction,&table_area,nullptr,fskclearNone,fsksuppresshardbreakbeforefirstparaNone,&formatted,&subtrack,&subrecord,&used,&bbox,&margin,&clear,&top_space);
+            std::printf("table direction matrix parent=%u own=%d spans=%d status=%d continuation=%d used=%d\n",parent_direction,own_direction,int(spans),table_status,int(subrecord!=nullptr),used);
+            require(table_status==0&&!subrecord,"independent table/track direction matrix formats ordinary and spanning cells");
+            require(FsQuerySubtrackParaList(context,subtrack,1,paras,&actual_count)==0&&actual_count==1&&FsQueryTableObjDetails(context,paras[0].pfspara,&table_details)==0&&table_details.fswdirTable==uint32_t(own_direction)&&table_details.fsrcTableObj.u==10&&table_details.fsrcTableObj.v==20&&table_details.fsrcTableObj.du==100,"table details retain its own direction and placement in parent track coordinates");
+            require(table_row_direction_calls>=3&&table_cell_direction_calls>0&&table_height_direction_calls>0,"actual row/cell/height callbacks observe the independently requested table direction");
+            require(destroy_subtrack(context,subtrack)==0&&table_cells_created==table_cells_destroyed&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"independent table direction releases all ordinary/spanning cell and source resources exactly once");
+        }
+        table_direction_override=-1;text_direction=0;table_spans=false;reset_page_counts();table_cells_created=table_cells_destroyed=0;
+        std::puts("native independent table directions: parent placement, queried direction, ordinary/spanning row/cell callbacks and exact resource ownership PASS");
         require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&page_break,"table formats real owned cell subpages and defers an intact later row");
         require(FsQueryPageDetails(context,page_handle,&details)==0&&FsQueryTrackParaList(context,details.u.simple.trackdescr.pfstrack,1,paras,&actual_count)==0&&actual_count==1&&paras[0].idobj==3&&paras[0].dvrUsed==44,"table paragraph uses actual maximum cell heights and row spacing");
         void* table_handle=paras[0].pfspara;
