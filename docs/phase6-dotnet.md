@@ -9737,3 +9737,60 @@ flow across paragraph boundaries, complex center/clear policies, figures/tables,
 comparison/display transfer, balancing/spans/footnotes, advanced/optimal/
 incremental/interruptible algorithms and full bidi/native-language behavior
 remain incomplete. The WPF goal remains active.
+
+## 149. Installed release 25: in-line floater anchors
+
+The 2026-10-14 continuation packages section 148 as WindowsDesktop 8.0.0-25.
+Declared/checksummed 0025-inline-floater-anchors.patch follows the previous
+24 patches. Clean pinned sources plus all 25 patches match the four committed
+feature files byte for byte. Actual private package sources have identical
+SHA-256 hashes. After the initial complete private gate, its source patch was
+replaced with the final actual-line-position correction and the private native,
+ABI, layout and entire SDK gates ran again successfully. Unchanged managed,
+graphics and printing outputs remain the private tree's own source builds.
+
+Validation in the CLANG64 package workspace:
+
+```sh
+makepkg --verifysource --force
+source PKGBUILD                 # with srcdir set to this workspace's src/
+_wpf native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+makepkg --printsrcinfo > .SRCINFO
+makepkg --repackage --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-25-any.pkg.tar.zst
+/usr/bin/python3 check-staged.py /clang64/lib/dotnet
+bash "$(_driver)/wpf-tests/check-floaters-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-inline-floaters-sdk-check
+bash "$(_driver)/wpf-tests/check-forced-progress-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-inline-floaters-forced-sdk-check
+pacman -Q mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap
+sha256sum mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-25-any.pkg.tar.zst
+```
+
+All final commands pass. Native discovery/retry/displaced-anchor/actual-line-
+position cases and invalid-output/callback cleanup pass alongside 335 original
+ABI field checks and all existing native paragraph/line regressions. Staged and
+installed payload checks cover 42 managed implementations/references, eight
+native libraries, SDK tasks and retained interim WinForms versions. Installed
+original WPF early/wrapping-displaced/late inline anchors complete three/three/
+four pages with all 1047/1071/1118 characters covered once in Ideal/Display.
+Floating source and raster belong to the same page, host glyphs remain outside
+the rectangle and disposed pages regenerate real content. Installed scrolling
+edits also pass with inline anchors, including changed raster/extent and end
+scrolling. Prior single/multiple before-line placement and deferral cases pass.
+Installed undersized-page forced progress covers all 61 characters once in
+three pages across both formatting modes, nested/flat and kept/unkept variants.
+Both installed SDK fixtures pass shared-framework and self-contained execution
+with SDK roots/toolchain PATH removed, with zero consumer warnings/errors. The
+complete corrected private SDK gate also passes all other consumers including
+interim WinForms. The existing srcdir provenance warning in source-bootstrap.json
+remains.
+
+Artifact: mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-25-any.pkg.tar.zst.
+SHA-256: e19d403defb4e423191769e6e8e51c1fb8bf1598bc95c6af44b39653e4b59ada.
+Recipe commit: msys2-ur 9efdb65; feature commit: ac31158.
+Artifact, recipe, metadata, patch, hashes and logs are archived under
+ tmp/wpf8-support/validation/inline-floaters-package-20261014.
+Imported native coverage remains 103/139 with 36 absent. Oversized/split floater
+content, flow across paragraph boundaries, complex center/clear policies,
+figures/tables, comparison/display transfer, balancing/span areas/footnotes,
+advanced/optimal/incremental/interruptible algorithms and full bidi/native-
+language behavior remain incomplete. The full WPF goal stays active.
