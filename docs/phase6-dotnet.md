@@ -12352,3 +12352,132 @@ Source evidence is under
 General polygons and advanced object/table/subpage/column-span/footnote behavior,
 full bidi/optimizer conformance and legacy multiword/reform spelling controls
 remain unfinished. The WPF packaging goal stays active.
+
+
+## 192. Original subpage/subtrack footnote query APIs
+
+The 2026-10-14 continuation implements FsGetNumberSubtrackFootnotes,
+FsGetNumberSubpageFootnotes and FsGetSubpageFootnoteInfo for WPF's supported
+empty collections. An installed release46 baseline calling the original
+PtsHost.SubpageGetNumberFootnotes fails with EntryPointNotFoundException. The
+new native implementation allows that real wrapper path to run.
+
+The result follows retained source/layout data rather than a constant success:
+text callbacks receive only the retained first/limit CPs, container/subpage
+callbacks recurse through their actual objects, floater content uses its original
+count callback, figures visit retained native subpages and shared table cells are
+queried once. Missing callbacks, negative counts and original callback errors
+fail with clean scalar outputs. A thread-local query scope rejects callback
+cycles without recursive overflow. Queries acquire no new layout owners.
+
+Upstream TextParagraph.GetNumberFootnotes returns zero; PtsHost.GetFootnotes and
+footnote creation callbacks remain unimplemented upstream. Positive collections
+therefore return explicit NotImplemented. This closes the existing source WPF
+query paths for empty collections; it does not claim general footnote placement.
+Empty info returns the actual LTR/RTL direction, preserves indexStart as indexLim
+and does not modify caller array entries. Typed owner/context, stale handle,
+capacity/index and output pointer checks preserve that contract.
+
+The original Pts.cs generator now includes FSFTNINFO and the four count delegate
+signatures. Managed/native ABI validation increases from 479 to 482 fields while
+context/methods/callback sizes remain 872/136/824. Source feature commit 17b8dce
+records the implementation and regressions.
+
+Native fixtures prove retained/cloned CP intervals, recursive containers, floater
+and figure subpage callbacks, shared spanning-cell deduplication, LTR/RTL info,
+untouched indexed buffers, negative/positive/error/cyclic callback paths,
+stale/foreign/kind/null/array rejection and exact callback/resource cleanup.
+Existing normal SDK subpage/subtrack consumers now call the original PtsHost
+count/info wrappers on finite chunks, bottomless objects, updates and synchronized
+content while retaining their original render/source/GC/disposal checks. An
+initial subtrack test entered PTS twice inside an existing arrange context; the
+fixture was corrected to reuse that existing entry scope before final validation.
+
+Validation on win11 with the standard source compiler/WPF environment:
+
+```sh
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 inventory check-paragraph-context
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-paragraph-context-native
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-subpages-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/footnote-queries-subpages-check
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-subtracks-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/footnote-queries-subtracks-check
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-paragraph-context-native check-paragraph-context inventory layout check-sdk
+```
+
+All final commands exit zero. The source suite passes 35 WPF consumers (normal
+SDK/BAML/window plus 34 feature consumers) and both interim WinForms executions.
+Bash/Python syntax and scoped whitespace checks pass. Native imported coverage
+increases from 129 to 132 of 139 source-visible APIs. Seven remain absent: the
+reverse-object handler and six declarations disabled upstream by #if NEVER.
+The inventory keeps its conservative source-visible denominator unchanged.
+Evidence is under `tmp/wpf8-support/validation/original-footnote-queries-20261014`,
+including the installed-release46 missing-entrypoint baseline and final original
+native/managed ABI, subtrack and full source logs.
+
+General polygon/object/table/subpage layouts, full bidi/optimizer conformance and
+legacy multiword/reform spelling controls remain unfinished. General positive
+footnote placement is unsupported, including upstream's creation callbacks. The
+WPF packaging goal stays active.
+
+
+## 193. Installed WindowsDesktop release 47 original query validation
+
+The same continuation builds, packages and installs
+mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap 8.0.0-47. Recipe commit
+80b3fec declares 0047-original-footnote-queries.patch (SHA-256
+14a5edafea8876d0efda821b0e3cf2a69c4d91e333a94bd925eed690f9ec99dd), whose bytes
+match source feature commit 17b8dce. Clean pinned sources plus all 47 patches
+reproduce all six feature files, and actual source/private files match. All 50
+locally available declared source hashes pass. Private makepkg --verifysource
+checks all 54 sources/hashes; final .SRCINFO records release47 and that input count.
+
+The private tree rebuilds the native library and source ABI header, runs original
+native/managed query/callback checks, regenerates layout and runs the entire
+suite. Both source/private trees pass 35 WPF consumers and shared/portable interim
+WinForms. Paragraph ABI coverage is 482 fields; imported API coverage is 132/139.
+
+Validation on win11:
+
+```sh
+# Private CLANG64 recipe workspace, after sourcing PKGBUILD:
+_wpf native-win32 inventory check-paragraph-context-native check-paragraph-context layout check-sdk
+MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/install-footnote-queries.sh'
+```
+
+The archived install-and-check.sh regenerates .SRCINFO, invokes makepkg
+--repackage --force --noconfirm, installs through pacman -U --noconfirm and checks
+staged/installed payload hashes before these exact installed consumers:
+
+```sh
+bash "$(_driver)/wpf-tests/check-subpages-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-footnote-subpages-sdk-check
+bash "$(_driver)/wpf-tests/check-subtracks-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-footnote-subtracks-sdk-check
+bash "$(_driver)/wpf-tests/check-forced-floaters-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-footnote-regression-forced-floaters
+/usr/bin/python3 ~/wpfboot/check-installed-hyphenation.py
+```
+
+All commands exit zero. Staged/installed payload gates verify 42 managed
+implementations/references, native hashes, SDK tasks and retained interim framework
+versions. Original subpage/floater/subtrack count and subpage info wrappers now
+return their supported empty collections on retained finite chunks, bottomless
+objects and updated/synchronized content. Original source ownership, glyph raster,
+independent continuation/client lifetime, disposal and GC remain valid. The
+existing forced-object regression passes 96 cases across shared and portable
+execution. All three consumers build with zero warnings/errors and run against
+both the shared framework and portable apphost with SDK roots removed.
+
+Installed source audit verifies 81 hashes, 39 notices and exact regeneration of
+all 36 embedded dictionaries. Installed native inventory records 132 implemented
+of 139 source-visible APIs and seven absent: the reverse-object handler plus six
+upstream #if NEVER declarations. Empty-query support does not claim general
+positive footnote layout.
+
+Evidence/artifact are under
+`tmp/wpf8-support/validation/original-footnote-queries-package-20261014`:
+`mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-47-any.pkg.tar.zst`.
+SHA-256: 7d79ad84544274c180425b103bdc2947e1c99269c0371678bfe5327436f0a719.
+The 58,894,001-byte local artifact hash matches the installed host's artifact.
+Source evidence is under
+`tmp/wpf8-support/validation/original-footnote-queries-20261014`.
+
+General polygon/object/table/subpage layouts, full bidi/optimizer conformance,
+positive footnote placement and legacy multiword/reform spelling controls remain
+unsupported or unproven. The WPF packaging goal stays active.
