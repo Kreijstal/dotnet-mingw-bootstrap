@@ -13897,3 +13897,114 @@ aligned-field justification, compression/ink insertion, broader layout/bidi/
 optimizer conformance, complex margins, spelling reform and physical printing
 remain unfinished. WinForms8 metadata generation and current Greenshot's net480/
 source dependency requirements also remain open. The WPF goal stays active.
+
+
+## 215. Provider inter-word compression in optimal line layout
+
+The 2026-10-14 continuation implements the original WPF nominal/glyph compression
+callbacks for justified FullMixed optimal lines. Release58's public reconstruction
+baseline builds with zero warnings/errors, then retains105.57333333333334 pixels
+against a101.57333333333334-pixel target. The new behavior removes only eligible
+complete inter-word spacing and honors all three provider priority levels. Both
+sides share one physical advance budget, preventing duplicate removal or negative
+advances. Trailing spaces, non-space text and earlier tab fields keep their widths.
+Original shaped advances remain available for drawing, with signed left offsets
+and no fabricated ink expansion. Provider capacity determines real minimum widths;
+insufficient capacity retains overflow instead of inventing a fit.
+
+Source commit9019115 applies compression to reshaped retained paragraph candidates,
+admits newly feasible boundaries, and scores their nominal distance from the
+column. Reconstruction repeats the adjustment. A selected terminal optimal line
+can compress when needed without expanding a nominally fitting terminal line.
+Ordinary InterWord wrapping retains its existing policy. Compression exceptions
+and invalid capacities clear line output; paragraph enumeration rolls back all
+provisional resources and can be reused afterward.
+
+The public test also exposed an existing same-level split-grapheme bidi defect.
+A multi-word RTL Indic selection counted228.7 pixels against its146.04333333333335-
+pixel line. Trace evidence showed one artificial directional subline per joined
+grapheme interleaved with the real enclosing scope for spaces. Same-level joined
+cells now retain that enclosing scope; cross-level source cells keep a stable
+synthetic scope. Actual per-CP source-run identity remains authoritative. The
+selection assertion stays exact; it is not replaced with a larger tolerance.
+
+Exact final development commands on win11, terminal exit0:
+
+```sh
+MSYSTEM=CLANG64 WPF_SOURCE=$HOME/dotnetboot/m612/src/wpf-8.0.0 WPF_BUILD=$HOME/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-justification-native check-paragraph-breaks-native check-lineservices-line-native
+bash ~/wpfboot/compression-development-check.sh
+```
+
+Native assertions cover exact nominal/shaped, right-only/both-side compression,
+priority allocation, real minimum widths, unchanged trailing/non-space advances,
+actual/original drawing advances, signed offsets, exhausted/zero/negative provider
+capacity, callback failures, InterWord policy and terminal reconstruction. The
+paragraph fixture admits and selects a previously overflowing terminal candidate,
+queries its compressed caret position, exercises transactional rollback and reuse,
+and retains existing break-record/session lifetime tests.
+
+The new SDK consumer checks32 direct reconstructions: Ideal/Display, LTR/RTL,
+split/unsplit runs, Latin/Indic, terminal/nonterminal lines. It checks exact width,
+nominal and compressed selection, glyph/source ownership, forward/backward and
+point carets, real raster and GC. Sixteen optimal paragraph cases add both column
+layouts, actual previously overflowing selected boundaries, exact source/page
+coverage, pagination, justified line geometry and page regeneration. Shared and
+portable execution both pass (96 new cases in development). Existing split-
+grapheme/emoji/flag, selected-tab, ordinary tab/font, mixed justification and aligned
+flexible-object regressions also pass. Final scripts, baseline, trace and logs are
+archived under `tmp/wpf8-support/validation/paragraph-compression-20261014`.
+
+WindowsDesktop8.0.0-59 is packaged in msys2-ur commit1cad78d. Clean replay of all59
+recipe patches matches all seven feature files byte for byte. All66 source/hash
+declarations verify on the host; all62 locally available inputs match. Patch0059
+SHA-256:
+a1f0c6cc8de615583579c03fec6bef246aebf6ea48cc8b53ce97a6b2e141950a.
+Registered SDK consumers increase to44. This release runs focused regression
+coverage, not a new complete44-consumer suite.
+
+Exact private/package/install command on win11, terminal exit0:
+
+```sh
+bash ~/wpfboot/compression-package-and-check.sh
+```
+
+The archived script verifies sources, dry-runs/applies0059 and runs:
+
+```sh
+_wpf native-win32 inventory check-justification-native check-paragraph-breaks-native check-inline-objects-native check-lineservices-line-native layout
+makepkg --repackage --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-59-any.pkg.tar.zst
+```
+
+The changed native library is rebuilt from patched sources in the existing
+private source workspace. The managed payload comes from that previously
+validated private source build; this is not another complete from-scratch WPF
+build. Normal makepkg dependency checks remain enabled. Recreated SDK overlays
+keep native shared/runtime-pack bytes identical to the private rebuild without
+overwriting installed hardlinks.
+
+Private native compression/candidate/object/line tests and shared/portable SDK
+checks for compression, selected tabs, aligned/ordinary objects, tabs/font
+resources, bidi, cross-run carets, mixed justification and normal BAML/window
+behavior all pass. The42-pair managed/reference/native hash and SDK payload audit
+passes privately and after installation. Installed compression and BAML/window
+consumers then pass in both shared and portable execution with zero warnings/
+errors. The new consumer runs288 cases across development, private and installed
+scopes (96 each). Required native export coverage remains133/139; the six absent
+declarations remain upstream #if NEVER.
+
+Artifact, exact final scripts/logs, source recipe, clean replay and native inventory
+are archived under `tmp/wpf8-support/validation/paragraph-compression-package-20261014`:
+
+```text
+mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-59-any.pkg.tar.zst
+SHA-256: 6100a6c541e33e471dab865650c991bbf5546f1d8b40596a28d965c031af3bec
+Bytes: 58927370
+```
+
+The downloaded hash matches the host; pacman reports8.0.0-59. Final aligned-field
+justification, ink insertion and broader native layout/bidi/optimizer conformance
+remain unfinished. Combined justification and position-dependent object behavior
+needs broader validation, as do complex margins, spelling reform and physical
+printing. WinForms8 metadata generation and current Greenshot's net480/source
+requirements remain open. The full WPF goal stays active.
