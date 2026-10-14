@@ -13390,3 +13390,103 @@ upstream by #if NEVER. Existing general native layout, bidi/optimizer, complex
 margin-collapse, spelling-reform and physical-printing gaps remain unfinished.
 WinForms8 metadata generation and current Greenshot's net480/source dependency
 requirements also remain open. The WPF packaging goal stays active.
+
+
+## 210. Installed release 54: BlockUIContainer floater clearance
+
+The 2026-10-14 continuation fixes a reachable original-WPF layout gap in source
+commit7e13f1d and packages it in msys2-ur commit42c49c7 as WindowsDesktop8.0.0-54.
+Original UIElementParagraph.GetFloaterProperties reads Block.ClearFloatersProperty
+and returns its horizontal clear enumeration. The native block formatter previously
+rejected every non-None value. The public baseline completes its first two None
+cases, then fails the Left case's pagination/source-ownership assertion because
+formatting never produces a complete document. The retained baseline log records
+this failure; source inspection establishes the explicit NotImplemented branch.
+
+The block formatter now receives the inherited obstacle snapshots already
+transformed into its container direction. It selects the requested logical side
+using floater alignment, advances the outer origin before top-margin/border/padding
+layout, and includes accepted clearance in consumed height and top space. Queried
+content rectangles retain actual cleared coordinates. Deferred blocks consume no
+gap or child source; their immutable continuation recomputes clearance on the next
+page. Attached floaters retain their separate placement/height accounting.
+Malformed clear values fail before content is created; populated callback failures
+release speculative ownership and preserve clean public outputs.
+
+Native fixtures cover all valid values without obstacles, invalid output, eight
+inherited side/clear combinations with exact positions/heights/top-space, intact
+clearance-plus-child deferral/resume and populated callback failure. Exact line,
+client and floating-content disposal counts remain checked. Existing paragraph
+layout/continuation/query/update regressions pass, and the original managed/native
+ABI consumer verifies all482 nested field sizes/offsets.
+
+The new normal SDK consumer has88 scenarios per execution:64 finite pagination
+cases,16 styled margin/border/padding cases and eight bottomless live-edit cases.
+Each bottomless case changes the clear property five times. It covers Ideal/Display,
+both page directions and opposing container directions, every clear value, occupied
+page deferral, exact following-source/page ownership, unique child placement,
+regeneration and compacting GC. Styled raster checks prove the gap precedes the
+outer border/background and content padding. Every scenario runs against the
+shared framework and a portable publication with both DOTNET_ROOT values removed.
+check-sdk now registers39 WPF consumers.
+
+Exact focused development commands, all terminal exit0:
+
+```sh
+MSYSTEM=CLANG64 WPF_SOURCE=$HOME/dotnetboot/m612/src/wpf-8.0.0 WPF_BUILD=$HOME/wpfboot/build bash -lc 'bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-paragraph-context-native'
+MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/block-ui-clearing-check-development.sh'
+```
+
+The final development script rebuilds the changed native library, runs the updated
+native assertions, unlinks both SDK-overlay native hardlinks before replacement,
+then executes the new clearing and original BlockUI SDK consumers. The final log
+contains176 new public scenarios plus original shared/portable BlockUI regressions,
+with zero managed build warnings/errors.
+
+Exact package/private/installed validation command, terminal exit0:
+
+```sh
+MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/block-ui-clearing-package-and-check.sh'
+```
+
+The script verifies all declared sources, dry-runs/applies patch0054 in the private
+pinned source tree, and runs:
+
+```sh
+_wpf native-win32 inventory check-paragraph-context-native check-paragraph-context layout
+```
+
+It refreshes the SDK overlay using unlink-before-copy, then runs normal offline
+SDK checks for block clearing, original BlockUI, floater clearing, section clearing
+and BAML/window/shared/portable behavior. All pass. The changed native DLL is built
+inside the private source workspace; no installed desktop implementation is used
+to construct it. Normal dependency-checked makepkg --repackage creates the package,
+pacman installs it, and the42-pair native/managed payload hash audit passes again.
+The installed new clearing and normal BAML/window consumers then both pass in
+shared and portable execution. Private plus installed validation covers352 new
+clearing scenarios; including development, the final implementation passes528.
+This is focused validation of changed paths; the preceding full37-consumer suite
+remains the release51 run, and release53 separately adds imaging validation.
+
+All54 recipe patches replay from the checksum-verified pinned bootstrap source;
+the six changed files byte-match the source commit. There are61 source/hash
+declarations and all57 locally available inputs match. Host makepkg verifies every
+declared source. Patch0054 SHA-256:
+dd3fe45a5fedcd1ca64c33d237ed71f7cbc28975eb8c17f4aba31a6e940cb1d0.
+
+Installed artifact archived with exact scripts/logs/recipe/replay/native inventory
+under `tmp/wpf8-support/validation/block-ui-clearing-package-20261014`:
+
+```text
+mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-54-any.pkg.tar.zst
+SHA-256: aae06f887f81059cb92c26f909ec678a538b488893bf76f0010d09f2feebb1bb
+Bytes: 58915241
+```
+
+The downloaded hash matches the host and pacman reports8.0.0-54. Development and
+baseline evidence are retained in `validation/block-ui-clearing-20261014`.
+Native required import coverage stays133/139; all six missing declarations remain
+upstream #if NEVER. General polygon/object/table/subpage behavior, full bidi and
+optimizer conformance, complex margin collapse, spelling reform and physical
+printing remain unfinished. WinForms8 metadata generation and current Greenshot's
+net480/source dependency requirements remain open. The WPF packaging goal is active.
