@@ -14382,3 +14382,94 @@ aligned-field spacing, ink insertion and broader native conformance work remains
 open, along with complex margins, spelling reform, physical printing, WinForms8
 metadata and current Greenshot's net480/source dependencies. The full WPF goal
 stays active.
+
+
+## 220. Source software drawing/effect regression gate
+
+The 2026-10-14 continuation verifies source graphics behavior not directly covered
+by the earlier SDK registry. Source commit d58aaf3 adds a public drawing consumer
+and registers it as the 47th WPF SDK check. This is a new regression gate, not a
+renderer implementation change: the tested original graphics port already passes
+the final cases.
+
+The consumer explicitly sets and verifies SoftwareOnly rendering, then checks:
+
+- Exact premultiplied half-opacity pixels and transparent outside pixels.
+- Transformed triangle geometry clipped by a rectangle.
+- Exact nearest-neighbor source bitmap tile colors and periodicity.
+- sRGB linear gradient endpoints, opacity and midpoint color balance.
+- An opacity-mask gradient preserving premultiplied blue channels.
+- Retained VisualBrush vector tiles and source-background invalidation.
+- Gaussian blur interior, halo and outside coverage without spurious color.
+- A separate black drop-shadow halo, its direction, updated depth and unchanged
+  source fill; repeated retained raster is byte-identical after compacting GC.
+
+The initial nearest-neighbor assertion used RenderOptions attached properties on
+a DrawingVisual. Original UIElement source installs those metadata callbacks;
+DrawingVisual does not. A custom SceneVisual now sets the protected visual
+properties directly. Wrapping the root alone did not change this behavior. No
+native implementation was patched and no pixel assertions were weakened.
+The requested nearest-neighbor sampling behavior is described by
+[Microsoft's BitmapScalingMode API reference](https://learn.microsoft.com/dotnet/api/system.windows.media.bitmapscalingmode).
+
+Exact final development command on win11, terminal exit0:
+
+```sh
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-drawing-effects-sdk.sh /clang64/lib/dotnet ~/wpfboot/drawing-effects-final
+```
+
+Both shared and self-contained runs build without warnings/errors, force software
+rendering and pass all raster/invalidation/GC checks. Nine generated PNGs from each
+run make the drawing output reviewable. The final development log and images are
+archived under `tmp/wpf8-support/validation/drawing-effects-20261014`.
+
+WindowsDesktop 8.0.0-63 packages the gate in msys2-ur commit 3328ca6. All 63 recipe
+patches replay cleanly and match all four gate files byte for byte. All 70 source/
+hash declarations verify on the host; all 66 locally available inputs match.
+Patch0063 SHA-256:
+c86fef618df73bd8d0bd70f199d35cabe03ed6a64a968a413885dcb84c9bda65.
+Registered SDK consumers increase to 47. The previous complete 46-consumer plus
+WinForms run remains evidence for the unchanged libraries; no new single full 47-
+consumer run is claimed here.
+
+Exact private/package/install command on win11, terminal exit0:
+
+```sh
+bash ~/wpfboot/drawing-effects-package-and-check.sh
+```
+
+The script verifies sources, dry-runs/applies0063, compares the native libraries
+with the installed release 62 payload and runs _wpf check-gfx. Sixteen text shaders
+assemble identically to the upstream reference arrays, all 106 graphics exports
+resolve, and version/handshake/shader-resource checks pass. Private drawing and
+BAML/window consumers run shared and portable, with payload audits passing.
+Ordinary dependency checks remain enabled for makepkg --repackage; pacman installs
+release 63. The installed graphics handshake plus drawing and BAML/window consumers
+pass again in shared and portable modes, with zero consumer warnings/errors.
+This gives six primary drawing-consumer executions across development, private
+and installed scopes.
+
+All 177 packaged DLL files are byte-identical between release 62 and release 63,
+including framework, reference, native, SDK and legacy desktop DLLs. A streaming
+archive comparison records every DLL hash in unchanged-dlls.json. Its initial
+reader closed the decompressor before trailing tar padding was drained; the final
+comparison drains that padding and succeeds. No native or managed framework rebuild
+is necessary for this gate-only release. It reuses the validated private source
+payload, and no prebuilt Microsoft renderer or shader compiler is introduced.
+
+The final artifact, exact scripts/logs, recipe, replay, DLL comparison and installed
+PNG examples are archived under
+`tmp/wpf8-support/validation/drawing-effects-package-20261014`:
+
+```text
+mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-63-any.pkg.tar.zst
+SHA-256: 1ec39c97b3145105049223518fcbf1e36dc7c5d4c54f0d0c2608137cb91adb04
+Bytes: 58942331
+```
+
+The downloaded hash matches the host and pacman reports 8.0.0-63. This establishes
+specific software drawing/effect behavior; it does not prove multimedia/hardware
+rendering or resolve the inherited WPP/SEH translation limitations. Aligned-field
+spacing, ink insertion, broader native conformance, complex margins, spelling
+reform, physical printing, WinForms8 metadata and current Greenshot dependencies
+remain unfinished. The full WPF goal stays active.
