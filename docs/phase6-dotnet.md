@@ -10536,3 +10536,58 @@ ABI scope remains 441 source-derived fields. Imported native coverage rises to
 complex figure collision/search/composite-line layouts, advanced span/row breaks,
 balancing/footnotes, optimal/interruptible algorithms and full bidi/native-language
 behavior remain incomplete. The full WPF goal stays active.
+
+## 163. Installed release 32: finite page updates
+
+The 2026-10-14 continuation packages section 162 as WindowsDesktop 8.0.0-32.
+Declared/checksummed 0032-finite-page-updates.patch follows the prior 31 patches.
+Clean pinned sources plus all patches reproduce the five committed feature files
+byte for byte; actual private package sources have matching hashes. Source and
+private trees rebuild native output/inventory/layout and pass finite-update
+identity/lifetime/rollback/continuation/section tests, 441 original ABI checks and
+paragraph/line regressions. Each tree passes all 20 offline WPF SDK consumer gates
+and retained interim WinForms checks. Unchanged managed/graphics/printing output
+remains the package workspace's own private source builds.
+
+Validation commands:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+# In the CLANG64 package workspace, with srcdir set to its src/ directory:
+makepkg --verifysource --force
+source PKGBUILD
+_wpf native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+makepkg --printsrcinfo > .SRCINFO
+makepkg --repackage --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-32-any.pkg.tar.zst
+/usr/bin/python3 check-staged.py /clang64/lib/dotnet
+bash "$(_driver)/wpf-tests/check-finite-updates-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-finite-update-sdk-check
+bash "$(_driver)/wpf-tests/check-pagination-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-finite-update-pagination-sdk-check
+pacman -Q mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap
+sha256sum mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-32-any.pkg.tar.zst
+```
+
+All final commands pass. Staged/installed checks cover 42 managed implementation/
+reference assemblies, eight native libraries, SDK tasks and interim WinForms
+versions. Installed original finite-page updates retain native identity through
+three real text edits in Ideal/Display, with/without columns. Longer edits change
+glyph raster and first-page source ranges; actual outgoing records resume the
+719-character document across three pages with every character once. The final
+19-character edit completes without an outgoing continuation. Original arrange,
+visual validation, page/record disposal and compacting GC pass. Ordinary installed
+pagination still completes six pages with all 1278 source characters exactly once
+and original GetPageNumber agreement, glyph raster and disposed-page regeneration.
+Shared-framework and self-contained consumers pass with SDK roots/toolchain PATH
+removed, zero warnings/errors. The existing srcdir provenance warning remains.
+
+Artifact: mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-32-any.pkg.tar.zst.
+SHA-256: 80776a7a31958c5fb49466692b67ccb179080893db887211e50440bdd3e2ff46.
+Recipe commit: msys2-ur f7a53b9; feature commit: eb28b2e.
+Source evidence is archived under tmp/wpf8-support/validation/finite-update-20261014.
+Artifact, recipe, metadata, patch, hashes and package/installed logs are archived
+under tmp/wpf8-support/validation/finite-update-package-20261014.
+Imported native coverage is 111/139 with 28 absent. Finite updates rebuild complete
+page layouts; selective incremental reuse and comparison/display transfer remain
+unfinished, alongside complex figure collision/search/composite-line layouts,
+advanced span/row breaks, balancing/footnotes, optimal/interruptible algorithms and
+full bidi/native-language behavior. The full WPF goal stays active.
