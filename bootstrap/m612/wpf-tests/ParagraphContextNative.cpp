@@ -40,6 +40,7 @@ static uint32_t page_direction=0,text_direction=0;
 static bool rtl_matrix=false;
 static bool attached_figure=false,figure_fail_properties=false,figure_fail_position=false,inside_figure=false;
 static int figure_alignment=0;
+static bool composite_long=false;
 static std::unordered_map<void*,void*> figure_content;
 static bool structural_line=false;
 static bool subpage_parent=false,table_mode=false,inside_table_cell=false,lose_table_cell=false;
@@ -109,10 +110,11 @@ static int WINAPI text_properties(void*,void* name,int,FSTXTPROPS* props){*props
 static int WINAPI line_format(void*,void*,void* name,int,int dcp,void* incoming,uint32_t direction,
     int start,int width,int track_start,int track_width,int margin,int hyphen,int left,int right,int first,int last,int suppress,
     void** line,int* consumed,void** br,int* forced,FSFLRES* result,int* ascent,int* descent,int* bbox,int* bbox_width,int* depend,int* reformat) {
-    if(!inside_figure&&(direction!=text_direction||(!attached_float&&!attached_figure&&(start!=track_start||width!=100))||(!rtl_matrix&&track_start!=10&&track_start!=120)||track_width!=100||margin!=track_start||hyphen||left||right||last||first!=(dcp==0)||bool(incoming)!=(dcp!=0)))return PTS_tserrInvalidParameter;
+    if(!inside_figure&&(direction!=text_direction||(!attached_float&&!attached_figure&&(start!=track_start||width!=100))||(!rtl_matrix&&track_start!=10&&track_start!=120)||track_width!=100||margin!=track_start||hyphen||left||right||last||first!=(dcp==0||(attached_figure&&figure_alignment==1&&dcp==5))||bool(incoming)!=(dcp!=0)))return PTS_tserrInvalidParameter;
     if(attached_float&&!inline_anchor_mode&&(!deferred_attachment||name==reinterpret_cast<void*>(102))&&(width!=(multiple_opposite?20:60)||start!=(attached_right?10:50)))return PTS_tserrInvalidParameter;
     ++lines_created;*line=reinterpret_cast<void*>(1000+lines_created);*br=reinterpret_cast<void*>(2000+lines_created);
     *consumed=5;*forced=0;*result=dcp==0?fsflrOutOfSpace:fsflrEndOfParagraph;*ascent=7;*descent=3;*bbox=start;*bbox_width=attached_figure?std::min(75,width):75;*depend=*reformat=0;
+    if(composite_long&&!inside_figure){*result=dcp+5>=30?fsflrEndOfParagraph:fsflrOutOfSpace;}
     if(inline_anchor_mode){if(start!=(width==100?10:50)||(width!=60&&width!=100))return PTS_tserrInvalidParameter;*consumed=std::min(5,10-dcp);if(inline_anchor_mode==2&&dcp==0&&width==60)*consumed=2;*result=dcp+*consumed==10?fsflrEndOfParagraph:fsflrOutOfSpace;}
     if(split_table_cells&&short_table_cell&&dcp==0)*result=fsflrEndOfParagraph;
     if(long_table_cell)*result=dcp+5>=45?fsflrEndOfParagraph:fsflrOutOfSpace;
@@ -570,6 +572,9 @@ int main(int argc,char** argv) {
         std::puts("native installed subpage objects: typed nested continuation, independent root/page lifetime, client ownership and lost-output callback rollback PASS");
         using QueryAttached=int(WINAPI*)(void*,void*,int,FSATTACHEDOBJECTDESCRIPTION*,int*);PROC(FsQueryAttachedObjectList,QueryAttached);
         using QueryFigure=int(WINAPI*)(void*,void*,FSFIGUREDETAILS*);PROC(FsQueryFigureObjectDetails,QueryFigure);
+        using QueryComposite=int(WINAPI*)(void*,void*,int,FSLINEDESCRIPTIONCOMPOSITE*,int*);using QueryElements=int(WINAPI*)(void*,void*,int,FSLINEELEMENT*,int*);
+        PROC(FsQueryLineListComposite,QueryComposite);PROC(FsQueryLineCompositeElementList,QueryElements);
+
         available_height=80;para_count=1;attached_figure=true;
         for(int alignment:{0,1,2}) {
             figure_alignment=alignment;reset_page_counts();
@@ -579,8 +584,34 @@ int main(int argc,char** argv) {
             require(FsQueryAttachedObjectList(context,paras[0].pfspara,1,&object,&actual_count)==0&&actual_count==1&&object.idobj==-2&&object.nmp==reinterpret_cast<void*>(301),"figure query exposes original source name and managed client");
             require(FsQueryFigureObjectDetails(context,object.pfspara,&figure_details)==0&&figure_details.fsrcFlowAround.u==10+30*alignment&&figure_details.fsrcFlowAround.v==20&&figure_details.fsrcFlowAround.du==40&&figure_details.fsrcFlowAround.dv==25,"actual left/center/right figure details agree with callback geometry");
             require(FsQueryFigureObjectDetails(reinterpret_cast<void*>(999),object.pfspara,&figure_details)==PTS_tserrInvalidQuery&&!figure_details.fsbbox.fDefined&&FsQueryFigureObjectDetails(context,object.pfspara,nullptr)==PTS_tserrNullOutputParameter,"figure query validates context and resets rejected output");
+            void* saved_composite=nullptr;
+            if(alignment==1){FSLINEDESCRIPTIONCOMPOSITE row{};FSLINEELEMENT elements[2]{};
+                require(FsQueryTextDetails(context,paras[0].pfspara,&text_details)==0&&text_details.u.full.fLinesComposite&&text_details.u.full.cLines==1,"centered rectangle creates one actual composite row rather than two vertical lines");
+                require(FsQueryLineListComposite(context,paras[0].pfspara,1,&row,&actual_count)==0&&actual_count==1&&row.cElements==2&&row.vrStart==20&&row.dvrAscent+row.dvrDescent==10&&row.fTreatedAsFirst,"composite row exposes source-defined aggregate metrics");saved_composite=row.pline;
+                require(FsQueryLineCompositeElementList(context,row.pline,2,elements,&actual_count)==0&&actual_count==2&&elements[0].dcpFirst==0&&elements[0].dcpLim==5&&elements[1].dcpFirst==5&&elements[1].dcpLim==10&&elements[0].urStart==10&&elements[1].urStart==80&&elements[0].dur==30&&elements[1].dur==30&&elements[1].pfsbreakreclineclient,"composite elements retain both source intervals, widths/origins and incoming break records");
+                require(FsQueryLineListComposite(context,paras[0].pfspara,0,&row,&actual_count)==PTS_tserrInvalidParameter&&!actual_count&&FsQueryLineCompositeElementList(context,saved_composite,1,elements,&actual_count)==PTS_tserrInvalidParameter&&!actual_count,"composite queries reject short arrays without partial count");
+                require(FsQueryLineCompositeElementList(reinterpret_cast<void*>(999),saved_composite,2,elements,&actual_count)==PTS_tserrInvalidQuery&&!actual_count&&FsQueryLineCompositeElementList(context,paras[0].pfspara,2,elements,&actual_count)==PTS_tserrInvalidQuery&&!actual_count&&FsQueryLineListSingle(context,paras[0].pfspara,2,lines,&actual_count)==PTS_tserrInvalidQuery&&!actual_count,"composite queries validate owner/native handle kind and prohibit misleading flat row queries");
+            }
             require(FsClearUpdateInfoInPage(context,page_handle)==0&&FsDestroyPage(context,page_handle)==0&&FsQueryFigureObjectDetails(context,object.pfspara,&figure_details)==PTS_tserrInvalidQuery&&figure_content.empty()&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"figure content/client/line resources release exactly once and stale handles reject");
+            if(saved_composite){FSLINEELEMENT elements[2]{};require(FsQueryLineCompositeElementList(context,saved_composite,2,elements,&actual_count)==PTS_tserrInvalidQuery&&!actual_count,"opaque composite row handles expire with the actual text owner");}
         }
+        figure_alignment=1;composite_long=true;reset_page_counts();
+        require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&!page_break&&FsQueryPageDetails(context,page_handle,&details)==0&&FsQueryTrackParaList(context,details.u.simple.trackdescr.pfstrack,2,paras,&actual_count)==0,"multiple composite rows format all source through the original callback");
+        FSLINEDESCRIPTIONCOMPOSITE composite_rows[3]{};FSLINEELEMENT composite_elements[2]{};
+        require(FsQueryTextDetails(context,paras[0].pfspara,&text_details)==0&&text_details.u.full.cLines==3&&text_details.u.full.dcpLim==30&&FsQueryLineListComposite(context,paras[0].pfspara,3,composite_rows,&actual_count)==0&&actual_count==3,"three real composite rows retain all thirty source units");
+        int composite_dcp=0;for(int row=0;row<3;++row){require(composite_rows[row].vrStart==20+row*10&&composite_rows[row].cElements==2&&FsQueryLineCompositeElementList(context,composite_rows[row].pline,2,composite_elements,&actual_count)==0&&actual_count==2,"row geometry advances once per composite row");for(const auto& element:composite_elements){require(element.dcpFirst==composite_dcp,"composite source intervals are contiguous across elements/rows");composite_dcp=element.dcpLim;}}
+        require(FsDestroyPage(context,page_handle)==0&&figure_content.empty()&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"all composite row elements and original figure content dispose once");
+        reset_page_counts();available_height=25;FSRECT composite_rect{10,20,100,25};FSCOLUMNINFO composite_column{0,100};
+        auto composite_page=[&](void* input){return create_subpage(context,input,input?1:0,reinterpret_cast<void*>(77),nullptr,0,1,0,200,140,&composite_rect,1,&composite_column,0,0,nullptr,nullptr,0,nullptr,nullptr,0,fsksuppresshardbreakbeforefirstparaPageAndColumn,&formatted,&page_handle,&page_break,&sub_used,&sub_box,&sub_margin,&sub_top);};
+        require(composite_page(nullptr)==0&&page_break&&FsQuerySubpageDetails(context,page_handle,&sub_details)==0&&FsQueryTrackParaList(context,sub_details.u.simple.trackdescr.pfstrack,2,paras,&actual_count)==0&&FsQueryTextDetails(context,paras[0].pfspara,&text_details)==0&&text_details.u.full.cLines==2&&text_details.u.full.dcpLim==20,"finite fit counts composite rows rather than individual elements");
+        int row_count=0,row_sum=0,row_min=0;uint32_t row_direction=99;
+        require(balance_page(context,page_handle,&row_direction,&row_count,&row_sum,&row_min)==0&&!row_direction&&row_count==2&&row_sum==20&&row_min==10,"balancing measurement counts two actual rows, not four formatted elements");
+        require(FsDuplicateSubpageBreakRecord(context,page_break,&clone)==0&&FsDestroySubpageBreakRecord(context,page_break)==0&&FsDestroySubpage(context,page_handle)==0,"independent composite continuation retains the last accepted element record after old page destruction");
+        require(composite_page(clone)==0&&!page_break&&FsQuerySubpageDetails(context,page_handle,&sub_details)==0&&FsQueryTrackParaList(context,sub_details.u.simple.trackdescr.pfstrack,2,paras,&actual_count)==0&&FsQueryTextDetails(context,paras[0].pfspara,&text_details)==0&&text_details.u.full.dcpFirst==20&&text_details.u.full.dcpLim==30&&text_details.u.full.cLines==2&&!text_details.u.full.fLinesComposite,"composite continuation resumes exact source and can return ordinary rows beyond the old obstacle");
+        require(FsDestroySubpageBreakRecord(context,clone)==0&&FsDestroySubpage(context,page_handle)==0&&figure_content.empty()&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"composite continuation and cloned owner clean up every original record once");available_height=80;
+        reset_page_counts();fail_line=4;
+        require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrCallbackException&&!page_handle&&!page_break&&figure_content.empty()&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"later composite element callback failure releases earlier elements and original figure pages");fail_line=-1;composite_long=false;
+        std::puts("native composite rows: source-derived queries/metrics, two actual intervals, row heights, exact fit/cloned resumes, contiguous CP/break records, short/foreign/stale/kind rejection and exact callback failure cleanup PASS");
         for(int failure:{0,1}) {
             figure_fail_properties=failure==0;figure_fail_position=failure==1;reset_page_counts();
             require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrCallbackException&&!page_handle&&!page_break&&figure_content.empty()&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"lost subpage and populated position failure clean up all speculative original resources");

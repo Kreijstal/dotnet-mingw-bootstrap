@@ -11076,3 +11076,83 @@ Imported native coverage is 117/139 with 22 absent; original paragraph ABI remai
 441 fields. General column spans, complex object/layout constraints, advanced
 bidi, footnotes, optimal/interruptible algorithms and complete native-language
 services remain unfinished. The WPF goal stays active.
+
+
+## 172. Rectangular composite text rows and original element queries
+
+The 2026-10-14 continuation implements FsQueryLineListComposite and
+FsQueryLineCompositeElementList and uses every permitted horizontal interval
+around rectangular obstacles. The native model retains original formatted
+clients and output/incoming line-break records per element, then groups them
+into actual rows. Composite descriptions and elements are generated from original
+PTS records, with no handwritten ABI substitute. Row metrics aggregate maximum
+ascent/descent and vertical progress occurs once per row. Logical row counts
+now drive pagination, widow/orphan fitting, forced progress, balancing measurements
+and keep-prefix constraints; each row retains contiguous element/source ranges.
+
+Original attached-object discovery can change permitted regions during formatting.
+A restricted/newly obstructed row retries from its original source and break
+record, releasing every provisional element. Valid narrowed intervals remain
+accepted when postponing an unconsumed anchor widens free space; restarting on
+widening would move source back into a postponed anchor's earlier row. Final
+row handles have context-owned weak registration and expire with the actual
+text owner. Queries retain the owner while copying source-defined fields and
+reject short/null arrays, wrong kinds and stale/foreign handles without partial
+counts. Simple-line queries reject composite paragraphs rather than presenting
+elements as separate vertical rows. Frame synchronization derives composite
+coordinates from the same shifted element records. Height aggregation and
+vertical advancement use checked integer bounds.
+
+Native checks verify a centered obstacle produces one row/two actual intervals
+(30-unit widths at U=10/80), contiguous CP=0..5..10, retained incoming records,
+row V=20 and height=10. Three rows retain all 30 source units and advance vertically
+only once each. A 25-unit finite subpage accepts two rows/four elements, reports
+balancing metrics 2/20/10, and clones its real continuation. The clone resumes
+CP=20..30 after the original page and wrapper are destroyed; the resumed text
+can return ordinary rows beyond the old obstacle. Later-element callback failure
+releases earlier elements and original figure content exactly once. All previous
+native paragraph cases pass. Original ABI verification expands from 441 to 470
+field sizes/offsets for the two additional source records; context/method/callback
+sizes remain 872/136/824.
+
+CompositeLines.cs uses public original FlowDocument/Figure pagination and the
+original ITextView. Ideal/Display and LTR/RTL scenarios cover ordinary and late
+inline anchors, nested figure content, mixed host font sizes, and narrow columns.
+The narrow-column figure's explicit height accommodates its wrapped content;
+clipped fixed-height figure overflow is outside this fixture. Documents complete
+three pages, or six with the larger host font. All 667/726 source characters have
+one real page-range owner and original GetPageNumber agreement. Centered figures
+render once, with actual dark glyphs on both sides across 44..52 raster pixel
+rows and no glyph overlap inside the obstacle. Each case performs 100 original
+caret/point queries; caret rectangles avoid the obstacle and point mapping
+returns content. Disposed-page regeneration and compacting GC preserve rendering.
+The offline SDK check executes the complete matrix twice through shared-framework
+and portable self-contained publication with SDK roots/toolchain PATH removed;
+builds have zero warnings/errors.
+
+Focused validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 inventory check-paragraph-context-native check-paragraph-context
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-paragraph-context-native check-paragraph-context
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-paragraph-context-native
+/usr/bin/python3 ~/wpfboot/refresh-finite-native.py
+MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-composite-lines-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/composite-sdk-check'
+```
+
+The final focused native/ABI and managed SDK checks pass. The full source
+regression also exits zero:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+```
+
+All 25 offline WPF SDK gates (the previous 24 plus composite lines), native
+paragraph/line and original ABI/lifecycle checks, and interim WinForms shared/
+self-contained consumers pass. Evidence is archived
+under tmp/wpf8-support/validation/composite-lines-20261014. Imported native coverage
+rises to 119/139 with 20 absent. This implements rectangular composite rows;
+polygon geometry, advanced composite optimizations, clipped figure overflow,
+complex object layouts, general column spans, footnotes, optimal/interruptible
+algorithms and complete native-language services remain unfinished. The WPF goal
+stays active.

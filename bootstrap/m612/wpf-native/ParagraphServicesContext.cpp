@@ -199,11 +199,14 @@ Continuation::~Continuation() {
 struct FigureData { FSFIGUREPROPS props{}; FSFIGUREDETAILS details{}; };
 struct ParaData;
 struct AttachedData { int anchor=0; FSFLOATERPROPS props{}; std::shared_ptr<ParaData> para; };
+struct CompositeLineData;
 struct TextData {
     std::shared_ptr<Context> context;
     explicit TextData(std::shared_ptr<Context> value):context(std::move(value)){++context->resources;}
     uint32_t direction=0;
     std::vector<FSLINEDESCRIPTIONSINGLE> lines;
+    std::vector<std::shared_ptr<CompositeLineData>> rows;
+    bool composite=false;
     // Output break records include the last record, which is not necessarily
     // referenced by another line. Retain each record exactly once.
     std::vector<std::shared_ptr<LineBreakData>> breaks;
@@ -218,6 +221,15 @@ struct TextData {
         --context->resources;
     }
 };
+struct CompositeLineData {
+    std::weak_ptr<TextData> owner;
+    size_t first=0,last=0;
+};
+FSLINEDESCRIPTIONCOMPOSITE describe_row(const TextData& text,const CompositeLineData& row) {
+    FSLINEDESCRIPTIONCOMPOSITE value{};value.pline=const_cast<CompositeLineData*>(&row);value.cElements=int(row.last-row.first);
+    value.vrStart=text.lines[row.first].vrStart;value.fTreatedAsFirst=text.lines[row.first].fTreatedAsFirst;
+    for(size_t i=row.first;i<row.last;++i){value.dvrAscent=std::max(value.dvrAscent,text.lines[i].dvrAscent);value.dvrDescent=std::max(value.dvrDescent,text.lines[i].dvrDescent);}return value;
+}
 struct FloaterData;
 void erase_floater(void* handle);
 struct FloaterData {
@@ -321,6 +333,7 @@ struct PageData {
 };
 std::unordered_map<void*,std::shared_ptr<TrackData>> tracks;
 std::unordered_map<void*,std::weak_ptr<TextData>> texts;
+std::unordered_map<void*,std::weak_ptr<CompositeLineData>> composite_lines;
 std::unordered_map<void*,std::weak_ptr<FloaterData>> floaters;
 std::unordered_map<void*,std::weak_ptr<ParaData>> figures;
 std::unordered_map<void*,std::shared_ptr<PageData>> pages;
@@ -331,7 +344,7 @@ std::unordered_map<void*,std::weak_ptr<TableRowData>> table_rows;
 void erase_table(void* handle){std::lock_guard<std::mutex> lock(gate);tables.erase(handle);}
 void erase_table_row(void* handle){std::lock_guard<std::mutex> lock(gate);table_rows.erase(handle);}
 void erase_section(void* handle){std::lock_guard<std::mutex> lock(gate);sections.erase(handle);}
-void erase_text(void* handle){std::lock_guard<std::mutex> lock(gate);texts.erase(handle);}
+void erase_text(void* handle){std::lock_guard<std::mutex> lock(gate);for(const auto& row:static_cast<TextData*>(handle)->rows)composite_lines.erase(row.get());texts.erase(handle);}
 void erase_floater(void* handle){std::lock_guard<std::mutex> lock(gate);floaters.erase(handle);}
 ParaData::~ParaData() {
     // Arranged original subpage clients own their subpage handle themselves.
@@ -551,7 +564,8 @@ int postpone_unconsumed_objects(TextData& text,const FSLINEDESCRIPTIONSINGLE& li
     }
     return 0;
 }
-int line_area(const TextData& text,const FSRECT& rect,int& used,int& u,int& width,int height_hint=0) {
+using LineInterval=std::pair<int,int>;
+int line_area(const TextData& text,const FSRECT& rect,int& used,int& u,int& width,int height_hint=0,std::vector<LineInterval>* areas=nullptr) {
     // Intersect every obstacle's permitted regions before choosing a contiguous
     // line interval. Choosing after each obstacle can discard a valid side.
     for(;;) {
@@ -573,9 +587,11 @@ int line_area(const TextData& text,const FSRECT& rect,int& used,int& u,int& widt
             intervals=std::move(remaining);
         }
         auto chosen=std::max_element(intervals.begin(),intervals.end(),[](const Interval& a,const Interval& b){return a.second-a.first<b.second-b.first;});
-        if(chosen!=intervals.end()&&chosen->second>chosen->first){u=int(chosen->first);width=int(chosen->second-chosen->first);return 0;}
+        if(chosen!=intervals.end()&&chosen->second>chosen->first){
+            if(areas){areas->clear();for(const auto& interval:intervals)if(interval.second>interval.first)areas->push_back({int(interval.first),int(interval.second-interval.first)});u=areas->front().first;width=areas->front().second;}
+            else {u=int(chosen->first);width=int(chosen->second-chosen->first);}return 0;}
         if(!active||next==INT32_MAX||next<rect.v)return PTS_tserrInvalidGeometry;
-        used=next-rect.v;
+        if(int64_t(next)-rect.v>INT32_MAX)return PTS_tserrInvalidGeometry;used=int(int64_t(next)-rect.v);
     }
 }
 
@@ -603,77 +619,63 @@ int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const F
         if(deferred){text->attached.clear();text->pending_floaters.clear();output=std::make_shared<Continuation>(*input);break;}
     }
     if(input&&input->text_ended)ended=true;
+    std::vector<size_t> row_ends;std::vector<int> row_heights;
+    auto discard_from=[&](size_t first){for(size_t i=first;i<text->lines.size();++i)if(text->lines[i].pfslineclient)reinterpret_cast<PtsDestroyLine>(cb.pfnDestroyLine)(client,text->lines[i].pfslineclient);text->lines.resize(first);text->breaks.resize(first);};
     while(!ended&&!deferred) {
-        int max_anchor=-1;FSRECT object_area=rect;object_area.v+=used;object_area.dv=std::max(0,rect.dv-used);
-        status=attached_before_line(para,dcp,direction,object_area,bottomless,force&&used==0,max_anchor,deferred);if(status)return status;
-        // No host line has consumed this anchor. Resume with its incoming
-        // line-break record, releasing speculative attached content below.
-        if(deferred)break;
-        int line_u=rect.u,line_width=rect.du;status=line_area(*text,rect,used,line_u,line_width,height_hint);if(status)return status;
-        text->lines.emplace_back();text->breaks.push_back(std::make_shared<LineBreakData>(context));
-        auto& line=text->lines.back();auto& br=text->breaks.back();
-        line.dcpFirst=dcp;line.urStart=line_u;line.dur=line_width;line.vrStart=rect.v+used;
-        line.pfsbreakreclineclient=previous?previous->handle:nullptr;line.fTreatedAsFirst=(dcp==props.dcpStartContent);
-        int consumed=0,dependent=0,reformat=0;FSFLRES result{};
-        status=reinterpret_cast<PtsFormatLine>(cb.pfnFormatLine)(client,para->desc.pfsparaclient,para->desc.nmp,0,dcp,line.pfsbreakreclineclient,direction,
-            line_u,line_width,rect.u,rect.du,rect.u,0,0,0,line.fTreatedAsFirst,0,used==0,
-            &line.pfslineclient,&consumed,&br->handle,&line.fForceBroken,&result,&line.dvrAscent,&line.dvrDescent,&line.urBBox,&line.durBBox,&dependent,&reformat);
-        if(status)return status;
-        if(!line.pfslineclient||consumed<=0||line.dvrAscent<0||line.dvrDescent<0||line.durBBox<0||int64_t(line.urBBox)+line.durBBox>INT32_MAX||int64_t(dcp)+consumed>INT32_MAX)return PTS_tserrInvalidClientOutput;
-        int64_t height=int64_t(line.dvrAscent)+line.dvrDescent;
-        // Structural-marker lines can consume source without visible height.
-        if(height<0||height>INT32_MAX-int64_t(rect.v)-used)return PTS_tserrInvalidGeometry;
-        line.dcpLim=dcp+consumed;
-        // Existing obstacles may have advanced the actual line vertically.
-        object_area.v=line.vrStart;object_area.dv=std::max(0,rect.dv-used);
-        status=attached_in_line(para,line,direction,object_area,bottomless,force&&used==0,max_anchor,deferred);if(status)return status;
-        if(!deferred)status=postpone_unconsumed_objects(*text,line,rect,bottomless,deferred);
-        if(status)return status;
-        if(deferred){
-            reinterpret_cast<PtsDestroyLine>(cb.pfnDestroyLine)(client,line.pfslineclient);line.pfslineclient=nullptr;
-            text->lines.pop_back();text->breaks.pop_back();break;
+        size_t row_first=text->lines.size();int row_dcp=dcp,row_used=used,row_ascent=0,row_descent=0;auto row_previous=previous;
+        bool first_in_para=dcp==props.dcpStartContent,retry=false;
+        std::vector<LineInterval> areas;int ignored_u=0,ignored_width=0,max_anchor=-1;
+        FSRECT object_area=rect;object_area.v+=used;object_area.dv=std::max(0,rect.dv-used);
+        status=attached_before_line(para,dcp,direction,object_area,bottomless,force&&used==0,max_anchor,deferred);if(status)return status;if(deferred)break;
+        status=line_area(*text,rect,used,ignored_u,ignored_width,height_hint,&areas);if(status)return status;row_used=used;
+        for(size_t cell=0;cell<areas.size()&&!ended;++cell) {
+            text->lines.emplace_back();text->breaks.push_back(std::make_shared<LineBreakData>(context));
+            auto& line=text->lines.back();auto& br=text->breaks.back();int line_u=areas[cell].first,line_width=areas[cell].second;
+            line.dcpFirst=dcp;line.urStart=line_u;line.dur=line_width;line.vrStart=rect.v+used;
+            line.pfsbreakreclineclient=previous?previous->handle:nullptr;line.fTreatedAsFirst=first_in_para;
+            int consumed=0,dependent=0,reformat=0;FSFLRES result{};
+            status=reinterpret_cast<PtsFormatLine>(cb.pfnFormatLine)(client,para->desc.pfsparaclient,para->desc.nmp,0,dcp,line.pfsbreakreclineclient,direction,
+                line_u,line_width,rect.u,rect.du,rect.u,0,0,0,line.fTreatedAsFirst,0,used==0,
+                &line.pfslineclient,&consumed,&br->handle,&line.fForceBroken,&result,&line.dvrAscent,&line.dvrDescent,&line.urBBox,&line.durBBox,&dependent,&reformat);
+            if(status)return status;
+            if(!line.pfslineclient||consumed<=0||line.dvrAscent<0||line.dvrDescent<0||line.durBBox<0||int64_t(line.urBBox)+line.durBBox>INT32_MAX||int64_t(dcp)+consumed>INT32_MAX)return PTS_tserrInvalidClientOutput;
+            row_ascent=std::max(row_ascent,line.dvrAscent);row_descent=std::max(row_descent,line.dvrDescent);int64_t height=int64_t(row_ascent)+row_descent;
+            if(height>INT32_MAX-int64_t(used)||height>INT32_MAX-int64_t(rect.v)-used)return PTS_tserrInvalidGeometry;
+            line.dcpLim=dcp+consumed;object_area.v=line.vrStart;object_area.dv=std::max(0,rect.dv-used);
+            status=attached_in_line(para,line,direction,object_area,bottomless,force&&used==0,max_anchor,deferred);if(status)return status;
+            if(!deferred)status=postpone_unconsumed_objects(*text,line,rect,bottomless,deferred);if(status)return status;
+            if(deferred)break;
+            int next_used=used;std::vector<LineInterval> next_areas;
+            status=line_area(*text,rect,next_used,ignored_u,ignored_width,int(height),&next_areas);if(status)return status;
+            bool constrained=false;for(const auto& area:areas)if(std::none_of(next_areas.begin(),next_areas.end(),[&](const LineInterval& next){return next.first<=area.first&&int64_t(next.first)+next.second>=int64_t(area.first)+area.second;})){constrained=true;break;}
+            if(next_used>used||constrained){used=next_used;height_hint=std::max(height_hint,int(height));retry=true;break;}
+            dcp=line.dcpLim;previous=br;
+            ended=result>=fsflrEndOfParagraph&&result<=fsflrEndOfParagraphClearBoth;
+            bool soft=result>=fsflrSoftBreak&&result<=fsflrSoftBreakClearBoth;
+            if(!ended&&result!=fsflrOutOfSpace&&result!=fsflrOutOfSpaceHyphenated&&!soft)return PTS_tserrNotImplemented;
+            if(soft)break;
         }
-        int next_used=used,next_u=line_u,next_width=line_width;
-        status=line_area(*text,rect,next_used,next_u,next_width,int(height));if(status)return status;
-        if(next_used>used||next_u>line_u||int64_t(next_u)+next_width<int64_t(line_u)+line_width){
-            reinterpret_cast<PtsDestroyLine>(cb.pfnDestroyLine)(client,line.pfslineclient);line.pfslineclient=nullptr;
-            text->lines.pop_back();text->breaks.pop_back();used=next_used;height_hint=std::max(height_hint,int(height));continue;
-        }
-        height_hint=0;
-        line.dcpLim=dcp+consumed;dcp=line.dcpLim;previous=br;
-        if(!overflow && height<=int64_t(rect.dv)-used)++fit;else overflow=true;
-        used+=int(height);
-        ended=result>=fsflrEndOfParagraph&&result<=fsflrEndOfParagraphClearBoth;
-        if(!ended&&result!=fsflrOutOfSpace&&result!=fsflrSoftBreak)return PTS_tserrNotImplemented;
-        if(ended || (!bottomless&&overflow&&int(text->lines.size())-fit>=std::max(1,props.cMinLinesAfterBreak)))break;
+        if(retry||deferred){discard_from(row_first);dcp=row_dcp;previous=row_previous;ended=false;if(deferred)break;continue;}
+        height_hint=0;int height=row_ascent+row_descent;
+        row_ends.push_back(text->lines.size());row_heights.push_back(height);
+        if(!overflow&&height<=int64_t(rect.dv)-row_used)++fit;else overflow=true;
+        used=row_used+height;
+        if(ended||(!bottomless&&overflow&&int(row_ends.size())-fit>=std::max(1,props.cMinLinesAfterBreak)))break;
     }
-    if(!bottomless && (fit<int(text->lines.size())||deferred)) {
-        // Lookahead is enough to preserve widow/orphan policy, without retaining
-        // speculative client lines in the formatted page or consuming their text.
+    if(!bottomless&&(fit<int(row_ends.size())||deferred)) {
         int fitting=fit;
-        if(ended && int(text->lines.size())-fit<props.cMinLinesAfterBreak)
-            fit=std::max(0,int(text->lines.size())-props.cMinLinesAfterBreak);
+        if(ended&&int(row_ends.size())-fit<props.cMinLinesAfterBreak)fit=std::max(0,int(row_ends.size())-props.cMinLinesAfterBreak);
         if(fit<props.cMinLinesBeforeBreak)fit=0;
         if(!fit&&force)fit=fitting;
-        if(!deferred&&!fit&&force&&!text->lines.empty()){fit=1;para->forced_progress=true;}
-        if(force&&fit<int(text->lines.size())) {
-            int64_t prefix_height=0;for(int index=0;index<fit;++index)prefix_height+=text->lines[index].dvrAscent+text->lines[index].dvrDescent;
-            // A structural-only prefix must not use up the forced-progress
-            // opportunity before the first real oversized line is accepted.
-            if(!prefix_height){++fit;para->forced_progress=true;}
-        }
-        // A new keep-together paragraph that does not fit the remaining area
-        // is deferred intact. At a fresh area, an oversized paragraph must
-        // still split so pagination makes progress rather than looping.
+        if(!deferred&&!fit&&force&&!row_ends.empty()){fit=1;para->forced_progress=true;}
+        if(force&&fit<int(row_ends.size())){int64_t prefix=0;for(int i=0;i<fit;++i)prefix+=row_heights[i];if(!prefix){++fit;para->forced_progress=true;}}
         if(props.fKeepTogether&&!force&&!input)fit=0;
-        if(fit<int(text->lines.size())||!ended) {
-            if(!output)output=std::make_shared<Continuation>();output->context=context;output->paragraph=para->desc.nmp;
-            output->dcp=fit?text->lines[fit-1].dcpLim:(input?input->dcp:props.dcpStartContent);
-            output->line_break=fit?text->breaks[fit-1]:text->incoming;
-        }
-        for(size_t i=fit;i<text->lines.size();++i)if(text->lines[i].pfslineclient)reinterpret_cast<PtsDestroyLine>(cb.pfnDestroyLine)(client,text->lines[i].pfslineclient);
-        text->lines.resize(fit);text->breaks.resize(fit);
+        size_t limit=fit?row_ends[fit-1]:0;
+        if(fit<int(row_ends.size())||!ended){if(!output)output=std::make_shared<Continuation>();output->context=context;output->paragraph=para->desc.nmp;
+            output->dcp=limit?text->lines[limit-1].dcpLim:(input?input->dcp:props.dcpStartContent);output->line_break=limit?text->breaks[limit-1]:text->incoming;}
+        discard_from(limit);row_ends.resize(fit);
     }
+    size_t first=0;for(size_t last:row_ends){auto row=std::make_shared<CompositeLineData>();row->owner=text;row->first=first;row->last=last;text->composite=text->composite||last-first>1;text->rows.push_back(row);first=last;}
     used=0;
     for(const auto& line:text->lines) {
         int height=line.dvrAscent+line.dvrDescent;used=std::max(used,line.vrStart-rect.v+height);
@@ -688,7 +690,7 @@ int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const F
         output->floaters=text->pending_floaters;
     }
     para->desc.pfspara=text.get();para->desc.dvrUsed=para->forced_progress?std::min(used,rect.dv):used;
-    {std::lock_guard<std::mutex> lock(gate);texts[text.get()]=text;}
+    {std::lock_guard<std::mutex> lock(gate);texts[text.get()]=text;if(text->composite)for(const auto& row:text->rows)composite_lines[row.get()]=row;}
     return 0;
 }
 
@@ -1142,7 +1144,7 @@ int measure_track(const std::shared_ptr<TrackData>& track,BalancingInfo& result)
     ++depth;struct Pop {int& value;~Pop(){--value;}} pop{depth};
     for(const auto& para:track->paras) {
         int status=0;
-        if(para->text){for(const auto& line:para->text->lines){int64_t height=int64_t(line.dvrAscent)+line.dvrDescent;if(height>INT32_MAX)return PTS_tserrInvalidGeometry;status=result.add(1,int(height),int(height));if(status)return status;}}
+        if(para->text){for(const auto& row:para->text->rows){auto value=describe_row(*para->text,*row);int64_t height=int64_t(value.dvrAscent)+value.dvrDescent;if(height>INT32_MAX)return PTS_tserrInvalidGeometry;status=result.add(1,int(height),int(height));if(status)return status;}}
         else if(para->desc.idobj==0||para->desc.idobj==1){auto fn=track->context->installed->methods[para->desc.idobj].pfnGetColumnBalancingInfo;if(!fn)return PTS_tserrInvalidParameter;
             int count=0,sum=0,minimum=0;status=reinterpret_cast<PtsObjGetColumnBalancingInfo>(fn)(para->desc.pfspara,para->direction,&count,&sum,&minimum);if(status)return status;status=result.add(count,sum,minimum);if(status)return status;}
         else if(para->floater){auto& value=*para->floater;auto fn=value.callbacks.pfnGetFloaterContentColumnBalancingInfo;if(!fn)return PTS_tserrInvalidParameter;
@@ -1163,7 +1165,7 @@ int required_track_height(const std::shared_ptr<TrackData>& track,int& height,in
         if(para->keep_together)height=std::max(height,para->desc.dvrUsed);
         if(para->keep_with_next){chain+=para->desc.dvrUsed;if(chain>INT32_MAX)return PTS_tserrInvalidGeometry;}
         else if(chain){int64_t following=para->desc.dvrUsed;
-            if(para->text&&!para->keep_together){following=para->desc.dvrTopSpace;size_t count=std::min(para->text->lines.size(),size_t(para->min_lines_before_break));for(size_t i=0;i<count;++i)following+=int64_t(para->text->lines[i].dvrAscent)+para->text->lines[i].dvrDescent;}
+            if(para->text&&!para->keep_together){following=para->desc.dvrTopSpace;size_t count=std::min(para->text->rows.size(),size_t(para->min_lines_before_break));for(size_t i=0;i<count;++i){auto row=describe_row(*para->text,*para->text->rows[i]);following+=int64_t(row.dvrAscent)+row.dvrDescent;}}
             chain+=following;if(chain>INT32_MAX)return PTS_tserrInvalidGeometry;height=std::max(height,int(chain));chain=0;}
         int status=0;
         if(para->desc.idobj==0){auto child=lookup_owned(tracks,track->context.get(),para->desc.pfspara);if(child)status=required_track_height(child,height,depth+1);}
@@ -1603,7 +1605,7 @@ extern "C" __declspec(dllexport) int WINAPI FsQueryTableObjCellList(void* contex
 }
 extern "C" __declspec(dllexport) int WINAPI FsQueryTextDetails(void* context,void* handle,FSTEXTDETAILS* output) {
     if(!output)return PTS_tserrNullOutputParameter;*output={};auto text=find_text(context,handle);if(!text)return PTS_tserrInvalidQuery;
-    output->fsktd=fsktdFull;auto& value=output->u.full;value.fswdir=text->direction;value.fsklines=fsklinesNormal;value.cLines=int(text->lines.size());
+    output->fsktd=fsktdFull;auto& value=output->u.full;value.fswdir=text->direction;value.fsklines=fsklinesNormal;value.cLines=int(text->rows.size());value.fLinesComposite=text->composite;
     value.cAttachedObjects=int(text->attached.size());
     if(!text->lines.empty()){value.dcpFirst=text->lines.front().dcpFirst;value.dcpLim=text->lines.back().dcpLim;}return 0;
 }
@@ -1614,8 +1616,23 @@ extern "C" __declspec(dllexport) int WINAPI FsQueryAttachedObjectList(void* cont
 }
 extern "C" __declspec(dllexport) int WINAPI FsQueryLineListSingle(void* context,void* handle,int capacity,FSLINEDESCRIPTIONSINGLE* output,int* count) {
     if(!count)return PTS_tserrNullOutputParameter;*count=0;auto text=find_text(context,handle);if(!text)return PTS_tserrInvalidQuery;
+    if(text->composite)return PTS_tserrInvalidQuery;
     if(capacity<0||capacity<int(text->lines.size())||(!output&&!text->lines.empty()))return PTS_tserrInvalidParameter;
     for(const auto& line:text->lines)output[(*count)++]=line;return 0;
+}
+extern "C" __declspec(dllexport) int WINAPI FsQueryLineListComposite(void* context,void* handle,int capacity,FSLINEDESCRIPTIONCOMPOSITE* output,int* count) {
+    if(!count)return PTS_tserrNullOutputParameter;*count=0;auto text=find_text(context,handle);if(!text||!text->composite)return PTS_tserrInvalidQuery;
+    if(capacity<0||size_t(capacity)<text->rows.size()||(!output&&!text->rows.empty()))return PTS_tserrInvalidParameter;
+    for(const auto& row:text->rows)output[(*count)++]=describe_row(*text,*row);return 0;
+}
+extern "C" __declspec(dllexport) int WINAPI FsQueryLineCompositeElementList(void* context,void* handle,int capacity,FSLINEELEMENT* output,int* count) {
+    if(!count)return PTS_tserrNullOutputParameter;*count=0;std::shared_ptr<TextData> text;std::shared_ptr<CompositeLineData> row;
+    {std::lock_guard<std::mutex> lock(gate);auto at=composite_lines.find(handle);if(contexts.find(context)==contexts.end()||at==composite_lines.end())return PTS_tserrInvalidQuery;row=at->second.lock();if(row)text=row->owner.lock();}
+    if(!text||text->context.get()!=context)return PTS_tserrInvalidQuery;
+    if(capacity<0||size_t(capacity)<row->last-row->first||(!output&&row->last!=row->first))return PTS_tserrInvalidParameter;
+    for(size_t i=row->first;i<row->last;++i){const auto& line=text->lines[i];auto& element=output[(*count)++];element={};
+        element.pfslineclient=line.pfslineclient;element.dcpFirst=line.dcpFirst;element.pfsbreakreclineclient=line.pfsbreakreclineclient;element.dcpLim=line.dcpLim;element.urStart=line.urStart;element.dur=line.dur;element.fAllowHyphenation=line.fAllowHyphenation;element.urBBox=line.urBBox;element.durBBox=line.durBBox;element.dvrAscent=line.dvrAscent;element.dvrDescent=line.dvrDescent;element.fClearOnLeft=line.fClearOnLeft;element.fClearOnRight=line.fClearOnRight;element.fForceBroken=line.fForceBroken;}
+    return 0;
 }
 extern "C" __declspec(dllexport) int WINAPI FsClearUpdateInfoInPage(void* context,void* handle) {
     auto page=lookup_owned(pages,context,handle);if(!page||page->subpage)return PTS_tserrInvalidQuery;
