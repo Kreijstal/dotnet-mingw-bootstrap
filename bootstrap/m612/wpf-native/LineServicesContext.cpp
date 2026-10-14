@@ -62,6 +62,7 @@ struct Line {
     Run terminator;
     bool has_terminator=false;
     bool justified=false;
+    int justification=0; // LsKJust.lskjFullInterWord
     std::shared_ptr<BreakPenalty> penalty;
     std::weak_ptr<ParaSession> penalty_session;
     bool detached_penalty=false;
@@ -186,6 +187,10 @@ int measure_run(Context& context,Run& run) {
                 capacity=actual;
             }
             if(!generated || actual<=0 || actual>capacity) return LS_InvalidCharToGlyphMapping;
+            // GlyphRun and the original placement/expansion callbacks require a
+            // zero-based, monotonic map entirely inside the actual glyph array.
+            if(run.clusters.empty()||run.clusters[0]!=0)return LS_InvalidCharToGlyphMapping;
+            for(size_t cp=0;cp<run.clusters.size();++cp)if(run.clusters[cp]>=actual||(cp&&run.clusters[cp]<run.clusters[cp-1]))return LS_InvalidCharToGlyphMapping;
             run.glyphs.resize(actual); run.glyph_properties.resize(actual);
             run.advances.resize(actual); run.offsets.resize(actual);
             run.expansion.resize(actual);
@@ -390,10 +395,25 @@ LsNeighborInfo neighbor(const Run* run,bool last) {
     return value;
 }
 
+struct SourceGraphemes {
+    std::vector<UChar> text;std::vector<int> logical{0};int first=0;
+    std::unique_ptr<UBreakIterator,decltype(&ubrk_close)> breaks{nullptr,ubrk_close};
+    int initialize(const Line& line) {
+        first=line.first;
+        // Reversal controls belong to the LS transport, not the Unicode source.
+        for(const auto& run:line.runs)if(!run.synthetic)for(WCHAR ch:run.text){if(!run.level_delta)text.push_back(ch);logical.push_back(int(text.size()));}
+        UErrorCode error=U_ZERO_ERROR;
+        breaks.reset(ubrk_open(UBRK_CHARACTER,"root",text.data(),int(text.size()),&error));
+        return U_FAILURE(error)||!breaks?LS_InvalidFormatterResult:LS_None;
+    }
+    bool boundary(int cp) const {return cp>=first&&size_t(cp-first)<logical.size()&&ubrk_isBoundary(breaks.get(),logical[cp-first]);}
+};
+
 int justify_line(Line& line,int target,int& total,int& trailing) {
     int64_t remaining=static_cast<int64_t>(target)-trailing;
     if(remaining<=0) return LS_None;
-    auto& context=*line.context;
+    auto& context=*line.context;bool mixed=line.justification==4; // LsKJust.lskjFullMixed
+    SourceGraphemes graphemes;if(mixed){int status=graphemes.initialize(line);if(status)return status;}
     if(std::any_of(line.runs.begin(),line.runs.end(),[](const Run& run) { return run.tab; }) &&
         std::any_of(context.tabs.begin(),context.tabs.end(),[](const LsTbd& stop) { return stop.lskt!=0; })) return LS_NotImplemented;
     int visible_cp=line.first;
@@ -434,16 +454,17 @@ int justify_line(Line& line,int target,int& total,int& trailing) {
             for(int level=0;level<3;++level) if(left[level][item]<0 || right[level][item]<0) return LS_InvalidFormatterResult;
         }
         for(size_t cp=0;cp<run.text.size() && run.cp+static_cast<int>(cp)<visible_cp;++cp) {
-            if(!u_isUWhiteSpace(run.text[cp])) continue;
-            size_t item=cp;
+            size_t end=cp+1,item=cp;
             if(run.shaped) {
-                if((cp && run.clusters[cp]==run.clusters[cp-1]) || (cp+1<run.text.size() && run.clusters[cp]==run.clusters[cp+1])) continue;
-                unsigned end=cp+1<run.text.size()?run.clusters[cp+1]:run.advances.size();
-                if(end<=run.clusters[cp] || end>run.advances.size()) return LS_InvalidCharToGlyphMapping;
-                item=end-1;
-                if(types[item]==0) continue;
-                if(types[item]!=1) return LS_NotImplemented;
+                if(cp&&run.clusters[cp]==run.clusters[cp-1])continue;
+                while(end<run.text.size()&&run.clusters[end]==run.clusters[cp])++end;
+                unsigned glyph_end=end<run.text.size()?run.clusters[end]:run.advances.size();
+                if(glyph_end<=run.clusters[cp]||glyph_end>run.advances.size())return LS_InvalidCharToGlyphMapping;
+                item=glyph_end-1;
             }
+            bool space=end==cp+1&&u_isUWhiteSpace(run.text[cp]);
+            if(!space&&(!mixed||run.cp+int(end)>=visible_cp||!graphemes.boundary(run.cp+int(end))))continue;
+            if(run.shaped){if(types[item]==0)continue;if(types[item]!=1)return LS_NotImplemented;}
             for(int side=0;side<2;++side) {
                 auto* capacities=side?right:left;
                 sites.push_back({&run,item,{capacities[0][item],capacities[1][item],capacities[2][item]},0,side==0,types[item]});
@@ -715,13 +736,7 @@ struct Cell {
 int text_cells(const Line& line,std::vector<Cell>& cells) {
     // Unicode text elements are properties of the complete retained line,
     // including when font/style/client buffers divide one grapheme.
-    std::vector<UChar> text;std::vector<int> logical{0};
-    // Reversal controls belong to the LS transport, not the Unicode source.
-    for(const auto& run:line.runs)if(!run.synthetic)for(WCHAR ch:run.text){if(!run.level_delta)text.push_back(ch);logical.push_back(int(text.size()));}
-    UErrorCode error=U_ZERO_ERROR;
-    auto* raw=ubrk_open(UBRK_CHARACTER,"root",text.data(),static_cast<int>(text.size()),&error);
-    if(U_FAILURE(error)||!raw)return LS_InvalidFormatterResult;
-    std::unique_ptr<UBreakIterator,decltype(&ubrk_close)> graphemes(raw,ubrk_close);
+    SourceGraphemes graphemes;int status=graphemes.initialize(line);if(status)return status;
     auto geometry=visual_runs(line);int x=line.widths.upStartMainText;
     for(size_t index=0;index<line.runs.size();++index) {
         const auto& run=line.runs[index];if(run.synthetic)continue;x=geometry.edge[index];int sign=run.flow==line.base_flow?1:-1;
@@ -761,7 +776,7 @@ int text_cells(const Line& line,std::vector<Cell>& cells) {
     for(size_t index=0;index<cells.size();++index) {
         Cell cell=cells[index];cell.flow=cell.run->flow;cell.level=cell.run->level;
         int left=cell.x-(cell.flow!=line.base_flow?cell.width:0),right=left+cell.width;
-        while(!ubrk_isBoundary(graphemes.get(),logical.at(cell.cp-line.first+cell.length))) {
+        while(!graphemes.boundary(cell.cp+cell.length)) {
             if(index+1>=cells.size())return LS_InvalidFormatterResult;
             const auto& next=cells[++index];
             if(next.cp!=cell.cp+cell.length)return LS_InvalidFormatterResult;
@@ -979,7 +994,7 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
         status=reinterpret_cast<FetchProps>(context->callbacks.pfnFetchLineProps)(context->info.pols,cp,cp==result->paragraph_first,&properties);
         if(status) return status;
         if((paragraph.fJustify && paragraph.lskj!=0 && paragraph.lskj!=4)) return LS_NotImplemented;
-        result->justified=paragraph.fJustify!=0;
+        result->justified=paragraph.fJustify!=0;result->justification=paragraph.lskj;
         int flow=paragraph.lstflow;
         if(flow!=0 && flow!=4) return LS_NotImplemented;
         result->base_flow=flow;if(!previous_break)result->initial_level=flow==4?1:0;int level=result->initial_level;

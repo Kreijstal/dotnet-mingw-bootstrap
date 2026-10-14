@@ -7,10 +7,11 @@
 #include "LineServicesNative.h"
 struct GlyphOffset { int32_t du,dv; };
 static std::wstring text=L"aa bb cc dd\u2029";
-static bool shaped=false;
+static bool shaped=false,mixed=false;
+static int map_failure=0,position_calls=0;
 static int failure=0,calls=0,draws=0;
 static void require(bool value,const char* why) { if(!value)throw std::runtime_error(why); }
-static int WINAPI pap(void*,int,LsPap* value) { *value={};value->grpf=0x40;value->fJustify=1;return 0; }
+static int WINAPI pap(void*,int,LsPap* value) { *value={};value->grpf=0x40;value->fJustify=1;value->lskj=mixed?4:0;return 0; }
 static int WINAPI props(void*,int,int,LsLineProps* value) { *value={};value->durLeft=4;value->durRightJustify=3;return 0; }
 static int WINAPI fetch(void*,int cp,int,void*,WCHAR* buffer,int,int* used,WCHAR**,int* count,int* hidden,LsChp* chp,uintptr_t* id) {
     if(cp<0 || cp>=static_cast<int>(text.size()))return LS_WrongGivenCp;
@@ -20,10 +21,10 @@ static int WINAPI fetch(void*,int cp,int,void*,WCHAR* buffer,int,int* used,WCHAR
 static int WINAPI metrics(void*,uint32_t,int,int,LsTxM* value) { *value={12,8,20,0};return 0; }
 static int WINAPI widths(void*,uint32_t,int,WCHAR*,int count,int,int,int* values,int* total,int* fitted) { *total=count*10;*fitted=count;for(int i=0;i<count;++i)values[i]=10;return 0; }
 static int WINAPI glyphs(void*,uintptr_t*,int*,int,WCHAR*,int count,int,uint16_t* indices,uint32_t* properties,int,int* used,uint16_t* clusters,uint16_t* chars,int* alone,int* actual) {
-    *used=1;*actual=count;for(int i=0;i<count;++i){indices[i]=i+20;properties[i]=0;clusters[i]=i;chars[i]=0;alone[i]=1;}return 0;
+    *used=1;*actual=count;for(int i=0;i<count;++i){indices[i]=i+20;properties[i]=0;clusters[i]=i;chars[i]=0;alone[i]=1;}if(map_failure==1)clusters[0]=1;if(map_failure==2)clusters[count-1]=count;if(map_failure==3&&count>2)clusters[2]=0;return 0;
 }
 static int WINAPI positions(void*,uintptr_t*,int*,int,int,WCHAR*,uint16_t*,uint16_t*,int,uint16_t*,uint32_t*,int count,int,int* advances,GlyphOffset* offsets) {
-    for(int i=0;i<count;++i){advances[i]=10;offsets[i]={};}return 0;
+    ++position_calls;for(int i=0;i<count;++i){advances[i]=10;offsets[i]={};}return 0;
 }
 static int fill(int count,int** left,int** right) {
     ++calls;if(failure==1)return LS_ClientAbort;
@@ -31,13 +32,13 @@ static int fill(int count,int** left,int** right) {
     if(failure==2)left[0][0]=-1;return 0;
 }
 static int WINAPI char_expand(void*,int device,int flow,LsCharRunInfo* run,LsNeighborInfo* left,LsNeighborInfo* right,int priorities,int** l,int** r) {
-    if(device||flow||priorities!=3||run->plsrun!=7||run->cwch!=6||run->pwch[2]!=' '||run->rgduNominalWidth[2]!=10||run->rgduChangeLeft[2]||run->rgduChangeRight[2]||left->fNeighborIsPresent||right->fNeighborIsPresent)return LS_ClientAbort;
-    return fill(run->cwch,l,r);
+    if(device||flow||priorities!=3||run->plsrun!=7||run->cwch!=6||run->pwch[2]!=text[2]||run->rgduNominalWidth[2]!=10||run->rgduChangeLeft[2]||run->rgduChangeRight[2]||left->fNeighborIsPresent||right->fNeighborIsPresent)return LS_ClientAbort;
+    int status=fill(run->cwch,l,r);if(mixed)for(int cp=0;cp<run->cwch;++cp)for(int level=0;level<2;++level)r[level][cp]=0;return status;
 }
 static int WINAPI glyph_expand(void*,int device,int flow,LsGlyphRunInfo* run,LsNeighborInfo*,LsNeighborInfo*,int priorities,int** l,int** r,uint8_t* types,int* ink) {
-    if(device||flow||priorities!=3||run->plsrun!=7||run->cwch!=6||run->cgindex!=6||run->pwch[2]!=' '||run->rggmap[2]!=2||run->rgduWidth[2]!=10||run->rggindex[2]!=22)return LS_ClientAbort;
+    if(device||flow||priorities!=3||run->plsrun!=7||run->cwch!=6||run->cgindex!=6||run->pwch[2]!=text[2]||run->rggmap[2]!=2||run->rgduWidth[2]!=10||run->rggindex[2]!=22)return LS_ClientAbort;
     for(int i=0;i<run->cgindex;++i){types[i]=1;ink[i]=0;}if(failure==3)types[2]=2;
-    return fill(run->cgindex,l,r);
+    int status=fill(run->cgindex,l,r);if(mixed)for(int cp=0;cp<run->cgindex;++cp)for(int level=0;level<2;++level)r[level][cp]=0;return status;
 }
 static int WINAPI draw_text(void*,uint32_t,LSPOINT*,WCHAR*,int* widths,int count,int,uint32_t,LSPOINT*,LsHeights*,int width,LSRECT*) {
     if(count!=6||widths[2]!=23||widths[5]!=10||width!=73)return LS_ClientAbort;++draws;return 0;
@@ -70,6 +71,23 @@ int main(int argc,char** argv) {
             failure=4;require(LoCreateLine(context,0,0,70,0,nullptr,&info,&line,&depth,&measured)==0&&measured.upStartTrailing==55,"provider capacity limits cannot be exceeded to forge column width");require(LoDisposeLine(line,FALSE)==0,"limited-capacity line disposal");failure=0;
             calls=0;require(LoCreateLine(context,0,0,200,0,nullptr,&info,&line,&depth,&measured)==0&&info.endr==2&&calls==0&&measured.upLimLine==114,"last paragraph line stays nominal and does not request expansion");require(LoDisposeLine(line,FALSE)==0,"last line disposal");
         }
+        for(bool mode:{false,true}) {
+            shaped=mode;text=L"abcdefgh ij\u2029";
+            for(bool kind:{false,true}) {
+                mixed=kind;calls=position_calls=0;
+                require(LoCreateLine(context,0,0,70,0,nullptr,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==6&&measured.upMinStartTrailing==64&&measured.upStartTrailing==(mixed?67:64),"mixed mode uses only emergency capacity while interword mode retains its ordinary no-space width");
+                LsQSubInfo sub{};LsTextCell cell{};
+                for(int cp=0;cp<6;++cp)require(LoQueryLineCpPpoint(line,cp,1,&sub,&depth,&cell)==0&&cell.dupCell==(mixed&&cp<3?11:10),"nominal and shaped emergency expansion preserves exact distributed caret advances");
+                require(LoDisposeLine(line,FALSE)==0,"mixed emergency line disposal");
+            }
+        }
+        mixed=false;shaped=true;text=L"aa bb cc dd\u2029";
+        for(int malformed:{1,2,3}) {
+            map_failure=malformed;position_calls=0;line=reinterpret_cast<void*>(1);
+            require(LoCreateLine(context,0,0,70,0,nullptr,&info,&line,&depth,&measured)==LS_InvalidCharToGlyphMapping&&!line&&position_calls==0,"invalid first/range/decreasing cluster maps fail before glyph placement with empty output");
+        }
+        map_failure=0;
+        std::puts("native mixed emergency expansion: nominal/glyph capacities, exact caret distribution, interword policy and invalid cluster isolation PASS");
         failure=3;line=reinterpret_cast<void*>(1);require(LoCreateLine(context,0,0,70,0,nullptr,&info,&line,&depth,&measured)==LS_NotImplemented&&!line,"unsupported ink expansion rejects without fabricated glyphs");
         require(LoDestroyContext(context)==0,"justification context teardown");
         std::puts("native nominal/glyph/neighbor ABI, exact justified geometry, original advances, trailing/minimum widths, priority limits, callback errors and final-line policy PASS");return 0;

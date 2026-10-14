@@ -66,8 +66,9 @@ The original nested query layouts are generated from LineServices.cs:
 LsQSubInfo 120 bytes and LsTextCell 40 bytes on x64. Public Indic leading/trailing
 hits, caret navigation, distances and selection rectangles pass after GC.
 Queries join graphemes across client-run boundaries, retaining each requested
-code point's source run metadata. Nonmonotonic glyph cluster maps and other
-advanced geometry still require further work.
+code point's source run metadata. Glyph maps must start at zero, remain monotonic and name actual glyphs, as
+required by the original GlyphRun and expansion/placement consumers. Malformed
+maps fail before glyph placement; other advanced geometry still needs work.
 
 LoDisplayLine obtains underline and strikethrough metrics through the original
 callbacks and draws each retained decorated run with its original identity,
@@ -168,3 +169,19 @@ style changes, tiny/full widths, Latin combining/Indic/emoji/flags. Forward/back
 carets, every interior code-unit query, hit testing, selection width, glyph source
 coverage, compacting GC and real raster output are checked, alongside ordinary
 same-run character carets. Shared and portable executions remain separate checks.
+
+FullMixed justification (original LsKJust value 4) accepts provider expansion
+capacity at nonfinal Unicode grapheme and complete glyph-cluster boundaries,
+including non-space boundaries. InterWord (value 0) retains whitespace eligibility.
+Shared source grapheme segmentation excludes internal reversal transport controls
+and prevents expansion inside a user-perceived character. The final visible
+non-space cluster receives no gap after it. Callback priority/capacity bounds,
+nominal advances and original glyph expansion types remain authoritative.
+
+Native assertions compare exact nominal/shaped mixed and interword geometry and
+reject malformed first/range/decreasing cluster maps before placement callbacks.
+The mixed SDK consumer checks optimal no-space Latin and Indic paragraphs in both
+formatting modes/directions, single/multiple columns, exact source/page completion,
+caret/point queries, real raster/GC, plus direct mixed/interword caret/selection
+comparisons. Full ink expansion, compression and other advanced algorithms remain
+unfinished.
