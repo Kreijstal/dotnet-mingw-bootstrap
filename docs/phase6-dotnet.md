@@ -11293,3 +11293,64 @@ to 122/139 with 17 absent; paragraph ABI remains 470 fields. Legacy spelling/NLS
 class objects, unsupported cultures and spelling-changing hyphens, advanced
 layout/bidi, general column spans, footnotes and optimal/interruptible algorithms
 remain unfinished. The WPF goal stays active.
+
+
+## 175. Installed release 38: source hyphenation and original pattern notices
+
+WindowsDesktop 8.0.0-38 is built, installed and validated on win11. Source feature
+commit 11514e6 is represented byte for byte by recipe patch 0038; all 92 feature
+and input files match the committed diff. Recipe commit 290f542 declares the
+patch/README hashes and adds the native resource check to check(). The private
+source regression exits zero after rebuilding native output, inventory and
+layout, original ABI/resource/line checks, all 26 offline WPF SDK gates and
+shared/self-contained interim WinForms consumers. All 41 locally available
+recipe source hashes match their declarations.
+
+Package validation on win11:
+
+```sh
+MSYSTEM=CLANG64 bash -lc '
+  set -e
+  cd ~/dotnetboot/packages/windowsdesktop-8.0.0
+  export srcdir=$PWD/src
+  source PKGBUILD
+  _wpf check-hyphenation-native
+  makepkg --printsrcinfo > .SRCINFO
+  makepkg --repackage --force --noconfirm
+  pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-38-any.pkg.tar.zst
+  /usr/bin/python3 check-staged.py /clang64/lib/dotnet
+  bash "$(_driver)/wpf-tests/check-hyphenation-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-hyphenation-sdk-check
+  bash "$(_driver)/wpf-tests/check-composite-lines-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-hyphenation-composite-sdk-check
+  pacman -Q mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap
+  sha256sum mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-38-any.pkg.tar.zst
+'
+/usr/bin/python3 ~/wpfboot/check-installed-hyphenation.py
+```
+
+Both commands exit zero. Installed payload validation verifies 42 managed
+implementations/references, native hashes, SDK tasks and retained interim versions.
+The installed hyphenation consumer runs all thirteen dictionary cultures,
+original TextFormatter inserted-glyph/source-length/caret checks and the public
+FlowDocument matrix (both modes, directions and left/justified paragraphs) in
+shared-framework and portable self-contained execution. The existing composite
+line consumer passes its geometry/raster/source/page/caret/regeneration/GC cases
+in both execution modes. Consumer builds have zero warnings/errors.
+
+The package carries the complete dictionary engine/pattern source, manifest,
+wrapper and generator under share/doc/dotnet-windowsdesktop-bootstrap/hyphenation,
+with original notices under share/licenses. The installed source audit verifies
+all 81 manifest hashes and 39 original notices. Its installed generator embeds
+all 36 dictionaries and recreates the actual build header byte for byte. Package
+license metadata includes MPL-1.1 and the per-dictionary pattern license reference.
+
+Evidence and artifact are archived under
+`tmp/wpf8-support/validation/hyphenation-package-20261014`:
+`mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-38-any.pkg.tar.zst`.
+SHA-256: 03b0e141db1da73c9a5a0d70552c06baee06e2824ca219d4e04a1f2fa089fca8.
+The local artifact hash matches the installed validation host's artifact.
+
+Imported native coverage is 122/139 with 17 absent; paragraph ABI remains 470
+fields. Legacy spelling/NLS, unsupported cultures and spelling-changing hyphens,
+general column spans, footnotes, optimal/interruptible formatting and advanced
+layout/bidi remain unfinished. This is an experimental WPF package; the broader
+WPF goal remains active.
