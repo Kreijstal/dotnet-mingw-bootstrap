@@ -588,6 +588,21 @@ int justify_objects(Line& line,int target,int& total,int& trailing,int* minimum_
     return LS_None;
 }
 
+// Publish metrics from the final retained runs for both direct lines and
+// optimal candidates after object remeasurement or inserted markers.
+int update_line_metrics(Line& line) {
+    line.info.dvpAscent=line.info.dvpDescent=line.info.dvpMultiLineHeight=0;
+    for(const auto& run:line.runs){line.info.dvpAscent=std::max(line.info.dvpAscent,run.metrics.dvAscent);line.info.dvpDescent=std::max(line.info.dvpDescent,run.metrics.dvDescent);line.info.dvpMultiLineHeight=std::max(line.info.dvpMultiLineHeight,run.metrics.dvMultiLineHeight);}
+    int64_t combined_height=int64_t(line.info.dvpAscent)+line.info.dvpDescent;
+    if(combined_height>INT_MAX)return LS_InvalidFormatterResult;
+    line.info.dvpMultiLineHeight=std::max(line.info.dvpMultiLineHeight,int(combined_height));
+    line.info.dvrAscent=line.info.dvpAscent;
+    line.info.dvrDescent=line.info.dvpDescent;
+    line.info.dvrMultiLineHeight=line.info.dvpMultiLineHeight;
+    if(line.runs.empty()) line.info.dvrMultiLineHeight=INT_MAX;
+    return LS_None;
+}
+
 struct BreakGeometry {
     std::vector<UChar> text;
     std::vector<int64_t> width{0};
@@ -1281,17 +1296,7 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
         if(minmax) {
             status=paragraph_widths(*result,total,trailing,minimum_total,minimum_trailing);if(status)return status;
         }
-        // Remeasurement can also change object ascent/descent, so publish only
-        // metrics from the final retained layout.
-        result->info.dvpAscent=result->info.dvpDescent=result->info.dvpMultiLineHeight=0;
-        for(const auto& run:result->runs){result->info.dvpAscent=std::max(result->info.dvpAscent,run.metrics.dvAscent);result->info.dvpDescent=std::max(result->info.dvpDescent,run.metrics.dvDescent);result->info.dvpMultiLineHeight=std::max(result->info.dvpMultiLineHeight,run.metrics.dvMultiLineHeight);}
-        int64_t combined_height=int64_t(result->info.dvpAscent)+result->info.dvpDescent;
-        if(combined_height>INT_MAX)return LS_InvalidFormatterResult;
-        result->info.dvpMultiLineHeight=std::max(result->info.dvpMultiLineHeight,int(combined_height));
-        result->info.dvrAscent=result->info.dvpAscent;
-        result->info.dvrDescent=result->info.dvpDescent;
-        result->info.dvrMultiLineHeight=result->info.dvpMultiLineHeight;
-        if(result->runs.empty()) result->info.dvrMultiLineHeight=INT_MAX;
+        status=update_line_metrics(*result);if(status)return status;
         result->info.cpLimToContinue=result->info.cpLimToStay=position;
         result->info.cpFirstVis=cp; result->info.fFirstLineInPara=cp==result->paragraph_first;
         result->widths.upLimLine=total; result->widths.upStartTrailing=trailing;
@@ -1432,6 +1437,7 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateBreaks(void* handle,int cp,v
                 visible=int64_t(trailing)-properties.durLeft;
             }
             if(!candidate.overflow && visible>available)return LS_None;
+            result=update_line_metrics(*line);if(result)return result;
             if(line->info.cpLimToContinue<=cp)return LS_InvalidFormatterResult;
             auto penalty=std::make_shared<BreakPenalty>();penalty->first=cp;penalty->next=line->info.cpLimToContinue;
             penalty->width=int(visible);penalty->target=int(available);penalty->forced=candidate.forced;

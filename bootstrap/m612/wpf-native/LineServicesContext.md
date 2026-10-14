@@ -253,3 +253,9 @@ failure/oscillation isolation and context reuse. Public checks cover Ideal/Displ
 normal and reconstructed lines, left tabs, fixed/flexible caching, actual nominal
 overflow/compression, exact raw-to-display endpoints, remaining width, atomic
 carets/point/source selection, raster, GC and callback failure/reuse.
+
+Optimal candidates recompute presentation/reference line heights from their final
+retained runs before publishing LsLInfo. This shares the direct-line metric step,
+so remeasured objects and inserted markers cannot retain prefetched ascent/descent.
+Native assertions check the published candidate's ascent, descent and both heights,
+alongside its already checked object cell and right edge.

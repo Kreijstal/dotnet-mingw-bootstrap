@@ -130,8 +130,9 @@ int main(int argc,char** argv) {
         require(LoCreateParaBreakingSession(context,0,200,nullptr,&session,&session_justified)==0&&session_justified,"dependent object paragraph session");
         LsBreaks candidates{};int best=0;
         require(LoCreateBreaks(context,0,nullptr,session,nullptr,&candidates,&best)==0,"dependent compressed candidate enumeration");
-        void* retained=nullptr;for(int at=0;at<candidates.cBreaks;++at)if(candidates.plslinfoArray[at].cpLimToContinue==16)retained=candidates.pplolineArray[at];
+        void* retained=nullptr;int retained_index=-1;for(int at=0;at<candidates.cBreaks;++at)if(candidates.plslinfoArray[at].cpLimToContinue==16){retained=candidates.pplolineArray[at];retained_index=at;}
         require(retained!=nullptr,"previously overflowing object candidate becomes feasible");
+        require(candidates.plslinfoArray[retained_index].dvpAscent==23&&candidates.plslinfoArray[retained_index].dvpDescent==8&&candidates.plslinfoArray[retained_index].dvpMultiLineHeight==31&&candidates.plslinfoArray[retained_index].dvrMultiLineHeight==31,"published candidate height uses final object metrics");
         require(LoQueryLineCpPpoint(retained,4,1,&compressed_sub,&depth,&compressed_cell)==0&&compressed_cell.pointUvStartCell.x==36&&compressed_cell.dupCell==82,"candidate settles actual dependent object measurement");
         require(LoQueryLineCpPpoint(retained,14,1,&compressed_sub,&depth,&compressed_cell)==0&&compressed_cell.pointUvStartCell.x==190&&compressed_cell.dupCell==10,"settled candidate ends at its real justified column");
         for(int at=0;at<candidates.cBreaks;++at)require(LoDisposeLine(candidates.pplolineArray[at],FALSE)==0,"dispose dependent candidates");
