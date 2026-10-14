@@ -259,3 +259,18 @@ retained runs before publishing LsLInfo. This shares the direct-line metric step
 so remeasured objects and inserted markers cannot retain prefetched ascent/descent.
 Native assertions check the published candidate's ascent, descent and both heights,
 alongside its already checked object cell and right edge.
+
+Compression capacities reported at the last glyph of a single-character space
+cover the whole shaped cluster. Both sides share the cluster's total advance;
+removal walks from the requested edge across glyphs, skipping zero advances,
+without creating new negative advances. Original glyphs/maps/nominal advances and
+trailing whitespace remain intact. Minimum widths use the same complete budget.
+
+Native fixtures cover two/three-glyph spaces, zero-width edge glyphs, both sides,
+exact source caret cells/minima/drawing and capacity exhaustion. The public SDK
+fixture builds a tiny TrueType/OpenType font from Python standard-library source.
+Its ccmp substitution maps one space to two blank glyphs; a visible Devanagari
+consonant exercises the actual shaping path. No binary font is a source input or
+installed system font. Ideal/Display checks verify real cluster counts, compression
+beyond the last glyph's width, source/glyph preservation, nonnegative advances,
+caret/point/selection, raster and compacting GC in shared/portable execution.

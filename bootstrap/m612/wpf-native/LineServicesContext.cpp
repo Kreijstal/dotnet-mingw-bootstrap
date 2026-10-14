@@ -445,7 +445,7 @@ int justify_line(Line& line,int target,int& total,int& trailing,int* minimum_tot
         while(count && (run->text[count-1]==L' ' || run->text[count-1]==0xa0)) { --count; --visible_cp; }
         if(count) break;
     }
-    struct Opportunity { Run* run; size_t index; int capacity[3]; int added; bool left; uint8_t type; std::shared_ptr<int> budget; };
+    struct Opportunity { Run* run; size_t first,index; int capacity[3]; int added; bool left; uint8_t type; std::shared_ptr<int> budget; };
     std::vector<Opportunity> sites;
     for(size_t index=begin;index<line.runs.size();++index) {
         auto& run=line.runs[index];
@@ -476,23 +476,27 @@ int justify_line(Line& line,int target,int& total,int& trailing,int* minimum_tot
             for(int level=0;level<3;++level) if(left[level][item]<0 || right[level][item]<0) return LS_InvalidFormatterResult;
         }
         for(size_t cp=0;cp<run.text.size() && run.cp+static_cast<int>(cp)<visible_cp;++cp) {
-            size_t end=cp+1,item=cp;
+            size_t end=cp+1,item=cp,first=cp;
             if(run.shaped) {
                 if(cp&&run.clusters[cp]==run.clusters[cp-1])continue;
                 while(end<run.text.size()&&run.clusters[end]==run.clusters[cp])++end;
                 unsigned glyph_end=end<run.text.size()?run.clusters[end]:run.advances.size();
                 if(glyph_end<=run.clusters[cp]||glyph_end>run.advances.size())return LS_InvalidCharToGlyphMapping;
-                item=glyph_end-1;
+                first=run.clusters[cp];item=glyph_end-1;
             }
             bool space=end==cp+1&&u_isUWhiteSpace(run.text[cp]);
             if(!space&&(compress||!mixed||run.cp+int(end)>=visible_cp||!graphemes.boundary(run.cp+int(end))))continue;
             if(run.shaped){if(types[item]==0)continue;if(types[item]!=1)return LS_NotImplemented;}
-            // Both sides share the same physical advance. Provider capacities
-            // cannot remove it twice or produce a negative glyph advance.
-            auto budget=std::make_shared<int>(compress?std::max(0,run.shaped?run.advances[item]:run.widths[item]):INT_MAX);
+            // WPF reports a space cluster's capacity at its last glyph, but
+            // that capacity covers all glyph advances in the cluster. Both
+            // sides share the physical cluster budget.
+            int64_t available=run.shaped?0:run.widths[item];
+            if(compress&&run.shaped)for(size_t glyph=first;glyph<=item;++glyph)available+=run.advances[glyph];
+            if(compress&&available>INT_MAX)return LS_InvalidFormatterResult;
+            auto budget=std::make_shared<int>(compress?int(std::max<int64_t>(0,available)):INT_MAX);
             for(int side=0;side<2;++side) {
                 auto* capacities=side?right:left;
-                sites.push_back({&run,item,{capacities[0][item],capacities[1][item],capacities[2][item]},0,side==0,types[item],budget});
+                sites.push_back({&run,first,item,{capacities[0][item],capacities[1][item],capacities[2][item]},0,side==0,types[item],budget});
             }
         }
     }
@@ -527,6 +531,22 @@ int justify_line(Line& line,int target,int& total,int& trailing,int* minimum_tot
     for(const auto& site:sites) if(site.added) {
         auto& run=*site.run;
         if(run.shaped && run.nominal_advances.empty()) run.nominal_advances=run.advances;
+        if(compress&&run.shaped) {
+            int remaining=site.added;
+            if(run.width<remaining)return LS_InvalidFormatterResult;
+            for(size_t step=0;step<=site.index-site.first;++step) {
+                size_t glyph=site.left?site.first+step:site.index-step;
+                int amount=std::min(remaining,std::max(0,run.advances[glyph]));
+                run.advances[glyph]-=amount;run.expansion[glyph]=0;remaining-=amount;
+                if(site.left&&amount) {
+                    if(int64_t(run.offsets[glyph].du)-amount<INT_MIN)return LS_InvalidFormatterResult;
+                    run.offsets[glyph].du-=amount;
+                }
+                if(!remaining)break;
+            }
+            if(remaining)return LS_InvalidFormatterResult;
+            run.width-=site.added;continue;
+        }
         int& advance=run.shaped?run.advances[site.index]:run.widths[site.index];
         int delta=direction*site.added;
         if(static_cast<int64_t>(advance)+delta>INT_MAX || static_cast<int64_t>(run.width)+delta>INT_MAX) return LS_InvalidFormatterResult;

@@ -12,6 +12,7 @@ static int map_failure=0,position_calls=0;
 static int failure=0,calls=0,draws=0;
 static bool compress_mode=false,compress_both=false;
 static int compression_failure=0,compression_calls=0;
+static int space_glyphs=1,space_tail=1;
 static void require(bool value,const char* why) { if(!value)throw std::runtime_error(why); }
 static int WINAPI pap(void*,int,LsPap* value) { *value={};value->grpf=0x40;value->fJustify=1;value->lskj=mixed?4:0;return 0; }
 static int WINAPI props(void*,int,int,LsLineProps* value) { *value={};value->durLeft=4;value->durRightJustify=3;return 0; }
@@ -22,10 +23,12 @@ static int WINAPI fetch(void*,int cp,int,void*,WCHAR* buffer,int,int* used,WCHAR
 }
 static int WINAPI metrics(void*,uint32_t,int,int,LsTxM* value) { *value={12,8,20,0};return 0; }
 static int WINAPI widths(void*,uint32_t,int,WCHAR*,int count,int,int,int* values,int* total,int* fitted) { *total=count*10;*fitted=count;for(int i=0;i<count;++i)values[i]=10;return 0; }
-static int WINAPI glyphs(void*,uintptr_t*,int*,int,WCHAR*,int count,int,uint16_t* indices,uint32_t* properties,int,int* used,uint16_t* clusters,uint16_t* chars,int* alone,int* actual) {
+static int WINAPI glyphs(void*,uintptr_t*,int*,int,WCHAR* characters,int count,int,uint16_t* indices,uint32_t* properties,int,int* used,uint16_t* clusters,uint16_t* chars,int* alone,int* actual) {
+    if(space_glyphs>1){*used=1;*actual=0;for(int cp=0;cp<count;++cp){clusters[cp]=*actual;chars[cp]=0;alone[cp]=1;int n=characters[cp]==L' '?space_glyphs:1;for(int i=0;i<n;++i){indices[*actual]=20+*actual;properties[*actual]=0;++*actual;}}return 0;}
     *used=1;*actual=count;for(int i=0;i<count;++i){indices[i]=i+20;properties[i]=0;clusters[i]=i;chars[i]=0;alone[i]=1;}if(map_failure==1)clusters[0]=1;if(map_failure==2)clusters[count-1]=count;if(map_failure==3&&count>2)clusters[2]=0;return 0;
 }
-static int WINAPI positions(void*,uintptr_t*,int*,int,int,WCHAR*,uint16_t*,uint16_t*,int,uint16_t*,uint32_t*,int count,int,int* advances,GlyphOffset* offsets) {
+static int WINAPI positions(void*,uintptr_t*,int*,int,int,WCHAR* characters,uint16_t* clusters,uint16_t*,int chars,uint16_t*,uint32_t*,int count,int,int* advances,GlyphOffset* offsets) {
+    if(space_glyphs>1){++position_calls;for(int cp=0;cp<chars;++cp){int n=characters[cp]==L' '?space_glyphs:1;for(int i=0;i<n;++i){int glyph=clusters[cp]+i;advances[glyph]=n==1?10:i==n-1?space_tail:n==2?10-space_tail:i==0?4:6-space_tail;offsets[glyph]={};}}return 0;}
     ++position_calls;for(int i=0;i<count;++i){advances[i]=10;offsets[i]={};}return 0;
 }
 static int fill(int count,int** left,int** right) {
@@ -55,6 +58,7 @@ static int WINAPI char_compress(void*,int device,int flow,LsCharRunInfo* run,LsN
     return compression_fill(run->cwch,left,right);
 }
 static int WINAPI glyph_compress(void*,int device,int flow,LsGlyphRunInfo* run,LsNeighborInfo*,LsNeighborInfo*,int priorities,int** left,int** right) {
+    if(space_glyphs>1){if(device||flow||priorities!=3||run->plsrun!=7)return LS_ClientAbort;int status=compression_fill(run->cgindex,left,right);if(status)return status;for(int level=0;level<3;++level)for(int cp=0;cp<run->cwch;++cp){int first=run->rggmap[cp],end=cp+1<run->cwch?run->rggmap[cp+1]:run->cgindex;for(int glyph=first;glyph<end;++glyph)if(run->pwch[cp]!=L' '||glyph!=end-1)left[level][glyph]=right[level][glyph]=0;}return 0;}
     if(device||flow||priorities!=3||run->plsrun!=7||run->cwch!=run->cgindex)return LS_ClientAbort;
     return compression_fill(run->cgindex,left,right);
 }
@@ -62,7 +66,8 @@ static int WINAPI draw_text(void*,uint32_t,LSPOINT*,WCHAR*,int* widths,int count
     if(compress_mode){if(count!=9||widths[2]!=4||widths[5]!=4||widths[8]!=10||width!=78)return LS_ClientAbort;++draws;return 0;}
     if(count!=6||widths[2]!=23||widths[5]!=10||width!=73)return LS_ClientAbort;++draws;return 0;
 }
-static int WINAPI draw_glyphs(void*,uint32_t,WCHAR*,uint16_t*,uint16_t*,int count,uint16_t*,int* justified,int* nominal,GlyphOffset* offsets,uint32_t*,uint8_t* types,int,int,uint32_t,LSPOINT*,LsHeights*,int width,LSRECT*) {
+static int WINAPI draw_glyphs(void*,uint32_t,WCHAR*,uint16_t*,uint16_t*,int count,uint16_t*,int* justified,int* nominal,GlyphOffset* offsets,uint32_t*,uint8_t* types,int glyph_count,int,uint32_t,LSPOINT*,LsHeights*,int width,LSRECT*) {
+    if(space_glyphs>1){if(count!=9||glyph_count!=9+3*(space_glyphs-1)||width!=78)return LS_ClientAbort;int at=0;for(int cp=0;cp<9;++cp){int n=text[cp]==L' '?space_glyphs:1,sum=0,shift=0;for(int i=0;i<n;++i,++at){int original=n==1?10:i==n-1?space_tail:n==2?10-space_tail:i==0?4:6-space_tail;if(nominal[at]!=original||justified[at]<0||types[at]!=0)return LS_ClientAbort;sum+=justified[at];shift+=offsets[at].du;}if(sum!=(cp==2||cp==5?4:10)||shift!=((cp==2||cp==5)&&compress_both?-3:0))return LS_ClientAbort;}++draws;return 0;}
     if(compress_mode){if(count!=9||justified[2]!=4||justified[5]!=4||justified[8]!=10||nominal[2]!=10||nominal[5]!=10||types[2]!=0||width!=78||offsets[2].du!=(compress_both?-3:0))return LS_ClientAbort;++draws;return 0;}
     if(count!=6||justified[2]!=23||nominal[2]!=10||types[2]!=1||width!=73)return LS_ClientAbort;++draws;return 0;
 }
@@ -157,6 +162,17 @@ int main(int argc,char** argv) {
             mixed=true;require(LoCreateLine(context,0,12,110,0,nullptr,&info,&line,&depth,&measured)==0&&info.endr==2&&measured.upStartTrailing==107,"selected terminal optimal line can compress instead of overflowing");require(LoDisposeLine(line,FALSE)==0,"terminal compression disposal");
         }
         std::puts("native mixed compression: exact nominal/shaped/left-right geometry, priorities/minima, original drawing advances, capacity floors, terminal reconstruction and failure isolation PASS");
+        shaped=mixed=true;compress_mode=true;
+        for(int n:{2,3})for(int tail:{0,1})for(bool both:{false,true}) {
+            space_glyphs=n;space_tail=tail;compress_both=both;draws=0;
+            require(LoCreateLine(context,0,9,75,0,nullptr,&info,&line,&depth,&measured)==0&&measured.upStartTrailing==72&&measured.upLimLine==82&&measured.upMinStartTrailing==(both?64:68),"whole multi-glyph space budget reaches exact compression and minima");
+            LsQSubInfo sub{};LsTextCell cell{};require(LoQueryLineCpPpoint(line,2,1,&sub,&depth,&cell)==0&&cell.dupCell==4&&cell.cGlyphsInCell==n&&cell.cCharsInCell==1,"one source space keeps its complete compressed multi-glyph caret cell");
+            require(LoQueryLineCpPpoint(line,3,1,&sub,&depth,&cell)==0&&cell.pointUvStartCell.x==28,"following text moves by full multi-glyph compression");
+            LSPOINT origin{0,12};LSRECT clip{-100,-100,1000,1000};require(LoDisplayLine(line,&origin,1,&clip)==0&&draws==1,"multi-glyph drawing preserves nominal advances, nonnegative actual advances, side offsets and trailing whitespace");require(LoDisposeLine(line,FALSE)==0,"multi-glyph disposal");
+            compression_failure=3;require(LoCreateLine(context,0,9,47,0,nullptr,&info,&line,&depth,&measured)==0&&measured.upStartTrailing==64&&measured.upMinStartTrailing==64,"excess multi-glyph capacity cannot remove one cluster twice");require(LoDisposeLine(line,FALSE)==0,"multi-glyph floor disposal");compression_failure=0;
+        }
+        space_glyphs=1;
+        std::puts("native multi-glyph space compression: two/three glyphs, zero edge advances, both sides, exact caret/minima/drawing and shared physical floor PASS");
         require(LoDestroyContext(context)==0,"justification context teardown");
         std::puts("native nominal/glyph/neighbor ABI, exact justified geometry, original advances, trailing/minimum widths, priority limits, callback errors and final-line policy PASS");return 0;
     } catch(const std::exception& e){std::printf("FAIL: %s\n",e.what());return 1;}
