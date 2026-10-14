@@ -13594,3 +13594,103 @@ Nonmonotonic glyph maps, noncontiguous cells, full bidi/optimizer/native layout
 conformance, complex margins, spelling reform and physical printing remain
 unfinished. WinForms8 metadata generation and current Greenshot's net480/source
 dependency requirements remain open. The WPF packaging goal stays active.
+
+
+## 212. Installed release 56: optimal mixed emergency expansion
+
+The 2026-10-14 continuation implements provider-controlled inter-letter expansion
+for optimal FullMixed justification in source commite926827 and installs
+WindowsDesktop8.0.0-56 from msys2-ur recipe commit5e8dbd1.
+The public baseline's no-space optimal paragraph never fills a nonfinal justified
+line. Original LineServicesCallbacks supplies emergency capacity at priority2, but
+the native formatter only admitted whitespace opportunities.
+
+The native line retains the original LsKJust mode: FullMixed is4 and InterWord is0.
+FullMixed now admits the provider's non-space capacities only at complete Unicode
+grapheme and glyph-cluster boundaries before the last visible cluster. InterWord
+keeps whitespace eligibility. Existing priority limits, capacity bounds, original
+advances, expansion types and final/hard-break policy remain authoritative.
+The shared SourceGraphemes helper excludes internal reversal transport controls
+from segmentation and is also used by caret-cell construction.
+
+A related audit corrects a previous design-note gap: original GlyphRun requires
+cluster maps to begin at zero, remain monotonic and stay within actual glyphs.
+Nonmonotonic maps are malformed input, not a feature to add. Native shaping now
+checks these requirements before invoking glyph placement. The source contract is
+in upstream PresentationCore/System/Windows/Media/GlyphRun.cs.
+
+Native assertions compare exact nominal and shaped FullMixed/InterWord geometry:
+only emergency provider capacity fills the no-space line, distributed caret
+advances are exact, and InterWord retains nominal width. Invalid first, out-of-range
+and decreasing cluster maps return InvalidCharToGlyphMapping with empty line output
+and zero placement calls. Existing priority/capacity/error/final-line, line/bidi/tab/
+caret/record tests pass.
+
+The new required SDK consumer checks16 optimal paragraph cases and two direct
+mode comparisons per execution: Ideal/Display, LTR/RTL, no-space Latin/Indic,
+single/multiple columns, exact width for every nonfinal line, exact source/page
+completion, caret/point queries, real raster and compacting GC. Direct reconstruction
+fills133 pixels, while regular InterWord formatting remains ragged on the same
+no-space text; caret and selection bounds match133. The consumer runs shared and
+portable, giving36 new scenarios per scope. Development, private and installed
+scopes pass108 new scenarios total. Registered WPF SDK consumers increase to41.
+
+Exact final focused development build/check commands (terminal exit0):
+
+```sh
+MSYSTEM=CLANG64 WPF_SOURCE=$HOME/dotnetboot/m612/src/wpf-8.0.0 WPF_BUILD=$HOME/wpfboot/build bash -lc 'bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32'
+MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/mixed-justification-check-development.sh'
+MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-mixed-justification-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/build/mixed-justification-sdk-check'
+```
+
+Final development logs, exact script and baseline are archived under
+`validation/mixed-justification-20261014`. Temporary mode tracing is absent from
+committed source and the final private/installed log.
+
+Exact package/private/installed command (terminal exit0):
+
+```sh
+MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/mixed-justification-package-and-check.sh'
+```
+
+The private pinned source tree applies patch0056 and runs:
+
+```sh
+_wpf native-win32 inventory check-lineservices-line-native check-justification-native check-paragraph-context layout
+```
+
+The native DLL rebuilds from this private source tree. All482 original ABI field
+sizes/offsets pass. Refreshed SDK consumers for mixed justification, existing optimal
+scoring/reconstruction, regular justification/TextBlock, cross-run carets,
+paragraph widths/FormattedText and BAML/window behavior all pass shared and portable
+execution. The changed native payload is never copied from the installed SDK.
+This is focused regression validation; the historical full37-consumer suite is
+section205, with later added consumers verified in their respective sections.
+
+Normal dependency-checked makepkg --repackage creates the package, pacman installs
+it, and the42-pair managed/reference/native hash and SDK payload audit passes.
+Installed mixed and BAML/window consumers pass again in shared/portable execution.
+The combined final log has64 new optimal paragraph scenarios plus48 original
+optimal paragraph regressions, eight direct mixed/interword comparisons and four
+BAML/window executions. Native required export coverage remains133/139; the six
+missing declarations remain disabled upstream by #if NEVER.
+
+Clean replay of all56 recipe patches matches all six committed feature files.
+All63 source/hash declarations pass on the host; all59 locally available inputs
+match. Patch0056 SHA-256:
+5a070d35848f58974fc37b21727d84f4ade5d2d05d14340172b53306856119ab.
+
+Artifact and exact final logs/scripts/recipe/replay/inventory are archived under
+`tmp/wpf8-support/validation/mixed-justification-package-20261014`:
+
+```text
+mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-56-any.pkg.tar.zst
+SHA-256: 2fcc05db896ed5bcceb55bd965c8163a17d5e7648aa22d7e529c446df147629a
+Bytes: 58932000
+```
+
+The downloaded hash matches the host and pacman reports8.0.0-56. Full compression,
+ink insertion, aligned-tab justification, noncontiguous cells, broader bidi/native
+layout/optimizer conformance, complex margins, spelling reform and physical
+printing remain unfinished. WinForms8 metadata generation and current Greenshot's
+net480/source dependency requirements remain open. The WPF packaging goal is active.
