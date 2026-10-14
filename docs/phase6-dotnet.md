@@ -13311,3 +13311,82 @@ complex nested layout/margin conformance, vertical/polygon/object layouts and ot
 documented native behavior remain incomplete or unproven. Full physical printing,
 WinForms8 metadata bootstrapping and current Greenshot compatibility remain open.
 The full WPF goal stays active.
+
+
+## 209. Installed release 53: offline WPF image codecs and GDI+ conversion
+
+The 2026-10-14 continuation adds a required imaging SDK consumer in source commit
+c637680 and packages it in msys2-ur commit97c3b61 as WindowsDesktop8.0.0-53.
+This is additional package validation, not a codec implementation replacement.
+The original source-built PresentationCore imaging code calls the Windows WIC
+codecs supplied by the OS. No prebuilt Microsoft SDK/runtime/NuGet input is added.
+
+The consumer encodes and decodes PNG, BMP, ZIP-compressed TIFF, lossless JPEG XR,
+JPEG and indexed GIF. It verifies dimensions and exact lossless pixel data;
+JPEG uses a bounded mean pixel error. PNG alpha bytes remain exact after OnLoad
+stream disposal, freezing and a compacting collection. Corrupt bytes are rejected.
+JPEG XR also exercises ImageQualityLevel0.75/1.0 and PreservePixelFormat with
+BitmapCacheOption.None, the API sequence used by current Greenshot's
+WpfFileFormatHandler. Observed mean byte errors are2.126 and0.000 respectively.
+This checks the API path without claiming the current Greenshot application builds.
+
+The GDI+ conversion fixture exercises Greenshot ImageHelper's
+LockBits/Scan0/BitmapSource.Create/Freeze/CopyPixels sequence. A33-pixel Bgr24 row
+requires native padding; every returned GDI+ pixel matches the original. DPI120x144
+survives creation. The frozen WPF bitmap retains its copied data after the
+original GDI+ bitmap is overwritten and a compacting collection completes.
+
+Every imaging scenario runs in shared-framework and self-contained execution.
+The offline build uses an empty NuGet source list/cache; publication byte-compares
+PresentationCore against the source SDK framework and runs the apphost with both
+DOTNET_ROOT variables removed and only MSYS/Windows OS paths available.
+The consumer joins wpf.sh check-sdk, increasing registered WPF consumers to38.
+
+Exact narrow installed consumer command (terminal exit0, zero build warnings/errors):
+
+```sh
+MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-image-codecs-sdk.sh /clang64/lib/dotnet ~/wpfboot/image-codecs-sdk-check'
+```
+
+Packaging and installed validation command (terminal exit0):
+
+```sh
+MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/image-codecs-package-and-check.sh'
+# makepkg --verifysource --noconfirm
+# patch --batch --forward --dry-run/apply ...0053-image-codecs-sdk.patch
+# private source-overlay imaging and normal BAML/window SDK checks
+# makepkg --repackage --force --noconfirm
+# pacman -U --noconfirm ...8.0.0-53-any.pkg.tar.zst
+# installed payload hash audit, imaging and normal BAML/window SDK checks
+```
+
+Normal makepkg dependency checks pass with the installed LLVM23 compiler;
+no --nodeps exception is used. The private payload is the fresh source build
+recorded in sections201/205, with release52 spelling already applied. No desktop
+implementation is copied from the installed SDK to construct this payload.
+The package audit verifies42 managed implementation/reference pairs, native hashes,
+SDK tasks and retained interim WinForms versions. Imaging and BAML/window checks
+pass twice each, on private and installed layouts, with shared and portable
+execution in both scopes. This turn uses focused validation; the preceding full
+37-consumer/native suite is the release51 run in section205.
+
+All53 recipe patches replay cleanly from the checksum-verified pinned bootstrap
+archive. The resulting wpf.sh and both new imaging fixture files byte-match the
+source commit. There are60 recipe source/hash declarations; all56 inputs available
+locally have matching hashes. Host makepkg verifies every declared source hash.
+
+Installed artifact, archived with exact scripts/logs/recipe/replay evidence under
+`tmp/wpf8-support/validation/image-codecs-package-20261014`:
+
+```text
+mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-53-any.pkg.tar.zst
+SHA-256: d99942176847d60bf8b6d03ff9270379aa84e3eef3f6053125e1f940ae16d3fa
+Bytes: 58913416
+```
+
+The downloaded artifact's hash matches the host, and pacman reports8.0.0-53.
+Native import coverage remains133/139; the six absent declarations are disabled
+upstream by #if NEVER. Existing general native layout, bidi/optimizer, complex
+margin-collapse, spelling-reform and physical-printing gaps remain unfinished.
+WinForms8 metadata generation and current Greenshot's net480/source dependency
+requirements also remain open. The WPF packaging goal stays active.
