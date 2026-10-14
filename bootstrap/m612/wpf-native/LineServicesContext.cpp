@@ -112,6 +112,7 @@ using ObjectHandler=int (WINAPI *)(void*,uint32_t,InlineInit*);
 using FormatObject=int (WINAPI *)(void*,uint32_t,int,int,int,ObjDim*,int*,int*,int*,int*);
 using DrawObject=int (WINAPI *)(void*,uint32_t,LSPOINT*,int,int);
 using CharExpansion=int(WINAPI*)(void*,int,int,LsCharRunInfo*,LsNeighborInfo*,LsNeighborInfo*,int,int**,int**);
+using GlyphCompression=int(WINAPI*)(void*,int,int,LsGlyphRunInfo*,LsNeighborInfo*,LsNeighborInfo*,int,int**,int**);
 using GlyphExpansion=int(WINAPI*)(void*,int,int,LsGlyphRunInfo*,LsNeighborInfo*,LsNeighborInfo*,int,int**,int**,uint8_t*,int*);
 using HyphenOpportunity=int(WINAPI*)(void*,int,int,int*,int*,LsHyph*);
 using AutoNumber=int(WINAPI*)(void*,int*,LsChp*,uintptr_t*,uint16_t*,LsChp*,uintptr_t*,int*,int*,int*);
@@ -424,12 +425,14 @@ struct SourceGraphemes {
     bool boundary(int cp) const {return cp>=first&&size_t(cp-first)<logical.size()&&ubrk_isBoundary(breaks.get(),logical[cp-first]);}
 };
 
-int justify_line(Line& line,int target,int& total,int& trailing) {
+int justify_line(Line& line,int target,int& total,int& trailing,int* minimum_total=nullptr,int* minimum_trailing=nullptr) {
     int64_t remaining=static_cast<int64_t>(target)-trailing;
-    if(remaining<=0) return LS_None;
+    bool compress=remaining<0;
+    if(!remaining||(compress&&line.justification!=4))return LS_None;
+    if(compress)remaining=-remaining;
     auto& context=*line.context;bool mixed=line.justification==4; // LsKJust.lskjFullMixed
     SourceGraphemes graphemes;if(mixed){int status=graphemes.initialize(line);if(status)return status;}
-    // Only the field following the last visible tab participates in expansion.
+    // Only the field following the last visible tab participates in adjustment.
     // Earlier aligned fields retain their anchors; unused stops impose no rule.
     size_t begin=0;
     for(size_t i=0;i<line.runs.size();++i)if(line.runs[i].tab&&!line.runs[i].hidden)begin=i+1;
@@ -442,7 +445,7 @@ int justify_line(Line& line,int target,int& total,int& trailing) {
         while(count && (run->text[count-1]==L' ' || run->text[count-1]==0xa0)) { --count; --visible_cp; }
         if(count) break;
     }
-    struct Opportunity { Run* run; size_t index; int capacity[3]; int added; bool left; uint8_t type; };
+    struct Opportunity { Run* run; size_t index; int capacity[3]; int added; bool left; uint8_t type; std::shared_ptr<int> budget; };
     std::vector<Opportunity> sites;
     for(size_t index=begin;index<line.runs.size();++index) {
         auto& run=line.runs[index];
@@ -455,14 +458,17 @@ int justify_line(Line& line,int target,int& total,int& trailing) {
         auto next=neighbor(index+1<line.runs.size()?&line.runs[index+1]:nullptr,false);
         int status=0;
         if(run.shaped) {
-            if(!context.info.pfnGetGlyphExpansionInfoFullMixed) return LS_NotImplemented;
+            void* callback=compress?context.info.pfnGetGlyphCompressionInfoFullMixed:context.info.pfnGetGlyphExpansionInfoFullMixed;
+            if(!callback)return LS_NotImplemented;
             LsGlyphRunInfo info{static_cast<uint32_t>(run.id),reinterpret_cast<uint16_t*>(run.text.data()),run.clusters.data(),run.characters.data(),
                 static_cast<int>(run.text.size()),0,run.glyphs.data(),run.glyph_properties.data(),run.advances.data(),run.offsets.data(),static_cast<int>(count)};
-            status=reinterpret_cast<GlyphExpansion>(context.info.pfnGetGlyphExpansionInfoFullMixed)(context.info.pols,0,run.flow,&info,&previous,&next,3,lp,rp,types.data(),ink.data());
+            if(compress)status=reinterpret_cast<GlyphCompression>(callback)(context.info.pols,0,run.flow,&info,&previous,&next,3,lp,rp);
+            else status=reinterpret_cast<GlyphExpansion>(callback)(context.info.pols,0,run.flow,&info,&previous,&next,3,lp,rp,types.data(),ink.data());
         } else {
-            if(!context.info.pfnGetCharExpansionInfoFullMixed) return LS_NotImplemented;
+            void* callback=compress?context.info.pfnGetCharCompressionInfoFullMixed:context.info.pfnGetCharExpansionInfoFullMixed;
+            if(!callback)return LS_NotImplemented;
             LsCharRunInfo info{static_cast<uint32_t>(run.id),reinterpret_cast<uint16_t*>(run.text.data()),run.widths.data(),zero.data(),zero.data(),static_cast<int>(count)};
-            status=reinterpret_cast<CharExpansion>(context.info.pfnGetCharExpansionInfoFullMixed)(context.info.pols,0,run.flow,&info,&previous,&next,3,lp,rp);
+            status=reinterpret_cast<CharExpansion>(callback)(context.info.pols,0,run.flow,&info,&previous,&next,3,lp,rp);
         }
         if(status) return status;
         for(size_t item=0;item<count;++item) {
@@ -479,45 +485,61 @@ int justify_line(Line& line,int target,int& total,int& trailing) {
                 item=glyph_end-1;
             }
             bool space=end==cp+1&&u_isUWhiteSpace(run.text[cp]);
-            if(!space&&(!mixed||run.cp+int(end)>=visible_cp||!graphemes.boundary(run.cp+int(end))))continue;
+            if(!space&&(compress||!mixed||run.cp+int(end)>=visible_cp||!graphemes.boundary(run.cp+int(end))))continue;
             if(run.shaped){if(types[item]==0)continue;if(types[item]!=1)return LS_NotImplemented;}
+            // Both sides share the same physical advance. Provider capacities
+            // cannot remove it twice or produce a negative glyph advance.
+            auto budget=std::make_shared<int>(compress?std::max(0,run.shaped?run.advances[item]:run.widths[item]):INT_MAX);
             for(int side=0;side<2;++side) {
                 auto* capacities=side?right:left;
-                sites.push_back({&run,item,{capacities[0][item],capacities[1][item],capacities[2][item]},0,side==0,types[item]});
+                sites.push_back({&run,item,{capacities[0][item],capacities[1][item],capacities[2][item]},0,side==0,types[item],budget});
             }
         }
+    }
+    if(compress) {
+        int64_t capacity=0;
+        for(size_t i=0;i<sites.size();i+=2) {
+            int64_t left=*std::max_element(sites[i].capacity,sites[i].capacity+3);
+            int64_t right=*std::max_element(sites[i+1].capacity,sites[i+1].capacity+3);
+            capacity+=std::min<int64_t>(*sites[i].budget,left+right);
+        }
+        if(int64_t(total)-capacity<INT_MIN||int64_t(trailing)-capacity<INT_MIN)return LS_InvalidFormatterResult;
+        if(minimum_total)*minimum_total=int(int64_t(total)-capacity);
+        if(minimum_trailing)*minimum_trailing=int(int64_t(trailing)-capacity);
     }
     int64_t added=0;
     for(int level=0;level<3 && remaining>0;++level) {
         for(;;) {
             size_t active=0;
-            for(const auto& site:sites) if(site.capacity[level]>site.added) ++active;
+            for(const auto& site:sites) if(site.capacity[level]>site.added&&*site.budget>0) ++active;
             if(!active || !remaining) break;
             int64_t share=(remaining+active-1)/active;
             for(auto& site:sites) {
-                int64_t room=static_cast<int64_t>(site.capacity[level])-site.added;
+                int64_t room=std::min<int64_t>(static_cast<int64_t>(site.capacity[level])-site.added,*site.budget);
                 if(room<=0) continue;
                 int amount=static_cast<int>(std::min({room,share,remaining}));
-                site.added+=amount;remaining-=amount;added+=amount;
+                site.added+=amount;*site.budget-=amount;remaining-=amount;added+=amount;
             }
         }
     }
-    if(static_cast<int64_t>(total)+added>INT_MAX) return LS_InvalidFormatterResult;
+    int direction=compress?-1:1;
+    if(int64_t(total)+direction*added>INT_MAX||int64_t(total)+direction*added<INT_MIN||int64_t(trailing)+direction*added>INT_MAX||int64_t(trailing)+direction*added<INT_MIN) return LS_InvalidFormatterResult;
     for(const auto& site:sites) if(site.added) {
         auto& run=*site.run;
         if(run.shaped && run.nominal_advances.empty()) run.nominal_advances=run.advances;
         int& advance=run.shaped?run.advances[site.index]:run.widths[site.index];
-        if(static_cast<int64_t>(advance)+site.added>INT_MAX || static_cast<int64_t>(run.width)+site.added>INT_MAX) return LS_InvalidFormatterResult;
-        advance+=site.added;run.width+=site.added;
+        int delta=direction*site.added;
+        if(static_cast<int64_t>(advance)+delta>INT_MAX || static_cast<int64_t>(run.width)+delta>INT_MAX) return LS_InvalidFormatterResult;
+        advance+=delta;run.width+=delta;
         if(run.shaped) {
-            run.expansion[site.index]=site.type;
+            run.expansion[site.index]=compress?0:site.type;
             if(site.left) {
-                if(static_cast<int64_t>(run.offsets[site.index].du)+site.added>INT_MAX) return LS_InvalidFormatterResult;
-                run.offsets[site.index].du+=site.added;
+                if(static_cast<int64_t>(run.offsets[site.index].du)+delta>INT_MAX||static_cast<int64_t>(run.offsets[site.index].du)+delta<INT_MIN) return LS_InvalidFormatterResult;
+                run.offsets[site.index].du+=delta;
             }
         }
     }
-    total+=static_cast<int>(added);trailing+=static_cast<int>(added);return LS_None;
+    total=int(int64_t(total)+direction*added);trailing=int(int64_t(trailing)+direction*added);return LS_None;
 }
 
 struct BreakGeometry {
@@ -843,12 +865,15 @@ int query_cell(const Line& line,const Cell& source,int capacity,LsQSubInfo* sub,
     if(capacity<needed)return LS_InvalidParameter;
     fill_query(line,cell,sub[needed-1],*text);
     size_t index=0;while(index<line.runs.size()&& &line.runs[index]!=cell.run)++index;
+    bool crosses_levels=false;
+    if(cell.joined)for(const auto& run:line.runs)if(!run.level_delta&&run.cp<cell.cp+cell.length&&run.cp+int(run.text.size())>cell.cp&&run.level!=cell.level)crosses_levels=true;
     for(int offset=0;offset<needed;++offset){
         auto value=sub[needed-1];value.lstflowSubLine=((base+offset)&1)?4:0;
         if(offset==0){value.lscpFirstSubLine=line.first;value.lsdcpSubLine=line.info.cpLimToContinue-line.first;value.pointUvStartSubLine={line.widths.upStartMainText,0};value.dupSubLine=line.widths.upLimLine-line.widths.upStartMainText;}
-        else if(cell.joined) {
+        else if(cell.joined&&crosses_levels) {
             // Internal client reversal scopes do not divide one source text
-            // element. Every CP in the cell observes the same caret subline.
+            // element. Crossing levels needs one stable synthetic subline;
+            // same-level cells keep their common enclosing directional scope.
             value.lscpFirstSubLine=cell.cp;value.lsdcpSubLine=cell.length;
             value.pointUvStartSubLine={cell.x,0};value.dupSubLine=cell.width;
         } else {
@@ -1201,10 +1226,11 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
         trailing=total;
         for(auto item=result->runs.rbegin();item!=result->runs.rend();++item){bool all_spaces=false;trailing-=trailing_width(*item,all_spaces);if(!all_spaces)break;}
         int minimum_total=total,minimum_trailing=trailing;
-        if(!minmax && paragraph.fJustify && (result->info.endr==0||result->info.endr==1) && !(flags&0x40000000u)) {
+        if(!minmax && paragraph.fJustify && !(flags&0x40000000u) &&
+            (result->info.endr==0||result->info.endr==1||(paragraph.lskj==4&&int64_t(trailing)>int64_t(column)-properties.durRightJustify))) {
             int64_t target=static_cast<int64_t>(column)-properties.durRightJustify;
             if(target<INT_MIN || target>INT_MAX) return LS_InvalidFormatterResult;
-            status=justify_line(*result,static_cast<int>(target),total,trailing); if(status) return status;
+            status=justify_line(*result,static_cast<int>(target),total,trailing,&minimum_total,&minimum_trailing); if(status) return status;
         }
         if(minmax) {
             status=paragraph_widths(*result,total,trailing,minimum_total,minimum_trailing);if(status)return status;
@@ -1352,12 +1378,19 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateBreaks(void* handle,int cp,v
                 line->widths.upLimLine+=candidate.marker->width;line->widths.upStartTrailing=line->widths.upLimLine;
             }
             int64_t visible=int64_t(line->widths.upStartTrailing)-properties.durLeft;
+            int64_t nominal_visible=visible;
+            if(visible>available&&paragraph.fJustify&&paragraph.lskj==4) {
+                int total=line->widths.upLimLine,trailing=line->widths.upStartTrailing;
+                result=justify_line(*line,session->width-properties.durRightBreak,total,trailing,&line->widths.upMinLimLine,&line->widths.upMinStartTrailing);if(result)return result;
+                line->widths.upLimLine=total;line->widths.upStartTrailing=trailing;
+                visible=int64_t(trailing)-properties.durLeft;
+            }
             if(!candidate.overflow && visible>available)return LS_None;
             if(line->info.cpLimToContinue<=cp)return LS_InvalidFormatterResult;
             auto penalty=std::make_shared<BreakPenalty>();penalty->first=cp;penalty->next=line->info.cpLimToContinue;
             penalty->width=int(visible);penalty->target=int(available);penalty->forced=candidate.forced;
             penalty->hyphenated=bool(candidate.marker);penalty->terminal=line->info.endr==2||line->info.endr==4;
-            double slack=double(available-visible)/std::max<int64_t>(1,available);
+            double slack=double(available-nominal_visible)/std::max<int64_t>(1,available);
             penalty->cost=penalty->terminal?0:slack*slack;
             if(penalty->hyphenated)penalty->cost+=0.1;
             if(penalty->forced)penalty->cost+=1000;

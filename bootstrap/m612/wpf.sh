@@ -889,6 +889,7 @@ step_check_sdk() {
   bash "$here/wpf-tests/check-paragraph-breaks-sdk.sh" "$root" "$build/paragraph-breaks-sdk-check"
   bash "$here/wpf-tests/check-optimal-paragraph-sdk.sh" "$root" "$build/optimal-paragraph-sdk-check"
   bash "$here/wpf-tests/check-mixed-justification-sdk.sh" "$root" "$build/mixed-justification-sdk-check"
+  bash "$here/wpf-tests/check-paragraph-compression-sdk.sh" "$root" "$build/paragraph-compression-sdk-check"
   bash "$here/wpf-tests/check-list-markers-sdk.sh" "$root" "$build/list-markers-sdk-check"
   bash "$here/wpf-tests/check-finite-updates-sdk.sh" "$root" "$build/finite-updates-sdk-check"
   bash "$here/wpf-tests/check-bidi-sdk.sh" "$root" "$build/bidi-sdk-check"

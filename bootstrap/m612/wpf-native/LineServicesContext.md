@@ -211,3 +211,25 @@ justification pending their anchor-preserving expansion policy. Native checks
 cover nominal/shaped and InterWord/FullMixed modes; the public consumer checks
 Ideal/Display, split runs, earlier four-way anchors and incremental fallback,
 exact width/caret/point/selection, source completion, raster and moving GC.
+
+Optimal FullMixed lines use the original nominal/glyph compression callbacks at
+complete inter-word space clusters. Both sides share one advance-removal budget;
+priority capacities cannot remove the same spacing twice or create a negative
+advance. Trailing spaces, other text and earlier tab fields retain their metrics.
+Shaped drawing receives original and compressed advances, signed left offsets
+and no ink-expansion type. Minimum line widths reflect all available provider
+capacity; insufficient capacity leaves a real overflow rather than inventing fit.
+
+Paragraph candidate enumeration tests compression on retained, reshaped prefixes,
+admits newly feasible boundaries and scores their nominal width difference.
+Reconstruction repeats the adjustment, including a selected terminal line that
+needs compression. Ordinary InterWord wrapping remains unchanged. Callback and
+invalid-capacity failures preserve empty output and roll back provisional break
+resources. Public coverage checks reconstruction and actual optimal paragraphs,
+Ideal/Display, LTR/RTL, Latin/Indic, split runs, terminal lines, source/caret/point/
+selection, raster, pagination and GC.
+
+Same-level joined graphemes retain their common enclosing directional subline;
+an artificial subline per grapheme causes overlapping multi-grapheme selection
+rectangles. Cross-level cells retain a stable synthetic scope. Actual per-CP
+source-run ownership is preserved in either case.
