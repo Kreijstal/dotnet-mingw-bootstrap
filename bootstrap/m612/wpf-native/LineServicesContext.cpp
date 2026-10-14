@@ -37,7 +37,7 @@ struct Run {
     std::vector<uint32_t> glyph_properties;
     std::vector<uint8_t> expansion;
     std::vector<GlyphOffset> offsets;
-    bool shaped=false,hidden=false,tab=false;
+    bool shaped=false,hidden=false,tab=false,synthetic=false;
     uint16_t leader=0;
     bool embedded=false,position_used=false,hard_break=false;
     InlineInit object_handler{};
@@ -83,6 +83,7 @@ using FormatObject=int (WINAPI *)(void*,uint32_t,int,int,int,ObjDim*,int*,int*,i
 using DrawObject=int (WINAPI *)(void*,uint32_t,LSPOINT*,int,int);
 using CharExpansion=int(WINAPI*)(void*,int,int,LsCharRunInfo*,LsNeighborInfo*,LsNeighborInfo*,int,int**,int**);
 using GlyphExpansion=int(WINAPI*)(void*,int,int,LsGlyphRunInfo*,LsNeighborInfo*,LsNeighborInfo*,int,int**,int**,uint8_t*,int*);
+using HyphenOpportunity=int(WINAPI*)(void*,int,int,int*,int*,LsHyph*);
 
 int format_object(Context& context,Run& run,int position,int margin) {
     if(!context.info.pfnGetObjectHandlerInfo) return LS_NotImplemented;
@@ -285,7 +286,7 @@ int justify_line(Line& line,int target,int& total,int& trailing) {
     if(std::any_of(line.runs.begin(),line.runs.end(),[](const Run& run) { return run.tab; }) &&
         std::any_of(context.tabs.begin(),context.tabs.end(),[](const LsTbd& stop) { return stop.lskt!=0; })) return LS_NotImplemented;
     int visible_cp=line.first;
-    for(const auto& run:line.runs) visible_cp+=static_cast<int>(run.text.size());
+    for(const auto& run:line.runs)if(!run.synthetic)visible_cp+=static_cast<int>(run.text.size());
     for(auto run=line.runs.rbegin();run!=line.runs.rend();++run) {
         if(run->level_delta){visible_cp-=int(run->text.size());continue;}
         size_t count=run->text.size();
@@ -298,7 +299,7 @@ int justify_line(Line& line,int target,int& total,int& trailing) {
     for(size_t i=0;i<line.runs.size();++i) if(line.runs[i].tab) begin=i+1;
     for(size_t index=begin;index<line.runs.size();++index) {
         auto& run=line.runs[index];
-        if(run.hidden || run.embedded || run.tab || run.cp>=visible_cp) continue;
+        if(run.synthetic || run.hidden || run.embedded || run.tab || run.cp>=visible_cp) continue;
         size_t count=run.shaped?run.advances.size():run.text.size();
         std::vector<int> left[3],right[3]; int* lp[3]; int* rp[3];
         for(int level=0;level<3;++level) { left[level].assign(count,0);right[level].assign(count,0);lp[level]=left[level].data();rp[level]=right[level].data(); }
@@ -467,6 +468,33 @@ int choose_wrap(const Line& line,int allowance,bool emergency,int max_cut,bool& 
     ubrk_close(iterator);unavoidable=!chosen;int point=chosen?chosen:first_break;return point>0?geometry.raw[point]:point;
 }
 
+int hyphen_opportunity(const Line& line,int allowance,int max_cut,int natural,bool natural_overflow,int& cut,Run& marker) {
+    cut=0;auto& context=*line.context;if(!context.info.pfnGetNextHyphenOpp)return LS_None;
+    BreakGeometry geometry;int status=break_geometry(line,geometry);if(status)return status;
+    UErrorCode error=U_ZERO_ERROR;std::unique_ptr<UBreakIterator,decltype(&ubrk_close)> words(ubrk_open(UBRK_WORD,"root",geometry.text.data(),int(geometry.text.size()),&error),ubrk_close);
+    if(U_FAILURE(error)||!words)return LS_InvalidFormatterResult;
+    int start=ubrk_first(words.get()),end=0;
+    while((end=ubrk_next(words.get()))!=UBRK_DONE) {
+        if(ubrk_getRuleStatus(words.get())<UBRK_WORD_LETTER||ubrk_getRuleStatus(words.get())>=UBRK_WORD_KANA){start=end;continue;}
+        int first=line.first+geometry.raw[start],last=line.first+geometry.raw[end-1];
+        for(int current=first;current<last;) {
+            int found=0,hyphen=0;LsHyph detail{};
+            status=reinterpret_cast<HyphenOpportunity>(context.info.pfnGetNextHyphenOpp)(context.info.pols,current,last-current,&found,&hyphen,&detail);if(status)return status;
+            if(!found)break;if(found!=1||hyphen<current||hyphen>=last)return LS_WrongHyphenationPosition;
+            current=hyphen+1;if(detail.kysr!=0)return LS_NotImplemented;
+            int raw=current-line.first;auto at=std::lower_bound(geometry.raw.begin(),geometry.raw.end(),raw);
+            if(at==geometry.raw.end())continue;size_t index=size_t(at-geometry.raw.begin());raw=*at;
+            if(raw>max_cut||!geometry.boundary[index]||raw<=cut||(!natural_overflow&&raw<=natural))continue;
+            auto owner=std::find_if(line.runs.begin(),line.runs.end(),[&](const Run& run){return !run.hidden&&!run.embedded&&!run.tab&&hyphen>=run.cp&&hyphen<run.cp+int(run.text.size());});if(owner==line.runs.end())continue;
+            Run next=*owner;next.cp=hyphen;next.text.assign(1,context.info.wchHyphen?context.info.wchHyphen:L'-');next.synthetic=true;next.level_delta=0;next.shaped=false;next.glyphs.clear();next.clusters.clear();next.characters.clear();next.advances.clear();next.nominal_advances.clear();next.offsets.clear();next.glyph_properties.clear();next.expansion.clear();
+            status=measure_run(context,next);if(status)return status;
+            if(geometry.width[index]+next.width<=allowance){cut=raw;marker=std::move(next);}
+        }
+        start=end;
+    }
+    return LS_None;
+}
+
 int range_width(const Line& line,int first,int end,int visible,int64_t& width) {
     int64_t x=line.widths.upStartMainText;
     for(size_t i=0;i<line.runs.size();++i) {
@@ -546,20 +574,21 @@ int text_cells(const Line& line,std::vector<Cell>& cells) {
     // a user-perceived character at an artificial buffer boundary.
     if(line.runs.size()>1) {
         std::vector<UChar> text;
-        for(const auto& run:line.runs) if(run.level_delta)text.insert(text.end(),run.text.size(),0x2060);else text.insert(text.end(),run.text.begin(),run.text.end());
+        for(const auto& run:line.runs) if(run.synthetic)continue;else if(run.level_delta)text.insert(text.end(),run.text.size(),0x2060);else text.insert(text.end(),run.text.begin(),run.text.end());
         UErrorCode error=U_ZERO_ERROR;
         auto* raw=ubrk_open(UBRK_CHARACTER,"root",text.data(),static_cast<int>(text.size()),&error);
         if(U_FAILURE(error) || !raw) return LS_InvalidFormatterResult;
         std::unique_ptr<UBreakIterator,decltype(&ubrk_close)> iterator(raw,ubrk_close);
         int end=0;
         for(const auto& run:line.runs) {
+            if(run.synthetic)continue;
             end+=static_cast<int>(run.text.size());
             if(!ubrk_isBoundary(raw,end)) return LS_NotImplemented;
         }
     }
     auto geometry=visual_runs(line);int x=line.widths.upStartMainText;
     for(size_t index=0;index<line.runs.size();++index) {
-        const auto& run=line.runs[index];x=geometry.edge[index];int sign=run.flow==line.base_flow?1:-1;
+        const auto& run=line.runs[index];if(run.synthetic)continue;x=geometry.edge[index];int sign=run.flow==line.base_flow?1:-1;
         int run_x=x;
         UErrorCode error=U_ZERO_ERROR;
         auto* raw=ubrk_open(UBRK_CHARACTER,"root",reinterpret_cast<const UChar*>(run.text.data()),
@@ -592,6 +621,7 @@ int text_cells(const Line& line,std::vector<Cell>& cells) {
             x+=sign*width; start=end;
         }
     }
+    for(const auto& run:line.runs)if(run.synthetic){auto at=std::find_if(cells.begin(),cells.end(),[&](const Cell& cell){return run.cp>=cell.cp&&run.cp<cell.cp+cell.length;});if(at!=cells.end())at->width+=run.width;}
     std::sort(cells.begin(),cells.end(),[&](const Cell& a,const Cell& b){int ax=a.x-(a.run->flow!=line.base_flow?a.width:0),bx=b.x-(b.run->flow!=line.base_flow?b.width:0);return ax<bx;});
     x=line.widths.upLimLine;
     if(line.has_terminator) cells.push_back({&line.terminator,line.terminator.cp,1,x,0,0,x});
@@ -864,8 +894,11 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
             int max_cut=INT_MAX;
             for(;;) {
                 bool unavoidable=false;
-                int cut=choose_wrap(*result,column-properties.durRightBreak-properties.durLeft,
-                    (paragraph.grpf&0x80000)==0 || (flags&4),max_cut,unavoidable);
+                int allowance=column-properties.durRightBreak-properties.durLeft;
+                int cut=choose_wrap(*result,allowance,(paragraph.grpf&0x80000)==0||(flags&4),max_cut,unavoidable);
+                Run hyphen;int hyphen_cut=0;
+                if((paragraph.grpf&0x100000)&&!properties.fProhibitHyphenation){bool overflow=false;int natural=choose_wrap(*result,allowance,false,max_cut,overflow);
+                    status=hyphen_opportunity(*result,allowance,max_cut,natural,overflow,hyphen_cut,hyphen);if(status)return status;if(hyphen_cut){cut=hyphen_cut;unavoidable=false;}}
                 if(cut<=0) return LS_InvalidFormatterResult;
                 Line candidate=*result;
                 int text_end=cp;
@@ -885,6 +918,8 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
                 }
                 candidate.runs.resize(keep);
                 if(truncated) { candidate.info.endr=0; candidate.has_terminator=false; }
+                if(hyphen_cut){candidate.runs.push_back(std::move(hyphen));candidate.info.endr=1;candidate.has_terminator=false;}
+
                 status=layout_tabs(candidate,properties.durLeft,total);
                 if(status) {
                     if(status==LS_InvalidFormatterResult && cut>1 && !context->tabs.empty()) { max_cut=cut-1; continue; }
@@ -923,7 +958,7 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
             if(!all_spaces) break;
         }
         int minimum_total=total,minimum_trailing=trailing;
-        if(!minmax && paragraph.fJustify && result->info.endr==0 && limit==0) {
+        if(!minmax && paragraph.fJustify && (result->info.endr==0||result->info.endr==1) && limit==0) {
             int64_t target=static_cast<int64_t>(column)-properties.durRightJustify;
             if(target<INT_MIN || target>INT_MAX) return LS_InvalidFormatterResult;
             status=justify_line(*result,static_cast<int>(target),total,trailing); if(status) return status;
@@ -1134,7 +1169,7 @@ extern "C" __declspec(dllexport) int WINAPI LoEnumLine(void* handle,BOOL reverse
             continue;
         }
         int status=reinterpret_cast<EnumText>(context.info.pfnEnumText)(context.info.pols,static_cast<uint32_t>(run.id),
-            run.cp,static_cast<int>(run.text.size()),run.text.data(),static_cast<int>(run.text.size()),run.flow,
+            run.cp,run.synthetic?0:static_cast<int>(run.text.size()),run.text.data(),static_cast<int>(run.text.size()),run.flow,
             reverse!=FALSE,geometry!=FALSE,&point,&height,run.width,run.shaped?1:0,run.widths.data(),
             run.shaped?run.clusters.data():nullptr,run.shaped?run.characters.data():nullptr,run.shaped?run.glyphs.data():nullptr,
             run.shaped?run.advances.data():nullptr,run.shaped?run.offsets.data():nullptr,run.shaped?run.glyph_properties.data():nullptr,

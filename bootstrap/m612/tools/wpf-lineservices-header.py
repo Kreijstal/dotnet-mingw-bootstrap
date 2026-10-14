@@ -10,7 +10,7 @@ primitive={'uint':'uint32_t','int':'int32_t','ushort':'uint16_t','char':'uint16_
 records=('EscStringInfo','LsTbd','LsDevRes','LsIMethods','LscbkRedefined','LsContextInfo',
          'LsPap','LsLineProps','LsChp','LsTxM','LsHeights','LSPOINT','LSRECT','LsLInfo','LsLineWidths',
          'LsQSubInfo','LsTextCell','LsULInfo','LsStInfo','ObjDim','InlineInit',
-         'LsNeighborInfo','LsCharRunInfo','LsGlyphRunInfo')
+         'LsNeighborInfo','LsCharRunInfo','LsGlyphRunInfo','LsHyph')
 lines=['// Generated from original WPF LineServices.cs.','#pragma once','#include <cstdint>']
 for name in records:
     match=re.search(r'\bstruct\s+'+name+r'\s*\{(.*?)\n    \}',text,re.S)

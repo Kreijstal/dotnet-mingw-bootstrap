@@ -11214,3 +11214,82 @@ to 470 fields. Polygon geometry and advanced composite optimizations, clipped
 figure overflow, complex object/layout constraints, general column spans,
 advanced bidi, footnotes, optimal/interruptible algorithms and complete native-
 language services remain unfinished. The WPF goal stays active.
+
+
+## 174. Source hyphenation resources, dictionary callbacks and inserted glyphs
+
+The 2026-10-14 continuation implements NlCreateHyphenator, NlHyphenate and
+NlDestroyHyphenator against the original managed NaturalLanguageHyphenator ABI.
+PreserveSig=false creation uses HRESULT plus out-retval; analysis returns HRESULT
+and UTF-16 position bits; ref disposal clears the native handle. Opaque registered
+resources validate lifetime, Unicode word/case/grapheme handling preserves source
+positions, unavailable locales produce no invented breaks, and short arrays
+reject without an overrun. Spelling-changing dictionary replacements are omitted:
+WPF's original bitmask cannot represent their replacement text.
+
+The source C engine is Hunspell/Hyphen commit
+482d218738a5affdea467883eb01d5518312ae80; original code/license notices are retained.
+Thirty-six UTF-8 text dictionaries and notices come from the existing Mypal68
+source checkout at 0190d4f3c10a29dfd1f498a8fbf21252cf91356e. manifest.json records
+repositories, commits and every copied file's SHA-256; the generator verifies all
+inputs before embedding dictionaries. Published apps require no dictionary path
+or prebuilt natural-language library. Regional English uses the US patterns;
+German uses reformed orthography (Swiss uses de-CH); Serbian maps to sh. These
+choices and per-language licenses are explicit in wpf-native/hyphen/README.md;
+linguistic results follow those source patterns rather than claiming Microsoft-
+identical behavior. Package integration carries complete source and notices.
+
+Line Services uses the original GetNextHyphenOpp callback when paragraph/line
+flags allow hyphenation. Search endpoints remain inside the word, as required by
+the original FullTextState lexical-chunk contract. The engine compares fitting
+normal and dictionary breaks, measures the inserted glyph with the source run's
+font/shaping callbacks, rechecks retained geometry and reports endrHyphenated.
+Synthetic glyphs retain run/direction/font/drawing identity but consume zero
+source characters in enumeration. Caret cells include their advance; source
+continuations and independently cloned records resume from original CP. Per-line
+prohibition preserves normal wrapping. Justification excludes synthetic source
+positions and preserves the actual inserted glyph.
+
+Native checks validate HRESULT/out-retval, exact English 2/6 boundaries, upper-
+case text, a preceding surrogate pair, cleared unavailable/stale output, short
+buffers and idempotent disposal. Native line checks use actual callback ABI,
+include the synthetic glyph's measured width, draw/enumerate four source/five
+painted characters, retain the extended caret cell, clone/resume after old line
+and wrapper disposal, and propagate callback errors/invalid positions with clean
+outputs. All previous native line tests pass.
+
+Original managed resource analysis passes thirteen cultures (English US/GB,
+German/Swiss, French, Spanish, Italian, Dutch, Russian, Polish, Turkish, Hungarian
+and Finnish) with source dictionaries and disposal. Direct TextFormatter in both
+modes/directions formats six source characters as 'hyphen-' without counting the
+inserted glyph as source; widths are 88.62/91 DIPs, actual raster/caret queries and
+exact continuation pass. Public IsHyphenationEnabled FlowDocuments in Ideal/
+Display, LTR/RTL and left/justified layouts complete ten pages, paint 39/30 inserted
+hyphens and retain all 539 source characters exactly once with GetPageNumber
+agreement, disposed-page regeneration and compacting GC. The full matrix runs in
+shared-framework and portable self-contained SDK execution with roots/toolchain
+PATH removed; builds have zero warnings/errors.
+
+Focused validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 inventory check-hyphenation-native check-lineservices-line-native
+/usr/bin/python3 ~/wpfboot/refresh-finite-native.py
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-hyphenation-native
+MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-hyphenation-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/hyphenation-sdk-check'
+```
+
+All final focused checks pass. The complete source regression also exits zero:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 inventory check-hyphenation-native check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+```
+
+All 26 offline WPF SDK gates (the previous 25 plus hyphenation), original
+paragraph ABI/lifecycle and native paragraph/line/resource checks, and interim
+WinForms shared/self-contained consumers pass. Evidence is archived under
+ tmp/wpf8-support/validation/hyphenation-20261014. Imported native coverage rises
+to 122/139 with 17 absent; paragraph ABI remains 470 fields. Legacy spelling/NLS
+class objects, unsupported cultures and spelling-changing hyphens, advanced
+layout/bidi, general column spans, footnotes and optimal/interruptible algorithms
+remain unfinished. The WPF goal stays active.

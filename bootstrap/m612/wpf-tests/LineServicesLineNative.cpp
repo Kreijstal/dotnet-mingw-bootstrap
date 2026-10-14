@@ -15,6 +15,11 @@ static std::wstring sample=L"abc  \u2029";
 static uint32_t paragraph_flags=0;
 static int run_length=9600;
 static bool uniform_width=false;
+static int hyphen_mode=0,hyphen_draws=0,hyphen_sources=0,hyphen_characters=0;
+static int WINAPI hyphen_opportunity(void*,int first,int length,int* found,int* position,LsHyph* detail){*found=0;*position=0;*detail={};if(hyphen_mode==2)return LS_ClientAbort;if(hyphen_mode==3){*found=1;*position=first+length;return 0;}for(int cp:{3,6})if(cp>=first&&cp<first+length){*found=1;*position=cp;break;}return 0;}
+static int WINAPI hyphen_draw(void*,uint32_t id,LSPOINT* point,WCHAR* text,int*,int count,int flow,uint32_t,LSPOINT*,LsHeights*,int width,LSRECT*){if(id!=5||flow)return LS_ClientAbort;if(text[0]==L'-'){if(count!=1||width!=10||point->x!=44)return LS_ClientAbort;}else if(count!=4||width!=40||point->x!=4)return LS_ClientAbort;++hyphen_draws;return 0;}
+static int WINAPI hyphen_enum(void*,uint32_t,int,int source,WCHAR* text,int count,int,int,int,LSPOINT*,LsHeights*,int,int,int*,uint16_t*,uint16_t*,uint16_t*,int*,void*,uint32_t*,int){if(text[0]==L'-'&&(source!=0||count!=1))return LS_ClientAbort;hyphen_sources+=source;hyphen_characters+=count;return 0;}
+
 static bool contextual_widths=false;
 static bool decorate=false;
 static int decoration_error=0;
@@ -40,7 +45,7 @@ static int WINAPI enum_tab(void*,uint32_t id,int cp,WCHAR* text,uint16_t leader,
 }
 static int WINAPI enum_text(void*,uint32_t,int,int,WCHAR*,int,int,int,int,LSPOINT*,LsHeights*,int,int,int*,uint16_t*,uint16_t*,uint16_t*,int*,void*,uint32_t*,int) { return 0; }
 static int WINAPI pap(void*,int,LsPap* value) { *value={}; value->cpFirst=0; value->grpf=paragraph_flags; return 0; }
-static int WINAPI props(void*,int,int,LsLineProps* value) { *value={}; value->durLeft=4; return 0; }
+static int WINAPI props(void*,int,int,LsLineProps* value) { *value={}; value->durLeft=4;value->fProhibitHyphenation=hyphen_mode==4; return 0; }
 static int WINAPI fetch(void*,int cp,int,void*,WCHAR* buffer,int capacity,int* used,WCHAR** output,int* count,int* hidden,LsChp* chp,uintptr_t* id) {
     if(abort_fetch) return LS_ClientAbort;
     int end=static_cast<int>(sample.size())-1;
@@ -265,6 +270,18 @@ int main(int argc,char** argv) {
         LsQSubInfo nested[3]{};require(LoQueryLineCpPpoint(line,2,3,nested,&queried_depth,&cell)==0&&queried_depth==3&&nested[0].lstflowSubLine==0&&nested[1].lstflowSubLine==4&&nested[2].lstflowSubLine==0,"nested reversal hierarchy retains its intermediate direction");
         require(LoDisposeLine(line,FALSE)==0&&LoDestroyContext(bidi_context)==0,"bidi record/context cleanup");bidi_mode=false;paragraph_flags=0;
         std::puts("native bidi reversals: control ownership, visual origins, nested caret/point geometry, depth validation, wrapped embedding and independent cloned continuations PASS");
+        sample=L"abcdefghij\u2029";run_length=9600;uniform_width=true;paragraph_flags=0x100040;hyphen_mode=1;
+        config.pfnDrawTextRun=reinterpret_cast<void*>(hyphen_draw);config.pfnEnumText=reinterpret_cast<void*>(hyphen_enum);config.pfnGetNextHyphenOpp=reinterpret_cast<void*>(hyphen_opportunity);
+        void* hyphen_context=nullptr;require(LoCreateContext(&config,&callbacks,&hyphen_context)==0&&LoSetDoc(hyphen_context,1,1,&resolution)==0,"source hyphen callback context ABI");
+        require(LoCreateLine(hyphen_context,0,0,64,0,nullptr,&info,&line,&depth,&measured)==0&&info.endr==1&&info.cpLimToContinue==4&&measured.upLimLine==54,"dictionary candidate includes measured inserted hyphen width and reports actual source continuation");
+        require(LoDisplayLine(line,&origin,1,&clip)==0&&hyphen_draws==2&&LoEnumLine(line,FALSE,TRUE,&origin)==0&&hyphen_sources==4&&hyphen_characters==5,"original rendering/enumeration callbacks draw inserted glyph without adding a source character");
+        require(LoQueryLineCpPpoint(line,3,1,&sub,&queried_depth,&cell)==0&&cell.dupCell==20&&LoAcquireBreakRecord(line,&bidi_record)==0&&LoCloneBreakRecord(bidi_record,&bidi_clone)==0&&LoDisposeLine(line,FALSE)==0&&LoDisposeBreakRecord(bidi_record,FALSE)==0,"hyphenated caret cell and independent input record retain exact source boundary");
+        require(LoCreateLine(hyphen_context,4,0,1000,0,bidi_clone,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==11&&info.endr==2&&LoDisposeLine(line,FALSE)==0&&LoDisposeBreakRecord(bidi_clone,FALSE)==0,"hyphen record resumes original text after old line/wrapper disposal");
+        hyphen_mode=2;require(LoCreateLine(hyphen_context,0,0,64,0,nullptr,&info,&line,&depth,&measured)==LS_ClientAbort&&!line&&!depth&&!info.cpLimToContinue,"hyphen callback failure propagates with cleared outputs");
+        hyphen_mode=3;require(LoCreateLine(hyphen_context,0,0,64,0,nullptr,&info,&line,&depth,&measured)==LS_WrongHyphenationPosition&&!line&&!depth,"invalid callback position rejects without a fabricated line");
+        hyphen_mode=4;require(LoCreateLine(hyphen_context,0,0,64,0,nullptr,&info,&line,&depth,&measured)==0&&info.endr==0&&info.cpLimToContinue==6&&LoDisposeLine(line,FALSE)==0,"original per-line hyphenation prohibition preserves ordinary wrapping");
+        require(LoDestroyContext(hyphen_context)==0,"hyphen line/context ownership cleanup");hyphen_mode=0;paragraph_flags=0;uniform_width=false;
+        std::puts("native hyphen line callbacks: source ABI, measured synthetic glyph, caret/enumeration/source identity, cloned continuation, prohibited lines and callback/position failure isolation PASS");
         void* penalty=nullptr;void* second_penalty=nullptr;void* internal=nullptr;void* second_internal=nullptr;
         require(LoAcquirePenaltyModule(context,&penalty)==0&&LoAcquirePenaltyModule(context,&second_penalty)==0&&penalty&&penalty!=second_penalty,"owned penalty wrappers acquire independently from the original LS context");
         require(LoGetPenaltyModuleInternalHandle(penalty,&internal)==0&&LoGetPenaltyModuleInternalHandle(second_penalty,&second_internal)==0&&internal&&internal!=second_internal,"each wrapper exposes its real retained source state");

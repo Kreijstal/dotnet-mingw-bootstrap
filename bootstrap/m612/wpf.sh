@@ -118,9 +118,19 @@ step_native_win32() {
     "$source/src/Microsoft.DotNet.Wpf/src/PresentationCore/MS/internal/TextFormatting/LineServices.cs" "$work/LineServicesNative.h"
   /usr/bin/python3 "$here/tools/wpf-pts-header.py" \
     "$source/src/Microsoft.DotNet.Wpf/src/PresentationFramework/MS/Internal/PtsHost/Pts.cs" "$work/ParagraphServicesNative.h"
+  /usr/bin/python3 "$here/tools/wpf-hyphen-data.py" "$here/wpf-native/hyphen" "$work/HyphenPatterns.h"
+  /clang64/bin/clang.exe -O2 -c "$here/wpf-native/hyphen/engine/hyphen.c" -I "$here/wpf-native/hyphen/engine" -o "$work/hyphen.o"
+  /clang64/bin/clang.exe -O2 -c "$here/wpf-native/hyphen/engine/hnjalloc.c" -I "$here/wpf-native/hyphen/engine" -o "$work/hnjalloc.o"
   /clang64/bin/clang++.exe -O2 -shared "$here/wpf-native/PresentationNativeWin32.cpp" \
-    "$here/wpf-native/Classification.cpp" "$here/wpf-native/TextAnalysis.cpp" "$here/wpf-native/LineServicesContext.cpp" "$here/wpf-native/ParagraphServicesContext.cpp" -I "$work" \
+    "$here/wpf-native/Classification.cpp" "$here/wpf-native/TextAnalysis.cpp" "$here/wpf-native/LineServicesContext.cpp" "$here/wpf-native/ParagraphServicesContext.cpp" "$here/wpf-native/NaturalLanguageHyphenation.cpp" "$work/hyphen.o" "$work/hnjalloc.o" -I "$work" \
     -o "$build/lib/PresentationNative_cor3.dll" -luser32 -lgdi32 -licuuc -licuin
+}
+
+step_check_hyphenation_native() {
+  local work=$build/hyphenation-native
+  mkdir -p "$work"
+  /clang64/bin/clang++.exe -std=c++17 -O2 "$here/wpf-tests/HyphenationNative.cpp" -o "$work/check.exe"
+  "$work/check.exe" "$build/lib/PresentationNative_cor3.dll"
 }
 
 step_inventory() {
@@ -840,6 +850,7 @@ step_check_sdk() {
   bash "$here/wpf-tests/check-tables-sdk.sh" "$root" "$build/tables-sdk-check"
   bash "$here/wpf-tests/check-figures-sdk.sh" "$root" "$build/figures-sdk-check"
   bash "$here/wpf-tests/check-composite-lines-sdk.sh" "$root" "$build/composite-lines-sdk-check"
+  bash "$here/wpf-tests/check-hyphenation-sdk.sh" "$root" "$build/hyphenation-sdk-check"
   bash "$here/wpf-tests/check-finite-updates-sdk.sh" "$root" "$build/finite-updates-sdk-check"
   bash "$here/wpf-tests/check-bidi-sdk.sh" "$root" "$build/bidi-sdk-check"
   bash "$here/wpf-tests/check-rtl-pages-sdk.sh" "$root" "$build/rtl-pages-sdk-check"
