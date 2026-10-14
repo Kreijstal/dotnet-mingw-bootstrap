@@ -13694,3 +13694,108 @@ ink insertion, aligned-tab justification, noncontiguous cells, broader bidi/nati
 layout/optimizer conformance, complex margins, spelling reform and physical
 printing remain unfinished. WinForms8 metadata generation and current Greenshot's
 net480/source dependency requirements remain open. The WPF packaging goal is active.
+
+
+## 213. Installed release 57: aligned position-dependent inline objects
+
+The 2026-10-14 continuation adds aligned flexible-object layout in source commit
+6558f46 and installs WindowsDesktop8.0.0-57 from msys2-ur recipe commitd0a14e4.
+The retained public baseline formats a flexible object after a Left tab, then
+throws native NotImplemented after a Center tab. The old native guard rejected
+position-dependent objects whenever an aligned tab occurred earlier on the line.
+
+An aligned field's width determines its pen, while a flexible object's width can
+depend on that pen. Each retained object now records its measurement position.
+Tab layout calls the original object formatter again when the pen changes, until
+positions and dimensions agree exactly in native units, within64 passes. Incomplete
+prefix collection stays provisional; complete fields and wrapped retained prefixes
+settle independently. Callback errors and nonconvergence bypass the ordinary
+missing-tab-fit wrapping fallback, preserving empty outputs. Accepted line metrics
+are recomputed from final runs, including combined ascent/descent.
+
+Original TextStore cached one metric object per source CP regardless of pen.
+Source patch patches/wpf/0012-position-dependent-object-cache.patch adds the pen and
+margin to cache validity for non-fixed objects. Fixed-size metrics retain their
+original cache behavior. The key is published only after successful measurement
+and validation, so failures cannot cache a speculative position.
+
+Native assertions check Left/Center/Right/Character anchors with exact integer
+positions, widths and final heights, actual drawing, bounded callback counts,
+populated callback failure, oscillation rejection and context reuse. They also
+retain the original16 adjacent-object break-condition combinations and existing
+object/line/caret/bidi/tab/record regressions. The integer floor-width callback has
+two adjacent possible fixed points in some alignments; assertions verify the exact
+fixed point reached from the initial measurement rather than assuming a real-valued
+algebraic result.
+
+The public consumer runs eight complete-field and eight wrapping cases per
+execution, covering Ideal/Display and all four alignments in LTR paragraphs.
+It checks actual remaining width, source completion and atomic object ownership,
+caret/selection geometry, glyph source coverage, real raster/drawing position and
+compacting GC. Three additional cases check initial-format, reformat and drawing
+exceptions, including formatter reuse after measurement failure. Display assertions
+follow upstream IdealToReal/RectUV's independent round-to-even pixel endpoints;
+the tolerance stays0.02 rather than masking one-pixel rounding with a looser bound.
+Each shared/portable pair executes38 new cases; development/private/installed
+validation therefore covers114. The registered SDK suite now has42 WPF consumers.
+
+Exact final development commands, terminal exit0:
+
+```sh
+MSYSTEM=CLANG64 WPF_SOURCE=$HOME/dotnetboot/m612/src/wpf-8.0.0 WPF_BUILD=$HOME/wpfboot/build bash -lc 'bash ~/wpfboot/driver/bootstrap/m612/wpf.sh prepare-bridges build-presentation-core native-win32 check-inline-objects-native check-lineservices-line-native'
+MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/aligned-objects-check-development.sh'
+MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-aligned-objects-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/build/aligned-objects-sdk-check'
+```
+
+The final public log is aligned-objects-development-wrapped.log; baseline and
+native/convergence diagnostics are archived in `validation/aligned-objects-20261014`.
+The final native tests are also rebuilt and verified in the private package scope.
+SDK overlay replacement unlinks native and managed hardlinks before copying.
+
+Exact private/package/installed command, terminal exit0:
+
+```sh
+MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/aligned-objects-package-and-check.sh'
+```
+
+The script verifies sources, dry-runs/applies patch0057, then runs:
+
+```sh
+_wpf prepare-bridges build-presentation-core native-win32 inventory check-inline-objects-native check-lineservices-line-native check-paragraph-context layout
+```
+
+PresentationCore rebuilds1337 source files and three resources in the private
+source workspace. Native convergence/object/line tests and all482 original ABI
+field sizes/offsets pass. Refreshed source SDK consumers for aligned objects,
+ordinary inline objects/InlineUIContainer, tabs/font resources, bidi, cross-run
+carets, mixed justification and BAML/window behavior all pass shared and portable
+execution with zero consumer build warnings/errors. This is focused validation;
+no new complete42-consumer suite run is claimed.
+
+Normal dependency-checked makepkg --repackage creates the package and pacman
+installs it. The42-pair managed/reference/native hash and SDK payload audit passes.
+Installed aligned-object and BAML/window consumers pass again shared and portable
+execution. The changed PresentationCore and native library are built privately
+from patched sources, never constructed from installed desktop implementation IL.
+Native required export coverage remains133/139; the six absent declarations remain
+upstream #if NEVER.
+
+Clean replay of all57 patches matches all seven committed feature files. All64
+source/hash declarations pass on the host; all60 locally available inputs match.
+Patch0057 SHA-256:
+3b85fc22b71bc6341502ae7d52a655e5627e772b147dd44db196d19ef936615b.
+
+Artifact and exact final scripts/logs/recipe/replay/native inventory are archived
+under `tmp/wpf8-support/validation/aligned-objects-package-20261014`:
+
+```text
+mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-57-any.pkg.tar.zst
+SHA-256: 54c80ee5b836b6af135f74b4a3c53ff0c1eb0f42b2fb8af9c31176bcb4e879e5
+Bytes: 58914685
+```
+
+The downloaded hash matches the host and pacman reports8.0.0-57. Aligned-tab
+justification, broader native layout/bidi/optimizer conformance, compression/ink
+insertion, complex margins, spelling reform and physical printing remain unfinished.
+WinForms8 metadata generation and current Greenshot's net480/source dependency
+requirements remain open. The WPF packaging goal stays active.
