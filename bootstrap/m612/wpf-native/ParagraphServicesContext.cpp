@@ -247,6 +247,7 @@ struct TableRowData {
     std::shared_ptr<Context> context;
     FSTABLEROWDESCRIPTION description{};FSTABLEROWDETAILS details{};
     std::vector<std::shared_ptr<TableCellData>> cells;
+    std::vector<FSTABLEKCELLMERGE> merges;
     explicit TableRowData(std::shared_ptr<Context> value):context(std::move(value)){++context->resources;}
     ~TableRowData(){erase_table_row(this);cells.clear();--context->resources;}
 };
@@ -680,6 +681,64 @@ int format_block_ui(const std::shared_ptr<ParaData>& para,uint32_t direction,con
     return 0;
 }
 
+struct SpanRowInput {void* name=nullptr;FSTABLEROWPROPS props{};std::vector<void*> names;std::vector<FSTABLEKCELLMERGE> merges;};
+int format_span_group(const std::shared_ptr<ParaData>& para,const std::shared_ptr<TableData>& data,uint32_t direction,const FSRECT& rect,
+    int top,int& used,bool bottomless,bool empty_ok,bool first_table,SpanRowInput first,void*& next,int& found,std::shared_ptr<Continuation>& output) {
+    auto context=para->context;void* client=context->info.pfsclient;auto& fetch=data->callbacks.tablecbkfetch;auto& cb=data->callbacks.tablecbkcell;
+    if(!cb.pfnFormatCellBottomless)return PTS_tserrNotImplemented;
+    struct Master {void* name;size_t first,last;std::shared_ptr<TableCellData> cell;};
+    std::vector<SpanRowInput> inputs;std::vector<Master> masters;std::unordered_map<void*,size_t> active;std::unordered_set<void*> seen_rows;
+    inputs.push_back(std::move(first));
+    for(size_t r=0;r<inputs.size();++r){
+        auto& input=inputs[r];if(!input.name||!seen_rows.insert(input.name).second)return PTS_tserrInvalidClientOutput;
+        std::unordered_set<void*> row_names;
+        for(size_t i=0;i<input.names.size();++i){void* name=input.names[i];auto merge=input.merges[i];if(!name||!row_names.insert(name).second)return PTS_tserrInvalidClientOutput;
+            if(merge==fskcellmergeNo||merge==fskcellmergeFirst){if(active.count(name))return PTS_tserrInvalidClientOutput;masters.push_back({name,r,r,nullptr});if(merge==fskcellmergeFirst)active[name]=masters.size()-1;}
+            else if(merge==fskcellmergeMiddle||merge==fskcellmergeLast){auto at=active.find(name);if(at==active.end())return PTS_tserrInvalidClientOutput;masters[at->second].last=r;if(merge==fskcellmergeLast)active.erase(at);}
+            else return PTS_tserrInvalidClientOutput;
+        }
+        int status=reinterpret_cast<PtsGetNextRow>(fetch.pfnGetNextRow)(client,para->desc.nmp,input.name,&found,&next);if(status)return status;
+        if(active.empty())break;if(!found||!next)return PTS_tserrInvalidClientOutput;
+        SpanRowInput added;added.name=next;status=reinterpret_cast<PtsGetRowProperties>(fetch.pfnGetRowProperties)(client,next,direction,&added.props);if(status)return status;
+        if(added.props.cCells<0)return PTS_tserrInvalidClientOutput;
+        added.names.resize(added.props.cCells);added.merges.resize(added.props.cCells);status=reinterpret_cast<PtsGetCells>(fetch.pfnGetCells)(client,next,added.props.cCells,added.names.data(),added.merges.data());if(status)return status;inputs.push_back(std::move(added));
+    }
+    std::vector<int> heights(inputs.size()),above(inputs.size()),below(inputs.size());
+    for(size_t r=0;r<inputs.size();++r){auto& props=inputs[r].props;
+        if(props.fskrowheight!=fskrowheightNatural&&!(props.fskrowheight==fskrowheightExactNoBreak&&props.dvrRowHeightRestriction==0))return PTS_tserrNotImplemented;
+        above[r]=r==0&&data->rows.empty()?(first_table?props.dvrAboveTopRow:props.dvrAboveRowBreak):props.dvrAboveRow;
+        below[r]=r+1==inputs.size()&&!found?props.dvrBelowBottomRow:props.dvrBelowRow;
+        if(above[r]<0||below[r]<0)return PTS_tserrInvalidClientOutput;
+    }
+    for(auto& master:masters){auto cell=std::make_shared<TableCellData>(context);cell->callbacks=cb;cell->name=master.name;CallbackTracks pending;FSFMTRBL formatted{};
+        int status=reinterpret_cast<PtsFormatCellBottomless>(cb.pfnFormatCellBottomless)(client,para->desc.pfsparaclient,master.name,direction,&formatted,&cell->handle,&cell->height);
+        pending.claimed_pages=cell->handle!=nullptr;if(pending.claimed_pages)for(const auto& page:pending.created_pages)page->inherit_updates=true;
+        if(status)return status;if(formatted!=fmtrblGoalReached)return PTS_tserrNotImplemented;if(!cell->handle||cell->height<0)return PTS_tserrInvalidClientOutput;
+        master.cell=cell;if(master.first==master.last)heights[master.first]=std::max(heights[master.first],cell->height);
+    }
+    // Natural heights come from ordinary cells. A spanning cell contributes
+    // only the additional height missing from its complete row interval.
+    for(const auto& master:masters)if(master.first!=master.last){int64_t span=0;for(size_t r=master.first;r<=master.last;++r){span+=heights[r];if(r<master.last)span+=int64_t(below[r])+above[r+1];}
+        if(span<master.cell->height){int64_t value=int64_t(heights[master.last])+master.cell->height-span;if(value>INT32_MAX)return PTS_tserrInvalidGeometry;heights[master.last]=int(value);}
+    }
+    int64_t total=0;for(size_t r=0;r<inputs.size();++r)total+=int64_t(above[r])+heights[r]+below[r];
+    if(int64_t(rect.v)+top+used+total>INT32_MAX)return PTS_tserrInvalidGeometry;
+    if(!bottomless&&int64_t(top)+used+total>rect.dv){
+        if(!empty_ok&&data->rows.empty())return PTS_tserrNotImplemented;
+        output=std::make_shared<Continuation>();output->context=context;output->paragraph=para->desc.nmp;output->table_row=inputs.front().name;
+        if(!data->rows.empty())data->rows.back()->details.fskboundaryBelow=fsktablerowboundaryBreak;return 0;
+    }
+    for(const auto& master:masters){int64_t span=0;for(size_t r=master.first;r<=master.last;++r){span+=heights[r];if(r<master.last)span+=int64_t(below[r])+above[r+1];}if(span>INT32_MAX)return PTS_tserrInvalidGeometry;
+        int status=reinterpret_cast<PtsSetCellHeight>(cb.pfnSetCellHeight)(master.cell->handle,para->desc.pfsparaclient,nullptr,master.name,0,direction,int(span));if(status)return status;
+    }
+    for(size_t r=0;r<inputs.size();++r){auto row=std::make_shared<TableRowData>(context);auto& input=inputs[r];row->description.fsnmRow=input.name;row->description.pfstablerow=row.get();row->description.fsupdinf.fskupd=fskupdNew;row->description.u.dvrRow=above[r]+heights[r]+below[r];
+        row->details.fskboundaryAbove=data->rows.empty()?(first_table?fsktablerowboundaryOuter:fsktablerowboundaryBreak):fsktablerowboundaryInner;
+        row->details.fskboundaryBelow=r+1==inputs.size()&&!found?fsktablerowboundaryOuter:fsktablerowboundaryInner;row->details.dvrAbove=above[r];row->details.dvrBelow=below[r];row->details.cCells=int(input.names.size());row->merges=input.merges;
+        for(void* name:input.names){auto master=std::find_if(masters.begin(),masters.end(),[&](const Master& value){return value.name==name&&value.first<=r&&value.last>=r;});if(master==masters.end())return PTS_tserrInvalidClientOutput;row->cells.push_back(master->cell);}
+        data->rows.push_back(row);
+    }
+    used+=int(total);return 0;
+}
 int format_table(const std::shared_ptr<ParaData>& para,uint32_t direction,const FSRECT& rect,void* input_margin,
     bool bottomless,bool empty_ok,int suppress,const std::shared_ptr<Continuation>& input,std::shared_ptr<Continuation>& output,void** margin_output) {
     auto context=para->context;void* client=context->info.pfsclient;auto& obj=context->info.fscbk.cbkobj;
@@ -705,7 +764,6 @@ int format_table(const std::shared_ptr<ParaData>& para,uint32_t direction,const 
         void* next=nullptr;int has_next=0;status=reinterpret_cast<PtsGetNextRow>(fetch.pfnGetNextRow)(client,para->desc.nmp,name,&has_next,&next);if(status)return status;if(has_next&&!next)return PTS_tserrInvalidClientOutput;
         FSTABLEROWPROPS row_props{};status=reinterpret_cast<PtsGetRowProperties>(fetch.pfnGetRowProperties)(client,name,direction,&row_props);if(status)return status;
         if(row_props.cCells<0||(row_props.cCells>0&&width==0))return PTS_tserrInvalidClientOutput;
-        if(row_props.fskrowheight!=fskrowheightNatural&&!(row_props.cCells==0&&row_props.fskrowheight==fskrowheightExactNoBreak&&row_props.dvrRowHeightRestriction==0))return PTS_tserrNotImplemented;
         int above=data->rows.empty()?(first_table?row_props.dvrAboveTopRow:row_props.dvrAboveRowBreak):row_props.dvrAboveRow;
         int below=has_next?row_props.dvrBelowRow:row_props.dvrBelowBottomRow;
         if(above<0||below<0||int64_t(used)+above+below+top>INT32_MAX)return PTS_tserrInvalidClientOutput;
@@ -715,6 +773,12 @@ int format_table(const std::shared_ptr<ParaData>& para,uint32_t direction,const 
         auto row=std::make_shared<TableRowData>(context);row->description.fsnmRow=name;row->description.pfstablerow=row.get();row->description.fsupdinf.fskupd=fskupdNew;
         std::vector<void*> names(row_props.cCells);std::vector<FSTABLEKCELLMERGE> merge(row_props.cCells);
         status=reinterpret_cast<PtsGetCells>(fetch.pfnGetCells)(client,name,row_props.cCells,names.data(),merge.data());if(status)return status;
+        if(std::any_of(merge.begin(),merge.end(),[](FSTABLEKCELLMERGE value){return value!=fskcellmergeNo;})){
+            if(resumed)return PTS_tserrNotImplemented;
+            SpanRowInput group{name,row_props,names,merge};status=format_span_group(para,data,direction,rect,top,used,bottomless,empty_ok,first_table,std::move(group),next,has_next,output);if(status)return status;
+            if(output)break;name=next;found=has_next;continue;
+        }
+        if(row_props.fskrowheight!=fskrowheightNatural&&!(row_props.cCells==0&&row_props.fskrowheight==fskrowheightExactNoBreak&&row_props.dvrRowHeightRestriction==0))return PTS_tserrNotImplemented;
         if(resumed&&input->table_cells.size()!=names.size())return PTS_tserrInvalidBreakRecord;
         for(int i=0;i<row_props.cCells;++i){
             if(!names[i]||merge[i]!=fskcellmergeNo)return PTS_tserrNotImplemented;
@@ -1192,7 +1256,7 @@ extern "C" __declspec(dllexport) int WINAPI FsQueryTableObjRowDetails(void* cont
 extern "C" __declspec(dllexport) int WINAPI FsQueryTableObjCellList(void* context,void* handle,int capacity,FSKUPDATE* updates,void** handles,FSTABLEKCELLMERGE* merges,int* count) {
     if(!count)return PTS_tserrNullOutputParameter;*count=0;auto data=lookup_weak_owned(table_rows,context,handle);if(!data)return PTS_tserrInvalidQuery;
     if(capacity<0||size_t(capacity)<data->cells.size()||((!updates||!handles||!merges)&&!data->cells.empty()))return PTS_tserrInvalidParameter;
-    for(const auto& cell:data->cells){updates[*count]=cell?cell->update:fskupdNoChange;handles[*count]=cell?cell->handle:nullptr;merges[*count]=fskcellmergeNo;++*count;}return 0;
+    for(const auto& cell:data->cells){updates[*count]=cell?cell->update:fskupdNoChange;handles[*count]=cell?cell->handle:nullptr;merges[*count]=data->merges.empty()?fskcellmergeNo:data->merges[*count];++*count;}return 0;
 }
 extern "C" __declspec(dllexport) int WINAPI FsQueryTextDetails(void* context,void* handle,FSTEXTDETAILS* output) {
     if(!output)return PTS_tserrNullOutputParameter;*output={};auto text=find_text(context,handle);if(!text)return PTS_tserrInvalidQuery;

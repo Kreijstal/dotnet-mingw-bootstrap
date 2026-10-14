@@ -10149,3 +10149,61 @@ repeated headers/footers, figures, complex center/clear policies, comparison/
 display transfer, balancing/spans/footnotes, advanced/optimal/incremental/
 interruptible algorithms and full bidi/native-language behavior remain
 incomplete. The full WPF goal stays active.
+
+## 156. Shared vertical span clients and connected row constraints
+
+The 2026-10-14 continuation retains original first/middle/last vertical merge
+flags and one actual cell client across its constituent rows. Connected span
+groups are discovered through original row/cell callbacks, including staggered
+overlapping spans. Each unique cell formats once through original bottomless
+cell/subpage callbacks so its full content height is available for constraints.
+Ordinary cells supply natural row heights. A spanning cell adds only any missing
+height to its interval's final row; actual span height includes internal row
+spacing. SetCellHeight receives that combined height. Query cell lists expose
+shared original handles and merge states, letting original TableParaClient
+arrange/validate spanning content once while merging its actual source range.
+
+Connected groups fitting a fresh column defer intact when the remaining area
+is insufficient. Their measured temporary cells release on deferral and retry
+from the group's original row name on the next page/column. Invalid merge
+sequences, repeated cell names and callback failures return errors with exact
+cleanup. Shared row references release the spanning client only once.
+
+Native fixtures use four actual owned cell subpages for a three-row group,
+confirm one shared span handle with first/middle/last flags, natural row height
+plus spacing (66 total units, 64 spanning-cell units), single content destruction,
+initial group deferral/resume after preceding text and populated/missing-master
+failure cleanup. Ordinary/split-table resource regressions remain green.
+
+Original WPF Ideal/Display cases cover natural spans, initial deferral, column
+flow, content growing its row interval, rows consisting solely of a spanning
+cell and staggered overlapping spans. They preserve all 230/300/258/27/271
+characters exactly once through original page ranges and GetPageNumber. Natural
+and staggered groups complete two pages, deferred groups three pages, enlarged
+groups three pages and span-only content one page. Background geometry is
+measured using a continuous red strip inside the spanning cell, independently
+of following red cells and green glyphs. Disposed pages regenerate original
+content across GC. Scrolling span edits change height/raster/full extent
+(658.9->701.4 Ideal, 653->695 Display) and reach the end. All prior table cases
+still pass, including unequal split cells and tiny forced-progress pages.
+
+Focused validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 inventory check-paragraph-context-native check-paragraph-context
+/usr/bin/python3 ~/wpfboot/refresh-finite-native.py
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-tables-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/row-spans-sdk-check
+```
+
+All final focused commands pass with zero consumer warnings/errors. Shared-
+framework and self-contained runs pass with SDK roots/toolchain PATH removed.
+Original ABI checks remain 429 source-derived fields. Bash syntax and whitespace
+checks pass. Evidence is archived under
+ tmp/wpf8-support/validation/row-spans-20261014.
+
+Imported native coverage remains 109/139 with 30 absent. This implements intact
+connected vertical-span groups; groups taller than a fresh column still need
+continuation support. Repeated headers/footers, figures, complex center/clear
+policies, comparison/display transfer, balancing/spans/footnotes, advanced/
+optimal/incremental/interruptible algorithms and full bidi/native-language
+behavior remain incomplete. The full WPF goal stays active.
