@@ -12114,3 +12114,122 @@ Source evidence is under
 General polygons, forced oversized groups, advanced object/table/subpage/column-
 span/footnote behavior, full bidi/optimizer conformance and legacy multiword/reform
 spelling controls remain unfinished. The WPF packaging goal stays active.
+
+
+## 188. Progress for floating groups larger than an empty page
+
+The 2026-10-14 continuation fixes an original public failure: two individually
+fitting 136-pixel floaters stacked at the same edge produced an empty document
+page when their combined group exceeded the 200-pixel content area. On a fresh
+page, an accepted object now retains its anchor and source range; the host line
+stops before the next nonfitting anchor. Its exact CP/line-break record resumes
+that object on the next page. Occupied pages retain intact-group deferral and
+preceding source text. Speculative content/clients are released.
+
+Before shortening at an anchor, the formatter obtains the naturally fitting line
+range. The original ReconstructLineVariant callback then only shortens that range;
+leading text is never forced past its available width. Discovery within a
+provisional line retries the row before acceptance. The retained prefix sets the
+original fForceBroken description flag. A managed preparation patch makes 21
+TextParaClient reconstruction sites honor that recorded CP range; two line-result
+helpers that only receive CP bounds recreate their retained range directly.
+Rendering, caret/point and selection paths therefore use the saved prefix without
+adding a native ABI field or export.
+
+The prior native negative fixture expected NotImplemented for a two-object group.
+Its replacement uses the original reconstruction callback and checks a real first
+page [0,1), a second page [1,10), distinct object names, continuation after first
+page destruction and exact accepted/speculative resource cleanup. The existing
+native paragraph suite passes afterward, including rollback/failure cases.
+
+Focused commands on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh prepare-bridges build-presentation-framework native-win32 inventory layout
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-paragraph-context-native
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-oversized-floats-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/oversized-floats-sdk-check
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-floaters-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/oversized-regression-floaters
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-optimal-paragraph-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/oversized-regression-optimal
+```
+
+Public cases pass both modes/directions and shared-framework/portable execution.
+Two text floaters have distinct pages 0/1; three have pages 0/1/2. Fixed-size UI
+content retains the same progress. Short inline prefixes and optimal formatting
+pass; occupied-page and long leading text preserve their earlier text and place
+objects on pages 1/2. Every tested character has one source/page owner, objects
+never repeat, and disposed-page regeneration/GC retains geometry. Existing
+floater and optimal paragraph regressions pass with zero compiler warnings/errors.
+Prefix/body caret and point checks also pass in both final full gates.
+
+The new consumer belongs to check-sdk, bringing the suite to 34 WPF consumers.
+Full source/private regressions and package integration follow. Native imported
+coverage remains 129/139 and paragraph ABI 479 fields. Evidence is under
+`tmp/wpf8-support/validation/oversized-floating-groups-20261014`. General polygons,
+oversized individual objects and advanced object/table/subpage/column-span/
+footnote behavior remain unfinished. The WPF packaging goal stays active.
+
+
+## 189. Installed release 45: oversized floating-group progress
+
+WindowsDesktop 8.0.0-45 is built, installed and validated on win11. Source feature
+commit f45bcdd is represented by recipe patch 0045. Clean pinned source plus all
+45 patches reproduces all seven changed files byte for byte; actual source/private
+files also match. All 48 locally available declared input hashes match, and the
+private makepkg --verifysource gate validates every input. Recipe commit d70dbf1
+updates release, patch, README and complete .SRCINFO metadata (52 source/hash
+entries). No additional binary seed is introduced.
+
+Full source and private regressions both exit zero. Each completes 34 WPF
+consumers (standard SDK/BAML/window application plus 33 feature gates) and both
+interim WinForms executions. Each new consumer passes 48 oversized-group cases
+across shared-framework and portable execution, including all final prefix/body
+caret and point checks. Original paragraph ABI remains 479 fields with the same
+context/method/callback sizes 872/136/824. Exact full commands:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh inventory check-paragraph-context-native check-paragraph-context layout check-sdk
+# Private CLANG64 recipe workspace, after sourcing PKGBUILD:
+_wpf prepare-bridges build-presentation-framework native-win32 inventory check-paragraph-context-native check-paragraph-context layout check-sdk
+MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/install-oversized-floats.sh'
+```
+
+The archived install-and-check.sh regenerates .SRCINFO, invokes makepkg
+--repackage --force --noconfirm, installs through pacman -U --noconfirm and checks
+staged payload hashes before these exact installed consumers:
+
+```sh
+bash "$(_driver)/wpf-tests/check-oversized-floats-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-oversized-floats-sdk-check
+bash "$(_driver)/wpf-tests/check-floaters-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-oversized-regression-floaters
+bash "$(_driver)/wpf-tests/check-optimal-paragraph-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-oversized-regression-optimal
+/usr/bin/python3 ~/wpfboot/check-installed-hyphenation.py
+```
+
+All commands exit zero. Staged/installed payload checks verify 42 managed
+implementations/references, native hashes, SDK tasks and retained interim framework
+versions. Installed tests verify two text/UI floaters on pages 0/1 and three text
+floaters on 0/1/2 in both modes/directions. Short inline prefixes and optimal
+formatting retain page 0 progress. Occupied-page/long leading text keeps its source
+before moving the objects to pages 1/2. Every tested run character has one source/
+page owner; objects do not repeat. Disposed pages regenerate, pixels remain stable
+through GC, and prefix/body caret and point queries use the retained CP range.
+
+Existing installed floater regressions preserve ordinary/multiple/deferred/
+inline/split/bottomless content behavior. Existing optimal paragraph regressions
+preserve original scoring/reconstruction, Unicode/source positions, rendering,
+page mapping and collection. All three consumers pass shared-framework and
+portable executions with zero compiler warnings/errors. Installed source audit
+verifies 81 input hashes, 39 notices and exact regeneration of all 36 dictionaries.
+Installed native inventory remains 129/139 imported APIs with ten absent; new
+behavior uses existing entry points.
+
+Evidence/artifact are under
+`tmp/wpf8-support/validation/oversized-floating-groups-package-20261014`:
+`mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-45-any.pkg.tar.zst`.
+SHA-256: 835703799bc527425193ca2ac108f46a20229b69994c017a13a9fe47f63a474d.
+The 58,890,686-byte local artifact hash equals the installed host's artifact.
+Source evidence is under
+`tmp/wpf8-support/validation/oversized-floating-groups-20261014`.
+
+General polygons, oversized individual objects, advanced object/table/subpage/
+column-span/footnote behavior, full bidi/optimizer conformance and legacy multiword/
+reform spelling controls remain unfinished. The WPF packaging goal stays active.
