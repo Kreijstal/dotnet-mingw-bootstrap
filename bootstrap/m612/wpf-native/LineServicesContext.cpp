@@ -395,6 +395,7 @@ struct BreakGeometry {
     std::vector<UChar> text;
     std::vector<int64_t> width{0};
     std::vector<int> raw{0};
+    std::vector<int> characters;
     std::vector<bool> boundary{true};
     std::vector<int> before,after;
     bool allowed(int point,bool natural) const {
@@ -418,7 +419,7 @@ int break_geometry(const Line& line,BreakGeometry& geometry) {
             if(run.level_delta<0)geometry.raw.back()=consumed;
             continue;
         }
-        for(size_t i=0;i<run.text.size();++i)geometry.raw.push_back(++consumed);
+        for(size_t i=0;i<run.text.size();++i){geometry.characters.push_back(run.cp+int(i));geometry.raw.push_back(++consumed);}
         int64_t before=width.back();
         text.insert(text.end(),run.text.begin(),run.text.end());
         if(!run.shaped || run.hidden) {
@@ -501,7 +502,9 @@ int hyphen_opportunity(const Line& line,int allowance,int max_cut,int natural,bo
     int start=ubrk_first(words.get()),end=0;
     while((end=ubrk_next(words.get()))!=UBRK_DONE) {
         if(ubrk_getRuleStatus(words.get())<UBRK_WORD_LETTER||ubrk_getRuleStatus(words.get())>=UBRK_WORD_KANA){start=end;continue;}
-        int first=line.first+geometry.raw[start],last=line.first+geometry.raw[end-1];
+        // A break boundary can precede a zero-source-length opening reverse;
+        // lexical callbacks instead need the CP of the actual text character.
+        int first=geometry.characters[start],last=geometry.characters[end-1];
         for(int current=first;current<last;) {
             int found=0,hyphen=0;LsHyph detail{};
             status=reinterpret_cast<HyphenOpportunity>(context.info.pfnGetNextHyphenOpp)(context.info.pols,current,last-current,&found,&hyphen,&detail);if(status)return status;

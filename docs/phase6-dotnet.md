@@ -11412,10 +11412,19 @@ warnings/errors:
 MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-paragraph-breaks-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/paragraph-breaks-sdk-check'
 ```
 
-The new consumer is included in check-sdk (27 WPF gates total). Focused evidence
+The new consumer is included in check-sdk (28 WPF consumers total: the standard
+SDK application plus 27 feature consumers). Focused evidence
 is archived under `tmp/wpf8-support/validation/paragraph-breaks-20261014`.
 Imported coverage is 126/139 with 13 absent; paragraph ABI remains 470 fields.
 Full source/private regressions and package integration follow. Paragraph-wide
 scoring/PTS optimal-line reconstruction, external penalty restrictions, general
 column spans, footnotes, advanced layout/bidi and legacy NLS remain unfinished.
 The WPF goal stays active.
+
+The first complete regression stopped in original RTL hyphenation: after moving
+opening controls to the following break, the lexical search began on that
+control rather than its following text run. BreakGeometry now records actual
+character CPs separately from break-boundary CPs. Hyphenation uses character CPs
+for original lexical callbacks while cached breakpoints retain the corrected
+boundary mapping. Both consumers are rerun before package integration. Counts
+above enumerate consumer scripts, not only the 27 feature-specific PASS markers.
