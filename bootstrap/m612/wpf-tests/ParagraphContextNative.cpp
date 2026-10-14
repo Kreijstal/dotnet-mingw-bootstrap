@@ -21,6 +21,7 @@ static bool subpage_parent=false,table_mode=false,inside_table_cell=false,lose_t
 static int table_cells_created=0,table_cells_destroyed=0,table_fail_cell=-1,table_rows_count=3;
 static bool split_table_cells=false,short_table_cell=false,table_spans=false,span_prefix=false,malformed_span=false;
 static int span_set_height=0;
+static bool long_span=false,long_table_cell=false;
 static int table_records_created=0,table_records_destroyed=0;
 static int(WINAPI* table_handler)(const FSTABLEOBJINIT*,void*)=nullptr;
 static int(WINAPI* clear_cell_subpage)(void*,void*)=nullptr;
@@ -86,6 +87,7 @@ static int WINAPI line_format(void*,void*,void* name,int,int dcp,void* incoming,
     *consumed=5;*forced=0;*result=dcp==0?fsflrOutOfSpace:fsflrEndOfParagraph;*ascent=7;*descent=3;*bbox=start;*bbox_width=75;*depend=*reformat=0;
     if(inline_anchor_mode){if(start!=(width==100?10:50)||(width!=60&&width!=100))return PTS_tserrInvalidParameter;*consumed=std::min(5,10-dcp);if(inline_anchor_mode==2&&dcp==0&&width==60)*consumed=2;*result=dcp+*consumed==10?fsflrEndOfParagraph:fsflrOutOfSpace;}
     if(split_table_cells&&short_table_cell&&dcp==0)*result=fsflrEndOfParagraph;
+    if(long_table_cell)*result=dcp+5>=45?fsflrEndOfParagraph:fsflrOutOfSpace;
     if(structural_line&&dcp==0){*ascent=*descent=*bbox_width=0;}
     if(lines_created==fail_line)return PTS_tserrCallbackException;
     return 0;
@@ -120,18 +122,18 @@ static int WINAPI table_next(void*,void*,void* current,int* found,void** name){a
 static int WINAPI table_row_props(void*,void*,uint32_t,FSTABLEROWPROPS* props){*props={};props->cCells=2;props->dvrAboveRow=props->dvrBelowRow=props->dvrAboveTopRow=props->dvrBelowBottomRow=props->dvrAboveRowBreak=props->dvrBelowRowBreak=1;return 0;}
 static int WINAPI table_get_cells(void*,void* row,int count,void** names,FSTABLEKCELLMERGE* merge){if(count!=2)return PTS_tserrInvalidParameter;auto n=reinterpret_cast<uintptr_t>(row);for(int i=0;i<2;++i){names[i]=reinterpret_cast<void*>(table_spans?(i==0?602+n-501:601):601+(n-501)*2+i);merge[i]=table_spans&&i==1?(n==501?(malformed_span?fskcellmergeMiddle:fskcellmergeFirst):n==503?fskcellmergeLast:fskcellmergeMiddle):fskcellmergeNo;}return 0;}
 static int WINAPI table_cell_format(void*,void*,void* input,void* name,void*,int empty,uint32_t direction,int extra,int available,FSFMTR* formatted,void** output,void** br,int* height){
-    *formatted={};*output=*br=nullptr;*height=0;if((input&&!split_table_cells)||extra)return PTS_tserrInvalidParameter;if(empty&&available<20){formatted->kstop=fmtrNoProgressOutOfSpace;return 0;}
+    *formatted={};*output=*br=nullptr;*height=0;if((input&&!split_table_cells&&!long_span)||extra)return PTS_tserrInvalidParameter;if(empty&&available<20){formatted->kstop=fmtrNoProgressOutOfSpace;return 0;}
     FSRECT rect{10,20,100,available};FSCOLUMNINFO column{0,100};FSBBOX bbox{};void* margin=nullptr;int top=0;void* page=nullptr;
-    inside_table_cell=true;short_table_cell=split_table_cells&&name==reinterpret_cast<void*>(601);int status=create_subpage(page_context,input,input?1:0,name,nullptr,empty,1,direction,200,20+available,&rect,1,&column,0,0,nullptr,nullptr,0,nullptr,nullptr,0,fsksuppresshardbreakbeforefirstparaNone,formatted,&page,br,height,&bbox,&margin,&top);inside_table_cell=false;short_table_cell=false;
+    inside_table_cell=true;short_table_cell=split_table_cells&&name==reinterpret_cast<void*>(601);long_table_cell=long_span&&name==reinterpret_cast<void*>(601);int status=create_subpage(page_context,input,input?1:0,name,nullptr,empty,1,direction,200,20+available,&rect,1,&column,0,0,nullptr,nullptr,0,nullptr,nullptr,0,fsksuppresshardbreakbeforefirstparaNone,formatted,&page,br,height,&bbox,&margin,&top);inside_table_cell=false;short_table_cell=false;long_table_cell=false;
     if(*br)++table_records_created;
     if(status)return status;if(margin)return PTS_tserrInvalidClientOutput;
     auto cell=new MockTableCell{page};++table_cells_created;*output=cell;
     if(lose_table_cell){delete cell;++table_cells_destroyed;*output=*br=nullptr;return PTS_tserrCallbackException;}
     return table_cells_created==table_fail_cell?PTS_tserrCallbackException:0;
 }
-static int WINAPI table_cell_bottomless(void* client,void* table,void* name,uint32_t direction,FSFMTRBL* formatted,void** output,int* height){FSFMTR finite{};void* br=nullptr;int status=table_cell_format(client,table,nullptr,name,nullptr,0,direction,0,80,&finite,output,&br,height);*formatted=fmtrblGoalReached;if(br)return PTS_tserrInvalidClientOutput;if(!status&&name==reinterpret_cast<void*>(601))*height=45;return status;}
+static int WINAPI table_cell_bottomless(void* client,void* table,void* name,uint32_t direction,FSFMTRBL* formatted,void** output,int* height){FSFMTR finite{};void* br=nullptr;int status=table_cell_format(client,table,nullptr,name,nullptr,0,direction,0,long_span?200:80,&finite,output,&br,height);*formatted=fmtrblGoalReached;if(br)return PTS_tserrInvalidClientOutput;if(!status&&name==reinterpret_cast<void*>(601))*height=long_span?150:45;return status;}
 static int WINAPI table_destroy_cell(void* handle){auto cell=static_cast<MockTableCell*>(handle);int status=destroy_subpage(page_context,cell->page);delete cell;++table_cells_destroyed;return status;}
-static int WINAPI table_set_height(void*,void*,void*,void* name,int,uint32_t,int height){if(table_spans){if(name==reinterpret_cast<void*>(601))span_set_height=height;return height==(name==reinterpret_cast<void*>(601)?64:20)?0:PTS_tserrInvalidClientOutput;}return (split_table_cells?height>=0&&height<=20:height==20)?0:PTS_tserrInvalidClientOutput;}
+static int WINAPI table_set_height(void*,void*,void*,void* name,int,uint32_t,int height){if(table_spans){if(name==reinterpret_cast<void*>(601))span_set_height=height;if(long_span)return height>=0?0:PTS_tserrInvalidClientOutput;return height==(name==reinterpret_cast<void*>(601)?64:20)?0:PTS_tserrInvalidClientOutput;}return (split_table_cells?height>=0&&height<=20:height==20)?0:PTS_tserrInvalidClientOutput;}
 static int WINAPI table_clear_cell(void* handle){return clear_cell_subpage(page_context,static_cast<MockTableCell*>(handle)->page);}
 static int WINAPI table_destroy_record(void*,void* record){int status=destroy_subpage_record(page_context,record);if(!status)++table_records_destroyed;return status;}
 static int WINAPI table_object_handler(void* output){FSTABLEOBJINIT init{};init.tableobjcbk.pfnGetTableProperties=reinterpret_cast<void*>(table_props);init.tableobjcbk.pfnAutofitTable=reinterpret_cast<void*>(table_fit);init.tableobjcbk.pfnGetMCSClientAfterTable=reinterpret_cast<void*>(block_after);auto& fetch=init.tablecbkfetch;fetch.pfnGetFirstRow=reinterpret_cast<void*>(table_first);fetch.pfnGetNextRow=reinterpret_cast<void*>(table_next);fetch.pfnGetRowProperties=reinterpret_cast<void*>(table_row_props);fetch.pfnGetCells=reinterpret_cast<void*>(table_get_cells);auto& cells=init.tablecbkcell;cells.pfnFormatCellFinite=reinterpret_cast<void*>(table_cell_format);cells.pfnFormatCellBottomless=reinterpret_cast<void*>(table_cell_bottomless);cells.pfnDestroyCell=reinterpret_cast<void*>(table_destroy_cell);cells.pfnDestroyCellBreakRecord=reinterpret_cast<void*>(table_destroy_record);cells.pfnSetCellHeight=reinterpret_cast<void*>(table_set_height);cells.pfnClearUpdateInfoInCell=reinterpret_cast<void*>(table_clear_cell);return table_handler(&init,output);}
@@ -612,6 +614,21 @@ int main(int argc,char** argv) {
         for(int failure:{0,1}){reset_page_counts();table_cells_created=table_cells_destroyed=0;table_fail_cell=failure==0?2:-1;malformed_span=failure==1;
             require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==(failure==0?PTS_tserrCallbackException:PTS_tserrInvalidClientOutput)&&!page_handle&&!page_break&&table_cells_created==table_cells_destroyed&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"span partial callback failure or missing master releases all temporary native resources");
         }
+        table_fail_cell=-1;malformed_span=false;long_span=true;reset_page_counts();table_cells_created=table_cells_destroyed=table_records_created=table_records_destroyed=0;
+        FSRECT large_span_area{10,20,100,80};
+        require(format_subtrack(context,nullptr,0,reinterpret_cast<void*>(77),0,nullptr,nullptr,0,1,0,&large_span_area,nullptr,fskclearNone,fsksuppresshardbreakbeforefirstparaNone,&formatted,&subtrack,&subrecord,&used,&bbox,&margin,&clear,&top_space)==0&&subrecord&&used<=80&&table_records_created>0,"oversized connected span group creates actual owned cell continuation records");
+        require(FsDuplicateSubtrackBreakRecord(context,subrecord,&clone)==0&&clone!=subrecord&&destroy_subtrack_record(context,subrecord)==0&&destroy_subtrack(context,subtrack)==0&&table_records_destroyed==0,"span record clone retains input after measured and first-chunk content release");
+        FSRECT span_no_space{10,20,100,5};
+        require(format_subtrack(context,clone,1,reinterpret_cast<void*>(77),0,nullptr,nullptr,1,1,0,&span_no_space,nullptr,fskclearNone,fsksuppresshardbreakbeforefirstparaNone,&formatted,&subtrack,&subrecord,&used,&bbox,&margin,&clear,&top_space)==0&&subrecord&&used==0&&formatted.kstop==fmtrNoProgressOutOfSpace,"no-progress span resume preserves original cell checkpoints");
+        require(destroy_subtrack(context,subtrack)==0&&destroy_subtrack_record(context,subrecord)==0,"unaccepted span fragment outputs release independently");
+        table_fail_cell=table_cells_created+1;
+        require(format_subtrack(context,clone,1,reinterpret_cast<void*>(77),0,nullptr,nullptr,0,1,0,&large_span_area,nullptr,fskclearNone,fsksuppresshardbreakbeforefirstparaNone,&formatted,&subtrack,&subrecord,&used,&bbox,&margin,&clear,&top_space)==PTS_tserrCallbackException&&!subtrack&&!subrecord,"populated span resume failure releases speculative content");table_fail_cell=-1;
+        for(int branch=0;branch<2;++branch){require(format_subtrack(context,clone,1,reinterpret_cast<void*>(77),0,nullptr,nullptr,0,1,0,&large_span_area,nullptr,fskclearNone,fsksuppresshardbreakbeforefirstparaNone,&formatted,&subtrack,&subrecord,&used,&bbox,&margin,&clear,&top_space)==0&&!subrecord&&FsQuerySubtrackParaList(context,subtrack,1,paras,&actual_count)==0&&FsQueryTableObjRowList(context,paras[0].pfspara,3,table_rows,&actual_count)==0&&actual_count==3,"cloned span inputs resume independently to completion");
+            for(int r=0;r<3;++r)require(FsQueryTableObjCellList(context,table_rows[r].pfstablerow,2,cell_updates,cell_handles,cell_merges,&actual_count)==0&&!cell_handles[0]&&cell_handles[1],"completed ordinary cells are omitted while the resumed span stays shared across rows");
+            require(destroy_subtrack(context,subtrack)==0,"terminal span branch release");
+        }
+        require(destroy_subtrack_record(context,clone)==0&&table_records_created==table_records_destroyed&&table_cells_created==table_cells_destroyed&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"split span clones/no-progress/failure/final release own every cell, record and original line exactly once");long_span=false;
+        std::puts("native split spans: actual cell records, shared resumed master/omitted completed cells, immutable clones, no-progress/failure preservation and exact teardown PASS");
         table_fail_cell=-1;malformed_span=table_spans=false;
         std::puts("native vertical spans: original shared client/merge states, combined row height, intact deferral/resume, partial failures and exact single-owner cleanup PASS");
         table_fail_cell=-1;lose_table_cell=table_mode=false;para_count=2;available_height=80;

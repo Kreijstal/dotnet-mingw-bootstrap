@@ -10266,3 +10266,61 @@ footers, figures, complex center/clear policies, comparison/display transfer,
 balancing/spans/footnotes, advanced/optimal/incremental/interruptible algorithms
 and full bidi/native-language behavior remain incomplete. The full WPF goal
 stays active.
+
+## 158. Finite fragments for oversized connected table spans
+
+The 2026-10-14 continuation adds immutable pending master-cell state to connected
+span-group continuations. Groups still use complete original bottomless cell
+measurements for intact layout/deferral. A group exceeding a fresh formatting
+area releases those measurements and formats finite original cell subpages.
+Unfinished masters retain original cell break records; completed ordinary/spanning
+cells expose null content slots on later fragments. Row/cell queries retain the
+original shared master identity, merge flags and split boundaries. Incoming
+records pass through original FormatCellFinite/SetCellHeight callbacks.
+
+Finite formatting handles ordinary rows before spanning cells. The area is
+shared among active ordinary rows; each span's budget accounts for ordinary
+content outside its interval and internal spacing. Fragment heights then satisfy
+actual cell-content constraints. This supports tall ordinary cells alongside
+large/overlapping spanning masters without giving every row a full-column budget.
+Independent record owners reuse the existing cell-break callbacks. Native clones
+share immutable incoming positions, while later fragments own distinct outputs.
+Unaccepted and failed fragments release their outputs and preserve original
+pending inputs. Terminal masters release their records after the last owner.
+
+Native fixtures measure/release a tall group, produce an actual cell subpage
+record, destroy the original track/wrapper while retaining a clone, discard a
+no-progress fragment, inject populated resume failure and independently resume
+the clone twice to completion. Completed ordinary cells have null handles while
+the active master remains shared across first/middle/last rows. Every cell,
+record, paragraph client, original line and line break releases exactly once.
+
+Original WPF Ideal/Display cases complete tall groups on five pages with all
+412 characters covered once, initially deferred groups on six pages with 482,
+column continuation on three pages with 412, overlapping tall masters on five
+pages with 662 and tall ordinary neighbors on twelve pages with 922. Original
+GetPageNumber agrees with actual cell ranges, green glyph raster and continuous
+red span strips verify rendering/geometry, and disposed chunk pages regenerate
+original content across GC. Prior intact/spanned/split/tiny/nested/empty/scrolling
+table checks remain green.
+
+Focused validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 inventory check-paragraph-context-native check-paragraph-context
+/usr/bin/python3 ~/wpfboot/refresh-finite-native.py
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-tables-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/split-spans-sdk-check
+```
+
+All final focused commands pass with zero consumer warnings/errors. Shared-
+framework/self-contained execution passes with SDK roots/toolchain PATH removed.
+Original ABI remains 429 source-derived field checks. Bash syntax and whitespace
+checks pass. Evidence is archived under
+ tmp/wpf8-support/validation/split-spans-20261014.
+
+Imported native coverage remains 109/139 with 30 absent. Oversized span groups
+work in the exercised layouts. More complex span/row-break arrangements,
+repeated headers/footers, figures, complex center/clear policies, comparison/
+display transfer, balancing/spans/footnotes, advanced/optimal/incremental/
+interruptible algorithms and full bidi/native-language behavior remain
+incomplete. The full WPF goal stays active.
