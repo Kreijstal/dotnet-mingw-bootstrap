@@ -11567,3 +11567,66 @@ this adds behavior to existing exports. The score is explicit and does not claim
 Microsoft-identical stretchability/compression/ink insertion. Global variable-
 width object constraints, external penalty restrictions, advanced layout/bidi,
 general column spans, footnotes and legacy NLS remain unfinished. WPF stays active.
+
+
+## 179. Installed release 40: original public optimal paragraphs
+
+WindowsDesktop 8.0.0-40 is built, installed and validated on win11. Source feature
+commit 7f93e6f is represented byte for byte by recipe patch 0040. Clean pinned
+sources plus all 40 patches reproduce all six feature files; actual private
+sources also equal the driver. All 43 locally available declared source hashes
+match. Recipe commit b8d7b6a declares the new patch/README hashes and release 40
+metadata. Existing source dictionary/notice integration remains present.
+
+The complete source and private regressions both exit zero after native rebuild,
+original cache/line/context tests and layout. Each check-sdk completes 29 WPF
+consumers (standard SDK/BAML application plus 28 feature gates) and both interim
+WinForms executions. Original paragraph ABI/lifecycle checks confirm 479 field
+sizes/offsets, including FSLINEVARIANT, with context/callback structures unchanged.
+
+Final full validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 inventory check-paragraph-breaks-native check-lineservices-line-native check-paragraph-context-native check-paragraph-context layout check-sdk
+# Private CLANG64 recipe workspace, after sourcing PKGBUILD:
+_wpf native-win32 inventory check-paragraph-breaks-native check-lineservices-line-native check-paragraph-context-native check-paragraph-context layout check-sdk
+MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/install-optimal-paragraph.sh'
+```
+
+The archived install-and-check.sh regenerates .SRCINFO, builds the artifact with
+makepkg --repackage --force --noconfirm, installs through pacman -U --noconfirm,
+then verifies installed manifest/payload hashes and runs these exact consumers:
+
+```sh
+bash "$(_driver)/wpf-tests/check-optimal-paragraph-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-optimal-paragraph-sdk-check
+bash "$(_driver)/wpf-tests/check-paragraph-breaks-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-optimal-paragraph-cache-sdk-check
+bash "$(_driver)/wpf-tests/check-hyphenation-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-optimal-paragraph-hyphenation-sdk-check
+/usr/bin/python3 ~/wpfboot/check-installed-hyphenation.py
+```
+
+All commands exit zero. Staged/installed payload checks confirm 42 managed
+implementations/references, native hashes, SDK tasks and retained interim versions.
+The installed optimizer consumer again proves the exhaustive six-partition
+minimum against greedy wrapping in four mode/direction cases and runs all 28
+public document cases in shared-framework and portable execution. Five-page and
+two-column three-page continuations, exact source/page mapping, mixed scripts,
+real dictionary markers, actually expanded justified rows, caret/point queries,
+real pixels, disposed-page regeneration and compacting GC pass. The original
+paragraph cache and ordinary hyphenation regressions also pass in both execution
+modes; builds have zero warnings/errors. Installed source audit verifies all 81
+input hashes, 39 original notices and exact regeneration of 36 dictionaries.
+Installed-DLL inventory confirms 126/139 imported APIs with 13 absent.
+
+Evidence/artifact are under
+`tmp/wpf8-support/validation/optimal-paragraph-package-20261014`:
+`mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-40-any.pkg.tar.zst`.
+SHA-256: 0595ab1ef6ac4db0b1d6b89d649fed1810b889908dbeff21871a5214db88a4d7.
+The local artifact hash matches the installed validation host's artifact. Final
+source evidence is under `tmp/wpf8-support/validation/optimal-paragraph-20261014`.
+
+Original public optimized paragraphs now execute the source global scorer and
+reconstruct the selected line path. Imported coverage is unchanged because this
+completes tested behavior of existing APIs. Microsoft-identical scoring,
+stretchability/compression/ink insertion, globally varying object constraints,
+external penalty restrictions, advanced layout/bidi, general column spans,
+footnotes and legacy NLS remain open. The WPF goal remains active.
