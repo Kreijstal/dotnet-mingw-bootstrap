@@ -203,6 +203,16 @@ Continuation::~Continuation() {
 struct FigureData { FSFIGUREPROPS props{}; FSFIGUREDETAILS details{}; };
 struct ParaData;
 struct AttachedData { int anchor=0; FSFLOATERPROPS props{}; std::shared_ptr<ParaData> para; };
+// Earlier paragraphs retain the objects and their source/drawing ownership.
+// Later paragraphs receive geometry snapshots, without a second object client.
+struct FloatObstacle {FSRECT rect{};FSFLOATERPROPS props{};bool floater=false;};
+struct ContainerFlow {
+    uint32_t direction=0;const std::vector<FloatObstacle>* obstacles=nullptr;ContainerFlow* previous=nullptr;
+    static thread_local ContainerFlow* current;
+    ContainerFlow(uint32_t value,const std::vector<FloatObstacle>* areas):direction(value),obstacles(areas),previous(current){current=areas?this:nullptr;}
+    ~ContainerFlow(){current=previous;}
+};
+thread_local ContainerFlow* ContainerFlow::current=nullptr;
 struct CompositeLineData;
 struct OptimalSession {
     std::shared_ptr<Context> context;
@@ -224,6 +234,8 @@ struct TextData {
     std::vector<std::shared_ptr<LineBreakData>> breaks;
     std::shared_ptr<LineBreakData> incoming;
     std::vector<AttachedData> attached;
+    std::vector<FloatObstacle> inherited;
+    int text_used=0;
     std::vector<PendingFloater> pending_floaters;
     ~TextData() {
         erase_text(this);
@@ -310,6 +322,8 @@ struct TrackData {
     FSRECT rect{};
     FSBBOX bbox{};
     int used=0;
+    int flow_used=0;
+    std::vector<FloatObstacle> inherited,obstacles;
     std::shared_ptr<Continuation> continuation;
     FSFMTRKSTOP stop=fmtrGoalReached;
     bool forced_progress=false;
@@ -446,6 +460,24 @@ thread_local FigureGeometry* FigureGeometry::current=nullptr;
 FSRECT& attachment_rect(const std::shared_ptr<ParaData>& para) {
     return para->figure?para->figure->details.fsrcFlowAround:para->floater->details.fsrcFloater;
 }
+template<class F> void visit_obstacles(const TextData& text,F visit) {
+    for(const auto& obstacle:text.inherited)visit(obstacle);
+    for(const auto& object:text.attached)visit(FloatObstacle{attachment_rect(object.para),object.props,bool(object.para->floater)});
+}
+int transform_obstacles(const std::vector<FloatObstacle>& input,uint32_t from,uint32_t to,const FSRECT& page,std::vector<FloatObstacle>& output) {
+    output=input;if(from==to)return 0;
+    for(auto& obstacle:output){FSRECT converted{};int status=FsTransformRectangle(from,&page,&obstacle.rect,to,&converted);if(status)return status;obstacle.rect=converted;
+        if(obstacle.props.fskwr==fskwrLeft)obstacle.props.fskwr=fskwrRight;else if(obstacle.props.fskwr==fskwrRight)obstacle.props.fskwr=fskwrLeft;
+        if(obstacle.props.fskfloatalignment==fskfloatalignMin)obstacle.props.fskfloatalignment=fskfloatalignMax;else if(obstacle.props.fskfloatalignment==fskfloatalignMax)obstacle.props.fskfloatalignment=fskfloatalignMin;
+    }return 0;
+}
+int para_obstacles(const std::shared_ptr<ParaData>& para,uint32_t direction,const FSRECT& page,std::vector<FloatObstacle>& output) {
+    std::vector<FloatObstacle> owned;uint32_t from=direction;
+    if(para->text){from=para->text->direction;for(const auto& object:para->text->attached)owned.push_back({attachment_rect(object.para),object.props,bool(object.para->floater)});}
+    else if(para->desc.idobj==0){auto child=lookup_owned(tracks,para->context.get(),para->desc.pfspara);if(child){owned=child->obstacles;from=child->direction;}}
+    std::vector<FloatObstacle> converted;int status=transform_obstacles(owned,from,direction,page,converted);if(status)return status;
+    output.insert(output.end(),converted.begin(),converted.end());return 0;
+}
 int format_figure(const std::shared_ptr<ParaData>& para,uint32_t direction,const FSRECT& track,bool bottomless,bool force,bool& deferred) {
     if(bottomless)return PTS_tserrNotImplemented;
     auto& cb=para->context->info.fscbk.cbkfig;
@@ -508,10 +540,10 @@ int format_attached_objects(const std::shared_ptr<ParaData>& para,int dcp,uint32
         // collides with an earlier object, move it below that rectangle.
         // Opposite edges can share a row when their rectangles do not overlap.
         for(;;){int64_t next_top=placed;
-            for(const auto& previous:attached){const auto& obstacle=attachment_rect(previous.para);
+            visit_obstacles(*para->text,[&](const FloatObstacle& previous){const auto& obstacle=previous.rect;
                 bool horizontal=int64_t(candidate.u)<int64_t(obstacle.u)+obstacle.du&&int64_t(obstacle.u)<int64_t(candidate.u)+candidate.du;
                 if(horizontal&&placed<int64_t(obstacle.v)+obstacle.dv&&int64_t(obstacle.v)<placed+candidate.dv)next_top=std::max(next_top,int64_t(obstacle.v)+obstacle.dv);
-            }
+            });
             if(next_top==placed)break;placed=next_top;
         }
         if(placed+candidate.dv>INT32_MAX)return PTS_tserrInvalidGeometry;
@@ -566,6 +598,9 @@ int postpone_unconsumed_objects(TextData& text,const FSLINEDESCRIPTIONSINGLE& li
             for(const auto& earlier:text.attached){if(&earlier==&object)continue;const auto& obstacle=attachment_rect(earlier.para);
                 if(earlier.anchor<object.anchor&&int64_t(candidate.u)<int64_t(obstacle.u)+obstacle.du&&int64_t(obstacle.u)<int64_t(candidate.u)+candidate.du&&placed<int64_t(obstacle.v)+obstacle.dv&&int64_t(obstacle.v)<placed+candidate.dv)next=std::max(next,int64_t(obstacle.v)+obstacle.dv);
             }
+            for(const auto& earlier:text.inherited){const auto& obstacle=earlier.rect;
+                if(int64_t(candidate.u)<int64_t(obstacle.u)+obstacle.du&&int64_t(obstacle.u)<int64_t(candidate.u)+candidate.du&&placed<int64_t(obstacle.v)+obstacle.dv&&int64_t(obstacle.v)<placed+candidate.dv)next=std::max(next,int64_t(obstacle.v)+obstacle.dv);
+            }
             if(next==placed)break;placed=next;
         }
         if(placed+candidate.dv>INT32_MAX)return PTS_tserrInvalidGeometry;
@@ -584,10 +619,10 @@ int line_area(const TextData& text,const FSRECT& rect,int& used,int& u,int& widt
         using Interval=std::pair<int64_t,int64_t>;
         std::vector<Interval> intervals{{rect.u,int64_t(rect.u)+rect.du}};
         int next=INT32_MAX;bool active=false;
-        for(const auto& object:text.attached){const auto& obstacle=attachment_rect(object.para);int bottom=obstacle.v+obstacle.dv;
-            if(int64_t(obstacle.v)>=int64_t(rect.v)+used+std::max(1,height_hint)||bottom<=rect.v+used)continue;
+        visit_obstacles(text,[&](const FloatObstacle& object){const auto& obstacle=object.rect;int bottom=obstacle.v+obstacle.dv;
+            if(int64_t(obstacle.v)>=int64_t(rect.v)+used+std::max(1,height_hint)||bottom<=rect.v+used)return;
             active=true;next=std::min(next,bottom);auto wrap=object.props.fskwr;
-            if(wrap==fskwrNone){intervals.clear();continue;}
+            if(wrap==fskwrNone){intervals.clear();return;}
             int64_t cut_left=wrap==fskwrRight?rect.u:obstacle.u;
             int64_t cut_right=wrap==fskwrLeft?int64_t(rect.u)+rect.du:int64_t(obstacle.u)+obstacle.du;
             std::vector<Interval> remaining;
@@ -597,7 +632,7 @@ int line_area(const TextData& text,const FSRECT& rect,int& used,int& u,int& widt
                 if(cut_right<interval.second)remaining.push_back({std::max(cut_right,interval.first),interval.second});
             }
             intervals=std::move(remaining);
-        }
+        });
         auto chosen=std::max_element(intervals.begin(),intervals.end(),[](const Interval& a,const Interval& b){return a.second-a.first<b.second-b.first;});
         if(chosen!=intervals.end()&&chosen->second>chosen->first){
             if(areas){areas->clear();for(const auto& interval:intervals)if(interval.second>interval.first)areas->push_back({int(interval.first),int(interval.second-interval.first)});u=areas->front().first;width=areas->front().second;}
@@ -680,7 +715,7 @@ int optimize_text(const std::shared_ptr<ParaData>& para,TextData& text,const FST
 }
 
 int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const FSRECT& rect,
-    const std::shared_ptr<Continuation>& input,std::shared_ptr<Continuation>& output,bool bottomless,bool force,bool keep_self=false,bool previous_page=true) {
+    const std::shared_ptr<Continuation>& input,std::shared_ptr<Continuation>& output,bool bottomless,bool force,bool keep_self=false,bool previous_page=true,const std::vector<FloatObstacle>& inherited={}) {
     auto context=para->context;auto& cb=context->info.fscbk.cbktxt;void* client=context->info.pfsclient;
     if(!cb.pfnGetTextProperties||!cb.pfnFormatLine||!cb.pfnDestroyLine||!cb.pfnDestroyLineBreakRecord)return PTS_tserrInvalidParameter;
     FSTXTPROPS props{};int status=reinterpret_cast<PtsGetTextProperties>(cb.pfnGetTextProperties)(client,para->desc.nmp,0,&props);
@@ -691,10 +726,11 @@ int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const F
     if(props.fswdir!=direction){
         FSRECT page=FigureGeometry::current?FigureGeometry::current->page:rect,converted{};
         status=FsTransformRectangle(direction,&page,&rect,props.fswdir,&converted);if(status)return status;
-        status=format_text(para,props.fswdir,converted,input,output,bottomless,force,keep_self,previous_page);if(status)return status;
+        std::vector<FloatObstacle> converted_obstacles;status=transform_obstacles(inherited,direction,props.fswdir,page,converted_obstacles);if(status)return status;
+        status=format_text(para,props.fswdir,converted,input,output,bottomless,force,keep_self,previous_page,converted_obstacles);if(status)return status;
         FSBBOX box{};status=FsTransformBbox(props.fswdir,&page,&para->desc.fsbbox,direction,&box);if(!status)para->desc.fsbbox=box;return status;
     }
-    auto text=std::make_shared<TextData>(context);text->direction=props.fswdir;text->optimal=props.fOptimizeParagraph!=0;para->text=text;OptimalPath optimal_path;
+    auto text=std::make_shared<TextData>(context);text->direction=props.fswdir;text->optimal=props.fOptimizeParagraph!=0;para->text=text;text->inherited=inherited;OptimalPath optimal_path;
     int dcp=input?input->dcp:props.dcpStartContent,used=0,fit=0,height_hint=0;bool overflow=false,ended=false,deferred=false;
     std::shared_ptr<LineBreakData> previous=input?input->line_break:nullptr;text->incoming=previous;
     if(input)for(const auto& pending:input->floaters) {
@@ -773,6 +809,7 @@ int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const F
         int height=line.dvrAscent+line.dvrDescent;used=std::max(used,line.vrStart-rect.v+height);
         FSBBOX bbox{1,{line.urBBox,line.vrStart,line.durBBox,height}};status=merge_bbox(para->desc.fsbbox,bbox);if(status)return status;
     }
+    text->text_used=used;
     int limit=text->lines.empty()?(input?input->dcp:props.dcpStartContent):text->lines.back().dcpLim;
     text->attached.erase(std::remove_if(text->attached.begin(),text->attached.end(),[&](const AttachedData& value){return value.anchor>=limit;}),text->attached.end());
     for(const auto& object:text->attached){status=merge_bbox(para->desc.fsbbox,object.para->desc.fsbbox);if(status)return status;const auto& obstacle=attachment_rect(object.para);used=std::max(used,object.para->figure?std::min(rect.dv,std::max(0,obstacle.v-rect.v+obstacle.dv)):obstacle.v-rect.v+obstacle.dv);}
@@ -806,17 +843,17 @@ int format_block_ui(const std::shared_ptr<ParaData>& para,uint32_t direction,con
     if(props.fskfloatalignment<fskfloatalignMin||props.fskfloatalignment>fskfloatalignMax)return PTS_tserrInvalidClientOutput;
     if(floating&&enclosing&&props.fskclear!=fskclearNone) {
         int64_t top=rect.v,mid=int64_t(rect.u)+rect.du/2;
-        for(const auto& earlier:enclosing->attached) {
-            const auto& obstacle=attachment_rect(earlier.para);
+        visit_obstacles(*enclosing,[&](const FloatObstacle& earlier) {
+            const auto& obstacle=earlier.rect;
             bool left=obstacle.u<mid,right=int64_t(obstacle.u)+obstacle.du>mid;
-            if(earlier.para->floater) {
+            if(earlier.floater) {
                 // A wide left-aligned floater remains a left-side object even
                 // if its rectangle crosses the column midpoint.
                 left=earlier.props.fskfloatalignment!=fskfloatalignMax;
                 right=earlier.props.fskfloatalignment!=fskfloatalignMin;
             }
             if(props.fskclear==fskclearBoth||(props.fskclear==fskclearLeft&&left)||(props.fskclear==fskclearRight&&right))top=std::max(top,int64_t(obstacle.v)+obstacle.dv);
-        }
+        });
         if(top>INT_MAX)return PTS_tserrInvalidGeometry;
         int64_t gap=top-rect.v;rect.v=int(top);rect.dv=int(std::max<int64_t>(0,int64_t(rect.dv)-gap));
     }
@@ -1062,6 +1099,8 @@ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t 
     if(!segment||(direction!=PTS_fswdirES&&direction!=PTS_fswdirWS)||rect.du<=0||rect.dv<0||int64_t(rect.u)+rect.du>INT32_MAX||int64_t(rect.v)+rect.dv>INT32_MAX)return PTS_tserrNotImplemented;
     if(!cb.pfnGetFirstPara||!cb.pfnGetNextPara||!cb.pfnGetParaProperties||!cb.pfnCreateParaclient||!cb.pfnDestroyParaclient||!context->info.fscbk.cbkobj.pfnDestroyMcsclient)return PTS_tserrInvalidParameter;
     auto track=std::make_shared<TrackData>(context);track->segment=segment;track->direction=direction;track->rect=rect;track->bottomless=bottomless;
+    if(ContainerFlow::current){FSRECT page=FigureGeometry::current?FigureGeometry::current->page:rect;int status=transform_obstacles(*ContainerFlow::current->obstacles,ContainerFlow::current->direction,direction,page,track->inherited);if(status)return status;}
+    ContainerFlow isolated(0,nullptr);
     int found=0,status=0;void* name=nullptr;
     if(input){if(input->segment!=segment)return PTS_tserrInvalidBreakRecord;name=input->paragraph;found=1;}
     else {status=reinterpret_cast<PtsGetFirstPara>(cb.pfnGetFirstPara)(client,segment,&found,&name);if(status)return status;}
@@ -1103,7 +1142,11 @@ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t 
         FSRECT available=rect;available.v+=track->used;available.dv-=track->used;
         std::shared_ptr<Continuation> next_position;FSFMTRKSTOP next_stop=fmtrBrokenOutOfSpace;
         auto resume=(input&&track->paras.empty())?input:std::shared_ptr<Continuation>{};
-        if(props.idobj==-1)status=format_text(para,direction,available,resume,next_position,bottomless,!empty_ok&&track->paras.empty(),keep_self||props.fKeepWithNext,previous_page);
+        std::vector<FloatObstacle> inherited=track->inherited;
+        FSRECT flow_page=FigureGeometry::current?FigureGeometry::current->page:rect;
+        for(const auto& earlier:track->paras){status=para_obstacles(earlier,direction,flow_page,inherited);if(status)return status;}
+        inherited.erase(std::remove_if(inherited.begin(),inherited.end(),[&](const FloatObstacle& obstacle){return int64_t(obstacle.rect.v)+obstacle.rect.dv<=available.v||obstacle.rect.u>=int64_t(available.u)+available.du||int64_t(obstacle.rect.u)+obstacle.rect.du<=available.u;}),inherited.end());
+        if(props.idobj==-1)status=format_text(para,direction,available,resume,next_position,bottomless,!empty_ok&&track->paras.empty(),keep_self||props.fKeepWithNext,previous_page,inherited);
         else if(props.idobj==3) {
             void* margin_next=nullptr;
             status=format_table(para,direction,available,input_margin,bottomless,empty_ok||!track->paras.empty(),suppress&&first,resume,next_position,&margin_next);
@@ -1118,6 +1161,7 @@ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t 
             if(!next_position){margin.reset();margin.value=margin_next;input_margin=margin.value;}
             else if(margin_next)reinterpret_cast<PtsDestroyMcsclient>(context->info.fscbk.cbkobj.pfnDestroyMcsclient)(client,margin_next);
         } else {
+            ContainerFlow nested(direction,props.idobj==0?&inherited:nullptr);
             auto& methods=context->installed->methods[props.idobj];
             if(!(bottomless?methods.pfnFormatParaBottomless:methods.pfnFormatParaFinite)||!methods.pfnDestroyPara)return PTS_tserrInvalidParameter;
             CallbackTracks pending;
@@ -1148,6 +1192,17 @@ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t 
             if(!status&&clear!=fskclearNone)status=PTS_tserrNotImplemented;
         }
         if(status)return status;
+        int following_found=0;void* following_name=nullptr;int flow_used=para->desc.dvrUsed;
+        if(!next_position) {
+            status=reinterpret_cast<PtsGetNextPara>(cb.pfnGetNextPara)(client,segment,name,&following_found,&following_name);if(status)return status;
+            if(para->text)flow_used=para->text->text_used;
+            else if(props.idobj==0){auto child=lookup_owned(tracks,context.get(),para->desc.pfspara);if(child)flow_used=std::max(0,para->desc.dvrUsed-child->used+child->flow_used);}
+            FSPAP next_props{};
+            if(following_found){status=reinterpret_cast<PtsGetParaProperties>(cb.pfnGetParaProperties)(client,following_name,&next_props);if(status)return status;}
+            if(following_found&&(next_props.idobj==-1||next_props.idobj==0))para->desc.dvrUsed=flow_used;
+            else for(const auto& obstacle:inherited)para->desc.dvrUsed=std::max(para->desc.dvrUsed,int(std::min<int64_t>(available.dv,std::max<int64_t>(0,int64_t(obstacle.rect.v)+obstacle.rect.dv-available.v))));
+        }
+        track->flow_used=track->used+flow_used;
         if(para->forced_progress&&para->desc.dvrUsed>available.dv)para->desc.dvrUsed=available.dv;
         if(para->desc.dvrUsed<0||para->desc.dvrUsed>available.dv)return PTS_tserrInvalidClientOutput;
         if(!bottomless&&next_position&&para->desc.dvrUsed==0&&chain_start>=0&&(chain_start>0||empty_ok)) {
@@ -1166,8 +1221,10 @@ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t 
             else if(next_stop==fmtrBrokenColumnBreakBeforePara||next_stop==fmtrNoProgressColumnBreakBeforePara)track->stop=track->paras.empty()?fmtrNoProgressColumnBreakBeforePara:fmtrBrokenColumnBreakBeforePara;
             else track->stop=track->paras.empty()?fmtrNoProgressOutOfSpace:fmtrBrokenOutOfSpace;break;}
         if(!props.fKeepWithNext){chain_start=-1;chain_position.reset();chain_margin.reset();}
-        void* next=nullptr;status=reinterpret_cast<PtsGetNextPara>(cb.pfnGetNextPara)(client,segment,name,&found,&next);if(status)return status;name=next;
+        found=following_found;name=following_name;
     }
+    FSRECT flow_page=FigureGeometry::current?FigureGeometry::current->page:rect;
+    for(const auto& para:track->paras){status=para_obstacles(para,direction,flow_page,track->obstacles);if(status)return status;}
     if(bottomless)track->rect.dv=track->used;
     result=track;*margin_output=margin.value;margin.value=nullptr;return 0;
 }
@@ -1428,6 +1485,7 @@ extern "C" __declspec(dllexport) int WINAPI FsUpdateBottomlessSubtrack(void* con
             // into the temporary tree for teardown outside the registry lock.
             std::swap(track->rect,replacement->rect);std::swap(track->bbox,replacement->bbox);
             std::swap(track->used,replacement->used);track->paras.swap(replacement->paras);
+            std::swap(track->flow_used,replacement->flow_used);track->inherited.swap(replacement->inherited);track->obstacles.swap(replacement->obstacles);
             track->continuation.swap(replacement->continuation);
             std::swap(track->stop,replacement->stop);std::swap(track->forced_progress,replacement->forced_progress);
             track->update=fskupdNew;
@@ -1452,9 +1510,12 @@ struct TrackShift {
         owners.push_back(track);
         int status=add(track->rect.v,track->rect.dv);if(status)return status;
         status=box(track->bbox);if(status)return status;
+        for(auto& obstacle:track->inherited){status=add(obstacle.rect.v,obstacle.rect.dv);if(status)return status;}
+        for(auto& obstacle:track->obstacles){status=add(obstacle.rect.v,obstacle.rect.dv);if(status)return status;}
         for(const auto& para:track->paras) {
             status=box(para->desc.fsbbox);if(status)return status;
             if(para->text)for(auto& line:para->text->lines){status=add(line.vrStart,int64_t(line.dvrAscent)+line.dvrDescent);if(status)return status;}
+            if(para->text)for(auto& obstacle:para->text->inherited){status=add(obstacle.rect.v,obstacle.rect.dv);if(status)return status;}
             if(para->floater){auto& rect=para->floater->details.fsrcFloater;status=add(rect.v,rect.dv);if(status)return status;}
             if(para->text)for(const auto& object:para->text->attached){status=box(object.para->desc.fsbbox);if(status)return status;auto& rect=attachment_rect(object.para);status=add(rect.v,rect.dv);if(status)return status;if(object.para->figure){status=box(object.para->figure->details.fsbbox);if(status)return status;status=add(object.para->figure->details.fsptPosPreliminary.v,0);if(status)return status;}}
             if(para->desc.idobj==0){auto child=lookup_owned(tracks,track->context.get(),para->desc.pfspara);if(!child)return PTS_tserrInvalidQuery;status=collect(child);if(status)return status;}
@@ -1492,7 +1553,8 @@ int compare_paras(const std::shared_ptr<ParaData>& old,const std::shared_ptr<Par
     int status=reinterpret_cast<PtsUpdGetParaChange>(changed)(client,a.nmp,&change,&done);if(status)return status;
     if(change!=fskchNone)return 0;
     if(old->text&&fresh->text){const auto& x=*old->text;const auto& y=*fresh->text;
-        if(x.direction!=y.direction||x.lines.size()!=y.lines.size()||x.attached.size()!=y.attached.size())return 0;
+        if(x.direction!=y.direction||x.lines.size()!=y.lines.size()||x.attached.size()!=y.attached.size()||x.inherited.size()!=y.inherited.size()||x.text_used!=y.text_used)return 0;
+        for(size_t i=0;i<x.inherited.size();++i){const auto& l=x.inherited[i];const auto& r=y.inherited[i];if(!equal_rect(l.rect,r.rect,shift)||l.props.fskwr!=r.props.fskwr||l.props.fskfloatalignment!=r.props.fskfloatalignment||l.floater!=r.floater)return 0;}
         for(size_t i=0;i<x.lines.size();++i){auto l=x.lines[i],r=y.lines[i];
             if(l.pfslineclient!=r.pfslineclient||l.dcpFirst!=r.dcpFirst||l.dcpLim!=r.dcpLim||l.urStart!=r.urStart||l.dur!=r.dur||int64_t(l.vrStart)+shift!=r.vrStart||l.dvrAscent!=r.dvrAscent||l.dvrDescent!=r.dvrDescent||l.urBBox!=r.urBBox||l.durBBox!=r.durBBox||l.fForceBroken!=r.fForceBroken||l.fTreatedAsFirst!=r.fTreatedAsFirst)return 0;
         }
@@ -1525,7 +1587,9 @@ int compare_paras(const std::shared_ptr<ParaData>& old,const std::shared_ptr<Par
 }
 int compare_tracks(const std::shared_ptr<TrackData>& old,const std::shared_ptr<TrackData>& fresh,int shift,bool& equal) {
     equal=false;if(old==fresh){equal=true;return 0;}
-    if(old->segment!=fresh->segment||old->bottomless!=fresh->bottomless||old->direction!=fresh->direction||old->used!=fresh->used||old->stop!=fresh->stop||old->forced_progress!=fresh->forced_progress||old->paras.size()!=fresh->paras.size()||!equal_rect(old->rect,fresh->rect,shift)||!equal_bbox(old->bbox,fresh->bbox,shift))return 0;
+    if(old->segment!=fresh->segment||old->bottomless!=fresh->bottomless||old->direction!=fresh->direction||old->used!=fresh->used||old->flow_used!=fresh->flow_used||old->stop!=fresh->stop||old->forced_progress!=fresh->forced_progress||old->paras.size()!=fresh->paras.size()||old->inherited.size()!=fresh->inherited.size()||old->obstacles.size()!=fresh->obstacles.size()||!equal_rect(old->rect,fresh->rect,shift)||!equal_bbox(old->bbox,fresh->bbox,shift))return 0;
+    for(size_t i=0;i<old->inherited.size();++i)if(!equal_rect(old->inherited[i].rect,fresh->inherited[i].rect,shift))return 0;
+    for(size_t i=0;i<old->obstacles.size();++i)if(!equal_rect(old->obstacles[i].rect,fresh->obstacles[i].rect,shift))return 0;
     for(size_t i=0;i<old->paras.size();++i){bool same=false;int status=compare_paras(old->paras[i],fresh->paras[i],shift,same);if(status||!same)return status;}equal=true;return 0;
 }
 int compare_pages(const std::shared_ptr<PageData>& old,const std::shared_ptr<PageData>& fresh,bool& equal) {

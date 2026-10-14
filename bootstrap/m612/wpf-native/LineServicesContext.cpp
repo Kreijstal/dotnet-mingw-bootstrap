@@ -641,6 +641,30 @@ int paragraph_widths(const Line& line,int& maximum_total,int& maximum_visible,in
     return LS_None;
 }
 
+int reset_line_whitespace(Line& line) {
+    // UAX #9 L1 is a line operation: wrapping can leave whitespace inside
+    // a directional run. It must move to the paragraph's visual line end.
+    int base=line.base_flow==4?1:0;
+    for(size_t index=line.runs.size();index>0;) {
+        --index;auto& run=line.runs[index];
+        if(run.synthetic||run.embedded)break;
+        if(run.hidden){run.level=base;run.flow=line.base_flow;continue;}
+        size_t first=run.text.size();
+        while(first){auto kind=u_charDirection(run.text[first-1]);if(kind!=U_WHITE_SPACE_NEUTRAL&&kind!=U_SEGMENT_SEPARATOR&&kind!=U_BLOCK_SEPARATOR)break;--first;}
+        if(first==run.text.size())break;
+        if(run.level!=base) {
+            if(first) {
+                Run tail=run;tail.cp+=int(first);tail.text.erase(tail.text.begin(),tail.text.begin()+first);tail.level=base;tail.flow=line.base_flow;tail.level_delta=0;
+                run.text.resize(first);int status=measure_run(*line.context,run);if(status)return status;
+                status=measure_run(*line.context,tail);if(status)return status;
+                line.runs.insert(line.runs.begin()+index+1,std::move(tail));
+            } else {run.level=base;run.flow=line.base_flow;}
+        }
+        if(first)break;
+    }
+    return LS_None;
+}
+
 struct RunGeometry { std::vector<int> left,edge;std::vector<int32_t> order; };
 RunGeometry visual_runs(const Line& line) {
     RunGeometry result;size_t count=line.runs.size();result.left.resize(count);result.edge.resize(count);result.order.resize(count);
@@ -1078,6 +1102,10 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
                 }
             }
         }
+        status=reset_line_whitespace(*result);if(status)return status;
+        status=layout_tabs(*result,properties.durLeft,total);if(status)return status;
+        trailing=total;
+        for(auto item=result->runs.rbegin();item!=result->runs.rend();++item){bool all_spaces=false;trailing-=trailing_width(*item,all_spaces);if(!all_spaces)break;}
         int minimum_total=total,minimum_trailing=trailing;
         if(!minmax && paragraph.fJustify && (result->info.endr==0||result->info.endr==1) && !(flags&0x40000000u)) {
             int64_t target=static_cast<int64_t>(column)-properties.durRightJustify;
