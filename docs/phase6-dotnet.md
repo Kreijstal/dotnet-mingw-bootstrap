@@ -11688,3 +11688,63 @@ Full source/private regressions and package integration follow. Imported coverag
 remains 126/139 and paragraph ABI 479 fields: automatic numbering is new behavior
 of existing exports. Other advanced layout/optimal/NLS gaps remain unfinished;
 the WPF goal stays active.
+
+
+## 181. Installed release 41: public bullets and numbered lists
+
+WindowsDesktop 8.0.0-41 is built, installed and validated on win11. Source feature
+commit c9e3147 is represented byte for byte by patch 0041. Clean pinned sources
+plus all 41 declared patches reproduce all six feature files; actual private
+source files equal the driver. All 44 locally available source declarations match
+their hashes. Recipe commit 3737f44 declares corrected release/patch/README
+metadata and adds check-list-markers-native to check().
+
+Complete source and private regressions exit zero. Each check-sdk finishes 30
+WPF consumers (standard SDK/BAML/window application plus 29 feature gates) and
+both interim WinForms executions. Native marker/line/breakpoint checks pass;
+private original paragraph ABI/lifecycle checks confirm 479 fields unchanged.
+Final validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-list-markers-native check-lineservices-line-native check-paragraph-breaks-native inventory layout check-sdk
+# Private CLANG64 recipe workspace, after sourcing PKGBUILD:
+_wpf native-win32 inventory check-list-markers-native check-paragraph-breaks-native check-lineservices-line-native check-paragraph-context-native check-paragraph-context layout check-sdk
+MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/install-list-markers.sh'
+```
+
+The archived install-and-check.sh regenerates .SRCINFO, invokes makepkg
+--repackage --force --noconfirm, installs with pacman -U --noconfirm and verifies
+installed payload hashes. It then runs these exact installed consumers:
+
+```sh
+bash "$(_driver)/wpf-tests/check-list-markers-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-list-markers-sdk-check
+bash "$(_driver)/wpf-tests/check-optimal-paragraph-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-list-markers-optimal-sdk-check
+bash "$(_driver)/wpf-tests/check-paragraph-breaks-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-list-markers-cache-sdk-check
+/usr/bin/python3 ~/wpfboot/check-installed-hyphenation.py
+```
+
+All commands exit zero. Payload validation confirms 42 managed implementations/
+references, native hashes, desktop SDK tasks and retained interim versions.
+Installed marker checks pass all 64 direct marker cases and matching empty-line
+checks, four marked-cache continuations and 24 public list cases twice. Three-page
+lists retain all 176 source characters and exactly 4/10/13 bullet/decimal/Roman
+marker characters for four items across both text modes/directions and optimization
+settings. Actual red/black pixels, unchanged body metrics/carets/source glyphs,
+independently cloned records, page mapping, regeneration and GC pass. Installed
+optimizer/cache regressions pass in both execution modes, including eight
+independent exhaustive minimum proofs. Builds have zero warnings/errors.
+Installed source audit again verifies 81 input hashes, 39 original notices and
+exact regeneration of 36 dictionaries. Installed native inventory remains
+126/139 imported APIs, with 13 absent; this release adds behavior to existing APIs.
+
+Evidence/artifact are under
+`tmp/wpf8-support/validation/list-markers-package-20261014`:
+`mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-41-any.pkg.tar.zst`.
+SHA-256: a3cec7252a52dc6bfac47ccee956afa5edaa0e7ea5eb6fc8ce03b14f522a3c69.
+The local artifact hash matches the installed validation host's artifact. Final
+source evidence is under `tmp/wpf8-support/validation/list-markers-20261014`.
+
+Legacy Word95/embedded-object markers, advanced layout/optimal constraints,
+general column spans, footnotes and legacy NLS remain unfinished. Original public
+bullets and numbered lists now render through source marker handling. The broader
+WPF goal remains active.
