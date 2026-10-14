@@ -11428,3 +11428,72 @@ character CPs separately from break-boundary CPs. Hyphenation uses character CPs
 for original lexical callbacks while cached breakpoints retain the corrected
 boundary mapping. Both consumers are rerun before package integration. Counts
 above enumerate consumer scripts, not only the 27 feature-specific PASS markers.
+
+
+## 177. Installed release 39: paragraph-cache breakpoint substrate
+
+WindowsDesktop 8.0.0-39 is built, installed and validated on win11. Source feature
+commits d7d648a/ff9cd85 are represented byte for byte by patch 0039; clean pinned
+sources plus all 39 declared patches reproduce all six changed feature files,
+and actual private source files equal the driver. Recipe commit 0a856c9 declares
+the corrected patch/README hashes and adds check-paragraph-breaks-native to
+check(). The first regression's RTL lexical failure is corrected as described
+in section 176; no failing candidate was installed as release 39.
+
+Final source and private regressions both exit zero. Each check-sdk invocation
+runs 28 WPF consumers: the standard SDK/BAML/window/publish application plus 27
+feature consumers with individual PASS markers. Both interim WinForms executions
+also pass. This distinguishes complete consumer counts from earlier sections'
+feature-marker-only counts. Private original paragraph ABI/lifecycle tests and
+native cache/line checks pass, with 470 paragraph fields unchanged.
+
+Final validation commands on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 inventory check-paragraph-breaks-native check-lineservices-line-native
+/usr/bin/python3 ~/wpfboot/refresh-finite-native.py
+MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-hyphenation-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/paragraph-breaks-hyphenation-check; bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-paragraph-breaks-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/paragraph-breaks-sdk-check'
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh layout check-sdk
+# In the private CLANG64 package workspace, after sourcing PKGBUILD:
+_wpf native-win32 inventory check-paragraph-breaks-native check-lineservices-line-native check-paragraph-context-native check-paragraph-context layout check-sdk
+MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/install-paragraph-breaks.sh'
+```
+
+The archived install-and-check.sh script sources the private recipe, regenerates
+.SRCINFO, runs makepkg --repackage --force --noconfirm, installs with pacman -U
+--noconfirm and verifies staged payload hashes. It then runs these exact focused
+installed consumers:
+
+```sh
+bash "$(_driver)/wpf-tests/check-paragraph-breaks-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-paragraph-breaks-sdk-check
+bash "$(_driver)/wpf-tests/check-hyphenation-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-paragraph-breaks-hyphenation-sdk-check
+bash "$(_driver)/wpf-tests/check-bidi-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-paragraph-breaks-bidi-sdk-check
+/usr/bin/python3 ~/wpfboot/check-installed-hyphenation.py
+```
+
+All exit zero. Installed payload validation confirms 42 managed implementations/
+references, native hashes, SDK tasks and legacy framework versions. The original
+paragraph cache passes all forty cases twice with exact reconstructed lengths,
+actual glyph/raster output, independent cloned continuations and GC. Original
+hyphenation again passes thirteen cultures and the Ideal/Display LTR/RTL direct
+and left/justified ten-page FlowDocument matrix. Mixed bidi consumers include
+four rendered FlowDocument pages with all 699 characters once, source/page
+mapping, disposed-page regeneration and GC. Shared-framework and self-contained
+consumers build with zero warnings/errors. The installed source audit again
+verifies 81 source hashes, 39 original notices and a byte-identical regeneration
+of all 36 embedded dictionaries. Installed-DLL import inventory confirms 126/139,
+with the same 13 absent exports as the final source inventory.
+
+Evidence/artifact are archived under
+`tmp/wpf8-support/validation/paragraph-breaks-package-20261014`:
+`mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-39-any.pkg.tar.zst`.
+SHA-256: 8c8d77fcff941f9c6766a1a2b966439d0b73dbf5215924e4fdb9450487472d9b.
+The 58,867,950-byte local artifact hash equals the installed validation host's
+artifact. Final source evidence is under
+`tmp/wpf8-support/validation/paragraph-breaks-20261014`.
+
+The package now supplies genuine original cache sessions and feasible Unicode
+break alternatives. It does not complete PTS optimal paragraph formatting:
+paragraph-wide scoring/reconstruction and external penalty restrictions are the
+next integration work. General column spans, footnotes, advanced layout/bidi and
+legacy NLS remain open. The WPF goal remains active.
