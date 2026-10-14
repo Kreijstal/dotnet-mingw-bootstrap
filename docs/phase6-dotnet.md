@@ -12631,3 +12631,117 @@ General polygon/object/table/subpage layouts, full bidi/optimizer conformance,
 legacy compound/multiword/reform spelling and full physical printing remain
 unsupported or unproven. WinForms 8 still needs its source metadata generator;
 the approved interim build remains WinForms 7. The full WPF goal stays active.
+
+
+## 196. Independent horizontal table flow direction
+
+Source feature commit 42ff2d7 preserves the table direction reported by original
+TableParagraph.GetTableProperties independently of its parent track. The former
+native guard rejected opposing directions. The source formatter now passes the
+table direction to row/distribution callbacks, ordinary and spanning cell subpage
+formatting and SetCellHeight. Placement, AutofitTable and margin collapse retain
+parent track coordinates; table detail queries report the table's own direction.
+
+An installed release48 baseline with the strengthened RTL SDK fixture builds
+successfully but fails the first opposing table/page direction's raster assertion.
+After the native change, all four page/table direction combinations in both Ideal
+and Display pass actual logical column-order/background/glyph checks. The complete
+public table fixture runs its 52 scenarios with ordinary LTR, RTL table in LTR page,
+and LTR table in RTL page: 312 scenario executions across shared and portable runs.
+This includes nested tables with the opposite table direction, split ordinary and
+spanning cells, multi-column layout, page/source mapping, disposal/regeneration,
+tiny forced-progress pages and bottomless scrolling/edit/extent checks. Original
+thresholds and source assertions are retained; the spanning-background probe scans
+both physical column orders for the same required continuous red height.
+
+Native checks cover eight parent/table/span combinations, actual callback direction
+arguments, query placement and exact resource teardown. Existing populated callback
+failure, lost-output, cloned break records and split row/span assertions still pass.
+The original managed paragraph ABI check remains 482 fields.
+
+Exact focused source validation, with the standard CLANG64 source environment:
+
+```sh
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-paragraph-context-native
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-paragraph-context-native check-paragraph-context
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-tables-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/mixed-table-deep-check
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-rtl-pages-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/mixed-table-candidate
+```
+
+All final commands exit zero; managed build/publish steps report zero warnings and
+errors. For these focused checks the source SDK overlay's shared/runtime-pack native
+files were unlinked and replaced with the rebuilt library before running consumers.
+This avoids changing the installed framework through hard links. Initial fixture
+failures were corrected: the native mock text direction now follows its cell
+subpage, and the spanning-background measurement no longer assumes a left physical
+column. Neither fix suppresses an application assertion.
+
+Evidence is archived under
+`tmp/wpf8-support/validation/independent-table-direction-20261014`.
+Clean pinned sources plus all 49 recipe patches reproduce all six feature files.
+The new patch SHA-256 is
+0b4faf37fae165dc84c1a4b8369bc079b2a19598fa5f696c0d7cfacfee888d3a.
+This closes a real public mixed-direction table gap, but vertical/floating tables,
+non-default native table alignment and other advanced layout behavior remain
+unsupported or unproven. Full WPF compatibility remains an active goal.
+
+
+## 197. Installed release 49: independently directed tables
+
+The 2026-10-14 continuation packages and installs WindowsDesktop 8.0.0-49 with
+section 196's source change. Recipe commit 4d792b3 retains the pinned driver and
+adds 0049-independent-table-direction.patch. Clean replay of all 49 patches
+reproduces all six feature files exactly. Source verification passes; .SRCINFO has
+56 source/hash declarations and all 52 locally available input hashes match.
+
+The private tree receives the new patch after release48's validated build. Its
+native library is rebuilt with the current trusted MSYS2 LLVM23 toolchain;
+native inventory, context/line/page/table ownership checks, managed original
+482-field ABI and desktop layout pass. The first focused app attempt used the old
+SDK overlay because layout does not recreate sdk-check-root. That stale-overlay
+failure is retained in the original log. The archived private-sdk-checks.sh then
+recreates the overlay using check-sdk's exact unlink-before-copy sequence and
+compares both shared and runtime-pack native copies with the rebuilt library.
+All subsequent shared/portable table and RTL checks pass. This release uses
+focused regressions for the native change; release48's complete 36-consumer and
+WinForms suite remains separately recorded in section 195.
+
+Exact private rebuild and successful SDK continuation, after sourcing PKGBUILD:
+
+```sh
+makepkg --verifysource --noconfirm
+patch --batch --forward -d "$(_tree)" -Np1 -i "$PWD/0049-independent-table-direction.patch"
+_wpf native-win32 inventory check-paragraph-context-native check-paragraph-context layout
+bash ~/wpfboot/mixed-table-private-sdk-checks.sh
+bash ~/wpfboot/install-independent-tables.sh
+```
+
+The SDK continuation and install script both exit zero. As in section 195,
+packaging checks every runtime dependency and all non-C++/CLI makedepends with
+pacman -T, then invokes makepkg --repackage --force --noconfirm --nodeps on the
+validated existing source build. This avoids the unused LLVM22-pinned compiler
+check after the host upgrade without downgrading LLVM or falsifying dependencies;
+a fresh build still requires the recipe's declared source C++/CLI compiler.
+
+package() and installed payload checks both pass: 42 managed implementation/
+reference pairs, native hashes, SDK tasks and retained legacy framework versions.
+The installed table suite passes 312 scenario executions and the installed RTL
+suite passes sixteen table raster cases across shared/portable execution, plus
+its existing paragraph/page/scrolling cases. Hyphenation's original source audit
+passes 81 hashes, 39 notices and exact regenerated embedded dictionaries. Native
+inventory remains 133/139, with all six absent declarations under upstream
+#if NEVER. This does not establish full native behavior.
+
+The 58,923,943-byte artifact and its host/local matching hash are archived with
+exact scripts, private/source/installed logs and native inventory under
+`tmp/wpf8-support/validation/independent-table-direction-package-20261014`:
+
+```text
+mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-49-any.pkg.tar.zst
+SHA-256: d076c61a7c8d11824744f7bce43acc141a154f4e21bd911bb39d772bf122bd55
+```
+
+General polygon/object/table/subpage layout, full bidi/optimizer conformance,
+legacy compound/multiword/reform spelling and full physical printing remain
+unfinished or unproven. WinForms8 metadata generation and current Greenshot
+compatibility also remain open. The WPF goal stays active.
