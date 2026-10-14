@@ -14308,3 +14308,77 @@ spacing adjustments, ink insertion and broader native layout/bidi/optimizer
 conformance remain unfinished, as do complex margins, spelling reform, physical
 printing, WinForms8 metadata generation and current Greenshot's net480/source
 dependencies. The full WPF goal stays active.
+
+
+## 219. Complete registered release 62 SDK consumer run
+
+The 2026-10-14 continuation completes the full current SDK consumer registry
+against the release 62 private source-built layout. This supersedes the focused-
+coverage limitation recorded at packaging time in section 218; it does not claim
+complete WPF conformance. The installed package and source binaries remain
+unchanged.
+
+Exact command on win11, terminal exit0:
+
+```sh
+bash ~/wpfboot/full-wpf-release62-check.sh
+```
+
+The archived script checks installed package identity, compares the changed native
+DLL with the private source build, verifies the installed payload and invokes:
+
+```sh
+_wpf check-sdk
+```
+
+That step recreates its SDK overlay without overwriting installed hardlinks,
+then runs all 46 registered WPF consumers followed by the interim WinForms consumer.
+All 47 consumers build offline and pass shared-framework plus self-contained
+execution (94 primary application executions). All 47 build summaries report zero
+warnings and zero errors. The BAML/window and WinForms window/control/resource/
+event/GDI+ checks each pass in both execution modes. The final overlay 42-pair
+managed/reference/native/SDK payload audit passes too.
+
+The completed coverage includes image codecs, text/font/tab geometry, glyph and
+cross-run carets, fixed/flexible objects, justification and compression, paragraph
+contexts/minimums/breakpoints, finite/bottomless documents, pagination, columns,
+hard breaks, keep constraints, forced progress, block UI and clearing, subpages/
+subtracks, display transfer and balancing, floats and clearing across paragraphs,
+oversized/forced floaters, tables/figures/composite lines, hyphenation and spelling,
+optimal paragraph selection, lists, finite updates and bidi/reverse/RTL pages.
+The optimizer fixture also passes exhaustive feasible-partition cost comparison.
+Existing tests perform actual raster, source/page mapping, regeneration and GC
+checks rather than treating successful assembly loading as layout proof.
+
+A separate post-run audit checks the exact deployed files. Exact command on
+win11, after sourcing the recipe with the same CLANG64/srcdir environment:
+
+```sh
+/usr/bin/python3 ~/wpfboot/full-wpf-release62-audit-published.py "$(_driver)" "$(_wpfbuild)" /clang64/lib/dotnet ~/wpfboot/full-wpf-release62-published.json
+```
+
+The audit parses the registered consumer list from that private driver's wpf.sh.
+All 161 desktop overlay files in shared/framework/reference/runtime/SDK directories
+match the corresponding installed files. All 47 portable output directories exist;
+all 376 published native desktop assets and 1,974 managed desktop assets match the
+installed desktop hashes. Each of the 46 WPF publications includes the required
+native libraries plus PresentationCore/PresentationFramework; the WinForms
+publication includes the expected System.Windows.Forms. This rules out stale
+portable desktop DLLs in the completed registry run. Core SDK/runtime files are
+outside this desktop byte comparison; the suite uses the existing approved
+source-built SDK seed.
+
+The exact runner, audit source, complete log, audit log, per-consumer asset JSON
+and validation-file hashes are archived under
+`tmp/wpf8-support/validation/full-wpf-release62-20261014`. The checked package remains:
+
+```text
+mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-62-any.pkg.tar.zst
+SHA-256: 7708c3f9d30c836dac48a842255fec5ff36dce54ee693dfaeaac7b6a5a511b86
+```
+
+This is validation-only progress; no new package version is required. Remaining
+aligned-field spacing, ink insertion and broader native conformance work remains
+open, along with complex margins, spelling reform, physical printing, WinForms8
+metadata and current Greenshot's net480/source dependencies. The full WPF goal
+stays active.
