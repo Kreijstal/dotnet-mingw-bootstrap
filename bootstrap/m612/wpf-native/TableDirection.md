@@ -26,3 +26,24 @@ All consumers run as shared-framework and portable self-contained applications.
 This supports horizontal LTR/RTL tables. Vertical writing directions, floating tables,
 non-default native table alignment, header/footer rows and other documented advanced
 table features remain unsupported. It does not establish full native layout parity.
+
+Spanning-cell forced progress
+----------------------------
+
+Finite span groups retain the cell formatter's fForcedProgress flag. On an empty
+page an oversized first line can extend beyond the page, including on resumed
+cell records. The group keeps its actual row/cell geometry and immutable source
+continuations; row queries expose fForcedRow and the parent bounds its consumed
+extent to the available page height. A nonempty page still defers the group.
+Overflow without a forced-progress callback remains unsupported.
+
+The native regression resumes nine oversized source fragments and verifies row
+flags, bounded parent height, terminal continuation state and exact ownership.
+The public SpanForcedProgress consumer checks three-row spans with no neighboring
+cells, short neighbors and independently continuing multiline neighbors at page
+heights 10/40/80 in Ideal/Display mode and opposing page/table directions. Every
+source character belongs to exactly one page with matching GetPageNumber; disposed
+pages regenerate identical rasters after compacting GC. The 40/80-height cases
+also require actual green glyph ink. At height 10 the page clip may hide the glyphs,
+so source coverage, bounded progress and regeneration are the relevant checks.
+All scenarios execute through shared-framework and portable SDK applications.

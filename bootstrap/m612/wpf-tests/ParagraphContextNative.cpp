@@ -930,7 +930,19 @@ int main(int argc,char** argv) {
             for(int r=0;r<3;++r)require(FsQueryTableObjCellList(context,table_rows[r].pfstablerow,2,cell_updates,cell_handles,cell_merges,&actual_count)==0&&!cell_handles[0]&&cell_handles[1],"completed ordinary cells are omitted while the resumed span stays shared across rows");
             require(destroy_subtrack(context,subtrack)==0,"terminal span branch release");
         }
-        require(destroy_subtrack_record(context,clone)==0&&table_records_created==table_records_destroyed&&table_cells_created==table_cells_destroyed&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"split span clones/no-progress/failure/final release own every cell, record and original line exactly once");long_span=false;
+        require(destroy_subtrack_record(context,clone)==0&&table_records_created==table_records_destroyed&&table_cells_created==table_cells_destroyed&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"split span clones/no-progress/failure/final release own every cell, record and original line exactly once");
+        reset_page_counts();table_cells_created=table_cells_destroyed=table_records_created=table_records_destroyed=0;
+        FSRECT tiny_span_area{10,20,100,5};void* tiny_input=nullptr;
+        for(int chunk=0;chunk<9;++chunk){
+            require(format_subtrack(context,tiny_input,chunk!=0,reinterpret_cast<void*>(77),0,nullptr,nullptr,0,1,0,&tiny_span_area,nullptr,fskclearNone,fsksuppresshardbreakbeforefirstparaNone,&formatted,&subtrack,&subrecord,&used,&bbox,&margin,&clear,&top_space)==0&&formatted.fForcedProgress&&used==5&&bool(subrecord)==(chunk<8),"tiny spanning cell fragments honor forced source progress and retain exact terminal state");
+            if(tiny_input)require(destroy_subtrack_record(context,tiny_input)==0,"tiny span input release after successful resume");
+            require(FsQuerySubtrackParaList(context,subtrack,1,paras,&actual_count)==0&&actual_count==1&&paras[0].dvrUsed==5&&FsQueryTableObjRowList(context,paras[0].pfspara,3,table_rows,&actual_count)==0&&actual_count==3,"tiny span parent bounds consumed height and preserves all original row identities");
+            FSTABLEROWDETAILS tiny_row{};
+            require(FsQueryTableObjRowDetails(context,table_rows[0].pfstablerow,&tiny_row)==0&&tiny_row.fForcedRow,"tiny span row query exposes the callback forced-progress flag");
+            require(destroy_subtrack(context,subtrack)==0,"tiny span content release before continuation");tiny_input=subrecord;
+        }
+        require(!tiny_input&&table_records_created==table_records_destroyed&&table_cells_created==table_cells_destroyed&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"tiny span terminal teardown releases all cells, records, clients and source lines exactly once");long_span=false;
+        std::puts("native forced spans: nine oversized source fragments, bounded parent extent, row flags, exact terminal state and complete ownership PASS");
         std::puts("native split spans: actual cell records, shared resumed master/omitted completed cells, immutable clones, no-progress/failure preservation and exact teardown PASS");
         table_fail_cell=-1;malformed_span=table_spans=false;
         std::puts("native vertical spans: original shared client/merge states, combined row height, intact deferral/resume, partial failures and exact single-owner cleanup PASS");

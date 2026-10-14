@@ -974,8 +974,10 @@ int format_span_group(const std::shared_ptr<ParaData>& para,const std::shared_pt
     }
     bool resumed=incoming&&!incoming->span_cells.empty();
     if(resumed&&incoming->span_cells.size()!=masters.size())return PTS_tserrInvalidBreakRecord;
+    bool forced_progress=false;
     auto format_cells=[&](bool finite,int available)->int {
         std::fill(heights.begin(),heights.end(),0);
+        forced_progress=false;
         std::unordered_set<size_t> ordinary_rows;for(size_t i=0;i<masters.size();++i)if(masters[i].first==masters[i].last&&!(resumed&&incoming->span_cells[i].done))ordinary_rows.insert(masters[i].first);
         int row_available=ordinary_rows.empty()?available:available/int(ordinary_rows.size());
         std::vector<size_t> order;for(size_t i=0;i<masters.size();++i)if(masters[i].first==masters[i].last)order.push_back(i);for(size_t i=0;i<masters.size();++i)if(masters[i].first!=masters[i].last)order.push_back(i);
@@ -987,6 +989,7 @@ int format_span_group(const std::shared_ptr<ParaData>& para,const std::shared_pt
                 if(master.first!=master.last){int64_t outside=0,inside_spacing=0;for(size_t r=0;r<inputs.size();++r){if(r<master.first||r>master.last)outside+=heights[r];if(r>=master.first&&r<master.last)inside_spacing+=int64_t(below[r])+above[r+1];}cell_available=int(std::max<int64_t>(0,int64_t(available)+inside_spacing-outside));}
                 FSFMTR formatted{};void* record=resumed&&incoming->span_cells[i].record?incoming->span_cells[i].record->handle:nullptr;
                 status=reinterpret_cast<PtsFormatCellFinite>(cb.pfnFormatCellFinite)(client,para->desc.pfsparaclient,record,master.name,nullptr,0,direction,0,cell_available,&formatted,&cell->handle,&cell->record,&cell->height);
+                forced_progress=forced_progress||formatted.fForcedProgress;
                 if(!status&&formatted.kstop!=fmtrGoalReached&&!(formatted.kstop==fmtrBrokenOutOfSpace&&cell->record))status=PTS_tserrNotImplemented;
             }else {FSFMTRBL formatted{};status=reinterpret_cast<PtsFormatCellBottomless>(cb.pfnFormatCellBottomless)(client,para->desc.pfsparaclient,master.name,direction,&formatted,&cell->handle,&cell->height);if(!status&&formatted!=fmtrblGoalReached)status=PTS_tserrNotImplemented;}
             pending.claimed_pages=cell->handle!=nullptr;pending.claimed_record=cell->record;if(pending.claimed_pages)for(const auto& page:pending.created_pages)page->inherit_updates=true;
@@ -1011,10 +1014,14 @@ int format_span_group(const std::shared_ptr<ParaData>& para,const std::shared_pt
             output=std::make_shared<Continuation>();output->context=context;output->paragraph=para->desc.nmp;output->table_row=inputs.front().name;if(resumed)output->span_cells=incoming->span_cells;
             if(!data->rows.empty())data->rows.back()->details.fskboundaryBelow=fsktablerowboundaryBreak;return 0;
         }
-        if(resumed)return PTS_tserrNotImplemented;
-        for(auto& master:masters)master.cell.reset();
-        status=format_cells(true,available);if(status)return status;status=constrain();if(status)return status;total=extent();
-        if(int64_t(top)+used+total>rect.dv)return PTS_tserrNotImplemented;
+        if(!resumed){
+            for(auto& master:masters)master.cell.reset();
+            status=format_cells(true,available);if(status)return status;status=constrain();if(status)return status;total=extent();
+        }
+        // A cell may force its first oversized line onto an otherwise empty
+        // page. Preserve its real ink height and continuation; the parent
+        // accounts for the available page height, as for ordinary table rows.
+        if(int64_t(top)+used+total>rect.dv&&!forced_progress)return PTS_tserrNotImplemented;
     }
     if(int64_t(rect.v)+top+used+total>INT32_MAX)return PTS_tserrInvalidGeometry;
     bool split=std::any_of(masters.begin(),masters.end(),[](const Master& master){return master.cell&&master.cell->record;});
@@ -1022,11 +1029,13 @@ int format_span_group(const std::shared_ptr<ParaData>& para,const std::shared_pt
         int status=reinterpret_cast<PtsSetCellHeight>(cb.pfnSetCellHeight)(master.cell->handle,para->desc.pfsparaclient,resumed&&incoming->span_cells[i].record?incoming->span_cells[i].record->handle:nullptr,master.name,master.cell->record!=nullptr,direction,int(span));if(status)return status;
     }
     for(size_t r=0;r<inputs.size();++r){auto row=std::make_shared<TableRowData>(context);auto& input=inputs[r];row->description.fsnmRow=input.name;row->description.pfstablerow=row.get();row->description.fsupdinf.fskupd=fskupdNew;row->description.u.dvrRow=above[r]+heights[r]+below[r];
+        row->details.fForcedRow=forced_progress;
         row->details.fskboundaryAbove=resumed?fsktablerowboundaryBreak:data->rows.empty()?(first_table?fsktablerowboundaryOuter:fsktablerowboundaryBreak):fsktablerowboundaryInner;
         row->details.fskboundaryBelow=split?fsktablerowboundaryBreak:r+1==inputs.size()&&!found?fsktablerowboundaryOuter:fsktablerowboundaryInner;row->details.dvrAbove=above[r];row->details.dvrBelow=below[r];row->details.cCells=int(input.names.size());row->merges=input.merges;
         for(void* name:input.names){auto master=std::find_if(masters.begin(),masters.end(),[&](const Master& value){return value.name==name&&value.first<=r&&value.last>=r;});if(master==masters.end())return PTS_tserrInvalidClientOutput;row->cells.push_back(master->cell);}
         data->rows.push_back(row);
     }
+    para->forced_progress=para->forced_progress||forced_progress;
     used+=int(total);
     if(split){output=std::make_shared<Continuation>();output->context=context;output->paragraph=para->desc.nmp;output->table_row=inputs.front().name;
         for(auto& master:masters){PendingTableCell pending{master.name,nullptr,!master.cell||!master.cell->record};if(master.cell&&master.cell->record){auto record=std::make_shared<CellBreakData>(context);record->callbacks=cb;record->handle=master.cell->record;master.cell->record=nullptr;pending.record=record;}output->span_cells.push_back(pending);}
