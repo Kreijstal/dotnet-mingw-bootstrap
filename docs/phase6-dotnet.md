@@ -10090,3 +10090,62 @@ works in the exercised cases. Vertical spans and repeated headers/footers,
 figures, complex center/clear policies, comparison/display transfer, balancing/
 spans/footnotes, advanced/optimal/incremental/interruptible algorithms and full
 bidi/native-language behavior remain incomplete. The full WPF goal stays active.
+
+## 155. Installed release 28: split table cells and rows
+
+The 2026-10-14 continuation packages section 154 as WindowsDesktop 8.0.0-28.
+Declared/checksummed 0028-split-table-cells.patch follows the prior 27 patches.
+Clean pinned sources plus all 28 patches match the three committed feature
+files byte for byte; actual private sources have matching SHA-256 hashes. Both
+source and private builds regenerate native output, inventory and layout and
+pass native cell-record/clone/no-progress/failure/ownership gates, 429 original
+ABI field checks, paragraph/line regressions and every offline SDK consumer.
+Unchanged managed/graphics/printing outputs remain its own private source builds.
+
+Validation commands:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+# In the CLANG64 package workspace:
+makepkg --verifysource --force
+source PKGBUILD                 # with srcdir set to this workspace's src/
+_wpf native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+makepkg --printsrcinfo > .SRCINFO
+makepkg --repackage --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-28-any.pkg.tar.zst
+/usr/bin/python3 check-staged.py /clang64/lib/dotnet
+bash "$(_driver)/wpf-tests/check-tables-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-split-tables-sdk-check
+bash "$(_driver)/wpf-tests/check-forced-progress-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-split-tables-forced-sdk-check
+pacman -Q mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap
+sha256sum mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-28-any.pkg.tar.zst
+```
+
+All final commands pass. Staged/installed checks cover 42 managed implementation/
+reference assemblies, eight native libraries, SDK tasks and retained WinForms
+versions. Installed split rows cover all 384 characters once on four pages in
+Ideal/Display; unequal cells cover 232 characters with the shorter cell on one
+page and the tall cell on four. Initial whole-row deferral preserves 454
+characters on five pages; columns preserve 384 on two pages; following rows
+preserve 408 on five pages. Original GetPageNumber, actual green glyph raster,
+disposed chunk regeneration and GC agree with real source ranges. A 400x10
+paginator with 32-DIP text preserves all 30 characters on three pages, showing
+bounded forced source progress. Native cloned/no-progress/failed/terminal cell
+paths release all allocated resources exactly once and omit completed cells.
+Prior intact/styled/spanned/grouped/nested/empty/scrolling table paths pass.
+Installed undersized ordinary paragraph pagination also remains green across
+Ideal/Display, flat/nested and kept/unkept cases, covering all 61 characters
+once on three pages. Shared-framework and self-contained runs pass with SDK
+roots/toolchain PATH removed and zero consumer warnings/errors. Full source/
+private suites pass all other consumers, including interim WinForms. The
+existing srcdir provenance warning remains.
+
+Artifact: mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-28-any.pkg.tar.zst.
+SHA-256: 0de5eda920e912f22c46d5d54d6e22c76465e456148dba507440f7d8d20ae104.
+Recipe commit: msys2-ur 78634fe; feature commit: f5e8f6c.
+Artifact, recipe, metadata, patch, hashes and validation logs are archived under
+ tmp/wpf8-support/validation/split-tables-package-20261014.
+Imported native coverage remains 109/139 with 30 absent. Vertical spans and
+repeated headers/footers, figures, complex center/clear policies, comparison/
+display transfer, balancing/spans/footnotes, advanced/optimal/incremental/
+interruptible algorithms and full bidi/native-language behavior remain
+incomplete. The full WPF goal stays active.
