@@ -10591,3 +10591,58 @@ page layouts; selective incremental reuse and comparison/display transfer remain
 unfinished, alongside complex figure collision/search/composite-line layouts,
 advanced span/row breaks, balancing/footnotes, optimal/interruptible algorithms and
 full bidi/native-language behavior. The full WPF goal stays active.
+
+## 164. Horizontal bidi reversal scopes and visual run geometry
+
+The 2026-10-14 continuation interprets original TextStore reversal and close-anchor
+controls in source Line Services. Original resolved embedding levels determine
+run flow and ICU visual reordering. Controls consume their actual LSCP scope
+counts without glyph widths; original SpanVector can coalesce multiple controls
+onto a one-character backing buffer. Native break records retain the embedding
+level at the accepted cut, and cloned records resume that immutable state.
+
+Drawing uses physical run origins while enumeration and queries use the base
+paragraph's U coordinates. Native caret/point queries report real reversal depth,
+intermediate subline directions, group bounds and logical character edges.
+Reverse runs advance toward smaller U positions when opposite the base flow.
+Rectangular selection and point hit testing use the original managed line methods.
+Trailing control scopes do not mask trailing-space advances. Logical Unicode
+break analysis omits synthetic controls and maps visible boundaries back to raw
+LSCP offsets, preserving scope state without joining otherwise separate words.
+Existing source whitespace-expansion callbacks now accept RTL runs in justified
+mixed text; non-whitespace/advanced expansion still needs further implementation.
+
+Native fixtures verify exact control consumption and zero width, physical draw
+origins, nested caret/point geometry, insufficient-depth output clearing, an open
+scope across a wrapped line and independent cloned resumes. Coalesced two-scope
+controls produce a three-level query hierarchy with intermediate RTL direction.
+Prior decorations/tabs/min-max/wrapping/error/resource tests remain green.
+
+The public SDK consumer formats Hebrew, Arabic, Latin mixtures, numbers, Hebrew
+combining marks and trailing spaces in Ideal/Display and both paragraph directions.
+It checks glyph raster, source-complete glyph enumeration, caret direction and
+point mapping, selection bounds and trailing-space metrics. Wrapped mixed text
+covers all 203 characters across 18 lines, retaining original records across GC.
+Original TextBlock wraps, renders and hit tests in both directions. Intrinsic
+minimum width agrees with the widest isolated word; maximum width agrees with
+whole-paragraph formatting. Default-justified mixed FlowDocuments complete four
+rendered pages with every one of 699 source characters exactly once and original
+GetPageNumber agreement; disposed early pages regenerate after GC.
+
+Focused validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 inventory check-lineservices-line-native
+/usr/bin/python3 ~/wpfboot/refresh-finite-native.py
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-bidi-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/bidi-sdk-check
+```
+
+Final focused commands pass with zero consumer warnings/errors. Shared-framework
+and self-contained runs pass with SDK roots/toolchain PATH removed. Imported
+native coverage remains 111/139 with 28 absent, and paragraph ABI remains 441
+source-derived fields. This extends horizontal line formatting; full RTL
+paragraph/page layout, advanced bidi decorations/objects/expansion, selective
+incremental reuse/comparison/display transfer, complex figure collision/search/
+composite-line layouts, advanced spans, balancing/footnotes, optimal/interruptible
+algorithms and complete native-language behavior remain open. The WPF goal stays
+active.

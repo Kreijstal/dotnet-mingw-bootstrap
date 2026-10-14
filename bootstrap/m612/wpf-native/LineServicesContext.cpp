@@ -9,6 +9,7 @@
 #include <new>
 #include <limits>
 #include <unicode/ubrk.h>
+#include <unicode/ubidi.h>
 #include <unicode/uchar.h>
 #include "LineServicesNative.h"
 
@@ -26,7 +27,7 @@ struct Context {
 
 struct GlyphOffset { int32_t du,dv; };
 struct Run {
-    int cp=0,flow=0,width=0;
+    int cp=0,flow=0,width=0,level=0,level_delta=0;
     uintptr_t id=0;
     LsChp properties{};
     LsTxM metrics{};
@@ -48,11 +49,11 @@ struct Line {
     std::vector<Run> runs;
     LsLInfo info{};
     LsLineWidths widths{};
-    int first=0,paragraph_first=0;
+    int first=0,paragraph_first=0,base_flow=0,initial_level=0;
     Run terminator;
     bool has_terminator=false;
 };
-struct BreakRecord { int next,paragraph_first; std::shared_ptr<Context> context; };
+struct BreakRecord { int next,paragraph_first; std::shared_ptr<Context> context; int level=0; };
 // Source-owned state for paragraph penalty services. Scoring/optimal breaking
 // will use this retained context; resource acquisition does not format text.
 struct PenaltyState { std::shared_ptr<Context> context; };
@@ -247,7 +248,7 @@ int trailing_width(const Run& run,bool& all_spaces) {
     size_t end=run.text.size();
     while(end && (run.text[end-1]==L' ' || run.text[end-1]==0xA0)) --end;
     all_spaces=end==0;
-    if(run.hidden) return 0;
+    if(run.hidden){all_spaces=true;return 0;}
     if(!run.shaped) {
         int width=0;
         for(size_t i=end;i<run.widths.size();++i) width+=run.widths[i];
@@ -286,6 +287,7 @@ int justify_line(Line& line,int target,int& total,int& trailing) {
     int visible_cp=line.first;
     for(const auto& run:line.runs) visible_cp+=static_cast<int>(run.text.size());
     for(auto run=line.runs.rbegin();run!=line.runs.rend();++run) {
+        if(run->level_delta){visible_cp-=int(run->text.size());continue;}
         size_t count=run->text.size();
         while(count && (run->text[count-1]==L' ' || run->text[count-1]==0xa0)) { --count; --visible_cp; }
         if(count) break;
@@ -297,7 +299,6 @@ int justify_line(Line& line,int target,int& total,int& trailing) {
     for(size_t index=begin;index<line.runs.size();++index) {
         auto& run=line.runs[index];
         if(run.hidden || run.embedded || run.tab || run.cp>=visible_cp) continue;
-        if(run.flow!=0) return LS_NotImplemented;
         size_t count=run.shaped?run.advances.size():run.text.size();
         std::vector<int> left[3],right[3]; int* lp[3]; int* rp[3];
         for(int level=0;level<3;++level) { left[level].assign(count,0);right[level].assign(count,0);lp[level]=left[level].data();rp[level]=right[level].data(); }
@@ -373,6 +374,7 @@ int justify_line(Line& line,int target,int& total,int& trailing) {
 struct BreakGeometry {
     std::vector<UChar> text;
     std::vector<int64_t> width{0};
+    std::vector<int> raw{0};
     std::vector<bool> boundary{true};
     std::vector<int> before,after;
     bool allowed(int point,bool natural) const {
@@ -387,7 +389,10 @@ struct BreakGeometry {
 int break_geometry(const Line& line,BreakGeometry& geometry) {
     const auto& runs=line.runs;
     auto& text=geometry.text;auto& width=geometry.width;auto& boundary=geometry.boundary;
+    int consumed=0;
     for(const auto& run:runs) {
+        if(run.level_delta){consumed+=int(run.text.size());geometry.raw.back()=consumed;continue;}
+        for(size_t i=0;i<run.text.size();++i)geometry.raw.push_back(++consumed);
         int64_t before=width.back();
         text.insert(text.end(),run.text.begin(),run.text.end());
         if(!run.shaped || run.hidden) {
@@ -410,8 +415,9 @@ int break_geometry(const Line& line,BreakGeometry& geometry) {
     geometry.before.assign(text.size()+1,-1);geometry.after.assign(text.size()+1,-1);
     auto& before=geometry.before;auto& after=geometry.after;
     for(const auto& run:runs) if(run.embedded) {
-        before[run.cp-line.first]=run.break_before;
-        after[run.cp-line.first+run.text.size()]=run.break_after;
+        size_t at=std::lower_bound(geometry.raw.begin(),geometry.raw.end(),run.cp-line.first)-geometry.raw.begin();
+        if(at>=before.size()||at+run.text.size()>=after.size())return LS_InvalidFormatterResult;
+        before[at]=run.break_before;after[at+run.text.size()]=run.break_after;
     }
     return LS_None;
 }
@@ -427,14 +433,14 @@ int choose_wrap(const Line& line,int allowance,bool emergency,int max_cut,bool& 
     auto* iterator=ubrk_open(UBRK_LINE,"root",text.data(),static_cast<int>(text.size()),&error);
     if(U_FAILURE(error) || !iterator) return -1;
     int chosen=0,first_break=0;
-    for(int point=1;point<=static_cast<int>(text.size()) && point<=max_cut;++point) {
+    for(int point=1;point<=static_cast<int>(text.size()) && geometry.raw[point]<=max_cut;++point) {
         if(!boundary[point] || !allowed(point,ubrk_isBoundary(iterator,point))) continue;
         int visible=point;
         while(visible>0 && text[visible-1]==L' ') --visible;
         while(visible>0 && !boundary[visible]) --visible;
         int64_t actual=width[visible];
         if(tabs) {
-            int status=candidate_width(line,point,visible,actual);
+            int status=candidate_width(line,geometry.raw[point],geometry.raw[visible],actual);
             if(status==LS_InvalidFormatterResult) continue; // No usable stop for this retained field.
             if(status) { ubrk_close(iterator); return -1; }
         }
@@ -442,23 +448,23 @@ int choose_wrap(const Line& line,int allowance,bool emergency,int max_cut,bool& 
         if(actual<=allowance) chosen=point;
     }
     ubrk_close(iterator);
-    if(chosen || !emergency) { unavoidable=!chosen; return chosen?chosen:first_break; }
+    if(chosen||!emergency){unavoidable=!chosen;int point=chosen?chosen:first_break;return point>0?geometry.raw[point]:point;}
     error=U_ZERO_ERROR;
     iterator=ubrk_open(UBRK_CHARACTER,"root",text.data(),static_cast<int>(text.size()),&error);
     if(U_FAILURE(error) || !iterator) return -1;
     first_break=0;
     for(int point=ubrk_first(iterator);(point=ubrk_next(iterator))!=UBRK_DONE;) {
-        if(point>max_cut || !boundary[point] || !allowed(point,true)) continue;
+        if(geometry.raw[point]>max_cut || !boundary[point] || !allowed(point,true)) continue;
         int64_t actual=width[point];
         if(tabs) {
-            int status=candidate_width(line,point,point,actual);
+            int status=candidate_width(line,geometry.raw[point],geometry.raw[point],actual);
             if(status==LS_InvalidFormatterResult) continue;
             if(status) { ubrk_close(iterator); return -1; }
         }
         if(!first_break) first_break=point;
         if(actual<=allowance) chosen=point;
     }
-    ubrk_close(iterator); unavoidable=!chosen; return chosen?chosen:first_break;
+    ubrk_close(iterator);unavoidable=!chosen;int point=chosen?chosen:first_break;return point>0?geometry.raw[point]:point;
 }
 
 int range_width(const Line& line,int first,int end,int visible,int64_t& width) {
@@ -499,8 +505,8 @@ int paragraph_widths(const Line& line,int& maximum_total,int& maximum_visible,in
         while(trim>first && (text[trim-1]==L' ' || text[trim-1]==0xa0 || text[trim-1]==0x2028))--trim;
         while(trim>first && !geometry.boundary[trim])--trim;
         int64_t full=0,shown=0;
-        int result=range_width(line,line.first+first,line.first+end,line.first+end,full);if(result)return result;
-        result=range_width(line,line.first+first,line.first+end,line.first+trim,shown);if(result)return result;
+        int result=range_width(line,line.first+geometry.raw[first],line.first+geometry.raw[end],line.first+geometry.raw[end],full);if(result)return result;
+        result=range_width(line,line.first+geometry.raw[first],line.first+geometry.raw[end],line.first+geometry.raw[trim],shown);if(result)return result;
         total=std::max(total,static_cast<int>(full));visible=std::max(visible,static_cast<int>(shown));return LS_None;
     };
     for(int point=1;point<=static_cast<int>(text.size());++point) {
@@ -518,6 +524,17 @@ int paragraph_widths(const Line& line,int& maximum_total,int& maximum_visible,in
     return LS_None;
 }
 
+struct RunGeometry { std::vector<int> left,edge;std::vector<int32_t> order; };
+RunGeometry visual_runs(const Line& line) {
+    RunGeometry result;size_t count=line.runs.size();result.left.resize(count);result.edge.resize(count);result.order.resize(count);
+    std::vector<UBiDiLevel> levels;for(const auto& run:line.runs)levels.push_back(static_cast<UBiDiLevel>(run.level));
+    if(count)ubidi_reorderVisual(levels.data(),int32_t(count),result.order.data());
+    if(line.base_flow==4)std::reverse(result.order.begin(),result.order.end());
+    int pen=line.widths.upStartMainText;
+    for(int32_t index:result.order){const auto& run=line.runs[index];result.left[index]=pen;result.edge[index]=pen+(run.flow!=line.base_flow?run.width:0);pen+=run.width;}
+    return result;
+}
+
 struct Cell {
     const Run* run;
     int cp,length,x,width,glyphs,run_x;
@@ -529,7 +546,7 @@ int text_cells(const Line& line,std::vector<Cell>& cells) {
     // a user-perceived character at an artificial buffer boundary.
     if(line.runs.size()>1) {
         std::vector<UChar> text;
-        for(const auto& run:line.runs) text.insert(text.end(),run.text.begin(),run.text.end());
+        for(const auto& run:line.runs) if(run.level_delta)text.insert(text.end(),run.text.size(),0x2060);else text.insert(text.end(),run.text.begin(),run.text.end());
         UErrorCode error=U_ZERO_ERROR;
         auto* raw=ubrk_open(UBRK_CHARACTER,"root",text.data(),static_cast<int>(text.size()),&error);
         if(U_FAILURE(error) || !raw) return LS_InvalidFormatterResult;
@@ -540,9 +557,9 @@ int text_cells(const Line& line,std::vector<Cell>& cells) {
             if(!ubrk_isBoundary(raw,end)) return LS_NotImplemented;
         }
     }
-    int x=line.widths.upStartMainText;
-    for(const auto& run:line.runs) {
-        if(run.flow!=0) return LS_NotImplemented;
+    auto geometry=visual_runs(line);int x=line.widths.upStartMainText;
+    for(size_t index=0;index<line.runs.size();++index) {
+        const auto& run=line.runs[index];x=geometry.edge[index];int sign=run.flow==line.base_flow?1:-1;
         int run_x=x;
         UErrorCode error=U_ZERO_ERROR;
         auto* raw=ubrk_open(UBRK_CHARACTER,"root",reinterpret_cast<const UChar*>(run.text.data()),
@@ -572,9 +589,11 @@ int text_cells(const Line& line,std::vector<Cell>& cells) {
                 }
             }
             cells.push_back({&run,run.cp+static_cast<int>(start),static_cast<int>(end-start),x,width,glyphs,run_x});
-            x+=width; start=end;
+            x+=sign*width; start=end;
         }
     }
+    std::sort(cells.begin(),cells.end(),[&](const Cell& a,const Cell& b){int ax=a.x-(a.run->flow!=line.base_flow?a.width:0),bx=b.x-(b.run->flow!=line.base_flow?b.width:0);return ax<bx;});
+    x=line.widths.upLimLine;
     if(line.has_terminator) cells.push_back({&line.terminator,line.terminator.cp,1,x,0,0,x});
     return LS_None;
 }
@@ -596,6 +615,28 @@ void fill_query(const Line& line,const Cell& cell,LsQSubInfo& sub,LsTextCell& te
     text.lscpStartCell=cell.cp; text.lscpEndCell=cell.cp+cell.length-1;
     text.pointUvStartCell={cell.x,0}; text.dupCell=cell.width;
     text.cCharsInCell=cell.length; text.cGlyphsInCell=cell.glyphs;
+}
+
+int query_cell(const Line& line,const Cell& cell,int capacity,LsQSubInfo* sub,int* depth,LsTextCell* text) {
+    int base=line.base_flow==4?1:0,needed=std::max(1,cell.run->level-base+1);
+    if(capacity<needed)return LS_InvalidParameter;
+    fill_query(line,cell,sub[needed-1],*text);
+    auto geometry=visual_runs(line);size_t index=0;while(index<line.runs.size()&& &line.runs[index]!=cell.run)++index;
+    for(int offset=0;offset<needed;++offset){
+        auto value=sub[needed-1];value.lstflowSubLine=((base+offset)&1)?4:0;
+        if(offset==0){value.lscpFirstSubLine=line.first;value.lsdcpSubLine=line.info.cpLimToContinue-line.first;value.pointUvStartSubLine={line.widths.upStartMainText,0};value.dupSubLine=line.widths.upLimLine-line.widths.upStartMainText;}
+        else {
+            size_t first=index,last=index;int level=base+offset;
+            while(first&&line.runs[first-1].level>=level)--first;
+            while(last+1<line.runs.size()&&line.runs[last+1].level>=level)++last;
+            int left=INT_MAX,right=INT_MIN;int cp_first=INT_MAX,cp_last=INT_MIN;
+            for(size_t at=first;at<=last;++at){const auto& run=line.runs[at];if(run.level_delta)continue;left=std::min(left,geometry.left[at]);right=std::max(right,geometry.left[at]+run.width);cp_first=std::min(cp_first,run.cp);cp_last=std::max(cp_last,run.cp+int(run.text.size()));}
+            if(left==INT_MAX){left=right=cell.run_x;cp_first=cell.cp;cp_last=cell.cp+cell.length;}
+            value.lscpFirstSubLine=cp_first;value.lsdcpSubLine=cp_last-cp_first;value.pointUvStartSubLine={value.lstflowSubLine==line.base_flow?left:right,0};value.dupSubLine=right-left;
+        }
+        sub[offset]=value;
+    }
+    *depth=needed;return LS_None;
 }
 
 // The source formatter's control vocabulary uses stable, single Unicode
@@ -722,7 +763,7 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
             std::lock_guard<std::mutex> lock(gate);
             auto found=records.find(previous_break);
             if(found==records.end() || found->second->next!=cp || found->second->context!=context) return LS_InvalidBreakRecord;
-            result->paragraph_first=found->second->paragraph_first;
+            result->paragraph_first=found->second->paragraph_first;result->initial_level=found->second->level;
         }
         LsPap paragraph{}; LsLineProps properties{};
         int status=reinterpret_cast<FetchPap>(context->info.pfnFetchPap)(context->info.pols,cp,&paragraph);
@@ -735,9 +776,11 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
         int position=cp,total=properties.durLeft,trailing=properties.durLeft;
         int flow=paragraph.lstflow;
         if(flow!=0 && flow!=4) return LS_NotImplemented;
+        result->base_flow=flow;if(!previous_break)result->initial_level=flow==4?1:0;int level=result->initial_level;
         bool ended=false;
         for(int attempts=0;attempts<9600 && !ended;++attempts) {
-            Run run; run.cp=position; run.flow=flow;
+            if(limit>0&&position-cp>=limit){ended=true;break;}
+            Run run; run.cp=position;run.level=level;run.flow=(level&1)?4:0;
             std::vector<WCHAR> buffer(4096);
             int used=0,count=0,hidden_flag=0; WCHAR* text=nullptr;
             for(int retry=0;retry<3;++retry) {
@@ -750,7 +793,18 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
                 buffer.resize(count);
             }
             if(!text) return LS_InvalidCpContentFetched;
-            if(run.properties.idObj!=0xFFFF && run.properties.idObj!=1) return LS_NotImplemented;
+            if(run.properties.idObj!=0xFFFF && run.properties.idObj!=1 && run.properties.idObj!=0) return LS_NotImplemented;
+            bool reversal=run.properties.idObj==0;
+            bool close=run.properties.idObj==0xFFFF&&text[0]==0xFFFB&&(run.id&0x0FFFFFFFu)==0;
+            if(reversal||close){
+                if(reversal&&text[0]!=0xFFFC)return LS_InvalidFormatterResult;
+                if(limit>0)count=std::min(count,limit-(position-cp));
+                // Original SpanVector coalesces adjacent identical control IDs;
+                // their one-character backing buffer represents count scopes.
+                if(reversal){if(count>125-level)return LS_InvalidFormatterResult;run.level_delta=count;level+=count;}
+                else {if(count>level-(flow==4?1:0))return LS_InvalidFormatterResult;run.level_delta=-count;level-=count;}
+                run.hidden=true;run.text.assign(count,reversal?0xFFFC:0xFFFB);run.widths.assign(count,0);result->runs.push_back(std::move(run));position+=count;continue;
+            }
             run.embedded=run.properties.idObj==1;
             if(run.embedded && count!=1) return LS_InvalidDcpFetched;
             run.hidden=hidden_flag!=0 || (run.properties.flags&0x10000)!=0;
@@ -887,7 +941,7 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
         result->widths.upMinLimLine=minimum_total; result->widths.upMinStartTrailing=minimum_trailing;
         void* line_handle=result.get();
         { std::lock_guard<std::mutex> lock(gate); lines.emplace(line_handle,result); }
-        *info=result->info; *widths=result->widths; *depth=1; *output=line_handle;
+        *info=result->info;*widths=result->widths;*depth=1;for(const auto& run:result->runs)*depth=std::max(*depth,run.level-(result->base_flow==4?1:0)+1);*output=line_handle;
         return LS_None;
     } catch(const std::bad_alloc&) { return LS_OutOfMemory; }
 }
@@ -902,7 +956,9 @@ extern "C" __declspec(dllexport) int WINAPI LoAcquireBreakRecord(void* handle,vo
     if(!output) return LS_NullOutputParameter; *output=nullptr;
     auto line=get_line(handle); if(!line) return LS_InvalidLine;
     try {
-        auto record=std::make_shared<BreakRecord>(BreakRecord{line->info.cpLimToContinue,line->info.endr==2?line->info.cpLimToContinue:line->paragraph_first,line->context});
+        auto record=std::make_shared<BreakRecord>(BreakRecord{line->info.cpLimToContinue,line->info.endr==2?line->info.cpLimToContinue:line->paragraph_first,line->context,0});
+        record->level=line->initial_level;for(const auto& run:line->runs)record->level+=run.level_delta;
+        if(line->info.endr==2)record->level=line->base_flow==4?1:0;
         void* key=record.get();
         { std::lock_guard<std::mutex> lock(gate); records.emplace(key,record); }
         *output=key; return LS_None;
@@ -935,7 +991,7 @@ extern "C" __declspec(dllexport) int WINAPI LoQueryLineCpPpoint(void* handle,int
         std::vector<Cell> cells;
         int status=text_cells(*line,cells); if(status) return status;
         for(const auto& cell:cells) if(cp>=cell.cp && cp<cell.cp+cell.length) {
-            fill_query(*line,cell,*sub,*text); *depth=1; return LS_None;
+            return query_cell(*line,cell,capacity,sub,depth,text);
         }
         return LS_WrongGivenCp;
     } catch(const std::bad_alloc&) { return LS_OutOfMemory; }
@@ -957,10 +1013,10 @@ extern "C" __declspec(dllexport) int WINAPI LoQueryLinePointPcp(void* handle,con
         for(const auto& cell:cells) {
             if(cell.width<=0) continue;
             chosen=&cell;
-            if(static_cast<int64_t>(point->x)<static_cast<int64_t>(cell.x)+cell.width) break;
+            int end=cell.x+(cell.run->flow==line->base_flow?cell.width:0);if(static_cast<int64_t>(point->x)<end) break;
         }
         if(!chosen) chosen=&cells.front();
-        fill_query(*line,*chosen,*sub,*text); *depth=1; return LS_None;
+        return query_cell(*line,*chosen,capacity,sub,depth,text);
     } catch(const std::bad_alloc&) { return LS_OutOfMemory; }
 }
 
@@ -969,8 +1025,9 @@ extern "C" __declspec(dllexport) int WINAPI LoDisplayLine(void* handle,LSPOINT* 
     auto line=get_line(handle); if(!line) return LS_InvalidLine;
     auto& context=*line->context;
     try {
-    int x=origin->x+line->widths.upStartMainText;
-    for(auto& run:line->runs) {
+    auto geometry=visual_runs(*line);
+    for(size_t index=0;index<line->runs.size();++index) {
+        auto& run=line->runs[index];int x=origin->x+(line->base_flow==4?-geometry.edge[index]:geometry.edge[index]);
         LSPOINT point{x,origin->y};
         LsHeights height{run.metrics.dvAscent,run.metrics.dvDescent,run.metrics.dvMultiLineHeight};
         int status=0;
@@ -1050,7 +1107,6 @@ extern "C" __declspec(dllexport) int WINAPI LoDisplayLine(void* handle,LSPOINT* 
                 }
             }
         }
-        x+=run.width;
     }
     return LS_None;
     } catch(const std::bad_alloc&) { return LS_OutOfMemory; }
@@ -1062,9 +1118,8 @@ extern "C" __declspec(dllexport) int WINAPI LoEnumLine(void* handle,BOOL reverse
     const auto& context=*line->context;
     if(!context.info.pfnEnumText) return LS_NotImplemented;
     try {
-    std::vector<int> starts;
-    int x=origin->x+line->widths.upStartMainText;
-    for(const auto& run:line->runs) { starts.push_back(x); x+=run.width; }
+    auto geometry_runs=visual_runs(*line);std::vector<int> starts;
+    for(int edge:geometry_runs.edge)starts.push_back(origin->x+edge);
     for(size_t index=0;index<line->runs.size();++index) {
         size_t position=reverse?line->runs.size()-index-1:index;
         auto& run=line->runs[position]; if(run.hidden || run.embedded) continue;

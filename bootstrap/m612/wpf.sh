@@ -838,6 +838,7 @@ step_check_sdk() {
   bash "$here/wpf-tests/check-tables-sdk.sh" "$root" "$build/tables-sdk-check"
   bash "$here/wpf-tests/check-figures-sdk.sh" "$root" "$build/figures-sdk-check"
   bash "$here/wpf-tests/check-finite-updates-sdk.sh" "$root" "$build/finite-updates-sdk-check"
+  bash "$here/wpf-tests/check-bidi-sdk.sh" "$root" "$build/bidi-sdk-check"
   bash "$here/winforms-tests/check-sdk.sh" "$root" "$build/winforms-sdk-check"
 }
 

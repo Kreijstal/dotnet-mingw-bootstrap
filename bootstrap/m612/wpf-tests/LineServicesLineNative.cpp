@@ -7,7 +7,9 @@
 #include <algorithm>
 #include <vector>
 #include "LineServicesNative.h"
-static bool abort_fetch=false;
+static bool abort_fetch=false,bidi_mode=false;
+struct BidiCall { WCHAR ch;int x,flow; };
+static std::vector<BidiCall> bidi_calls;
 static int draws=0;
 static std::wstring sample=L"abc  \u2029";
 static uint32_t paragraph_flags=0;
@@ -43,7 +45,8 @@ static int WINAPI fetch(void*,int cp,int,void*,WCHAR* buffer,int capacity,int* u
     if(abort_fetch) return LS_ClientAbort;
     int end=static_cast<int>(sample.size())-1;
     if(cp<0 || cp>end) return LS_WrongGivenCp;
-    *count=cp<end?std::min(run_length,end-cp):1; *output=nullptr; *used=0; *hidden=0; *chp={}; chp->idObj=0xFFFF; *id=cp<end?5:8;
+    *count=cp<end?std::min(run_length,end-cp):1; *output=nullptr; *used=0; *hidden=0; *chp={}; chp->idObj=bidi_mode&&sample[cp]==0xFFFC?0:0xFFFF; *id=bidi_mode&&sample[cp]==0xFFFB?0:cp<end?5:8;
+    if(bidi_mode&&(sample[cp]==0xFFFC||sample[cp]==0xFFFB)){*count=1;while(cp+*count<end&&sample[cp+*count]==sample[cp])++*count;}
     if(decorate && cp<end) chp->flags=0x60000;
     if(capacity>=*count) { std::memcpy(buffer,sample.data()+cp,*count*sizeof(WCHAR)); *used=1; }
     return 0;
@@ -57,6 +60,9 @@ static int WINAPI widths(void*,uint32_t,int,WCHAR* text,int count,int,int,int* v
 static int WINAPI draw(void*,uint32_t,LSPOINT* point,WCHAR* text,int* values,int count,int,uint32_t,LSPOINT*,LsHeights* height,int width,LSRECT*) {
     if(point->x!=4 || point->y!=12 || count!=5 || text[0]!=L'a' || values[2]!=30 || width!=70 || height->dvAscent!=12) return LS_ClientAbort;
     ++draws; return 0;
+}
+static int WINAPI bidi_draw(void*,uint32_t,LSPOINT* point,WCHAR* text,int*,int count,int flow,uint32_t,LSPOINT*,LsHeights*,int,LSRECT*) {
+    if(count!=1)return LS_ClientAbort;bidi_calls.push_back({text[0],point->x,flow});return 0;
 }
 static void require(bool value,const char* message) { if(!value) throw std::runtime_error(message); }
 static int WINAPI underline_info(void*,uint32_t id,LsHeights* height,int flow,LsULInfo* value) {
@@ -238,6 +244,27 @@ int main(int argc,char** argv) {
         require(LoCreateLine(context,0,0,1,8,nullptr,&info,&line,&depth,&measured)==0&&measured.upStartTrailing==60&&measured.upMinStartTrailing==40,"min/max tab segments retain actual paragraph stop geometry");
         require(LoDisposeLine(line,FALSE)==0,"min/max tab disposal");
         std::puts("native min/max exact column-independent widths, trailing spaces, cross-run words, hard-line paragraph coverage and NBSP boundaries PASS");
+        bidi_mode=true;sample=L"a\uFFFCbc\uFFFBd\u2029";run_length=1;paragraph_flags=0;
+        config.pfnDrawTextRun=reinterpret_cast<void*>(bidi_draw);void* bidi_context=nullptr;
+        require(LoCreateContext(&config,&callbacks,&bidi_context)==0&&LoSetDoc(bidi_context,1,1,&resolution)==0,"bidi context creation and original device setup");
+        int bidi_status=LoCreateLine(bidi_context,0,0,1000,0,nullptr,&info,&line,&depth,&measured);if(bidi_status||depth!=2||info.cpLimToContinue!=7||measured.upLimLine!=44)std::printf("bidi status=%d depth=%d cp=%d width=%d\n",bidi_status,depth,info.cpLimToContinue,measured.upLimLine);require(bidi_status==0&&depth==2&&info.cpLimToContinue==7&&measured.upLimLine==44,"reversal controls consume source units without glyph width and report real query depth");
+        LsQSubInfo hierarchy[2]{};
+        require(LoQueryLineCpPpoint(line,2,2,hierarchy,&queried_depth,&cell)==0&&queried_depth==2&&hierarchy[0].lstflowSubLine==0&&hierarchy[1].lstflowSubLine==4&&hierarchy[1].lscpFirstSubLine==2&&hierarchy[1].lsdcpSubLine==2&&hierarchy[1].pointUvStartSubLine.x==34&&cell.pointUvStartCell.x==34&&cell.dupCell==10,"logical first reverse character has right-edge caret and owning reversed subline");
+        require(LoQueryLineCpPpoint(line,3,2,hierarchy,&queried_depth,&cell)==0&&cell.pointUvStartCell.x==24,"later reversed character advances toward smaller U coordinates");
+        LSPOINT bidi_point{19,0};require(LoQueryLinePointPcp(line,&bidi_point,2,hierarchy,&queried_depth,&cell)==0&&cell.lscpStartCell==3,"point query chooses the visual second reverse character");
+        require(LoQueryLineCpPpoint(line,2,1,hierarchy,&queried_depth,&cell)==LS_InvalidParameter&&!queried_depth&&!cell.cCharsInCell,"insufficient reversal hierarchy capacity rejects with clean outputs");
+        bidi_calls.clear();require(LoDisplayLine(line,&origin,1,&clip)==0&&bidi_calls.size()==4&&bidi_calls[0].ch==L'a'&&bidi_calls[0].x==4&&bidi_calls[1].ch==L'b'&&bidi_calls[1].x==34&&bidi_calls[1].flow==4&&bidi_calls[2].ch==L'c'&&bidi_calls[2].x==24&&bidi_calls[3].ch==L'd'&&bidi_calls[3].x==34,"drawing receives reordered physical run origins and skips native controls");
+        require(LoDisposeLine(line,FALSE)==0,"bidi full line disposal");paragraph_flags=0x40;
+        require(LoCreateLine(bidi_context,0,0,24,0,nullptr,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==3,"wrapped reverse scope retains its open embedding");
+        void* bidi_record=nullptr;void* bidi_clone=nullptr;
+        require(LoAcquireBreakRecord(line,&bidi_record)==0&&LoCloneBreakRecord(bidi_record,&bidi_clone)==0&&LoDisposeLine(line,FALSE)==0&&LoDisposeBreakRecord(bidi_record,FALSE)==0,"cloned input independently retains the bidi embedding level");
+        for(int branch=0;branch<2;++branch){require(LoCreateLine(bidi_context,3,0,24,0,bidi_clone,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==7&&LoQueryLineCpPpoint(line,3,2,hierarchy,&queried_depth,&cell)==0&&queried_depth==2&&hierarchy[1].lstflowSubLine==4&&cell.pointUvStartCell.x==14,"independent cloned continuation resumes inside the reverse group before its closing control");require(LoDisposeLine(line,FALSE)==0,"bidi continuation branch cleanup");}
+        require(LoDisposeBreakRecord(bidi_clone,FALSE)==0,"bidi cloned record cleanup");
+        sample=L"\uFFFC\uFFFCab\uFFFB\uFFFB\u2029";paragraph_flags=0;
+        require(LoCreateLine(bidi_context,0,0,1000,0,nullptr,&info,&line,&depth,&measured)==0&&depth==3&&measured.upLimLine==24,"coalesced native control spans represent two embedding scopes without backing-buffer glyphs");
+        LsQSubInfo nested[3]{};require(LoQueryLineCpPpoint(line,2,3,nested,&queried_depth,&cell)==0&&queried_depth==3&&nested[0].lstflowSubLine==0&&nested[1].lstflowSubLine==4&&nested[2].lstflowSubLine==0,"nested reversal hierarchy retains its intermediate direction");
+        require(LoDisposeLine(line,FALSE)==0&&LoDestroyContext(bidi_context)==0,"bidi record/context cleanup");bidi_mode=false;paragraph_flags=0;
+        std::puts("native bidi reversals: control ownership, visual origins, nested caret/point geometry, depth validation, wrapped embedding and independent cloned continuations PASS");
         void* penalty=nullptr;void* second_penalty=nullptr;void* internal=nullptr;void* second_internal=nullptr;
         require(LoAcquirePenaltyModule(context,&penalty)==0&&LoAcquirePenaltyModule(context,&second_penalty)==0&&penalty&&penalty!=second_penalty,"owned penalty wrappers acquire independently from the original LS context");
         require(LoGetPenaltyModuleInternalHandle(penalty,&internal)==0&&LoGetPenaltyModuleInternalHandle(second_penalty,&second_internal)==0&&internal&&internal!=second_internal,"each wrapper exposes its real retained source state");
