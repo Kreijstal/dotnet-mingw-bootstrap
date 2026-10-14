@@ -550,7 +550,14 @@ int format_attached_objects(const std::shared_ptr<ParaData>& para,int dcp,uint32
         if(placed+candidate.dv>INT32_MAX)return PTS_tserrInvalidGeometry;
         int64_t placement_bottom=int64_t(rect.v)+rect.dv;
         if(child->figure&&FigureGeometry::current){auto reference=child->figure->props.fskrefV;if(reference==fskrefPage)placement_bottom=int64_t(FigureGeometry::current->page.v)+FigureGeometry::current->page.dv;else if(reference==fskrefMargin)placement_bottom=int64_t(FigureGeometry::current->margin.v)+FigureGeometry::current->margin.dv;}
-        if(!bottomless&&placed+candidate.dv>placement_bottom){if(force&&!attached.empty()){para->text->deferred_anchor=anchors[index];return 0;}if(force)return PTS_tserrNotImplemented;deferred=true;return 0;}
+        if(!bottomless&&placed+candidate.dv>placement_bottom) {
+            // The original callback can require a first atomic object to make
+            // progress beyond the page height. Preserve that real content and
+            // bound the parent's used height; never force a collision-shifted
+            // or later object past a previously accepted object.
+            if(force&&child->forced_progress&&attached.empty()&&placed==candidate.v)para->forced_progress=true;
+            else {if(force&&!attached.empty()){para->text->deferred_anchor=anchors[index];return 0;}if(force)return PTS_tserrNotImplemented;deferred=true;return 0;}
+        }
         int64_t shift=placed-candidate.v;
         auto& box=child->desc.fsbbox;
         if(box.fDefined&&(int64_t(box.fsrc.v)+shift<INT32_MIN||int64_t(box.fsrc.v)+shift+box.fsrc.dv>INT32_MAX))return PTS_tserrInvalidGeometry;

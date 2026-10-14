@@ -874,6 +874,7 @@ step_check_sdk() {
   bash "$here/wpf-tests/check-floater-clearing-sdk.sh" "$root" "$build/floater-clearing-sdk-check"
   bash "$here/wpf-tests/check-cross-paragraph-floats-sdk.sh" "$root" "$build/cross-paragraph-floats-sdk-check"
   bash "$here/wpf-tests/check-oversized-floats-sdk.sh" "$root" "$build/oversized-floats-sdk-check"
+  bash "$here/wpf-tests/check-forced-floaters-sdk.sh" "$root" "$build/forced-floaters-sdk-check"
   bash "$here/wpf-tests/check-tables-sdk.sh" "$root" "$build/tables-sdk-check"
   bash "$here/wpf-tests/check-figures-sdk.sh" "$root" "$build/figures-sdk-check"
   bash "$here/wpf-tests/check-composite-lines-sdk.sh" "$root" "$build/composite-lines-sdk-check"

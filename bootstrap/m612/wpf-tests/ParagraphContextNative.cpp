@@ -58,7 +58,7 @@ static int(WINAPI* destroy_subpage)(void*,void*)=nullptr;
 static int(WINAPI* destroy_subpage_record)(void*,void*)=nullptr;
 static bool block_ui=false,float_obstacle=false,fail_float=false,attached_float=false,attached_right=false,multiple_float=false,multiple_opposite=false;
 static int inline_anchor_mode=0;
-static bool deferred_attachment=false,split_attachment=false;
+static bool deferred_attachment=false,split_attachment=false,forced_attachment=false;
 static int float_records_destroyed=0,float_records_created=0;
 static bool paginate_float=false;
 struct MockFloaterRecord {int stage;};
@@ -111,7 +111,10 @@ static int WINAPI line_format(void*,void*,void* name,int,int dcp,void* incoming,
     int start,int width,int track_start,int track_width,int margin,int hyphen,int left,int right,int first,int last,int suppress,
     void** line,int* consumed,void** br,int* forced,FSFLRES* result,int* ascent,int* descent,int* bbox,int* bbox_width,int* depend,int* reformat) {
     if(!inside_figure&&(direction!=text_direction||(!attached_float&&!attached_figure&&(start!=track_start||width!=100))||(!rtl_matrix&&track_start!=10&&track_start!=120)||track_width!=100||margin!=track_start||hyphen||left||right||last||first!=(dcp==0||(attached_figure&&figure_alignment==1&&dcp==5))||bool(incoming)!=(dcp!=0)))return PTS_tserrInvalidParameter;
-    if(attached_float&&!inline_anchor_mode&&(!deferred_attachment||name==reinterpret_cast<void*>(102))&&(width!=(multiple_opposite?20:60)||start!=(attached_right?10:50)))return PTS_tserrInvalidParameter;
+    if(attached_float&&!inline_anchor_mode&&(!deferred_attachment||name==reinterpret_cast<void*>(102))) {
+        if(forced_attachment&&dcp){if((width!=60&&width!=100)||start!=(width==100?10:50))return PTS_tserrInvalidParameter;}
+        else if(width!=(multiple_opposite?20:60)||start!=(attached_right?10:50))return PTS_tserrInvalidParameter;
+    }
     ++lines_created;*line=reinterpret_cast<void*>(1000+lines_created);*br=reinterpret_cast<void*>(2000+lines_created);
     *consumed=5;*forced=0;*result=dcp==0?fsflrOutOfSpace:fsflrEndOfParagraph;*ascent=7;*descent=3;*bbox=start;*bbox_width=attached_figure?std::min(75,width):75;*depend=*reformat=0;
     if(composite_long&&!inside_figure){*result=dcp+5>=30?fsflrEndOfParagraph:fsflrOutOfSpace;}
@@ -637,6 +640,17 @@ int main(int argc,char** argv) {
             require(FsClearUpdateInfoInPage(context,page_handle)==0&&FsQueryAttachedObjectList(context,paras[0].pfspara,1,&object,&actual_count)==0&&object.fsupdinf.fskupd==fskupdNoChange,"attachment update state clears with its page");
             require(FsDestroyPage(context,page_handle)==0&&FsQueryAttachedObjectList(context,paras[0].pfspara,1,&object,&actual_count)==PTS_tserrInvalidQuery&&float_created==1&&float_destroyed==1&&lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"attached content/client/line lifetime and stale text-query rejection");
         }
+        forced_attachment=true;available_height=10;attached_right=false;reset_page_counts();float_created=float_destroyed=0;
+        require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&page_handle&&page_break&&formatted.fForcedProgress,"first oversized atomic attachment honors the original forced-progress callback");
+        require(FsQueryPageDetails(context,page_handle,&details)==0&&FsQueryTrackParaList(context,details.u.simple.trackdescr.pfstrack,2,paras,&actual_count)==0&&actual_count==1&&paras[0].dvrUsed==10&&FsQueryTextDetails(context,paras[0].pfspara,&text_details)==0&&text_details.u.full.dcpFirst==0&&text_details.u.full.dcpLim==5,"forced attachment bounds parent height and preserves actual host source progress");
+        FSATTACHEDOBJECTDESCRIPTION forced_object{};
+        require(FsQueryAttachedObjectList(context,paras[0].pfspara,1,&forced_object,&actual_count)==0&&actual_count==1&&FsQueryFloaterDetails(context,forced_object.pfspara,&float_details)==0&&float_details.fsrcFloater.v==20&&float_details.fsrcFloater.dv==25,"forced object query retains actual geometry beyond the page height");
+        void* forced_record=page_break;
+        require(FsDestroyPage(context,page_handle)==0&&float_created==float_destroyed,"forced object content releases before its host continuation resumes");
+        require(FsCreatePageFinite(context,forced_record,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&!page_break&&!formatted.fForcedProgress&&FsQueryPageDetails(context,page_handle,&details)==0&&FsQueryTrackParaList(context,details.u.simple.trackdescr.pfstrack,2,paras,&actual_count)==0&&actual_count==1&&FsQueryTextDetails(context,paras[0].pfspara,&text_details)==0&&text_details.u.full.dcpFirst==5&&text_details.u.full.dcpLim==10&&text_details.u.full.cAttachedObjects==0,"forced attachment continuation resumes exact remaining CPs without repeating the object");
+        require(FsDestroyPage(context,page_handle)==0&&FsDestroyPageBreakRecord(context,forced_record)==0&&float_created==1&&float_destroyed==1&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"forced attachment and retained continuation release every original resource once");
+        forced_attachment=false;available_height=80;
+        std::puts("native forced atomic floater: original callback flag, bounded parent height, actual object geometry, exact continuation after page disposal and complete cleanup PASS");
         multiple_float=true;attached_right=false;
         for(bool opposite:{false,true}) {
             multiple_opposite=opposite;reset_page_counts();float_created=float_destroyed=0;

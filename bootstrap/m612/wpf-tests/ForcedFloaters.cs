@@ -1,0 +1,24 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Threading;
+class Check {
+ const BindingFlags I=BindingFlags.Instance|BindingFlags.Public|BindingFlags.NonPublic;
+ static byte[] Raster(Visual visual){var image=new RenderTargetBitmap(400,220,96,96,PixelFormats.Pbgra32);image.Render(visual);var p=new byte[400*220*4];image.CopyPixels(p,1600,0);return p;}
+ static Rect Bounds(byte[] p,int color){int left=400,right=-1,top=220,bottom=-1;for(int y=0;y<220;++y)for(int x=0;x<400;++x){int at=(y*400+x)*4;if(p[at+3]<150)continue;bool hit=color==0?p[at+2]>200&&p[at+1]<60&&p[at]<60:p[at]>160&&p[at+1]<90&&p[at+2]<90;if(hit){left=Math.Min(left,x);right=Math.Max(right,x);top=Math.Min(top,y);bottom=Math.Max(bottom,y);}}return right<0?Rect.Empty:new Rect(left,top,right-left+1,bottom-top+1);}
+ [STAThread]static void Main(){var viewType=typeof(FlowDocument).Assembly.GetType("System.Windows.Documents.ITextView",true);
+  foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display})foreach(var direction in new[]{FlowDirection.LeftToRight,FlowDirection.RightToLeft})foreach(bool prefix in new[]{false,true})foreach(double padding in new[]{4d,120d})foreach(var alignment in new[]{HorizontalAlignment.Left,HorizontalAlignment.Center,HorizontalAlignment.Right}){
+   var floater=new Floater(new BlockUIContainer(new Border{Width=112,Height=300,Background=Brushes.Red}){Margin=new Thickness(0)}){Width=120,HorizontalAlignment=alignment,Padding=new Thickness(4,padding,4,padding),Margin=new Thickness(0)};var body=new Run(string.Join(" ",Enumerable.Range(0,60).Select(i=>$"body{i:D3}"))){Foreground=Brushes.Blue};var host=new Paragraph(floater){Margin=new Thickness(0)};host.Inlines.Add(body);var lead=new Run("prefix one\nprefix two");var doc=new FlowDocument{FontFamily=new FontFamily("Segoe UI"),FontSize=18,FlowDirection=direction,PagePadding=new Thickness(10),ColumnWidth=double.PositiveInfinity};if(prefix)doc.Blocks.Add(new Paragraph(lead){Margin=new Thickness(0)});doc.Blocks.Add(host);TextOptions.SetTextFormattingMode(doc,mode);
+   var paginator=(DynamicDocumentPaginator)((IDocumentPaginatorSource)doc).DocumentPaginator;paginator.PageSize=new Size(400,220);var ranges=new List<(int Page,TextPointer Start,TextPointer End)>();int pages=0,objectPage=-1;Rect initial=Rect.Empty;
+   for(;pages<20;++pages){using var page=paginator.GetPage(pages);if(page==DocumentPage.Missing)break;var pixels=Raster(page.Visual);var red=Bounds(pixels,0);if(!red.IsEmpty){if(objectPage>=0)throw new Exception("forced atomic content repeats");objectPage=pages;initial=red;}Console.WriteLine($"forced floater {mode} {direction}, prefix={prefix}, padding={padding}, alignment={alignment}, page={pages}: object={red}, body={Bounds(pixels,1)}");var view=((IServiceProvider)page).GetService(viewType);foreach(object segment in (IEnumerable)viewType.GetProperty("TextSegments").GetValue(view)){var t=segment.GetType();ranges.Add((pages,(TextPointer)t.GetProperty("Start",I).GetValue(segment),(TextPointer)t.GetProperty("End",I).GetValue(segment)));}GC.Collect(2,GCCollectionMode.Forced,true,true);if(!pixels.SequenceEqual(Raster(page.Visual)))throw new Exception("forced content raster GC");}
+   if(pages<2||pages>=20||objectPage!=(prefix?1:0)||initial.Width!=112||initial.Height!=(padding==4?196:90)||initial.Y!=10+padding||!paginator.IsPageCountValid)throw new Exception("forced individual floater must retain progress at the requested page size");double expectedX=alignment==HorizontalAlignment.Center?144:((alignment==HorizontalAlignment.Left)==(direction==FlowDirection.LeftToRight)?14:274);if(initial.X!=expectedX)throw new Exception("forced object horizontal alignment");foreach(var run in prefix?new[]{lead,body}:new[]{body})for(int at=0;at<run.Text.Length;++at){var position=run.ContentStart.GetPositionAtOffset(at,LogicalDirection.Forward);var owners=ranges.Where(r=>position.CompareTo(r.Start)>=0&&position.CompareTo(r.End)<0).ToArray();if(owners.Length!=1||paginator.GetPageNumber(position)!=owners[0].Page)throw new Exception("forced floater source/page ownership");}using(var page=paginator.GetPage(objectPage))if(Bounds(Raster(page.Visual),0)!=initial)throw new Exception("forced individual floater page regeneration");Console.WriteLine($"original forced floater {mode} {direction}, prefix={prefix}, padding={padding}, alignment={alignment}: {pages} pages, one atomic object, complete host source and regeneration/GC PASS");
+  }Dispatcher.CurrentDispatcher.InvokeShutdown();Console.WriteLine("original oversized individual floater progress and cleanup PASS");
+ }
+}

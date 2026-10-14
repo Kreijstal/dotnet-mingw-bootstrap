@@ -33,3 +33,20 @@ optimal paragraph regressions.
 This adds progress for an oversized group of individually fitting objects.
 General polygon/object/table/subpage interactions and other documented layout
 restrictions remain unfinished.
+
+An individually oversized first atomic floater can also progress when the original
+finite callback sets fForcedProgress. The native attachment layer retains its
+actual content rectangle beyond the page's content height, propagates the flag
+and bounds the host paragraph's used height. Only an unshifted first attachment
+can take this path; collision-shifted and later objects keep the existing deferral
+rules. This preserves the original callback's forced-progress contract without
+clipping the stored object geometry or consuming its host source twice.
+
+The native regression retains a 25-unit object on a 10-unit page, checks the flag,
+actual rectangle and bounded parent height, then resumes exact remaining CPs after
+page disposal with no repeated object and complete resource cleanup. Public SDK
+checks cover 48 cases per execution: both text modes and directions, three
+horizontal alignments, with/without preceding text and ordinary/oversized vertical
+padding. Fixed UI content appears exactly once at its requested position; each
+host/prefix character has one page owner, disposed pages regenerate and pixels
+survive compacting GC. These checks run in shared and portable applications.
