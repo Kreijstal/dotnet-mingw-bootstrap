@@ -22,6 +22,7 @@ static NativeSubpageFinite create_subpage=nullptr;
 static int(WINAPI* destroy_subpage)(void*,void*)=nullptr;
 static int(WINAPI* destroy_subpage_record)(void*,void*)=nullptr;
 static bool block_ui=false,float_obstacle=false,fail_float=false,attached_float=false,attached_right=false,multiple_float=false,multiple_opposite=false;
+static int inline_anchor_mode=0;
 static bool deferred_attachment=false,split_attachment=false;
 static int float_records_destroyed=0;
 static int float_created=0,float_destroyed=0,float_fail_at=-1;
@@ -69,9 +70,10 @@ static int WINAPI line_format(void*,void*,void* name,int,int dcp,void* incoming,
     int start,int width,int track_start,int track_width,int margin,int hyphen,int left,int right,int first,int last,int suppress,
     void** line,int* consumed,void** br,int* forced,FSFLRES* result,int* ascent,int* descent,int* bbox,int* bbox_width,int* depend,int* reformat) {
     if(direction||(!attached_float&&(start!=track_start||width!=100))||(track_start!=10&&track_start!=120)||track_width!=100||margin!=track_start||hyphen||left||right||last||first!=(dcp==0)||bool(incoming)!=(dcp!=0))return PTS_tserrInvalidParameter;
-    if(attached_float&&(!deferred_attachment||name==reinterpret_cast<void*>(102))&&(width!=(multiple_opposite?20:60)||start!=(attached_right?10:50)))return PTS_tserrInvalidParameter;
+    if(attached_float&&!inline_anchor_mode&&(!deferred_attachment||name==reinterpret_cast<void*>(102))&&(width!=(multiple_opposite?20:60)||start!=(attached_right?10:50)))return PTS_tserrInvalidParameter;
     ++lines_created;*line=reinterpret_cast<void*>(1000+lines_created);*br=reinterpret_cast<void*>(2000+lines_created);
     *consumed=5;*forced=0;*result=dcp==0?fsflrOutOfSpace:fsflrEndOfParagraph;*ascent=7;*descent=3;*bbox=start;*bbox_width=75;*depend=*reformat=0;
+    if(inline_anchor_mode){if(start!=(width==100?10:50)||(width!=60&&width!=100))return PTS_tserrInvalidParameter;*consumed=std::min(5,10-dcp);if(inline_anchor_mode==2&&dcp==0&&width==60)*consumed=2;*result=dcp+*consumed==10?fsflrEndOfParagraph:fsflrOutOfSpace;}
     if(structural_line&&dcp==0){*ascent=*descent=*bbox_width=0;}
     if(lines_created==fail_line)return PTS_tserrCallbackException;
     return 0;
@@ -79,7 +81,7 @@ static int WINAPI line_format(void*,void*,void* name,int,int dcp,void* incoming,
 static int WINAPI destroy_line(void*,void*){++lines_destroyed;return 0;}
 static int WINAPI destroy_break(void*,void*){++breaks_destroyed;return 0;}
 static int WINAPI destroy_margin(void*,void*){return 0;}
-static int WINAPI block_props(void*,void* name,uint32_t,FSFLOATERPROPS* output){*output={};output->fFloat=float_obstacle||attached_float;output->fskwr=attached_float?fskwrBoth:fskwrNone;output->fskfloatalignment=(attached_right||(multiple_opposite&&name==reinterpret_cast<void*>(302)))?fskfloatalignMax:fskfloatalignMin;return 0;}
+static int WINAPI block_props(void*,void* name,uint32_t,FSFLOATERPROPS* output){*output={};output->fFloat=float_obstacle||attached_float;output->fskwr=inline_anchor_mode==6&&name==reinterpret_cast<void*>(302)?fskwrNone:attached_float?fskwrBoth:fskwrNone;output->fskfloatalignment=(attached_right||((multiple_opposite||inline_anchor_mode==6)&&name==reinterpret_cast<void*>(302)))?fskfloatalignMax:fskfloatalignMin;return 0;}
 static int WINAPI block_margin(void*,void*,void*,uint32_t,void*,int,int* output){*output=0;return 0;}
 static int WINAPI block_after(void*,void*,void*,uint32_t,void*,void** output){*output=nullptr;return 0;}
 static int WINAPI block_destroy(void*){++float_destroyed;return 0;}
@@ -100,9 +102,10 @@ static int WINAPI block_handler(void*,int id,void* output) {
     cb.pfnDestroyFloaterContentBreakRecord=reinterpret_cast<void*>(block_destroy_break);cb.pfnGetMCSClientAfterFloater=reinterpret_cast<void*>(block_after);
     return floater_handler(&init,output);
 }
-static int WINAPI attached_count(void*,void* name,int dcp,int* count){*count=attached_float&&name==reinterpret_cast<void*>(deferred_attachment?102:101)&&dcp==0?(multiple_float?2:1):0;return 0;}
-static int WINAPI attached_objects(void*,void*,int,int capacity,void** names,int* kinds,int* anchors,int* actual,int* ended){if(capacity!=(multiple_float?2:1))return PTS_tserrInvalidParameter;for(int index=0;index<capacity;++index){names[index]=reinterpret_cast<void*>(301+index);kinds[index]=2;anchors[index]=index;}*actual=capacity;*ended=0;return 0;}
-static int WINAPI attached_in_line(void*,void*,void*,int,int,int,int,int* count){*count=0;return 0;}
+static int WINAPI attached_count(void*,void* name,int dcp,int* count){*count=attached_float&&(!inline_anchor_mode||inline_anchor_mode==6)&&name==reinterpret_cast<void*>(deferred_attachment?102:101)&&dcp==0?(multiple_float?2:1):0;return 0;}
+static int WINAPI attached_objects(void*,void*,int,int capacity,void** names,int* kinds,int* anchors,int* actual,int* ended){if(capacity!=(multiple_float?2:1))return PTS_tserrInvalidParameter;for(int index=0;index<capacity;++index){names[index]=reinterpret_cast<void*>((inline_anchor_mode==6?302:301)+index);kinds[index]=2;anchors[index]=index;}*actual=capacity;*ended=0;return 0;}
+static int WINAPI attached_in_line(void*,void*,void*,int first,int limit,int,int,int* count){int anchor=inline_anchor_mode==2?4:2;*count=inline_anchor_mode&&first<=anchor&&anchor<limit?1:0;if(inline_anchor_mode==3)*count=-1;return 0;}
+static int WINAPI inline_objects(void*,void*,void*,int,int,int,int,int capacity,void** names,int* kinds,int* anchors,int* actual){if(capacity!=1)return PTS_tserrInvalidParameter;names[0]=reinterpret_cast<void*>(301);kinds[0]=2;anchors[0]=inline_anchor_mode==2?4:2;*actual=inline_anchor_mode==4?0:1;return inline_anchor_mode==5?PTS_tserrCallbackException:0;}
 static void reset_page_counts(){lines_created=lines_destroyed=breaks_destroyed=clients_created=clients_destroyed=0;}
 
 int main(int argc,char** argv) {
@@ -192,7 +195,7 @@ int main(int argc,char** argv) {
         gen.pfnGetFirstPara=reinterpret_cast<void*>(first_para);gen.pfnGetNextPara=reinterpret_cast<void*>(next_para);gen.pfnGetParaProperties=reinterpret_cast<void*>(para_properties);
         gen.pfnCreateParaclient=reinterpret_cast<void*>(para_client);gen.pfnDestroyParaclient=reinterpret_cast<void*>(destroy_para_client);
         txt.pfnGetTextProperties=reinterpret_cast<void*>(text_properties);txt.pfnFormatLine=reinterpret_cast<void*>(line_format);
-        txt.pfnGetNumberAttachedObjectsBeforeTextLine=reinterpret_cast<void*>(attached_count);txt.pfnGetAttachedObjectsBeforeTextLine=reinterpret_cast<void*>(attached_objects);txt.pfnGetNumberAttachedObjectsInTextLine=reinterpret_cast<void*>(attached_in_line);
+        txt.pfnGetNumberAttachedObjectsBeforeTextLine=reinterpret_cast<void*>(attached_count);txt.pfnGetAttachedObjectsBeforeTextLine=reinterpret_cast<void*>(attached_objects);txt.pfnGetNumberAttachedObjectsInTextLine=reinterpret_cast<void*>(attached_in_line);txt.pfnGetAttachedObjectsInTextLine=reinterpret_cast<void*>(inline_objects);
         txt.pfnDestroyLine=reinterpret_cast<void*>(destroy_line);txt.pfnDestroyLineBreakRecord=reinterpret_cast<void*>(destroy_break);
         info.fscbk.cbkobj.pfnDestroyMcsclient=reinterpret_cast<void*>(destroy_margin);
         floater_handler=reinterpret_cast<decltype(floater_handler)>(GetProcAddress(dll,"GetFloaterHandlerInfo"));require(floater_handler!=nullptr,"floater handler registration export");
@@ -480,6 +483,23 @@ int main(int argc,char** argv) {
         }
         deferred_attachment=split_attachment=multiple_float=false;available_height=80;para_count=1;
         std::puts("native deferred floaters: nonzero no-progress dimensions, speculative subpage/break-record cleanup, collision rollback, exact host-anchor resume and object lifetime PASS");
+        for(int mode:{1,2,6}) {
+            inline_anchor_mode=mode;reset_page_counts();float_created=float_destroyed=0;
+            require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&!page_break,"in-line anchors are discovered and wrapped through original callbacks");
+            require(FsQueryPageDetails(context,page_handle,&details)==0&&FsQueryTrackParaList(context,details.u.simple.trackdescr.pfstrack,2,paras,&actual_count)==0&&actual_count==1,"in-line paragraph retains its real native text record");
+            FSATTACHEDOBJECTDESCRIPTION objects[2]{};
+            require(FsQueryAttachedObjectList(context,paras[0].pfspara,2,objects,&actual_count)==0&&actual_count==(mode==6?2:1)&&FsQueryFloaterDetails(context,objects[actual_count-1].pfspara,&float_details)==0&&float_details.fsrcFloater.v==(mode==6?45:mode==2?30:20),"inline objects follow moved anchors and actual line positions after nonwrapping obstacles");
+            FSLINEDESCRIPTIONSINGLE inline_lines[3]{};
+            require(FsQueryLineListSingle(context,paras[0].pfspara,3,inline_lines,&actual_count)==0&&actual_count==(mode==2?3:2)&&inline_lines[0].dcpFirst==0&&inline_lines[actual_count-1].dcpLim==10,"in-line reformat retains exact original text extent");
+            for(int i=1;i<actual_count;++i)require(inline_lines[i-1].dcpLim==inline_lines[i].dcpFirst,"inline line source intervals are contiguous");
+            require(FsDestroyPage(context,page_handle)==0&&float_created==(mode==6?2:1)&&float_destroyed==float_created&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"inline retries retain one floating object and release every speculative line");
+        }
+        for(int mode:{3,4,5}) {
+            inline_anchor_mode=mode;reset_page_counts();float_created=float_destroyed=0;
+            require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==(mode==5?PTS_tserrCallbackException:PTS_tserrInvalidClientOutput)&&!page_handle&&!page_break&&float_created==float_destroyed&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"invalid inline counts/arrays or failed discovery release owned line and client outputs");
+        }
+        inline_anchor_mode=0;
+        std::puts("native inline floaters: discovery, constrained line retry, moved anchor placement, exact source/ownership, invalid outputs and callback cleanup PASS");
         fail_float=true;reset_page_counts();float_created=float_destroyed=0;
         require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrCallbackException&&!page_handle&&!page_break&&float_created==float_destroyed&&lines_created==lines_destroyed&&clients_created==clients_destroyed,"populated attached-content callback failure tears down all owned objects");
         fail_float=attached_float=attached_right=false;para_count=2;

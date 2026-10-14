@@ -9681,3 +9681,59 @@ center/clear policies, figures/tables, comparison/display transfer, balancing/
 span areas/footnotes, advanced/optimal/incremental/interruptible algorithms,
 full bidi/native language and broader behavior remain incomplete. The complete
 WPF goal remains active.
+
+## 148. In-line floating anchors and stable wrapped placement
+
+The 2026-10-14 continuation derives GetAttachedObjectsInTextLine from the
+original Pts.cs ABI and uses the original count/list callbacks on provisional
+client lines. The before-line and in-line paths share original floater formatting,
+placement and ownership. Newly discovered rectangles constrain line retries.
+When narrowing moves an anchor beyond the chosen text break, its rectangle moves
+forward monotonically to the following line, retaining that break rather than
+oscillating between wide/narrow layouts. A late object that cannot fit resumes
+from the line's incoming host checkpoint without consuming its anchor. Existing
+obstacles may move the line vertically; in-line objects use its actual vrStart.
+
+Native fixtures verify original count/list discovery, constrained line retries,
+anchors displaced to the next line, and placement below a nonwrapping,
+horizontally disjoint obstacle. They require contiguous original dcp ranges,
+one retained instance per floater and exact destruction of speculative lines,
+breaks, clients and content. Negative counts, mismatched array counts and failed
+callbacks return errors with clean page outputs and no leaked resources.
+
+Original WPF tests cover early and wrapping-displaced inline anchors on page
+zero and a late anchor deferred after six preceding lines to page one. Ideal/
+Display documents complete three/three/four pages and cover all 1047/1071/1118
+characters once, with original page-number agreement, no black host glyphs in
+the red rectangle and correct floating source/raster ownership. Disposed pages
+regenerate their actual objects across GC. Original scrolling viewers now also
+place the floater after a Run, edit its content and verify changed glyph raster,
+full extent and end scrolling: 857.9->905.8 Ideal and 895->945 Display.
+
+Validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-paragraph-context-native
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh inventory layout
+/usr/bin/python3 ~/wpfboot/refresh-finite-native.py
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-floaters-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/inline-floaters-sdk-check
+```
+
+The final focused commands pass. An extracted helper's missing status variable
+was corrected after the first native compile; the next rebuild passes. The late
+inline fixture originally left enough space; its prefix was lengthened to
+exercise actual deferral. The complete source gate passes all existing consumers.
+A subsequent actual-line-position correction passes its new focused native
+oracle; final inventory/layout and shared-framework/self-contained floater tests
+pass again with that DLL. Consumer builds have zero warnings/errors. The full
+SDK gate and corrected-position native gate run concurrently using separate
+DLL copies; the final isolated SDK is refreshed only after the full gate ends.
+Evidence is archived under tmp/wpf8-support/validation/inline-floaters-20261014.
+
+Native imported coverage stays 103/139 with 36 absent. In-line intact floaters
+are now supported in the exercised paths. Oversized/split floater content,
+flow across paragraph boundaries, complex center/clear policies, figures/tables,
+comparison/display transfer, balancing/spans/footnotes, advanced/optimal/
+incremental/interruptible algorithms and full bidi/native-language behavior
+remain incomplete. The WPF goal remains active.

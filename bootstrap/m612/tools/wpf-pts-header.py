@@ -128,7 +128,7 @@ for name in ('GetPageDimensions', 'GetSectionProperties', 'GetMainTextSegment',
              'FormatFloaterContentFinite', 'FormatFloaterContentBottomless',
              'DestroyFloaterContent', 'DestroyFloaterContentBreakRecord', 'GetMCSClientAfterFloater',
              'GetNumberAttachedObjectsBeforeTextLine', 'GetAttachedObjectsBeforeTextLine',
-             'GetNumberAttachedObjectsInTextLine'):
+             'GetNumberAttachedObjectsInTextLine', 'GetAttachedObjectsInTextLine'):
     match = re.search(r'\bdelegate\s+int\s+' + name + r'\s*\((.*?)\)\s*;', text, re.S)
     if not match:
         raise SystemExit('Missing source callback: ' + name)

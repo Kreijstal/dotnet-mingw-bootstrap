@@ -340,16 +340,10 @@ int merge_bbox(FSBBOX& box,const FSBBOX& add) {
 int format_block_ui(const std::shared_ptr<ParaData>& para,uint32_t direction,const FSRECT& rect,
     void* input_margin,bool bottomless,bool empty_ok,int suppress,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA suppress_break,
     std::shared_ptr<Continuation>& output,void** margin_output,bool floating=false,FSFLOATERPROPS* floater_props=nullptr);
-int attached_before_line(const std::shared_ptr<ParaData>& para,int dcp,uint32_t direction,const FSRECT& rect,bool bottomless,bool force,int& maximum_anchor,bool& deferred) {
-    auto context=para->context;auto& cb=context->info.fscbk.cbktxt;void* client=context->info.pfsclient;
-    maximum_anchor=-1;deferred=false;
-    if(!cb.pfnGetNumberAttachedObjectsBeforeTextLine)return 0;
-    int count=0,status=reinterpret_cast<PtsGetNumberAttachedObjectsBeforeTextLine>(cb.pfnGetNumberAttachedObjectsBeforeTextLine)(client,para->desc.nmp,dcp,&count);if(status)return status;
-    if(count<0)return PTS_tserrInvalidClientOutput;if(!count)return 0;
-    if(!cb.pfnGetAttachedObjectsBeforeTextLine)return PTS_tserrInvalidParameter;
-    std::vector<void*> names(count);std::vector<int> kinds(count),anchors(count);int actual=0,ended=0;
-    status=reinterpret_cast<PtsGetAttachedObjectsBeforeTextLine>(cb.pfnGetAttachedObjectsBeforeTextLine)(client,para->desc.nmp,dcp,count,names.data(),kinds.data(),anchors.data(),&actual,&ended);if(status)return status;
-    if(actual!=count||ended)return PTS_tserrInvalidClientOutput;
+int format_attached_objects(const std::shared_ptr<ParaData>& para,int dcp,uint32_t direction,const FSRECT& rect,bool bottomless,bool force,
+    const std::vector<void*>& names,const std::vector<int>& kinds,const std::vector<int>& anchors,int& maximum_anchor,bool& deferred) {
+    auto context=para->context;void* client=context->info.pfsclient;
+    int count=int(names.size()),status=0;deferred=false;
     for(int index=0;index<count;++index) {
         maximum_anchor=std::max(maximum_anchor,anchors[index]);
         if(kinds[index]!=2||!names[index]||anchors[index]<dcp)return PTS_tserrNotImplemented;
@@ -380,6 +374,54 @@ int attached_before_line(const std::shared_ptr<ParaData>& para,int dcp,uint32_t 
         if(box.fDefined&&(int64_t(box.fsrc.v)+shift<INT32_MIN||int64_t(box.fsrc.v)+shift+box.fsrc.dv>INT32_MAX))return PTS_tserrInvalidGeometry;
         candidate.v=int(placed);if(box.fDefined)box.fsrc.v=int(int64_t(box.fsrc.v)+shift);
         attached.push_back({anchors[index],props,child});
+    }
+    return 0;
+}
+int attached_before_line(const std::shared_ptr<ParaData>& para,int dcp,uint32_t direction,const FSRECT& rect,bool bottomless,bool force,int& maximum_anchor,bool& deferred) {
+    auto context=para->context;auto& cb=context->info.fscbk.cbktxt;void* client=context->info.pfsclient;
+    maximum_anchor=-1;deferred=false;
+    if(!cb.pfnGetNumberAttachedObjectsBeforeTextLine)return 0;
+    int count=0,status=reinterpret_cast<PtsGetNumberAttachedObjectsBeforeTextLine>(cb.pfnGetNumberAttachedObjectsBeforeTextLine)(client,para->desc.nmp,dcp,&count);if(status)return status;
+    if(count<0)return PTS_tserrInvalidClientOutput;if(!count)return 0;
+    if(!cb.pfnGetAttachedObjectsBeforeTextLine)return PTS_tserrInvalidParameter;
+    std::vector<void*> names(count);std::vector<int> kinds(count),anchors(count);int actual=0,ended=0;
+    status=reinterpret_cast<PtsGetAttachedObjectsBeforeTextLine>(cb.pfnGetAttachedObjectsBeforeTextLine)(client,para->desc.nmp,dcp,count,names.data(),kinds.data(),anchors.data(),&actual,&ended);if(status)return status;
+    if(actual!=count||ended)return PTS_tserrInvalidClientOutput;
+    return format_attached_objects(para,dcp,direction,rect,bottomless,force,names,kinds,anchors,maximum_anchor,deferred);
+}
+int attached_in_line(const std::shared_ptr<ParaData>& para,const FSLINEDESCRIPTIONSINGLE& line,uint32_t direction,const FSRECT& rect,
+    bool bottomless,bool force,int& maximum_anchor,bool& deferred) {
+    auto context=para->context;auto& cb=context->info.fscbk.cbktxt;void* client=context->info.pfsclient;
+    if(!cb.pfnGetNumberAttachedObjectsInTextLine)return 0;
+    int count=0;
+    int status=reinterpret_cast<PtsGetNumberAttachedObjectsInTextLine>(cb.pfnGetNumberAttachedObjectsInTextLine)(client,line.pfslineclient,para->desc.nmp,line.dcpFirst,line.dcpLim,maximum_anchor>=0,maximum_anchor,&count);if(status)return status;
+    if(count<0)return PTS_tserrInvalidClientOutput;if(!count)return 0;
+    if(!cb.pfnGetAttachedObjectsInTextLine)return PTS_tserrInvalidParameter;
+    std::vector<void*> names(count);std::vector<int> kinds(count),anchors(count);int actual=0;
+    status=reinterpret_cast<PtsGetAttachedObjectsInTextLine>(cb.pfnGetAttachedObjectsInTextLine)(client,line.pfslineclient,para->desc.nmp,line.dcpFirst,line.dcpLim,maximum_anchor>=0,maximum_anchor,count,names.data(),kinds.data(),anchors.data(),&actual);if(status)return status;
+    if(actual!=count)return PTS_tserrInvalidClientOutput;
+    for(int anchor:anchors)if(anchor<line.dcpFirst||anchor>=line.dcpLim)return PTS_tserrInvalidClientOutput;
+    return format_attached_objects(para,line.dcpFirst,direction,rect,bottomless,force,names,kinds,anchors,maximum_anchor,deferred);
+}
+int postpone_unconsumed_objects(TextData& text,const FSLINEDESCRIPTIONSINGLE& line,const FSRECT& rect,bool bottomless,bool& deferred) {
+    // Narrowing can move a discovered anchor out of its provisional line.
+    // Keep the chosen text break and move its rectangle forward monotonically
+    // so retrying cannot oscillate between wide and narrow line layouts.
+    for(auto& object:text.attached) {
+        if(object.anchor<line.dcpLim)continue;
+        auto& candidate=object.para->floater->details.fsrcFloater;
+        int64_t placed=std::max(int64_t(candidate.v),int64_t(line.vrStart)+line.dvrAscent+line.dvrDescent);
+        for(;;){int64_t next=placed;
+            for(const auto& earlier:text.attached){if(&earlier==&object)continue;const auto& obstacle=earlier.para->floater->details.fsrcFloater;
+                if(earlier.anchor<object.anchor&&int64_t(candidate.u)<int64_t(obstacle.u)+obstacle.du&&int64_t(obstacle.u)<int64_t(candidate.u)+candidate.du&&placed<int64_t(obstacle.v)+obstacle.dv&&int64_t(obstacle.v)<placed+candidate.dv)next=std::max(next,int64_t(obstacle.v)+obstacle.dv);
+            }
+            if(next==placed)break;placed=next;
+        }
+        if(placed+candidate.dv>INT32_MAX)return PTS_tserrInvalidGeometry;
+        if(!bottomless&&placed+candidate.dv>int64_t(rect.v)+rect.dv){deferred=true;return 0;}
+        auto& box=object.para->desc.fsbbox;int64_t shift=placed-candidate.v;
+        if(box.fDefined&&(int64_t(box.fsrc.v)+shift<INT32_MIN||int64_t(box.fsrc.v)+shift+box.fsrc.dv>INT32_MAX))return PTS_tserrInvalidGeometry;
+        candidate.v=int(placed);if(box.fDefined)box.fsrc.v=int(int64_t(box.fsrc.v)+shift);
     }
     return 0;
 }
@@ -434,6 +476,16 @@ int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const F
         int64_t height=int64_t(line.dvrAscent)+line.dvrDescent;
         // Structural-marker lines can consume source without visible height.
         if(height<0||height>INT32_MAX-int64_t(rect.v)-used)return PTS_tserrInvalidGeometry;
+        line.dcpLim=dcp+consumed;
+        // Existing obstacles may have advanced the actual line vertically.
+        object_area.v=line.vrStart;object_area.dv=std::max(0,rect.dv-used);
+        status=attached_in_line(para,line,direction,object_area,bottomless,force&&used==0,max_anchor,deferred);if(status)return status;
+        if(!deferred)status=postpone_unconsumed_objects(*text,line,rect,bottomless,deferred);
+        if(status)return status;
+        if(deferred){
+            reinterpret_cast<PtsDestroyLine>(cb.pfnDestroyLine)(client,line.pfslineclient);line.pfslineclient=nullptr;
+            text->lines.pop_back();text->breaks.pop_back();break;
+        }
         int next_used=used,next_u=line_u,next_width=line_width;
         status=line_area(*text,rect,next_used,next_u,next_width,int(height));if(status)return status;
         if(next_used>used||next_u>line_u||int64_t(next_u)+next_width<int64_t(line_u)+line_width){
@@ -442,7 +494,6 @@ int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const F
         }
         height_hint=0;
         line.dcpLim=dcp+consumed;dcp=line.dcpLim;previous=br;
-        if(cb.pfnGetNumberAttachedObjectsInTextLine){int objects=0;status=reinterpret_cast<PtsGetNumberAttachedObjectsInTextLine>(cb.pfnGetNumberAttachedObjectsInTextLine)(client,line.pfslineclient,para->desc.nmp,line.dcpFirst,line.dcpLim,max_anchor>=0,max_anchor,&objects);if(status)return status;if(objects)return PTS_tserrNotImplemented;}
         if(!overflow && height<=int64_t(rect.dv)-used)++fit;else overflow=true;
         used+=int(height);
         ended=result>=fsflrEndOfParagraph&&result<=fsflrEndOfParagraphClearBoth;

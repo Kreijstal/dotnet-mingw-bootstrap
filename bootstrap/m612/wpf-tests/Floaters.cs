@@ -89,16 +89,37 @@ class Check {
             using(var page=paginator.GetPage(1)){var bytes=Raster(page.Visual);int red=0,green=0;for(int i=0;i<bytes.Length;i+=4){if(bytes[i+3]<150)continue;if(bytes[i+2]>200&&bytes[i]<60&&bytes[i+1]<60)++red;if(bytes[i+1]>200&&bytes[i]<60&&bytes[i+2]<60)++green;}if(red<1000||(multiple&&green<1000))throw new Exception("deferred page regeneration must retain original objects");}
             Console.WriteLine($"original deferred floaters {mode}, multiple={multiple}: {pages} pages, {runs.Sum(r=>r.Text.Length)} characters covered exactly once, intact next-page source/raster, regeneration and GC PASS");
         }
-        foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display}) {
+        foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display})
+        foreach(int scenario in new[]{0,1,2}) {
+            string lead=scenario==0?"Inline anchor ":scenario==1?"Words before float at inline position ":"prefix zero\nprefix one\nprefix two\nprefix three\nprefix four\nprefix five\nInline anchor ";
+            var prefix=new Run(lead);var floating=new Run("inline one\ninline two\ninline three");var body=new Run(string.Join(" ",Enumerable.Range(0,100).Select(i=>$"inline{i:D3}")));
+            var floater=new Floater(new Paragraph(floating){Margin=new Thickness(0),Foreground=Brushes.Blue,LineHeight=24}){Width=120,HorizontalAlignment=HorizontalAlignment.Left,Padding=new Thickness(4),Margin=new Thickness(0),Background=Brushes.Red};
+            var host=new Paragraph(prefix){Margin=new Thickness(0),LineHeight=24};host.Inlines.Add(floater);host.Inlines.Add(body);
+            var document=new FlowDocument(host){FontFamily=new FontFamily("Segoe UI"),FontSize=18,PagePadding=new Thickness(10),ColumnWidth=double.PositiveInfinity};TextOptions.SetTextFormattingMode(document,mode);
+            var paginator=(DynamicDocumentPaginator)((IDocumentPaginatorSource)document).DocumentPaginator;paginator.PageSize=new Size(400,220);
+            var ranges=new List<(int Page,TextPointer Start,TextPointer End)>();var floatingPages=new List<int>();int pages=0;
+            for(;pages<20;++pages){using var page=paginator.GetPage(pages);if(page==DocumentPage.Missing)break;var bytes=Raster(page.Visual);var red=new List<(int X,int Y)>();
+                for(int y=0;y<220;++y)for(int x=0;x<400;++x){int i=(y*400+x)*4;if(bytes[i+3]>150&&bytes[i+2]>200&&bytes[i]<60&&bytes[i+1]<60)red.Add((x,y));}
+                if(red.Count>0){if(red.Count<1000||red.Min(p=>p.X)!=10)throw new Exception("inline floater content/placement missing");floatingPages.Add(pages);int overlap=0,beside=0;int top=red.Min(p=>p.Y),bottom=red.Max(p=>p.Y);for(int y=top;y<=bottom;++y)for(int x=0;x<400;++x){int i=(y*400+x)*4;if(bytes[i+3]>150&&bytes[i]<70&&bytes[i+1]<70&&bytes[i+2]<70){if(x<130)++overlap;else ++beside;}}if(overlap!=0||beside<100)throw new Exception("inline host glyphs must flow outside the floating rectangle");}
+                var view=((IServiceProvider)page).GetService(viewType);foreach(var segment in (IEnumerable)viewType.GetProperty("TextSegments").GetValue(view)){var t=segment.GetType();var flags=BindingFlags.Instance|BindingFlags.Public|BindingFlags.NonPublic;ranges.Add((pages,(TextPointer)t.GetProperty("Start",flags).GetValue(segment),(TextPointer)t.GetProperty("End",flags).GetValue(segment)));}GC.Collect(2,GCCollectionMode.Forced,true,true);
+            }
+            if(pages<2||pages>=20||floatingPages.Count!=1||!paginator.IsPageCountValid)throw new Exception("inline floating object pagination must finish with one intact object");
+            foreach(var run in new[]{prefix,floating,body})for(int at=0;at<run.Text.Length;++at){var position=run.ContentStart.GetPositionAtOffset(at,LogicalDirection.Forward);var owners=ranges.Where(r=>position.CompareTo(r.Start)>=0&&position.CompareTo(r.End)<0).ToArray();if(owners.Length!=1||paginator.GetPageNumber(position)!=owners[0].Page)throw new Exception("inline floater exact source ownership at "+at);if(run==floating&&owners[0].Page!=floatingPages[0])throw new Exception("inline floating source and raster must belong to same page");}
+            if(scenario==2&&floatingPages[0]==0)throw new Exception("late inline floater must defer after preceding paragraph lines");
+            using(var page=paginator.GetPage(floatingPages[0])){var bytes=Raster(page.Visual);int red=0;for(int i=0;i<bytes.Length;i+=4)if(bytes[i+3]>150&&bytes[i+2]>200&&bytes[i]<60&&bytes[i+1]<60)++red;if(red<1000)throw new Exception("inline floating page must regenerate");}
+            Console.WriteLine($"original inline floater {mode}, scenario={scenario}: {pages} pages, floating page={floatingPages[0]}, {prefix.Text.Length+floating.Text.Length+body.Text.Length} characters covered once, zero host overlap, source mapping/regeneration/GC PASS");
+        }
+        foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display})
+        foreach(bool inline in new[]{false,true}) {
             var floatingRun=new Run("Original scrolling floater");var bodyRun=new Run(string.Join(" ",Enumerable.Range(0,130).Select(i=>$"scroll{i:D3}")));
             var floater=new Floater(new Paragraph(floatingRun){Margin=new Thickness(0),Foreground=Brushes.Blue}){Width=120,HorizontalAlignment=HorizontalAlignment.Left,Margin=new Thickness(0),Padding=new Thickness(4),Background=Brushes.Red};
-            var paragraph=new Paragraph(floater){Margin=new Thickness(0)};paragraph.Inlines.Add(bodyRun);var document=new FlowDocument(paragraph){FontSize=18,FontFamily=new FontFamily("Segoe UI"),PagePadding=new Thickness(10)};TextOptions.SetTextFormattingMode(document,mode);
+            var paragraph=new Paragraph(){Margin=new Thickness(0)};if(inline)paragraph.Inlines.Add(new Run("Inline scrolling anchor "));paragraph.Inlines.Add(floater);paragraph.Inlines.Add(bodyRun);var document=new FlowDocument(paragraph){FontSize=18,FontFamily=new FontFamily("Segoe UI"),PagePadding=new Thickness(10)};TextOptions.SetTextFormattingMode(document,mode);
             var viewer=new FlowDocumentScrollViewer{Document=document,IsToolBarVisible=false};var window=new Window{Content=viewer,Width=420,Height=260,ShowInTaskbar=false};window.Show();Pump(window);
             var scroll=(ScrollViewer)viewer.Template.FindName("PART_ContentHost",viewer);double oldHeight=scroll.ExtentHeight;var before=Raster(viewer);
             floatingRun.Text+=" Additional original floater text changes the obstacle height and the host line widths.";Pump(window);var after=Raster(viewer);
             if(before.SequenceEqual(after)||scroll.ExtentHeight<oldHeight||scroll.ExtentHeight<=scroll.ViewportHeight)throw new Exception("edited scrolling floater must update glyphs/obstacle/extent");
             scroll.ScrollToEnd();Pump(window);if(scroll.VerticalOffset<=0)throw new Exception("scrolling floater host must retain its full text extent");window.Close();
-            Console.WriteLine($"original scrolling floater {mode}: edited content changes obstacle/host raster, full extent {oldHeight:F1}->{scroll.ExtentHeight:F1}, scrolling and cleanup PASS");
+            Console.WriteLine($"original scrolling floater {mode}, inline={inline}: edited content changes obstacle/host raster, full extent {oldHeight:F1}->{scroll.ExtentHeight:F1}, scrolling and cleanup PASS");
         }
         Dispatcher.CurrentDispatcher.InvokeShutdown();Console.WriteLine("original rectangular floater wrapping and dispatcher cleanup PASS");
     }
