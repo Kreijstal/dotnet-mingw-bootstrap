@@ -277,6 +277,7 @@ struct TrackData {
     explicit TrackData(std::shared_ptr<Context> value):context(std::move(value)){++context->resources;}
     ~TrackData(){paras.clear();--context->resources;}
     void* segment=nullptr;
+    uint32_t direction=0;
     FSRECT rect{};
     FSBBOX bbox{};
     int used=0;
@@ -294,6 +295,7 @@ struct SectionData {
     explicit SectionData(std::shared_ptr<Context> value):context(std::move(value)){++context->resources;}
     ~SectionData(){erase_section(this);columns.clear();--context->resources;}
     FSSECTIONDESCRIPTION description{};
+    uint32_t direction=0;
     std::vector<std::shared_ptr<TrackData>> columns;
     FSKUPDATE update=fskupdNew;
 };
@@ -579,8 +581,14 @@ int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const F
     FSTXTPROPS props{};int status=reinterpret_cast<PtsGetTextProperties>(cb.pfnGetTextProperties)(client,para->desc.nmp,0,&props);
     if(status)return status;
     if(keep_self)props.fKeepTogether=1;
-    if(props.fswdir!=direction||props.fDropCap||props.fVerticalGrid||props.fOptimizeParagraph)return PTS_tserrNotImplemented;
-    auto text=std::make_shared<TextData>(context);text->direction=direction;para->text=text;
+    if((props.fswdir!=PTS_fswdirES&&props.fswdir!=PTS_fswdirWS)||props.fDropCap||props.fVerticalGrid||props.fOptimizeParagraph)return PTS_tserrNotImplemented;
+    if(props.fswdir!=direction){
+        FSRECT page=FigureGeometry::current?FigureGeometry::current->page:rect,converted{};
+        status=FsTransformRectangle(direction,&page,&rect,props.fswdir,&converted);if(status)return status;
+        status=format_text(para,props.fswdir,converted,input,output,bottomless,force,keep_self,previous_page);if(status)return status;
+        FSBBOX box{};status=FsTransformBbox(props.fswdir,&page,&para->desc.fsbbox,direction,&box);if(!status)para->desc.fsbbox=box;return status;
+    }
+    auto text=std::make_shared<TextData>(context);text->direction=props.fswdir;para->text=text;
     int dcp=input?input->dcp:props.dcpStartContent,used=0,fit=0,height_hint=0;bool overflow=false,ended=false,deferred=false;
     std::shared_ptr<LineBreakData> previous=input?input->line_break:nullptr;text->incoming=previous;
     if(input)for(const auto& pending:input->floaters) {
@@ -932,9 +940,9 @@ int format_table(const std::shared_ptr<ParaData>& para,uint32_t direction,const 
 int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t direction,const FSRECT& rect,
     int suppress,void* incoming,std::shared_ptr<TrackData>& result,void** margin_output,bool bottomless=false,const std::shared_ptr<Continuation>& input={},bool empty_ok=false,bool previous_page=true,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA suppress_break=fsksuppresshardbreakbeforefirstparaPageAndColumn,bool keep_self=false) {
     auto& cb=context->info.fscbk.cbkgen;void* client=context->info.pfsclient;
-    if(!segment||direction!=PTS_fswdirES||rect.du<=0||rect.dv<0||int64_t(rect.u)+rect.du>INT32_MAX||int64_t(rect.v)+rect.dv>INT32_MAX)return PTS_tserrNotImplemented;
+    if(!segment||(direction!=PTS_fswdirES&&direction!=PTS_fswdirWS)||rect.du<=0||rect.dv<0||int64_t(rect.u)+rect.du>INT32_MAX||int64_t(rect.v)+rect.dv>INT32_MAX)return PTS_tserrNotImplemented;
     if(!cb.pfnGetFirstPara||!cb.pfnGetNextPara||!cb.pfnGetParaProperties||!cb.pfnCreateParaclient||!cb.pfnDestroyParaclient||!context->info.fscbk.cbkobj.pfnDestroyMcsclient)return PTS_tserrInvalidParameter;
-    auto track=std::make_shared<TrackData>(context);track->segment=segment;track->rect=rect;track->bottomless=bottomless;
+    auto track=std::make_shared<TrackData>(context);track->segment=segment;track->direction=direction;track->rect=rect;track->bottomless=bottomless;
     int found=0,status=0;void* name=nullptr;
     if(input){if(input->segment!=segment)return PTS_tserrInvalidBreakRecord;name=input->paragraph;found=1;}
     else {status=reinterpret_cast<PtsGetFirstPara>(cb.pfnGetFirstPara)(client,segment,&found,&name);if(status)return status;}
@@ -1120,8 +1128,9 @@ int build_page(const std::shared_ptr<Context>& context,void* section,bool bottom
     int status=reinterpret_cast<PtsGetPageDimensions>(cb.pfnGetPageDimensions)(client,section,&direction,&header,&width,&height,&rect);if(status)return status;
     int new_page=0,balance=0,columns=0,segments=0,heights=0;
     status=reinterpret_cast<PtsGetSectionProperties>(cb.pfnGetSectionProperties)(client,section,&new_page,&section_direction,&balance,&columns,&segments,&heights);if(status)return status;
-    if(direction!=PTS_fswdirES||section_direction!=direction||header||columns<1||segments||heights||balance|| (bottomless&&columns!=1))return PTS_tserrNotImplemented;
+    if((direction!=PTS_fswdirES&&direction!=PTS_fswdirWS)||section_direction!=direction||header||columns<1||segments||heights||balance|| (bottomless&&columns!=1))return PTS_tserrNotImplemented;
     if(width<=0||(!bottomless&&height<=0)||rect.u<0||rect.v<0||rect.du<=0||int64_t(rect.u)+rect.du>width||(!bottomless&&int64_t(rect.v)+rect.dv>height))return PTS_tserrInvalidGeometry;
+    if(direction==PTS_fswdirWS){FSRECT page_rect{0,0,width,height},converted{};status=FsTransformRectangle(PTS_fswdirES,&page_rect,&rect,direction,&converted);if(status)return status;rect=converted;}
     if(bottomless)rect.dv=INT32_MAX-rect.v;
     FigureGeometry figure_geometry({0,0,width,height},rect);
     void* segment=nullptr;status=reinterpret_cast<PtsGetMainTextSegment>(cb.pfnGetMainTextSegment)(client,section,&segment);if(status)return status;
@@ -1140,13 +1149,13 @@ int build_page(const std::shared_ptr<Context>& context,void* section,bool bottom
         // create managed paragraph clients or native continuation resources.
         int64_t u=rect.u;
         for(const auto& col:info){if(col.durBefore<0||col.durWidth<=0)return PTS_tserrInvalidClientOutput;u+=int64_t(col.durBefore)+col.durWidth;if(u>int64_t(rect.u)+rect.du)return PTS_tserrInvalidGeometry;}
-        auto data=std::make_shared<SectionData>(context);page->section=data;
+        auto data=std::make_shared<SectionData>(context);page->section=data;data->direction=direction;
         auto& desc=data->description;desc.fsupdinf.fskupd=fskupdNew;desc.nms=section;desc.fsrc=rect;desc.pfssection=data.get();
         auto continuation=input;bool finished=false,stop_page=false;FSFMTRKSTOP stop=fmtrGoalReached;u=rect.u;
         for(int index=0;index<columns;++index) {
             u+=info[index].durBefore;FSRECT column{int(u),rect.v,info[index].durWidth,rect.dv};u+=column.du;
             std::shared_ptr<TrackData> track;MarginOwner column_margin{context};
-            if(finished||stop_page){track=std::make_shared<TrackData>(context);track->segment=segment;track->rect=column;}
+            if(finished||stop_page){track=std::make_shared<TrackData>(context);track->segment=segment;track->direction=direction;track->rect=column;}
             else {
                 status=format_track(context,segment,direction,column,1,nullptr,track,&column_margin.value,false,continuation,false,index==0,index==0?fsksuppresshardbreakbeforefirstparaPageAndColumn:fsksuppresshardbreakbeforefirstparaColumn);if(status)return status;
                 continuation=track->continuation;finished=!continuation;stop=track->stop;
@@ -1274,7 +1283,7 @@ struct TrackShift {
 extern "C" __declspec(dllexport) int WINAPI FsSynchronizeBottomlessSubtrack(void* context_handle,void* handle,void* geometry,uint32_t direction,int shift) {
     auto track=lookup_owned(tracks,context_handle,handle);
     if(!track||!track->subtrack||!track->bottomless)return PTS_tserrInvalidQuery;
-    if(geometry||direction!=PTS_fswdirES)return PTS_tserrNotImplemented;
+    if(geometry||direction!=track->direction||(direction!=PTS_fswdirES&&direction!=PTS_fswdirWS))return PTS_tserrNotImplemented;
     try {TrackShift plan{shift};int status=plan.collect(track);if(status)return status;std::lock_guard<std::mutex> lock(gate);plan.apply();return 0;}
     catch(const std::bad_alloc&){return PTS_tserrOutOfMemory;}
 }
@@ -1436,7 +1445,7 @@ extern "C" __declspec(dllexport) int WINAPI FsQueryPageSectionList(void* context
 }
 extern "C" __declspec(dllexport) int WINAPI FsQuerySectionDetails(void* context,void* handle,FSSECTIONDETAILS* output) {
     if(!output)return PTS_tserrNullOutputParameter;*output={};auto section=find_section(context,handle);if(!section)return PTS_tserrInvalidQuery;
-    output->fFootnotesAsPagenotes=1;auto& body=output->u.withpagenotes;body.fswdir=0;body.fsrcSectionBody=section->description.fsrc;body.fsbboxSectionBody=section->description.fsbbox;body.cBasicColumns=int(section->columns.size());return 0;
+    output->fFootnotesAsPagenotes=1;auto& body=output->u.withpagenotes;body.fswdir=section->direction;body.fsrcSectionBody=section->description.fsrc;body.fsbboxSectionBody=section->description.fsbbox;body.cBasicColumns=int(section->columns.size());return 0;
 }
 extern "C" __declspec(dllexport) int WINAPI FsQuerySectionBasicColumnList(void* context,void* handle,int capacity,FSTRACKDESCRIPTION* output,int* count) {
     if(!count)return PTS_tserrNullOutputParameter;*count=0;auto section=find_section(context,handle);if(!section)return PTS_tserrInvalidQuery;
@@ -1449,18 +1458,19 @@ int build_subpage(const std::shared_ptr<Context>& context,void* segment,uint32_t
     int width,int height,int columns,const FSCOLUMNINFO* info,bool bottomless,bool empty_ok,int suppress,bool previous,
     FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA suppress_break,const std::shared_ptr<Continuation>& input,
     std::shared_ptr<PageData>& result,void** margin_output,int& used,FSBBOX& bbox) {
-    if(!segment||direction!=PTS_fswdirES||width<=0||height<0||columns<1||!info||rect.u<0||rect.v<0||rect.du<=0||rect.dv<0||
+    if(!segment||(direction!=PTS_fswdirES&&direction!=PTS_fswdirWS)||width<=0||height<0||columns<1||!info||rect.u<0||rect.v<0||rect.du<=0||rect.dv<0||
        int64_t(rect.u)+rect.du>width||(!bottomless&&int64_t(rect.v)+rect.dv>height))return PTS_tserrInvalidGeometry;
     if(bottomless&&columns!=1)return PTS_tserrNotImplemented;
     int64_t u=rect.u;
     for(int index=0;index<columns;++index){if(info[index].durBefore<0||info[index].durWidth<=0)return PTS_tserrInvalidGeometry;u+=int64_t(info[index].durBefore)+info[index].durWidth;if(u>int64_t(rect.u)+rect.du)return PTS_tserrInvalidGeometry;}
+    FigureGeometry subpage_geometry({0,0,width,height},rect);
     auto page=std::make_shared<PageData>(context);page->subpage=true;page->bottomless=bottomless;
-    if(columns>1){page->section=std::make_shared<SectionData>(context);page->section->description.nms=segment;page->section->description.fsrc=rect;}
+    if(columns>1){page->section=std::make_shared<SectionData>(context);page->section->direction=direction;page->section->description.nms=segment;page->section->description.fsrc=rect;}
     auto position=input;bool finished=false,stop_page=false;u=rect.u;
     for(int index=0;index<columns;++index) {
         u+=info[index].durBefore;FSRECT column{int(u),rect.v,info[index].durWidth,bottomless?INT32_MAX-rect.v:rect.dv};u+=column.du;
         std::shared_ptr<TrackData> track;MarginOwner margin{context};
-        if(finished||stop_page){track=std::make_shared<TrackData>(context);track->segment=segment;track->rect=column;}
+        if(finished||stop_page){track=std::make_shared<TrackData>(context);track->segment=segment;track->direction=direction;track->rect=column;}
         else {
             int status=format_track(context,segment,direction,column,suppress,nullptr,track,&margin.value,bottomless,position,empty_ok,previous&&index==0,
                 index==0?suppress_break:fsksuppresshardbreakbeforefirstparaColumn);if(status)return status;

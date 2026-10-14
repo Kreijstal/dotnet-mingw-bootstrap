@@ -10703,3 +10703,52 @@ expansion, selective incremental reuse/comparison/display transfer, complex
 figure collision/search/composite-line layouts, advanced spans, balancing/
 footnotes, optimal/interruptible algorithms and full native-language services
 remain unfinished. The WPF goal stays active.
+
+## 166. Horizontal RTL page and independent paragraph coordinates
+
+The 2026-10-14 continuation permits ES/WS writing directions in page, track and
+subpage formatting. Physical margins from original GetPageDimensions convert to
+logical RTL U coordinates, including asymmetric left/right padding. Sections
+retain their actual direction for original section/column queries. Columns are
+formatted in logical reading order; RTL pages therefore consume the right column
+first. Tracks retain their direction, and bottomless synchronization rejects a
+caller supplying a different direction from the owned track.
+
+A paragraph whose original text properties differ from its parent track formats
+in its own writing direction. Its available rectangle converts around the current
+page frame; line queries retain paragraph coordinates, while final paragraph
+bounds convert back to the parent track. Local subpage frames keep nested content
+from using an outer page's width for that conversion. Native callbacks, source
+continuations and page/resource ownership retain their existing contracts.
+
+Native matrix tests cover all page/paragraph direction pairs in one/two columns:
+physical margins, logical column positions, actual section/text directions, line
+coordinates and transformed paragraph bounds. Failed finite updates retain prior
+content; page clearing/disposal releases all source clients/lines/records once.
+The previous wrong-direction synchronization rejection remains enforced.
+
+The original public SDK consumer runs sixteen pagination cases in Ideal/Display,
+with both page directions, matching/opposite paragraph directions and one/two
+columns. Every case completes six rendered pages with all 1258 source characters
+exactly once and original GetPageNumber agreement. Glyph ink respects asymmetric
+physical padding, original text-position rectangles put the first character in
+the first column in reading order, and disposed early/late pages regenerate after
+GC. Original RTL/LTR scrolling retains distinct top/end glyphs; an edit changes
+raster and extent from 1323.4 to 1429.8. Basic table cell background order and
+actual subpage glyph rendering pass in both directions/modes.
+
+Focused validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-paragraph-context-native
+/usr/bin/python3 ~/wpfboot/refresh-finite-native.py
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-rtl-pages-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/rtl-pages-sdk-check
+```
+
+Final focused commands pass with zero consumer warnings/errors. Shared-framework
+and self-contained runs pass with SDK roots/toolchain PATH removed. Original ABI
+and import scope remain 441 fields and 111/139 with 28 absent. Advanced bidi
+objects/decorations/expansion, selective incremental reuse/comparison/display
+transfer, complex figure collision/search/composite-line layouts, advanced spans,
+balancing/footnotes, optimal/interruptible algorithms and complete native-language
+services remain open. The WPF goal stays active.

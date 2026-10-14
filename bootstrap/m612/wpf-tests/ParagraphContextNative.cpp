@@ -17,6 +17,8 @@ static int WINAPI create_object(void* client,void* context,FSCBKOBJ* callbacks,u
 static int WINAPI destroy_object(void* value){if(value!=reinterpret_cast<void*>(100)&&value!=reinterpret_cast<void*>(101))return PTS_tserrInvalidParameter;++destroys;return 0;}
 static int lines_created=0,lines_destroyed=0,breaks_destroyed=0,clients_created=0,clients_destroyed=0,fail_line=-1,columns=1,available_height=80,invalid_columns=false,hard_break=0,keep_mode=0,keep_next=0,para_count=2;
 static bool containers=false,lose_subtrack=false;
+static uint32_t page_direction=0,text_direction=0;
+static bool rtl_matrix=false;
 static bool attached_figure=false,figure_fail_properties=false,figure_fail_position=false,inside_figure=false;
 static int figure_alignment=0;
 static std::unordered_map<void*,void*> figure_content;
@@ -67,10 +69,10 @@ static int WINAPI subpage_format(void*,void*,void* input,int previous,void* name
 static int WINAPI subpage_destroy(void* page){return destroy_subpage(page_context,page);}
 static int WINAPI subpage_destroy_record(void*,void* record){return destroy_subpage_record(page_context,record);}
 static int WINAPI page_geometry(void*,void*,uint32_t* direction,int* header,int* width,int* height,FSRECT* margin) {
-    *direction=0;*header=0;*width=columns==2?240:200;*height=140;*margin={10,20,columns==2?210:100,available_height};return 0;
+    *direction=page_direction;*header=0;*width=columns==2?240:200;*height=140;*margin={10,20,columns==2?210:100,available_height};return 0;
 }
 static int WINAPI section_properties(void*,void*,int* page,uint32_t* direction,int* balance,int* cols,int* segments,int* heights) {
-    *page=0;*direction=0;*balance=0;*cols=columns;*segments=*heights=0;return 0;
+    *page=0;*direction=page_direction;*balance=0;*cols=columns;*segments=*heights=0;return 0;
 }
 static int WINAPI column_info(void*,void*,uint32_t,int capacity,FSCOLUMNINFO* output,int* actual) {
     if(capacity!=2)return PTS_tserrInvalidParameter;output[0]={0,100};output[1]={10,invalid_columns?250:100};*actual=2;return 0;
@@ -81,11 +83,11 @@ static int WINAPI next_para(void*,void* segment,void* current,int* found,void** 
 static int WINAPI para_properties(void*,void* name,FSPAP* pap){*pap={};pap->idobj=table_mode&&!inside_table_cell&&!(span_prefix&&name==reinterpret_cast<void*>(101))?3:subpage_parent&&reinterpret_cast<uintptr_t>(name)<200?1:block_ui&&name==reinterpret_cast<void*>(102)?2:containers&&reinterpret_cast<uintptr_t>(name)<200?0:-1;pap->fKeepWithNext=keep_next&&name==reinterpret_cast<void*>(102);if(name==reinterpret_cast<void*>(102)){pap->fBreakPageBefore=hard_break==1;pap->fBreakColumnBefore=hard_break==2;}return 0;}
 static int WINAPI para_client(void*,void* name,void** output){++clients_created;*output=name;return 0;}
 static int WINAPI destroy_para_client(void*,void* client){auto at=figure_content.find(client);if(at!=figure_content.end()){void* page=at->second;figure_content.erase(at);require(destroy_subpage(page_context,page)==0,"original figure client owns its subpage through disposal");}++clients_destroyed;return 0;}
-static int WINAPI text_properties(void*,void* name,int,FSTXTPROPS* props){*props={};props->fKeepTogether=keep_mode==2||(keep_mode==1&&name==reinterpret_cast<void*>(102));return 0;}
+static int WINAPI text_properties(void*,void* name,int,FSTXTPROPS* props){*props={};props->fswdir=text_direction;props->fKeepTogether=keep_mode==2||(keep_mode==1&&name==reinterpret_cast<void*>(102));return 0;}
 static int WINAPI line_format(void*,void*,void* name,int,int dcp,void* incoming,uint32_t direction,
     int start,int width,int track_start,int track_width,int margin,int hyphen,int left,int right,int first,int last,int suppress,
     void** line,int* consumed,void** br,int* forced,FSFLRES* result,int* ascent,int* descent,int* bbox,int* bbox_width,int* depend,int* reformat) {
-    if(!inside_figure&&(direction||(!attached_float&&!attached_figure&&(start!=track_start||width!=100))||(track_start!=10&&track_start!=120)||track_width!=100||margin!=track_start||hyphen||left||right||last||first!=(dcp==0)||bool(incoming)!=(dcp!=0)))return PTS_tserrInvalidParameter;
+    if(!inside_figure&&(direction!=text_direction||(!attached_float&&!attached_figure&&(start!=track_start||width!=100))||(!rtl_matrix&&track_start!=10&&track_start!=120)||track_width!=100||margin!=track_start||hyphen||left||right||last||first!=(dcp==0)||bool(incoming)!=(dcp!=0)))return PTS_tserrInvalidParameter;
     if(attached_float&&!inline_anchor_mode&&(!deferred_attachment||name==reinterpret_cast<void*>(102))&&(width!=(multiple_opposite?20:60)||start!=(attached_right?10:50)))return PTS_tserrInvalidParameter;
     ++lines_created;*line=reinterpret_cast<void*>(1000+lines_created);*br=reinterpret_cast<void*>(2000+lines_created);
     *consumed=5;*forced=0;*result=dcp==0?fsflrOutOfSpace:fsflrEndOfParagraph;*ascent=7;*descent=3;*bbox=start;*bbox_width=attached_figure?std::min(75,width):75;*depend=*reformat=0;
@@ -703,6 +705,23 @@ int main(int argc,char** argv) {
         std::puts("native vertical spans: original shared client/merge states, combined row height, intact deferral/resume, partial failures and exact single-owner cleanup PASS");
         table_fail_cell=-1;lose_table_cell=table_mode=false;para_count=2;available_height=80;
         std::puts("native tables: original cell/subpage callbacks, exact rows/heights/spacing, typed queries/capacity/update/stale state, row resume and populated/lost-output cleanup PASS");
+        rtl_matrix=true;
+        for(uint32_t page_dir:{0u,4u})for(uint32_t para_dir:{0u,4u})for(int cols:{1,2}) {
+            page_direction=page_dir;text_direction=para_dir;columns=cols;available_height=80;reset_page_counts();
+            require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&!page_break&&FsQueryPageDetails(context,page_handle,&details)==0,"horizontal page/paragraph direction matrix formats actual source content");
+            FSTRACKDESCRIPTION first_track{};
+            if(cols==1){first_track=details.u.simple.trackdescr;require(first_track.fsrc.u==(page_dir==4?90:10),"RTL page margins map physical left padding to logical U");}
+            else {require(FsQueryPageSectionList(context,page_handle,1,&section_desc,&actual_count)==0&&FsQuerySectionDetails(context,section_desc.pfssection,&section_details)==0&&section_details.u.withpagenotes.fswdir==page_dir&&FsQuerySectionBasicColumnList(context,section_desc.pfssection,2,column_desc,&actual_count)==0&&actual_count==2,"section and column queries preserve actual page direction");first_track=column_desc[0];require(first_track.fsrc.u==(page_dir==4?20:10)&&column_desc[1].fsrc.u==first_track.fsrc.u+110,"columns advance in logical reading order");}
+            require(FsQueryTrackParaList(context,first_track.pfstrack,2,paras,&actual_count)==0&&actual_count==2&&FsQueryTextDetails(context,paras[0].pfspara,&text_details)==0&&text_details.u.full.fswdir==para_dir&&FsQueryLineListSingle(context,paras[0].pfspara,2,lines,&actual_count)==0,"paragraph queries preserve their independent writing direction");
+            int expected_u=first_track.fsrc.u;if(page_dir!=para_dir)expected_u=(cols==2?240:200)-expected_u-first_track.fsrc.du;
+            require(lines[0].urStart==expected_u&&lines[0].dur==100&&lines[0].vrStart==20,"line coordinates use paragraph U rather than parent track U");
+            int expected_bbox=page_dir==para_dir?expected_u:(cols==2?240:200)-expected_u-75;
+            require(paras[0].fsbbox.fsrc.u==expected_bbox&&paras[0].fsbbox.fsrc.du==75,"paragraph bounds convert back to the parent track direction");
+            fail_line=lines_created+2;require(FsUpdateFinitePage(context,page_handle,nullptr,reinterpret_cast<void*>(66),&formatted,&clone)==PTS_tserrCallbackException&&!clone,"RTL finite-update failure preserves prior content and clears output");fail_line=-1;
+            require(FsClearUpdateInfoInPage(context,page_handle)==0&&FsDestroyPage(context,page_handle)==0&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"RTL matrix/update failure releases every source client/line/record once");
+        }
+        page_direction=text_direction=0;rtl_matrix=false;
+        std::puts("native horizontal RTL pages: asymmetric physical margins, logical columns, independent paragraph coordinates/bounds, direction queries, failed-update retention and exact cleanup PASS");
         columns=1;require(DestroyDocContext(context)==0&&DestroyInstalledObjectsInfo(installed)==0,"failed page creation leaves no retained resources");
         std::puts("native finite pages: actual callback geometry/ranges/break records, query/update state, foreign/stale handles, exact teardown, partial failure rollback and unsupported paths PASS");
         std::printf("native paragraph records: context=%zu, methods=%zu, callbacks=%zu; copied ownership, callbacks, rollback, invalid states and teardown PASS\n",sizeof(FSCONTEXTINFO),sizeof(FSIMETHODS),sizeof(FSCBK));return 0;
