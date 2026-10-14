@@ -12745,3 +12745,124 @@ General polygon/object/table/subpage layout, full bidi/optimizer conformance,
 legacy compound/multiword/reform spelling and full physical printing remain
 unfinished or unproven. WinForms8 metadata generation and current Greenshot
 compatibility also remain open. The WPF goal stays active.
+
+
+## 198. Container clearing of inherited floating objects
+
+Source feature commit 9e79187 implements original container ClearFloaters values in
+finite and bottomless subtrack formatting and bottomless updates. Previously all
+non-none values returned NotImplemented. Inherited obstacles are transformed into
+the container direction before selecting left/right/both clearing. Floater logical
+alignment preserves side identity. Accepted gaps contribute to consumed height,
+callback top-space output and the queried content origin, so original section
+background and child arrangement move together. Comparison retains gap differences;
+updates atomically publish the gap with the replacement tree.
+
+Finite clearance that leaves no usable space preserves an immutable continuation
+without consuming the container. A gap is also discarded when no child source fits.
+Keep-chain rollback retains leading clearance only with accepted source paragraphs.
+Invalid clear values reset outputs; a failed bottomless update retains existing
+queryable source and exported identity. Empty containers do not generate a gap.
+
+The final strengthened consumer builds on installed release49, passes none-clearing
+cases, then fails the first original ClearFloaters.Left case because container
+source is missing. The changed native formatter passes 64 finite cases plus four
+bottomless cases in each shared/portable execution: 136 case executions. These use
+Ideal/Display, LTR/RTL page and opposite container directions, all four clear
+values and occupied-page deferral. Exact selected-side raster placement and visible
+section background origins are checked, together with unchanged earlier source,
+single page ownership, page mapping, disposal/regeneration and compacting GC.
+Bottomless cases resize an inherited floater, change the clear property and scroll
+to the real source end. A 90-pixel preceding block forces selected cleared sections
+onto a fresh page while the original floating host remains on page zero.
+
+Native tests additionally check exact selective child line positions/widths/heights,
+no-progress deferral/resume, every valid clear value without obstacles, invalid
+finite values and invalid bottomless updates, stable queryable content and exact
+callback/resource ownership. Existing source native context/line/page/table,
+continuation and callback-failure tests still pass. The original managed ABI remains
+482 field sizes/offsets. Initial native fixture compilation exposed an incorrect
+query-variable name; using its existing typed subtrack record corrected that test.
+
+Exact focused source commands, with the standard CLANG64 source environment:
+
+```sh
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-paragraph-context-native check-paragraph-context
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-section-clearing-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/section-clearing-candidate
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-cross-paragraph-floats-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/section-clearing-cross-paragraph-regression
+```
+
+All final commands exit zero, including the existing cross-paragraph floating
+shared/portable regression. Build/publish reports zero warnings/errors. The overlay
+shared/runtime-pack native copies were unlinked before replacing them with the
+rebuilt source library. check-sdk now registers the new section consumer (37 WPF
+consumers); this turn ran focused regressions rather than the entire consumer suite.
+Clean pinned source plus all 50 patches reproduce all six feature files exactly.
+
+Source evidence is archived under
+`tmp/wpf8-support/validation/container-clearing-20261014`. Styled margin/border
+interactions need broader conformance coverage beyond these zero-margin/padding
+sections. Vertical, polygon/object and the other documented advanced layout gaps
+remain unfinished; the full WPF goal stays active.
+
+
+## 199. Installed release 50: inherited container clearing
+
+The 2026-10-14 continuation packages and installs WindowsDesktop 8.0.0-50 with
+section 198's source feature commit 9e79187. Recipe commit 46e2f05 adds
+0050-container-clearing.patch (SHA-256
+b0859ebe4e8ddfaec477a3ce8943a698d3fd905f19ab3b0e0c3718c607cca1e7).
+Clean pinned source plus all 50 patches reproduce all six feature files. Private
+source verification passes. Regenerated .SRCINFO has 57 source/hash declarations;
+all 53 locally available source hashes match.
+
+The private native library is rebuilt from the patched source with trusted MSYS2
+LLVM23. Native paragraph/page/container/table ownership and clear-parameter gates,
+original 482-field managed ABI and desktop layout pass. The private SDK continuation
+recreates its overlay using check-sdk's unlink-before-copy procedure and verifies
+both native copies equal the rebuilt library. The complete new section consumer
+passes 136 finite/bottomless case executions across shared and portable modes;
+normal source BAML generation, window and raster consumers also pass both modes.
+
+Exact private commands after sourcing PKGBUILD:
+
+```sh
+makepkg --verifysource --noconfirm
+patch --batch --forward -d "$(_tree)" -Np1 -i "$PWD/0050-container-clearing.patch"
+_wpf native-win32 inventory check-paragraph-context-native check-paragraph-context layout
+bash ~/wpfboot/section-clearing-private-sdk-checks.sh
+bash ~/wpfboot/install-section-clearing.sh
+```
+
+All private/install commands exit zero. The validated build is repackaged with
+makepkg --repackage --force --noconfirm --nodeps after explicitly verifying every
+runtime dependency and all non-C++/CLI makedepends via pacman -T. As recorded in
+section 195, the host's LLVM23 upgrade removed the LLVM22-pinned compiler package;
+this existing source build repackage does not invoke it. Fresh-build compiler
+requirements remain in the recipe, with no dependency falsification or downgrade.
+
+package() and installed payload validation both pass: 42 managed implementation/
+reference pairs, native hashes, SDK tasks and retained legacy versions. Installed
+section clearing repeats all 136 case executions with exact geometry/source/page/
+background/update assertions. Installed normal BAML/window/raster consumers pass
+shared and portable modes. Source hyphenation audit retains 81 hashes, 39 notices
+and exact regenerated embedded dictionaries. Native imported API inventory remains
+133/139; the six absent declarations remain upstream #if NEVER.
+
+The artifact and exact scripts/private/installed logs/native inventory are archived
+under `tmp/wpf8-support/validation/container-clearing-package-20261014`:
+
+```text
+mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-50-any.pkg.tar.zst
+SHA-256: 09c57394bee85e21f8753b4f5e572b1433428bb1b864bd80e9ee938221ce6202
+Bytes: 58907815
+```
+
+The downloaded artifact's hash and byte count equal the host archive. Source
+regression evidence remains under `tmp/wpf8-support/validation/container-clearing-20261014`.
+These are focused regressions for the native change; the full 37-consumer suite
+was not rerun in this turn. Styled margin/border clearing, vertical/polygon/object
+layout, full bidi/optimizer conformance, legacy compound/multiword/reform spelling
+and full physical printing remain incomplete or unproven. WinForms8 metadata
+bootstrapping and current Greenshot compatibility remain open. The full WPF goal
+stays active.
