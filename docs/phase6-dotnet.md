@@ -11989,3 +11989,128 @@ Object-handler, column-span, footnote/debug/cached-query imports remain absent.
 Legacy multiword/compound/reform controls, advanced bidi/layout/optimal behavior,
 cross-paragraph floats and forced oversized object groups remain unfinished.
 The WPF packaging goal stays active.
+
+
+## 186. Floating geometry across original paragraph containers
+
+The 2026-10-14 continuation fixes a public FlowDocument gap: an ordinary following
+paragraph started below a preceding 160-pixel floater instead of wrapping beside
+it. Original WPF wraps ordinary paragraphs in container paragraphs, so propagation
+must cross native container callbacks as well as text leaves.
+
+Text/track state now distinguishes text advance from owned object extent.
+Completed text/container paragraphs can advance following text by their actual
+text height, retaining outstanding object extent for a final paragraph or a
+transition to a non-text block. Anchor paragraphs retain object clients, drawing
+and source ranges; subsequent paragraphs receive geometry snapshots. Container
+callback scopes pass snapshots through nested tracks, transform geometry and
+wrap/alignment sides across direction changes, and isolate local floating-content
+tracks. Snapshots expire below the current position and reset at page/column
+boundaries. They participate in line-area intersection, collision, anchor
+postponement and selective clearing. Bottomless replacement/comparison/shift
+paths retain the fields without changing the original 479-field ABI.
+
+Opposite-direction following paragraphs exposed a second real error: trailing
+whitespace retained an embedded run's level after wrapping, shifting actual
+leading glyph/caret geometry into the exclusion area. LineServices applies the
+line-end reset from Unicode UAX #9 L1, splitting at the trailing whitespace
+boundary and remeasuring through original callbacks. Source CPs and continuation
+levels remain intact; rendering, enumeration and caret queries share that
+geometry. This is the line-end rule, not a claim of full bidi conformance.
+
+Focused commands on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-paragraph-context-native check-paragraph-context
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-cross-paragraph-floats-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/cross-paragraph-floats-sdk-check
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-lineservices-line-native
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-bidi-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/cross-paragraph-bidi-sdk-check
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-floater-clearing-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/cross-paragraph-clearing-sdk-check
+```
+
+The baseline fails at following-paragraph glyph top 175 versus floater bottom
+170. Corrected cases put following glyphs near top 39/41 while the object remains
+at top 10..169. Twenty-four finite cases pass both text modes/directions,
+left/center/right objects and matching/opposite following directions, including
+optimal centered paragraphs and 80 caret/point queries per case. Sixteen clearing
+cases preserve None/Left/Right/Both across paragraphs. Four bottomless cases
+resize the preceding object 110/180/110 pixels, retaining wrapping, scroll extent,
+restored viewport pixels and GC cleanup. These cases pass shared-framework and
+portable execution. Existing native line/paragraph ABI/lifetime, bidi and
+selective clearing regressions also pass. A separate two-column probe passes
+short/multipage documents in both directions; eight stronger column ownership/
+regeneration cases also pass in both final full regressions.
+
+The new SDK consumer brings the suite to 33 WPF consumers. Full source/private
+regressions and package integration follow. Evidence is under
+`tmp/wpf8-support/validation/cross-paragraph-floats-20261014`. Imported coverage
+remains 129/139 and paragraph ABI 479 fields. General polygon/oversized/object/
+table/subpage layouts and other documented advanced native behavior remain
+unfinished. The WPF packaging goal stays active.
+
+
+## 187. Installed release 44: cross-paragraph float layout
+
+WindowsDesktop 8.0.0-44 is built, installed and validated on win11. Source feature
+commit 088c7e5 is represented by recipe patch 0044. Clean pinned source plus all
+44 patches reproduces all six changed files byte for byte; actual source/private
+files also match. All 47 locally available declared input hashes match, and the
+private makepkg --verifysource gate validates all inputs. Recipe commit d7f7899
+updates release, patch, README and complete .SRCINFO metadata (51 source/hash
+entries). No additional binary seed is introduced.
+
+Full source and private regressions both exit zero. Each completes 33 WPF
+consumers (standard SDK/BAML/window application plus 32 feature gates) and both
+interim WinForms executions. Paragraph ABI remains 479 fields, with the same
+context/method/callback sizes 872/136/824. Exact full commands:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh inventory check-paragraph-context-native check-paragraph-context layout check-sdk
+# Private CLANG64 recipe workspace, after sourcing PKGBUILD:
+_wpf native-win32 inventory check-lineservices-line-native check-paragraph-context-native check-paragraph-context layout check-sdk
+MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/install-cross-floats.sh'
+```
+
+The archived install-and-check.sh regenerates .SRCINFO, invokes makepkg
+--repackage --force --noconfirm, installs through pacman -U --noconfirm and checks
+staged payload hashes before these exact installed consumers:
+
+```sh
+bash "$(_driver)/wpf-tests/check-cross-paragraph-floats-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-cross-paragraph-floats-sdk-check
+bash "$(_driver)/wpf-tests/check-bidi-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-cross-paragraph-bidi-sdk-check
+bash "$(_driver)/wpf-tests/check-subtracks-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-cross-paragraph-subtracks-sdk-check
+/usr/bin/python3 ~/wpfboot/check-installed-hyphenation.py
+```
+
+All commands exit zero. Staged/installed payload checks verify 42 managed
+implementations/references, native hashes, SDK tasks and retained interim framework
+versions. Installed cross-paragraph tests pass 48 finite wrapping cases, 32 clearing
+cases, eight bottomless cases and sixteen column cases across shared-framework and
+portable executions. They verify actual glyph rows beside the earlier object,
+matching/opposite paragraph directions, optimal centered paragraphs, 80 caret/point
+queries per finite case, one source/page owner for every tested run character,
+nonrepeated objects, disposed-page regeneration and unchanged pixels after GC.
+Clearing honors None/Left/Right/Both across paragraph containers. Bottomless resize
+110/180/110 preserves wrapping and actual scroll extent/viewport restoration.
+Short and multipage two-column documents preserve source ownership and regeneration.
+
+Installed bidi regressions retain original continuation, source/selection,
+intrinsic metrics and point-hit behavior in both modes/directions. Installed
+subtrack regressions preserve native identities and original source ownership
+through shifted/resized padded/unpadded containers, updated glyphs and scrolling.
+All three consumers pass shared-framework and portable execution with zero compiler
+warnings/errors. Installed source audit verifies 81 input hashes, 39 notices and
+exact regeneration of all 36 dictionaries. Installed native inventory remains
+129/139 imported APIs with ten absent; new behavior uses existing entry points.
+
+Evidence/artifact are under
+`tmp/wpf8-support/validation/cross-paragraph-floats-package-20261014`:
+`mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-44-any.pkg.tar.zst`.
+SHA-256: 20d33bbe714bbc99ce5df979a90f9b514a88d0120ec49a9b77d645f1ebefb90c.
+The 58,882,941-byte local artifact hash equals the installed host's artifact.
+Source evidence is under
+`tmp/wpf8-support/validation/cross-paragraph-floats-20261014`.
+
+General polygons, forced oversized groups, advanced object/table/subpage/column-
+span/footnote behavior, full bidi/optimizer conformance and legacy multiword/reform
+spelling controls remain unfinished. The WPF packaging goal stays active.
