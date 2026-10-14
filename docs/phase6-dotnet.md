@@ -14008,3 +14008,188 @@ remain unfinished. Combined justification and position-dependent object behavior
 needs broader validation, as do complex margins, spelling reform and physical
 printing. WinForms8 metadata generation and current Greenshot's net480/source
 requirements remain open. The full WPF goal stays active.
+
+
+## 216. Justified position-dependent inline objects
+
+The 2026-10-14 continuation fixes stale object metrics after justification changes
+the preceding spacing. The public release 59 baseline reports 447.69 pixels available
+at a final pen leaving 444.8233333333333 pixels, then fails its exact remaining-width
+assertion. Source commit c3a0dce settles flexible objects at the justified pen before
+publishing the line. Each pass restores original nominal text/glyph metrics,
+retains the latest object dimensions, recalculates tabs without premature object
+measurement, adjusts spacing, then remeasures dependent objects at their resulting
+pens. Widths and both reference/presentation heights must stabilize. A 64-pass bound
+rejects oscillation with empty output; callback failures propagate unchanged.
+Fixed-size objects retain their original cache behavior.
+
+Minimum metrics require their own valid layout. FullMixed first settles maximum
+permitted compression and its corresponding object measurements. The accepted
+pass starts from that measured object state and runs last, preserving the source
+object's drawing state. InterWord retains its valid nominal minimum. A fitting
+aligned field takes the existing no-adjustment path; final aligned fields needing
+spacing adjustment remain unsupported. Optimal compressed candidate feasibility
+uses the same settlement and transactional ownership path.
+
+Exact final development commands on win11, terminal exit0:
+
+```sh
+MSYSTEM=CLANG64 WPF_SOURCE=$HOME/dotnetboot/m612/src/wpf-8.0.0 WPF_BUILD=$HOME/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-inline-objects-native check-justification-native check-paragraph-breaks-native
+bash ~/wpfboot/justified-objects-final-check.sh
+```
+
+Native tests verify exact expansion at pen 104 / width 98, visible right edge 300,
+trailing edge 310 and final height 32 in InterWord and FullMixed modes. The minimum
+visible widths are 212 and 188 respectively. Compression settles pen 36 / width 82,
+visible right edge 200, trailing edge 210, actual minimum 174 and height 31. Drawing
+uses those accepted dimensions and origins. Two dependent objects settle the same
+line while retaining their individual measurements. Paragraph enumeration admits
+the previously overflowing retained boundary, verifies the compressed object and
+last visible character, rolls back provisional candidates on a remeasurement
+failure, and successfully reuses the session. Callback failure, bounded oscillation,
+context reuse and already fitting right-aligned fields also pass.
+
+The new public SDK consumer checks 26 cases per execution. Twenty geometry cases
+cover Ideal/Display, normal/reconstructed lines, left tabs, fixed/flexible objects
+and actual compression. Six failure/recovery cases cover initial/reformat/draw
+exceptions in both modes. Checks include the exact original raw-to-display endpoint
+rounding, real remaining width, accepted dimensions, fixed-size caching, atomic
+caret/point/selection, glyph/source coverage, real blue-object raster and GC.
+Shared and portable executions both pass (52 final development cases).
+
+The first tabbed compression fixture did not actually compress. Its final column
+is chosen to leave nominal overflow, and an independent unadjusted reconstruction
+asserts that overflow before the compressed case runs. Geometry assertions stay
+exact. The initial minimum prototype reused accepted object dimensions at another
+pen; the final implementation settles and verifies the minimum separately. A
+native fixture variable collision was corrected before final compilation.
+
+Existing inline/InlineUIContainer, aligned-object, tab/font, selected-tab, split-
+grapheme, mixed justification and optimal compression regressions passed during
+development. The final minimum refinement is rechecked by the narrow commands
+above; the private package run repeats focused regression coverage. Scripts,
+baseline and final logs are archived under
+`tmp/wpf8-support/validation/justified-objects-20261014`.
+
+WindowsDesktop 8.0.0-60 packages source commit c3a0dce in msys2-ur commit 661746a.
+All 60 source patches replay cleanly and match all six feature files; all 67
+source/hash declarations verify on the host and all 63 locally available inputs
+match. Patch0060 SHA-256:
+83d2afd09ea77a3c218606968fc4d5e2e566866041560af58edd757f5982c2a5.
+Registered SDK consumers increase to45; this is focused coverage, not a new full
+45-consumer run.
+
+The exact private/package/install command completed with exit0:
+
+```sh
+bash ~/wpfboot/justified-objects-package-and-check.sh
+```
+
+The changed native library was rebuilt in the existing private source build,
+with ordinary makepkg dependencies enabled. Native object/justification/paragraph/
+line checks, the new object consumer, existing compression/selected-tab/aligned/
+ordinary object/tab/font/bidi/cross-run/mixed justification/BAML consumers and both
+private/installed42-pair payload audits passed. Installed object and BAML/window
+consumers passed shared and portable. There are156 new public cases across final
+development, private and installed scopes (52 each), with zero consumer warnings/
+errors. Native export coverage remains133/139; the missing six remain upstream
+#if NEVER.
+
+Release60 artifact and exact logs/scripts/recipe/replay are archived under
+`tmp/wpf8-support/validation/justified-objects-package-20261014`:
+
+```text
+mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-60-any.pkg.tar.zst
+SHA-256: ce92b42a9989c120143b5837b283667d7b0a24aa38aadbd277adfa813f3fce5a
+Bytes: 58942727
+```
+
+Follow-up review found that compressed paragraph candidates updated object widths
+but retained prefetched line-height metadata. A stop request raced package
+completion: release60 did install and its existing checks completed before that
+attempt could stop it. Release61 below fixes the discovered metadata gap; release60
+is retained as distinct evidence rather than silently rebuilding the same version.
+The full WPF goal remains active.
+
+
+## 217. Final line heights for optimal object candidates
+
+Source commit 8931874 shares the direct-line final metric calculation with optimal
+candidate publication. Candidates now recompute ascent, descent, presentation and
+reference heights from their final retained runs after object remeasurement or
+inserted markers. The new native assertion fails against release 60's implementation
+and passes after the fix: the selected compressed object's published ascent 23,
+descent 8 and both line heights 31 agree with its accepted cell and right edge.
+
+Exact final development commands on win11, terminal exit0:
+
+```sh
+MSYSTEM=CLANG64 WPF_SOURCE=$HOME/dotnetboot/m612/src/wpf-8.0.0 WPF_BUILD=$HOME/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-inline-objects-native check-justification-native check-paragraph-breaks-native check-lineservices-line-native
+bash ~/wpfboot/justified-objects-final-check.sh
+```
+
+The latter refreshes native overlay copies by unlinking before copying and runs
+the 26-case object consumer shared and portable. All 52 cases pass with zero
+warnings/errors. Native line/object/justification/candidate regressions pass as
+well. Baseline and final logs are archived under
+`tmp/wpf8-support/validation/object-candidate-height-20261014`.
+
+WindowsDesktop 8.0.0-61 packages the follow-up in msys2-ur commit e19a091. All 61
+patches replay cleanly and match all six combined release60/61 feature files byte
+for byte. All 68 source/hash declarations verify on the host; all 64 locally
+available inputs match. Patch0061 SHA-256:
+5639791a884a1653e10cdfd5f4df27b2730c12ac239e8f12a86dc0a825fb8f61.
+The registered SDK consumer count remains45; no new full45-consumer run is claimed.
+
+Exact private/package/install command on win11, terminal exit0:
+
+```sh
+bash ~/wpfboot/object-candidate-height-package-and-check.sh
+```
+
+The script verifies sources, dry-runs/applies0061 and runs the focused native and
+SDK checks before ordinary dependency-checked packaging/install:
+
+```sh
+_wpf native-win32 inventory check-justification-native check-paragraph-breaks-native check-inline-objects-native check-lineservices-line-native layout
+makepkg --repackage --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-61-any.pkg.tar.zst
+```
+
+The changed native DLL is rebuilt from patched sources in the existing private
+source workspace. The previously validated managed payload remains from that
+private source build; this is not a new complete from-scratch WPF rebuild.
+Native shared/runtime-pack bytes match the rebuilt library, and SDK overlays
+are recreated without overwriting installed hardlinks.
+
+Private native assertions and shared/portable object, compression, selected-tab,
+aligned/ordinary object, tab/font, bidi, cross-run caret, mixed justification and
+BAML/window checks pass. Private/package/installed payload audits verify42 managed
+implementation/reference pairs, native hashes and SDK tasks. After installation,
+the compiled native inline-object fixture runs directly against the installed
+PresentationNative DLL, including the new published-candidate height assertion:
+
+```sh
+"$(_wpfbuild)/inline-objects-native-check/native-check.exe" /clang64/lib/dotnet/shared/Microsoft.WindowsDesktop.App/$version/PresentationNative_cor3.dll
+```
+
+That installed native execution and both installed object/BAML SDK checks pass.
+There are156 object-consumer executions across final development/private/installed
+shared and portable scopes (26 cases times six executions), with zero consumer
+warnings/errors. Native export coverage remains133/139; the six missing declarations
+remain upstream #if NEVER.
+
+The final artifact, scripts/logs, recipe, clean replay and native inventory are
+archived under `tmp/wpf8-support/validation/object-candidate-height-package-20261014`:
+
+```text
+mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-61-any.pkg.tar.zst
+SHA-256: 6c7788731c184d65c1c7e2a37cf842c24c22c008b1645037c12cd4d826770ee4
+Bytes: 58943097
+```
+
+The downloaded hash matches the host and pacman reports8.0.0-61. Final aligned-field
+spacing adjustments, ink insertion, broader native layout/bidi/optimizer conformance,
+complex margins, spelling reform and physical printing remain unfinished. WinForms8
+metadata generation and current Greenshot's net480/source dependency requirements
+remain open. The full WPF goal stays active.
