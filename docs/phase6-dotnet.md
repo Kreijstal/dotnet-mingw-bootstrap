@@ -10207,3 +10207,62 @@ continuation support. Repeated headers/footers, figures, complex center/clear
 policies, comparison/display transfer, balancing/spans/footnotes, advanced/
 optimal/incremental/interruptible algorithms and full bidi/native-language
 behavior remain incomplete. The full WPF goal stays active.
+
+## 157. Installed release 29: connected vertical table spans
+
+The 2026-10-14 continuation packages section 156 as WindowsDesktop 8.0.0-29.
+Declared/checksummed 0029-vertical-table-spans.patch follows the prior 28 patches.
+Clean pinned sources plus all 29 patches match the three committed feature
+files byte for byte; actual private package sources have matching SHA-256
+hashes. Source/private trees rebuild native output, inventory and layout and
+pass shared-span/merge/height/deferral/failure/resource gates, 429 original ABI
+field checks, paragraph/line regressions and every offline SDK consumer.
+Unchanged managed/graphics/printing outputs remain its own private source builds.
+
+Validation commands:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+# In the CLANG64 package workspace:
+makepkg --verifysource --force
+source PKGBUILD                 # with srcdir set to this workspace's src/
+_wpf native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+makepkg --printsrcinfo > .SRCINFO
+makepkg --repackage --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-29-any.pkg.tar.zst
+/usr/bin/python3 check-staged.py /clang64/lib/dotnet
+bash "$(_driver)/wpf-tests/check-tables-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-row-spans-sdk-check
+bash "$(_driver)/wpf-tests/check-subtracks-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-row-spans-subtracks-sdk-check
+pacman -Q mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap
+sha256sum mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-29-any.pkg.tar.zst
+```
+
+All final commands pass. Staged/installed checks cover 42 managed implementation/
+reference assemblies, eight native libraries, SDK tasks and retained interim
+WinForms versions. Installed natural/column spans preserve all 230 characters,
+initial deferral 300, growing content 258, span-only rows 27 and staggered
+spans 271 in Ideal/Display, exactly once with original GetPageNumber agreement.
+Natural/staggered/column cases complete two pages, deferred/growing cases three
+and span-only content one. Continuous red strips verify actual span geometry,
+separately from other cells; original glyph raster, disposed-page regeneration
+and GC pass. Scrolling span edits change height/extent and raster and scroll to
+the end. Native shared client handles and merge flags agree across first/middle/
+last rows; callback failures and initial group deferral release measured content
+once. Prior intact/split/tiny/nested/empty table consumers remain green. Installed
+subtrack update/sync still retains all 1339 characters with changed/shifted raster
+and full extent for padded/unpadded cases. Shared-framework and self-contained
+consumers pass with SDK roots/toolchain PATH removed, zero warnings/errors.
+Full source/private suites pass all other consumers including interim WinForms.
+The existing srcdir provenance warning remains.
+
+Artifact: mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-29-any.pkg.tar.zst.
+SHA-256: 130f67d7f71146b6d370f2e6cde3794f3be8d4c9568a11ae9e72fafe8c53a3d9.
+Recipe commit: msys2-ur 6d4041c; feature commit: 729f263.
+Artifact, recipe, metadata, patch, hashes and validation logs are archived under
+ tmp/wpf8-support/validation/row-spans-package-20261014.
+Imported native coverage remains 109/139 with 30 absent. Connected span groups
+taller than a fresh column still need continuation support. Repeated headers/
+footers, figures, complex center/clear policies, comparison/display transfer,
+balancing/spans/footnotes, advanced/optimal/incremental/interruptible algorithms
+and full bidi/native-language behavior remain incomplete. The full WPF goal
+stays active.
