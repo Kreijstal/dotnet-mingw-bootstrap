@@ -852,6 +852,7 @@ step_check_sdk() {
     "$root/packs/Microsoft.WindowsDesktop.App.Runtime.win-x64/$desktop_version"
   cp -a "${WPF_LAYOUT:-$build/layout}/." "$root/"
   bash "$here/wpf-tests/check-sdk.sh" "$root" "$build/sdk-check"
+  bash "$here/wpf-tests/check-image-codecs-sdk.sh" "$root" "$build/image-codecs-sdk-check"
   bash "$here/wpf-tests/check-text-tabs-sdk.sh" "$root" "$build/tabs-sdk-check"
   bash "$here/wpf-tests/check-inline-objects-sdk.sh" "$root" "$build/inline-sdk-check"
   bash "$here/wpf-tests/check-justification-sdk.sh" "$root" "$build/justification-sdk-check"
