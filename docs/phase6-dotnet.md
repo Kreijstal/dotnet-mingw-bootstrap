@@ -12233,3 +12233,122 @@ Source evidence is under
 General polygons, oversized individual objects, advanced object/table/subpage/
 column-span/footnote behavior, full bidi/optimizer conformance and legacy multiword/
 reform spelling controls remain unfinished. The WPF packaging goal stays active.
+
+
+## 190. Forced progress for individually oversized atomic floaters
+
+The 2026-10-14 continuation fixes the attachment layer's handling of the original
+finite floater callback's fForcedProgress flag. Ordinary 300-pixel UI content
+already paginated on release 45. A narrower public baseline with 120-pixel top
+and bottom padding on a 200-pixel content area instead produced an empty first
+page and failed the progress assertion. The managed callback retained the real
+content and explicitly reported forced progress, but the outer native layer
+rejected its oversized rectangle.
+
+An unshifted first attachment on a fresh page now retains that real geometry and
+propagates forced progress to the host paragraph. The host's used height stays
+bounded by the available page height; the object query still reports its actual
+rectangle. Later objects and collision-shifted placements retain the existing
+deferral rules. No new native export, record layout or managed preparation patch
+is required. Source feature commit 248a440 records the implementation and probes.
+
+The original native fixture retains a 25-unit object on a 10-unit page, checks
+the forced flag, bounded parent extent and actual rectangle, disposes that page,
+then resumes CPs 5..10 without repeating the object. All original content, client,
+line and break-record resources release exactly once. Existing occupied-page and
+oversized-group regressions retain their original behavior.
+
+The normal SDK public probe covers 48 cases per execution: Ideal/Display,
+LTR/RTL, left/center/right alignment, with/without preceding paragraph text and
+ordinary/oversized vertical padding around fixed UI content. Exact requested
+object raster position/width/visible height, one object owner, every prefix/host
+character's single text-segment/page owner, finite completion, disposed-page
+regeneration and compacting GC pass in shared and portable execution.
+
+Validation on win11 with the standard source compiler/WPF environment:
+
+```sh
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-paragraph-context-native
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-forced-floaters-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/forced-floaters-sdk-check
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-paragraph-context-native check-paragraph-context inventory layout check-sdk
+```
+
+All source commands exit zero. The full suite passes 35 WPF consumers (normal
+SDK/BAML/window plus 34 feature consumers) and both interim WinForms executions.
+The forced-object probe contributes 96 passing cases across shared and portable
+execution. Bash syntax and scoped git diff whitespace checks pass. Source
+PresentationNative coverage remains 129/139 and paragraph ABI 479 fields.
+Evidence is under `tmp/wpf8-support/validation/forced-atomic-floaters-20261014`,
+including the failing installed-release45 baseline and final native/public/full
+source logs. A source declaration audit also records that six of the ten absent
+APIs are under upstream #if NEVER; the existing inventory deliberately retains
+all source-visible declarations, so its denominator is unchanged.
+
+General polygon/object/table/subpage interactions, column-span/footnote behavior,
+full bidi/optimizer conformance and legacy multiword/reform spelling controls
+remain unfinished. This fixes the demonstrated forced atomic-object path; it
+does not establish complete upstream native compatibility. The WPF packaging
+goal stays active.
+
+
+## 191. Installed WindowsDesktop release 46 forced atomic-floater validation
+
+The same continuation builds, packages and installs
+mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap 8.0.0-46. Recipe commit
+65c76cd declares patch 0046-forced-atomic-floaters.patch (SHA-256
+386607c6897d9f683278ed7ebb9297b1f56856583a4de018c88edd413c0564b4), whose bytes
+match source feature commit 248a440. Applying all 46 patches to the pinned driver
+archive reproduces all six feature files exactly; actual source/private files
+also match. All 49 locally available declared source hashes pass. Private
+makepkg --verifysource validates all 53 sources/hashes, and the regenerated
+.SRCINFO records the same release and input count. The README's current coverage
+count is corrected from 126 to 129; no new exported API is added.
+
+The private tree rebuilds its native library, checks original callback/ABI
+fixtures, regenerates layout and runs the entire suite. Source and private trees
+both pass 35 WPF consumers and shared/portable interim WinForms. Paragraph ABI
+remains 479 fields and PresentationNative inventory 129/139.
+
+Validation on win11:
+
+```sh
+# Private CLANG64 recipe workspace, after sourcing PKGBUILD:
+_wpf native-win32 inventory check-paragraph-context-native check-paragraph-context layout check-sdk
+MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/install-forced-atomic-floaters.sh'
+```
+
+The archived install-and-check.sh regenerates .SRCINFO, invokes makepkg
+--repackage --force --noconfirm, installs through pacman -U --noconfirm and checks
+staged/installed payload hashes before these exact installed consumers:
+
+```sh
+bash "$(_driver)/wpf-tests/check-forced-floaters-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-forced-atomic-floaters-sdk-check
+bash "$(_driver)/wpf-tests/check-oversized-floats-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-forced-atomic-floats-sdk-check
+bash "$(_driver)/wpf-tests/check-floaters-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-forced-atomic-regression-floaters
+bash "$(_driver)/wpf-tests/check-optimal-paragraph-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-forced-atomic-regression-optimal
+/usr/bin/python3 ~/wpfboot/check-installed-hyphenation.py
+```
+
+All commands exit zero. Staged/installed checks validate 42 managed
+implementations/references, native hashes, SDK tasks and retained interim framework
+versions. The installed forced-object consumer passes all 48 cases in each of
+shared and portable execution with zero build warnings/errors. Objects retain
+exact visible positions and dimensions, one page owner, exact host/prefix source
+ownership, finite completion, disposed-page regeneration and collection stability.
+Existing oversized-group/floater/optimal consumers also pass both executions.
+The installed source audit verifies 81 hashes, 39 original notices and exact
+regeneration of all 36 embedded dictionaries. Installed native inventory remains
+129/139 imported APIs with ten absent.
+
+Evidence/artifact are under
+`tmp/wpf8-support/validation/forced-atomic-floaters-package-20261014`:
+`mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-46-any.pkg.tar.zst`.
+SHA-256: 5865a9ea86c153fad513665a462382e6158007add0e3c08dcd51daf1d70404ca.
+The 58,890,479-byte local artifact hash matches the installed host's artifact.
+Source evidence is under
+`tmp/wpf8-support/validation/forced-atomic-floaters-20261014`.
+
+General polygons and advanced object/table/subpage/column-span/footnote behavior,
+full bidi/optimizer conformance and legacy multiword/reform spelling controls
+remain unfinished. The WPF packaging goal stays active.
