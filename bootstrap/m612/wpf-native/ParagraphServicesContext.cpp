@@ -485,7 +485,7 @@ int format_figure(const std::shared_ptr<ParaData>& para,uint32_t direction,const
 int format_block_ui(const std::shared_ptr<ParaData>& para,uint32_t direction,const FSRECT& rect,
     void* input_margin,bool bottomless,bool empty_ok,int suppress,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA suppress_break,
     std::shared_ptr<Continuation>& output,void** margin_output,bool floating=false,FSFLOATERPROPS* floater_props=nullptr,
-    void* floater_input=nullptr,std::shared_ptr<FloaterBreakData>* floater_output=nullptr,bool previous_page=true);
+    void* floater_input=nullptr,std::shared_ptr<FloaterBreakData>* floater_output=nullptr,bool previous_page=true,const TextData* enclosing=nullptr);
 int format_attached_objects(const std::shared_ptr<ParaData>& para,int dcp,uint32_t direction,const FSRECT& rect,bool bottomless,bool force,
     const std::vector<void*>& names,const std::vector<int>& kinds,const std::vector<int>& anchors,int& maximum_anchor,bool& deferred,const PendingFloater* resume=nullptr,bool previous_page=true) {
     auto context=para->context;void* client=context->info.pfsclient;
@@ -500,7 +500,7 @@ int format_attached_objects(const std::shared_ptr<ParaData>& para,int dcp,uint32
         if(!child->desc.pfsparaclient)return PTS_tserrInvalidClientOutput;
         std::shared_ptr<Continuation> next;std::shared_ptr<FloaterBreakData> tail;MarginOwner margin{context};FSFLOATERPROPS props{};
         if(kinds[index]==-2){status=format_figure(child,direction,rect,bottomless,force,deferred);if(status||deferred)return status;props.fskwr=child->figure->props.fskwrap;}
-        else {status=format_block_ui(child,direction,rect,nullptr,bottomless,!force,1,fsksuppresshardbreakbeforefirstparaPageAndColumn,next,&margin.value,true,&props,resume?resume->record->handle:nullptr,&tail,previous_page);if(status)return status;}
+        else {status=format_block_ui(child,direction,rect,nullptr,bottomless,!force,1,fsksuppresshardbreakbeforefirstparaPageAndColumn,next,&margin.value,true,&props,resume?resume->record->handle:nullptr,&tail,previous_page,para->text.get());if(status)return status;}
         if(next){if(force)return PTS_tserrNotImplemented;deferred=true;return 0;}
         auto& candidate=attachment_rect(child);
         int64_t placed=candidate.v;
@@ -786,9 +786,10 @@ int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const F
     return 0;
 }
 
-int format_block_ui(const std::shared_ptr<ParaData>& para,uint32_t direction,const FSRECT& rect,
+int format_block_ui(const std::shared_ptr<ParaData>& para,uint32_t direction,const FSRECT& input_rect,
     void* input_margin,bool bottomless,bool empty_ok,int suppress,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA suppress_break,
-    std::shared_ptr<Continuation>& output,void** margin_output,bool floating,FSFLOATERPROPS* floater_props,void* floater_input,std::shared_ptr<FloaterBreakData>* floater_output,bool previous_page) {
+    std::shared_ptr<Continuation>& output,void** margin_output,bool floating,FSFLOATERPROPS* floater_props,void* floater_input,std::shared_ptr<FloaterBreakData>* floater_output,bool previous_page,const TextData* enclosing) {
+    FSRECT rect=input_rect;
     auto context=para->context;auto& obj=context->info.fscbk.cbkobj;void* client=context->info.pfsclient;
     if(!obj.pfnGetObjectHandlerInfo||!obj.pfnConvertMcsclient)return PTS_tserrInvalidParameter;
     FloaterHandler handler{};
@@ -799,8 +800,26 @@ int format_block_ui(const std::shared_ptr<ParaData>& para,uint32_t direction,con
        !(bottomless?cb.pfnFormatFloaterContentBottomless:cb.pfnFormatFloaterContentFinite))return PTS_tserrInvalidParameter;
     FSFLOATERPROPS props{};
     status=reinterpret_cast<PtsGetFloaterProperties>(cb.pfnGetFloaterProperties)(client,para->desc.nmp,direction,&props);if(status)return status;
-    if(bool(props.fFloat)!=floating||props.fskclear!=fskclearNone||(!floating&&props.fskwr!=fskwrNone))return PTS_tserrNotImplemented;
-    if(floating&&props.fskfloatalignment==fskfloatalignCenter&&props.fskwr!=fskwrNone)return PTS_tserrNotImplemented;
+    if(bool(props.fFloat)!=floating||(!floating&&props.fskwr!=fskwrNone))return PTS_tserrNotImplemented;
+    if(!floating&&props.fskclear!=fskclearNone)return PTS_tserrNotImplemented;
+    if(props.fskclear<fskclearNone||props.fskclear>fskclearBoth)return PTS_tserrInvalidClientOutput;
+    if(props.fskfloatalignment<fskfloatalignMin||props.fskfloatalignment>fskfloatalignMax)return PTS_tserrInvalidClientOutput;
+    if(floating&&enclosing&&props.fskclear!=fskclearNone) {
+        int64_t top=rect.v,mid=int64_t(rect.u)+rect.du/2;
+        for(const auto& earlier:enclosing->attached) {
+            const auto& obstacle=attachment_rect(earlier.para);
+            bool left=obstacle.u<mid,right=int64_t(obstacle.u)+obstacle.du>mid;
+            if(earlier.para->floater) {
+                // A wide left-aligned floater remains a left-side object even
+                // if its rectangle crosses the column midpoint.
+                left=earlier.props.fskfloatalignment!=fskfloatalignMax;
+                right=earlier.props.fskfloatalignment!=fskfloatalignMin;
+            }
+            if(props.fskclear==fskclearBoth||(props.fskclear==fskclearLeft&&left)||(props.fskclear==fskclearRight&&right))top=std::max(top,int64_t(obstacle.v)+obstacle.dv);
+        }
+        if(top>INT_MAX)return PTS_tserrInvalidGeometry;
+        int64_t gap=top-rect.v;rect.v=int(top);rect.dv=int(std::max<int64_t>(0,int64_t(rect.dv)-gap));
+    }
     if(floater_props)*floater_props=props;
     int top=0;
     status=reinterpret_cast<PtsConvertMcsclient>(obj.pfnConvertMcsclient)(client,para->desc.pfsparaclient,para->desc.nmp,direction,input_margin,suppress,&top);if(status)return status;

@@ -11748,3 +11748,61 @@ Legacy Word95/embedded-object markers, advanced layout/optimal constraints,
 general column spans, footnotes and legacy NLS remain unfinished. Original public
 bullets and numbered lists now render through source marker handling. The broader
 WPF goal remains active.
+
+
+## 182. Centered floaters and selective clear-before-format placement
+
+The 2026-10-14 continuation removes the rejection of centered floating content
+with wrapping on both sides. Existing composite line intervals now handle the
+center rectangle, and original Floater.Width/HorizontalAlignment feed its native
+geometry without introducing a substitute figure. Original floater tests now
+include centered text, exact 140..259 pixel bounds, actual host glyph rows on both
+sides and zero overlap; all previous multiple/deferred/split/scrolling cases pass.
+
+Floater ClearFloaters values are validated and applied before formatting content.
+The enclosing paragraph's earlier floating rectangles establish the requested
+clear height. Left/right selection follows original alignment for floaters, so a
+wide left-aligned object remains left-side even when it crosses the midpoint;
+center objects participate on both sides. The source raises the available
+rectangle's top and reduces finite height before calling the original managed
+floater formatter. Thus native fitting/deferral sees the actual remaining space,
+while horizontal placement stays as requested. Existing speculative content and
+record owners release deferred groups without leaving old-page objects behind.
+Other nonfloating block clear paths retain their explicit unsupported status.
+
+The new original public SDK consumer executes 64 finite cases per execution:
+Ideal/Display, LTR/RTL, None/Left/Right/Both clear values, an optional 80-pixel
+occupied-page prefix and optional wide 220-pixel left object. Red/green/blue
+rectangles prove exact selective vertical placement. A centered blue floater
+starts at 10/90/150 pixels according to the requested side; a wide left object
+stays distinct from right-side clearing. Intact groups that no longer fit the
+occupied page move to page one, with no speculative earlier red/green objects on
+page zero. Three/four-page documents retain all 799 host characters exactly once
+with original page-number agreement, regenerated rectangle identity and stable
+pixels through compacting GC.
+
+Four bottomless window cases exercise the actual FlowDocumentScrollViewer. The
+cleared object's top follows an earlier object's resize from 80 to 120 pixels,
+and the complete document remains scrollable to its actual end. The fixture uses
+the original viewer's PART_ContentHost template part and actual viewer raster;
+an initial lookup of nonexistent convenience properties was corrected. This was
+a fixture error, not a native formatter failure.
+
+Final focused validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 inventory check-paragraph-context-native check-paragraph-context
+/usr/bin/python3 ~/wpfboot/refresh-finite-native.py
+MSYSTEM=CLANG64 bash -lc 'set -e; bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-floater-clearing-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/floater-clearing-sdk-check; bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-floaters-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/floater-center-sdk-check'
+```
+
+All final commands exit zero. The clearing/resize matrix and expanded original
+floater suite pass in shared-framework and portable execution with zero compiler
+warnings/errors. Focused evidence is archived under
+`tmp/wpf8-support/validation/floater-layout-20261014`. The new consumer is in
+check-sdk, bringing the suite to 31 WPF consumers (standard SDK application plus
+30 feature gates). Full source/private regressions and package integration follow.
+Imported coverage remains 126/139 and paragraph ABI 479 fields. Cross-paragraph
+float propagation/clearing, forced object groups exceeding an empty page,
+polygon/object constraints and other advanced layout/NLS gaps remain unfinished.
+The WPF goal stays active.

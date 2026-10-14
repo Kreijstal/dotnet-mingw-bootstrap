@@ -16,7 +16,7 @@ class Check {
     static void Main() {
         var viewType=typeof(FlowDocument).Assembly.GetType("System.Windows.Documents.ITextView",true);
         foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display})
-        foreach(var alignment in new[]{HorizontalAlignment.Left,HorizontalAlignment.Right}) {
+        foreach(var alignment in new[]{HorizontalAlignment.Left,HorizontalAlignment.Right,HorizontalAlignment.Center}) {
             var floatingRun=new Run("Original floating text");var bodyRun=new Run(string.Join(" ",Enumerable.Range(0,100).Select(i=>$"body{i:D3}")));
             var floater=new Floater(new Paragraph(floatingRun){Margin=new Thickness(0),Foreground=Brushes.Blue}){Width=120,HorizontalAlignment=alignment,Margin=new Thickness(0),Padding=new Thickness(4),Background=Brushes.Red};
             var paragraph=new Paragraph(floater){Margin=new Thickness(0)};paragraph.Inlines.Add(bodyRun);
@@ -31,8 +31,10 @@ class Check {
                 if(pages==0) {
                     if(red<1000||blue<30)throw new Exception($"original floater content/background missing: red={red}, blue={blue}");
                     if(alignment==HorizontalAlignment.Left&&minX!=10||alignment==HorizontalAlignment.Right&&maxX!=389)throw new Exception("floater horizontal placement: "+minX+".."+maxX);
-                    int forbidden=0,beside=0;
-                    for(int y=minY;y<=maxY;++y)for(int x=0;x<400;++x){int i=(y*400+x)*4;if(pixels[i+3]>150&&pixels[i]<70&&pixels[i+1]<70&&pixels[i+2]<70){if(x>=minX&&x<=maxX)++forbidden;else ++beside;}}
+                    if(alignment==HorizontalAlignment.Center&&(minX!=140||maxX!=259))throw new Exception("center floater placement");
+                    int forbidden=0,beside=0,pairs=0;
+                    for(int y=minY;y<=maxY;++y){int leftInk=0,rightInk=0;for(int x=0;x<400;++x){int i=(y*400+x)*4;if(pixels[i+3]>150&&pixels[i]<70&&pixels[i+1]<70&&pixels[i+2]<70){if(x>=minX&&x<=maxX)++forbidden;else{++beside;if(x<minX)++leftInk;else++rightInk;}}}if(leftInk>3&&rightInk>3)++pairs;}
+                    if(alignment==HorizontalAlignment.Center&&pairs<3)throw new Exception("center floater needs actual glyph rows on both sides");
                     if(forbidden!=0||beside<100)throw new Exception($"host glyphs must flow beside the actual floater rectangle: overlap={forbidden}, beside={beside}");
                     Console.WriteLine($"original floater {mode}, {alignment}: red bounds {minX}..{maxX}, {minY}..{maxY}, {blue} blue glyph pixels, {beside} host pixels beside and zero overlap PASS");
                 }else if(red!=0||blue!=0)throw new Exception("intact first-page floater must not repeat on later text pages");
