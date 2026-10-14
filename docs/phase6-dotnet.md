@@ -13124,7 +13124,77 @@ payload with installed desktop implementations.
 MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/upgrade-clean-wpf-release51.sh'
 ```
 
-The current job uses local observation session38437 and
-~/wpfboot/wpf-llvm23-clean-release51.log. It must be polled before any restart; final
-check/package outcome and installation evidence are still pending. The broader
-native WPF conformance goal remains active regardless of this build milestone.
+Observation session38437 subsequently returned exit0, and the full validation and
+installation completed. Section205 records the final fresh-source release51
+artifact and installed evidence. The broader native WPF conformance goal remains
+active regardless of this build milestone.
+
+
+## 205. Installed release51 from the completely fresh LLVM23 source tree
+
+Section204's release51 upgrade of the freshly built source tree completes on
+2026-10-14. Source verification, native rebuild/layout and all recipe check() gates
+pass, followed by ordinary dependency-checked package creation. The full SDK suite
+passes37 WPF consumers (36 feature markers plus normal BAML/window consumer), all
+216 section-clearing executions, and both interim WinForms executions. Original
+native resource/ABI checks and482 managed field sizes/offsets pass. No source
+assertion or required check is removed.
+
+The exact archived scripts run:
+
+```sh
+MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/upgrade-clean-wpf-release51.sh'
+MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/install-fresh-wpf-release51.sh'
+```
+
+Both commands exit zero. The second script checks the completed full-suite markers
+before reinstalling the new release51 artifact with pacman. Installed payload
+validation passes42 managed implementation/reference pairs, native hashes, SDK
+markup tasks and retained legacy versions. Installed section clearing repeats all
+216 cases; normal WPF BAML/window/raster and WinForms window/control/resource/event/
+GDI+ checks each pass shared and portable execution. Installed hyphenation verifies
+81 source hashes,39 original notices and exact embedded dictionary headers. Native
+import inventory remains133/139, with six upstream #if NEVER declarations absent.
+
+The current installed artifact and exact full-build/install logs are archived under
+`tmp/wpf8-support/validation/clean-wpf-llvm23-20261014/release51`:
+
+```text
+mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-51-any.pkg.tar.zst
+SHA-256: f090e4417f1b856af80dc7f9fd10d0d8abe77ce85f55598a19aeb315ab739d9e
+Bytes: 58915685
+```
+
+Downloaded hash/size equal the installed host artifact. This replaces the earlier
+installed release51 artifact from section203; that separately validated incremental
+artifact remains archived as historical evidence. Recipe/source commits remain
+adde9b0/0bb60d6. The compiler package remains source-built0.3.0-2 for LLVM23.1.3.
+Source-directory references reported by makepkg belong to source-bootstrap.json
+provenance. Full native behavior/conformance, WinForms8 metadata bootstrap and
+current Greenshot compatibility remain unfinished. The full WPF goal stays active.
+
+
+## 206. Native Windows spelling context probe for the next legacy gap
+
+A source-only Windows en-US ISpellChecker probe confirms that whole-text checking
+provides behavior omitted by the current legacy bridge's per-word checks. Both
+Check and ComprehensiveCheck report the second word in "the the" at UTF-16 offset4,
+length3, with CORRECTIVE_ACTION_DELETE. ComprehensiveCheck reports "mispell word"
+with an explicit "misspell" replacement rather than only suggesting alternatives.
+The original managed NLG wrapper documents MultiWordMode as multiword spelling-
+error detection and sets IsSpellSuggestingMWEs. The source bridge currently returns
+E_NOTIMPL when that option is enabled.
+
+Microsoft's [ComprehensiveCheck contract](https://learn.microsoft.com/en-us/windows/win32/api/spellcheck/nf-spellcheck-ispellchecker-comprehensivecheck)
+and [corrective actions](https://learn.microsoft.com/windows/win32/api/spellcheck/ne-spellcheck-corrective_action)
+provide the primary API contracts for implementing whole-input error spans and
+replacement/deletion suggestions. Probe source and exact output are retained under
+`tmp/wpf8-support/validation/spelling-context-probe-20261014`. The focused native
+probe is compiled with CLANG64 clang++ -std=c++17 -O2 and linked to OS ole32/uuid.
+No spelling dictionary or Microsoft .NET binary is imported.
+
+This is implementation evidence for the next change; legacy multiword support has
+not yet been enabled. Compound subsegment topology and pre/post reform selection
+remain separate unsupported behaviors. Follow-up implementation must preserve
+UTF-16 ranges, suggestion/verification modes, custom lexicon scope and independent
+snapshot lifetimes while matching actual provider error spans.
