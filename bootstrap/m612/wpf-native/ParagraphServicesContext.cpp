@@ -340,9 +340,9 @@ int merge_bbox(FSBBOX& box,const FSBBOX& add) {
 int format_block_ui(const std::shared_ptr<ParaData>& para,uint32_t direction,const FSRECT& rect,
     void* input_margin,bool bottomless,bool empty_ok,int suppress,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA suppress_break,
     std::shared_ptr<Continuation>& output,void** margin_output,bool floating=false,FSFLOATERPROPS* floater_props=nullptr);
-int attached_before_line(const std::shared_ptr<ParaData>& para,int dcp,uint32_t direction,const FSRECT& rect,bool bottomless,bool force,int& maximum_anchor) {
+int attached_before_line(const std::shared_ptr<ParaData>& para,int dcp,uint32_t direction,const FSRECT& rect,bool bottomless,bool force,int& maximum_anchor,bool& deferred) {
     auto context=para->context;auto& cb=context->info.fscbk.cbktxt;void* client=context->info.pfsclient;
-    maximum_anchor=-1;
+    maximum_anchor=-1;deferred=false;
     if(!cb.pfnGetNumberAttachedObjectsBeforeTextLine)return 0;
     int count=0,status=reinterpret_cast<PtsGetNumberAttachedObjectsBeforeTextLine>(cb.pfnGetNumberAttachedObjectsBeforeTextLine)(client,para->desc.nmp,dcp,&count);if(status)return status;
     if(count<0)return PTS_tserrInvalidClientOutput;if(!count)return 0;
@@ -360,7 +360,7 @@ int attached_before_line(const std::shared_ptr<ParaData>& para,int dcp,uint32_t 
         if(!child->desc.pfsparaclient)return PTS_tserrInvalidClientOutput;
         std::shared_ptr<Continuation> next;MarginOwner margin{context};FSFLOATERPROPS props{};
         status=format_block_ui(child,direction,rect,nullptr,bottomless,!force,1,fsksuppresshardbreakbeforefirstparaPageAndColumn,next,&margin.value,true,&props);if(status)return status;
-        if(next)return PTS_tserrNotImplemented;
+        if(next){if(force)return PTS_tserrNotImplemented;deferred=true;return 0;}
         auto& candidate=child->floater->details.fsrcFloater;
         int64_t placed=candidate.v;
         // Keep each object's requested horizontal edge. If its rectangle
@@ -373,7 +373,8 @@ int attached_before_line(const std::shared_ptr<ParaData>& para,int dcp,uint32_t 
             }
             if(next_top==placed)break;placed=next_top;
         }
-        if(placed+candidate.dv>INT32_MAX||(!bottomless&&placed+candidate.dv>int64_t(rect.v)+rect.dv))return PTS_tserrNotImplemented;
+        if(placed+candidate.dv>INT32_MAX)return PTS_tserrInvalidGeometry;
+        if(!bottomless&&placed+candidate.dv>int64_t(rect.v)+rect.dv){if(force)return PTS_tserrNotImplemented;deferred=true;return 0;}
         int64_t shift=placed-candidate.v;
         auto& box=child->desc.fsbbox;
         if(box.fDefined&&(int64_t(box.fsrc.v)+shift<INT32_MIN||int64_t(box.fsrc.v)+shift+box.fsrc.dv>INT32_MAX))return PTS_tserrInvalidGeometry;
@@ -411,11 +412,14 @@ int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const F
     if(keep_self)props.fKeepTogether=1;
     if(props.fswdir!=direction||props.fDropCap||props.fVerticalGrid||props.fOptimizeParagraph)return PTS_tserrNotImplemented;
     auto text=std::make_shared<TextData>(context);text->direction=direction;para->text=text;
-    int dcp=input?input->dcp:props.dcpStartContent,used=0,fit=0,height_hint=0;bool overflow=false,ended=false;
+    int dcp=input?input->dcp:props.dcpStartContent,used=0,fit=0,height_hint=0;bool overflow=false,ended=false,deferred=false;
     std::shared_ptr<LineBreakData> previous=input?input->line_break:nullptr;text->incoming=previous;
     while(true) {
         int max_anchor=-1;FSRECT object_area=rect;object_area.v+=used;object_area.dv=std::max(0,rect.dv-used);
-        status=attached_before_line(para,dcp,direction,object_area,bottomless,force&&used==0,max_anchor);if(status)return status;
+        status=attached_before_line(para,dcp,direction,object_area,bottomless,force&&used==0,max_anchor,deferred);if(status)return status;
+        // No host line has consumed this anchor. Resume with its incoming
+        // line-break record, releasing speculative attached content below.
+        if(deferred)break;
         int line_u=rect.u,line_width=rect.du;status=line_area(*text,rect,used,line_u,line_width,height_hint);if(status)return status;
         text->lines.emplace_back();text->breaks.push_back(std::make_shared<LineBreakData>(context));
         auto& line=text->lines.back();auto& br=text->breaks.back();
@@ -445,7 +449,7 @@ int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const F
         if(!ended&&result!=fsflrOutOfSpace&&result!=fsflrSoftBreak)return PTS_tserrNotImplemented;
         if(ended || (!bottomless&&overflow&&int(text->lines.size())-fit>=std::max(1,props.cMinLinesAfterBreak)))break;
     }
-    if(!bottomless && fit<int(text->lines.size())) {
+    if(!bottomless && (fit<int(text->lines.size())||deferred)) {
         // Lookahead is enough to preserve widow/orphan policy, without retaining
         // speculative client lines in the formatted page or consuming their text.
         int fitting=fit;
@@ -453,7 +457,7 @@ int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const F
             fit=std::max(0,int(text->lines.size())-props.cMinLinesAfterBreak);
         if(fit<props.cMinLinesBeforeBreak)fit=0;
         if(!fit&&force)fit=fitting;
-        if(!fit&&force&&!text->lines.empty()){fit=1;para->forced_progress=true;}
+        if(!deferred&&!fit&&force&&!text->lines.empty()){fit=1;para->forced_progress=true;}
         if(force&&fit<int(text->lines.size())) {
             int64_t prefix_height=0;for(int index=0;index<fit;++index)prefix_height+=text->lines[index].dvrAscent+text->lines[index].dvrDescent;
             // A structural-only prefix must not use up the forced-progress
@@ -520,9 +524,15 @@ int format_block_ui(const std::shared_ptr<ParaData>& para,uint32_t direction,con
     }
     pending.claimed=details.pfsFloaterContent;pending.claimed_record=data->break_record;
     if(status)return status;
-    if(polygons||vertices||data->break_record)return PTS_tserrNotImplemented;
+    if(polygons||vertices)return PTS_tserrNotImplemented;
+    // An attached floater is kept intact when the occupied page would split
+    // its subpage. FloaterData releases both speculative content and record.
+    if(!bottomless&&floating&&empty_ok&&(data->break_record||finite.kstop==fmtrBrokenOutOfSpace)){
+        output=std::make_shared<Continuation>();output->context=context;output->paragraph=para->desc.nmp;return 0;
+    }
+    if(data->break_record)return PTS_tserrNotImplemented;
     if(!bottomless&&finite.kstop==fmtrNoProgressOutOfSpace) {
-        if(details.pfsFloaterContent||width||height)return PTS_tserrInvalidClientOutput;
+        if(details.pfsFloaterContent||width<0||height<0)return PTS_tserrInvalidClientOutput;
         output=std::make_shared<Continuation>();output->context=context;output->paragraph=para->desc.nmp;
         return 0;
     }

@@ -9580,3 +9580,49 @@ center/clear policies, figures/tables, comparison/display transfer, balancing/
 span areas/footnotes, advanced/optimal/partial incremental/interruptible
 algorithms, full bidi/native language and broader runtime behavior remain
 incomplete. The full WPF goal stays active.
+
+## 146. Intact floater deferral and unconsumed host checkpoints
+
+The 2026-10-14 continuation handles before-line floating objects that do not fit
+an occupied page. No-progress callbacks, speculative split subpages and
+collision-free placements exceeding the remaining height now defer the host
+before consuming its anchor. The text checkpoint retains its incoming original
+line-break record. Unaccepted attachments, subpage contents, subpage continuation
+records and clients are released through their original callbacks. Retrying on
+a fresh page formats the intact original content. No-progress callbacks may
+return nonzero measured dimensions after destroying their content; those valid
+measurements are no longer mistaken for invalid live output.
+
+Native fixtures cover single-object no-progress with nonzero measurements,
+multiple-object placement rollback and callbacks returning speculative content
+plus a split record. They destroy the preceding page before resuming the
+continuation, verify the original host dcp and check exact line/client/content/
+record cleanup. Original public WPF documents test single and multiple floaters
+after six lines of preceding text in Ideal and Display modes. Both finish four
+pages, cover all 1000/1028 source characters exactly once and agree with original
+GetPageNumber. Colored content renders only on the next page and regenerates
+after disposal/GC. Existing placement, glyph exclusion and scrolling checks pass.
+
+Focused validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-paragraph-context-native
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-paragraph-context-native
+/usr/bin/python3 ~/wpfboot/refresh-finite-native.py
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-floaters-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/deferred-floaters-sdk-check
+```
+
+All final focused commands pass. The native fixture was extended after the
+initial rebuild and passed again. A test-only nonexistent two-argument
+FlowDocument constructor was corrected to use Blocks.Add before the successful
+SDK gate. Shared-framework and self-contained runs pass with zero consumer
+warnings/errors; the latter clears SDK roots and toolchain PATH. Whitespace and
+recipe Bash syntax checks pass. Evidence is archived under
+ tmp/wpf8-support/validation/deferred-floaters-20261014.
+
+Imported native coverage remains 103/139 with 36 absent. This implements intact
+deferral to a fresh formatting area, not oversized/split floater content on a
+fresh page. Later in-line anchors/cross-paragraph flow, complex center/clear
+policies, figures/tables, comparison/display transfer, balancing/spans/footnotes,
+advanced/optimal/incremental/interruptible algorithms, full bidi/native language
+and broader runtime behavior remain incomplete. The full WPF goal stays active.

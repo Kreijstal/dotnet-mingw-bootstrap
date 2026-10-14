@@ -22,6 +22,8 @@ static NativeSubpageFinite create_subpage=nullptr;
 static int(WINAPI* destroy_subpage)(void*,void*)=nullptr;
 static int(WINAPI* destroy_subpage_record)(void*,void*)=nullptr;
 static bool block_ui=false,float_obstacle=false,fail_float=false,attached_float=false,attached_right=false,multiple_float=false,multiple_opposite=false;
+static bool deferred_attachment=false,split_attachment=false;
+static int float_records_destroyed=0;
 static int float_created=0,float_destroyed=0,float_fail_at=-1;
 static int(WINAPI* floater_handler)(const FSFLOATERINIT*,void*)=nullptr;
 static void* page_context=nullptr;
@@ -63,11 +65,11 @@ static int WINAPI para_properties(void*,void* name,FSPAP* pap){*pap={};pap->idob
 static int WINAPI para_client(void*,void* name,void** output){++clients_created;*output=name;return 0;}
 static int WINAPI destroy_para_client(void*,void*){++clients_destroyed;return 0;}
 static int WINAPI text_properties(void*,void* name,int,FSTXTPROPS* props){*props={};props->fKeepTogether=keep_mode==2||(keep_mode==1&&name==reinterpret_cast<void*>(102));return 0;}
-static int WINAPI line_format(void*,void*,void*,int,int dcp,void* incoming,uint32_t direction,
+static int WINAPI line_format(void*,void*,void* name,int,int dcp,void* incoming,uint32_t direction,
     int start,int width,int track_start,int track_width,int margin,int hyphen,int left,int right,int first,int last,int suppress,
     void** line,int* consumed,void** br,int* forced,FSFLRES* result,int* ascent,int* descent,int* bbox,int* bbox_width,int* depend,int* reformat) {
     if(direction||(!attached_float&&(start!=track_start||width!=100))||(track_start!=10&&track_start!=120)||track_width!=100||margin!=track_start||hyphen||left||right||last||first!=(dcp==0)||bool(incoming)!=(dcp!=0))return PTS_tserrInvalidParameter;
-    if(attached_float&&(width!=(multiple_opposite?20:60)||start!=(attached_right?10:50)))return PTS_tserrInvalidParameter;
+    if(attached_float&&(!deferred_attachment||name==reinterpret_cast<void*>(102))&&(width!=(multiple_opposite?20:60)||start!=(attached_right?10:50)))return PTS_tserrInvalidParameter;
     ++lines_created;*line=reinterpret_cast<void*>(1000+lines_created);*br=reinterpret_cast<void*>(2000+lines_created);
     *consumed=5;*forced=0;*result=dcp==0?fsflrOutOfSpace:fsflrEndOfParagraph;*ascent=7;*descent=3;*bbox=start;*bbox_width=75;*depend=*reformat=0;
     if(structural_line&&dcp==0){*ascent=*descent=*bbox_width=0;}
@@ -81,11 +83,13 @@ static int WINAPI block_props(void*,void* name,uint32_t,FSFLOATERPROPS* output){
 static int WINAPI block_margin(void*,void*,void*,uint32_t,void*,int,int* output){*output=0;return 0;}
 static int WINAPI block_after(void*,void*,void*,uint32_t,void*,void** output){*output=nullptr;return 0;}
 static int WINAPI block_destroy(void*){++float_destroyed;return 0;}
-static int WINAPI block_destroy_break(void*,void*){return 0;}
+static int WINAPI block_destroy_break(void*,void*){++float_records_destroyed;return 0;}
 static int WINAPI block_finite(void*,void* para,void*,int,void*,void*,int empty,int,uint32_t,int,int width,int height,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA,
     FSFMTR* formatted,void** content,void** br,int* used_width,int* used_height,FSBBOX* box,int* polygons,int* vertices) {
     *formatted={};*content=*br=nullptr;*used_width=*used_height=*polygons=*vertices=0;*box={};
-    if(height<25&&empty){formatted->kstop=fmtrNoProgressOutOfSpace;return 0;}
+    if(height<25&&empty){*used_width=40;*used_height=25;
+        if(split_attachment){++float_created;*content=para;*br=reinterpret_cast<void*>(4001);formatted->kstop=fmtrBrokenOutOfSpace;}
+        else formatted->kstop=fmtrNoProgressOutOfSpace;return 0;}
     ++float_created;*content=para;*used_width=attached_float?40:width;*used_height=25;*box={1,{0,0,*used_width,25}};formatted->fForcedProgress=height<25;
     return (fail_float||float_created==float_fail_at)?PTS_tserrCallbackException:0;
 }
@@ -96,7 +100,7 @@ static int WINAPI block_handler(void*,int id,void* output) {
     cb.pfnDestroyFloaterContentBreakRecord=reinterpret_cast<void*>(block_destroy_break);cb.pfnGetMCSClientAfterFloater=reinterpret_cast<void*>(block_after);
     return floater_handler(&init,output);
 }
-static int WINAPI attached_count(void*,void* name,int dcp,int* count){*count=attached_float&&name==reinterpret_cast<void*>(101)&&dcp==0?(multiple_float?2:1):0;return 0;}
+static int WINAPI attached_count(void*,void* name,int dcp,int* count){*count=attached_float&&name==reinterpret_cast<void*>(deferred_attachment?102:101)&&dcp==0?(multiple_float?2:1):0;return 0;}
 static int WINAPI attached_objects(void*,void*,int,int capacity,void** names,int* kinds,int* anchors,int* actual,int* ended){if(capacity!=(multiple_float?2:1))return PTS_tserrInvalidParameter;for(int index=0;index<capacity;++index){names[index]=reinterpret_cast<void*>(301+index);kinds[index]=2;anchors[index]=index;}*actual=capacity;*ended=0;return 0;}
 static int WINAPI attached_in_line(void*,void*,void*,int,int,int,int,int* count){*count=0;return 0;}
 static void reset_page_counts(){lines_created=lines_destroyed=breaks_destroyed=clients_created=clients_destroyed=0;}
@@ -464,6 +468,18 @@ int main(int argc,char** argv) {
         require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrCallbackException&&!page_handle&&!page_break&&float_created==2&&float_destroyed==2&&clients_created==clients_destroyed,"later populated floater failure releases prior accepted and current speculative attachments");float_fail_at=-1;
         available_height=40;reset_page_counts();float_created=float_destroyed=0;
         require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrNotImplemented&&!page_handle&&!page_break&&float_created==2&&float_destroyed==2&&clients_created==clients_destroyed,"unsupported multi-floater overflow retains no partial page or attachments");available_height=80;multiple_float=false;
+        for(int deferred_mode:{0,1,2}) {
+            deferred_attachment=true;multiple_float=deferred_mode==1;split_attachment=deferred_mode==2;para_count=2;available_height=multiple_float?60:40;reset_page_counts();float_created=float_destroyed=float_records_destroyed=0;
+            require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&page_break&&formatted.kstop==fmtrBrokenOutOfSpace,"occupied page defers a floater without consuming its host anchor");
+            require(FsQueryPageDetails(context,page_handle,&details)==0&&FsQueryTrackParaList(context,details.u.simple.trackdescr.pfstrack,2,paras,&actual_count)==0&&actual_count==1&&paras[0].nmp==reinterpret_cast<void*>(101)&&float_created==float_destroyed&&float_records_destroyed==(split_attachment?1:0),"deferred paragraph has no page-owned speculative attachment");
+            require(FsDestroyPage(context,page_handle)==0,"destroy page before resuming deferred attachment");
+            void* deferred_record=page_break;
+            require(FsCreatePageFinite(context,deferred_record,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&!page_break&&float_created-float_destroyed==(multiple_float?2:1),"deferred floater resumes intact on fresh page");
+            require(FsQueryPageDetails(context,page_handle,&details)==0&&FsQueryTrackParaList(context,details.u.simple.trackdescr.pfstrack,2,paras,&actual_count)==0&&actual_count==1&&paras[0].nmp==reinterpret_cast<void*>(102)&&FsQueryLineListSingle(context,paras[0].pfspara,2,lines,&actual_count)==0&&actual_count==2&&lines[0].dcpFirst==0,"resumed host starts at original unconsumed anchor");
+            require(FsDestroyPage(context,page_handle)==0&&FsDestroyPageBreakRecord(context,deferred_record)==0&&float_created==float_destroyed&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"deferred attachment and incoming record release exactly once");
+        }
+        deferred_attachment=split_attachment=multiple_float=false;available_height=80;para_count=1;
+        std::puts("native deferred floaters: nonzero no-progress dimensions, speculative subpage/break-record cleanup, collision rollback, exact host-anchor resume and object lifetime PASS");
         fail_float=true;reset_page_counts();float_created=float_destroyed=0;
         require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrCallbackException&&!page_handle&&!page_break&&float_created==float_destroyed&&lines_created==lines_destroyed&&clients_created==clients_destroyed,"populated attached-content callback failure tears down all owned objects");
         fail_float=attached_float=attached_right=false;para_count=2;

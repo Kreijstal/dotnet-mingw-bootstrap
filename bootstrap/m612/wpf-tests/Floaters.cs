@@ -69,6 +69,26 @@ class Check {
             using(var first=paginator.GetPage(0)){var bytes=Raster(first.Visual);int red=0,green=0;for(int i=0;i<bytes.Length;i+=4){if(bytes[i+3]<150)continue;if(bytes[i+2]>200&&bytes[i]<60&&bytes[i+1]<60)++red;if(bytes[i+1]>200&&bytes[i]<60&&bytes[i+2]<60)++green;}if(red<1000||green<1000)throw new Exception("multiple floater page must regenerate both original objects");}
             Console.WriteLine($"original multiple floaters {mode}, opposite={opposite}: {pages} pages, {firstRun.Text.Length+secondRun.Text.Length+body.Text.Length} characters covered exactly once, page mapping/regeneration/GC PASS");
         }
+        foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display})
+        foreach(bool multiple in new[]{false,true}) {
+            var prefix=new Run("prefix zero\nprefix one\nprefix two\nprefix three\nprefix four\nprefix five");
+            var firstRun=new Run("float one\nfloat two\nfloat three");var secondRun=new Run("next one\nnext two\nnext three");var body=new Run(string.Join(" ",Enumerable.Range(0,100).Select(i=>$"defer{i:D3}")));
+            Floater Make(Run run,Brush color)=>new Floater(new Paragraph(run){Margin=new Thickness(0),Foreground=Brushes.Blue,LineHeight=24}){Width=120,HorizontalAlignment=HorizontalAlignment.Left,Padding=new Thickness(4),Margin=new Thickness(0),Background=color};
+            var host=new Paragraph(Make(firstRun,Brushes.Red)){Margin=new Thickness(0)};if(multiple)host.Inlines.Add(Make(secondRun,Brushes.Lime));host.Inlines.Add(body);
+            var document=new FlowDocument(new Paragraph(prefix){Margin=new Thickness(0),LineHeight=24}){FontFamily=new FontFamily("Segoe UI"),FontSize=18,PagePadding=new Thickness(10),ColumnWidth=double.PositiveInfinity};document.Blocks.Add(host);TextOptions.SetTextFormattingMode(document,mode);
+            var paginator=(DynamicDocumentPaginator)((IDocumentPaginatorSource)document).DocumentPaginator;paginator.PageSize=new Size(400,220);
+            var ranges=new List<(int Page,TextPointer Start,TextPointer End)>();int pages=0;
+            for(;pages<20;++pages){using var page=paginator.GetPage(pages);if(page==DocumentPage.Missing)break;var bytes=Raster(page.Visual);int red=0,green=0;
+                for(int i=0;i<bytes.Length;i+=4){if(bytes[i+3]<150)continue;if(bytes[i+2]>200&&bytes[i]<60&&bytes[i+1]<60)++red;if(bytes[i+1]>200&&bytes[i]<60&&bytes[i+2]<60)++green;}
+                if(pages==1){if(red<1000||(multiple&&green<1000))throw new Exception("deferred intact floaters must render on fresh page");}else if(red!=0||green!=0)throw new Exception("deferred floater must not render on occupied or later pages");
+                var view=((IServiceProvider)page).GetService(viewType);foreach(var segment in (IEnumerable)viewType.GetProperty("TextSegments").GetValue(view)){var t=segment.GetType();var flags=BindingFlags.Instance|BindingFlags.Public|BindingFlags.NonPublic;ranges.Add((pages,(TextPointer)t.GetProperty("Start",flags).GetValue(segment),(TextPointer)t.GetProperty("End",flags).GetValue(segment)));}GC.Collect(2,GCCollectionMode.Forced,true,true);
+            }
+            if(pages<3||pages>=20||!paginator.IsPageCountValid)throw new Exception("deferred floater pagination must complete");
+            var runs=multiple?new[]{prefix,firstRun,secondRun,body}:new[]{prefix,firstRun,body};
+            foreach(var run in runs)for(int at=0;at<run.Text.Length;++at){var position=run.ContentStart.GetPositionAtOffset(at,LogicalDirection.Forward);var owners=ranges.Where(r=>position.CompareTo(r.Start)>=0&&position.CompareTo(r.End)<0).ToArray();if(owners.Length!=1||paginator.GetPageNumber(position)!=owners[0].Page)throw new Exception("deferred floater exact source ownership at "+at);if((run==firstRun||run==secondRun)&&owners[0].Page!=1)throw new Exception("intact floating source belongs to next page");}
+            using(var page=paginator.GetPage(1)){var bytes=Raster(page.Visual);int red=0,green=0;for(int i=0;i<bytes.Length;i+=4){if(bytes[i+3]<150)continue;if(bytes[i+2]>200&&bytes[i]<60&&bytes[i+1]<60)++red;if(bytes[i+1]>200&&bytes[i]<60&&bytes[i+2]<60)++green;}if(red<1000||(multiple&&green<1000))throw new Exception("deferred page regeneration must retain original objects");}
+            Console.WriteLine($"original deferred floaters {mode}, multiple={multiple}: {pages} pages, {runs.Sum(r=>r.Text.Length)} characters covered exactly once, intact next-page source/raster, regeneration and GC PASS");
+        }
         foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display}) {
             var floatingRun=new Run("Original scrolling floater");var bodyRun=new Run(string.Join(" ",Enumerable.Range(0,130).Select(i=>$"scroll{i:D3}")));
             var floater=new Floater(new Paragraph(floatingRun){Margin=new Thickness(0),Foreground=Brushes.Blue}){Width=120,HorizontalAlignment=HorizontalAlignment.Left,Margin=new Thickness(0),Padding=new Thickness(4),Background=Brushes.Red};
