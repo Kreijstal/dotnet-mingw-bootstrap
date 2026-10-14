@@ -14193,3 +14193,118 @@ spacing adjustments, ink insertion, broader native layout/bidi/optimizer conform
 complex margins, spelling reform and physical printing remain unfinished. WinForms8
 metadata generation and current Greenshot's net480/source dependency requirements
 remain open. The full WPF goal stays active.
+
+
+## 218. Complete multi-glyph space compression and source-built font proof
+
+The 2026-10-14 continuation fixes a mismatch with WPF's original compression
+callback: it reports a space cluster's capacity at the last glyph, while that
+capacity is based on the sum of all glyph advances in the cluster. Source commit
+822141b budgets removal across the complete cluster and consumes advances from
+the requested edge, skipping zero advances. Both sides share that physical budget.
+Original glyphs, source maps, nominal advances and trailing whitespace remain
+intact; actual advances cannot become newly negative. Minimum widths use the
+complete cluster budget too.
+
+A new standard-library Python generator builds a tiny TrueType/OpenType font
+from readable source. Its ccmp substitution replaces one space with two blank
+glyphs. A visible Devanagari consonant forces actual shaping. The new SDK consumer
+verifies the font family and real GSUB glyph counts before testing compression.
+Against installed release 61, it builds without warnings/errors, then retains
+55.2 pixels against a 53.2-pixel target. The updated implementation reaches 53.2
+in Ideal mode and 52 from a nominal 66 in Display mode. The native regression also
+fails against release 61's insufficient cluster budget.
+
+The font is generated test output, never a binary source input or installed system
+font. No fontTools dependency is needed by the build. Optional local fontTools
+inspection decodes every generated table and the expected space-to-two-glyph GSUB
+mapping; normal generation/checks use only Python's standard library. Linux and
+Windows generation produce identical font SHA-256:
+eee9ad2e186e48150264539147062c5c86df15d2d2d6d67ca5de499dc3444a03.
+
+Exact development rebuild and final check commands on win11, terminal exit0:
+
+```sh
+MSYSTEM=CLANG64 WPF_SOURCE=$HOME/dotnetboot/m612/src/wpf-8.0.0 WPF_BUILD=$HOME/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-justification-native
+bash ~/wpfboot/space-cluster-development-check.sh
+```
+
+Native tests cover eight combinations of two/three glyphs, zero/nonzero last
+advances and right-only/both-side capacity. They assert exact widths, provider
+minima, one source caret cell retaining all original glyphs, following text,
+original/actual drawing advances, signed left offsets, unchanged trailing spaces
+and shared capacity exhaustion. An initial drawing assertion confused cchText with
+glyphCount; the final fixture verifies the distinct ABI fields. The standalone
+baseline fixture also needed the ordinary CLANG64 environment for DLL resolution.
+
+The new public consumer checks Ideal/Display in shared and portable execution
+(four development executions). It verifies original source-font glyph/cluster
+counts, compression beyond the final glyph's advance, source ownership, retained
+glyphs, nonnegative actual advances, complete zero edge advances, caret/point/
+selection, real rectangle-glyph raster and compacting GC. Existing native line,
+inline-object, justification and candidate fixtures, plus ordinary public optimal
+compression and justified-object consumers, all pass. Final scripts and baseline/
+development logs are archived under
+`tmp/wpf8-support/validation/space-cluster-compression-20261014`.
+
+WindowsDesktop 8.0.0-62 packages the change in msys2-ur commit 43e0cd5. Clean replay
+of all 62 patches matches all seven feature files byte for byte. All 69 source/hash
+declarations verify on the host; all 65 locally available inputs match. Patch0062
+SHA-256:
+d633a955e3e8b5979dba60679613cfc935ce76d6d579db804c9d759dc4e2d787.
+Registered SDK consumers increase to 46; this is focused validation, not a new full
+46-consumer suite.
+
+Exact private/package/install command on win11, terminal exit0:
+
+```sh
+bash ~/wpfboot/space-cluster-package-and-check.sh
+```
+
+The script verifies sources, dry-runs/applies0062 and runs:
+
+```sh
+_wpf native-win32 inventory check-justification-native check-paragraph-breaks-native check-inline-objects-native check-lineservices-line-native layout
+makepkg --repackage --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-62-any.pkg.tar.zst
+```
+
+The changed native DLL is rebuilt in the existing private source workspace. Managed
+payloads remain from that previously validated private source build; this is not a
+new complete from-scratch WPF rebuild. Ordinary dependency checks stay enabled.
+Recreated SDK overlays unlink native/managed pack roots before copying; native
+shared/runtime-pack bytes match the private rebuild.
+
+Private native and shared/portable source-font, justified-object, compression,
+selected-tab, aligned/ordinary object, tab/font-resource, bidi, cross-run caret,
+mixed justification and BAML/window consumers pass. Private/package/installed
+payload audits verify 42 managed implementation/reference pairs, native hashes and
+SDK tasks. After installation, both native fixtures run directly against the
+installed library, including all multi-glyph compression and dependent-candidate
+height assertions:
+
+```sh
+"$(_wpfbuild)/justification-native-check/native-check.exe" /clang64/lib/dotnet/shared/Microsoft.WindowsDesktop.App/$version/PresentationNative_cor3.dll
+"$(_wpfbuild)/inline-objects-native-check/native-check.exe" /clang64/lib/dotnet/shared/Microsoft.WindowsDesktop.App/$version/PresentationNative_cor3.dll
+```
+
+Installed source-font, object and BAML/window consumers then pass shared and
+portable. The source-font consumer has 12 mode executions across development,
+private and installed scopes (Ideal/Display times shared/portable times three).
+All final consumer warnings/errors are zero. Native export coverage remains
+133/139; the six missing declarations remain upstream #if NEVER.
+
+Artifact, exact scripts/logs, recipe, clean replay and native inventory are archived
+under `tmp/wpf8-support/validation/space-cluster-compression-package-20261014`:
+
+```text
+mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-62-any.pkg.tar.zst
+SHA-256: 7708c3f9d30c836dac48a842255fec5ff36dce54ee693dfaeaac7b6a5a511b86
+Bytes: 58940417
+```
+
+The downloaded hash matches the host and pacman reports 8.0.0-62. Final aligned-field
+spacing adjustments, ink insertion and broader native layout/bidi/optimizer
+conformance remain unfinished, as do complex margins, spelling reform, physical
+printing, WinForms8 metadata generation and current Greenshot's net480/source
+dependencies. The full WPF goal stays active.
