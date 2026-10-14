@@ -11806,3 +11806,67 @@ Imported coverage remains 126/139 and paragraph ABI 479 fields. Cross-paragraph
 float propagation/clearing, forced object groups exceeding an empty page,
 polygon/object constraints and other advanced layout/NLS gaps remain unfinished.
 The WPF goal stays active.
+
+
+## 183. Installed release 42: centered and selectively cleared floaters
+
+WindowsDesktop 8.0.0-42 is built, installed and validated on win11. Source feature
+commit d71e708 is represented byte for byte by recipe patch 0042. Clean pinned
+sources plus all 42 patches reproduce all five changed feature files; actual
+private files also match the driver. All 45 locally available declared source
+hashes match. Recipe commit fda8ffb declares release/patch/README metadata and the
+new SDK consumer is part of the regular check-sdk gate.
+
+Full source and private regressions both exit zero. Each completes 31 WPF
+consumers (standard SDK/BAML/window application plus 30 feature gates) and both
+interim WinForms executions. Original paragraph ABI/lifecycle checks remain
+479 fields, with the same native context/callback record sizes. Final full checks:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh inventory check-paragraph-context-native check-paragraph-context layout check-sdk
+# Private CLANG64 recipe workspace, after sourcing PKGBUILD:
+_wpf native-win32 inventory check-paragraph-context-native check-paragraph-context layout check-sdk
+MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/install-floater-layout.sh'
+```
+
+The archived install-and-check.sh regenerates .SRCINFO, invokes makepkg
+--repackage --force --noconfirm, installs through pacman -U --noconfirm and checks
+staged payload hashes before these exact installed consumers:
+
+```sh
+bash "$(_driver)/wpf-tests/check-floater-clearing-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-floater-clearing-sdk-check
+bash "$(_driver)/wpf-tests/check-floaters-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-floater-center-sdk-check
+bash "$(_driver)/wpf-tests/check-composite-lines-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-floater-composite-sdk-check
+/usr/bin/python3 ~/wpfboot/check-installed-hyphenation.py
+```
+
+All commands exit zero. Payload checks verify 42 managed implementations/
+references, native hashes, SDK tasks and retained interim framework versions.
+Installed clearing tests pass 128 finite cases (64 in each execution mode) and
+eight bottomless resize cases. None/Left/Right/Both placement, wide-left side
+identity, occupied-page deferral without speculative leftovers or repetition,
+all 799 host-character/page mappings, disposed-page geometry regeneration and
+stable pixels through GC pass in both text modes/directions. The cleared blue
+object moves from top 90 to 130 pixels after its predecessor grows by 40 pixels.
+Actual full document scrolling survives the resize.
+
+The expanded original floater suite verifies centered text at 140..259 pixel
+bounds with actual glyph rows on both sides and no overlap, plus existing
+multiple/deferred/split/edited scrolling behavior. Existing composite line tests
+verify source/glyph geometry, pagination, caret/point queries and page regeneration.
+All three consumers run in shared-framework and portable execution with zero
+warnings/errors. Installed source audit verifies 81 input hashes, 39 notices and
+exact regeneration of all 36 dictionaries. Installed native inventory confirms
+126/139 imports with 13 absent; paragraph ABI remains 479 fields.
+
+Evidence/artifact are under
+`tmp/wpf8-support/validation/floater-layout-package-20261014`:
+`mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-42-any.pkg.tar.zst`.
+SHA-256: ad4ec193034afda676c5b93206755079b7a4f93b58943632d13d235fa132aca5.
+The 58,872,919-byte local artifact hash equals the installed host's artifact.
+Source evidence is under `tmp/wpf8-support/validation/floater-layout-20261014`.
+
+Cross-paragraph float propagation/clearing, forced groups too large for an empty
+page, polygon/object constraints and other advanced layout/optimal/NLS paths
+remain unfinished. This release supplies original centered wrapping and selective
+floater clear-before-format behavior. The broader WPF goal remains active.
