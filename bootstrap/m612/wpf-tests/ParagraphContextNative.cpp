@@ -18,6 +18,7 @@ static int WINAPI destroy_object(void* value){if(value!=reinterpret_cast<void*>(
 static int lines_created=0,lines_destroyed=0,breaks_destroyed=0,clients_created=0,clients_destroyed=0,fail_line=-1,columns=1,available_height=80,invalid_columns=false,hard_break=0,keep_mode=0,keep_next=0,para_count=2;
 static bool containers=false,lose_subtrack=false,oversized_group=false,clearing_container=false;
 static FSKCLEAR container_clear=fskclearNone;
+static int container_inset=0;
 static int balance_requested=0,balancing_error=0;
 using BalanceTrack=int(WINAPI*)(void*,void*,uint32_t,int*,int*,int*);
 using BalancePage=int(WINAPI*)(void*,void*,uint32_t*,int*,int*,int*);
@@ -91,7 +92,12 @@ static int(WINAPI* destroy_subtrack_record)(void*,void*)=nullptr;
 static int WINAPI container_format(void*,void*,void* input,int previous,void* name,int area,void* footnote,void* geometry,int empty,int suppress,uint32_t direction,FSRECT* rect,void* margin,FSKCLEAR clear,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA suppress_break,int,
     FSFMTR* formatted,void** output,void** br,int* used,FSBBOX* bbox,void** margin_out,FSKCLEAR* clear_out,int* top,int* can_break) {
     *can_break=0;if(clearing_container)clear=container_clear;
-    int status=format_subtrack(page_context,input,previous,name,area,footnote,geometry,empty,suppress,direction,rect,margin,clear,suppress_break,formatted,output,br,used,bbox,margin_out,clear_out,top);
+    FSRECT inner=*rect;if(clearing_container){inner.v+=container_inset;inner.dv=std::max(0,inner.dv-container_inset);}
+    // Original callbacks may modify their ref rectangle while applying insets.
+    // The native outer-frame snapshot must retain the pre-callback origin.
+    if(clearing_container&&container_inset)*rect=inner;
+    int status=format_subtrack(page_context,input,previous,name,area,footnote,geometry,empty,suppress,direction,&inner,margin,clear,suppress_break,formatted,output,br,used,bbox,margin_out,clear_out,top);
+    if(!status&&clearing_container){if(formatted->kstop>=fmtrNoProgressOutOfSpace)*used=0;else *used+=container_inset;if(container_inset)*top=0;}
     if(!status&&lose_subtrack){*output=*br=nullptr;return PTS_tserrCallbackException;}
     return status;
 }
@@ -808,15 +814,16 @@ int main(int argc,char** argv) {
         fail_float=attached_float=attached_right=false;para_count=2;
         std::puts("native attached floaters: original callbacks, multiple collision-free placements/later failure, left/right rectangular wrapping, attached count/query/update/capacity, stale handles, partial failure and exact cleanup PASS");
         containers=clearing_container=attached_float=true;
-        for(bool right:{false,true})for(auto clear_value:{fskclearNone,fskclearLeft,fskclearRight,fskclearBoth}){
+        for(int inset:{0,10})for(bool right:{false,true})for(auto clear_value:{fskclearNone,fskclearLeft,fskclearRight,fskclearBoth}){
+            container_inset=inset;
             attached_right=right;container_clear=clear_value;available_height=80;reset_page_counts();float_created=float_destroyed=0;
             require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&!page_break&&FsQueryPageDetails(context,page_handle,&details)==0&&FsQueryTrackParaList(context,details.u.simple.trackdescr.pfstrack,2,paras,&actual_count)==0&&actual_count==2&&paras[1].idobj==0,"cleared container formats after the actual earlier floating host");
             bool clears=clear_value==fskclearBoth||(right?clear_value==fskclearRight:clear_value==fskclearLeft);
             FSPARADESCRIPTION child_para{};FSLINEDESCRIPTIONSINGLE child_lines[2]{};
-            require(FsQuerySubtrackParaList(context,paras[1].pfspara,1,&child_para,&actual_count)==0&&actual_count==1&&FsQueryLineListSingle(context,child_para.pfspara,2,child_lines,&actual_count)==0&&actual_count==2&&child_lines[0].vrStart==(clears?45:40)&&child_lines[0].dur==(clears?100:60)&&child_lines[1].dur==100&&paras[1].dvrUsed==(clears?25:20),"selective inherited clearing changes original child line position, available width and consumed height exactly");
+            require(FsQuerySubtrackParaList(context,paras[1].pfspara,1,&child_para,&actual_count)==0&&actual_count==1&&FsQueryLineListSingle(context,child_para.pfspara,2,child_lines,&actual_count)==0&&actual_count==2&&child_lines[0].vrStart==(clears?45:40)+inset&&child_lines[0].dur==(clears||inset?100:60)&&child_lines[1].dur==100&&paras[1].dvrUsed==(clears?25:20)+inset&&paras[1].dvrTopSpace==(clears?5:0),"selective inherited clearing changes original child line position, available width and consumed height exactly");
             require(FsDestroyPage(context,page_handle)==0&&float_created==float_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"cleared child tracks own every earlier floating/line/client resource exactly once");
         }
-        attached_right=false;container_clear=fskclearBoth;available_height=20;reset_page_counts();float_created=float_destroyed=0;
+        container_inset=0;attached_right=false;container_clear=fskclearBoth;available_height=20;reset_page_counts();float_created=float_destroyed=0;
         require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&page_break&&FsQueryPageDetails(context,page_handle,&details)==0&&FsQueryTrackParaList(context,details.u.simple.trackdescr.pfstrack,2,paras,&actual_count)==0&&actual_count==1&&paras[0].nmp==reinterpret_cast<void*>(101),"clearance beyond remaining space defers the container without publishing empty child source");
         incoming_record=page_break;
         require(FsDestroyPage(context,page_handle)==0,"release earlier floating host before cleared container continuation");

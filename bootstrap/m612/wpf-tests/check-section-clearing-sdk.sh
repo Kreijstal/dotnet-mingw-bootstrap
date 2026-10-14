@@ -18,6 +18,7 @@ export NUGET_PACKAGES=$(cygpath -m "$work/empty-packages")
 # Shared-framework execution must load the installed/overlaid desktop pack.
 test ! -e "$work/bin/Release/net8.0-windows/PresentationCore.dll"
 timeout 60 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0-windows/SectionClearingSdkCheck.dll")"
+timeout 60 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0-windows/SectionClearingSdkCheck.dll")" styled
 "$sdk/dotnet.exe" publish "$(cygpath -m "$work/SectionClearingSdkCheck.csproj")" -r win-x64 --self-contained true \
   --configfile "$(cygpath -m "$work/NuGet.config")" -p:UseAppHost=true -v:q -p:UseSharedCompilation=false
 # Verify the published implementation/resource bytes came from this SDK's pack.
@@ -25,4 +26,6 @@ cmp "$work/bin/Release/net8.0-windows/win-x64/publish/PresentationCore.dll" \
   "$sdk/shared/Microsoft.WindowsDesktop.App/8.0.0-bootstrap.wpf.8.0.0/PresentationCore.dll"
 env -u DOTNET_ROOT -u DOTNET_ROOT_X64 PATH=/usr/bin:/c/Windows/System32 \
   timeout 60 "$work/bin/Release/net8.0-windows/win-x64/publish/SectionClearingSdkCheck.exe"
+env -u DOTNET_ROOT -u DOTNET_ROOT_X64 PATH=/usr/bin:/c/Windows/System32 \
+  timeout 60 "$work/bin/Release/net8.0-windows/win-x64/publish/SectionClearingSdkCheck.exe" styled
 printf 'PASS normal offline WPF SDK section clearing check and self-contained publish with SDK roots removed\n'

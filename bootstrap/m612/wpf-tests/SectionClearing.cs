@@ -56,7 +56,49 @@ class Check {
     static void Pump(FrameworkElement element) {
         element.UpdateLayout();var frame=new DispatcherFrame();Dispatcher.CurrentDispatcher.BeginInvoke(DispatcherPriority.ContextIdle,new Action(()=>frame.Continue=false));Dispatcher.PushFrame(frame);element.UpdateLayout();
     }
-    [STAThread] static void Main() {
+    static void Styled() {
+        foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display})
+        foreach(var direction in new[]{FlowDirection.LeftToRight,FlowDirection.RightToLeft})
+        foreach(bool paddingOnly in new[]{false,true})
+        foreach(int margin in new[]{0,12})
+        foreach(bool reversed in new[]{false,true}) {
+            var inner=reversed?(direction==FlowDirection.LeftToRight?FlowDirection.RightToLeft:FlowDirection.LeftToRight):direction;
+            var document=Make(direction,inner,WrapDirection.Both,false,out var anchor,out var body,out var red,out var section);
+            section.Margin=new Thickness(0,margin,0,margin);section.Padding=new Thickness(6);section.BorderBrush=Brushes.Magenta;section.BorderThickness=new Thickness(paddingOnly?0:2);
+            TextOptions.SetTextFormattingMode(document,mode);var paginator=(DynamicDocumentPaginator)((IDocumentPaginatorSource)document).DocumentPaginator;paginator.PageSize=new Size(400,260);
+            using var page=paginator.GetPage(0);var pixels=Raster(page.Visual);var green=Bounds(pixels,1);var blue=Bounds(pixels,2);var yellow=Bounds(pixels,3);
+            double inset=paddingOnly?6:8;
+            Console.WriteLine($"styled section {mode} {direction}, paddingOnly={paddingOnly}, margin={margin}, reversed={reversed}: green={green}, blue={blue}, background={yellow}");
+            if(green.IsEmpty||blue.IsEmpty||Math.Abs(blue.Top-green.Bottom-margin-inset)>1||yellow.IsEmpty||yellow.Top<green.Bottom+margin-1)throw new Exception("styled section must clear its outer border/background before applying content padding");
+            var ranges=new List<(int Page,TextPointer Start,TextPointer End)>();int pages=0,bluePages=0;
+            for(;pages<15;++pages){using var chunk=paginator.GetPage(pages);if(chunk==DocumentPage.Missing)break;var bytes=Raster(chunk.Visual);if(!Bounds(bytes,2).IsEmpty)++bluePages;
+                object view=((IServiceProvider)chunk).GetService(ViewType);foreach(object segment in (IEnumerable)ViewType.GetProperty("TextSegments").GetValue(view)){var type=segment.GetType();ranges.Add((pages,(TextPointer)type.GetProperty("Start",Fields).GetValue(segment),(TextPointer)type.GetProperty("End",Fields).GetValue(segment)));}
+                GC.Collect(2,GCCollectionMode.Forced,true,true);if(!bytes.SequenceEqual(Raster(chunk.Visual)))throw new Exception("styled section raster changed across GC");
+            }
+            if(pages<2||pages>=15||bluePages!=1||!paginator.IsPageCountValid)throw new Exception("styled section must complete its source without duplicating its child");
+            foreach(var run in new[]{anchor,body})for(int i=0;i<run.Text.Length;++i){var position=run.ContentStart.GetPositionAtOffset(i,LogicalDirection.Forward);var owners=ranges.Where(r=>position.CompareTo(r.Start)>=0&&position.CompareTo(r.End)<0).ToArray();if(owners.Length!=1||paginator.GetPageNumber(position)!=owners[0].Page)throw new Exception("styled section loses exact source/page coverage");}
+            using(var regenerated=paginator.GetPage(0))if(!pixels.SequenceEqual(Raster(regenerated.Visual)))throw new Exception("styled section regeneration loses its border/background/content geometry");
+            Console.WriteLine("original styled section clearing outer frame, padding, exact source/page ownership, regeneration and GC PASS");
+        }
+        foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display})
+        foreach(var direction in new[]{FlowDirection.LeftToRight,FlowDirection.RightToLeft})
+        foreach(bool paddingOnly in new[]{false,true}) {
+            var document=Make(direction,direction,WrapDirection.Both,false,out var anchor,out var body,out var redBorder,out var section);
+            section.Margin=new Thickness(0,12,0,12);section.Padding=new Thickness(6);section.BorderBrush=Brushes.Magenta;section.BorderThickness=new Thickness(paddingOnly?0:2);
+            body.Text=string.Join(" ",Enumerable.Range(0,180).Select(i=>$"styled{i:D3}"));TextOptions.SetTextFormattingMode(document,mode);
+            var viewer=new FlowDocumentScrollViewer{Document=document,IsToolBarVisible=false};var window=new Window{Content=viewer,Width=420,Height=340,ShowInTaskbar=false};window.Show();Pump(window);
+            var before=Raster(viewer);var green=Bounds(before,1);var blue=Bounds(before,2);var yellow=Bounds(before,3);double inset=paddingOnly?6:8;
+            if(green.IsEmpty||blue.IsEmpty||yellow.IsEmpty||Math.Abs(blue.Top-green.Bottom-12-inset)>1||yellow.Top<green.Bottom+11)throw new Exception("bottomless styled initial frame/padding/margin geometry");
+            redBorder.Height=180;Pump(window);var changed=Raster(viewer);var red=Bounds(changed,0);var grownBlue=Bounds(changed,2);var grownYellow=Bounds(changed,3);
+            if(red.IsEmpty||grownBlue.IsEmpty||grownYellow.IsEmpty||Math.Abs(grownBlue.Top-red.Bottom-12-inset)>1||grownYellow.Top<red.Bottom+11||grownBlue.Top<blue.Top+39)throw new Exception("bottomless styled frame and content must follow the resized inherited floater");
+            var scroll=(ScrollViewer)viewer.Template.FindName("PART_ContentHost",viewer);scroll.ScrollToEnd();Pump(window);if(scroll.VerticalOffset<=0||scroll.VerticalOffset+scroll.ViewportHeight<scroll.ExtentHeight-1)throw new Exception("styled container cannot scroll to its actual source end");
+            window.Close();GC.Collect(2,GCCollectionMode.Forced,true,true);Console.WriteLine("original bottomless styled section clearing resized outer frame/content/margin/padding, end scrolling and GC PASS");
+        }
+        Dispatcher.CurrentDispatcher.InvokeShutdown();
+    }
+    [STAThread] static void Main(string[] args) {
+        if(args.Length==1&&args[0]=="styled"){Styled();return;}
+
         foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display})
         foreach(var pageDirection in new[]{FlowDirection.LeftToRight,FlowDirection.RightToLeft})
         foreach(bool reversed in new[]{false,true})

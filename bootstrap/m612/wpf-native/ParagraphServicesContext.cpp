@@ -208,8 +208,9 @@ struct AttachedData { int anchor=0; FSFLOATERPROPS props{}; std::shared_ptr<Para
 struct FloatObstacle {FSRECT rect{};FSFLOATERPROPS props{};bool floater=false;};
 struct ContainerFlow {
     uint32_t direction=0;const std::vector<FloatObstacle>* obstacles=nullptr;ContainerFlow* previous=nullptr;
+    FSRECT outer_rect{};bool has_outer=false;int clearing_space=0;
     static thread_local ContainerFlow* current;
-    ContainerFlow(uint32_t value,const std::vector<FloatObstacle>* areas):direction(value),obstacles(areas),previous(current){current=areas?this:nullptr;}
+    ContainerFlow(uint32_t value,const std::vector<FloatObstacle>* areas,const FSRECT* outer=nullptr):direction(value),obstacles(areas),previous(current),outer_rect(outer?*outer:FSRECT{}),has_outer(outer!=nullptr){current=areas?this:nullptr;}
     ~ContainerFlow(){current=previous;}
 };
 thread_local ContainerFlow* ContainerFlow::current=nullptr;
@@ -1126,23 +1127,26 @@ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t 
     if(requested_clear<fskclearNone||requested_clear>fskclearBoth)return PTS_tserrInvalidParameter;
     if(!cb.pfnGetFirstPara||!cb.pfnGetNextPara||!cb.pfnGetParaProperties||!cb.pfnCreateParaclient||!cb.pfnDestroyParaclient||!context->info.fscbk.cbkobj.pfnDestroyMcsclient)return PTS_tserrInvalidParameter;
     auto track=std::make_shared<TrackData>(context);track->segment=segment;track->direction=direction;track->rect=rect;track->bottomless=bottomless;
-    if(ContainerFlow::current){FSRECT page=FigureGeometry::current?FigureGeometry::current->page:rect;int status=transform_obstacles(*ContainerFlow::current->obstacles,ContainerFlow::current->direction,direction,page,track->inherited);if(status)return status;}
+    ContainerFlow* enclosing=ContainerFlow::current;FSRECT clear_frame=rect;
+    if(enclosing&&enclosing->has_outer)enclosing->clearing_space=0;
+    if(enclosing){FSRECT page=FigureGeometry::current?FigureGeometry::current->page:rect;int status=transform_obstacles(*enclosing->obstacles,enclosing->direction,direction,page,track->inherited);if(status)return status;
+        if(enclosing->has_outer){status=FsTransformRectangle(enclosing->direction,&page,&enclosing->outer_rect,direction,&clear_frame);if(status)return status;}}
     ContainerFlow isolated(0,nullptr);
     int found=0,status=0;void* name=nullptr;
     if(input){if(input->segment!=segment)return PTS_tserrInvalidBreakRecord;name=input->paragraph;found=1;}
     else {status=reinterpret_cast<PtsGetFirstPara>(cb.pfnGetFirstPara)(client,segment,&found,&name);if(status)return status;}
     int clearance=0;
     if(found&&requested_clear!=fskclearNone) {
-        int64_t bottom=rect.v,mid=int64_t(rect.u)+rect.du/2;
+        int64_t bottom=clear_frame.v,mid=int64_t(clear_frame.u)+clear_frame.du/2;
         for(const auto& obstacle:track->inherited) {
             const auto& box=obstacle.rect;
-            if(box.u>=int64_t(rect.u)+rect.du||int64_t(box.u)+box.du<=rect.u)continue;
+            if(box.u>=int64_t(clear_frame.u)+clear_frame.du||int64_t(box.u)+box.du<=clear_frame.u)continue;
             bool left=box.u<mid,right=int64_t(box.u)+box.du>mid;
             if(obstacle.floater){left=obstacle.props.fskfloatalignment!=fskfloatalignMax;right=obstacle.props.fskfloatalignment!=fskfloatalignMin;}
             if(requested_clear==fskclearBoth||(requested_clear==fskclearLeft&&left)||(requested_clear==fskclearRight&&right))bottom=std::max(bottom,int64_t(box.v)+box.dv);
         }
-        if(bottom>INT32_MAX||bottom-rect.v>INT32_MAX)return PTS_tserrInvalidGeometry;
-        clearance=int(bottom-rect.v);
+        if(bottom>INT32_MAX||bottom-clear_frame.v>INT32_MAX||int64_t(rect.v)+bottom-clear_frame.v>INT32_MAX)return PTS_tserrInvalidGeometry;
+        clearance=int(bottom-clear_frame.v);
         if(!bottomless&&clearance&&clearance>=rect.dv) {
             track->continuation=input?input:std::make_shared<Continuation>();
             if(!input){track->continuation->context=context;track->continuation->segment=segment;track->continuation->paragraph=name;}
@@ -1207,7 +1211,7 @@ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t 
             if(!next_position){margin.reset();margin.value=margin_next;input_margin=margin.value;}
             else if(margin_next)reinterpret_cast<PtsDestroyMcsclient>(context->info.fscbk.cbkobj.pfnDestroyMcsclient)(client,margin_next);
         } else {
-            ContainerFlow nested(direction,props.idobj==0?&inherited:nullptr);
+            ContainerFlow nested(direction,props.idobj==0?&inherited:nullptr,props.idobj==0?&available:nullptr);
             auto& methods=context->installed->methods[props.idobj];
             if(!(bottomless?methods.pfnFormatParaBottomless:methods.pfnFormatParaFinite)||!methods.pfnDestroyPara)return PTS_tserrInvalidParameter;
             CallbackTracks pending;
@@ -1235,6 +1239,12 @@ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t 
             }
             pending.claimed=para->desc.pfspara;
             margin.reset();margin.value=margin_next;input_margin=margin.value;
+            // The original callback reports collapsed margin top space. Its
+            // border/padding branch must not discard the outer clear gap.
+            if(!status&&props.idobj==0&&nested.clearing_space){
+                if(int64_t(para->desc.dvrTopSpace)+nested.clearing_space>INT32_MAX)return PTS_tserrInvalidGeometry;
+                para->desc.dvrTopSpace+=nested.clearing_space;
+            }
             if(!status&&clear!=fskclearNone)status=PTS_tserrNotImplemented;
         }
         if(status)return status;
@@ -1273,6 +1283,7 @@ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t 
     FSRECT flow_page=FigureGeometry::current?FigureGeometry::current->page:rect;
     for(const auto& para:track->paras){status=para_obstacles(para,direction,flow_page,track->obstacles);if(status)return status;}
     if(bottomless)track->rect.dv=track->used;
+    if(enclosing&&enclosing->has_outer)enclosing->clearing_space=track->clearing_space;
     result=track;*margin_output=margin.value;margin.value=nullptr;return 0;
 }
 void clear_subpage(const std::shared_ptr<PageData>& page);
@@ -1333,7 +1344,7 @@ extern "C" __declspec(dllexport) int WINAPI FsFormatSubtrackFinite(void* context
         std::shared_ptr<BreakData> outgoing;
         try {if(track->continuation)outgoing=make_record(context,track->continuation,false);}
         catch(...){{std::lock_guard<std::mutex> lock(gate);tracks.erase(track.get());}throw;}
-        *output=track.get();*used=track->used;*top_space=track->clearing_space;*bbox=track->bbox;*margin_output=margin.value;margin.value=nullptr;formatted->kstop=track->stop;formatted->fForcedProgress=track->forced_progress;*break_output=outgoing?outgoing.get():nullptr;return 0;
+        *output=track.get();*used=track->used;*top_space=(ContainerFlow::current&&ContainerFlow::current->has_outer)?0:track->clearing_space;*bbox=track->bbox;*margin_output=margin.value;margin.value=nullptr;formatted->kstop=track->stop;formatted->fForcedProgress=track->forced_progress;*break_output=outgoing?outgoing.get():nullptr;return 0;
     }catch(const std::bad_alloc&){return PTS_tserrOutOfMemory;}
 }
 extern "C" __declspec(dllexport) int WINAPI FsDestroySubtrack(void* context_handle,void* handle) {
@@ -1512,7 +1523,7 @@ extern "C" __declspec(dllexport) int WINAPI FsFormatSubtrackBottomless(void* con
         int status=format_track(context,segment,direction,rect,suppress,margin_input,track,&margin.value,true,{},false,true,fsksuppresshardbreakbeforefirstparaPageAndColumn,false,clear);if(status)return status;
         track->subtrack=true;if(callback_tracks)callback_tracks->push_back(track);
         {std::lock_guard<std::mutex> lock(gate);tracks.emplace(track.get(),track);}
-        *output=track.get();*used=track->used;*top_space=track->clearing_space;*bbox=track->bbox;*margin_output=margin.value;margin.value=nullptr;return 0;
+        *output=track.get();*used=track->used;*top_space=(ContainerFlow::current&&ContainerFlow::current->has_outer)?0:track->clearing_space;*bbox=track->bbox;*margin_output=margin.value;margin.value=nullptr;return 0;
     }catch(const std::bad_alloc&){return PTS_tserrOutOfMemory;}
 }
 extern "C" __declspec(dllexport) int WINAPI FsUpdateBottomlessSubtrack(void* context_handle,void* handle,void* segment,int area,void* geometry,int suppress,uint32_t direction,
@@ -1538,7 +1549,7 @@ extern "C" __declspec(dllexport) int WINAPI FsUpdateBottomlessSubtrack(void* con
             std::swap(track->stop,replacement->stop);std::swap(track->forced_progress,replacement->forced_progress);
             track->update=fskupdNew;
         }
-        *used=track->used;*top_space=track->clearing_space;*bbox=track->bbox;*margin_output=margin.value;margin.value=nullptr;*uninterruptible=1;return 0;
+        *used=track->used;*top_space=(ContainerFlow::current&&ContainerFlow::current->has_outer)?0:track->clearing_space;*bbox=track->bbox;*margin_output=margin.value;margin.value=nullptr;*uninterruptible=1;return 0;
     }catch(const std::bad_alloc&){return PTS_tserrOutOfMemory;}
 }
 namespace {
