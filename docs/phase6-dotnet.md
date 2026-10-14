@@ -9626,3 +9626,58 @@ fresh page. Later in-line anchors/cross-paragraph flow, complex center/clear
 policies, figures/tables, comparison/display transfer, balancing/spans/footnotes,
 advanced/optimal/incremental/interruptible algorithms, full bidi/native language
 and broader runtime behavior remain incomplete. The full WPF goal stays active.
+
+## 147. Installed release 24: intact floater deferral
+
+The 2026-10-14 continuation packages section 146 as WindowsDesktop 8.0.0-24.
+Declared/checksummed 0024-deferred-floaters.patch applies after the prior
+23 patches. Clean pinned sources plus all 24 patches match the three committed
+feature files byte for byte. The actual private package files have the same
+SHA-256 hashes. Both source and private package trees rebuild native output,
+inventory and layout and pass native deferral/resource gates, 335 original ABI
+field checks, paragraph-context/line-service regressions and every normal SDK
+consumer gate. Unchanged managed/graphics/printing outputs remain the package
+tree's own source builds.
+
+Validation commands:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+# In the CLANG64 package workspace:
+makepkg --verifysource --force
+source PKGBUILD                 # with srcdir set to this workspace's src/
+_wpf native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+makepkg --repackage --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-24-any.pkg.tar.zst
+/usr/bin/python3 check-staged.py /clang64/lib/dotnet
+bash "$(_driver)/wpf-tests/check-floaters-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-deferred-floaters-sdk-check
+bash "$(_driver)/wpf-tests/check-columns-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-deferred-floaters-columns-sdk-check
+pacman -Q mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap
+sha256sum mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-24-any.pkg.tar.zst
+```
+
+All final commands pass. Staged and installed payload checks cover 42 managed
+implementations/references, eight native libraries, SDK tasks and retained
+legacy WinForms versions. Installed original WPF single/multiple floaters defer
+after preceding text and render intact on the next page. Ideal/Display documents
+complete four pages with all 1000/1028 characters covered once and correct
+original page-number mappings. Disposed floating pages regenerate their colored
+content across GC. Existing placement/wrapping/scrolling edits still pass.
+Installed two-column pagination passes 12 Ideal/9 Display pages with all 1278
+characters covered once. Both installed fixtures pass shared-framework and
+self-contained execution with SDK roots/toolchain PATH removed. Consumer builds
+have zero warnings/errors. Both complete source/private SDK gates also pass all
+other existing consumers, including the approved interim WinForms 7 runtime.
+The existing source-bootstrap.json srcdir provenance warning remains.
+
+Artifact: mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-24-any.pkg.tar.zst.
+SHA-256: 3f3044eae691fdcd4ddcb7babe92be21d0fff825d27a7948d1dd19a97c62c589.
+Recipe commit: msys2-ur 624f234; feature commit: 5d0f406.
+Artifact, recipe, metadata, patch, hashes and validation logs are archived under
+ tmp/wpf8-support/validation/deferred-floaters-package-20261014.
+Imported native coverage remains 103/139 with 36 absent. Oversized/split floater
+content on a fresh page, later inline anchors/cross-paragraph flow, complex
+center/clear policies, figures/tables, comparison/display transfer, balancing/
+span areas/footnotes, advanced/optimal/incremental/interruptible algorithms,
+full bidi/native language and broader behavior remain incomplete. The complete
+WPF goal remains active.
