@@ -42,6 +42,7 @@ struct Run {
     bool shaped=false,hidden=false,tab=false,synthetic=false;
     uint16_t leader=0;
     bool embedded=false,position_used=false,hard_break=false;
+    int format_position=0;
     InlineInit object_handler{};
     ObjDim object_metrics{};
     int break_before=1,break_after=1;
@@ -158,7 +159,7 @@ int format_object(Context& context,Run& run,int position,int margin) {
         (first!=0 && first!=1) || (used!=0 && used!=1)) return LS_InvalidFormatterResult;
     run.width=run.object_metrics.dur; run.widths.assign(run.text.size(),0); run.widths[0]=run.width;
     run.metrics={height.dvAscent,height.dvDescent,height.dvMultiLineHeight,0};
-    run.position_used=used!=0; return LS_None;
+    run.position_used=used!=0;run.format_position=position;return LS_None;
 }
 
 int measure_run(Context& context,Run& run) {
@@ -320,21 +321,33 @@ int tab_target(const Line& line,size_t index,int64_t x,int end_cp,int64_t& targe
     return LS_None;
 }
 
-int layout_tabs(Line& line,int start,int& total) {
-    int64_t x=start;
-    for(size_t i=0;i<line.runs.size();++i) {
-        auto& run=line.runs[i];
-        if(run.hard_break) { x=start; continue; }
-        if(run.tab && !run.hidden) {
-            int64_t target=0;
-            int status=tab_target(line,i,x,INT_MAX,target,run.leader); if(status) return status;
-            if(target>x+INT_MAX || target>INT_MAX) return LS_InvalidFormatterResult;
-            run.width=static_cast<int>(target-x); run.widths.assign(1,run.width);
+int layout_tabs(Line& line,int start,int& total,bool position_objects=true,bool* object_failure=nullptr) {
+    if(object_failure)*object_failure=false;
+    // The field width determines an aligned tab's pen; a flexible object can
+    // depend on that pen. Iterate retained dimensions until both agree exactly
+    // in native units, and reject nonconvergent callbacks without publishing.
+    for(int attempt=0;attempt<64;++attempt) {
+        int64_t x=start;bool changed=false;
+        for(size_t i=0;i<line.runs.size();++i) {
+            auto& run=line.runs[i];
+            if(run.hard_break){x=start;continue;}
+            if(run.tab&&!run.hidden) {
+                int64_t target=0;
+                int status=tab_target(line,i,x,INT_MAX,target,run.leader);if(status)return status;
+                if(target>x+INT_MAX||target>INT_MAX)return LS_InvalidFormatterResult;
+                run.width=int(target-x);run.widths.assign(1,run.width);
+            }
+            if(position_objects&&run.embedded&&run.position_used&&run.format_position!=x) {
+                int status=format_object(*line.context,run,int(x),LS_IdealInfiniteWidth);if(status){if(object_failure)*object_failure=true;return status;}
+                changed=true;
+            }
+            x+=run.width;
+            if(x<INT_MIN||x>INT_MAX)return LS_InvalidFormatterResult;
         }
-        x+=run.width;
-        if(x<INT_MIN || x>INT_MAX) return LS_InvalidFormatterResult;
+        if(!changed){total=int(x);return LS_None;}
     }
-    total=static_cast<int>(x); return LS_None;
+    if(object_failure)*object_failure=true;
+    return LS_InvalidFormatterResult;
 }
 
 int candidate_width(const Line& line,int count,int visible,int64_t& width) {
@@ -1060,11 +1073,9 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
             else if(tab!=text+count) count=static_cast<int>(tab-text);
             run.text.resize(count); run.widths.resize(count);
             if(run.embedded) {
-                status=layout_tabs(*result,properties.durLeft,total); if(status) return status;
+                status=layout_tabs(*result,properties.durLeft,total,false); if(status) return status;
                 status=format_object(*context,run,total,LS_IdealInfiniteWidth);
                 if(status) return status;
-                if(run.position_used && std::any_of(result->runs.begin(),result->runs.end(),[](const Run& value) { return value.tab; }) &&
-                    std::any_of(context->tabs.begin(),context->tabs.end(),[](const LsTbd& value) { return value.lskt!=0; })) return LS_NotImplemented;
             } else status=measure_run(*context,run);
             if(status) return status;
             result->info.dvpAscent=std::max(result->info.dvpAscent,run.metrics.dvAscent);
@@ -1082,8 +1093,9 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
             if(limit>0 && position-cp>=limit) ended=true;
         }
         if(!ended) return LS_TooLongParagraph;
-        bool needs_tab_layout=false;
-        status=layout_tabs(*result,properties.durLeft,total);
+        bool needs_tab_layout=false,object_failure=false;
+        status=layout_tabs(*result,properties.durLeft,total,true,&object_failure);
+        if(object_failure)return status;
         if(status) {
             // With no incremental fallback, a long full field can miss all
             // explicit stops even though a shorter wrapped field fits one.
@@ -1122,7 +1134,8 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
                 if(truncated) { candidate.info.endr=0; candidate.has_terminator=false; }
                 if(hyphen_cut){candidate.runs.push_back(std::move(hyphen));candidate.info.endr=1;candidate.has_terminator=false;}
 
-                status=layout_tabs(candidate,properties.durLeft,total);
+                status=layout_tabs(candidate,properties.durLeft,total,true,&object_failure);
+                if(object_failure)return status;
                 if(status) {
                     if(status==LS_InvalidFormatterResult && cut>1 && !context->tabs.empty()) { max_cut=cut-1; continue; }
                     return status;
@@ -1193,6 +1206,13 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
         if(minmax) {
             status=paragraph_widths(*result,total,trailing,minimum_total,minimum_trailing);if(status)return status;
         }
+        // Remeasurement can also change object ascent/descent, so publish only
+        // metrics from the final retained layout.
+        result->info.dvpAscent=result->info.dvpDescent=result->info.dvpMultiLineHeight=0;
+        for(const auto& run:result->runs){result->info.dvpAscent=std::max(result->info.dvpAscent,run.metrics.dvAscent);result->info.dvpDescent=std::max(result->info.dvpDescent,run.metrics.dvDescent);result->info.dvpMultiLineHeight=std::max(result->info.dvpMultiLineHeight,run.metrics.dvMultiLineHeight);}
+        int64_t combined_height=int64_t(result->info.dvpAscent)+result->info.dvpDescent;
+        if(combined_height>INT_MAX)return LS_InvalidFormatterResult;
+        result->info.dvpMultiLineHeight=std::max(result->info.dvpMultiLineHeight,int(combined_height));
         result->info.dvrAscent=result->info.dvpAscent;
         result->info.dvrDescent=result->info.dvpDescent;
         result->info.dvrMultiLineHeight=result->info.dvpMultiLineHeight;

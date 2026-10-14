@@ -1,0 +1,35 @@
+--- a/src/Microsoft.DotNet.Wpf/src/PresentationCore/MS/internal/TextFormatting/TextStore.cs
++++ b/src/Microsoft.DotNet.Wpf/src/PresentationCore/MS/internal/TextFormatting/TextStore.cs
+@@ -79,6 +79,7 @@
+ 
+         private int                     _formatWidth;               // formatting width LS sees
+         private SpanVector              _textObjectMetricsVector;   // inline object cache
++        private Dictionary<int, (int Position, int Margin)> _textObjectMetricPositions;
+ 
+         internal static LSRun[]          ControlRuns;               // Control text runs e.g. Bidi reversal
+ 
+@@ -2348,7 +2349,11 @@
+ 
+             TextEmbeddedObjectMetrics metrics = (TextEmbeddedObjectMetrics)rider.CurrentElement;
+ 
+-            if(metrics == null)
++            bool positionDependent = !textObject.HasFixedSize;
++            bool samePosition = !positionDependent || (_textObjectMetricPositions != null
++                && _textObjectMetricPositions.TryGetValue(cpFirst, out var previousPosition)
++                && previousPosition == (currentPosition, rightMargin));
++            if(metrics == null || !samePosition)
+             {
+                 int widthLeft = _formatWidth - currentPosition;
+ 
+@@ -2379,6 +2384,11 @@
+                 }
+ 
+                 _textObjectMetricsVector.SetReference(cpFirst, textObject.Length, metrics);
++                if (positionDependent)
++                {
++                    _textObjectMetricPositions ??= new Dictionary<int, (int Position, int Margin)>();
++                    _textObjectMetricPositions[cpFirst] = (currentPosition, rightMargin);
++                }
+             }
+ 
+             Debug.Assert(metrics != null);

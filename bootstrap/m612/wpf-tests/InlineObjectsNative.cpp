@@ -9,6 +9,7 @@
 static std::wstring text=L"a\ufffcb\u2029";
 static int after_first=2,before_second=2,error=0,formats=0,draws=0;
 static LSPOINT object_origin{};
+static bool flexible=false;static int last_position=0,flexible_failure=0;
 static void require(bool value,const char* why) { if(!value)throw std::runtime_error(why); }
 static int WINAPI pap(void*,int,LsPap* value) { *value={};value->grpf=0x40;return 0; }
 static int WINAPI props(void*,int,int,LsLineProps* value) { *value={};value->durLeft=4;return 0; }
@@ -20,12 +21,18 @@ static int WINAPI metrics(void*,uint32_t,int,int,LsTxM* value) { *value={12,8,20
 static int WINAPI widths(void*,uint32_t,int,WCHAR*,int count,int,int,int* values,int* total,int* fitted) { *total=10*count;*fitted=count;for(int i=0;i<count;++i)values[i]=10;return 0; }
 static int WINAPI draw_text(void*,uint32_t,LSPOINT*,WCHAR*,int*,int,int,uint32_t,LSPOINT*,LsHeights*,int,LSRECT*) { return 0; }
 static int WINAPI draw_object(void*,uint32_t id,LSPOINT* point,int flow,int width) {
-    if(flow || width!=(text.size()==3?50:70) || id<5)return LS_ClientAbort;
+    if(flow || width!=(flexible?(800-last_position)/2:text.size()==3?50:70) || id<5)return LS_ClientAbort;
     object_origin=*point;++draws;return error==3?LS_ClientAbort:0;
 }
 static int WINAPI format_object(void*,uint32_t id,int cp,int position,int margin,ObjDim* dim,int* first,int* used,int* before,int* after) {
     if(id!=static_cast<uint32_t>(cp+5) || margin!=LS_IdealInfiniteWidth || position<4)return LS_ClientAbort;
-    ++formats;if(error==1)return LS_ClientAbort;
+    ++formats;if(error==1||(flexible_failure==1&&formats==2))return LS_ClientAbort;
+    if(flexible) {
+        last_position=position;
+        int width=flexible_failure==2?(position>=300?400:100):(800-position)/2;
+        dim->dur=width;int height=20+width/10;dim->heightsRef=dim->heightsPres={height-5,5,height};
+        *first=0;*used=1;*before=*after=2;return 0;
+    }
     dim->heightsRef=dim->heightsPres={20,10,30};dim->dur=error==2?-1:text.size()==3?50:70;
     *first=cp==0;*used=0;*before=cp==1&&text.size()==3?before_second:2;*after=cp==0&&text.size()==3?after_first:2;
     return 0;
@@ -75,6 +82,24 @@ int main(int argc,char** argv) {
             require(LoCreateLine(context,0,0,1,8,nullptr,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==3&&measured.upStartTrailing==104&&measured.upMinStartTrailing==(allowed?54:104),"min/max respects source object break table and atomic widths");
             require(LoDisposeLine(line,FALSE)==0,"object min/max line disposal");
         }
+        using SetTabs=int(WINAPI*)(void*,int,int,const LsTbd*);PROC(LoSetTabs,SetTabs);
+        text=L"a\t\ufffcb.cd\u2029";flexible=true;
+        for(int alignment:{0,1,2,4}) {
+            LsTbd tab{alignment,600,0,L'.'};formats=0;
+            require(LoSetTabs(context,80,1,&tab)==0&&LoCreateLine(context,0,0,800,0,nullptr,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==int(text.size()),"position-dependent object and aligned field settle on the complete source");
+            LsQSubInfo sub{};LsTextCell cell{};require(LoQueryLineCpPpoint(line,2,1,&sub,&depth,&cell)==0,"settled object query");
+            int expected=alignment==0?100:alignment==1?146:alignment==2?239:209;
+            int start=alignment==0?600:alignment==1?507:alignment==2?321:381;
+            int height=20+expected/10;
+            std::printf("aligned native kind=%d pos=%d width=%d last=%d formats=%d ascent=%d descent=%d height=%d\n",alignment,cell.pointUvStartCell.x,cell.dupCell,last_position,formats,info.dvpAscent,info.dvpDescent,info.dvpMultiLineHeight);
+            require(cell.pointUvStartCell.x==start&&cell.dupCell==expected&&last_position==start&&formats<=64&&info.dvpAscent==height-5&&info.dvpDescent==8&&info.dvpMultiLineHeight==height+3,"exact settled object pen/width, bounded format calls and updated line ascent/descent/height");
+            draws=0;require(LoDisplayLine(line,&origin,1,&clip)==0&&draws==1&&object_origin.x==start+10,"settled object draw uses accepted pen and dimensions");
+            require(LoDisposeLine(line,FALSE)==0,"settled object disposal");
+        }
+        LsTbd right_tab{2,600,0,L'.'};require(LoSetTabs(context,80,1,&right_tab)==0,"failure-case right tab");
+        for(int bad:{1,2}){flexible_failure=bad;formats=0;line=reinterpret_cast<void*>(1);require(LoCreateLine(context,0,0,800,0,nullptr,&info,&line,&depth,&measured)==(bad==1?LS_ClientAbort:LS_InvalidFormatterResult)&&!line&&formats<=65,"callback error and oscillating position-dependent geometry fail with empty outputs and bounded work");}
+        flexible_failure=0;formats=0;require(LoCreateLine(context,0,0,800,0,nullptr,&info,&line,&depth,&measured)==0&&LoDisposeLine(line,FALSE)==0,"object callback failure leaves context reusable");
+        std::puts("native aligned flexible objects: exact anchors/pens/widths/final heights, convergence bounds, populated failure/oscillation isolation and context reuse PASS");
         require(LoDestroyContext(context)==0,"object context teardown");
         std::puts("native InlineInit/ObjDim ABI, format/draw identity/geometry, atomic query, all 16 source break combinations, errors and ownership PASS");return 0;
     } catch(const std::exception& e) { std::printf("FAIL: %s\n",e.what());return 1; }

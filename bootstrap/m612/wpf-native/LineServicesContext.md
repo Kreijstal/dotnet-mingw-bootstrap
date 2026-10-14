@@ -109,9 +109,10 @@ Wrapping applies the original LineBreakCondition combination table at object
 edges, including all 16 adjacent-object cases. Public tests cover fixed/flexible
 sizes, a three-character source span, remaining width, caret/selection, wrapping,
 callback exceptions and original TextBlock InlineUIContainer rendering/hit tests
-across GC. Position-dependent objects following aligned tabs still explicitly
-reject while that circular measurement path is unfinished; ordinary text and
-left/incremental-tab positions use retained preceding geometry.
+across GC. Position-dependent objects following aligned tabs remeasure at the
+current pen until retained field widths and positions agree. Full fields and wrapped
+prefixes settle independently; callback failures and nonconvergence remain explicit
+errors, while ordinary missing-tab-fit errors can use the wrapping fallback.
 
 Regular inter-word justification requests original nominal/glyph expansion
 callbacks using source-generated 28-byte neighbor, 48-byte character and 80-byte
@@ -185,3 +186,19 @@ formatting modes/directions, single/multiple columns, exact source/page completi
 caret/point queries, real raster/GC, plus direct mixed/interword caret/selection
 comparisons. Full ink expansion, compression and other advanced algorithms remain
 unfinished.
+
+Aligned flexible objects retain their last measured pen. Tab layout iterates the
+original object callbacks until exact native positions and dimensions agree,
+within64 passes. Initial prefix collection does not prematurely settle incomplete
+fields. Final line metrics include the accepted object ascent/descent and their
+combined height. Fixed-size callbacks keep their original single-size caching.
+The managed TextStore cache keys flexible metrics by source CP, pen and margin;
+a failed measurement cannot publish a new cache key.
+
+Native fixtures check exact Left/Center/Right/Character geometry, integer fixed
+points, final heights/drawing, populated callback failure, bounded oscillation
+rejection and context reuse. Public fixtures check both formatting modes, eight
+complete-field and eight wrapping cases, source ownership, remaining width,
+caret/selection, real raster and GC; initial/reformat/draw exceptions and reuse are
+also checked. Display endpoints follow the original independent pixel rounding;
+assertions use those exact rules rather than a larger arbitrary tolerance.
