@@ -13198,3 +13198,116 @@ not yet been enabled. Compound subsegment topology and pre/post reform selection
 remain separate unsupported behaviors. Follow-up implementation must preserve
 UTF-16 ranges, suggestion/verification modes, custom lexicon scope and independent
 snapshot lifetimes while matching actual provider error spans.
+
+
+## 207. Legacy whole-input multiword spelling and exact correction actions
+
+Source feature commit64aa3e9 implements NLG IsSpellSuggestingMWEs/MultiWordMode.
+Previously enabling the original option returned E_NOTIMPL. With the option on,
+spelling uses Windows ComprehensiveCheck on the whole explicit input, preserving
+contextual errors such as repeated words. Native provider error spans become
+incorrect segments in the original UTF-16 coordinate space, while unaffected ICU
+word fragments and original sentence ordering remain. Error spans are validated
+and sorted before publication; overlapping ranges/actions outside the API contract
+fail explicitly.
+
+The original Windows corrective-action contract is preserved: explicit replacements
+are returned unchanged, deletions provide an owned empty-string suggestion, and
+suggestion-list actions use the original provider enumeration. Verification has no
+suggestions; wordbreaking does not invoke spelling even with multiword enabled.
+Disabling the option restores independent-word checking. Embedded NUL input spans
+are checked separately with offsets retained into the complete source buffer.
+Culture-scoped custom lexicons suppress ordinary spelling errors while contextual
+deletion remains meaningful. No persistent OS dictionary mutation is added.
+
+The strengthened native fixture fails on installed release51 at the formerly
+unsupported multiword option. The changed source library passes real repeated-word
+checks, deletion suggestion ABI, surrogate and embedded-NUL ranges, verify/no-suggest
+mode, source/mode changes after enumeration creation, independent snapshot clones,
+invalid option VARIANT types and unchanged unsupported reform selection. Existing
+COM HRESULT/class/IID, unavailable culture, owner-release/reload and snapshot tests
+remain active.
+
+The original NLG managed wrapper passes whole-input context/deletion/replacement,
+UTF-16/surrogate/NUL ranges, suggestion/verification/wordbreaking modes and disable
+transitions. Its three provider lifetimes run shared and portable (six complete
+multiword markers). UTF-8/UTF-16 LE/BE lexicons, culture scope, removal/release and
+GC checks pass, including dictionary acceptance/removal in both independent and
+whole-text modes. Existing public WinRT and legacy TextBox spelling detection,
+suggestions/correction, IgnoreAll and custom dictionary tests also pass in both
+SDK execution modes.
+
+Exact focused source commands in the standard CLANG64 source environment:
+
+```sh
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-spelling-native
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-spell-check-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/multiword-spelling-sdk-check
+```
+
+Both final commands exit zero, with zero managed build/publish warnings/errors.
+Overlay shared/runtime native copies were unlinked before replacing them with the
+rebuilt library. Source evidence is archived under
+`tmp/wpf8-support/validation/legacy-multiword-spelling-20261014`.
+Clean pinned source plus all52 patches reproduce all four feature files. The new
+patch SHA-256 is
+75d1577cb578c665af3c120d3b1677a1a07d0adacdf8366cb22bb64dafa056e6.
+This enables the original multiword detection option, not compound subsegment
+topology or legacy German/French pre/post reform selection. Those behaviors and the
+other documented WPF native gaps remain unfinished; the full goal stays active.
+
+
+## 208. Installed release52: original legacy multiword spelling
+
+The 2026-10-14 continuation packages and installs WindowsDesktop8.0.0-52 from
+section207's source commit64aa3e9. Recipe commit a88ba90 declares
+0052-legacy-multiword-spelling.patch with SHA-256
+75d1577cb578c665af3c120d3b1677a1a07d0adacdf8366cb22bb64dafa056e6.
+Clean pinned-source replay of all52 patches matches all four feature files.
+Regenerated .SRCINFO has59 source/hash declarations and all55 locally available
+input hashes match.
+
+The validated clean LLVM23 tree from section205 receives the new patch, rebuilds
+its native library and passes source verification, inventory, native spelling
+checks and desktop layout. Its refreshed SDK overlay passes the original NLG
+multiword context/deletion/replacement/range/mode tests across six provider runs,
+plus custom lexicon culture/encoding/removal/lifetime regressions. Public WinRT
+and legacy TextBox spelling checks pass shared and portable execution. Normal
+source BAML/window/raster consumers also pass both modes.
+
+Exact commands in the CLANG64 private tree after sourcing PKGBUILD:
+
+```sh
+makepkg --verifysource --noconfirm
+patch --batch --forward -d "$(_tree)" -Np1 -i "$PWD/0052-legacy-multiword-spelling.patch"
+_wpf native-win32 inventory check-spelling-native layout
+bash ~/wpfboot/multiword-private-sdk-checks.sh
+bash ~/wpfboot/install-multiword-spelling.sh
+```
+
+All final commands exit zero. The install script uses ordinary dependency-checked
+makepkg --repackage --force --noconfirm on the validated source payload, then installs
+with pacman. package() and installed payload checks both pass42 implementation/
+reference pairs, native hashes, SDK tasks and retained legacy framework versions.
+Installed NLG tests repeat all six provider runs, both public spelling providers
+repeat shared/portable checks, and normal BAML/window/raster consumers pass both
+modes. Source hyphenation audit retains81 hashes,39 notices and exact regenerated
+embedded headers. Native import inventory remains133/139, with six upstream
+#if NEVER absent declarations. Managed builds/publishes have zero warnings/errors.
+
+The installed artifact and exact scripts/private/installed logs are archived under
+`tmp/wpf8-support/validation/legacy-multiword-spelling-package-20261014`:
+
+```text
+mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-52-any.pkg.tar.zst
+SHA-256: 63e6bf21fa6d19730aa5cee469e716db04d39be216cae5d6d2746e5143bd2ee7
+Bytes: 58908386
+```
+
+The downloaded hash and byte count match the installed host. These are focused
+regressions for the NLG change; section205 retains full37-consumer and WinForms
+validation of the clean source payload before the change. Full37-consumer checks
+were not repeated this turn. Compound subsegment topology, legacy reform selection,
+complex nested layout/margin conformance, vertical/polygon/object layouts and other
+documented native behavior remain incomplete or unproven. Full physical printing,
+WinForms8 metadata bootstrapping and current Greenshot compatibility remain open.
+The full WPF goal stays active.
