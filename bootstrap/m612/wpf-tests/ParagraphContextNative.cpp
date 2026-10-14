@@ -16,7 +16,7 @@ static int WINAPI create_object(void* client,void* context,FSCBKOBJ* callbacks,u
 }
 static int WINAPI destroy_object(void* value){if(value!=reinterpret_cast<void*>(100)&&value!=reinterpret_cast<void*>(101))return PTS_tserrInvalidParameter;++destroys;return 0;}
 static int lines_created=0,lines_destroyed=0,breaks_destroyed=0,clients_created=0,clients_destroyed=0,fail_line=-1,columns=1,available_height=80,invalid_columns=false,hard_break=0,keep_mode=0,keep_next=0,para_count=2;
-static bool containers=false,lose_subtrack=false;
+static bool containers=false,lose_subtrack=false,oversized_group=false;
 static int balance_requested=0,balancing_error=0;
 using BalanceTrack=int(WINAPI*)(void*,void*,uint32_t,int*,int*,int*);
 using BalancePage=int(WINAPI*)(void*,void*,uint32_t*,int*,int*,int*);
@@ -118,9 +118,17 @@ static int WINAPI line_format(void*,void*,void* name,int,int dcp,void* incoming,
     if(inline_anchor_mode){if(start!=(width==100?10:50)||(width!=60&&width!=100))return PTS_tserrInvalidParameter;*consumed=std::min(5,10-dcp);if(inline_anchor_mode==2&&dcp==0&&width==60)*consumed=2;*result=dcp+*consumed==10?fsflrEndOfParagraph:fsflrOutOfSpace;}
     if(split_table_cells&&short_table_cell&&dcp==0)*result=fsflrEndOfParagraph;
     if(long_table_cell)*result=dcp+5>=45?fsflrEndOfParagraph:fsflrOutOfSpace;
+    if(oversized_group){*consumed=std::min(5,10-dcp);*result=dcp+*consumed==10?fsflrEndOfParagraph:fsflrOutOfSpace;}
     if(structural_line&&dcp==0){*ascent=*descent=*bbox_width=0;}
     if(lines_created==fail_line)return PTS_tserrCallbackException;
     return 0;
+}
+static int WINAPI line_reconstruct(void* client,void* para,void* name,int area,int dcp,void* incoming,int length,uint32_t direction,
+    int start,int width,int track_start,int track_width,int margin,int hyphen,int left,int right,int first,int last,int suppress,
+    void** line,void** br,int* forced,FSFLRES* result,int* ascent,int* descent,int* bbox,int* bbox_width,int* depend,int* reformat) {
+    if(!oversized_group||length!=1||dcp!=0)return PTS_tserrInvalidParameter;
+    int consumed=0;int status=line_format(client,para,name,area,dcp,incoming,direction,start,width,track_start,track_width,margin,hyphen,left,right,first,last,suppress,line,&consumed,br,forced,result,ascent,descent,bbox,bbox_width,depend,reformat);
+    if(!status){*forced=1;*result=fsflrOutOfSpace;}return status;
 }
 static int WINAPI destroy_line(void*,void*){++lines_destroyed;return 0;}
 static int WINAPI destroy_break(void*,void*){++breaks_destroyed;return 0;}
@@ -175,8 +183,8 @@ static int WINAPI block_handler(void*,int id,void* output) {
     cb.pfnDestroyFloaterContentBreakRecord=reinterpret_cast<void*>(block_destroy_break);cb.pfnGetMCSClientAfterFloater=reinterpret_cast<void*>(block_after);
     return floater_handler(&init,output);
 }
-static int WINAPI attached_count(void*,void* name,int dcp,int* count){*count=(attached_float||attached_figure)&&(!inline_anchor_mode||inline_anchor_mode==6)&&name==reinterpret_cast<void*>(deferred_attachment?102:101)&&dcp==0?(multiple_float?2:1):0;return 0;}
-static int WINAPI attached_objects(void*,void*,int,int capacity,void** names,int* kinds,int* anchors,int* actual,int* ended){if(capacity!=(multiple_float?2:1))return PTS_tserrInvalidParameter;for(int index=0;index<capacity;++index){names[index]=reinterpret_cast<void*>((inline_anchor_mode==6?302:301)+index);kinds[index]=attached_figure?-2:2;anchors[index]=index;}*actual=capacity;*ended=0;return 0;}
+static int WINAPI attached_count(void*,void* name,int dcp,int* count){if(oversized_group&&dcp==1){*count=1;return 0;}*count=(attached_float||attached_figure)&&(!inline_anchor_mode||inline_anchor_mode==6)&&name==reinterpret_cast<void*>(deferred_attachment?102:101)&&dcp==0?(multiple_float?2:1):0;return 0;}
+static int WINAPI attached_objects(void*,void*,int dcp,int capacity,void** names,int* kinds,int* anchors,int* actual,int* ended){if(oversized_group&&dcp==1){if(capacity!=1)return PTS_tserrInvalidParameter;names[0]=reinterpret_cast<void*>(302);kinds[0]=2;anchors[0]=1;*actual=1;*ended=0;return 0;}if(capacity!=(multiple_float?2:1))return PTS_tserrInvalidParameter;for(int index=0;index<capacity;++index){names[index]=reinterpret_cast<void*>((inline_anchor_mode==6?302:301)+index);kinds[index]=attached_figure?-2:2;anchors[index]=index;}*actual=capacity;*ended=0;return 0;}
 static int WINAPI attached_in_line(void*,void*,void*,int first,int limit,int,int,int* count){int anchor=inline_anchor_mode==2?4:2;*count=inline_anchor_mode&&first<=anchor&&anchor<limit?1:0;if(inline_anchor_mode==3)*count=-1;return 0;}
 static int WINAPI inline_objects(void*,void*,void*,int,int,int,int,int capacity,void** names,int* kinds,int* anchors,int* actual){if(capacity!=1)return PTS_tserrInvalidParameter;names[0]=reinterpret_cast<void*>(301);kinds[0]=2;anchors[0]=inline_anchor_mode==2?4:2;*actual=inline_anchor_mode==4?0:1;return inline_anchor_mode==5?PTS_tserrCallbackException:0;}
 static int WINAPI figure_properties(void*,void* client,void* name,int in_line,uint32_t direction,int bottomless,int* width,int* height,FSFIGUREPROPS* props,int* polygons,int* vertices,int* left,int* right,int* top,int* bottom) {
@@ -286,7 +294,7 @@ int main(int argc,char** argv) {
         gen.pfnGetFirstPara=reinterpret_cast<void*>(first_para);gen.pfnGetNextPara=reinterpret_cast<void*>(next_para);gen.pfnGetParaProperties=reinterpret_cast<void*>(para_properties);
         gen.pfnUpdGetParaChange=reinterpret_cast<void*>(source_change);gen.pfnTransferDisplayInfo=reinterpret_cast<void*>(transfer_visual);
         gen.pfnCreateParaclient=reinterpret_cast<void*>(para_client);gen.pfnDestroyParaclient=reinterpret_cast<void*>(destroy_para_client);
-        txt.pfnGetTextProperties=reinterpret_cast<void*>(text_properties);txt.pfnFormatLine=reinterpret_cast<void*>(line_format);
+        txt.pfnGetTextProperties=reinterpret_cast<void*>(text_properties);txt.pfnFormatLine=reinterpret_cast<void*>(line_format);txt.pfnReconstructLineVariant=reinterpret_cast<void*>(line_reconstruct);
         txt.pfnGetNumberAttachedObjectsBeforeTextLine=reinterpret_cast<void*>(attached_count);txt.pfnGetAttachedObjectsBeforeTextLine=reinterpret_cast<void*>(attached_objects);txt.pfnGetNumberAttachedObjectsInTextLine=reinterpret_cast<void*>(attached_in_line);txt.pfnGetAttachedObjectsInTextLine=reinterpret_cast<void*>(inline_objects);
         info.fscbk.cbkfig.pfnGetFigureProperties=reinterpret_cast<void*>(figure_properties);info.fscbk.cbkfig.pfnCalcFigurePosition=reinterpret_cast<void*>(figure_position);
         txt.pfnDestroyLine=reinterpret_cast<void*>(destroy_line);txt.pfnDestroyLineBreakRecord=reinterpret_cast<void*>(destroy_break);
@@ -641,7 +649,15 @@ int main(int argc,char** argv) {
         multiple_opposite=false;float_fail_at=2;reset_page_counts();float_created=float_destroyed=0;
         require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrCallbackException&&!page_handle&&!page_break&&float_created==2&&float_destroyed==2&&clients_created==clients_destroyed,"later populated floater failure releases prior accepted and current speculative attachments");float_fail_at=-1;
         available_height=40;reset_page_counts();float_created=float_destroyed=0;
-        require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrNotImplemented&&!page_handle&&!page_break&&float_created==2&&float_destroyed==2&&clients_created==clients_destroyed,"unsupported multi-floater overflow retains no partial page or attachments");available_height=80;multiple_float=false;
+        oversized_group=true;
+        require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&page_handle&&page_break&&formatted.kstop==fmtrBrokenOutOfSpace,"oversized group retains a real first-object page and continuation");
+        require(FsQueryPageDetails(context,page_handle,&details)==0&&FsQueryTrackParaList(context,details.u.simple.trackdescr.pfstrack,2,paras,&actual_count)==0&&FsQueryLineListSingle(context,paras[0].pfspara,2,lines,&actual_count)==0&&actual_count==1&&lines[0].dcpFirst==0&&lines[0].dcpLim==1&&lines[0].fForceBroken,"anchor-bounded retained prefix uses original reconstruction callback");
+        FSATTACHEDOBJECTDESCRIPTION retained{};require(FsQueryAttachedObjectList(context,paras[0].pfspara,1,&retained,&actual_count)==0&&actual_count==1&&retained.nmp==reinterpret_cast<void*>(301),"first page owns only its accepted source object");
+        clone=page_break;require(FsDestroyPage(context,page_handle)==0,"group continuation survives first page destruction");
+        require(FsCreatePageFinite(context,clone,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&!page_break&&FsQueryPageDetails(context,page_handle,&details)==0&&FsQueryTrackParaList(context,details.u.simple.trackdescr.pfstrack,2,paras,&actual_count)==0,"group resumes on an independent fresh page");
+        require(FsQueryAttachedObjectList(context,paras[0].pfspara,1,&retained,&actual_count)==0&&actual_count==1&&retained.nmp==reinterpret_cast<void*>(302)&&FsQueryLineListSingle(context,paras[0].pfspara,2,lines,&actual_count)==0&&actual_count==2&&lines[0].dcpFirst==1&&lines[1].dcpLim==10,"second object and remaining exact source belong only to resumed page");
+        require(FsDestroyPageBreakRecord(context,clone)==0&&FsDestroyPage(context,page_handle)==0&&float_created==float_destroyed&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"oversized group teardown releases all accepted/speculative callbacks once");
+        oversized_group=false;available_height=80;multiple_float=false;
         for(int deferred_mode:{0,1,2}) {
             deferred_attachment=true;multiple_float=deferred_mode==1;split_attachment=deferred_mode==2;para_count=2;available_height=multiple_float?60:40;reset_page_counts();float_created=float_destroyed=float_records_destroyed=0;
             require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&page_break&&formatted.kstop==fmtrBrokenOutOfSpace,"occupied page defers a floater without consuming its host anchor");

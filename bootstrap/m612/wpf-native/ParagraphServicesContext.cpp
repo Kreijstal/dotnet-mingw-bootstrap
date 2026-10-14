@@ -236,6 +236,7 @@ struct TextData {
     std::vector<AttachedData> attached;
     std::vector<FloatObstacle> inherited;
     int text_used=0;
+    int deferred_anchor=-1;
     std::vector<PendingFloater> pending_floaters;
     ~TextData() {
         erase_text(this);
@@ -533,7 +534,7 @@ int format_attached_objects(const std::shared_ptr<ParaData>& para,int dcp,uint32
         std::shared_ptr<Continuation> next;std::shared_ptr<FloaterBreakData> tail;MarginOwner margin{context};FSFLOATERPROPS props{};
         if(kinds[index]==-2){status=format_figure(child,direction,rect,bottomless,force,deferred);if(status||deferred)return status;props.fskwr=child->figure->props.fskwrap;}
         else {status=format_block_ui(child,direction,rect,nullptr,bottomless,!force,1,fsksuppresshardbreakbeforefirstparaPageAndColumn,next,&margin.value,true,&props,resume?resume->record->handle:nullptr,&tail,previous_page,para->text.get());if(status)return status;}
-        if(next){if(force)return PTS_tserrNotImplemented;deferred=true;return 0;}
+        if(next){if(force&&!attached.empty()){para->text->deferred_anchor=anchors[index];return 0;}if(force)return PTS_tserrNotImplemented;deferred=true;return 0;}
         auto& candidate=attachment_rect(child);
         int64_t placed=candidate.v;
         // Keep each object's requested horizontal edge. If its rectangle
@@ -549,7 +550,7 @@ int format_attached_objects(const std::shared_ptr<ParaData>& para,int dcp,uint32
         if(placed+candidate.dv>INT32_MAX)return PTS_tserrInvalidGeometry;
         int64_t placement_bottom=int64_t(rect.v)+rect.dv;
         if(child->figure&&FigureGeometry::current){auto reference=child->figure->props.fskrefV;if(reference==fskrefPage)placement_bottom=int64_t(FigureGeometry::current->page.v)+FigureGeometry::current->page.dv;else if(reference==fskrefMargin)placement_bottom=int64_t(FigureGeometry::current->margin.v)+FigureGeometry::current->margin.dv;}
-        if(!bottomless&&placed+candidate.dv>placement_bottom){if(force)return PTS_tserrNotImplemented;deferred=true;return 0;}
+        if(!bottomless&&placed+candidate.dv>placement_bottom){if(force&&!attached.empty()){para->text->deferred_anchor=anchors[index];return 0;}if(force)return PTS_tserrNotImplemented;deferred=true;return 0;}
         int64_t shift=placed-candidate.v;
         auto& box=child->desc.fsbbox;
         if(box.fDefined&&(int64_t(box.fsrc.v)+shift<INT32_MIN||int64_t(box.fsrc.v)+shift+box.fsrc.dv>INT32_MAX))return PTS_tserrInvalidGeometry;
@@ -731,7 +732,7 @@ int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const F
         FSBBOX box{};status=FsTransformBbox(props.fswdir,&page,&para->desc.fsbbox,direction,&box);if(!status)para->desc.fsbbox=box;return status;
     }
     auto text=std::make_shared<TextData>(context);text->direction=props.fswdir;text->optimal=props.fOptimizeParagraph!=0;para->text=text;text->inherited=inherited;OptimalPath optimal_path;
-    int dcp=input?input->dcp:props.dcpStartContent,used=0,fit=0,height_hint=0;bool overflow=false,ended=false,deferred=false;
+    int dcp=input?input->dcp:props.dcpStartContent,used=0,fit=0,height_hint=0;bool overflow=false,ended=false,deferred=false,prefix_stop=false;
     std::shared_ptr<LineBreakData> previous=input?input->line_break:nullptr;text->incoming=previous;
     if(input)for(const auto& pending:input->floaters) {
         int max_anchor=-1;
@@ -754,7 +755,7 @@ int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const F
             line.dcpFirst=dcp;line.urStart=line_u;line.dur=line_width;line.vrStart=rect.v+used;
             line.pfsbreakreclineclient=previous?previous->handle:nullptr;line.fTreatedAsFirst=first_in_para;
             int consumed=0,dependent=0,reformat=0;FSFLRES result{};
-            if(props.fOptimizeParagraph) {
+            if(props.fOptimizeParagraph&&text->deferred_anchor<0) {
                 if(optimal_path.width!=line_width||optimal_path.u!=line_u||!optimal_path.lengths.count(dcp)) {
                     status=optimize_text(para,*text,props,dcp,previous,direction,line_u,line_width,rect,optimal_path);if(status)return status;
                 }
@@ -765,12 +766,25 @@ int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const F
             } else status=reinterpret_cast<PtsFormatLine>(cb.pfnFormatLine)(client,para->desc.pfsparaclient,para->desc.nmp,0,dcp,line.pfsbreakreclineclient,direction,
                 line_u,line_width,rect.u,rect.du,rect.u,0,0,0,line.fTreatedAsFirst,0,used==0,
                 &line.pfslineclient,&consumed,&br->handle,&line.fForceBroken,&result,&line.dvrAscent,&line.dvrDescent,&line.urBBox,&line.durBBox,&dependent,&reformat);
+            if(!status&&text->deferred_anchor>dcp&&int64_t(dcp)+consumed>text->deferred_anchor) {
+                if(!cb.pfnReconstructLineVariant)return PTS_tserrInvalidParameter;
+                // First establish the naturally fitting range. Only shorten it
+                // at the deferred anchor; never force earlier text past its width.
+                if(line.pfslineclient)reinterpret_cast<PtsDestroyLine>(cb.pfnDestroyLine)(client,line.pfslineclient);line.pfslineclient=nullptr;
+                if(br->handle)reinterpret_cast<PtsDestroyLineBreakRecord>(cb.pfnDestroyLineBreakRecord)(client,br->handle);br->handle=nullptr;
+                consumed=text->deferred_anchor-dcp;
+                status=reinterpret_cast<PtsReconstructLineVariant>(cb.pfnReconstructLineVariant)(client,para->desc.pfsparaclient,para->desc.nmp,0,dcp,line.pfsbreakreclineclient,consumed,direction,
+                    line_u,line_width,rect.u,rect.du,rect.u,0,0,0,line.fTreatedAsFirst,0,used==0,
+                    &line.pfslineclient,&br->handle,&line.fForceBroken,&result,&line.dvrAscent,&line.dvrDescent,&line.urBBox,&line.durBBox,&dependent,&reformat);
+                line.fForceBroken=1;
+            }
             if(status)return status;
             if(!line.pfslineclient||consumed<=0||line.dvrAscent<0||line.dvrDescent<0||line.durBBox<0||int64_t(line.urBBox)+line.durBBox>INT32_MAX||int64_t(dcp)+consumed>INT32_MAX)return PTS_tserrInvalidClientOutput;
             row_ascent=std::max(row_ascent,line.dvrAscent);row_descent=std::max(row_descent,line.dvrDescent);int64_t height=int64_t(row_ascent)+row_descent;
             if(height>INT32_MAX-int64_t(used)||height>INT32_MAX-int64_t(rect.v)-used)return PTS_tserrInvalidGeometry;
             line.dcpLim=dcp+consumed;object_area.v=line.vrStart;object_area.dv=std::max(0,rect.dv-used);
             status=attached_in_line(para,line,direction,object_area,bottomless,force&&used==0,max_anchor,deferred);if(status)return status;
+            if(text->deferred_anchor>dcp&&line.dcpLim>text->deferred_anchor){retry=true;break;}
             if(!deferred)status=postpone_unconsumed_objects(*text,line,rect,bottomless,deferred);if(status)return status;
             if(deferred)break;
             int next_used=used;std::vector<LineInterval> next_areas;
@@ -778,6 +792,7 @@ int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const F
             bool constrained=false;for(const auto& area:areas)if(std::none_of(next_areas.begin(),next_areas.end(),[&](const LineInterval& next){return next.first<=area.first&&int64_t(next.first)+next.second>=int64_t(area.first)+area.second;})){constrained=true;break;}
             if(next_used>used||constrained){used=next_used;height_hint=std::max(height_hint,int(height));retry=true;break;}
             dcp=line.dcpLim;previous=br;
+            if(text->deferred_anchor>=0&&dcp>=text->deferred_anchor){prefix_stop=true;ended=false;break;}
             ended=result>=fsflrEndOfParagraph&&result<=fsflrEndOfParagraphClearBoth;
             bool soft=result>=fsflrSoftBreak&&result<=fsflrSoftBreakClearBoth;
             if(!ended&&result!=fsflrOutOfSpace&&result!=fsflrOutOfSpaceHyphenated&&!soft)return PTS_tserrNotImplemented;
@@ -788,9 +803,9 @@ int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const F
         row_ends.push_back(text->lines.size());row_heights.push_back(height);
         if(!overflow&&height<=int64_t(rect.dv)-row_used)++fit;else overflow=true;
         used=row_used+height;
-        if(ended||(!bottomless&&overflow&&int(row_ends.size())-fit>=std::max(1,props.cMinLinesAfterBreak)))break;
+        if(ended||prefix_stop||(!bottomless&&overflow&&int(row_ends.size())-fit>=std::max(1,props.cMinLinesAfterBreak)))break;
     }
-    if(!bottomless&&(fit<int(row_ends.size())||deferred)) {
+    if(!bottomless&&(fit<int(row_ends.size())||deferred||prefix_stop)) {
         int fitting=fit;
         if(ended&&int(row_ends.size())-fit<props.cMinLinesAfterBreak)fit=std::max(0,int(row_ends.size())-props.cMinLinesAfterBreak);
         if(fit<props.cMinLinesBeforeBreak)fit=0;

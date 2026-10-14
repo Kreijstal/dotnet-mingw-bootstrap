@@ -1,0 +1,215 @@
+--- a/src/Microsoft.DotNet.Wpf/src/PresentationFramework/MS/Internal/PtsHost/TextParaClient.cs
++++ b/src/Microsoft.DotNet.Wpf/src/PresentationFramework/MS/Internal/PtsHost/TextParaClient.cs
+@@ -613,10 +613,7 @@
+             Line.FormattingContext ctx = new Line.FormattingContext(false, true, true, TextParagraph.TextRunCache);
+             Line line = new Line(Paragraph.StructuralCache.TextFormatterHost, this, Paragraph.ParagraphStartCharacterPosition);
+
+-            if(IsOptimalParagraph)
+-            {
+-                ctx.LineFormatLengthTarget = dcpLim - dcpLine;
+-            }
++            ctx.LineFormatLengthTarget = dcpLim - dcpLine;
+
+             TextParagraph.FormatLineCore(line, breakRecLine, ctx, dcpLine, lineWidth, firstLine, dcpLine);
+
+@@ -1075,10 +1072,7 @@
+             Line.FormattingContext ctx = new Line.FormattingContext(false, true, true, TextParagraph.TextRunCache);
+             Line line = new Line(Paragraph.StructuralCache.TextFormatterHost, this, Paragraph.ParagraphStartCharacterPosition);
+
+-            if(IsOptimalParagraph)
+-            {
+-                ctx.LineFormatLengthTarget = dcpLim - dcpLine;
+-            }
++            ctx.LineFormatLengthTarget = dcpLim - dcpLine;
+
+             TextParagraph.FormatLineCore(line, breakRecLine, ctx, dcpLine, lineWidth, firstLine, dcpLine);
+
+@@ -1666,7 +1660,7 @@
+                     Line line = new Line(Paragraph.StructuralCache.TextFormatterHost, this, Paragraph.ParagraphStartCharacterPosition);
+                     Line.FormattingContext ctx = new Line.FormattingContext(false, PTS.ToBoolean(lineDesc.fClearOnLeft), PTS.ToBoolean(lineDesc.fClearOnRight), TextParagraph.TextRunCache);
+
+-                    if(IsOptimalParagraph)
++                    if(IsOptimalParagraph || lineDesc.fForceBroken != 0)
+                     {
+                         ctx.LineFormatLengthTarget = lineDesc.dcpLim - lineDesc.dcpFirst;
+                     }
+@@ -1763,7 +1757,7 @@
+                         Line line = new Line(Paragraph.StructuralCache.TextFormatterHost, this, Paragraph.ParagraphStartCharacterPosition);
+                         Line.FormattingContext ctx = new Line.FormattingContext(false, PTS.ToBoolean(element.fClearOnLeft), PTS.ToBoolean(element.fClearOnRight), TextParagraph.TextRunCache);
+
+-                        if(IsOptimalParagraph)
++                        if(IsOptimalParagraph || element.fForceBroken != 0)
+                         {
+                             ctx.LineFormatLengthTarget = element.dcpLim - element.dcpFirst;
+                         }
+@@ -2107,7 +2101,7 @@
+                     //  create and format line
+                     Line line = new Line(Paragraph.StructuralCache.TextFormatterHost, this, Paragraph.ParagraphStartCharacterPosition);
+                     Line.FormattingContext ctx = new Line.FormattingContext(false, PTS.ToBoolean(lineDesc.fClearOnLeft), PTS.ToBoolean(lineDesc.fClearOnRight), TextParagraph.TextRunCache);
+-                    if (IsOptimalParagraph)
++                    if(IsOptimalParagraph || lineDesc.fForceBroken != 0)
+                     {
+                         ctx.LineFormatLengthTarget = lineDesc.dcpLim - lineDesc.dcpFirst;
+                     }
+@@ -2218,7 +2212,7 @@
+                     // Create and format line
+                     Line line = new Line(Paragraph.StructuralCache.TextFormatterHost, this, Paragraph.ParagraphStartCharacterPosition);
+                     Line.FormattingContext ctx = new Line.FormattingContext(false, PTS.ToBoolean(elemDesc.fClearOnLeft), PTS.ToBoolean(elemDesc.fClearOnRight), TextParagraph.TextRunCache);
+-                    if (IsOptimalParagraph)
++                    if(IsOptimalParagraph || elemDesc.fForceBroken != 0)
+                     {
+                         ctx.LineFormatLengthTarget = elemDesc.dcpLim - elemDesc.dcpFirst;
+                     }
+@@ -2436,7 +2430,7 @@
+                     Line line = new Line(Paragraph.StructuralCache.TextFormatterHost, this, Paragraph.ParagraphStartCharacterPosition);
+                     Line.FormattingContext ctx = new Line.FormattingContext(false, PTS.ToBoolean(lineDesc.fClearOnLeft), PTS.ToBoolean(lineDesc.fClearOnRight), TextParagraph.TextRunCache);
+
+-                    if(IsOptimalParagraph)
++                    if(IsOptimalParagraph || lineDesc.fForceBroken != 0)
+                     {
+                         ctx.LineFormatLengthTarget = lineDesc.dcpLim - lineDesc.dcpFirst;
+                     }
+@@ -2560,7 +2554,7 @@
+                         Line line = new Line(Paragraph.StructuralCache.TextFormatterHost, this, Paragraph.ParagraphStartCharacterPosition);
+                         Line.FormattingContext ctx = new Line.FormattingContext(false, PTS.ToBoolean(element.fClearOnLeft), PTS.ToBoolean(element.fClearOnRight), TextParagraph.TextRunCache);
+
+-                        if(IsOptimalParagraph)
++                        if(IsOptimalParagraph || element.fForceBroken != 0)
+                         {
+                             ctx.LineFormatLengthTarget = element.dcpLim - element.dcpFirst;
+                         }
+@@ -2639,7 +2633,7 @@
+                     Line line = new Line(Paragraph.StructuralCache.TextFormatterHost, this, Paragraph.ParagraphStartCharacterPosition);
+                     Line.FormattingContext ctx = new Line.FormattingContext(false, PTS.ToBoolean(lineDesc.fClearOnLeft), PTS.ToBoolean(lineDesc.fClearOnRight), TextParagraph.TextRunCache);
+
+-                    if(IsOptimalParagraph)
++                    if(IsOptimalParagraph || lineDesc.fForceBroken != 0)
+                     {
+                         ctx.LineFormatLengthTarget = lineDesc.dcpLim - lineDesc.dcpFirst;
+                     }
+@@ -2805,7 +2799,7 @@
+                         Line line = new Line(Paragraph.StructuralCache.TextFormatterHost, this, Paragraph.ParagraphStartCharacterPosition);
+                         Line.FormattingContext ctx = new Line.FormattingContext(false, PTS.ToBoolean(element.fClearOnLeft), PTS.ToBoolean(element.fClearOnRight), TextParagraph.TextRunCache);
+
+-                        if(IsOptimalParagraph)
++                        if(IsOptimalParagraph || element.fForceBroken != 0)
+                         {
+                             ctx.LineFormatLengthTarget = element.dcpLim - element.dcpFirst;
+                         }
+@@ -2921,7 +2915,7 @@
+                     Line line = new Line(Paragraph.StructuralCache.TextFormatterHost, this, Paragraph.ParagraphStartCharacterPosition);
+                     Line.FormattingContext ctx = new Line.FormattingContext(false, PTS.ToBoolean(lineDesc.fClearOnLeft), PTS.ToBoolean(lineDesc.fClearOnRight), TextParagraph.TextRunCache);
+
+-                    if(IsOptimalParagraph)
++                    if(IsOptimalParagraph || lineDesc.fForceBroken != 0)
+                     {
+                         ctx.LineFormatLengthTarget = lineDesc.dcpLim - lineDesc.dcpFirst;
+                     }
+@@ -3047,7 +3041,7 @@
+                         Line line = new Line(Paragraph.StructuralCache.TextFormatterHost, this, Paragraph.ParagraphStartCharacterPosition);
+                         Line.FormattingContext ctx = new Line.FormattingContext(false, PTS.ToBoolean(element.fClearOnLeft), PTS.ToBoolean(element.fClearOnRight), TextParagraph.TextRunCache);
+
+-                        if(IsOptimalParagraph)
++                        if(IsOptimalParagraph || element.fForceBroken != 0)
+                         {
+                             ctx.LineFormatLengthTarget = element.dcpLim - element.dcpFirst;
+                         }
+@@ -3119,7 +3113,7 @@
+                     Line line = new Line(Paragraph.StructuralCache.TextFormatterHost, this, Paragraph.ParagraphStartCharacterPosition);
+                     Line.FormattingContext ctx = new Line.FormattingContext(false, PTS.ToBoolean(lineDesc.fClearOnLeft), PTS.ToBoolean(lineDesc.fClearOnRight), TextParagraph.TextRunCache);
+
+-                    if(IsOptimalParagraph)
++                    if(IsOptimalParagraph || lineDesc.fForceBroken != 0)
+                     {
+                         ctx.LineFormatLengthTarget = lineDesc.dcpLim - lineDesc.dcpFirst;
+                     }
+@@ -3181,7 +3175,7 @@
+                         Line line = new Line(Paragraph.StructuralCache.TextFormatterHost, this, Paragraph.ParagraphStartCharacterPosition);
+                         Line.FormattingContext ctx = new Line.FormattingContext(false, PTS.ToBoolean(element.fClearOnLeft), PTS.ToBoolean(element.fClearOnRight), TextParagraph.TextRunCache);
+
+-                        if(IsOptimalParagraph)
++                        if(IsOptimalParagraph || element.fForceBroken != 0)
+                         {
+                             ctx.LineFormatLengthTarget = element.dcpLim - element.dcpFirst;
+                         }
+@@ -3239,7 +3233,7 @@
+                     Line.FormattingContext ctx = new Line.FormattingContext(false, PTS.ToBoolean(lineDesc.fClearOnLeft), PTS.ToBoolean(lineDesc.fClearOnRight), TextParagraph.TextRunCache);
+                     Line line = new Line(Paragraph.StructuralCache.TextFormatterHost, this, cpTextParaStart);
+
+-                    if(IsOptimalParagraph)
++                    if(IsOptimalParagraph || lineDesc.fForceBroken != 0)
+                     {
+                         ctx.LineFormatLengthTarget = lineDesc.dcpLim - lineDesc.dcpFirst;
+                     }
+@@ -3284,7 +3278,7 @@
+                     Line.FormattingContext ctx = new Line.FormattingContext(false, PTS.ToBoolean(lineDesc.fClearOnLeft), PTS.ToBoolean(lineDesc.fClearOnRight), TextParagraph.TextRunCache);
+                     Line line = new Line(Paragraph.StructuralCache.TextFormatterHost, this, cpTextParaStart);
+
+-                    if(IsOptimalParagraph)
++                    if(IsOptimalParagraph || lineDesc.fForceBroken != 0)
+                     {
+                         ctx.LineFormatLengthTarget = lineDesc.dcpLim - lineDesc.dcpFirst;
+                     }
+@@ -3341,7 +3335,7 @@
+             Line.FormattingContext ctx = new Line.FormattingContext(false, PTS.ToBoolean(lineDesc.fClearOnLeft), PTS.ToBoolean(lineDesc.fClearOnRight), TextParagraph.TextRunCache);
+             Line line = new Line(Paragraph.StructuralCache.TextFormatterHost, this, cpTextParaStart);
+
+-            if(IsOptimalParagraph)
++            if(IsOptimalParagraph || lineDesc.fForceBroken != 0)
+             {
+                 ctx.LineFormatLengthTarget = lineDesc.dcpLim - lineDesc.dcpFirst;
+             }
+@@ -3633,7 +3627,7 @@
+                         Line.FormattingContext ctx = new Line.FormattingContext(false, PTS.ToBoolean(element.fClearOnLeft), PTS.ToBoolean(element.fClearOnRight), TextParagraph.TextRunCache);
+                         Line line = new Line(Paragraph.StructuralCache.TextFormatterHost, this, cpTextParaStart);
+
+-                        if(IsOptimalParagraph)
++                        if(IsOptimalParagraph || element.fForceBroken != 0)
+                         {
+                             ctx.LineFormatLengthTarget = element.dcpLim - element.dcpFirst;
+                         }
+@@ -3702,7 +3696,7 @@
+                         Line.FormattingContext ctx = new Line.FormattingContext(false, PTS.ToBoolean(element.fClearOnLeft), PTS.ToBoolean(element.fClearOnRight), TextParagraph.TextRunCache);
+                         Line line = new Line(Paragraph.StructuralCache.TextFormatterHost, this, cpTextParaStart);
+
+-                        if(IsOptimalParagraph)
++                        if(IsOptimalParagraph || element.fForceBroken != 0)
+                         {
+                             ctx.LineFormatLengthTarget = element.dcpLim - element.dcpFirst;
+                         }
+@@ -3806,7 +3800,7 @@
+                     Line.FormattingContext ctx = new Line.FormattingContext(false, PTS.ToBoolean(lineDesc.fClearOnLeft), PTS.ToBoolean(lineDesc.fClearOnRight), TextParagraph.TextRunCache);
+                     Line line = new Line(Paragraph.StructuralCache.TextFormatterHost, this, cpTextParaStart);
+
+-                    if(IsOptimalParagraph)
++                    if(IsOptimalParagraph || lineDesc.fForceBroken != 0)
+                     {
+                         ctx.LineFormatLengthTarget = lineDesc.dcpLim - lineDesc.dcpFirst;
+                     }
+@@ -3933,7 +3927,7 @@
+             Line line = new Line(Paragraph.StructuralCache.TextFormatterHost, this, Paragraph.ParagraphStartCharacterPosition);
+             Line.FormattingContext ctx = new Line.FormattingContext(false, PTS.ToBoolean(lineDesc.fClearOnLeft), PTS.ToBoolean(lineDesc.fClearOnRight), TextParagraph.TextRunCache);
+
+-            if(IsOptimalParagraph)
++            if(IsOptimalParagraph || lineDesc.fForceBroken != 0)
+             {
+                 ctx.LineFormatLengthTarget = lineDesc.dcpLim - lineDesc.dcpFirst;
+             }
+@@ -3997,7 +3991,7 @@
+                         Line.FormattingContext ctx = new Line.FormattingContext(false, PTS.ToBoolean(element.fClearOnLeft), PTS.ToBoolean(element.fClearOnRight), TextParagraph.TextRunCache);
+                         Line line = new Line(Paragraph.StructuralCache.TextFormatterHost, this, cpTextParaStart);
+
+-                        if(IsOptimalParagraph)
++                        if(IsOptimalParagraph || element.fForceBroken != 0)
+                         {
+                             ctx.LineFormatLengthTarget = element.dcpLim - element.dcpFirst;
+                         }
+@@ -4132,7 +4126,7 @@
+                 Line line = new Line(Paragraph.StructuralCache.TextFormatterHost, this, Paragraph.ParagraphStartCharacterPosition);
+                 Line.FormattingContext ctx = new Line.FormattingContext(false, PTS.ToBoolean(element.fClearOnLeft), PTS.ToBoolean(element.fClearOnRight), TextParagraph.TextRunCache);
+
+-                if(IsOptimalParagraph)
++                if(IsOptimalParagraph || element.fForceBroken != 0)
+                 {
+                     ctx.LineFormatLengthTarget = element.dcpLim - element.dcpFirst;
+                 }
