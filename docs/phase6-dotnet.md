@@ -12561,37 +12561,73 @@ subpage layouts, full bidi/optimizer conformance and legacy multiword/reform
 spelling controls remain unfinished. The WPF packaging goal stays active.
 
 
-## 195. Release 48 private validation pending build-host SSH recovery
+## 195. Installed release 48: source reverse-object callback registration
 
-Release 48's recipe declares 0048-native-reverse-object-handler.patch (SHA-256
-2935f36d1ea9421efbc9aeb7843f448ecdf0baff19e5c59f460a001d0caaff7f), matching
-source feature commit 9e223ef. Its prepare stage applies all 48 patches, and
-check() now includes the native/managed Line Services context gate. Clean replay
-matches all ten feature files; the 51 locally available input hashes pass.
-Private source files were synchronized to those same final feature bytes.
+The 2026-10-14 continuation packages and installs WindowsDesktop 8.0.0-48 from
+source feature commit 9e223ef. Recipe commit c8462d2 declares
+0048-native-reverse-object-handler.patch (SHA-256
+2935f36d1ea9421efbc9aeb7843f448ecdf0baff19e5c59f460a001d0caaff7f). Clean pinned
+source plus all 48 patches reproduce all ten feature files. The regenerated
+.SRCINFO has 55 sources and 55 hashes; all 51 locally available input hashes pass.
+The recipe check now includes the native/managed Line Services context gate.
 
-After the complete source suite passed, private validation was launched with:
+Private validation completed across a host reboot and an MSYS2 toolchain upgrade.
+Its first log proves native context/line/paragraph checks, the original 482-field
+paragraph ABI, native inventory and layout. After authoritative process inspection
+confirmed the interrupted job had ended, the resumed SDK run passed the normal
+WPF shared/portable BAML/window checks and all 35 feature gates. Its subsequent
+WinForms project generation failed during the host's Python package update.
+After the update completed, Python imports and package integrity passed; the
+narrow WinForms SDK retry passed both shared and portable executions. Together
+these logs prove all 36 WPF consumers and both interim WinForms executions.
+There was no feature-code change between those validation segments.
+
+Exact private continuation and final packaging commands, in the CLANG64 private
+recipe workspace after sourcing PKGBUILD:
 
 ```sh
-# CLANG64 private recipe workspace after sourcing PKGBUILD:
-makepkg --verifysource --noconfirm
 _wpf native-win32 inventory check-lineservices-context check-lineservices-line-native check-paragraph-context-native check-paragraph-context layout check-sdk
+_wpf check-sdk
+bash "$(_driver)/winforms-tests/check-sdk.sh" "$(_wpfbuild)/sdk-check-root" "$(_wpfbuild)/winforms-sdk-check"
 makepkg --printsrcinfo > .SRCINFO
+bash ~/wpfboot/install-reverse-object.sh
 ```
 
-The remote job's SSH connection then reset (local session 85131). Subsequent
-connections to win11 (192.168.188.22) were refused on TCP 22, while RDP TCP 3389
-remained reachable. Private validation's remote state is unknown: connection loss
-is not evidence that the job terminated. Inspect its process/log before resuming
-or restarting after SSH recovery. No release48 package or installation has been
-claimed; installed release47 remains the last verified package.
+The host upgraded LLVM from 22.1.8 to 23.1.3 and removed the ABI-pinned source-built
+C++/CLI compiler package during validation. Reinstalling the saved compiler
+correctly failed its LLVM 22 dependency without changing the system. The private
+WPF payload was already compiled with the approved source-built compiler and
+fully validated; packaging does not invoke that compiler. The archived install
+script verifies every runtime dependency and all other makedepends with pacman -T,
+then runs makepkg --repackage --force --noconfirm --nodeps on that validated tree.
+This explicitly skips the unused compiler dependency check only for this
+repackage operation. The recipe still requires C++/CLI for a fresh source build;
+LLVM was not downgraded and no dependency was falsified. The makepkg warning about
+source-directory references is confined to source-bootstrap.json provenance.
 
-The pending log is `~/wpfboot/reverse-object-private-validation.log`. The local
-reviewable recipe, exact future install/check script and validation-progress.json
-are archived under
-`tmp/wpf8-support/validation/native-reverse-object-handler-package-20261014`.
-After private validation finishes successfully, regenerate/copy final .SRCINFO,
-run the archived install script, verify installed shared/portable reverse/bidi/
-list-marker consumers and source/native inventory, archive the artifact with its
-host/local hash, then commit only the WindowsDesktop recipe paths. The WPF
-packaging goal stays active.
+The install script exits successfully after producing and installing the archive.
+package() and the installed payload check both pass with 42 managed implementation/
+reference pairs, native hashes, SDK tasks and retained legacy versions. Installed
+reverse-object, bidi and list-marker consumers each pass normal shared-framework
+build/run and portable self-contained publish/run with SDK roots removed. The
+reverse-handler fixture passes twice, including real transitions, GC and stale
+ownership rejection. Installed hyphenation verifies 81 source hashes, 39 original
+notices and exact regenerated embedded dictionary headers. Installed native
+inventory reports 133/139 imported APIs; all six absent declarations are upstream
+#if NEVER. API presence does not prove complete behavior.
+
+Artifact and exact scripts/logs are archived under
+`tmp/wpf8-support/validation/native-reverse-object-handler-package-20261014`:
+
+```text
+mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-48-any.pkg.tar.zst
+SHA-256: 9f41584777922fc9bda993ca3b4e7911b3f0c08defea2532a4a87b0211091ec9
+Bytes: 58910021
+```
+
+The downloaded artifact's hash and size equal the host artifact. Source evidence
+remains under `tmp/wpf8-support/validation/native-reverse-object-handler-20261014`.
+General polygon/object/table/subpage layouts, full bidi/optimizer conformance,
+legacy compound/multiword/reform spelling and full physical printing remain
+unsupported or unproven. WinForms 8 still needs its source metadata generator;
+the approved interim build remains WinForms 7. The full WPF goal stays active.
