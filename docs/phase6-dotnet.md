@@ -13490,3 +13490,107 @@ upstream #if NEVER. General polygon/object/table/subpage behavior, full bidi and
 optimizer conformance, complex margin collapse, spelling reform and physical
 printing remain unfinished. WinForms8 metadata generation and current Greenshot's
 net480/source dependency requirements remain open. The WPF packaging goal is active.
+
+
+## 211. Installed release 55: caret cells across source runs and bidi controls
+
+The 2026-10-14 continuation implements cross-run grapheme queries in source commit
+d4f05ab and installs WindowsDesktop8.0.0-55 from msys2-ur recipe commita001c04.
+The original public TextFormatter baseline formats a split Latin combining accent,
+then GetDistanceFromCharacterHit throws native NotImplemented. Native wrapping
+already retained that grapheme, but text_cells rejected its client-run boundary.
+
+Native cell construction now segments the complete retained Unicode source.
+Internal LS reversal controls stay in transport CP ranges but do not split Unicode
+text elements. Adjacent constituent cells join into one contiguous visual interval,
+retaining glyph counts and source range. Queries for each CP return that CP's actual
+client-run identity/metrics, alongside stable joined caret-subline geometry.
+Noncontiguous geometry remains an explicit failure rather than fabricated bounds.
+
+The first public test exposed a separate managed assumption: the run containing
+only a base character has no extended/caret flags, so FullTextLine permitted an
+interior caret despite receiving a complete cell. Source patch
+patches/wpf/0011-cross-run-caret-cells.patch recognizes cells extending beyond their
+queried source run. It maps internal cell endpoints back to external source CPs,
+so internal controls cannot inflate caret lengths. This preserves ordinary
+within-run character carets. RTL emoji then exposed inconsistent subline geometry;
+joined cells now report one stable caret subline across internal reversal scopes.
+The complete RTL/style/tiny-width tests remain in the required consumer and pass.
+
+Native assertions cover split combining marks, surrogate pairs, ZWJ emoji and
+flags; tiny-width whole-element wrapping; exact cell bounds, source ranges and
+per-CP distinct run identities; both point edges; and disposed-line rejection.
+Existing line/tab/decoration/bidi/hyphen/record/min-max tests also pass.
+
+The public consumer checks64 combinations per execution: Ideal/Display, LTR/RTL
+paragraphs, unchanged/alternating foreground styles, tiny/full widths and Latin
+combining/Indic/ZWJ emoji/regional-indicator samples. It checks forward/backward
+navigation, every interior UTF-16 code-unit query, point hits, exact selection
+width, glyph source coverage, forced compacting GC and real raster output.
+Ordinary same-run character carets are checked separately in both formatting modes.
+Shared and portable execution pass128 split-grapheme cases plus four ordinary
+checks in each development/private/installed scope:384 split-grapheme cases total.
+The offline SDK suite now registers40 WPF consumers.
+
+Exact final development build/check commands, terminal exit0:
+
+```sh
+MSYSTEM=CLANG64 WPF_SOURCE=$HOME/dotnetboot/m612/src/wpf-8.0.0 WPF_BUILD=$HOME/wpfboot/build bash -lc 'bash ~/wpfboot/driver/bootstrap/m612/wpf.sh prepare-bridges build-presentation-core native-win32 check-lineservices-line-native'
+MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/cross-run-carets-check-development.sh'
+MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-cross-run-carets-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/build/cross-run-carets-sdk-check'
+```
+
+The final development log is cross-run-carets-development-verified.log. Earlier
+baseline/direction/subline diagnostics are retained as evidence of the failures
+resolved before packaging. SDK overlay replacement unlinks native and managed
+hardlinks before copying; it never modifies the installed framework as a side effect.
+
+Exact package command, terminal exit0:
+
+```sh
+MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/cross-run-carets-package-and-check.sh'
+```
+
+The private pinned source tree applies patch0055, then runs:
+
+```sh
+_wpf prepare-bridges build-presentation-core native-win32 inventory check-lineservices-line-native check-paragraph-context layout
+```
+
+PresentationCore rebuilds all1337 source files and three resources. Native line
+checks and all482 original ABI field sizes/offsets pass. Refreshed private SDK
+consumers for carets, bidi, tabs/font resources, justification/TextBlock,
+paragraph-width/FormattedText and BAML/window behavior all pass in shared and
+portable execution, with zero managed build errors/warnings. This is focused
+validation of changed text paths; the historical full37-consumer suite remains
+section205, with later imaging/block clearing checks recorded separately.
+
+Normal dependency-checked makepkg --repackage creates the source payload package;
+pacman installs it. The42-pair managed/reference/native hash and SDK payload audit
+passes. Installed caret and BAML/window consumers pass again in shared/portable
+execution. Native required export coverage stays133/139; all six missing declarations
+remain disabled upstream by #if NEVER.
+
+Clean source replay initially found the design-note hunk based on a newer note
+than the pinned package contained. The recipe now reconciles that note from the
+actual patched package base. Code hunks were unchanged. Final replay of all55
+patches succeeds, and all seven feature files byte-match the source commit.
+All62 source/hash declarations are host-verified; all58 locally available inputs
+match. Corrected patch0055 SHA-256:
+b9907672f9529ca44d38e93f4874e3e8099a3439447225e9e80dd270301f439b.
+
+Artifact and exact final logs/scripts/recipe/replay/inventory are archived under
+`tmp/wpf8-support/validation/cross-run-carets-package-20261014`:
+
+```text
+mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-55-any.pkg.tar.zst
+SHA-256: 9cad0b5f1db07d015f1a63f10e5565abfe2a2481d6b657739418b63f79412f78
+Bytes: 58930838
+```
+
+The downloaded hash matches the host, and pacman reports8.0.0-55. Development
+and baseline evidence live under `validation/cross-run-carets-20261014`.
+Nonmonotonic glyph maps, noncontiguous cells, full bidi/optimizer/native layout
+conformance, complex margins, spelling reform and physical printing remain
+unfinished. WinForms8 metadata generation and current Greenshot's net480/source
+dependency requirements remain open. The WPF packaging goal stays active.
