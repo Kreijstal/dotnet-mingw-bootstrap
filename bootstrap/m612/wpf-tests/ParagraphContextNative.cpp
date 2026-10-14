@@ -17,6 +17,12 @@ static int WINAPI create_object(void* client,void* context,FSCBKOBJ* callbacks,u
 static int WINAPI destroy_object(void* value){if(value!=reinterpret_cast<void*>(100)&&value!=reinterpret_cast<void*>(101))return PTS_tserrInvalidParameter;++destroys;return 0;}
 static int lines_created=0,lines_destroyed=0,breaks_destroyed=0,clients_created=0,clients_destroyed=0,fail_line=-1,columns=1,available_height=80,invalid_columns=false,hard_break=0,keep_mode=0,keep_next=0,para_count=2;
 static bool containers=false,lose_subtrack=false;
+static int balance_requested=0,balancing_error=0;
+using BalanceTrack=int(WINAPI*)(void*,void*,uint32_t,int*,int*,int*);
+using BalancePage=int(WINAPI*)(void*,void*,uint32_t*,int*,int*,int*);
+static BalanceTrack balance_track=nullptr;
+static BalancePage balance_page=nullptr;
+
 static bool display_test=false;
 struct DisplayClient {bool visual=false;};
 static std::unordered_set<void*> display_clients;
@@ -61,6 +67,9 @@ static int(WINAPI* floater_handler)(const FSFLOATERINIT*,void*)=nullptr;
 static void* page_context=nullptr;
 using SubtrackFormat=int(WINAPI*)(void*,void*,int,void*,int,void*,void*,int,int,uint32_t,const FSRECT*,void*,FSKCLEAR,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA,FSFMTR*,void**,void**,int*,FSBBOX*,void**,FSKCLEAR*,int*);
 static SubtrackFormat format_subtrack=nullptr;
+static int WINAPI container_balance(void* content,uint32_t direction,int* lines,int* sum,int* minimum){if(balancing_error)return balancing_error;return balance_track(page_context,content,direction,lines,sum,minimum);}
+static int WINAPI subpage_balance(void* content,uint32_t direction,int* lines,int* sum,int* minimum){if(balancing_error)return balancing_error;return balance_page(page_context,content,&direction,lines,sum,minimum);}
+
 static int(WINAPI* destroy_subtrack)(void*,void*)=nullptr;
 static int(WINAPI* destroy_subtrack_record)(void*,void*)=nullptr;
 static int WINAPI container_format(void*,void*,void* input,int previous,void* name,int area,void* footnote,void* geometry,int empty,int suppress,uint32_t direction,FSRECT* rect,void* margin,FSKCLEAR clear,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA suppress_break,int,
@@ -85,7 +94,7 @@ static int WINAPI page_geometry(void*,void*,uint32_t* direction,int* header,int*
     *direction=page_direction;*header=0;*width=columns==2?240:200;*height=140;*margin={10,20,columns==2?210:100,available_height};return 0;
 }
 static int WINAPI section_properties(void*,void*,int* page,uint32_t* direction,int* balance,int* cols,int* segments,int* heights) {
-    *page=0;*direction=page_direction;*balance=0;*cols=columns;*segments=*heights=0;return 0;
+    *page=0;*direction=page_direction;*balance=balance_requested;*cols=columns;*segments=*heights=0;return 0;
 }
 static int WINAPI column_info(void*,void*,uint32_t,int capacity,FSCOLUMNINFO* output,int* actual) {
     if(capacity!=2)return PTS_tserrInvalidParameter;output[0]={0,100};output[1]={10,invalid_columns?250:100};*actual=2;return 0;
@@ -265,7 +274,9 @@ int main(int argc,char** argv) {
         methods.pfnDestroyBreakRecord=reinterpret_cast<void*>(container_destroy_record);
         methods.pfnFormatParaFinite=reinterpret_cast<void*>(container_format);methods.pfnDestroyPara=reinterpret_cast<void*>(container_destroy);
         create_subpage=reinterpret_cast<NativeSubpageFinite>(GetProcAddress(dll,"FsCreateSubpageFinite"));destroy_subpage=reinterpret_cast<decltype(destroy_subpage)>(GetProcAddress(dll,"FsDestroySubpage"));destroy_subpage_record=reinterpret_cast<decltype(destroy_subpage_record)>(GetProcAddress(dll,"FsDestroySubpageBreakRecord"));require(create_subpage&&destroy_subpage&&destroy_subpage_record,"subpage object exports");
-        FSIMETHODS subpage_methods=methods;subpage_methods.pfnFormatParaFinite=reinterpret_cast<void*>(subpage_format);subpage_methods.pfnDestroyPara=reinterpret_cast<void*>(subpage_destroy);subpage_methods.pfnDestroyBreakRecord=reinterpret_cast<void*>(subpage_destroy_record);
+        balance_track=reinterpret_cast<BalanceTrack>(GetProcAddress(dll,"FsGetSubtrackColumnBalancingInfo"));balance_page=reinterpret_cast<BalancePage>(GetProcAddress(dll,"FsGetSubpageColumnBalancingInfo"));require(balance_track&&balance_page,"column balancing measurement exports");
+        methods.pfnGetColumnBalancingInfo=reinterpret_cast<void*>(container_balance);
+        FSIMETHODS subpage_methods=methods;subpage_methods.pfnGetColumnBalancingInfo=reinterpret_cast<void*>(subpage_balance);subpage_methods.pfnFormatParaFinite=reinterpret_cast<void*>(subpage_format);subpage_methods.pfnDestroyPara=reinterpret_cast<void*>(subpage_destroy);subpage_methods.pfnDestroyBreakRecord=reinterpret_cast<void*>(subpage_destroy_record);
         require(CreateInstalledObjectsInfo(&methods,&subpage_methods,&installed,&count)==0,"page installed registration");
         info.version=0;info.pInstalledObjects=installed;
         auto& gen=info.fscbk.cbkgen;auto& txt=info.fscbk.cbktxt;
@@ -775,6 +786,37 @@ int main(int argc,char** argv) {
         require(display_clients.empty()&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"display page transfer tears down every original client/record once");
         std::puts("native display comparison/transfer: identity versus opaque content, callback failure, partial ownership, retry/idempotence, empty shifted tracks, subpages, foreign/stale/type/direction validation and exact cleanup PASS");
         display_test=false;
+        columns=2;para_count=4;available_height=80;balance_requested=1;reset_page_counts();
+        require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&!page_break&&!formatted.fForcedProgress,"balanced completed section fits without forced progress or lost continuation");
+        require(FsQueryPageDetails(context,page_handle,&details)==0&&!details.fSimple&&FsQueryPageSectionList(context,page_handle,1,&section_desc,&actual_count)==0&&FsQuerySectionBasicColumnList(context,section_desc.pfssection,2,column_desc,&actual_count)==0,"balanced root publishes actual column hierarchy");
+        int balanced_owners[4]{};
+        for(int column=0;column<2;++column){require(column_desc[column].fsrc.dv==40&&FsQueryTrackParaList(context,column_desc[column].pfstrack,2,paras,&actual_count)==0&&actual_count==2,"balanced root reduces height 80 to 40 and retains two paragraphs per column");for(int at=0;at<actual_count;++at){int owner=int(reinterpret_cast<uintptr_t>(paras[at].nmp))-101;require(owner>=0&&owner<4&&!balanced_owners[owner]++,"balanced root source paragraph belongs to one column");}}
+        require(FsDestroyPage(context,page_handle)==0&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"every accepted/discarded balancing trial releases source objects exactly once");
+        reset_page_counts();para_count=1;keep_mode=2;
+        require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&!page_break&&FsQueryPageSectionList(context,page_handle,1,&section_desc,&actual_count)==0&&FsQuerySectionBasicColumnList(context,section_desc.pfssection,2,column_desc,&actual_count)==0&&column_desc[0].fsrc.dv==20&&FsQueryTrackParaList(context,column_desc[0].pfstrack,2,paras,&actual_count)==0&&actual_count==1,"balancing preserves an originally fitting keep-together paragraph intact");
+        require(FsDestroyPage(context,page_handle)==0&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"kept balancing trial cleanup");keep_mode=0;para_count=4;keep_next=1;reset_page_counts();FSPARADESCRIPTION chain_desc[3]{};
+        require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&!page_break&&FsQueryPageSectionList(context,page_handle,1,&section_desc,&actual_count)==0&&FsQuerySectionBasicColumnList(context,section_desc.pfssection,2,column_desc,&actual_count)==0&&column_desc[0].fsrc.dv==50&&FsQueryTrackParaList(context,column_desc[0].pfstrack,3,chain_desc,&actual_count)==0&&actual_count==3,"balanced keep-with-next chain retains the following paragraph prefix at its feasible 50-unit height");
+        require(FsDestroyPage(context,page_handle)==0&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"balanced keep-chain cleanup");keep_next=0;
+        reset_page_counts();fail_line=9;
+        require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrCallbackException&&!page_handle&&!page_break&&!formatted.fForcedProgress&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"callback failure during balancing rolls back all initial/trial owners and clears outputs");fail_line=-1;
+        reset_page_counts();para_count=12;
+        require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&page_break,"full balanced-request page preserves remaining source continuation");
+        require(FsQueryPageSectionList(context,page_handle,1,&section_desc,&actual_count)==0&&FsQuerySectionBasicColumnList(context,section_desc.pfssection,2,column_desc,&actual_count)==0&&column_desc[0].fsrc.dv==80&&column_desc[1].fsrc.dv==80,"full page retains original height rather than cutting source to fit");
+        require(FsDestroyPage(context,page_handle)==0&&FsDestroyPageBreakRecord(context,page_break)==0&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"full balanced-request page/record teardown");balance_requested=0;para_count=4;
+        auto balanced_subpage=[&](){return create_subpage(context,nullptr,0,reinterpret_cast<void*>(77),nullptr,0,1,0,240,140,&sub_rect,2,sub_columns,1,0,nullptr,nullptr,0,nullptr,nullptr,0,fsksuppresshardbreakbeforefirstparaPageAndColumn,&formatted,&page_handle,&page_break,&sub_used,&sub_box,&sub_margin,&sub_top);};
+        sub_rect={10,20,210,80};reset_page_counts();
+        require(balanced_subpage()==0&&!page_break&&sub_used==40&&FsQuerySubpageBasicColumnList(context,page_handle,2,sub_tracks,&actual_count)==0&&sub_tracks[0].fsrc.dv==40&&sub_tracks[1].fsrc.dv==40,"explicit balanced subpage flag returns real reduced column height/used extent");
+        int measured_lines=99,measured_sum=99,measured_min=99;uint32_t measured_direction=99;
+        require(balance_page(context,page_handle,&measured_direction,&measured_lines,&measured_sum,&measured_min)==0&&measured_direction==0&&measured_lines==8&&measured_sum==80&&measured_min==10,"source subpage balancing metrics count every original formatted line once");
+        require(balance_track(context,page_handle,0,&measured_lines,&measured_sum,&measured_min)==PTS_tserrInvalidQuery&&!measured_lines&&!measured_sum&&!measured_min,"measurement rejects wrong native handle kind and clears outputs");
+        require(FsDestroySubpage(context,page_handle)==0&&balance_page(context,page_handle,&measured_direction,&measured_lines,&measured_sum,&measured_min)==PTS_tserrInvalidQuery&&!measured_direction&&!measured_lines&&!measured_sum&&!measured_min&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"subpage balancing trials and stale measurement cleanup");
+        columns=1;para_count=2;containers=true;reset_page_counts();display_rect={10,20,100,80};
+        require(format_display(&old_display)==0&&!display_record&&balance_track(context,old_display,0,&measured_lines,&measured_sum,&measured_min)==0&&measured_lines==4&&measured_sum==40&&measured_min==10,"nested original object callback recursively measures actual child line heights");
+        balancing_error=PTS_tserrCallbackException;
+        require(balance_track(context,old_display,0,&measured_lines,&measured_sum,&measured_min)==PTS_tserrCallbackException&&!measured_lines&&!measured_sum&&!measured_min,"nested measurement callback failure clears all public outputs");balancing_error=0;
+        require(balance_track(reinterpret_cast<void*>(999),old_display,0,&measured_lines,&measured_sum,&measured_min)==PTS_tserrInvalidQuery&&balance_track(context,old_display,4,&measured_lines,&measured_sum,&measured_min)==PTS_tserrNotImplemented,"measurement validates owning context and actual track direction");
+        require(destroy_subtrack(context,old_display)==0&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"nested measurement does not retain native/managed clients");containers=false;
+        std::puts("native column balancing: real minimum completed-section height, exact column/source coverage, full-page continuation, trial failure/cleanup, subpages, original nested callback metrics and invalid outputs PASS");
         columns=1;require(DestroyDocContext(context)==0&&DestroyInstalledObjectsInfo(installed)==0,"failed page creation leaves no retained resources");
         std::puts("native finite pages: actual callback geometry/ranges/break records, query/update state, foreign/stale handles, exact teardown, partial failure rollback and unsupported paths PASS");
         std::printf("native paragraph records: context=%zu, methods=%zu, callbacks=%zu; copied ownership, callbacks, rollback, invalid states and teardown PASS\n",sizeof(FSCONTEXTINFO),sizeof(FSIMETHODS),sizeof(FSCBK));return 0;

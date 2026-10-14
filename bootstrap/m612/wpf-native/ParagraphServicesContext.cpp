@@ -266,6 +266,8 @@ struct ParaData {
     std::shared_ptr<Context> context;
     FSPARADESCRIPTION desc{};
     bool forced_progress=false;
+    bool keep_together=false,keep_with_next=false;
+    int min_lines_before_break=1;
     uint32_t direction=0;
     std::weak_ptr<ParaData> transferred_from;
     std::shared_ptr<TextData> text;
@@ -584,6 +586,7 @@ int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const F
     FSTXTPROPS props{};int status=reinterpret_cast<PtsGetTextProperties>(cb.pfnGetTextProperties)(client,para->desc.nmp,0,&props);
     if(status)return status;
     if(keep_self)props.fKeepTogether=1;
+    para->keep_together=props.fKeepTogether!=0;para->min_lines_before_break=std::max(1,props.cMinLinesBeforeBreak);
     if((props.fswdir!=PTS_fswdirES&&props.fswdir!=PTS_fswdirWS)||props.fDropCap||props.fVerticalGrid||props.fOptimizeParagraph)return PTS_tserrNotImplemented;
     if(props.fswdir!=direction){
         FSRECT page=FigureGeometry::current?FigureGeometry::current->page:rect,converted{};
@@ -981,7 +984,7 @@ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t 
                 if(!chain_margin.value)return PTS_tserrInvalidClientOutput;
             }
         }
-        auto para=std::make_shared<ParaData>();para->context=context;para->direction=direction;para->desc.nmp=name;para->desc.idobj=props.idobj;para->desc.fsupdinf.fskupd=fskupdNew;
+        auto para=std::make_shared<ParaData>();para->context=context;para->direction=direction;para->keep_with_next=props.fKeepWithNext!=0;para->desc.nmp=name;para->desc.idobj=props.idobj;para->desc.fsupdinf.fskupd=fskupdNew;
         status=reinterpret_cast<PtsCreateParaclient>(cb.pfnCreateParaclient)(client,name,&para->desc.pfsparaclient);if(status)return status;
         if(!para->desc.pfsparaclient)return PTS_tserrInvalidClientOutput;
         FSRECT available=rect;available.v+=track->used;available.dv-=track->used;
@@ -1124,16 +1127,82 @@ extern "C" __declspec(dllexport) int WINAPI FsDestroySubtrack(void* context_hand
     return 0;
 }
 namespace {
-int build_page(const std::shared_ptr<Context>& context,void* section,bool bottomless,std::shared_ptr<PageData>& result,const std::shared_ptr<Continuation>& input={}) {
+struct BalancingInfo {
+    int64_t lines=0,height=0;int minimum=0;bool has_height=false;
+    int add(int count,int sum,int step) {
+        if(count<0||sum<0||step<0||(!count&&(sum||step))||step>sum)return PTS_tserrInvalidClientOutput;
+        lines+=count;height+=sum;if(lines>INT32_MAX||height>INT32_MAX)return PTS_tserrInvalidGeometry;
+        if(count){minimum=has_height?std::min(minimum,step):step;has_height=true;}return 0;
+    }
+};
+int measure_track(const std::shared_ptr<TrackData>& track,BalancingInfo& result) {
+    // Original installed object callbacks may reenter these exports for their
+    // native child track/page. Bound malformed callback recursion.
+    static thread_local int depth=0;if(depth>=128)return PTS_tserrInvalidClientOutput;
+    ++depth;struct Pop {int& value;~Pop(){--value;}} pop{depth};
+    for(const auto& para:track->paras) {
+        int status=0;
+        if(para->text){for(const auto& line:para->text->lines){int64_t height=int64_t(line.dvrAscent)+line.dvrDescent;if(height>INT32_MAX)return PTS_tserrInvalidGeometry;status=result.add(1,int(height),int(height));if(status)return status;}}
+        else if(para->desc.idobj==0||para->desc.idobj==1){auto fn=track->context->installed->methods[para->desc.idobj].pfnGetColumnBalancingInfo;if(!fn)return PTS_tserrInvalidParameter;
+            int count=0,sum=0,minimum=0;status=reinterpret_cast<PtsObjGetColumnBalancingInfo>(fn)(para->desc.pfspara,para->direction,&count,&sum,&minimum);if(status)return status;status=result.add(count,sum,minimum);if(status)return status;}
+        else if(para->floater){auto& value=*para->floater;auto fn=value.callbacks.pfnGetFloaterContentColumnBalancingInfo;if(!fn)return PTS_tserrInvalidParameter;
+            int count=0,sum=0,minimum=0;status=reinterpret_cast<PtsGetFloaterContentColumnBalancingInfo>(fn)(value.details.pfsFloaterContent,para->direction,&count,&sum,&minimum);if(status)return status;status=result.add(count,sum,minimum);if(status)return status;}
+        else if(para->table){for(const auto& row:para->table->rows){int height=row->description.u.dvrRow;status=result.add(height?1:0,height,height);if(status)return status;}}
+        else return PTS_tserrNotImplemented;
+    }
+    return 0;
+}
+int measure_page(const std::shared_ptr<PageData>& page,BalancingInfo& result) {
+    if(page->section){for(const auto& track:page->section->columns){int status=measure_track(track,result);if(status)return status;}return 0;}
+    return measure_track(page->track,result);
+}
+int required_page_height(const std::shared_ptr<PageData>& page,int& height,int depth);
+int required_track_height(const std::shared_ptr<TrackData>& track,int& height,int depth) {
+    if(depth>=128)return PTS_tserrInvalidClientOutput;int64_t chain=0;
+    for(const auto& para:track->paras) {
+        if(para->keep_together)height=std::max(height,para->desc.dvrUsed);
+        if(para->keep_with_next){chain+=para->desc.dvrUsed;if(chain>INT32_MAX)return PTS_tserrInvalidGeometry;}
+        else if(chain){int64_t following=para->desc.dvrUsed;
+            if(para->text&&!para->keep_together){following=para->desc.dvrTopSpace;size_t count=std::min(para->text->lines.size(),size_t(para->min_lines_before_break));for(size_t i=0;i<count;++i)following+=int64_t(para->text->lines[i].dvrAscent)+para->text->lines[i].dvrDescent;}
+            chain+=following;if(chain>INT32_MAX)return PTS_tserrInvalidGeometry;height=std::max(height,int(chain));chain=0;}
+        int status=0;
+        if(para->desc.idobj==0){auto child=lookup_owned(tracks,track->context.get(),para->desc.pfspara);if(child)status=required_track_height(child,height,depth+1);}
+        if(para->desc.idobj==1){auto child=lookup_owned(pages,track->context.get(),para->desc.pfspara);if(child)status=required_page_height(child,height,depth+1);}
+        if(status)return status;
+    }
+    return 0;
+}
+int required_page_height(const std::shared_ptr<PageData>& page,int& height,int depth) {
+    if(page->section){for(const auto& track:page->section->columns){int status=required_track_height(track,height,depth);if(status)return status;}return 0;}
+    return required_track_height(page->track,height,depth);
+}
+template<class Format> int balance_columns(std::shared_ptr<PageData>& page,int height,MarginOwner& margin,Format format) {
+    // A full page with continuation keeps its capacity. Balance the completed
+    // final section only, never discard source to make a shorter trial fit.
+    if(height<=1||!page->section||page->continuation||page->forced_progress)return 0;
+    int required=0;int status=required_page_height(page,required,0);if(status)return status;
+    // A trial must not make an originally fitting keep-together paragraph or
+    // keep-with-next chain oversized and then split it through the progress rule.
+    int low=std::max(0,std::min(height-1,required-1)),high=height;
+    while(high-low>1) {
+        int next=low+(high-low)/2;std::shared_ptr<PageData> trial;MarginOwner trial_margin{page->context};
+        int status=format(next,trial,&trial_margin.value);if(status)return status;
+        if(!trial->continuation&&!trial->forced_progress){high=next;page=std::move(trial);margin.reset();margin.value=trial_margin.value;trial_margin.value=nullptr;}
+        else low=next;
+    }
+    return 0;
+}
+int build_page(const std::shared_ptr<Context>& context,void* section,bool bottomless,std::shared_ptr<PageData>& result,const std::shared_ptr<Continuation>& input={},int height_limit=-1) {
     auto& cb=context->info.fscbk.cbkgen;void* client=context->info.pfsclient;
     if(!section||!cb.pfnGetPageDimensions||!cb.pfnGetSectionProperties||!cb.pfnGetMainTextSegment)return PTS_tserrInvalidParameter;
     FSRECT rect{};uint32_t direction=0,section_direction=0;int header=0,width=0,height=0;
     int status=reinterpret_cast<PtsGetPageDimensions>(cb.pfnGetPageDimensions)(client,section,&direction,&header,&width,&height,&rect);if(status)return status;
     int new_page=0,balance=0,columns=0,segments=0,heights=0;
     status=reinterpret_cast<PtsGetSectionProperties>(cb.pfnGetSectionProperties)(client,section,&new_page,&section_direction,&balance,&columns,&segments,&heights);if(status)return status;
-    if((direction!=PTS_fswdirES&&direction!=PTS_fswdirWS)||section_direction!=direction||header||columns<1||segments||heights||balance|| (bottomless&&columns!=1))return PTS_tserrNotImplemented;
+    if((direction!=PTS_fswdirES&&direction!=PTS_fswdirWS)||section_direction!=direction||header||columns<1||segments||heights||(balance&&bottomless)|| (bottomless&&columns!=1))return PTS_tserrNotImplemented;
     if(width<=0||(!bottomless&&height<=0)||rect.u<0||rect.v<0||rect.du<=0||int64_t(rect.u)+rect.du>width||(!bottomless&&int64_t(rect.v)+rect.dv>height))return PTS_tserrInvalidGeometry;
     if(direction==PTS_fswdirWS){FSRECT page_rect{0,0,width,height},converted{};status=FsTransformRectangle(PTS_fswdirES,&page_rect,&rect,direction,&converted);if(status)return status;rect=converted;}
+    if(height_limit>=0)rect.dv=std::min(rect.dv,height_limit);
     if(bottomless)rect.dv=INT32_MAX-rect.v;
     FigureGeometry figure_geometry({0,0,width,height},rect);
     void* segment=nullptr;status=reinterpret_cast<PtsGetMainTextSegment>(cb.pfnGetMainTextSegment)(client,section,&segment);if(status)return status;
@@ -1171,6 +1240,7 @@ int build_page(const std::shared_ptr<Context>& context,void* section,bool bottom
         details.fSimple=0;auto& body=details.u.complex;body.fswdirPageProper=direction;body.fsupdinfPageBody.fskupd=fskupdNew;
         body.fsrcPageBody=rect;body.fsrcPageMarginActual=rect;body.fsbboxPageBody=desc.fsbbox;body.cSections=1;
     }
+    if(balance&&height_limit<0){status=balance_columns(page,rect.dv,margin,[&](int limit,std::shared_ptr<PageData>& trial,void**){return build_page(context,section,bottomless,trial,input,limit);});if(status)return status;}
     result=page;return 0;
 }
 int register_page(const std::shared_ptr<PageData>& page) {
@@ -1382,6 +1452,16 @@ int transfer_tracks(const std::shared_ptr<TrackData>& old,const std::shared_ptr<
     for(const auto& next:fresh->paras){auto at=std::find_if(old->paras.begin(),old->paras.end(),[&](const std::shared_ptr<ParaData>& value){return value->desc.nmp==next->desc.nmp&&value->desc.idobj==next->desc.idobj;});if(at!=old->paras.end()){int status=transfer_para(*at,next);if(status)return status;}}
     return 0;
 }
+}
+extern "C" __declspec(dllexport) int WINAPI FsGetSubtrackColumnBalancingInfo(void* context,void* handle,uint32_t direction,int* lines,int* height,int* minimum) {
+    if(!lines||!height||!minimum)return PTS_tserrNullOutputParameter;*lines=*height=*minimum=0;
+    auto track=lookup_owned(tracks,context,handle);if(!track||!track->subtrack)return PTS_tserrInvalidQuery;if(track->direction!=direction)return PTS_tserrNotImplemented;
+    try{BalancingInfo value;int status=measure_track(track,value);if(status)return status;*lines=int(value.lines);*height=int(value.height);*minimum=value.minimum;return 0;}catch(const std::bad_alloc&){return PTS_tserrOutOfMemory;}
+}
+extern "C" __declspec(dllexport) int WINAPI FsGetSubpageColumnBalancingInfo(void* context,void* handle,uint32_t* direction,int* lines,int* height,int* minimum) {
+    if(!direction||!lines||!height||!minimum)return PTS_tserrNullOutputParameter;*direction=0;*lines=*height=*minimum=0;
+    auto page=lookup_owned(pages,context,handle);if(!page||!page->subpage)return PTS_tserrInvalidQuery;
+    try{BalancingInfo value;int status=measure_page(page,value);if(status)return status;*direction=page->section?page->section->direction:page->track->direction;*lines=int(value.lines);*height=int(value.height);*minimum=value.minimum;return 0;}catch(const std::bad_alloc&){return PTS_tserrOutOfMemory;}
 }
 extern "C" __declspec(dllexport) int WINAPI FsCompareSubtrack(void* context,void* previous,void* current,uint32_t direction,FSCOMPRESULT* result,int* shift) {
     if(!result||!shift)return PTS_tserrNullOutputParameter;*result=fscmprChangeInside;*shift=0;
@@ -1617,12 +1697,14 @@ extern "C" __declspec(dllexport) int WINAPI FsCreateSubpageFinite(void* context_
     *formatted={};*output=*break_output=*margin_output=nullptr;*used=*top_space=0;*bbox={};
     auto context=find_context(context_handle);if(!context)return PTS_tserrInvalidPtsContext;
     if(!rect)return PTS_tserrInvalidParameter;
-    if(footnote||balance||segment_areas||height_areas||overhang)return PTS_tserrNotImplemented;
+    if(footnote||segment_areas||height_areas||overhang)return PTS_tserrNotImplemented;
     std::shared_ptr<BreakData> input;
     if(break_input){input=lookup_owned(records,context_handle,break_input);if(!input||input->page||!input->subpage)return PTS_tserrInvalidBreakRecord;}
     try {
         std::shared_ptr<PageData> page;MarginOwner margin{context};
         int status=build_subpage(context,segment,direction,*rect,width,height,columns,info,false,empty_ok,suppress,previous,suppress_break,input?input->position:nullptr,page,&margin.value,*used,*bbox);if(status){*used=0;*bbox={};return status;}
+        if(balance){status=balance_columns(page,rect->dv,margin,[&](int limit,std::shared_ptr<PageData>& trial,void** next_margin){FSRECT area=*rect;area.dv=limit;int trial_used=0;FSBBOX trial_box{};return build_subpage(context,segment,direction,area,width,height,columns,info,false,empty_ok,suppress,previous,suppress_break,input?input->position:nullptr,trial,next_margin,trial_used,trial_box);});if(status){*used=0;*bbox={};return status;}
+            *used=0;if(page->section){for(const auto& track:page->section->columns)*used=std::max(*used,track->used);*bbox=page->subpage_details.u.complex.fsbbox;}else {*used=page->track->used;*bbox=page->track->bbox;}}
         auto outgoing=page->continuation?make_record(context,page->continuation,false,nullptr,true):nullptr;
         try {if(callback_pages)callback_pages->push_back(page);register_page(page);}catch(...){if(outgoing)destroy_record(context_handle,outgoing.get(),false,true);throw;}
         formatted->kstop=page->stop;formatted->fForcedProgress=page->forced_progress;*output=page.get();*break_output=outgoing?outgoing.get():nullptr;

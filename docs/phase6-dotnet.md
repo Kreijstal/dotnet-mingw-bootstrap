@@ -10940,3 +10940,81 @@ Imported native coverage is 115/139 with 24 absent; original paragraph ABI remai
 441 fields. Selective opaque-line reuse, complex object/layout behavior, advanced
 bidi, balancing/footnotes, optimal/interruptible algorithms and complete native-
 language services remain unfinished. The WPF goal stays active.
+
+
+## 170. Explicit finite column balancing and original measurement callbacks
+
+The 2026-10-14 continuation implements FsGetSubtrackColumnBalancingInfo and
+FsGetSubpageColumnBalancingInfo, and enables the existing finite formatting APIs'
+explicit column-balancing flag. Callback signatures are derived from original
+PTS declarations, including the floater callback's writing-direction argument.
+Measurements count retained actual text-line records and sum ascent/descent
+heights, recursively call original installed child/floater callbacks, and treat
+table rows conservatively as atomic balancing units. Checked aggregation rejects
+invalid callback metrics and integer overflow; context, handle kind and direction
+are validated and failure outputs clear. Nested callbacks can reenter the native
+measurement APIs without holding the ownership mutex.
+
+Completed multi-column finite sections search for a reduced feasible height by
+reformatting the original source through existing callbacks. A trial is accepted
+only when it completes all source without forced progress. Full pages with an
+outgoing continuation retain their capacity and exact source progress. Unaccepted
+trial clients/lines/records and margin states are disposed; callback failure
+propagates and rolls back the complete unpublished result. Original WPF section
+and subpage defaults remain unchanged: balancing is applied only when requested.
+
+Trial capacity must preserve fitting KeepTogether paragraphs and the leading
+parts of KeepWithNext chains. Private paragraph metadata retains those original
+constraints and the minimum lines before a break. Lower bounds prevent a trial
+from making fitting kept content oversized and splitting it through the normal
+pagination progress fallback. The last paragraph in a keep chain can still split
+with its original widow/orphan rules. This corrected behavior is supported by
+both fake-source exact native geometry tests and actual original managed clients;
+general spans/object constraints and optimal global layout remain open.
+
+Native fixtures cover completed root sections (80->40 units), explicit balanced
+subpages, exact paragraph/column ownership, originally fitting KeepTogether
+(20-unit intact content), KeepWithNext's accepted prefix (50-unit feasible layout),
+full-page continuation/capacity, a callback failure during trial formatting and
+exact teardown of every accepted/discarded client/line/record. Subpage metrics
+report eight actual lines/80 total/10 minimum. Nested original installed-object
+callbacks report four lines/40 total/10 minimum; callback failure, foreign/stale/
+wrong-kind handles and mismatched direction clear/reject outputs correctly. All
+previous native paragraph fixtures and original 441-field ABI checks pass.
+
+Balancing.cs constructs original SubpageParagraph/ContainerParagraph clients and
+invokes the original unsafe PTS declarations with actual source record types and
+marshaled column arrays. It compares unbalanced and explicitly balanced two-column
+layouts in Ideal/Display and LTR/RTL, with ordinary text, nested sections,
+KeepTogether and KeepWithNext. Six actual lines distribute 3/3 at 79.8/84 DIPs,
+versus the original 180-DIP unbalanced rectangle. Kept paragraphs/chains remain
+intact at 159.6/168 DIPs. Reported metrics exactly match independently queried
+original native line records (six lines, 47880/50400 total, 7980/8400 minimum).
+All 41/40 source characters have one real content-range owner, both balanced
+columns produce actual glyph pixels, and compacting GC preserves the raster.
+Shared-framework and portable self-contained SDK runs remove SDK roots and
+toolchain PATH; builds have zero warnings/errors.
+
+Focused validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 inventory check-paragraph-context-native check-paragraph-context
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-paragraph-context-native check-paragraph-context
+/usr/bin/python3 ~/wpfboot/refresh-finite-native.py
+MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-balancing-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/balancing-sdk-check'
+```
+
+The final focused commands pass. The full source regression also exits zero:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+```
+
+All 24 offline WPF SDK gates (the previous 23 plus balancing), original paragraph
+ABI/lifecycle and native paragraph/line checks, and retained interim WinForms
+shared/self-contained consumers pass. Evidence is archived under
+ tmp/wpf8-support/validation/balancing-20261014. Imported native coverage rises to
+117/139 with 22 absent; paragraph ABI remains 441 fields, context 872, methods 136
+and callbacks 824. General column spans, complex object/layout constraints,
+advanced bidi, footnotes, optimal/interruptible algorithms and complete native-
+language services remain unfinished. The WPF packaging goal stays active.
