@@ -42,4 +42,8 @@ for key,value in re.findall(r'\b(\w+)\s*=\s*(-?\d+)\s*[,\n]',body):
 infinite=re.search(r'const int\s+IdealInfiniteWidth\s*=\s*(0x[0-9A-Fa-f]+|\d+)',text)
 if not infinite: raise SystemExit('Missing original IdealInfiniteWidth')
 lines.append(f'constexpr int32_t LS_IdealInfiniteWidth = {infinite.group(1)};')
+store=source.with_name('TextStore.cs').read_text()
+marker=re.search(r'const int\s+LscpFirstMarker\s*=\s*\((-?0x[0-9A-Fa-f]+)\)',store)
+if not marker: raise SystemExit('Missing original marker CP range')
+lines.append(f'constexpr int32_t LS_FirstMarkerCp = {marker.group(1)};')
 output.write_text('\n'.join(lines)+'\n')

@@ -140,6 +140,13 @@ step_check_paragraph_breaks_native() {
   "$work/check.exe" "$build/lib/PresentationNative_cor3.dll"
 }
 
+step_check_list_markers_native() {
+  local work=$build/list-markers-native
+  mkdir -p "$work"
+  /clang64/bin/clang++.exe -std=c++17 -O2 "$here/wpf-tests/ListMarkersNative.cpp" -I "$build/classification-native" -o "$work/check.exe"
+  "$work/check.exe" "$build/lib/PresentationNative_cor3.dll"
+}
+
 step_inventory() {
   /usr/bin/python3 "$here/tools/wpfnative-inventory.py" "$source" "$build/lib/PresentationNative_cor3.dll" \
     "$build/native-coverage.json"
@@ -860,6 +867,7 @@ step_check_sdk() {
   bash "$here/wpf-tests/check-hyphenation-sdk.sh" "$root" "$build/hyphenation-sdk-check"
   bash "$here/wpf-tests/check-paragraph-breaks-sdk.sh" "$root" "$build/paragraph-breaks-sdk-check"
   bash "$here/wpf-tests/check-optimal-paragraph-sdk.sh" "$root" "$build/optimal-paragraph-sdk-check"
+  bash "$here/wpf-tests/check-list-markers-sdk.sh" "$root" "$build/list-markers-sdk-check"
   bash "$here/wpf-tests/check-finite-updates-sdk.sh" "$root" "$build/finite-updates-sdk-check"
   bash "$here/wpf-tests/check-bidi-sdk.sh" "$root" "$build/bidi-sdk-check"
   bash "$here/wpf-tests/check-rtl-pages-sdk.sh" "$root" "$build/rtl-pages-sdk-check"

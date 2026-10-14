@@ -11630,3 +11630,61 @@ completes tested behavior of existing APIs. Microsoft-identical scoring,
 stretchability/compression/ink insertion, globally varying object constraints,
 external penalty restrictions, advanced layout/bidi, general column spans,
 footnotes and legacy NLS remain open. The WPF goal remains active.
+
+
+## 180. Original list markers and negative-source automatic numbering
+
+The 2026-10-14 continuation implements original GetAutoNumberInfo handling and
+separate marker-source fetching. The source LS generator reads LscpFirstMarker
+from original TextStore.cs (-0x7FFFFFFF) rather than inventing a private CP range.
+Markers retain original run IDs, font/shaping, bidi controls and drawing callbacks
+in a separate vector. Their right-aligned range is distinct from main text;
+original auto-number metadata and the required implicit text tab restore its
+origin when the marker offset lies before it. Cached paragraph continuations
+restore that origin without repainting the first marker.
+
+Marker runs do not enter body wrapping/minimum widths, backing-source glyph
+enumeration, caret/selection cells or break-record bidi state. Original draw
+callbacks paint the marker and body through the same drawing helper; marker
+metrics do not enlarge body line metrics. Legacy Word95 models and marker
+embedded objects are rejected explicitly. Original WPF callbacks select the
+supported standard model. Normal and empty marked lines preserve the unmarked
+line's source/width/height/baseline behavior, including its requested indentation.
+
+Native tests use the original callback ABI and real replacement DLL. They verify
+negative marker CPs, exact LTR/RTL marker/body origins (-50..-20 versus body 0..30),
+a deliberately taller marker excluded from 15-unit body height, body-only source
+and caret/enumeration geometry, callback/fetch failures with cleared outputs and
+cloned continuation after old line/record disposal without repeating the marker.
+Previous native line and paragraph breakpoint regressions pass.
+
+Original TextFormatter tests cover 64 marker combinations: Ideal/Display,
+LTR/RTL, whole/single-character runs, bullet/decimal/Roman/Hebrew strings and
+outside/inside offsets. Each also checks an empty marked line, actual red marker
+and black body pixels, source-only glyph enumeration and unchanged caret/metric
+geometry. Four original paragraph-cache cases reconstruct a single first marker
+and exact source continuation through independently cloned records. A test that
+initially supplied FirstLineInParagraph=true to every RecreateLine was corrected
+to follow original PTS first-line semantics; WPF's single-line native call passes
+no native previous record. RTL carets are compared to actual unmarked geometry.
+
+Public Disc/Decimal/LowerRoman lists run 24 combinations of text mode, direction
+and paragraph optimization. Four items paginate three pages and paint exactly
+4/10/13 marker characters (no repeats across page boundaries). All 176 body
+characters have one page owner, original GetPageNumber agreement and disposed-
+page marker regeneration; actual marker/body pixels and compacting GC pass.
+The complete matrix executes in shared-framework and portable self-contained
+SDK mode with zero warnings/errors:
+
+```sh
+MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-list-markers-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/list-markers-sdk-check'
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 inventory check-list-markers-native check-lineservices-line-native check-paragraph-breaks-native
+```
+
+Final commands exit zero. Focused evidence is under
+`tmp/wpf8-support/validation/list-markers-20261014`. The consumer is in check-sdk,
+which now runs 30 WPF consumers (standard SDK application plus 29 feature gates).
+Full source/private regressions and package integration follow. Imported coverage
+remains 126/139 and paragraph ABI 479 fields: automatic numbering is new behavior
+of existing exports. Other advanced layout/optimal/NLS gaps remain unfinished;
+the WPF goal stays active.

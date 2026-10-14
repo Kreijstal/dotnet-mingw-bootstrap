@@ -53,6 +53,7 @@ struct ParaSession;
 struct Line {
     std::shared_ptr<Context> context;
     std::vector<Run> runs;
+    std::vector<Run> markers;
     LsLInfo info{};
     LsLineWidths widths{};
     int first=0,paragraph_first=0,base_flow=0,initial_level=0;
@@ -104,6 +105,7 @@ using DrawObject=int (WINAPI *)(void*,uint32_t,LSPOINT*,int,int);
 using CharExpansion=int(WINAPI*)(void*,int,int,LsCharRunInfo*,LsNeighborInfo*,LsNeighborInfo*,int,int**,int**);
 using GlyphExpansion=int(WINAPI*)(void*,int,int,LsGlyphRunInfo*,LsNeighborInfo*,LsNeighborInfo*,int,int**,int**,uint8_t*,int*);
 using HyphenOpportunity=int(WINAPI*)(void*,int,int,int*,int*,LsHyph*);
+using AutoNumber=int(WINAPI*)(void*,int*,LsChp*,uintptr_t*,uint16_t*,LsChp*,uintptr_t*,int*,int*,int*);
 
 int format_object(Context& context,Run& run,int position,int margin) {
     if(!context.info.pfnGetObjectHandlerInfo) return LS_NotImplemented;
@@ -174,6 +176,55 @@ int measure_run(Context& context,Run& run) {
             run.width=measured;
         }
     }
+    return LS_None;
+}
+
+int format_marker(Line& line,int requested,int& main_start) {
+    auto& context=*line.context;
+    if(!context.info.pfnGetAutoNumberInfo)return LS_NotImplemented;
+    int alignment=0,word95=0,offset=0,width=0;uint16_t added=0;
+    LsChp marker_props{},added_props{};uintptr_t marker_id=0,added_id=0;
+    int status=reinterpret_cast<AutoNumber>(context.info.pfnGetAutoNumberInfo)(context.info.pols,&alignment,&marker_props,&marker_id,&added,&added_props,&added_id,&word95,&offset,&width);
+    if(status)return status;
+    if(alignment<0||alignment>2||word95||(added && added!=L'\t'))return LS_NotImplemented;
+    if(added==L'\t') {
+        auto stop=std::find_if(context.tabs.begin(),context.tabs.end(),[&](const LsTbd& tab){return tab.ur>requested;});
+        if(stop==context.tabs.end()||stop->lskt)return LS_InvalidFormatterResult;
+        main_start=stop->ur;
+    }
+    int position=LS_FirstMarkerCp,level=line.base_flow==4?1:0,total=0;
+    bool ended=false;
+    for(int attempts=0;attempts<9600&&!ended;++attempts) {
+        Run run;run.cp=position;run.level=level;run.flow=(level&1)?4:0;
+        std::vector<WCHAR> buffer(4096);WCHAR* text=nullptr;int used=0,count=0,hidden=0;
+        for(int retry=0;retry<3;++retry) {
+            status=reinterpret_cast<FetchRun>(context.callbacks.pfnFetchRunRedefined)(context.info.pols,position,0,nullptr,buffer.data(),int(buffer.size()),&used,&text,&count,&hidden,&run.properties,&run.id);
+            if(status)return status;
+            if(count<=0||count>9600)return LS_InvalidDcpFetched;
+            if(used){text=buffer.data();break;}
+            if(text)break;buffer.resize(count);
+        }
+        if(!text)return LS_InvalidCpContentFetched;
+        if(int64_t(position)+count>=0)return LS_InvalidAutonumRun;
+        bool opening=run.properties.idObj==0;
+        bool closing=run.properties.idObj==0xFFFF && text[0]==0xFFFB && (run.id&0x0FFFFFFFu)==0;
+        if(opening||closing) {
+            if(opening){if(text[0]!=0xFFFC||count>125-level)return LS_InvalidFormatterResult;run.level_delta=count;level+=count;}
+            else {if(count>level-(line.base_flow==4?1:0))return LS_InvalidFormatterResult;run.level_delta=-count;level-=count;}
+            run.hidden=true;run.text.assign(count,opening?0xFFFC:0xFFFB);run.widths.assign(count,0);
+            line.markers.push_back(std::move(run));position+=count;continue;
+        }
+        if(count==1 && (text[0]==0x2028||text[0]==0x2029)){ended=true;break;}
+        if(run.properties.idObj!=0xFFFF)return LS_NotImplemented;
+        run.hidden=hidden!=0||(run.properties.flags&0x10000)!=0;
+        run.text.assign(text,text+count);status=measure_run(context,run);if(status)return status;
+        if(int64_t(total)+run.width>INT_MAX)return LS_InvalidFormatterResult;
+        total+=run.width;position+=count;line.markers.push_back(std::move(run));
+    }
+    if(!ended)return LS_TooLongParagraph;
+    int64_t start=requested-(alignment==2?int64_t(total):alignment==1?total/2:0);
+    if(start<INT_MIN||start>INT_MAX||start+total>INT_MAX)return LS_InvalidFormatterResult;
+    line.widths.upStartMarker=int(start);line.widths.upLimMarker=int(start)+total;
     return LS_None;
 }
 
@@ -839,13 +890,23 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
         if(!previous_break) result->paragraph_first=paragraph.cpFirst;
         status=reinterpret_cast<FetchProps>(context->callbacks.pfnFetchLineProps)(context->info.pols,cp,cp==result->paragraph_first,&properties);
         if(status) return status;
-        if((paragraph.fJustify && paragraph.lskj!=0 && paragraph.lskj!=4) || (paragraph.grpf&0x1000)) return LS_NotImplemented;
+        if((paragraph.fJustify && paragraph.lskj!=0 && paragraph.lskj!=4)) return LS_NotImplemented;
         result->justified=paragraph.fJustify!=0;
-        result->widths.upStartMainText=properties.durLeft;
-        int position=cp,total=properties.durLeft,trailing=properties.durLeft;
         int flow=paragraph.lstflow;
         if(flow!=0 && flow!=4) return LS_NotImplemented;
         result->base_flow=flow;if(!previous_break)result->initial_level=flow==4?1:0;int level=result->initial_level;
+        int main_start=properties.durLeft;
+        if((paragraph.grpf&0x1000) && cp==result->paragraph_first) {
+            status=format_marker(*result,properties.durLeft,main_start);if(status)return status;
+        } else if((paragraph.grpf&0x1000) && !context->tabs.empty() && context->tabs.front().ur>main_start) {
+            // A cached paragraph retains its marker store on later lines. Its
+            // implicit tab still names the main-text origin, without repainting
+            // the paragraph's marker or using its offset as the body indent.
+            main_start=context->tabs.front().ur;
+        }
+        properties.durLeft=main_start;
+        result->widths.upStartMainText=main_start;
+        int position=cp,total=main_start,trailing=main_start;
         bool ended=false;
         for(int attempts=0;attempts<9600 && !ended;++attempts) {
             if(limit>0&&position-cp>=limit){ended=true;break;}
@@ -1116,6 +1177,7 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateBreaks(void* handle,int cp,v
         LsLineProps properties{};LsPap paragraph{};
         status=reinterpret_cast<FetchProps>(session->context->callbacks.pfnFetchLineProps)(session->context->info.pols,cp,cp==session->first,&properties);
         if(status)return status;
+        properties.durLeft=full->widths.upStartMainText;
         status=reinterpret_cast<FetchPap>(session->context->info.pfnFetchPap)(session->context->info.pols,cp,&paragraph);
         if(status)return status;
         int64_t available=int64_t(session->width)-properties.durRightBreak-properties.durLeft;
@@ -1292,14 +1354,11 @@ extern "C" __declspec(dllexport) int WINAPI LoQueryLinePointPcp(void* handle,con
     } catch(const std::bad_alloc&) { return LS_OutOfMemory; }
 }
 
-extern "C" __declspec(dllexport) int WINAPI LoDisplayLine(void* handle,LSPOINT* origin,uint32_t mode,LSRECT* clip) {
-    if(!origin || !clip) return LS_InvalidParameter;
-    auto line=get_line(handle); if(!line) return LS_InvalidLine;
-    auto& context=*line->context;
-    try {
-    auto geometry=visual_runs(*line);
-    for(size_t index=0;index<line->runs.size();++index) {
-        auto& run=line->runs[index];int x=origin->x+(line->base_flow==4?-geometry.edge[index]:geometry.edge[index]);
+namespace {
+int display_runs(Line& line,Context& context,LSPOINT* origin,uint32_t mode,LSRECT* clip) {
+    auto geometry=visual_runs(line);
+    for(size_t index=0;index<line.runs.size();++index) {
+        auto& run=line.runs[index];int x=origin->x+(line.base_flow==4?-geometry.edge[index]:geometry.edge[index]);
         LSPOINT point{x,origin->y};
         LsHeights height{run.metrics.dvAscent,run.metrics.dvDescent,run.metrics.dvMultiLineHeight};
         int status=0;
@@ -1381,7 +1440,19 @@ extern "C" __declspec(dllexport) int WINAPI LoDisplayLine(void* handle,LSPOINT* 
         }
     }
     return LS_None;
-    } catch(const std::bad_alloc&) { return LS_OutOfMemory; }
+}
+}
+extern "C" __declspec(dllexport) int WINAPI LoDisplayLine(void* handle,LSPOINT* origin,uint32_t mode,LSRECT* clip) {
+    if(!origin||!clip)return LS_InvalidParameter;
+    auto line=get_line(handle);if(!line)return LS_InvalidLine;
+    try {
+        if(!line->markers.empty()) {
+            Line marker;marker.context=line->context;marker.base_flow=line->base_flow;marker.initial_level=line->base_flow==4?1:0;
+            marker.runs=line->markers;marker.widths.upStartMainText=line->widths.upStartMarker;marker.widths.upLimLine=line->widths.upLimMarker;
+            int status=display_runs(marker,*line->context,origin,mode,clip);if(status)return status;
+        }
+        return display_runs(*line,*line->context,origin,mode,clip);
+    }catch(const std::bad_alloc&){return LS_OutOfMemory;}
 }
 
 extern "C" __declspec(dllexport) int WINAPI LoEnumLine(void* handle,BOOL reverse,BOOL geometry,LSPOINT* origin) {
