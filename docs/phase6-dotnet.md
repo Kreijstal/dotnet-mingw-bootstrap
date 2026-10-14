@@ -12981,3 +12981,150 @@ Do not restart that build from an observation timeout. Poll the same session or
 inspect the live process/log. Final build/check results, artifact hash and installed
 verification are still required. Broader native layout/conformance and the other
 open WPF work remain unfinished; the full goal stays active.
+
+
+## 202. Styled container clearing from a copied outer frame
+
+Source feature commit 0bb60d6 fixes release50's styled ClearFloaters placement.
+An installed baseline with a bordered/padded original Section has its child at
+floater bottom while its background remains near the earlier paragraph; padding
+is not retained after clearing. The original managed callback changes its inner
+rectangle for margins/borders/padding and reports collapsed margin top space.
+Its nonzero-border branch ignores native subtrack top-space output.
+
+The source formatter now snapshots the parent outer frame before calling the
+original managed formatter. Inherited obstacle clearance uses that frame before
+content insets. The accepted gap reaches parent paragraph top space separately
+from the callback's collapsed-margin result, while the subtrack content rectangle
+retains the correctly shifted inset origin. The frame is copied because callbacks
+may mutate their input rectangle by reference. Each invocation resets its scoped
+gap; failed/deferred or empty source does not publish clearance. Returned margin
+ownership is retained before validating parent gap overflow.
+
+The existing section consumer retains all136 shared/portable case executions.
+Styled mode adds64 finite executions with border/padding, zero/nonzero top/bottom
+margins and opposite page/container directions, plus16 bottomless resize/scroll
+executions. Exact border/background/content geometry, complete source/page
+ownership, single child placement, regenerated pages and compacting GC pass.
+All216 cases pass in shared and portable execution. The finite styled app checks
+full pagination beyond its initial raster, and the bottomless app preserves
+margins/padding while a resized inherited floater moves its outer frame.
+
+Native fixtures expand to sixteen side/clear/inset combinations. They mutate the
+callback rectangle to prove the copied outer origin, and check exact child line
+positions/widths, consumed height, parent top space and resource teardown. Existing
+no-progress source deferral/resume, invalid updates, callback failures, native
+page/table/line ownership and original482-field managed ABI checks remain active.
+
+Exact focused source commands, in the standard CLANG64 source environment:
+
+```sh
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-paragraph-context-native check-paragraph-context
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-paragraph-context-native
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-section-clearing-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/section-clearing-styled-candidate
+```
+
+All final commands exit zero. Source overlay native files were unlinked before
+copying the rebuilt library. Source evidence is archived under
+`tmp/wpf8-support/validation/styled-container-clearing-20261014`.
+Clean pinned source plus all51 recipe patches match all five feature files.
+The new patch SHA-256 is
+a1bd71947d0367a025d158c73f497ec4fdaf89a132818f9b300fe603f7ee82bd.
+More complex nesting/margin-collapse conformance and the other documented native
+gaps remain open; full WPF compatibility is still unfinished.
+
+
+## 203. Installed release51: styled container outer-frame clearing
+
+The 2026-10-14 continuation installs WindowsDesktop 8.0.0-51 with source feature
+0bb60d6 and recipe commit adde9b0. Its declared patch and clean pinned-source replay
+match all five feature files. Source verification passes; .SRCINFO contains58
+source/hash declarations, with all54 locally available input hashes verified.
+
+The private native rebuild, original482-field managed ABI and source ownership
+checks pass. Its freshly overlaid SDK then passes all216 section-clearing cases
+and normal shared/portable BAML/window/raster checks. The exact archived install
+script uses normal makepkg dependency checks because the LLVM23 compiler is now
+installed; there is no --nodeps exception for this release.
+
+Exact commands in the CLANG64 private recipe workspace after sourcing PKGBUILD:
+
+```sh
+makepkg --verifysource --noconfirm
+patch --batch --forward -d "$(_tree)" -Np1 -i "$PWD/0051-styled-container-clearing.patch"
+_wpf native-win32 inventory check-paragraph-context-native check-paragraph-context layout
+bash ~/wpfboot/styled-container-private-sdk-checks.sh
+bash ~/wpfboot/install-styled-container.sh
+```
+
+All commands exit zero. package() and installed payload validation both pass with
+42 managed implementation/reference pairs, native hashes, SDK tasks and retained
+legacy versions. Installed section checks repeat all216 finite/bottomless/styled
+cases with exact geometry, source/page, background, update and lifetime assertions.
+Installed normal SDK shared and portable BAML/window/raster consumers also pass.
+Hyphenation verifies81 source hashes,39 notices and exact regenerated embedded
+headers. Native imported coverage remains133/139, with six upstream #if NEVER
+absent declarations. This turn uses focused regressions for the style change.
+
+Artifact and exact scripts/private/installed logs are archived under
+`tmp/wpf8-support/validation/styled-container-clearing-package-20261014`:
+
+```text
+mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-51-any.pkg.tar.zst
+SHA-256: fe931236ff68cee9781005578c0a8abf04c50b464c66a15c2ba19fe3e0625e0f
+Bytes: 58911609
+```
+
+The downloaded hash and byte count match the installed host artifact. Complex
+nested margin collapse, vertical/polygon/object layouts, full bidi/optimizer
+conformance and other documented native behavior remain incomplete or unproven.
+The full WPF goal stays active.
+
+
+## 204. Completed clean LLVM23 release50 build and current-release upgrade
+
+Section201's fresh source build completes on 2026-10-14 with the installed
+LLVM23 compiler and all ordinary makepkg dependencies. The new workspace contained
+only PKGBUILD and declared source inputs before prepare(), so its desktop managed,
+native, WinForms, markup and layout outputs were rebuilt from source. All37 WPF
+consumers pass:36 feature gate markers plus the normal shared/portable BAML/window
+consumer. Both interim WinForms executions pass. Native and managed ABI/resource
+checks also pass; packaging creates a real artifact. Existing native upstream
+warnings are retained rather than hidden; there are no build/check failures.
+
+Exact initial command and terminal result:
+
+```sh
+MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/start-clean-wpf-llvm23.sh'
+# makepkg --noconfirm --force; terminal exit0
+```
+
+The clean build's retained release50 source artifact is archived under
+`tmp/wpf8-support/validation/clean-wpf-llvm23-20261014`:
+
+```text
+mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-50-any.pkg.tar.zst
+SHA-256: 5516168d73168fff3c5b37fa454aabfaa414f4b6a51b07bbc34f39ebe076c78f
+Bytes: 58922592
+```
+
+The downloaded hash/size match the host. This artifact is build evidence; installed
+release51 is preserved. Its main log is wpf-llvm23-clean-package.log, whose final
+marker confirms the clean source package build completed. Former observation
+session92909 returned exit0.
+
+The same clean-source tree now receives declared patch0051 and the current recipe
+before rebuilding its changed native library and running the entire recipe check()
+again. The archived upgrade-to-release51.sh runs source verification, patch dry-run/
+apply, native/ABI/layout checks, all normal check() gates, and ordinary dependency-
+checked repackage. It does not replace the completed clean managed/native source
+payload with installed desktop implementations.
+
+```sh
+MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/upgrade-clean-wpf-release51.sh'
+```
+
+The current job uses local observation session38437 and
+~/wpfboot/wpf-llvm23-clean-release51.log. It must be polled before any restart; final
+check/package outcome and installation evidence are still pending. The broader
+native WPF conformance goal remains active regardless of this build milestone.
