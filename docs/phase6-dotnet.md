@@ -9794,3 +9794,61 @@ content, flow across paragraph boundaries, complex center/clear policies,
 figures/tables, comparison/display transfer, balancing/span areas/footnotes,
 advanced/optimal/incremental/interruptible algorithms and full bidi/native-
 language behavior remain incomplete. The full WPF goal stays active.
+
+## 150. Floater content continuations across columns and pages
+
+The 2026-10-14 continuation retains original floater subpage break records in
+paragraph continuation state. Microsoft documents floater pagination across
+columns/pages in https://learn.microsoft.com/en-us/dotnet/desktop/wpf/advanced/flow-document-overview.
+The native bridge now uses those original content callbacks and independently
+advances floating content and host text. Floating-only chunks continue after
+the host ends, while a long host continues after its floater ends. Destination
+columns/pages pass the actual previous-page flag to the original callback.
+
+Floater break owners hold the original callback table and record until their
+last continuation owner releases them. Cloned native records share immutable
+positions while producing independent later content/records. Failed callbacks
+release populated speculative outputs and preserve inputs. No-progress resumes
+retain the original incoming checkpoint and discard unaccepted content. Page
+trimming also discards split records for anchors whose source was not accepted.
+No fake host lines or synthetic floating source ranges are introduced: original
+TextParaClient/FloaterParaClient merge the real subpage ranges into each page.
+
+Native fixtures format three chunks, destroy the first track/record before
+resuming a clone, independently branch the clone twice, discard a no-progress
+resume, inject a populated content/record failure and complete both branches.
+Every allocated mock content record must remain live while referenced and be
+destroyed once; all clients, original lines and line breaks also release once.
+Terminal floating-only chunks have zero host lines, one actual attachment and
+no phantom continuation. Existing ABI/paragraph regression gates still pass.
+
+Original public WPF tests exercise leading/inline/initially-deferred anchors,
+two columns, a long host and two opposite-edge floaters with different content
+lengths. Ideal/Display single floaters render four/five actual chunks, preserving
+all 299/319/369 characters once through real page ranges and GetPageNumber.
+Column flow renders the chunks on two/three pages and reaches the second column.
+The long host completes ten pages with all 2638 characters covered once. Two
+opposite-edge floaters complete four/five pages with all 458 characters covered
+once and actual red/green backgrounds plus blue glyphs. Disposed chunk pages
+regenerate original content across GC. Prior intact/inline/scrolling cases pass.
+
+Focused validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-paragraph-context-native
+/usr/bin/python3 ~/wpfboot/refresh-finite-native.py
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-floaters-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/split-floaters-sdk-check
+```
+
+The final focused commands pass. SDK consumer builds have zero warnings/errors;
+shared-framework and self-contained runs pass with SDK roots/toolchain PATH
+removed. Recipe Bash syntax and git whitespace checks pass. Evidence is archived
+under tmp/wpf8-support/validation/split-floaters-20261014.
+
+Native imported coverage remains 103/139 with 36 absent. Split floaters now work
+in the exercised single/opposite-edge placement areas. Colliding multiple splits
+requiring more than one placement area, flow across paragraph boundaries,
+complex center/clear policies, figures/tables, comparison/display transfer,
+balancing/spans/footnotes, advanced/optimal/incremental/interruptible algorithms
+and full bidi/native-language behavior remain incomplete. The WPF goal stays
+active.

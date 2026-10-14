@@ -148,6 +148,14 @@ struct LineBreakData {
     explicit LineBreakData(std::shared_ptr<Context> value):context(std::move(value)){++context->resources;}
     ~LineBreakData(){if(handle)reinterpret_cast<PtsDestroyLineBreakRecord>(context->info.fscbk.cbktxt.pfnDestroyLineBreakRecord)(context->info.pfsclient,handle);--context->resources;}
 };
+struct FloaterBreakData {
+    std::shared_ptr<Context> context;
+    FSFLOATERCBK callbacks{};
+    void* handle=nullptr;
+    explicit FloaterBreakData(std::shared_ptr<Context> value):context(std::move(value)){++context->resources;}
+    ~FloaterBreakData(){if(handle)reinterpret_cast<PtsDestroyFloaterContentBreakRecord>(callbacks.pfnDestroyFloaterContentBreakRecord)(context->info.pfsclient,handle);--context->resources;}
+};
+struct PendingFloater { int anchor=0; void* name=nullptr; std::shared_ptr<FloaterBreakData> record; };
 struct Continuation {
     std::shared_ptr<Context> context;
     void* segment=nullptr;
@@ -156,6 +164,8 @@ struct Continuation {
     std::shared_ptr<LineBreakData> line_break;
     std::shared_ptr<BreakData> child;
     int child_object=0;
+    bool text_ended=false;
+    std::vector<PendingFloater> floaters;
     ~Continuation();
 };
 struct BreakData {
@@ -183,11 +193,12 @@ struct TextData {
     std::vector<std::shared_ptr<LineBreakData>> breaks;
     std::shared_ptr<LineBreakData> incoming;
     std::vector<AttachedData> attached;
+    std::vector<PendingFloater> pending_floaters;
     ~TextData() {
         erase_text(this);
         auto& cb=context->info.fscbk.cbktxt;void* client=context->info.pfsclient;
         for(auto& line:lines)if(line.pfslineclient)reinterpret_cast<PtsDestroyLine>(cb.pfnDestroyLine)(client,line.pfslineclient);
-        attached.clear();breaks.clear();incoming.reset();
+        attached.clear();pending_floaters.clear();breaks.clear();incoming.reset();
         --context->resources;
     }
 };
@@ -339,9 +350,10 @@ int merge_bbox(FSBBOX& box,const FSBBOX& add) {
 
 int format_block_ui(const std::shared_ptr<ParaData>& para,uint32_t direction,const FSRECT& rect,
     void* input_margin,bool bottomless,bool empty_ok,int suppress,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA suppress_break,
-    std::shared_ptr<Continuation>& output,void** margin_output,bool floating=false,FSFLOATERPROPS* floater_props=nullptr);
+    std::shared_ptr<Continuation>& output,void** margin_output,bool floating=false,FSFLOATERPROPS* floater_props=nullptr,
+    void* floater_input=nullptr,std::shared_ptr<FloaterBreakData>* floater_output=nullptr,bool previous_page=true);
 int format_attached_objects(const std::shared_ptr<ParaData>& para,int dcp,uint32_t direction,const FSRECT& rect,bool bottomless,bool force,
-    const std::vector<void*>& names,const std::vector<int>& kinds,const std::vector<int>& anchors,int& maximum_anchor,bool& deferred) {
+    const std::vector<void*>& names,const std::vector<int>& kinds,const std::vector<int>& anchors,int& maximum_anchor,bool& deferred,const PendingFloater* resume=nullptr,bool previous_page=true) {
     auto context=para->context;void* client=context->info.pfsclient;
     int count=int(names.size()),status=0;deferred=false;
     for(int index=0;index<count;++index) {
@@ -352,8 +364,8 @@ int format_attached_objects(const std::shared_ptr<ParaData>& para,int dcp,uint32
         auto child=std::make_shared<ParaData>();child->context=context;child->desc.nmp=names[index];child->desc.idobj=2;child->desc.fsupdinf.fskupd=fskupdNew;
         status=reinterpret_cast<PtsCreateParaclient>(context->info.fscbk.cbkgen.pfnCreateParaclient)(client,names[index],&child->desc.pfsparaclient);if(status)return status;
         if(!child->desc.pfsparaclient)return PTS_tserrInvalidClientOutput;
-        std::shared_ptr<Continuation> next;MarginOwner margin{context};FSFLOATERPROPS props{};
-        status=format_block_ui(child,direction,rect,nullptr,bottomless,!force,1,fsksuppresshardbreakbeforefirstparaPageAndColumn,next,&margin.value,true,&props);if(status)return status;
+        std::shared_ptr<Continuation> next;std::shared_ptr<FloaterBreakData> tail;MarginOwner margin{context};FSFLOATERPROPS props{};
+        status=format_block_ui(child,direction,rect,nullptr,bottomless,!force,1,fsksuppresshardbreakbeforefirstparaPageAndColumn,next,&margin.value,true,&props,resume?resume->record->handle:nullptr,&tail,previous_page);if(status)return status;
         if(next){if(force)return PTS_tserrNotImplemented;deferred=true;return 0;}
         auto& candidate=child->floater->details.fsrcFloater;
         int64_t placed=candidate.v;
@@ -374,6 +386,7 @@ int format_attached_objects(const std::shared_ptr<ParaData>& para,int dcp,uint32
         if(box.fDefined&&(int64_t(box.fsrc.v)+shift<INT32_MIN||int64_t(box.fsrc.v)+shift+box.fsrc.dv>INT32_MAX))return PTS_tserrInvalidGeometry;
         candidate.v=int(placed);if(box.fDefined)box.fsrc.v=int(int64_t(box.fsrc.v)+shift);
         attached.push_back({anchors[index],props,child});
+        if(tail)para->text->pending_floaters.push_back({anchors[index],names[index],tail});
     }
     return 0;
 }
@@ -446,7 +459,7 @@ int line_area(const TextData& text,const FSRECT& rect,int& used,int& u,int& widt
     }
 }
 int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const FSRECT& rect,
-    const std::shared_ptr<Continuation>& input,std::shared_ptr<Continuation>& output,bool bottomless,bool force,bool keep_self=false) {
+    const std::shared_ptr<Continuation>& input,std::shared_ptr<Continuation>& output,bool bottomless,bool force,bool keep_self=false,bool previous_page=true) {
     auto context=para->context;auto& cb=context->info.fscbk.cbktxt;void* client=context->info.pfsclient;
     if(!cb.pfnGetTextProperties||!cb.pfnFormatLine||!cb.pfnDestroyLine||!cb.pfnDestroyLineBreakRecord)return PTS_tserrInvalidParameter;
     FSTXTPROPS props{};int status=reinterpret_cast<PtsGetTextProperties>(cb.pfnGetTextProperties)(client,para->desc.nmp,0,&props);
@@ -456,7 +469,13 @@ int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const F
     auto text=std::make_shared<TextData>(context);text->direction=direction;para->text=text;
     int dcp=input?input->dcp:props.dcpStartContent,used=0,fit=0,height_hint=0;bool overflow=false,ended=false,deferred=false;
     std::shared_ptr<LineBreakData> previous=input?input->line_break:nullptr;text->incoming=previous;
-    while(true) {
+    if(input)for(const auto& pending:input->floaters) {
+        int max_anchor=-1;
+        status=format_attached_objects(para,pending.anchor,direction,rect,bottomless,force,{pending.name},{2},{pending.anchor},max_anchor,deferred,&pending,previous_page);if(status)return status;
+        if(deferred){text->attached.clear();text->pending_floaters.clear();output=std::make_shared<Continuation>(*input);break;}
+    }
+    if(input&&input->text_ended)ended=true;
+    while(!ended&&!deferred) {
         int max_anchor=-1;FSRECT object_area=rect;object_area.v+=used;object_area.dv=std::max(0,rect.dv-used);
         status=attached_before_line(para,dcp,direction,object_area,bottomless,force&&used==0,max_anchor,deferred);if(status)return status;
         // No host line has consumed this anchor. Resume with its incoming
@@ -520,7 +539,7 @@ int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const F
         // still split so pagination makes progress rather than looping.
         if(props.fKeepTogether&&!force&&!input)fit=0;
         if(fit<int(text->lines.size())||!ended) {
-            output=std::make_shared<Continuation>();output->context=context;output->paragraph=para->desc.nmp;
+            if(!output)output=std::make_shared<Continuation>();output->context=context;output->paragraph=para->desc.nmp;
             output->dcp=fit?text->lines[fit-1].dcpLim:(input?input->dcp:props.dcpStartContent);
             output->line_break=fit?text->breaks[fit-1]:text->incoming;
         }
@@ -535,6 +554,11 @@ int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const F
     int limit=text->lines.empty()?(input?input->dcp:props.dcpStartContent):text->lines.back().dcpLim;
     text->attached.erase(std::remove_if(text->attached.begin(),text->attached.end(),[&](const AttachedData& value){return value.anchor>=limit;}),text->attached.end());
     for(const auto& object:text->attached){status=merge_bbox(para->desc.fsbbox,object.para->desc.fsbbox);if(status)return status;const auto& obstacle=object.para->floater->details.fsrcFloater;used=std::max(used,obstacle.v-rect.v+obstacle.dv);}
+    text->pending_floaters.erase(std::remove_if(text->pending_floaters.begin(),text->pending_floaters.end(),[&](const PendingFloater& value){return value.anchor>=limit;}),text->pending_floaters.end());
+    if(!text->pending_floaters.empty()) {
+        if(!output){output=std::make_shared<Continuation>();output->context=context;output->paragraph=para->desc.nmp;output->dcp=limit;output->line_break=text->lines.empty()?text->incoming:text->breaks.back();output->text_ended=ended;}
+        output->floaters=text->pending_floaters;
+    }
     para->desc.pfspara=text.get();para->desc.dvrUsed=para->forced_progress?std::min(used,rect.dv):used;
     {std::lock_guard<std::mutex> lock(gate);texts[text.get()]=text;}
     return 0;
@@ -542,7 +566,7 @@ int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const F
 
 int format_block_ui(const std::shared_ptr<ParaData>& para,uint32_t direction,const FSRECT& rect,
     void* input_margin,bool bottomless,bool empty_ok,int suppress,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA suppress_break,
-    std::shared_ptr<Continuation>& output,void** margin_output,bool floating,FSFLOATERPROPS* floater_props) {
+    std::shared_ptr<Continuation>& output,void** margin_output,bool floating,FSFLOATERPROPS* floater_props,void* floater_input,std::shared_ptr<FloaterBreakData>* floater_output,bool previous_page) {
     auto context=para->context;auto& obj=context->info.fscbk.cbkobj;void* client=context->info.pfsclient;
     if(!obj.pfnGetObjectHandlerInfo||!obj.pfnConvertMcsclient)return PTS_tserrInvalidParameter;
     FloaterHandler handler{};
@@ -570,7 +594,7 @@ int format_block_ui(const std::shared_ptr<ParaData>& para,uint32_t direction,con
             &result,&details.pfsFloaterContent,&width,&height,&box,&polygons,&vertices);
         if(!status&&result!=fmtrblGoalReached)status=PTS_tserrNotImplemented;
     } else {
-        status=reinterpret_cast<PtsFormatFloaterContentFinite>(cb.pfnFormatFloaterContentFinite)(client,para->desc.pfsparaclient,nullptr,0,para->desc.nmp,nullptr,empty_ok,suppress,direction,1,rect.du,available,suppress_break,
+        status=reinterpret_cast<PtsFormatFloaterContentFinite>(cb.pfnFormatFloaterContentFinite)(client,para->desc.pfsparaclient,floater_input,floater_input&&previous_page?1:0,para->desc.nmp,nullptr,empty_ok,suppress,direction,1,rect.du,available,suppress_break,
             &finite,&details.pfsFloaterContent,&data->break_record,&width,&height,&box,&polygons,&vertices);
     }
     pending.claimed=details.pfsFloaterContent;pending.claimed_record=data->break_record;
@@ -578,16 +602,17 @@ int format_block_ui(const std::shared_ptr<ParaData>& para,uint32_t direction,con
     if(polygons||vertices)return PTS_tserrNotImplemented;
     // An attached floater is kept intact when the occupied page would split
     // its subpage. FloaterData releases both speculative content and record.
-    if(!bottomless&&floating&&empty_ok&&(data->break_record||finite.kstop==fmtrBrokenOutOfSpace)){
+    if(!bottomless&&floating&&empty_ok&&!floater_input&&(data->break_record||finite.kstop==fmtrBrokenOutOfSpace)){
         output=std::make_shared<Continuation>();output->context=context;output->paragraph=para->desc.nmp;return 0;
     }
-    if(data->break_record)return PTS_tserrNotImplemented;
+    bool split=!bottomless&&floating&&floater_output&&data->break_record&&finite.kstop==fmtrBrokenOutOfSpace;
+    if(data->break_record&&!split)return PTS_tserrNotImplemented;
     if(!bottomless&&finite.kstop==fmtrNoProgressOutOfSpace) {
         if(details.pfsFloaterContent||width<0||height<0)return PTS_tserrInvalidClientOutput;
         output=std::make_shared<Continuation>();output->context=context;output->paragraph=para->desc.nmp;
         return 0;
     }
-    if(!bottomless&&finite.kstop!=fmtrGoalReached)return PTS_tserrNotImplemented;
+    if(!bottomless&&finite.kstop!=fmtrGoalReached&&!split)return PTS_tserrNotImplemented;
     if(width<0||height<0||width>rect.du||int64_t(rect.v)+top+height>INT32_MAX)return PTS_tserrInvalidClientOutput;
     if(!bottomless&&int64_t(top)+height>rect.dv&&!finite.fForcedProgress)return PTS_tserrInvalidClientOutput;
     int left=rect.u;
@@ -603,6 +628,7 @@ int format_block_ui(const std::shared_ptr<ParaData>& para,uint32_t direction,con
     para->forced_progress=!bottomless&&finite.fForcedProgress;
     para->desc.dvrUsed=int(std::max<int64_t>(0,bottomless?int64_t(top)+height:std::min<int64_t>(int64_t(top)+height,rect.dv)));
     status=reinterpret_cast<PtsGetMCSClientAfterFloater>(cb.pfnGetMCSClientAfterFloater)(client,para->desc.pfsparaclient,para->desc.nmp,direction,input_margin,margin_output);if(status)return status;
+    if(split){auto record=std::make_shared<FloaterBreakData>(context);record->callbacks=cb;record->handle=data->break_record;data->break_record=nullptr;*floater_output=record;}
     {std::lock_guard<std::mutex> lock(gate);floaters[data.get()]=data;}
     return 0;
 }
@@ -628,7 +654,7 @@ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t 
         FSPAP props{};status=reinterpret_cast<PtsGetParaProperties>(cb.pfnGetParaProperties)(client,name,&props);if(status)return status;
         if(props.idobj!=-1&&props.idobj!=0&&props.idobj!=1&&props.idobj!=2)return PTS_tserrNotImplemented;
         bool first=track->paras.empty();
-        bool continued=input&&first&&(input->child||input->dcp>0);
+        bool continued=input&&first&&(input->child||input->dcp>0||input->text_ended||!input->floaters.empty());
         bool page_break=!bottomless&&!continued&&props.fBreakPageBefore&&!(first&&suppress_break==fsksuppresshardbreakbeforefirstparaPageAndColumn);
         bool column_break=!bottomless&&!continued&&props.fBreakColumnBefore&&!(first&&suppress_break!=fsksuppresshardbreakbeforefirstparaNone);
         if(page_break||column_break) {
@@ -654,7 +680,7 @@ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t 
         FSRECT available=rect;available.v+=track->used;available.dv-=track->used;
         std::shared_ptr<Continuation> next_position;FSFMTRKSTOP next_stop=fmtrBrokenOutOfSpace;
         auto resume=(input&&track->paras.empty())?input:std::shared_ptr<Continuation>{};
-        if(props.idobj==-1)status=format_text(para,direction,available,resume,next_position,bottomless,!empty_ok&&track->paras.empty(),keep_self||props.fKeepWithNext);
+        if(props.idobj==-1)status=format_text(para,direction,available,resume,next_position,bottomless,!empty_ok&&track->paras.empty(),keep_self||props.fKeepWithNext,previous_page);
         else if(props.idobj==2) {
             void* margin_next=nullptr;
             status=format_block_ui(para,direction,available,input_margin,bottomless,empty_ok||!track->paras.empty(),suppress&&first,first?suppress_break:fsksuppresshardbreakbeforefirstparaNone,next_position,&margin_next);

@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <climits>
+#include <unordered_set>
 #include "ParagraphServicesNative.h"
 static int creates=0,destroys=0,fail_id=-1;
 static void require(bool value,const char* why){if(!value)throw std::runtime_error(why);}
@@ -24,7 +25,10 @@ static int(WINAPI* destroy_subpage_record)(void*,void*)=nullptr;
 static bool block_ui=false,float_obstacle=false,fail_float=false,attached_float=false,attached_right=false,multiple_float=false,multiple_opposite=false;
 static int inline_anchor_mode=0;
 static bool deferred_attachment=false,split_attachment=false;
-static int float_records_destroyed=0;
+static int float_records_destroyed=0,float_records_created=0;
+static bool paginate_float=false;
+struct MockFloaterRecord {int stage;};
+static std::unordered_set<void*> float_live_records;
 static int float_created=0,float_destroyed=0,float_fail_at=-1;
 static int(WINAPI* floater_handler)(const FSFLOATERINIT*,void*)=nullptr;
 static void* page_context=nullptr;
@@ -85,14 +89,20 @@ static int WINAPI block_props(void*,void* name,uint32_t,FSFLOATERPROPS* output){
 static int WINAPI block_margin(void*,void*,void*,uint32_t,void*,int,int* output){*output=0;return 0;}
 static int WINAPI block_after(void*,void*,void*,uint32_t,void*,void** output){*output=nullptr;return 0;}
 static int WINAPI block_destroy(void*){++float_destroyed;return 0;}
-static int WINAPI block_destroy_break(void*,void*){++float_records_destroyed;return 0;}
-static int WINAPI block_finite(void*,void* para,void*,int,void*,void*,int empty,int,uint32_t,int,int width,int height,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA,
+static int WINAPI block_destroy_break(void*,void* record){if(paginate_float){if(!float_live_records.erase(record))return PTS_tserrInvalidBreakRecord;delete static_cast<MockFloaterRecord*>(record);}++float_records_destroyed;return 0;}
+static int WINAPI block_finite(void*,void* para,void* input,int previous,void*,void*,int empty,int,uint32_t,int,int width,int height,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA,
     FSFMTR* formatted,void** content,void** br,int* used_width,int* used_height,FSBBOX* box,int* polygons,int* vertices) {
     *formatted={};*content=*br=nullptr;*used_width=*used_height=*polygons=*vertices=0;*box={};
     if(height<25&&empty){*used_width=40;*used_height=25;
         if(split_attachment){++float_created;*content=para;*br=reinterpret_cast<void*>(4001);formatted->kstop=fmtrBrokenOutOfSpace;}
         else formatted->kstop=fmtrNoProgressOutOfSpace;return 0;}
     ++float_created;*content=para;*used_width=attached_float?40:width;*used_height=25;*box={1,{0,0,*used_width,25}};formatted->fForcedProgress=height<25;
+    if(paginate_float){
+        if(input&&!float_live_records.count(input))return PTS_tserrInvalidBreakRecord;
+        if(bool(input)!=bool(previous))return PTS_tserrInvalidParameter;
+        int stage=input?static_cast<MockFloaterRecord*>(input)->stage:0;
+        if(stage<2){auto record=new MockFloaterRecord{stage+1};float_live_records.insert(record);++float_records_created;*br=record;formatted->kstop=fmtrBrokenOutOfSpace;}
+    }
     return (fail_float||float_created==float_fail_at)?PTS_tserrCallbackException:0;
 }
 static int WINAPI block_handler(void*,int id,void* output) {
@@ -500,6 +510,28 @@ int main(int argc,char** argv) {
         }
         inline_anchor_mode=0;
         std::puts("native inline floaters: discovery, constrained line retry, moved anchor placement, exact source/ownership, invalid outputs and callback cleanup PASS");
+        paginate_float=true;float_records_created=float_records_destroyed=0;reset_page_counts();float_created=float_destroyed=0;
+        FSRECT floating_area{10,20,100,80};
+        require(format_subtrack(context,nullptr,0,reinterpret_cast<void*>(77),0,nullptr,nullptr,0,1,0,&floating_area,nullptr,fskclearNone,fsksuppresshardbreakbeforefirstparaNone,&formatted,&subtrack,&subrecord,&used,&bbox,&margin,&clear,&top_space)==0&&subrecord&&float_live_records.size()==1,"split floater produces an owned content continuation");
+        require(FsDuplicateSubtrackBreakRecord(context,subrecord,&clone)==0&&clone!=subrecord&&destroy_subtrack_record(context,subrecord)==0&&destroy_subtrack(context,subtrack)==0&&float_live_records.size()==1,"cloned continuation retains original floater record after page/subtrack destruction");
+        FSRECT unavailable_floating_area{10,20,100,10};
+        require(format_subtrack(context,clone,1,reinterpret_cast<void*>(77),0,nullptr,nullptr,1,1,0,&unavailable_floating_area,nullptr,fskclearNone,fsksuppresshardbreakbeforefirstparaNone,&formatted,&subtrack,&subrecord,&used,&bbox,&margin,&clear,&top_space)==0&&subrecord&&used==0&&formatted.kstop==fmtrNoProgressOutOfSpace&&float_live_records.size()==1,"no-progress resumed floater preserves the owned incoming content checkpoint");
+        require(destroy_subtrack_record(context,subrecord)==0&&destroy_subtrack(context,subtrack)==0&&float_live_records.size()==1,"discarded no-progress clone releases wrappers without consuming its input");
+        fail_float=true;
+        require(format_subtrack(context,clone,1,reinterpret_cast<void*>(77),0,nullptr,nullptr,0,1,0,&floating_area,nullptr,fskclearNone,fsksuppresshardbreakbeforefirstparaNone,&formatted,&subtrack,&subrecord,&used,&bbox,&margin,&clear,&top_space)==PTS_tserrCallbackException&&!subtrack&&!subrecord&&float_live_records.size()==1,"failed split resume releases speculative content and output record while preserving input");fail_float=false;
+        void* branches[2]{};
+        for(int branch=0;branch<2;++branch){
+            require(format_subtrack(context,clone,1,reinterpret_cast<void*>(77),0,nullptr,nullptr,0,1,0,&floating_area,nullptr,fskclearNone,fsksuppresshardbreakbeforefirstparaNone,&formatted,&subtrack,&branches[branch],&used,&bbox,&margin,&clear,&top_space)==0&&branches[branch]&&used==25,"immutable floating continuation can resume independently in two branches");
+            require(FsQuerySubtrackParaList(context,subtrack,1,paras,&actual_count)==0&&actual_count==1&&FsQueryTextDetails(context,paras[0].pfspara,&text_details)==0&&text_details.u.full.cLines==0&&text_details.u.full.cAttachedObjects==1,"floating-only page chunk does not consume host text again");
+            require(destroy_subtrack(context,subtrack)==0,"release independent intermediate floating content");
+        }
+        require(destroy_subtrack_record(context,clone)==0&&float_live_records.size()==2,"input floating record releases after its last independent continuation owner");
+        for(void* branch:branches){
+            require(format_subtrack(context,branch,1,reinterpret_cast<void*>(77),0,nullptr,nullptr,0,1,0,&floating_area,nullptr,fskclearNone,fsksuppresshardbreakbeforefirstparaNone,&formatted,&subtrack,&subrecord,&used,&bbox,&margin,&clear,&top_space)==0&&!subrecord&&used==25,"final floating content chunk completes without a phantom continuation");
+            require(destroy_subtrack_record(context,branch)==0&&destroy_subtrack(context,subtrack)==0,"terminal floating content and input record release independently");
+        }
+        require(float_live_records.empty()&&float_records_created==float_records_destroyed&&float_created==float_destroyed&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"split/cloned/failed/terminal floating paths release every content/client/record/line once");paginate_float=false;
+        std::puts("native split floaters: owned subpage records, host-terminal chunks, independent cloned resumes, populated callback failure and exact final cleanup PASS");
         fail_float=true;reset_page_counts();float_created=float_destroyed=0;
         require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrCallbackException&&!page_handle&&!page_break&&float_created==float_destroyed&&lines_created==lines_destroyed&&clients_created==clients_destroyed,"populated attached-content callback failure tears down all owned objects");
         fail_float=attached_float=attached_right=false;para_count=2;
