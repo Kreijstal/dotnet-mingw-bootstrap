@@ -10324,3 +10324,59 @@ repeated headers/footers, figures, complex center/clear policies, comparison/
 display transfer, balancing/spans/footnotes, advanced/optimal/incremental/
 interruptible algorithms and full bidi/native-language behavior remain
 incomplete. The full WPF goal stays active.
+
+## 159. Installed release 30: oversized connected span continuations
+
+The 2026-10-14 continuation packages section 158 as WindowsDesktop 8.0.0-30.
+Declared/checksummed 0030-split-vertical-spans.patch follows the prior 29 patches.
+The feature patch matches commit 8162364 exactly; clean patched pinned sources
+and the actual private package sources match the three feature files. Both
+source and private trees rebuild native output, inventory and layout and pass
+native clone/no-progress/failure/resource checks, 429 original ABI field checks,
+paragraph/line regressions and all 18 offline WPF SDK consumer gates. Interim
+WinForms checks also pass. Unchanged managed/graphics/printing outputs remain
+the package workspace's own private source builds.
+
+Validation commands:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+# In the CLANG64 package workspace, with srcdir set to its src/ directory:
+makepkg --verifysource --force
+source PKGBUILD
+_wpf native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+makepkg --printsrcinfo > .SRCINFO
+makepkg --repackage --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-30-any.pkg.tar.zst
+/usr/bin/python3 check-staged.py /clang64/lib/dotnet
+bash "$(_driver)/wpf-tests/check-tables-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-split-spans-sdk-check
+bash "$(_driver)/wpf-tests/check-subpages-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-split-spans-subpages-sdk-check
+pacman -Q mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap
+sha256sum mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-30-any.pkg.tar.zst
+```
+
+All final commands pass. The installed payload contains 42 managed implementation/
+reference assemblies, eight native libraries, SDK tasks and retained interim
+WinForms versions. Tall connected spans complete five pages with 412 source
+characters, initially deferred spans six pages with 482, columns three pages
+with 412, overlapping tall masters five pages with 662 and tall ordinary
+neighbors twelve pages with 922. Ideal/Display runs retain every character once
+with original GetPageNumber agreement, glyph raster and continuous span geometry.
+Disposed fragments regenerate after GC. Prior intact/split/tiny/nested/empty/
+scrolling table checks pass. Installed original finite/bottomless subpage
+checks pass, including width/extent updates retaining all 1339 source characters.
+Shared-framework and self-contained consumers pass with SDK roots/toolchain
+PATH removed and zero compiler warnings/errors. The existing srcdir provenance
+warning remains.
+
+Artifact: mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-30-any.pkg.tar.zst.
+SHA-256: fe72b7305e1bc076603649a2c8321cff5533a0c747a067220f37ff13fc139ea8.
+Recipe commit: msys2-ur de6a941; feature commit: 8162364.
+Source evidence is archived under tmp/wpf8-support/validation/split-spans-20261014.
+Artifact, recipe, metadata, patch, hashes and package/installed validation logs
+are archived under tmp/wpf8-support/validation/split-spans-package-20261014.
+Imported native coverage remains 109/139 with 30 absent. More complex span/row-
+break arrangements, repeated headers/footers, figures, complex center/clear
+policies, comparison/display transfer, balancing/spans/footnotes, advanced/
+optimal/incremental/interruptible algorithms and full bidi/native-language
+behavior remain incomplete. The full WPF goal stays active.
