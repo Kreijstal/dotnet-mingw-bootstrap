@@ -13799,3 +13799,101 @@ justification, broader native layout/bidi/optimizer conformance, compression/ink
 insertion, complex margins, spelling reform and physical printing remain unfinished.
 WinForms8 metadata generation and current Greenshot's net480/source dependency
 requirements remain open. The WPF packaging goal stays active.
+
+
+## 214. Selected tab alignment and final left-field justification
+
+The 2026-10-14 continuation fixes a blanket Line Services rejection: a justified
+line containing any tab failed whenever any configured stop was non-left, even
+when that stop was unused or belonged to an earlier field. The new public
+consumer reproduces NotImplemented on installed release57; its build succeeds
+with zero warnings/errors before the actual formatting failure.
+
+Source commit0c12244 retains each tab's actual selected alignment during final
+layout. Incremental fallback resets the selection to left. Justification expands
+only the field after the last visible tab; earlier fields keep their anchors.
+A final center/right/character field still rejects if expansion is needed,
+pending its anchor-preserving policy. This is not complete aligned-tab support.
+
+Exact development rebuild and final native check commands on win11:
+
+```sh
+MSYSTEM=CLANG64 WPF_SOURCE=$HOME/dotnetboot/m612/src/wpf-8.0.0 WPF_BUILD=$HOME/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-justification-native
+MSYSTEM=CLANG64 WPF_SOURCE=$HOME/dotnetboot/m612/src/wpf-8.0.0 WPF_BUILD=$HOME/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-justification-native
+bash ~/wpfboot/selected-tab-development-check.sh
+```
+
+All final commands exit0. Native tests cover nominal/shaped and InterWord/FullMixed
+geometry with five earlier stop types, unused right stops, incremental fallback
+and four final aligned-field rejection cases with empty output. Existing exact
+expansion priorities, nominal advances, callback failures, malformed glyph maps,
+capacity limits and terminal-line policy pass.
+
+The new public SDK consumer has32 cases per execution: Ideal/Display, split/
+unsplit source runs, four earlier alignment types, explicit final left versus
+incremental fallback. It verifies exact justified width, unchanged earlier
+anchors, expanded space advances, caret/point ownership, tab selection, real
+raster, paragraph continuation/source completion and compacting GC. Shared and
+portable executions pass separately (64 cases). Existing native line/object and
+public tab/font, mixed justification and aligned-object regressions also pass.
+
+The initial310-pixel Display fixture had nominal width310 and correctly needed no
+expansion. The final317-pixel fixture creates actual expansion in both modes;
+its exact geometry assertions remain unchanged. The initial final-aligned native
+fixture also needed no expansion; the final fixture explicitly leaves positive
+expansion room, so rejection is exercised. No production rule was weakened for
+either test correction. Logs/scripts are archived under
+`tmp/wpf8-support/validation/selected-tab-justification-20261014`.
+
+WindowsDesktop8.0.0-58 is packaged in msys2-ur commit031fe90. All58 recipe patches
+replay cleanly from the pinned archive and match all six feature files byte for
+byte. The65 source/hash declarations verify on the host; all61 locally available
+inputs match. Patch0058 SHA-256:
+23f0e4133aed53f4f1d592d95b3e75b3cc41f1f2488aafe226bafeff948bc714.
+Registered SDK consumers increase to43; this release runs focused regressions,
+not a new complete43-consumer suite.
+
+Exact package/install command on win11, terminal exit0:
+
+```sh
+bash ~/wpfboot/selected-tab-package-and-check.sh
+```
+
+The archived script exports the CLANG64 environment explicitly, verifies sources,
+dry-runs/applies0058 and rebuilds only the changed native payload in the existing
+private source build:
+
+```sh
+_wpf native-win32 inventory check-justification-native check-inline-objects-native check-lineservices-line-native layout
+makepkg --repackage --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-58-any.pkg.tar.zst
+```
+
+The private native tests and shared/portable selected-tab, aligned-object,
+InlineUIContainer, tabs/font, bidi, cross-run caret, mixed justification and normal
+BAML/window consumers pass. Ordinary dependency checks remain enabled. Package
+creation uses the previously validated private source-built managed payload;
+the changed native DLL is rebuilt from patched sources. It is not a new complete
+from-scratch WPF build. The native shared/runtime-pack bytes match the private
+rebuild, and SDK overlays are recreated without overwriting installed hardlinks.
+
+Both private and installed42-pair managed/reference/native payload audits pass.
+Installed selected-tab and BAML/window checks then pass shared and portable with
+zero consumer warnings/errors. There are192 new public cases across development,
+private and installed scopes (64 each). Native export coverage remains133/139;
+the six missing declarations remain upstream #if NEVER.
+
+Artifact, final scripts/logs, recipe, clean replay and native inventory are
+archived under `tmp/wpf8-support/validation/selected-tab-justification-package-20261014`:
+
+```text
+mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-58-any.pkg.tar.zst
+SHA-256: 7f274e3166ade53881fd28fa1d0fb7668e9d4509a2b7eaab6c23c509148e8861
+Bytes: 58920233
+```
+
+The downloaded artifact hash matches the host; pacman reports8.0.0-58. Final
+aligned-field justification, compression/ink insertion, broader layout/bidi/
+optimizer conformance, complex margins, spelling reform and physical printing
+remain unfinished. WinForms8 metadata generation and current Greenshot's net480/
+source dependency requirements also remain open. The WPF goal stays active.
