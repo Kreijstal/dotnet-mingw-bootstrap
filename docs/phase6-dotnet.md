@@ -11870,3 +11870,122 @@ Cross-paragraph float propagation/clearing, forced groups too large for an empty
 page, polygon/object constraints and other advanced layout/optimal/NLS paths
 remain unfinished. This release supplies original centered wrapping and selective
 floater clear-before-format behavior. The broader WPF goal remains active.
+
+
+## 184. Original legacy spelling ABI and culture-scoped dictionaries
+
+The 2026-10-14 continuation implements NlLoad/NlGetClassObject/NlUnload using
+source COM objects. A generator reads original NLGSpellerInterop.cs identities,
+method order and range-role constants: six interfaces retain 20/60/28/18/32/8
+slots after IUnknown. Used methods implement HRESULT/out results, VARIANT by
+value, VARIANT_BOOL and the original VT_UI2|VT_BYREF suggestion strings. Original
+unused stub_* slots remain explicit E_NOTIMPL entries. Resources belong to their
+COM owners; parent release and NlUnload do not invalidate surviving snapshots.
+Clones retain independent enumeration positions.
+
+ICU supplies original UTF-16 sentence/word ranges, including offsets after
+surrogate pairs. Windows ISpellChecker supplies actual errors/suggestions,
+without a bundled prebuilt engine. Verification mode excludes suggestions;
+word-breaking mode excludes spelling. Custom lexicons decode UTF-8/UTF-16 LE/BE,
+match without case, retain #LID culture scope and support add/remove/release-all.
+Unavailable providers/cultures and legacy compound/multiword/reform selectors
+remain explicit failures. Windows 8 or later and an installed spelling provider
+are required for spelling; this does not add Windows 7's old proprietary engine.
+
+The original WinRT provider already supports ordinary spelling. An independent
+native-only registrar probe proves that this host accepts registration for en-US
+or en but still reports the custom word as incorrect, whereas registration for
+all languages works. Both files with and without #LID show that behavior. The
+initial header-conversion hypothesis was therefore discarded. A managed source
+patch instead keeps a culture-aware word set alongside original OS registration,
+consults it in original spelling segments, and removes entries on dictionary
+removal/clear. Language scope and original source bytes are preserved.
+
+Focused validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-spelling-native inventory
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh prepare-bridges build-presentation-framework inventory layout
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-spell-check-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/spell-check-sdk-check
+```
+
+Native ABI/factory/invalid-culture/snapshot/clone/reload checks pass. Original NLG
+wrapper checks pass for multiple sentences, exact misspelling/surrogate offsets,
+suggestions, word/verification modes, empty inputs, callback cancellation,
+dictionary lifetime and GC. Public TextBox tests exercise both original providers
+through error detection, suggestions, correction, IgnoreAll, dictionary encodings
+and headers, source-byte preservation and removal. Test-only reflection chooses
+NLG after original Speller initialization; normal provider selection is unchanged.
+Both shared-framework and self-contained executions pass without compiler warnings
+or errors. Foreign-culture/clear checks also pass in the full regression gate.
+
+The new consumer belongs to check-sdk, bringing the suite to 32 WPF consumers.
+Full source/private regressions and package integration follow. Native imported
+coverage rises to 129/139, with ten exports still absent; paragraph ABI remains
+479 fields. Evidence is under tmp/wpf8-support/validation/spelling-20261014.
+Advanced layout/object/column-span/footnote behavior and legacy multiword/reform
+features remain unfinished. The WPF goal stays active.
+
+
+## 185. Installed release 43: original spelling bridge and scoped dictionaries
+
+WindowsDesktop 8.0.0-43 is built, installed and validated on win11. Source feature
+commit e6235d1 is represented by recipe patch 0043. Clean pinned source plus all
+43 patches reproduces all eight feature files byte for byte; actual source/private
+files also match. All 46 locally available declared input hashes match, and the
+private makepkg --verifysource gate verifies every source input. Recipe commit
+02c1701 declares release/patch/README/check metadata and regenerated .SRCINFO.
+
+Full source and private regressions both exit zero. Each completes 32 WPF
+consumers (standard SDK/BAML/window app plus 31 feature gates), and both interim
+WinForms executions. The source and private spelling consumers include all final
+foreign-culture and dictionary-clear checks. Paragraph ABI remains 479 fields,
+with context/methods/callback sizes 872/136/824. Exact full commands:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-spelling-native inventory check-paragraph-context-native check-paragraph-context layout check-sdk
+# Private CLANG64 recipe workspace, after sourcing PKGBUILD:
+_wpf prepare-bridges build-presentation-framework native-win32 inventory check-spelling-native check-paragraph-context-native check-paragraph-context layout check-sdk
+MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/install-spelling.sh'
+```
+
+The archived install-and-check.sh regenerates .SRCINFO, invokes makepkg
+--repackage --force --noconfirm, installs through pacman -U --noconfirm, and checks
+staged payload hashes before the exact installed consumers:
+
+```sh
+bash "$(_driver)/wpf-tests/check-spell-check-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-spelling-sdk-check
+bash "$(_driver)/wpf-tests/check-hyphenation-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-spelling-hyphenation-sdk-check
+bash "$(_driver)/wpf-tests/check-floater-clearing-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-spelling-floater-clearing-sdk-check
+/usr/bin/python3 ~/wpfboot/check-installed-hyphenation.py
+```
+
+All commands exit zero. Payload validation verifies 42 managed implementations/
+references, native hashes, SDK tasks and retained interim framework versions.
+Installed public TextBox checks pass for original WinRT and test-selected NLG
+providers: detection/suggestions/correction, IgnoreAll, six encoding/header
+combinations per provider, source-byte preservation, foreign-culture exclusion,
+dictionary removal/clear and dispatcher/GC cleanup. Shared-framework and portable
+execution each test twelve public dictionary combinations. Original NLG wrapper
+checks cover multiple sentences, surrogate/source positions, word/verification
+modes, empty inputs, cancellation and lexicon release across collection.
+
+Existing installed hyphenation checks pass thirteen cultures, exact native
+bitmasks, original formatter source positions and actual inserted glyphs in both
+text modes/directions. Existing floater checks pass finite/bottomless centered
+and selective-clear placement, source/page ownership and regeneration through GC.
+All three SDK consumers pass shared-framework and self-contained executions with
+zero compiler warnings/errors. Installed source audit verifies 81 input hashes,
+39 notices and exact regeneration of all 36 dictionaries. Installed native import
+inventory confirms 129/139 APIs with ten absent.
+
+Evidence/artifact are under tmp/wpf8-support/validation/spelling-package-20261014:
+mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-43-any.pkg.tar.zst.
+SHA-256: cea5d63d4aa8f89af9998f7dd475597ada24d67888c681d0e12d0422a85f942d.
+The 58,893,499-byte local artifact hash equals the installed host's artifact.
+Source evidence is under tmp/wpf8-support/validation/spelling-20261014.
+
+Object-handler, column-span, footnote/debug/cached-query imports remain absent.
+Legacy multiword/compound/reform controls, advanced bidi/layout/optimal behavior,
+cross-paragraph floats and forced oversized object groups remain unfinished.
+The WPF packaging goal stays active.
