@@ -10884,3 +10884,59 @@ ownership transfer; selective reuse of opaque line clients is not claimed.
 Complex object/layout behavior, advanced bidi, balancing/footnotes, optimal/
 interruptible algorithms and complete native-language services remain unfinished.
 The WPF packaging goal stays active.
+
+
+## 169. Installed release 35: comparison and managed visual transfer
+
+The 2026-10-14 continuation packages section 168 as WindowsDesktop 8.0.0-35.
+Declared/checksummed 0035-display-transfer.patch follows the preceding 34 patches.
+Clean pinned sources plus all patches reproduce the six feature files byte for
+byte; the actual private package tree matches the driver sources. The declared
+patch equals the committed feature diff. Both source and private package native
+rebuilds/ABI/lifecycle/line regressions and all 23 offline WPF SDK consumer checks
+complete with exit zero; retained interim WinForms shared/self-contained checks
+also pass. The package continues using its own private source-built managed,
+graphics, pen and printing outputs.
+
+Validation, packaging and installation:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+# In the CLANG64 package workspace, with srcdir set to its src/ directory:
+source PKGBUILD
+_wpf native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+makepkg --printsrcinfo > .SRCINFO
+makepkg --repackage --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-35-any.pkg.tar.zst
+/usr/bin/python3 check-staged.py /clang64/lib/dotnet
+bash "$(_driver)/wpf-tests/check-display-transfer-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-display-transfer-sdk-check
+bash "$(_driver)/wpf-tests/check-subtracks-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-display-transfer-subtracks-sdk-check
+bash "$(_driver)/wpf-tests/check-subpages-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-display-transfer-subpages-sdk-check
+pacman -Q mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap
+sha256sum mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-35-any.pkg.tar.zst
+```
+
+All commands pass. Staged/installed validation covers 42 managed implementation/
+reference assemblies, eight native libraries, SDK tasks and interim WinForms
+versions. Installed original managed transfer checks cover nested visual identity
+and ownership, conservative content comparison, repeated transfer, same-geometry
+brush changes, a second-generation text change, old-client disposal/compacting GC
+and complete original source ranges in Ideal/Display. Subtrack creation/update/
+synchronization and subpage pagination/cloned continuations/bottomless updates
+also pass against the installed package. All three consumers execute through
+shared-framework and portable self-contained publication with SDK roots and
+toolchain PATH removed. Builds have zero warnings/errors. Only the existing
+srcdir provenance warning is reported during package creation.
+
+Artifact: mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-35-any.pkg.tar.zst.
+SHA-256: 27d60e0e864ff185099d93b08491338dbf9f9668175f28257432dc207ee4b7ec.
+Recipe commit: msys2-ur 5ceb9de; feature commit: 5d0934e.
+Source evidence is archived under
+ tmp/wpf8-support/validation/display-transfer-20261014. Artifact, recipe, metadata,
+patch, hashes and package/installed/private-regression logs are archived under
+ tmp/wpf8-support/validation/display-transfer-package-20261014. The downloaded
+artifact's SHA-256 matches the validation host.
+Imported native coverage is 115/139 with 24 absent; original paragraph ABI remains
+441 fields. Selective opaque-line reuse, complex object/layout behavior, advanced
+bidi, balancing/footnotes, optimal/interruptible algorithms and complete native-
+language services remain unfinished. The WPF goal stays active.
