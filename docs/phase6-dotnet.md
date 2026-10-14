@@ -9912,3 +9912,64 @@ center/clear policies, figures/tables, comparison/display transfer, balancing/
 span areas/footnotes, advanced/optimal/incremental/interruptible algorithms and
 full bidi/native-language behavior remain incomplete. The full WPF goal stays
 active.
+
+## 152. Public table rows and original cell subpages
+
+The 2026-10-14 continuation derives the original table ABI and implements the
+opaque table handler plus table/object/proper/row/cell queries. Paragraph object
+ID 3 now formats through original TableParagraph/TableParaClient callbacks:
+Autofit computes actual column widths, row fetching returns original identities,
+and cell callbacks retain actual managed CellParaClient handles and their native
+subpages. Maximum cell height and original spacing/border/padding determine each
+row. Finite pages defer unaccepted whole rows and resume their original names on
+following columns/pages; bottomless tables preserve their full height.
+
+Native cell ownership differs from floater content ownership: cell callbacks
+return a managed client handle whose DestroyCell callback owns the generated
+native subpage. Callback resource guards preserve pages owned by reported cells
+and release unreported pages after a lost-output failure. Table/cell/client
+teardown remains outside registry locks. Weak table/row query registries reject
+foreign/stale handles and capacity errors without exposing freed data.
+
+The initial runtime check found the original CellParaClient.Arrange clears
+subpage updates before its first ValidateVisual(New). Cell-owned pages now
+inherit visual-update state through their tracks and paragraphs, so the original
+new visual initializes correctly. General subpage clear semantics stay intact.
+Native tests cover exact row identities/heights/spacing, table/proper/row/cell
+queries, capacity/update/stale state, unconsumed row continuation after old page
+destruction, populated cell failure and lost cell output. Mock cells actually
+create native subpages; all cell/client/line/break/native resources release once.
+
+Original public WPF tables render red/blue backgrounds, black borders and green
+glyphs in Ideal/Display. Auto/fixed-width 12-row tables complete two pages with
+all 156 characters covered once; styled border/padding, horizontal-span and
+multiple-row-group tables complete three pages with all 149 characters. Tables
+after six preceding lines complete three pages with all 226 characters. Column
+flow completes one page with all 156 characters; nested tables complete three
+pages with all 182 characters. Original GetPageNumber and disposed-page
+regeneration agree with actual original cell ranges across GC. Empty tables
+complete one page without a phantom continuation. Scrolling cell edits change
+row height/raster/full extent (619->661.6 Ideal, 614->656 Display), and end
+scrolling succeeds. Glyph checks require green ink separately from black border
+pixels. The new offline SDK fixture is included in the driver check-sdk gate.
+
+Focused validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 inventory check-paragraph-context-native check-paragraph-context
+/usr/bin/python3 ~/wpfboot/refresh-finite-native.py
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-tables-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/tables-sdk-check
+```
+
+Final focused commands pass. Original reflection now checks 429 source-derived
+field sizes/offsets, including both row-description union arms. Consumers build
+with zero warnings/errors; shared-framework and self-contained execution pass
+with SDK roots/toolchain PATH removed. Bash syntax and git whitespace checks
+pass. Evidence is archived under tmp/wpf8-support/validation/tables-20261014.
+
+Imported native coverage rises to 109/139 with 30 absent. This implements the
+exercised intact-row tables, not cell/row splitting, vertical spans or repeated
+headers/footers. Figures, complex center/clear policies, comparison/display
+transfer, balancing/spans/footnotes, advanced/optimal/incremental/interruptible
+algorithms and full bidi/native-language behavior remain incomplete. The full
+WPF goal remains active.

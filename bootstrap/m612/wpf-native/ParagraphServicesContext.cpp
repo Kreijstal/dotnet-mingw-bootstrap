@@ -16,6 +16,8 @@ struct InstalledObjects { FSIMETHODS methods[2]; };
 // consumer belong to this replacement; its callback table comes from Pts.cs.
 struct FloaterHandler { uint32_t magic=0; FSFLOATERINIT init{}; };
 constexpr uint32_t floater_magic=0x464c5431;
+constexpr uint32_t table_magic=0x54424c31;
+struct TableHandler {uint32_t magic=table_magic;FSTABLEOBJINIT init{};};
 struct Context {
     FSCONTEXTINFO info{};
     std::shared_ptr<InstalledObjects> installed;
@@ -41,6 +43,10 @@ extern "C" __declspec(dllexport) int WINAPI GetFloaterHandlerInfo(const FSFLOATE
     if(!output)return PTS_tserrNullOutputParameter;
     if(!init)return PTS_tserrInvalidParameter;
     auto handler=static_cast<FloaterHandler*>(output);handler->init=*init;handler->magic=floater_magic;return 0;
+}
+extern "C" __declspec(dllexport) int WINAPI GetTableObjHandlerInfo(const FSTABLEOBJINIT* init,void* output) {
+    if(!output)return PTS_tserrNullOutputParameter;if(!init)return PTS_tserrInvalidParameter;
+    TableHandler handler{};handler.init=*init;std::memcpy(output,&handler,sizeof(handler));return 0;
 }
 extern "C" __declspec(dllexport) int WINAPI CreateInstalledObjectsInfo(const FSIMETHODS* subtrack,const FSIMETHODS* subpage,void** output,int* count) {
     if(!output||!count)return PTS_tserrNullOutputParameter;*output=nullptr;*count=0;
@@ -164,6 +170,7 @@ struct Continuation {
     std::shared_ptr<LineBreakData> line_break;
     std::shared_ptr<BreakData> child;
     int child_object=0;
+    void* table_row=nullptr;
     bool text_ended=false;
     std::vector<PendingFloater> floaters;
     ~Continuation();
@@ -217,12 +224,39 @@ struct FloaterData {
         --context->resources;
     }
 };
+struct TableData;
+struct TableRowData;
+void erase_table(void*);
+void erase_table_row(void*);
+struct TableCellData {
+    std::shared_ptr<Context> context;
+    FSTABLECBKCELL callbacks{};
+    void* name=nullptr;void* handle=nullptr;void* record=nullptr;int height=0;
+    FSKUPDATE update=fskupdNew;
+    explicit TableCellData(std::shared_ptr<Context> value):context(std::move(value)){++context->resources;}
+    ~TableCellData(){if(record)reinterpret_cast<PtsDestroyCellBreakRecord>(callbacks.pfnDestroyCellBreakRecord)(context->info.pfsclient,record);if(handle)reinterpret_cast<PtsDestroyCell>(callbacks.pfnDestroyCell)(handle);--context->resources;}
+};
+struct TableRowData {
+    std::shared_ptr<Context> context;
+    FSTABLEROWDESCRIPTION description{};FSTABLEROWDETAILS details{};
+    std::vector<std::shared_ptr<TableCellData>> cells;
+    explicit TableRowData(std::shared_ptr<Context> value):context(std::move(value)){++context->resources;}
+    ~TableRowData(){erase_table_row(this);cells.clear();--context->resources;}
+};
+struct TableData {
+    std::shared_ptr<Context> context;FSTABLEOBJINIT callbacks{};
+    FSTABLEOBJDETAILS details{};FSTABLEDETAILS proper{};
+    std::vector<std::shared_ptr<TableRowData>> rows;
+    explicit TableData(std::shared_ptr<Context> value):context(std::move(value)){++context->resources;}
+    ~TableData(){erase_table(this);rows.clear();--context->resources;}
+};
 struct ParaData {
     std::shared_ptr<Context> context;
     FSPARADESCRIPTION desc{};
     bool forced_progress=false;
     std::shared_ptr<TextData> text;
     std::shared_ptr<FloaterData> floater;
+    std::shared_ptr<TableData> table;
     ~ParaData();
 };
 struct TrackData {
@@ -259,6 +293,7 @@ struct PageData {
     FSPAGEDETAILS details{};
     bool bottomless=false;
     bool subpage=false;
+    bool inherit_updates=false;
     FSSUBPAGEDETAILS subpage_details{};
     std::shared_ptr<Continuation> continuation;
     FSFMTRKSTOP stop=fmtrGoalReached;
@@ -270,6 +305,10 @@ std::unordered_map<void*,std::weak_ptr<FloaterData>> floaters;
 std::unordered_map<void*,std::shared_ptr<PageData>> pages;
 std::unordered_map<void*,std::shared_ptr<BreakData>> records;
 std::unordered_map<void*,std::weak_ptr<SectionData>> sections;
+std::unordered_map<void*,std::weak_ptr<TableData>> tables;
+std::unordered_map<void*,std::weak_ptr<TableRowData>> table_rows;
+void erase_table(void* handle){std::lock_guard<std::mutex> lock(gate);tables.erase(handle);}
+void erase_table_row(void* handle){std::lock_guard<std::mutex> lock(gate);table_rows.erase(handle);}
 void erase_section(void* handle){std::lock_guard<std::mutex> lock(gate);sections.erase(handle);}
 void erase_text(void* handle){std::lock_guard<std::mutex> lock(gate);texts.erase(handle);}
 void erase_floater(void* handle){std::lock_guard<std::mutex> lock(gate);floaters.erase(handle);}
@@ -281,7 +320,7 @@ ParaData::~ParaData() {
     bool destroy_subpage=false;
     if(desc.idobj==1&&desc.pfspara){std::lock_guard<std::mutex> lock(gate);auto found=pages.find(desc.pfspara);destroy_subpage=found!=pages.end()&&found->second->subpage&&found->second->context==context;}
     if(desc.pfspara&&(desc.idobj==0||destroy_subpage))reinterpret_cast<PtsObjDestroyPara>(context->installed->methods[desc.idobj].pfnDestroyPara)(desc.pfspara);
-    text.reset();floater.reset();
+    text.reset();floater.reset();table.reset();
     if(desc.pfsparaclient)reinterpret_cast<PtsDestroyParaclient>(context->info.fscbk.cbkgen.pfnDestroyParaclient)(context->info.pfsclient,desc.pfsparaclient);
 }
 // A managed object callback may successfully format a native subtrack and then
@@ -295,6 +334,7 @@ struct CallbackTracks {
     std::vector<std::shared_ptr<TrackData>> created;
     std::vector<std::shared_ptr<TrackData>>* previous;
     void* claimed=nullptr;
+    bool claimed_pages=false;
     std::vector<std::shared_ptr<BreakData>> created_records;
     void* claimed_record=nullptr;
     std::vector<std::shared_ptr<BreakData>>* previous_records;
@@ -311,7 +351,7 @@ struct CallbackTracks {
             {std::lock_guard<std::mutex> lock(gate);tracks.erase(track.get());}
             track.reset();
         }
-        for(auto& page:created_pages)if(page.get()!=claimed){unregister_page(page);page.reset();}
+        for(auto& page:created_pages)if(!claimed_pages&&page.get()!=claimed){unregister_page(page);page.reset();}
     }
 };
 
@@ -633,6 +673,69 @@ int format_block_ui(const std::shared_ptr<ParaData>& para,uint32_t direction,con
     return 0;
 }
 
+int format_table(const std::shared_ptr<ParaData>& para,uint32_t direction,const FSRECT& rect,void* input_margin,
+    bool bottomless,bool empty_ok,int suppress,const std::shared_ptr<Continuation>& input,std::shared_ptr<Continuation>& output,void** margin_output) {
+    auto context=para->context;void* client=context->info.pfsclient;auto& obj=context->info.fscbk.cbkobj;
+    if(!obj.pfnGetObjectHandlerInfo||!obj.pfnConvertMcsclient)return PTS_tserrInvalidParameter;
+    TableHandler handler{};int status=reinterpret_cast<PtsGetObjectHandlerInfo>(obj.pfnGetObjectHandlerInfo)(client,3,&handler);if(status)return status;
+    if(handler.magic!=table_magic)return PTS_tserrInvalidClientOutput;
+    auto& cb=handler.init;auto& fetch=cb.tablecbkfetch;auto& cells=cb.tablecbkcell;auto& table=cb.tableobjcbk;
+    if(!table.pfnGetTableProperties||!table.pfnAutofitTable||!table.pfnGetMCSClientAfterTable||!fetch.pfnGetFirstRow||!fetch.pfnGetNextRow||!fetch.pfnGetRowProperties||!fetch.pfnGetCells||!cells.pfnDestroyCell||!cells.pfnDestroyCellBreakRecord||!cells.pfnSetCellHeight||!(bottomless?cells.pfnFormatCellBottomless:cells.pfnFormatCellFinite))return PTS_tserrInvalidParameter;
+    FSTABLEOBJPROPS props{};status=reinterpret_cast<PtsGetTableProperties>(table.pfnGetTableProperties)(client,para->desc.nmp,direction,&props);if(status)return status;
+    if(props.fFloat||props.fskclear!=fskclearNone||props.fswdirTable!=direction||props.ktablealignment!=fsktableobjAlignLeft||props.dvrCaptionTop||props.dvrCaptionBottom||props.durCaptionLeft||props.durCaptionRight)return PTS_tserrNotImplemented;
+    for(int which=0;which<2;++which){void* callback=which?fetch.pfnGetFirstFooterRow:fetch.pfnGetFirstHeaderRow;if(callback){int found=0;void* name=nullptr;status=reinterpret_cast<PtsGetFirstHeaderRow>(callback)(client,para->desc.nmp,0,&found,&name);if(status)return status;if(found)return PTS_tserrNotImplemented;}}
+    if(fetch.pfnGetDistributionKind){FSKTABLEHEIGHTDISTRIBUTION distribution{};status=reinterpret_cast<PtsGetDistributionKind>(fetch.pfnGetDistributionKind)(client,para->desc.nmp,direction,&distribution);if(status)return status;if(distribution!=fskdistributeUnchanged)return PTS_tserrNotImplemented;}
+    int width=0,top=0;status=reinterpret_cast<PtsAutofitTable>(table.pfnAutofitTable)(client,para->desc.pfsparaclient,para->desc.nmp,direction,rect.du,&width);if(status)return status;
+    if(width<0||int64_t(rect.u)+width>INT32_MAX)return PTS_tserrInvalidClientOutput;
+    status=reinterpret_cast<PtsConvertMcsclient>(obj.pfnConvertMcsclient)(client,para->desc.pfsparaclient,para->desc.nmp,direction,input_margin,suppress,&top);if(status)return status;
+    if(top<0||int64_t(rect.v)+top>INT32_MAX)return PTS_tserrInvalidGeometry;
+    auto data=std::make_shared<TableData>(context);data->callbacks=cb;para->table=data;
+    int found=1;void* name=input?input->table_row:nullptr;bool first_table=!name;
+    if(!name){status=reinterpret_cast<PtsGetFirstRow>(fetch.pfnGetFirstRow)(client,para->desc.nmp,&found,&name);if(status)return status;}
+    int used=0;std::unordered_set<void*> visited;
+    while(found){
+        if(!name||!visited.insert(name).second)return PTS_tserrInvalidClientOutput;
+        void* next=nullptr;int has_next=0;status=reinterpret_cast<PtsGetNextRow>(fetch.pfnGetNextRow)(client,para->desc.nmp,name,&has_next,&next);if(status)return status;if(has_next&&!next)return PTS_tserrInvalidClientOutput;
+        FSTABLEROWPROPS row_props{};status=reinterpret_cast<PtsGetRowProperties>(fetch.pfnGetRowProperties)(client,name,direction,&row_props);if(status)return status;
+        if(row_props.cCells<0||(row_props.cCells>0&&width==0))return PTS_tserrInvalidClientOutput;
+        if(row_props.fskrowheight!=fskrowheightNatural&&!(row_props.cCells==0&&row_props.fskrowheight==fskrowheightExactNoBreak&&row_props.dvrRowHeightRestriction==0))return PTS_tserrNotImplemented;
+        int above=data->rows.empty()?(first_table?row_props.dvrAboveTopRow:row_props.dvrAboveRowBreak):row_props.dvrAboveRow;
+        int below=has_next?row_props.dvrBelowRow:row_props.dvrBelowBottomRow;
+        if(above<0||below<0||int64_t(used)+above+below+top>INT32_MAX)return PTS_tserrInvalidClientOutput;
+        int available=std::max(0,rect.dv-top-used-above-below),height=0;bool defer=false;bool row_empty_ok=empty_ok||!data->rows.empty();
+        auto row=std::make_shared<TableRowData>(context);row->description.fsnmRow=name;row->description.pfstablerow=row.get();row->description.fsupdinf.fskupd=fskupdNew;
+        std::vector<void*> names(row_props.cCells);std::vector<FSTABLEKCELLMERGE> merge(row_props.cCells);
+        status=reinterpret_cast<PtsGetCells>(fetch.pfnGetCells)(client,name,row_props.cCells,names.data(),merge.data());if(status)return status;
+        for(int i=0;i<row_props.cCells;++i){
+            if(!names[i]||merge[i]!=fskcellmergeNo)return PTS_tserrNotImplemented;
+            auto cell=std::make_shared<TableCellData>(context);cell->callbacks=cells;cell->name=names[i];CallbackTracks pending;
+            if(bottomless){FSFMTRBL formatted{};status=reinterpret_cast<PtsFormatCellBottomless>(cells.pfnFormatCellBottomless)(client,para->desc.pfsparaclient,names[i],direction,&formatted,&cell->handle,&cell->height);if(!status&&formatted!=fmtrblGoalReached)status=PTS_tserrNotImplemented;}
+            else {FSFMTR formatted{};status=reinterpret_cast<PtsFormatCellFinite>(cells.pfnFormatCellFinite)(client,para->desc.pfsparaclient,nullptr,names[i],nullptr,row_empty_ok,direction,0,available,&formatted,&cell->handle,&cell->record,&cell->height);
+                if(!status&&(cell->record||formatted.kstop!=fmtrGoalReached)){if(row_empty_ok)defer=true;else status=PTS_tserrNotImplemented;}
+            }
+            // The callback reports a managed CellParaClient handle. Its original
+            // DestroyCell callback owns the native subpage(s) created inside it.
+            pending.claimed_pages=cell->handle!=nullptr;pending.claimed_record=cell->record;
+            if(pending.claimed_pages)for(const auto& page:pending.created_pages)page->inherit_updates=true;
+            if(status)return status;if(defer)break;
+            if(!cell->handle||cell->height<0)return PTS_tserrInvalidClientOutput;
+            height=std::max(height,cell->height);row->cells.push_back(cell);
+        }
+        if(int64_t(rect.v)+top+used+above+height+below>INT32_MAX)return PTS_tserrInvalidGeometry;
+        if(!bottomless&&int64_t(top)+used+above+height+below>rect.dv){if(row_empty_ok)defer=true;else return PTS_tserrNotImplemented;}
+        if(defer){output=std::make_shared<Continuation>();output->context=context;output->paragraph=para->desc.nmp;output->table_row=name;if(!data->rows.empty()){auto& last=data->rows.back();last->details.fskboundaryBelow=fsktablerowboundaryBreak;}break;}
+        for(const auto& cell:row->cells){status=reinterpret_cast<PtsSetCellHeight>(cells.pfnSetCellHeight)(cell->handle,para->desc.pfsparaclient,nullptr,cell->name,0,direction,height);if(status)return status;}
+        row->description.u.dvrRow=above+height+below;row->details.fskboundaryAbove=data->rows.empty()?(first_table?fsktablerowboundaryOuter:fsktablerowboundaryBreak):fsktablerowboundaryInner;
+        row->details.fskboundaryBelow=has_next?fsktablerowboundaryInner:fsktablerowboundaryOuter;row->details.dvrAbove=above;row->details.dvrBelow=below;row->details.cCells=int(row->cells.size());
+        used+=row->description.u.dvrRow;data->rows.push_back(row);name=next;found=has_next;
+    }
+    data->details.fsnmTable=para->desc.nmp;data->details.fsrcTableObj={rect.u,rect.v+top,width,used};data->details.fswdirTable=direction;data->details.fskupdTableProper=fskupdNew;data->details.pfstableProper=data.get();data->proper={used,int(data->rows.size())};
+    para->desc.pfspara=data.get();para->desc.dvrTopSpace=top;para->desc.dvrUsed=data->rows.empty()&&output?0:top+used;
+    if(used)para->desc.fsbbox={1,data->details.fsrcTableObj};
+    if(!output){status=reinterpret_cast<PtsGetMCSClientAfterTable>(table.pfnGetMCSClientAfterTable)(client,para->desc.pfsparaclient,para->desc.nmp,direction,input_margin,margin_output);if(status)return status;}
+    {std::lock_guard<std::mutex> lock(gate);tables[data.get()]=data;for(const auto& row:data->rows)table_rows[row.get()]=row;}
+    return 0;
+}
 int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t direction,const FSRECT& rect,
     int suppress,void* incoming,std::shared_ptr<TrackData>& result,void** margin_output,bool bottomless=false,const std::shared_ptr<Continuation>& input={},bool empty_ok=false,bool previous_page=true,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA suppress_break=fsksuppresshardbreakbeforefirstparaPageAndColumn,bool keep_self=false) {
     auto& cb=context->info.fscbk.cbkgen;void* client=context->info.pfsclient;
@@ -652,9 +755,9 @@ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t 
     while(found) {
         if(!name||!visited.insert(name).second)return PTS_tserrInvalidClientOutput;
         FSPAP props{};status=reinterpret_cast<PtsGetParaProperties>(cb.pfnGetParaProperties)(client,name,&props);if(status)return status;
-        if(props.idobj!=-1&&props.idobj!=0&&props.idobj!=1&&props.idobj!=2)return PTS_tserrNotImplemented;
+        if(props.idobj!=-1&&props.idobj!=0&&props.idobj!=1&&props.idobj!=2&&props.idobj!=3)return PTS_tserrNotImplemented;
         bool first=track->paras.empty();
-        bool continued=input&&first&&(input->child||input->dcp>0||input->text_ended||!input->floaters.empty());
+        bool continued=input&&first&&(input->child||input->table_row||input->dcp>0||input->text_ended||!input->floaters.empty());
         bool page_break=!bottomless&&!continued&&props.fBreakPageBefore&&!(first&&suppress_break==fsksuppresshardbreakbeforefirstparaPageAndColumn);
         bool column_break=!bottomless&&!continued&&props.fBreakColumnBefore&&!(first&&suppress_break!=fsksuppresshardbreakbeforefirstparaNone);
         if(page_break||column_break) {
@@ -681,6 +784,12 @@ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t 
         std::shared_ptr<Continuation> next_position;FSFMTRKSTOP next_stop=fmtrBrokenOutOfSpace;
         auto resume=(input&&track->paras.empty())?input:std::shared_ptr<Continuation>{};
         if(props.idobj==-1)status=format_text(para,direction,available,resume,next_position,bottomless,!empty_ok&&track->paras.empty(),keep_self||props.fKeepWithNext,previous_page);
+        else if(props.idobj==3) {
+            void* margin_next=nullptr;
+            status=format_table(para,direction,available,input_margin,bottomless,empty_ok||!track->paras.empty(),suppress&&first,resume,next_position,&margin_next);
+            if(!next_position){margin.reset();margin.value=margin_next;input_margin=margin.value;}
+            else if(margin_next)reinterpret_cast<PtsDestroyMcsclient>(context->info.fscbk.cbkobj.pfnDestroyMcsclient)(client,margin_next);
+        }
         else if(props.idobj==2) {
             void* margin_next=nullptr;
             status=format_block_ui(para,direction,available,input_margin,bottomless,empty_ok||!track->paras.empty(),suppress&&first,first?suppress_break:fsksuppresshardbreakbeforefirstparaNone,next_position,&margin_next);
@@ -729,7 +838,7 @@ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t 
             margin.reset();margin.value=chain_margin.value;chain_margin.value=nullptr;
             track->continuation=chain_position;track->stop=track->paras.empty()?fmtrNoProgressOutOfSpace:fmtrBrokenOutOfSpace;break;
         }
-        bool source_progress=para->text&&!para->text->lines.empty();
+        bool source_progress=(para->text&&!para->text->lines.empty())||(para->table&&!para->table->rows.empty());
         if(props.idobj==0&&para->desc.pfspara){auto child=lookup_owned(tracks,context.get(),para->desc.pfspara);source_progress=child&&!child->paras.empty();}
         if(props.idobj==1&&para->desc.pfspara){auto child=lookup_owned(pages,context.get(),para->desc.pfspara);if(child){source_progress=!child->track->paras.empty();if(child->section)for(const auto& column:child->section->columns)source_progress=source_progress||!column->paras.empty();}}
         if(para->desc.dvrUsed>0||!next_position||para->forced_progress||source_progress){track->forced_progress=track->forced_progress||para->forced_progress;track->used+=para->desc.dvrUsed;status=merge_bbox(track->bbox,para->desc.fsbbox);if(status)return status;track->paras.push_back(para);}
@@ -743,14 +852,15 @@ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t 
     result=track;*margin_output=margin.value;margin.value=nullptr;return 0;
 }
 void clear_subpage(const std::shared_ptr<PageData>& page);
-void clear_track(const std::shared_ptr<TrackData>& track) {
-    track->update=fskupdNoChange;
+void clear_track(const std::shared_ptr<TrackData>& track,bool inherited=false) {
+    auto update=inherited?fskupdInherited:fskupdNoChange;track->update=update;
     for(const auto& para:track->paras) {
-        para->desc.fsupdinf.fskupd=fskupdNoChange;
-        if(para->floater)para->floater->details.fskupdContent=fskupdNoChange;
-        if(para->text)for(const auto& object:para->text->attached){object.para->desc.fsupdinf.fskupd=fskupdNoChange;object.para->floater->details.fskupdContent=fskupdNoChange;auto content=lookup_owned(pages,track->context.get(),object.para->floater->details.pfsFloaterContent);if(content&&content->subpage)clear_subpage(content);}
-        if(para->desc.idobj==0){auto child=lookup_owned(tracks,track->context.get(),para->desc.pfspara);if(child)clear_track(child);}
-        if(para->desc.idobj==1){auto child=lookup_owned(pages,track->context.get(),para->desc.pfspara);if(child&&child->subpage)clear_subpage(child);}
+        para->desc.fsupdinf.fskupd=update;
+        if(para->floater)para->floater->details.fskupdContent=update;
+        if(para->table){para->table->details.fskupdTableProper=update;for(const auto& row:para->table->rows){row->description.fsupdinf.fskupd=update;for(const auto& cell:row->cells){cell->update=update;if(cell->callbacks.pfnClearUpdateInfoInCell)reinterpret_cast<PtsClearUpdateInfoInCell>(cell->callbacks.pfnClearUpdateInfoInCell)(cell->handle);}}}
+        if(para->text)for(const auto& object:para->text->attached){object.para->desc.fsupdinf.fskupd=update;object.para->floater->details.fskupdContent=update;auto content=lookup_owned(pages,track->context.get(),object.para->floater->details.pfsFloaterContent);if(content&&content->subpage){content->inherit_updates=content->inherit_updates||inherited;clear_subpage(content);}}
+        if(para->desc.idobj==0){auto child=lookup_owned(tracks,track->context.get(),para->desc.pfspara);if(child)clear_track(child,inherited);}
+        if(para->desc.idobj==1){auto child=lookup_owned(pages,track->context.get(),para->desc.pfspara);if(child&&child->subpage){child->inherit_updates=child->inherit_updates||inherited;clear_subpage(child);}}
     }
 }
 }
@@ -964,7 +1074,7 @@ struct TrackShift {
         }
         return 0;
     }
-    void apply(){for(const auto& item:values)*item.first=item.second;for(const auto& track:owners){track->update=fskupdNew;for(const auto& para:track->paras){para->desc.fsupdinf.fskupd=fskupdNew;if(para->floater)para->floater->details.fskupdContent=fskupdNew;if(para->text)for(const auto& object:para->text->attached){object.para->desc.fsupdinf.fskupd=fskupdNew;object.para->floater->details.fskupdContent=fskupdNew;}}}}
+    void apply(){for(const auto& item:values)*item.first=item.second;for(const auto& track:owners){track->update=fskupdNew;for(const auto& para:track->paras){para->desc.fsupdinf.fskupd=fskupdNew;if(para->floater)para->floater->details.fskupdContent=fskupdNew;if(para->table){para->table->details.fskupdTableProper=fskupdNew;for(const auto& row:para->table->rows){row->description.fsupdinf.fskupd=fskupdNew;for(const auto& cell:row->cells)cell->update=fskupdNew;}}if(para->text)for(const auto& object:para->text->attached){object.para->desc.fsupdinf.fskupd=fskupdNew;object.para->floater->details.fskupdContent=fskupdNew;}}}}
 };
 }
 extern "C" __declspec(dllexport) int WINAPI FsSynchronizeBottomlessSubtrack(void* context_handle,void* handle,void* geometry,uint32_t direction,int shift) {
@@ -1026,6 +1136,32 @@ extern "C" __declspec(dllexport) int WINAPI FsQueryFloaterDetails(void* context,
         data=found->second.lock();}
     if(!data||data->context.get()!=context)return PTS_tserrInvalidQuery;
     *output=data->details;return 0;
+}
+namespace {
+template<class T> std::shared_ptr<T> lookup_weak_owned(std::unordered_map<void*,std::weak_ptr<T>>& map,void* context,void* handle) {
+    std::shared_ptr<T> value;
+    {std::lock_guard<std::mutex> lock(gate);if(contexts.find(context)==contexts.end())return {};auto found=map.find(handle);if(found==map.end())return {};value=found->second.lock();if(!value)map.erase(found);}
+    return value&&value->context.get()==context?value:nullptr;
+}
+}
+extern "C" __declspec(dllexport) int WINAPI FsQueryTableObjDetails(void* context,void* handle,FSTABLEOBJDETAILS* output) {
+    if(!output)return PTS_tserrNullOutputParameter;*output={};auto data=lookup_weak_owned(tables,context,handle);if(!data)return PTS_tserrInvalidQuery;*output=data->details;return 0;
+}
+extern "C" __declspec(dllexport) int WINAPI FsQueryTableObjTableProperDetails(void* context,void* handle,FSTABLEDETAILS* output) {
+    if(!output)return PTS_tserrNullOutputParameter;*output={};auto data=lookup_weak_owned(tables,context,handle);if(!data)return PTS_tserrInvalidQuery;*output=data->proper;return 0;
+}
+extern "C" __declspec(dllexport) int WINAPI FsQueryTableObjRowList(void* context,void* handle,int capacity,FSTABLEROWDESCRIPTION* output,int* count) {
+    if(!count)return PTS_tserrNullOutputParameter;*count=0;auto data=lookup_weak_owned(tables,context,handle);if(!data)return PTS_tserrInvalidQuery;
+    if(capacity<0||size_t(capacity)<data->rows.size()||(!output&&!data->rows.empty()))return PTS_tserrInvalidParameter;
+    for(const auto& row:data->rows)output[(*count)++]=row->description;return 0;
+}
+extern "C" __declspec(dllexport) int WINAPI FsQueryTableObjRowDetails(void* context,void* handle,FSTABLEROWDETAILS* output) {
+    if(!output)return PTS_tserrNullOutputParameter;*output={};auto data=lookup_weak_owned(table_rows,context,handle);if(!data)return PTS_tserrInvalidQuery;*output=data->details;return 0;
+}
+extern "C" __declspec(dllexport) int WINAPI FsQueryTableObjCellList(void* context,void* handle,int capacity,FSKUPDATE* updates,void** handles,FSTABLEKCELLMERGE* merges,int* count) {
+    if(!count)return PTS_tserrNullOutputParameter;*count=0;auto data=lookup_weak_owned(table_rows,context,handle);if(!data)return PTS_tserrInvalidQuery;
+    if(capacity<0||size_t(capacity)<data->cells.size()||((!updates||!handles||!merges)&&!data->cells.empty()))return PTS_tserrInvalidParameter;
+    for(const auto& cell:data->cells){updates[*count]=cell->update;handles[*count]=cell->handle;merges[*count]=fskcellmergeNo;++*count;}return 0;
 }
 extern "C" __declspec(dllexport) int WINAPI FsQueryTextDetails(void* context,void* handle,FSTEXTDETAILS* output) {
     if(!output)return PTS_tserrNullOutputParameter;*output={};auto text=find_text(context,handle);if(!text)return PTS_tserrInvalidQuery;
@@ -1109,8 +1245,8 @@ int build_subpage(const std::shared_ptr<Context>& context,void* segment,uint32_t
     result=page;return 0;
 }
 void clear_subpage(const std::shared_ptr<PageData>& page) {
-    if(page->section)for(const auto& track:page->section->columns)clear_track(track);
-    else {clear_track(page->track);page->subpage_details.u.simple.trackdescr.fsupdinf.fskupd=fskupdNoChange;}
+    if(page->section)for(const auto& track:page->section->columns)clear_track(track,page->inherit_updates);
+    else {clear_track(page->track,page->inherit_updates);page->subpage_details.u.simple.trackdescr.fsupdinf.fskupd=page->inherit_updates?fskupdInherited:fskupdNoChange;}
 }
 }
 extern "C" __declspec(dllexport) int WINAPI FsCreateSubpageFinite(void* context_handle,void* break_input,int previous,void* segment,

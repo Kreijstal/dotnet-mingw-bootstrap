@@ -17,7 +17,11 @@ static int WINAPI destroy_object(void* value){if(value!=reinterpret_cast<void*>(
 static int lines_created=0,lines_destroyed=0,breaks_destroyed=0,clients_created=0,clients_destroyed=0,fail_line=-1,columns=1,available_height=80,invalid_columns=false,hard_break=0,keep_mode=0,keep_next=0,para_count=2;
 static bool containers=false,lose_subtrack=false;
 static bool structural_line=false;
-static bool subpage_parent=false;
+static bool subpage_parent=false,table_mode=false,inside_table_cell=false,lose_table_cell=false;
+static int table_cells_created=0,table_cells_destroyed=0,table_fail_cell=-1,table_rows_count=3;
+static int(WINAPI* table_handler)(const FSTABLEOBJINIT*,void*)=nullptr;
+static int(WINAPI* clear_cell_subpage)(void*,void*)=nullptr;
+struct MockTableCell {void* page;};
 using NativeSubpageFinite=int(WINAPI*)(void*,void*,int,void*,void*,int,int,uint32_t,int,int,const FSRECT*,int,const FSCOLUMNINFO*,int,int,void* const*,const int*,int,const int*,const int*,int,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA,FSFMTR*,void**,void**,int*,FSBBOX*,void**,int*);
 static NativeSubpageFinite create_subpage=nullptr;
 static int(WINAPI* destroy_subpage)(void*,void*)=nullptr;
@@ -64,9 +68,9 @@ static int WINAPI column_info(void*,void*,uint32_t,int capacity,FSCOLUMNINFO* ou
     if(capacity!=2)return PTS_tserrInvalidParameter;output[0]={0,100};output[1]={10,invalid_columns?250:100};*actual=2;return 0;
 }
 static int WINAPI main_segment(void*,void*,void** segment){*segment=reinterpret_cast<void*>(77);return 0;}
-static int WINAPI first_para(void*,void* segment,int* found,void** name){if(segment!=reinterpret_cast<void*>(77)&&!containers&&!subpage_parent)return PTS_tserrInvalidParameter;*found=1;*name=segment==reinterpret_cast<void*>(77)?reinterpret_cast<void*>(101):reinterpret_cast<void*>(201);return 0;}
+static int WINAPI first_para(void*,void* segment,int* found,void** name){if(segment!=reinterpret_cast<void*>(77)&&!containers&&!subpage_parent&&!inside_table_cell)return PTS_tserrInvalidParameter;*found=1;*name=segment==reinterpret_cast<void*>(77)?reinterpret_cast<void*>(101):reinterpret_cast<void*>(201);return 0;}
 static int WINAPI next_para(void*,void* segment,void* current,int* found,void** next){*found=segment==reinterpret_cast<void*>(77)&&reinterpret_cast<uintptr_t>(current)<uintptr_t(100+para_count);*next=*found?reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(current)+1):nullptr;return 0;}
-static int WINAPI para_properties(void*,void* name,FSPAP* pap){*pap={};pap->idobj=subpage_parent&&reinterpret_cast<uintptr_t>(name)<200?1:block_ui&&name==reinterpret_cast<void*>(102)?2:containers&&reinterpret_cast<uintptr_t>(name)<200?0:-1;pap->fKeepWithNext=keep_next&&name==reinterpret_cast<void*>(102);if(name==reinterpret_cast<void*>(102)){pap->fBreakPageBefore=hard_break==1;pap->fBreakColumnBefore=hard_break==2;}return 0;}
+static int WINAPI para_properties(void*,void* name,FSPAP* pap){*pap={};pap->idobj=table_mode&&!inside_table_cell?3:subpage_parent&&reinterpret_cast<uintptr_t>(name)<200?1:block_ui&&name==reinterpret_cast<void*>(102)?2:containers&&reinterpret_cast<uintptr_t>(name)<200?0:-1;pap->fKeepWithNext=keep_next&&name==reinterpret_cast<void*>(102);if(name==reinterpret_cast<void*>(102)){pap->fBreakPageBefore=hard_break==1;pap->fBreakColumnBefore=hard_break==2;}return 0;}
 static int WINAPI para_client(void*,void* name,void** output){++clients_created;*output=name;return 0;}
 static int WINAPI destroy_para_client(void*,void*){++clients_destroyed;return 0;}
 static int WINAPI text_properties(void*,void* name,int,FSTXTPROPS* props){*props={};props->fKeepTogether=keep_mode==2||(keep_mode==1&&name==reinterpret_cast<void*>(102));return 0;}
@@ -105,7 +109,27 @@ static int WINAPI block_finite(void*,void* para,void* input,int previous,void*,v
     }
     return (fail_float||float_created==float_fail_at)?PTS_tserrCallbackException:0;
 }
+static int WINAPI table_props(void*,void*,uint32_t direction,FSTABLEOBJPROPS* props){*props={};props->fswdirTable=direction;return 0;}
+static int WINAPI table_fit(void*,void*,void*,uint32_t,int width,int* output){*output=width;return 0;}
+static int WINAPI table_first(void*,void*,int* found,void** name){*found=table_rows_count>0;*name=*found?reinterpret_cast<void*>(501):nullptr;return 0;}
+static int WINAPI table_next(void*,void*,void* current,int* found,void** name){auto n=reinterpret_cast<uintptr_t>(current);*found=n<uintptr_t(500+table_rows_count);*name=*found?reinterpret_cast<void*>(n+1):nullptr;return 0;}
+static int WINAPI table_row_props(void*,void*,uint32_t,FSTABLEROWPROPS* props){*props={};props->cCells=2;props->dvrAboveRow=props->dvrBelowRow=props->dvrAboveTopRow=props->dvrBelowBottomRow=props->dvrAboveRowBreak=props->dvrBelowRowBreak=1;return 0;}
+static int WINAPI table_get_cells(void*,void* row,int count,void** names,FSTABLEKCELLMERGE* merge){if(count!=2)return PTS_tserrInvalidParameter;auto n=reinterpret_cast<uintptr_t>(row);for(int i=0;i<2;++i){names[i]=reinterpret_cast<void*>(601+(n-501)*2+i);merge[i]=fskcellmergeNo;}return 0;}
+static int WINAPI table_cell_format(void*,void*,void* input,void* name,void*,int empty,uint32_t direction,int extra,int available,FSFMTR* formatted,void** output,void** br,int* height){
+    *formatted={};*output=*br=nullptr;*height=0;if(input||extra)return PTS_tserrInvalidParameter;if(empty&&available<20){formatted->kstop=fmtrNoProgressOutOfSpace;return 0;}
+    FSRECT rect{10,20,100,available};FSCOLUMNINFO column{0,100};FSBBOX bbox{};void* margin=nullptr;int top=0;void* page=nullptr;
+    inside_table_cell=true;int status=create_subpage(page_context,nullptr,0,name,nullptr,empty,1,direction,200,20+available,&rect,1,&column,0,0,nullptr,nullptr,0,nullptr,nullptr,0,fsksuppresshardbreakbeforefirstparaNone,formatted,&page,br,height,&bbox,&margin,&top);inside_table_cell=false;
+    if(status)return status;if(margin)return PTS_tserrInvalidClientOutput;
+    auto cell=new MockTableCell{page};++table_cells_created;*output=cell;
+    if(lose_table_cell){delete cell;++table_cells_destroyed;*output=*br=nullptr;return PTS_tserrCallbackException;}
+    return table_cells_created==table_fail_cell?PTS_tserrCallbackException:0;
+}
+static int WINAPI table_destroy_cell(void* handle){auto cell=static_cast<MockTableCell*>(handle);int status=destroy_subpage(page_context,cell->page);delete cell;++table_cells_destroyed;return status;}
+static int WINAPI table_set_height(void*,void*,void*,void*,int,uint32_t,int height){return height==20?0:PTS_tserrInvalidClientOutput;}
+static int WINAPI table_clear_cell(void* handle){return clear_cell_subpage(page_context,static_cast<MockTableCell*>(handle)->page);}
+static int WINAPI table_object_handler(void* output){FSTABLEOBJINIT init{};init.tableobjcbk.pfnGetTableProperties=reinterpret_cast<void*>(table_props);init.tableobjcbk.pfnAutofitTable=reinterpret_cast<void*>(table_fit);init.tableobjcbk.pfnGetMCSClientAfterTable=reinterpret_cast<void*>(block_after);auto& fetch=init.tablecbkfetch;fetch.pfnGetFirstRow=reinterpret_cast<void*>(table_first);fetch.pfnGetNextRow=reinterpret_cast<void*>(table_next);fetch.pfnGetRowProperties=reinterpret_cast<void*>(table_row_props);fetch.pfnGetCells=reinterpret_cast<void*>(table_get_cells);auto& cells=init.tablecbkcell;cells.pfnFormatCellFinite=reinterpret_cast<void*>(table_cell_format);cells.pfnDestroyCell=reinterpret_cast<void*>(table_destroy_cell);cells.pfnDestroyCellBreakRecord=reinterpret_cast<void*>(subpage_destroy_record);cells.pfnSetCellHeight=reinterpret_cast<void*>(table_set_height);cells.pfnClearUpdateInfoInCell=reinterpret_cast<void*>(table_clear_cell);return table_handler(&init,output);}
 static int WINAPI block_handler(void*,int id,void* output) {
+    if(id==3&&table_mode)return table_object_handler(output);
     if(id!=2)return PTS_tserrInvalidParameter;
     FSFLOATERINIT init{};auto& cb=init.fsfloatercbk;cb.pfnGetFloaterProperties=reinterpret_cast<void*>(block_props);
     cb.pfnFormatFloaterContentFinite=reinterpret_cast<void*>(block_finite);cb.pfnDestroyFloaterContent=reinterpret_cast<void*>(block_destroy);
@@ -536,6 +560,27 @@ int main(int argc,char** argv) {
         require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrCallbackException&&!page_handle&&!page_break&&float_created==float_destroyed&&lines_created==lines_destroyed&&clients_created==clients_destroyed,"populated attached-content callback failure tears down all owned objects");
         fail_float=attached_float=attached_right=false;para_count=2;
         std::puts("native attached floaters: original callbacks, multiple collision-free placements/later failure, left/right rectangular wrapping, attached count/query/update/capacity, stale handles, partial failure and exact cleanup PASS");
+        using QueryTable=int(WINAPI*)(void*,void*,FSTABLEOBJDETAILS*);using QueryTableProper=int(WINAPI*)(void*,void*,FSTABLEDETAILS*);using QueryTableRows=int(WINAPI*)(void*,void*,int,FSTABLEROWDESCRIPTION*,int*);using QueryTableRow=int(WINAPI*)(void*,void*,FSTABLEROWDETAILS*);using QueryTableCells=int(WINAPI*)(void*,void*,int,FSKUPDATE*,void**,FSTABLEKCELLMERGE*,int*);
+        PROC(GetTableObjHandlerInfo,int(WINAPI*)(const FSTABLEOBJINIT*,void*));table_handler=GetTableObjHandlerInfo;clear_cell_subpage=FsClearUpdateInfoInSubpage;
+        PROC(FsQueryTableObjDetails,QueryTable);PROC(FsQueryTableObjTableProperDetails,QueryTableProper);PROC(FsQueryTableObjRowList,QueryTableRows);PROC(FsQueryTableObjRowDetails,QueryTableRow);PROC(FsQueryTableObjCellList,QueryTableCells);
+        table_mode=true;para_count=1;available_height=48;reset_page_counts();table_cells_created=table_cells_destroyed=0;
+        FSTABLEOBJDETAILS table_details{};FSTABLEDETAILS table_proper{};FSTABLEROWDESCRIPTION table_rows[3]{};FSTABLEROWDETAILS table_row{};void* cell_handles[2]{};FSKUPDATE cell_updates[2]{};FSTABLEKCELLMERGE cell_merges[2]{};
+        require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&page_break,"table formats real owned cell subpages and defers an intact later row");
+        require(FsQueryPageDetails(context,page_handle,&details)==0&&FsQueryTrackParaList(context,details.u.simple.trackdescr.pfstrack,1,paras,&actual_count)==0&&actual_count==1&&paras[0].idobj==3&&paras[0].dvrUsed==44,"table paragraph uses actual maximum cell heights and row spacing");
+        void* table_handle=paras[0].pfspara;
+        require(FsQueryTableObjDetails(context,table_handle,&table_details)==0&&table_details.fsrcTableObj.v==20&&table_details.fsrcTableObj.du==100&&FsQueryTableObjTableProperDetails(context,table_details.pfstableProper,&table_proper)==0&&table_proper.cRows==2&&table_proper.dvrTable==44,"actual table geometry and proper-table query records");
+        require(FsQueryTableObjRowList(context,table_handle,1,table_rows,&actual_count)==PTS_tserrInvalidParameter&&!actual_count&&FsQueryTableObjRowList(context,table_handle,3,table_rows,&actual_count)==0&&actual_count==2&&table_rows[0].fsnmRow==reinterpret_cast<void*>(501)&&table_rows[1].fsnmRow==reinterpret_cast<void*>(502),"table row query capacity and original row identities");
+        require(FsQueryTableObjRowDetails(context,table_rows[1].pfstablerow,&table_row)==0&&table_row.cCells==2&&table_row.fskboundaryBelow==fsktablerowboundaryBreak&&FsQueryTableObjCellList(context,table_rows[0].pfstablerow,2,cell_updates,cell_handles,cell_merges,&actual_count)==0&&actual_count==2&&cell_handles[0]&&cell_handles[1]&&cell_merges[0]==fskcellmergeNo,"row continuation boundary and original opaque cell handles");
+        require(FsClearUpdateInfoInPage(context,page_handle)==0&&FsQueryTableObjDetails(context,table_handle,&table_details)==0&&table_details.fskupdTableProper==fskupdNoChange&&FsQueryTableObjCellList(context,table_rows[0].pfstablerow,2,cell_updates,cell_handles,cell_merges,&actual_count)==0&&cell_updates[0]==fskupdNoChange,"table and cell update clearing follows owned original callbacks");
+        incoming_record=page_break;
+        require(FsDestroyPage(context,page_handle)==0&&FsQueryTableObjDetails(context,table_handle,&table_details)==PTS_tserrInvalidQuery&&FsQueryTableObjRowDetails(context,table_rows[0].pfstablerow,&table_row)==PTS_tserrInvalidQuery,"destroyed table and row handles reject stale queries");
+        require(FsCreatePageFinite(context,incoming_record,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&!page_break&&FsQueryPageDetails(context,page_handle,&details)==0&&FsQueryTrackParaList(context,details.u.simple.trackdescr.pfstrack,1,paras,&actual_count)==0&&FsQueryTableObjRowList(context,paras[0].pfspara,3,table_rows,&actual_count)==0&&actual_count==1&&table_rows[0].fsnmRow==reinterpret_cast<void*>(503),"table continuation resumes the unconsumed row after old page destruction");
+        require(FsDestroyPageBreakRecord(context,incoming_record)==0&&FsDestroyPage(context,page_handle)==0&&table_cells_created==6&&table_cells_destroyed==6&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"table/cell/subpage/text resources release exactly once across pages");
+        for(bool lost:{false,true}){reset_page_counts();table_cells_created=table_cells_destroyed=0;table_fail_cell=lost?-1:2;lose_table_cell=lost;
+            require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrCallbackException&&!page_handle&&!page_break&&table_cells_created==table_cells_destroyed&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"failed populated or lost cell outputs release every prior and speculative native subpage");
+        }
+        table_fail_cell=-1;lose_table_cell=table_mode=false;para_count=2;available_height=80;
+        std::puts("native tables: original cell/subpage callbacks, exact rows/heights/spacing, typed queries/capacity/update/stale state, row resume and populated/lost-output cleanup PASS");
         columns=1;require(DestroyDocContext(context)==0&&DestroyInstalledObjectsInfo(installed)==0,"failed page creation leaves no retained resources");
         std::puts("native finite pages: actual callback geometry/ranges/break records, query/update state, foreign/stale handles, exact teardown, partial failure rollback and unsupported paths PASS");
         std::printf("native paragraph records: context=%zu, methods=%zu, callbacks=%zu; copied ownership, callbacks, rollback, invalid states and teardown PASS\n",sizeof(FSCONTEXTINFO),sizeof(FSIMETHODS),sizeof(FSCBK));return 0;
