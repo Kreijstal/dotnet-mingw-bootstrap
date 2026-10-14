@@ -41,6 +41,7 @@ struct Run {
     std::vector<GlyphOffset> offsets;
     bool shaped=false,hidden=false,tab=false,synthetic=false;
     uint16_t leader=0;
+    int tab_alignment=0;
     bool embedded=false,position_used=false,hard_break=false;
     int format_position=0;
     InlineInit object_handler{};
@@ -290,9 +291,10 @@ int prefix_width(const Run& run,size_t end,int64_t& width) {
 // Tab locations are relative to the paragraph origin. A break candidate
 // aligns only its retained field, across client runs, rather than the rest
 // of the paragraph that will move to the following line.
-int tab_target(const Line& line,size_t index,int64_t x,int end_cp,int64_t& target,uint16_t& leader) {
+int tab_target(const Line& line,size_t index,int64_t x,int end_cp,int64_t& target,uint16_t& leader,int* alignment=nullptr) {
     const Context& context=*line.context;
     leader=0;
+    if(alignment)*alignment=0;
     for(const auto& stop:context.tabs) {
         if(stop.ur<=x) continue;
         int64_t field=0;
@@ -313,7 +315,7 @@ int tab_target(const Line& line,size_t index,int64_t x,int end_cp,int64_t& targe
         }
         target=static_cast<int64_t>(stop.ur)-(stop.lskt==1?field/2:field);
         if(target<=x) continue;
-        leader=stop.wchTabLeader; return LS_None;
+        leader=stop.wchTabLeader;if(alignment)*alignment=stop.lskt;return LS_None;
     }
     if(context.incremental_tab<=0) return LS_InvalidFormatterResult;
     int64_t after=context.tabs.empty()?x:std::max<int64_t>(x,context.tabs.back().ur);
@@ -333,7 +335,7 @@ int layout_tabs(Line& line,int start,int& total,bool position_objects=true,bool*
             if(run.hard_break){x=start;continue;}
             if(run.tab&&!run.hidden) {
                 int64_t target=0;
-                int status=tab_target(line,i,x,INT_MAX,target,run.leader);if(status)return status;
+                int status=tab_target(line,i,x,INT_MAX,target,run.leader,&run.tab_alignment);if(status)return status;
                 if(target>x+INT_MAX||target>INT_MAX)return LS_InvalidFormatterResult;
                 run.width=int(target-x);run.widths.assign(1,run.width);
             }
@@ -427,8 +429,11 @@ int justify_line(Line& line,int target,int& total,int& trailing) {
     if(remaining<=0) return LS_None;
     auto& context=*line.context;bool mixed=line.justification==4; // LsKJust.lskjFullMixed
     SourceGraphemes graphemes;if(mixed){int status=graphemes.initialize(line);if(status)return status;}
-    if(std::any_of(line.runs.begin(),line.runs.end(),[](const Run& run) { return run.tab; }) &&
-        std::any_of(context.tabs.begin(),context.tabs.end(),[](const LsTbd& stop) { return stop.lskt!=0; })) return LS_NotImplemented;
+    // Only the field following the last visible tab participates in expansion.
+    // Earlier aligned fields retain their anchors; unused stops impose no rule.
+    size_t begin=0;
+    for(size_t i=0;i<line.runs.size();++i)if(line.runs[i].tab&&!line.runs[i].hidden)begin=i+1;
+    if(begin&&line.runs[begin-1].tab_alignment!=0)return LS_NotImplemented;
     int visible_cp=line.first;
     for(const auto& run:line.runs)if(!run.synthetic)visible_cp+=static_cast<int>(run.text.size());
     for(auto run=line.runs.rbegin();run!=line.runs.rend();++run) {
@@ -439,8 +444,6 @@ int justify_line(Line& line,int target,int& total,int& trailing) {
     }
     struct Opportunity { Run* run; size_t index; int capacity[3]; int added; bool left; uint8_t type; };
     std::vector<Opportunity> sites;
-    size_t begin=0;
-    for(size_t i=0;i<line.runs.size();++i) if(line.runs[i].tab) begin=i+1;
     for(size_t index=begin;index<line.runs.size();++index) {
         auto& run=line.runs[index];
         if(run.synthetic || run.hidden || run.embedded || run.tab || run.cp>=visible_cp) continue;

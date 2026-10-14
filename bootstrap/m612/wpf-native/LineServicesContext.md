@@ -202,3 +202,12 @@ complete-field and eight wrapping cases, source ownership, remaining width,
 caret/selection, real raster and GC; initial/reformat/draw exceptions and reuse are
 also checked. Display endpoints follow the original independent pixel rounding;
 assertions use those exact rules rather than a larger arbitrary tolerance.
+
+Justification retains each visible tab's actual selected alignment, including
+incremental fallback. Only the field following the last visible tab expands.
+Earlier aligned fields keep their nominal anchors, and unused aligned stops do
+not disable a final left field. Final center/right/character fields still reject
+justification pending their anchor-preserving expansion policy. Native checks
+cover nominal/shaped and InterWord/FullMixed modes; the public consumer checks
+Ideal/Display, split runs, earlier four-way anchors and incremental fallback,
+exact width/caret/point/selection, source completion, raster and moving GC.

@@ -7,7 +7,7 @@
 #include "LineServicesNative.h"
 struct GlyphOffset { int32_t du,dv; };
 static std::wstring text=L"aa bb cc dd\u2029";
-static bool shaped=false,mixed=false;
+static bool shaped=false,mixed=false,tab_mode=false;
 static int map_failure=0,position_calls=0;
 static int failure=0,calls=0,draws=0;
 static void require(bool value,const char* why) { if(!value)throw std::runtime_error(why); }
@@ -32,10 +32,12 @@ static int fill(int count,int** left,int** right) {
     if(failure==2)left[0][0]=-1;return 0;
 }
 static int WINAPI char_expand(void*,int device,int flow,LsCharRunInfo* run,LsNeighborInfo* left,LsNeighborInfo* right,int priorities,int** l,int** r) {
+    if(tab_mode)return fill(run->cwch,l,r);
     if(device||flow||priorities!=3||run->plsrun!=7||run->cwch!=6||run->pwch[2]!=text[2]||run->rgduNominalWidth[2]!=10||run->rgduChangeLeft[2]||run->rgduChangeRight[2]||left->fNeighborIsPresent||right->fNeighborIsPresent)return LS_ClientAbort;
     int status=fill(run->cwch,l,r);if(mixed)for(int cp=0;cp<run->cwch;++cp)for(int level=0;level<2;++level)r[level][cp]=0;return status;
 }
 static int WINAPI glyph_expand(void*,int device,int flow,LsGlyphRunInfo* run,LsNeighborInfo*,LsNeighborInfo*,int priorities,int** l,int** r,uint8_t* types,int* ink) {
+    if(tab_mode){for(int i=0;i<run->cgindex;++i){types[i]=1;ink[i]=0;}return fill(run->cgindex,l,r);}
     if(device||flow||priorities!=3||run->plsrun!=7||run->cwch!=6||run->cgindex!=6||run->pwch[2]!=text[2]||run->rggmap[2]!=2||run->rgduWidth[2]!=10||run->rggindex[2]!=22)return LS_ClientAbort;
     for(int i=0;i<run->cgindex;++i){types[i]=1;ink[i]=0;}if(failure==3)types[2]=2;
     int status=fill(run->cgindex,l,r);if(mixed)for(int cp=0;cp<run->cgindex;++cp)for(int level=0;level<2;++level)r[level][cp]=0;return status;
@@ -51,10 +53,11 @@ int main(int argc,char** argv) {
         require(argc==2,"usage: check DLL");HMODULE dll=LoadLibraryA(argv[1]);require(dll!=nullptr,"native DLL load");
         using Create=int(WINAPI*)(LsContextInfo*,LscbkRedefined*,void**);using Doc=int(WINAPI*)(void*,int,int,LsDevRes*);
         using Line=int(WINAPI*)(void*,int,int,int,uint32_t,void*,LsLInfo*,void**,int*,LsLineWidths*);
+        using SetTabs=int(WINAPI*)(void*,int,int,LsTbd*);
         using Query=int(WINAPI*)(void*,int,int,LsQSubInfo*,int*,LsTextCell*);using Display=int(WINAPI*)(void*,LSPOINT*,uint32_t,LSRECT*);
         using Dispose=int(WINAPI*)(void*,BOOL);using Destroy=int(WINAPI*)(void*);
 #define PROC(name,type) auto name=reinterpret_cast<type>(GetProcAddress(dll,#name));require(name!=nullptr,#name)
-        PROC(LoCreateContext,Create);PROC(LoSetDoc,Doc);PROC(LoCreateLine,Line);PROC(LoQueryLineCpPpoint,Query);PROC(LoDisplayLine,Display);PROC(LoDisposeLine,Dispose);PROC(LoDestroyContext,Destroy);
+        PROC(LoSetTabs,SetTabs);PROC(LoCreateContext,Create);PROC(LoSetDoc,Doc);PROC(LoCreateLine,Line);PROC(LoQueryLineCpPpoint,Query);PROC(LoDisplayLine,Display);PROC(LoDisposeLine,Dispose);PROC(LoDestroyContext,Destroy);
         require(sizeof(LsNeighborInfo)==28&&sizeof(LsCharRunInfo)==48&&sizeof(LsGlyphRunInfo)==80&&offsetof(LsGlyphRunInfo,rgduWidth)==56,"source nominal/glyph/neighbor record ABI");
         LsContextInfo config{};config.version=4;config.pfnFetchPap=reinterpret_cast<void*>(pap);config.pfnGetRunTextMetrics=reinterpret_cast<void*>(metrics);config.pfnGetRunCharWidths=reinterpret_cast<void*>(widths);config.pfnDrawTextRun=reinterpret_cast<void*>(draw_text);config.pfnDrawGlyphs=reinterpret_cast<void*>(draw_glyphs);config.pfnGetGlyphPositions=reinterpret_cast<void*>(positions);config.pfnGetCharExpansionInfoFullMixed=reinterpret_cast<void*>(char_expand);config.pfnGetGlyphExpansionInfoFullMixed=reinterpret_cast<void*>(glyph_expand);
         LscbkRedefined callbacks{reinterpret_cast<void*>(fetch),reinterpret_cast<void*>(glyphs),reinterpret_cast<void*>(props)};
@@ -89,6 +92,36 @@ int main(int argc,char** argv) {
         map_failure=0;
         std::puts("native mixed emergency expansion: nominal/glyph capacities, exact caret distribution, interword policy and invalid cluster isolation PASS");
         failure=3;line=reinterpret_cast<void*>(1);require(LoCreateLine(context,0,0,70,0,nullptr,&info,&line,&depth,&measured)==LS_NotImplemented&&!line,"unsupported ink expansion rejects without fabricated glyphs");
+        failure=0;tab_mode=true;
+        for(bool mode:{false,true})for(bool kind:{false,true})for(int earlier:{0,1,2,3,4}) {
+            shaped=mode;mixed=kind;calls=0;
+            text=L"a\tAB\t aa bb cc dd\u2029";
+            LsTbd stops[3]{{earlier,60,0,L'.'},{0,90,0,0},{2,300,0,0}};
+            require(LoSetTabs(context,80,3,stops)==0,"selected-stop setup");
+            int status=LoCreateLine(context,0,0,160,0,nullptr,&info,&line,&depth,&measured);
+            if(status)std::printf("selected tab status=%d shaped=%d mixed=%d earlier=%d\n",status,mode,kind,earlier);
+            require(status==0&&info.cpLimToContinue==12&&measured.upStartTrailing==157&&measured.upMinStartTrailing==150,"earlier aligned field and unused right stop permit exact final left-field justification");
+            LsQSubInfo sub{};LsTextCell cell{};
+            require(LoQueryLineCpPpoint(line,2,1,&sub,&depth,&cell)==0&&cell.pointUvStartCell.x==(earlier==1?50:earlier?40:60)&&cell.dupCell==10,"earlier tab anchor remains nominal");
+            require(LoQueryLineCpPpoint(line,5,1,&sub,&depth,&cell)==0&&cell.pointUvStartCell.x==90,"last left stop remains fixed");
+            require(calls>0&&LoDisposeLine(line,FALSE)==0,"selected-stop expansion callback and disposal");
+        }
+        // The first stop is right-aligned; the next actual tab falls back to a
+        // left incremental stop. Its remembered alignment must reset to left.
+        text=L"a\tAB\t aa bb cc dd\u2029";mixed=false;
+        LsTbd right_stop{2,60,0,0};require(LoSetTabs(context,80,1,&right_stop)==0,"incremental selected-stop setup");
+        require(LoCreateLine(context,0,0,150,0,nullptr,&info,&line,&depth,&measured)==0&&measured.upStartTrailing==147,"incremental fallback after an aligned stop permits justification");
+        require(LoDisposeLine(line,FALSE)==0,"incremental justified disposal");
+        text=L"a\t aa bb cc dd ee ff gg hh ii jj kk ll mm nn\u2029";
+        for(int alignment:{1,2,3,4}) {
+            LsTbd final_stop{alignment,120,0,L'.'};
+            require(LoSetTabs(context,80,1,&final_stop)==0,"final aligned field setup");
+            line=reinterpret_cast<void*>(1);
+            int status=LoCreateLine(context,0,0,165,0,nullptr,&info,&line,&depth,&measured);
+            if(status!=LS_NotImplemented)std::printf("final aligned status=%d alignment=%d cp=%d end=%d width=%d minimum=%d\n",status,alignment,info.cpLimToContinue,info.endr,measured.upLimLine,measured.upMinLimLine);
+            require(status==LS_NotImplemented&&!line,"final aligned field still rejects without publishing moved anchors");
+        }
+        std::puts("native selected tab justification: earlier anchors, unused stops, incremental fallback, nominal/shaped and mixed/interword PASS");
         require(LoDestroyContext(context)==0,"justification context teardown");
         std::puts("native nominal/glyph/neighbor ABI, exact justified geometry, original advances, trailing/minimum widths, priority limits, callback errors and final-line policy PASS");return 0;
     } catch(const std::exception& e){std::printf("FAIL: %s\n",e.what());return 1;}

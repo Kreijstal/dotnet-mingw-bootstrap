@@ -857,6 +857,7 @@ step_check_sdk() {
   bash "$here/wpf-tests/check-cross-run-carets-sdk.sh" "$root" "$build/cross-run-carets-sdk-check"
   bash "$here/wpf-tests/check-inline-objects-sdk.sh" "$root" "$build/inline-sdk-check"
   bash "$here/wpf-tests/check-aligned-objects-sdk.sh" "$root" "$build/aligned-objects-sdk-check"
+  bash "$here/wpf-tests/check-selected-tab-justification-sdk.sh" "$root" "$build/selected-tab-justification-sdk-check"
   bash "$here/wpf-tests/check-justification-sdk.sh" "$root" "$build/justification-sdk-check"
   bash "$here/wpf-tests/check-paragraph-widths-sdk.sh" "$root" "$build/paragraph-widths-sdk-check"
   bash "$here/wpf-tests/check-paragraph-context-sdk.sh" "$root" "$build/paragraph-context-sdk-check"
