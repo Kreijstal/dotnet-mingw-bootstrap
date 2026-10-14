@@ -11018,3 +11018,61 @@ shared/self-contained consumers pass. Evidence is archived under
 and callbacks 824. General column spans, complex object/layout constraints,
 advanced bidi, footnotes, optimal/interruptible algorithms and complete native-
 language services remain unfinished. The WPF packaging goal stays active.
+
+
+## 171. Installed release 36: explicit column balancing
+
+The 2026-10-14 continuation packages section 170 as WindowsDesktop 8.0.0-36.
+Declared/checksummed 0036-column-balancing.patch follows the preceding 35 patches.
+Clean pinned sources plus all patches reproduce the six feature files byte for
+byte; the private package sources match the driver. The declared patch equals
+the committed feature diff. Source and private package native rebuilds, original
+ABI/lifecycle/native paragraph/line regressions and all 24 offline WPF SDK gates
+complete with exit zero. Retained interim WinForms shared/self-contained checks
+also pass. The package continues using its own private source-built managed,
+graphics, pen and printing outputs.
+
+Final validation, packaging and installation:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+# In the CLANG64 package workspace, with srcdir set to its src/ directory:
+source PKGBUILD
+_wpf native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+makepkg --printsrcinfo > .SRCINFO
+makepkg --repackage --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-36-any.pkg.tar.zst
+/usr/bin/python3 check-staged.py /clang64/lib/dotnet
+bash "$(_driver)/wpf-tests/check-balancing-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-balancing-sdk-check
+bash "$(_driver)/wpf-tests/check-columns-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-balancing-columns-sdk-check
+bash "$(_driver)/wpf-tests/check-subpages-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-balancing-subpages-sdk-check
+pacman -Q mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap
+sha256sum mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-36-any.pkg.tar.zst
+```
+
+All commands pass. Staged and installed payload checks cover 42 managed
+implementation/reference assemblies, eight native libraries, SDK tasks and
+interim WinForms versions. Installed balancing scenarios use original clients
+and declarations in both text modes/directions, with ordinary/nested content,
+KeepTogether and KeepWithNext. Actual six-line glyph content redistributes into
+3/3 columns at 79.8/84 DIPs; kept content stays intact at 159.6/168 DIPs. Reported
+metrics match independent original line records, all 41/40 source characters have
+one range owner, actual glyph columns render and compacting GC preserves them.
+Installed ordinary column pagination and finite/bottomless subpage creation,
+cloned continuations, update/source/raster/disposal checks also pass. All three
+SDK consumers run through shared-framework and portable self-contained execution
+with SDK roots/toolchain PATH removed. Builds have zero warnings/errors. The
+existing srcdir provenance warning remains during package creation.
+
+Artifact: mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-36-any.pkg.tar.zst.
+SHA-256: be8cf2e3742d3dffda503243d5b91b6d962e395313951d7bac9bd6832b9a2edd.
+Recipe commit: msys2-ur 9ccbbb6; feature commit: 3b7372f.
+Source evidence is archived under
+ tmp/wpf8-support/validation/balancing-20261014. Artifact, recipe, metadata, patch,
+hashes and package/installed/private-regression logs are archived under
+ tmp/wpf8-support/validation/balancing-package-20261014. The downloaded artifact's
+SHA-256 matches the validation host.
+Imported native coverage is 117/139 with 22 absent; original paragraph ABI remains
+441 fields. General column spans, complex object/layout constraints, advanced
+bidi, footnotes, optimal/interruptible algorithms and complete native-language
+services remain unfinished. The WPF goal stays active.
