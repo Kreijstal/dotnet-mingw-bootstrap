@@ -12481,3 +12481,117 @@ Source evidence is under
 General polygon/object/table/subpage layouts, full bidi/optimizer conformance,
 positive footnote placement and legacy multiword/reform spelling controls remain
 unsupported or unproven. The WPF packaging goal stays active.
+
+
+## 194. Native reverse-object registration and original WPF callback binding
+
+The 2026-10-14 continuation implements LocbkGetObjectHandlerInfo for native
+reverse object zero and routes body/list-marker reverse controls through the
+original WPF GetObjectHandlerInfo callback. An installed release47 SDK probe
+fails with EntryPointNotFoundException at that API. The source implementation
+now supplies a real context-bound transition function rather than bypassing the
+callback with direct level arithmetic.
+
+Original WPF forwards objectInfo as an opaque pointer without reading its
+contents. ReverseObjectHandler.h explicitly defines a private source-engine
+producer/consumer protocol; it does not reconstruct or claim Microsoft's
+unpublished native handler record layout. The successful binding validates
+version/kind, owner and function identity before being retained per context.
+Failed, malformed, foreign and incomplete callback output never becomes a binding.
+Unknown object IDs do not overwrite another protocol's output buffer.
+
+Actual opening/closing transitions preserve the paragraph base and level-125
+bounds. Coalesced controls retain source CPs and zero glyph advances; nested,
+wrapped and cloned continuation geometry remains valid. Active line-formatting
+scopes retain the owner and prohibit its destruction, so their transitions avoid
+locking the registry per control. Direct borrowed-handler calls still validate a
+live owner. Scope teardown restores the previous thread-local owner before
+releasing the in-use guard; absent/null/stale owners reject with clean outputs.
+Source feature commit 9e223ef records the implementation and regressions.
+
+Native checks cover actual LTR/RTL transition results/bounds, registration,
+null/invalid/stale owner and output arguments, callback failure/retry, malformed/
+foreign/incomplete records, stable binding reuse, owner destruction rejection
+inside an active callback, nested/continued caret/point/drawing geometry and
+invalid closing scopes. The original managed context fixture independently
+marshals the private 24-byte record/function, invokes transitions across GC and
+verifies teardown. A new normal SDK consumer runs it in shared and portable
+execution. Original bidi and list-marker consumers also exercise the real
+managed-to-native callback path.
+
+Initial concurrent full runs exhausted cross-paragraph's 120-second limit.
+Two optimal-case probes on installed release47 took 65.183 and 89.091 seconds;
+the first candidate took 74.695 seconds under overlapping work, while the active-
+owner path completed a later probe in 24.913 seconds. These measurements have
+host-load variation and are not a controlled speedup claim. The complete 52-case
+fixture now has a bounded 600-second budget with every assertion retained.
+Floater clearing's complete installed-release47 reference took 62.21 seconds,
+exceeding its old 60-second limit; its 64 finite/four bottomless cases now have
+180 seconds. Heavy source/private runs are serialized.
+
+Validation on win11 with the standard compiler/WPF environment:
+
+```sh
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-lineservices-context check-lineservices-line-native
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-reverse-object-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/reverse-object-sdk-check
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-bidi-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/reverse-object-bidi-sdk-check
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-list-markers-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/reverse-object-list-markers-sdk-check
+bash ~/wpfboot/reverse-object-source-remaining.sh
+```
+
+Final commands exit zero. Source check-sdk's retained prefix contains 19 passing
+feature consumers plus the normal SDK/BAML/window shared/portable gate. After the
+clearing deadline expired, the archived source-remaining-checks.sh reruns that
+fixture and runs the remaining 16 feature consumers plus both interim WinForms
+executions. Together these prove all 36 WPF consumers without repeating the
+already passing prefix. Native/managed paragraph ABI remains 482 fields and LS
+records retain their original 760/24/12-byte source layouts. Imported native
+coverage reaches 133/139; all six absent declarations are upstream #if NEVER.
+
+Source logs/probes/scripts are under
+`tmp/wpf8-support/validation/native-reverse-object-handler-20261014`. Clean pinned
+sources plus all 48 recipe patches reproduce all ten feature files exactly; all
+51 locally available declared source hashes pass. A first private patch attempt
+found older pinned Line Services notes; the feature documentation was moved to
+its own file and partially applied feature files restored before clean replay.
+Final source/private feature bytes match.
+
+API presence does not prove complete behavior. General polygon/object/table/
+subpage layouts, full bidi/optimizer conformance and legacy multiword/reform
+spelling controls remain unfinished. The WPF packaging goal stays active.
+
+
+## 195. Release 48 private validation pending build-host SSH recovery
+
+Release 48's recipe declares 0048-native-reverse-object-handler.patch (SHA-256
+2935f36d1ea9421efbc9aeb7843f448ecdf0baff19e5c59f460a001d0caaff7f), matching
+source feature commit 9e223ef. Its prepare stage applies all 48 patches, and
+check() now includes the native/managed Line Services context gate. Clean replay
+matches all ten feature files; the 51 locally available input hashes pass.
+Private source files were synchronized to those same final feature bytes.
+
+After the complete source suite passed, private validation was launched with:
+
+```sh
+# CLANG64 private recipe workspace after sourcing PKGBUILD:
+makepkg --verifysource --noconfirm
+_wpf native-win32 inventory check-lineservices-context check-lineservices-line-native check-paragraph-context-native check-paragraph-context layout check-sdk
+makepkg --printsrcinfo > .SRCINFO
+```
+
+The remote job's SSH connection then reset (local session 85131). Subsequent
+connections to win11 (192.168.188.22) were refused on TCP 22, while RDP TCP 3389
+remained reachable. Private validation's remote state is unknown: connection loss
+is not evidence that the job terminated. Inspect its process/log before resuming
+or restarting after SSH recovery. No release48 package or installation has been
+claimed; installed release47 remains the last verified package.
+
+The pending log is `~/wpfboot/reverse-object-private-validation.log`. The local
+reviewable recipe, exact future install/check script and validation-progress.json
+are archived under
+`tmp/wpf8-support/validation/native-reverse-object-handler-package-20261014`.
+After private validation finishes successfully, regenerate/copy final .SRCINFO,
+run the archived install script, verify installed shared/portable reverse/bidi/
+list-marker consumers and source/native inventory, archive the artifact with its
+host/local hash, then commit only the WindowsDesktop recipe paths. The WPF
+packaging goal stays active.
