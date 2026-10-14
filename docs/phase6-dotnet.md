@@ -10752,3 +10752,65 @@ objects/decorations/expansion, selective incremental reuse/comparison/display
 transfer, complex figure collision/search/composite-line layouts, advanced spans,
 balancing/footnotes, optimal/interruptible algorithms and complete native-language
 services remain open. The WPF goal stays active.
+
+## 167. Installed release 34: horizontal RTL page/paragraph layout
+
+The 2026-10-14 continuation packages section 166 as WindowsDesktop 8.0.0-34.
+Declared/checksummed 0034-rtl-pages.patch follows the prior 33 patches. Clean
+pinned sources plus all patches reproduce the five committed feature files;
+actual private package sources have matching hashes. Native source output was
+rebuilt and source/private native matrix, lifecycle and ABI checks passed.
+
+The validation host restarted at 2026-10-14T03:48:15.5000000Z during the first
+SDK suites. The original remote job PIDs were confirmed absent; only stale local
+SSH connections remained. Interrupted logs were archived, those connections
+closed, and complete source/private validation rerun against their existing
+source-built outputs. Each final run passes all 22 offline WPF SDK consumer gates,
+441 original ABI field checks, native paragraph/line regressions and retained
+interim WinForms checks. Unchanged managed/graphics/printing outputs remain the
+package workspace's own private source builds.
+
+Final validation and packaging commands:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+# In the CLANG64 package workspace, with srcdir set to its src/ directory:
+source PKGBUILD
+_wpf inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+makepkg --printsrcinfo > .SRCINFO
+makepkg --repackage --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-34-any.pkg.tar.zst
+/usr/bin/python3 check-staged.py /clang64/lib/dotnet
+bash "$(_driver)/wpf-tests/check-rtl-pages-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-rtl-pages-sdk-check
+bash "$(_driver)/wpf-tests/check-subpages-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-rtl-pages-subpages-sdk-check
+pacman -Q mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap
+sha256sum mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-34-any.pkg.tar.zst
+```
+
+All final commands pass. Staged/installed checks cover 42 managed implementation/
+reference assemblies, eight native libraries, SDK tasks and interim WinForms
+versions. Installed Ideal/Display cases cover all page/paragraph direction pairs
+and one/two columns, twice through shared-framework and portable self-contained
+execution. Each completes six pages with all 1258 source characters exactly once,
+original GetPageNumber agreement, physical asymmetric margins and first-character
+rectangles in the first reading-order column. Original glyph raster, disposed-
+page regeneration and GC pass. RTL/LTR scrolling edits retain top/end content
+and change extent 1323.4->1429.8 and raster. Basic tables retain logical cell
+order, colored geometry and actual original subpage glyphs in both directions.
+Installed finite/bottomless subpage checks retain their exact source ranges,
+cloned continuations, updates, raster and cleanup. Consumer builds have zero
+warnings/errors; portable runs remove SDK roots/toolchain PATH. The existing
+srcdir provenance warning remains.
+
+Artifact: mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-34-any.pkg.tar.zst.
+SHA-256: f8fbb3470879c8f518aa3387325835f37f4f7b7d1c916e86eaba010888a28c9c.
+Recipe commit: msys2-ur da448da; feature commit: e753522.
+Source evidence, interrupted logs and restart record are archived under
+ tmp/wpf8-support/validation/rtl-pages-20261014. Artifact, recipe, metadata, patch,
+hashes and package/installed logs are archived under
+ tmp/wpf8-support/validation/rtl-pages-package-20261014.
+Imported native coverage remains 111/139 with 28 absent. Advanced bidi objects/
+decorations/expansion, selective incremental reuse/comparison/display transfer,
+complex figure collision/search/composite-line layouts, advanced spans,
+balancing/footnotes, optimal/interruptible algorithms and full native-language
+services remain unfinished. The WPF goal stays active.
