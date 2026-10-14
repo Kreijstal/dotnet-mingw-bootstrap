@@ -10814,3 +10814,73 @@ decorations/expansion, selective incremental reuse/comparison/display transfer,
 complex figure collision/search/composite-line layouts, advanced spans,
 balancing/footnotes, optimal/interruptible algorithms and full native-language
 services remain unfinished. The WPF goal stays active.
+
+
+## 168. Original subtrack/subpage comparison and display transfer
+
+The 2026-10-14 continuation implements FsCompareSubtrack, FsCompareSubpages,
+FsTransferDisplayInfoSubtrack and FsTransferDisplayInfoSubpage against retained
+source paragraph/page ownership. The callback declarations and comparison/change
+enums are generated from the original PTS source; no handwritten ABI substitute
+is introduced. Context, handle kind and track direction are validated. Comparison
+preserves identity, distinguishes vertical shifts for equivalent empty tracks,
+checks source/geometry/row/merge/shared-cell topology, and invokes the original
+paragraph/object/floater/cell change contracts. Fresh opaque line clients remain
+conservatively changed: identical metrics do not prove identical renderer content,
+fonts or brushes. Original cell comparison also conservatively reports changed.
+
+Transfer matches source paragraph identity and uses original managed callbacks to
+move visual ownership, recursively entering native subtrack/subpage object paths,
+attached objects and retained figure pages. Table/floater callbacks retain their
+original contracts. New-content update flags are preserved so adopted visual
+containers rebuild changed glyphs. Weak previous-owner ledgers skip successfully
+accepted paragraph/cell transfers during retry without keeping disposed old
+clients alive. A later callback failure leaves earlier accepted transfers owned
+by the new clients and untouched clients owned by the old layout.
+
+The native fixture verifies two simultaneously live snapshots, comparison callback
+failure and clean outputs, partial transfer failure, successful retry without
+repeating accepted moves, repeat/self transfer, empty tracks with a precise
+15-unit shift, native subpage transfer, foreign/stale/type/direction rejection,
+and exact managed-client/line/break-record cleanup. All prior native paragraph
+fixtures still pass. Original marshaling/lifecycle checks retain 441 field
+sizes/offsets, context 872, methods 136 and callbacks 824.
+
+DisplayTransfer.cs uses independently constructed original ContainerParagraph and
+SubpageParagraph clients, nested original containers, scoped format/arrange/PTS
+operations, the original PtsHost comparison/transfer callbacks and actual native
+exports. Its standalone paragraphs receive original format-cache invalidation
+because they are outside the paginator's invalidation tree. Ideal/Display cases
+verify the actual nested managed visual identities move to new clients and old
+_visual fields clear; repeated native transfer preserves the new visuals. A
+brush-only black-to-red edit keeps geometry and produces 1328/1004 red pixels.
+Disposing old owners and compacting GC leaves adopted content intact. All source
+characters remain in original content ranges. A subsequent generation transfers
+again and rebuilds changed text, rejecting a stale raster. The offline SDK check
+runs each case through shared-framework and self-contained publication with SDK
+roots and toolchain PATH removed; builds have zero warnings/errors.
+
+Focused validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 inventory check-paragraph-context-native check-paragraph-context
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh check-paragraph-context-native
+/usr/bin/python3 ~/wpfboot/refresh-finite-native.py
+MSYSTEM=CLANG64 bash -lc 'bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-display-transfer-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/display-transfer-sdk-check'
+```
+
+All focused commands pass. The full source regression command also exits zero:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+```
+
+It passes all 23 offline WPF SDK gates (the prior 22 plus display transfer),
+original paragraph ABI/lifecycle and native paragraph/line checks, and retained
+interim WinForms shared/self-contained consumers. Evidence is archived under
+ tmp/wpf8-support/validation/display-transfer-20261014. Imported native coverage
+rises to 115/139 with 24 absent. This provides conservative comparison and visual
+ownership transfer; selective reuse of opaque line clients is not claimed.
+Complex object/layout behavior, advanced bidi, balancing/footnotes, optimal/
+interruptible algorithms and complete native-language services remain unfinished.
+The WPF packaging goal stays active.

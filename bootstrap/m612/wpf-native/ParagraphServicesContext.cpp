@@ -242,6 +242,7 @@ struct TableCellData {
     FSTABLECBKCELL callbacks{};
     void* name=nullptr;void* handle=nullptr;void* record=nullptr;int height=0;
     FSKUPDATE update=fskupdNew;
+    std::weak_ptr<TableCellData> transferred_from;
     explicit TableCellData(std::shared_ptr<Context> value):context(std::move(value)){++context->resources;}
     ~TableCellData(){if(record)reinterpret_cast<PtsDestroyCellBreakRecord>(callbacks.pfnDestroyCellBreakRecord)(context->info.pfsclient,record);if(handle)reinterpret_cast<PtsDestroyCell>(callbacks.pfnDestroyCell)(handle);--context->resources;}
 };
@@ -265,6 +266,8 @@ struct ParaData {
     std::shared_ptr<Context> context;
     FSPARADESCRIPTION desc{};
     bool forced_progress=false;
+    uint32_t direction=0;
+    std::weak_ptr<ParaData> transferred_from;
     std::shared_ptr<TextData> text;
     std::shared_ptr<FloaterData> floater;
     std::shared_ptr<FigureData> figure;
@@ -465,7 +468,7 @@ int format_attached_objects(const std::shared_ptr<ParaData>& para,int dcp,uint32
         if((kinds[index]!=2&&kinds[index]!=-2)||!names[index]||anchors[index]<dcp)return PTS_tserrNotImplemented;
         auto& attached=para->text->attached;
         if(std::any_of(attached.begin(),attached.end(),[&](const AttachedData& value){return value.para->desc.nmp==names[index];}))continue;
-        auto child=std::make_shared<ParaData>();child->context=context;child->desc.nmp=names[index];child->desc.idobj=kinds[index];child->desc.fsupdinf.fskupd=fskupdNew;
+        auto child=std::make_shared<ParaData>();child->context=context;child->direction=direction;child->desc.nmp=names[index];child->desc.idobj=kinds[index];child->desc.fsupdinf.fskupd=fskupdNew;
         status=reinterpret_cast<PtsCreateParaclient>(context->info.fscbk.cbkgen.pfnCreateParaclient)(client,names[index],&child->desc.pfsparaclient);if(status)return status;
         if(!child->desc.pfsparaclient)return PTS_tserrInvalidClientOutput;
         std::shared_ptr<Continuation> next;std::shared_ptr<FloaterBreakData> tail;MarginOwner margin{context};FSFLOATERPROPS props{};
@@ -978,7 +981,7 @@ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t 
                 if(!chain_margin.value)return PTS_tserrInvalidClientOutput;
             }
         }
-        auto para=std::make_shared<ParaData>();para->context=context;para->desc.nmp=name;para->desc.idobj=props.idobj;para->desc.fsupdinf.fskupd=fskupdNew;
+        auto para=std::make_shared<ParaData>();para->context=context;para->direction=direction;para->desc.nmp=name;para->desc.idobj=props.idobj;para->desc.fsupdinf.fskupd=fskupdNew;
         status=reinterpret_cast<PtsCreateParaclient>(cb.pfnCreateParaclient)(client,name,&para->desc.pfsparaclient);if(status)return status;
         if(!para->desc.pfsparaclient)return PTS_tserrInvalidClientOutput;
         FSRECT available=rect;available.v+=track->used;available.dv-=track->used;
@@ -1286,6 +1289,118 @@ extern "C" __declspec(dllexport) int WINAPI FsSynchronizeBottomlessSubtrack(void
     if(geometry||direction!=track->direction||(direction!=PTS_fswdirES&&direction!=PTS_fswdirWS))return PTS_tserrNotImplemented;
     try {TrackShift plan{shift};int status=plan.collect(track);if(status)return status;std::lock_guard<std::mutex> lock(gate);plan.apply();return 0;}
     catch(const std::bad_alloc&){return PTS_tserrOutOfMemory;}
+}
+namespace {
+int compare_tracks(const std::shared_ptr<TrackData>& old,const std::shared_ptr<TrackData>& fresh,int shift,bool& equal);
+int compare_pages(const std::shared_ptr<PageData>& old,const std::shared_ptr<PageData>& fresh,bool& equal);
+bool equal_rect(const FSRECT& a,const FSRECT& b,int shift) {
+    return a.u==b.u&&int64_t(a.v)+shift==b.v&&a.du==b.du&&a.dv==b.dv;
+}
+bool equal_bbox(const FSBBOX& a,const FSBBOX& b,int shift) {
+    return bool(a.fDefined)==bool(b.fDefined)&&(!a.fDefined||equal_rect(a.fsrc,b.fsrc,shift));
+}
+int compare_paras(const std::shared_ptr<ParaData>& old,const std::shared_ptr<ParaData>& fresh,int shift,bool& equal) {
+    equal=false;const auto& a=old->desc;const auto& b=fresh->desc;
+    if(a.nmp!=b.nmp||a.idobj!=b.idobj||a.dvrUsed!=b.dvrUsed||a.dvrTopSpace!=b.dvrTopSpace||!equal_bbox(a.fsbbox,b.fsbbox,shift))return 0;
+    if(old==fresh){equal=true;return 0;}
+    auto context=old->context;void* client=context->info.pfsclient;
+    auto changed=context->info.fscbk.cbkgen.pfnUpdGetParaChange;
+    if(!changed)return 0;FSKCHANGE change=fskchNew;int done=0;
+    int status=reinterpret_cast<PtsUpdGetParaChange>(changed)(client,a.nmp,&change,&done);if(status)return status;
+    if(change!=fskchNone)return 0;
+    if(old->text&&fresh->text){const auto& x=*old->text;const auto& y=*fresh->text;
+        if(x.direction!=y.direction||x.lines.size()!=y.lines.size()||x.attached.size()!=y.attached.size())return 0;
+        for(size_t i=0;i<x.lines.size();++i){auto l=x.lines[i],r=y.lines[i];
+            if(l.pfslineclient!=r.pfslineclient||l.dcpFirst!=r.dcpFirst||l.dcpLim!=r.dcpLim||l.urStart!=r.urStart||l.dur!=r.dur||int64_t(l.vrStart)+shift!=r.vrStart||l.dvrAscent!=r.dvrAscent||l.dvrDescent!=r.dvrDescent||l.urBBox!=r.urBBox||l.durBBox!=r.durBBox||l.fForceBroken!=r.fForceBroken||l.fTreatedAsFirst!=r.fTreatedAsFirst)return 0;
+        }
+        for(size_t i=0;i<x.attached.size();++i){if(x.attached[i].anchor!=y.attached[i].anchor)return 0;bool same=false;status=compare_paras(x.attached[i].para,y.attached[i].para,shift,same);if(status||!same)return status;}
+        equal=true;return 0;
+    }
+    if(old->floater&&fresh->floater){auto& x=*old->floater;auto& y=*fresh->floater;if(!equal_rect(x.details.fsrcFloater,y.details.fsrcFloater,shift))return 0;
+        if(x.details.pfsFloaterContent==y.details.pfsFloaterContent){equal=true;return 0;}
+        if(!x.callbacks.pfnCompareFloaterContents)return 0;FSCOMPRESULT result=fscmprChangeInside;
+        status=reinterpret_cast<PtsCompareFloaterContents>(x.callbacks.pfnCompareFloaterContents)(x.details.pfsFloaterContent,y.details.pfsFloaterContent,&result);equal=!status&&result==fscmprNoChange;return status;
+    }
+    if(old->figure&&fresh->figure){if(!equal_rect(old->figure->details.fsrcFlowAround,fresh->figure->details.fsrcFlowAround,shift)||old->figure_pages.size()!=fresh->figure_pages.size())return 0;
+        for(size_t i=0;i<old->figure_pages.size();++i){bool same=false;status=compare_pages(old->figure_pages[i],fresh->figure_pages[i],same);if(status||!same)return status;}equal=true;return 0;
+    }
+    if(old->table&&fresh->table){auto& x=*old->table;auto& y=*fresh->table;
+        if(!equal_rect(x.details.fsrcTableObj,y.details.fsrcTableObj,shift)||x.rows.size()!=y.rows.size())return 0;
+        std::unordered_map<void*,void*> forward,reverse;
+        for(size_t row=0;row<x.rows.size();++row){const auto& left=*x.rows[row];const auto& right=*y.rows[row];
+            if(left.description.fsnmRow!=right.description.fsnmRow||left.description.u.dvrRow!=right.description.u.dvrRow||left.merges!=right.merges||left.cells.size()!=right.cells.size())return 0;
+            for(size_t i=0;i<left.cells.size();++i){auto l=left.cells[i],r=right.cells[i];if(bool(l)!=bool(r))return 0;if(!l)continue;if(l->name!=r->name||l->height!=r->height)return 0;auto paired=forward.emplace(l.get(),r.get());if(!paired.second){if(paired.first->second!=r.get())return 0;continue;}if(!reverse.emplace(r.get(),l.get()).second)return 0;
+                if(l==r)continue;if(!l->callbacks.pfnCompareCells)return 0;FSCOMPRESULT result=fscmprChangeInside;status=reinterpret_cast<PtsCompareCells>(l->callbacks.pfnCompareCells)(l->handle,r->handle,&result);if(status||result!=fscmprNoChange)return status;
+            }
+        }equal=true;return 0;
+    }
+    if(a.idobj==0||a.idobj==1){auto fn=context->installed->methods[a.idobj].pfnComparePara;if(!fn)return 0;FSCOMPRESULT result=fscmprChangeInside;int shifted=0;
+        status=reinterpret_cast<PtsObjComparePara>(fn)(a.pfsparaclient,a.pfspara,b.pfsparaclient,b.pfspara,old->direction,&result,&shifted);
+        equal=!status&&((result==fscmprNoChange&&(shift==0||a.idobj==1))||(result==fscmprShifted&&shifted==shift));return status;
+    }
+    return 0;
+}
+int compare_tracks(const std::shared_ptr<TrackData>& old,const std::shared_ptr<TrackData>& fresh,int shift,bool& equal) {
+    equal=false;if(old==fresh){equal=true;return 0;}
+    if(old->segment!=fresh->segment||old->bottomless!=fresh->bottomless||old->direction!=fresh->direction||old->used!=fresh->used||old->stop!=fresh->stop||old->forced_progress!=fresh->forced_progress||old->paras.size()!=fresh->paras.size()||!equal_rect(old->rect,fresh->rect,shift)||!equal_bbox(old->bbox,fresh->bbox,shift))return 0;
+    for(size_t i=0;i<old->paras.size();++i){bool same=false;int status=compare_paras(old->paras[i],fresh->paras[i],shift,same);if(status||!same)return status;}equal=true;return 0;
+}
+int compare_pages(const std::shared_ptr<PageData>& old,const std::shared_ptr<PageData>& fresh,bool& equal) {
+    equal=false;if(old==fresh){equal=true;return 0;}
+    if(old->bottomless!=fresh->bottomless||old->stop!=fresh->stop||bool(old->section)!=bool(fresh->section))return 0;
+    if(!old->section)return compare_tracks(old->track,fresh->track,0,equal);
+    if(old->section->direction!=fresh->section->direction||old->section->columns.size()!=fresh->section->columns.size())return 0;
+    for(size_t i=0;i<old->section->columns.size();++i){bool same=false;int status=compare_tracks(old->section->columns[i],fresh->section->columns[i],0,same);if(status||!same)return status;}equal=true;return 0;
+}
+int transfer_tracks(const std::shared_ptr<TrackData>& old,const std::shared_ptr<TrackData>& fresh);
+int transfer_pages(const std::shared_ptr<PageData>& old,const std::shared_ptr<PageData>& fresh) {
+    if(old==fresh)return 0;
+    if(old->section&&fresh->section){size_t count=std::min(old->section->columns.size(),fresh->section->columns.size());for(size_t i=0;i<count;++i){int status=transfer_tracks(old->section->columns[i],fresh->section->columns[i]);if(status)return status;}}
+    else if(!old->section&&!fresh->section)return transfer_tracks(old->track,fresh->track);
+    return 0;
+}
+int transfer_para(const std::shared_ptr<ParaData>& old,const std::shared_ptr<ParaData>& fresh) {
+    if(old==fresh)return 0;
+    auto context=old->context;int status=0;
+    if(old->desc.pfsparaclient!=fresh->desc.pfsparaclient&&fresh->transferred_from.lock()!=old){
+        auto fn=context->info.fscbk.cbkgen.pfnTransferDisplayInfo;if(!fn)return PTS_tserrInvalidParameter;
+        status=reinterpret_cast<PtsTransferDisplayInfo>(fn)(context->info.pfsclient,old->desc.pfsparaclient,fresh->desc.pfsparaclient);if(status)return status;fresh->transferred_from=old;
+    }
+    // Retain new-content flags: moved visuals must still rebuild changed glyphs.
+    if(old->text&&fresh->text){for(const auto& next:fresh->text->attached){auto at=std::find_if(old->text->attached.begin(),old->text->attached.end(),[&](const AttachedData& value){return value.para->desc.nmp==next.para->desc.nmp&&value.para->desc.idobj==next.para->desc.idobj;});if(at!=old->text->attached.end()){status=transfer_para(at->para,next.para);if(status)return status;}}}
+    if(old->figure&&fresh->figure){for(size_t i=0;i<std::min(old->figure_pages.size(),fresh->figure_pages.size());++i){status=transfer_pages(old->figure_pages[i],fresh->figure_pages[i]);if(status)return status;}}
+    if(old->floater&&fresh->floater&&old->floater->callbacks.pfnTransferDisplayInfoInFloaterContent){status=reinterpret_cast<PtsTransferDisplayInfoInFloaterContent>(old->floater->callbacks.pfnTransferDisplayInfoInFloaterContent)(old->floater->details.pfsFloaterContent,fresh->floater->details.pfsFloaterContent);if(status)return status;}
+    if(old->table&&fresh->table){std::unordered_set<void*> visited;for(const auto& row:fresh->table->rows)for(const auto& next:row->cells){if(!next||!visited.insert(next.get()).second)continue;std::shared_ptr<TableCellData> previous;
+        for(const auto& before:old->table->rows)for(const auto& cell:before->cells)if(cell&&cell->name==next->name)previous=cell;
+        if(previous&&previous->handle!=next->handle&&next->transferred_from.lock()!=previous&&previous->callbacks.pfnTransferDisplayInfoCell){status=reinterpret_cast<PtsTransferDisplayInfoCell>(previous->callbacks.pfnTransferDisplayInfoCell)(previous->handle,next->handle);if(status)return status;next->transferred_from=previous;}
+    }}
+    if(old->desc.idobj==0||old->desc.idobj==1){auto child=context->installed->methods[old->desc.idobj].pfnTransferDisplayInfoPara;if(child){status=reinterpret_cast<PtsObjTransferDisplayInfoPara>(child)(old->desc.pfspara,fresh->desc.pfspara);if(status)return status;}}
+    return 0;
+}
+int transfer_tracks(const std::shared_ptr<TrackData>& old,const std::shared_ptr<TrackData>& fresh) {
+    if(old==fresh)return 0;
+    for(const auto& next:fresh->paras){auto at=std::find_if(old->paras.begin(),old->paras.end(),[&](const std::shared_ptr<ParaData>& value){return value->desc.nmp==next->desc.nmp&&value->desc.idobj==next->desc.idobj;});if(at!=old->paras.end()){int status=transfer_para(*at,next);if(status)return status;}}
+    return 0;
+}
+}
+extern "C" __declspec(dllexport) int WINAPI FsCompareSubtrack(void* context,void* previous,void* current,uint32_t direction,FSCOMPRESULT* result,int* shift) {
+    if(!result||!shift)return PTS_tserrNullOutputParameter;*result=fscmprChangeInside;*shift=0;
+    auto old=lookup_owned(tracks,context,previous),fresh=lookup_owned(tracks,context,current);if(!old||!fresh||!old->subtrack||!fresh->subtrack)return PTS_tserrInvalidQuery;
+    if(direction!=old->direction||direction!=fresh->direction)return PTS_tserrNotImplemented;
+    int64_t delta=int64_t(fresh->rect.v)-old->rect.v;if(delta<INT32_MIN||delta>INT32_MAX)return PTS_tserrInvalidGeometry;
+    try {bool equal=false;int status=compare_tracks(old,fresh,int(delta),equal);if(status)return status;if(equal){*result=delta?fscmprShifted:fscmprNoChange;*shift=int(delta);}return 0;}catch(const std::bad_alloc&){return PTS_tserrOutOfMemory;}
+}
+extern "C" __declspec(dllexport) int WINAPI FsCompareSubpages(void* context,void* previous,void* current,FSCOMPRESULT* result) {
+    if(!result)return PTS_tserrNullOutputParameter;*result=fscmprChangeInside;auto old=lookup_owned(pages,context,previous),fresh=lookup_owned(pages,context,current);if(!old||!fresh||!old->subpage||!fresh->subpage)return PTS_tserrInvalidQuery;
+    try {bool equal=false;int status=compare_pages(old,fresh,equal);if(!status&&equal)*result=fscmprNoChange;return status;}catch(const std::bad_alloc&){return PTS_tserrOutOfMemory;}
+}
+extern "C" __declspec(dllexport) int WINAPI FsTransferDisplayInfoSubtrack(void* context,void* previous,void* current) {
+    auto old=lookup_owned(tracks,context,previous),fresh=lookup_owned(tracks,context,current);if(!old||!fresh||!old->subtrack||!fresh->subtrack)return PTS_tserrInvalidQuery;
+    try{return transfer_tracks(old,fresh);}catch(const std::bad_alloc&){return PTS_tserrOutOfMemory;}
+}
+extern "C" __declspec(dllexport) int WINAPI FsTransferDisplayInfoSubpage(void* context,void* previous,void* current) {
+    auto old=lookup_owned(pages,context,previous),fresh=lookup_owned(pages,context,current);if(!old||!fresh||!old->subpage||!fresh->subpage)return PTS_tserrInvalidQuery;
+    try{return transfer_pages(old,fresh);}catch(const std::bad_alloc&){return PTS_tserrOutOfMemory;}
 }
 extern "C" __declspec(dllexport) int WINAPI FsUpdateFinitePage(void* context_handle,void* handle,void* break_input,void* section,FSFMTR* formatted,void** break_output) {
     if(!formatted||!break_output)return PTS_tserrNullOutputParameter;

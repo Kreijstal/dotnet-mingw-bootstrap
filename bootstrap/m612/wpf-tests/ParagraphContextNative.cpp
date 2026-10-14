@@ -17,6 +17,19 @@ static int WINAPI create_object(void* client,void* context,FSCBKOBJ* callbacks,u
 static int WINAPI destroy_object(void* value){if(value!=reinterpret_cast<void*>(100)&&value!=reinterpret_cast<void*>(101))return PTS_tserrInvalidParameter;++destroys;return 0;}
 static int lines_created=0,lines_destroyed=0,breaks_destroyed=0,clients_created=0,clients_destroyed=0,fail_line=-1,columns=1,available_height=80,invalid_columns=false,hard_break=0,keep_mode=0,keep_next=0,para_count=2;
 static bool containers=false,lose_subtrack=false;
+static bool display_test=false;
+struct DisplayClient {bool visual=false;};
+static std::unordered_set<void*> display_clients;
+static int transfer_attempts=0,transfer_fail=-1;
+static FSKCHANGE backing_change=fskchNone;
+static int compare_error=0;
+static int WINAPI source_change(void*,void*,FSKCHANGE* change,int* done){*change=backing_change;*done=0;return compare_error;}
+static int WINAPI transfer_visual(void*,void* old,void* fresh){
+    ++transfer_attempts;if(transfer_attempts==transfer_fail)return PTS_tserrCallbackException;
+    if(!display_clients.count(old)||!display_clients.count(fresh))return PTS_tserrInvalidParameter;
+    auto before=static_cast<DisplayClient*>(old),after=static_cast<DisplayClient*>(fresh);
+    if(!before->visual)return PTS_tserrInvalidClientOutput;after->visual=true;before->visual=false;return 0;
+}
 static uint32_t page_direction=0,text_direction=0;
 static bool rtl_matrix=false;
 static bool attached_figure=false,figure_fail_properties=false,figure_fail_position=false,inside_figure=false;
@@ -78,11 +91,11 @@ static int WINAPI column_info(void*,void*,uint32_t,int capacity,FSCOLUMNINFO* ou
     if(capacity!=2)return PTS_tserrInvalidParameter;output[0]={0,100};output[1]={10,invalid_columns?250:100};*actual=2;return 0;
 }
 static int WINAPI main_segment(void*,void*,void** segment){*segment=reinterpret_cast<void*>(77);return 0;}
-static int WINAPI first_para(void*,void* segment,int* found,void** name){if(segment!=reinterpret_cast<void*>(77)&&!containers&&!subpage_parent&&!inside_table_cell)return PTS_tserrInvalidParameter;*found=1;*name=segment==reinterpret_cast<void*>(77)?reinterpret_cast<void*>(101):reinterpret_cast<void*>(201);return 0;}
+static int WINAPI first_para(void*,void* segment,int* found,void** name){if(segment!=reinterpret_cast<void*>(77)&&!containers&&!subpage_parent&&!inside_table_cell)return PTS_tserrInvalidParameter;*found=para_count!=0;*name=segment==reinterpret_cast<void*>(77)?reinterpret_cast<void*>(101):reinterpret_cast<void*>(201);return 0;}
 static int WINAPI next_para(void*,void* segment,void* current,int* found,void** next){*found=segment==reinterpret_cast<void*>(77)&&reinterpret_cast<uintptr_t>(current)<uintptr_t(100+para_count);*next=*found?reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(current)+1):nullptr;return 0;}
 static int WINAPI para_properties(void*,void* name,FSPAP* pap){*pap={};pap->idobj=table_mode&&!inside_table_cell&&!(span_prefix&&name==reinterpret_cast<void*>(101))?3:subpage_parent&&reinterpret_cast<uintptr_t>(name)<200?1:block_ui&&name==reinterpret_cast<void*>(102)?2:containers&&reinterpret_cast<uintptr_t>(name)<200?0:-1;pap->fKeepWithNext=keep_next&&name==reinterpret_cast<void*>(102);if(name==reinterpret_cast<void*>(102)){pap->fBreakPageBefore=hard_break==1;pap->fBreakColumnBefore=hard_break==2;}return 0;}
-static int WINAPI para_client(void*,void* name,void** output){++clients_created;*output=name;return 0;}
-static int WINAPI destroy_para_client(void*,void* client){auto at=figure_content.find(client);if(at!=figure_content.end()){void* page=at->second;figure_content.erase(at);require(destroy_subpage(page_context,page)==0,"original figure client owns its subpage through disposal");}++clients_destroyed;return 0;}
+static int WINAPI para_client(void*,void* name,void** output){++clients_created;*output=name;if(display_test){auto client=new DisplayClient;display_clients.insert(client);*output=client;}return 0;}
+static int WINAPI destroy_para_client(void*,void* client){auto at=figure_content.find(client);if(at!=figure_content.end()){void* page=at->second;figure_content.erase(at);require(destroy_subpage(page_context,page)==0,"original figure client owns its subpage through disposal");}if(display_clients.erase(client))delete static_cast<DisplayClient*>(client);++clients_destroyed;return 0;}
 static int WINAPI text_properties(void*,void* name,int,FSTXTPROPS* props){*props={};props->fswdir=text_direction;props->fKeepTogether=keep_mode==2||(keep_mode==1&&name==reinterpret_cast<void*>(102));return 0;}
 static int WINAPI line_format(void*,void*,void* name,int,int dcp,void* incoming,uint32_t direction,
     int start,int width,int track_start,int track_width,int margin,int hyphen,int left,int right,int first,int last,int suppress,
@@ -258,6 +271,7 @@ int main(int argc,char** argv) {
         auto& gen=info.fscbk.cbkgen;auto& txt=info.fscbk.cbktxt;
         gen.pfnGetPageDimensions=reinterpret_cast<void*>(page_geometry);gen.pfnGetSectionProperties=reinterpret_cast<void*>(section_properties);gen.pfnGetMainTextSegment=reinterpret_cast<void*>(main_segment);gen.pfnGetSectionColumnInfo=reinterpret_cast<void*>(column_info);
         gen.pfnGetFirstPara=reinterpret_cast<void*>(first_para);gen.pfnGetNextPara=reinterpret_cast<void*>(next_para);gen.pfnGetParaProperties=reinterpret_cast<void*>(para_properties);
+        gen.pfnUpdGetParaChange=reinterpret_cast<void*>(source_change);gen.pfnTransferDisplayInfo=reinterpret_cast<void*>(transfer_visual);
         gen.pfnCreateParaclient=reinterpret_cast<void*>(para_client);gen.pfnDestroyParaclient=reinterpret_cast<void*>(destroy_para_client);
         txt.pfnGetTextProperties=reinterpret_cast<void*>(text_properties);txt.pfnFormatLine=reinterpret_cast<void*>(line_format);
         txt.pfnGetNumberAttachedObjectsBeforeTextLine=reinterpret_cast<void*>(attached_count);txt.pfnGetAttachedObjectsBeforeTextLine=reinterpret_cast<void*>(attached_objects);txt.pfnGetNumberAttachedObjectsInTextLine=reinterpret_cast<void*>(attached_in_line);txt.pfnGetAttachedObjectsInTextLine=reinterpret_cast<void*>(inline_objects);
@@ -722,6 +736,45 @@ int main(int argc,char** argv) {
         }
         page_direction=text_direction=0;rtl_matrix=false;
         std::puts("native horizontal RTL pages: asymmetric physical margins, logical columns, independent paragraph coordinates/bounds, direction queries, failed-update retention and exact cleanup PASS");
+        using CompareTrack=int(WINAPI*)(void*,void*,void*,uint32_t,FSCOMPRESULT*,int*);using ComparePage=int(WINAPI*)(void*,void*,void*,FSCOMPRESULT*);using Transfer=int(WINAPI*)(void*,void*,void*);
+        PROC(FsCompareSubtrack,CompareTrack);PROC(FsCompareSubpages,ComparePage);PROC(FsTransferDisplayInfoSubtrack,Transfer);PROC(FsTransferDisplayInfoSubpage,Transfer);
+        columns=1;para_count=2;available_height=80;display_test=true;reset_page_counts();transfer_attempts=0;
+        FSRECT display_rect{10,20,100,80};void* old_display=nullptr;void* fresh_display=nullptr;void* display_record=nullptr;
+        auto format_display=[&](void** out){return format_subtrack(context,nullptr,0,reinterpret_cast<void*>(77),0,nullptr,nullptr,0,1,0,&display_rect,nullptr,fskclearNone,fsksuppresshardbreakbeforefirstparaNone,&formatted,out,&display_record,&used,&bbox,&margin,&clear,&top_space);};
+        require(format_display(&old_display)==0&&!display_record&&format_display(&fresh_display)==0&&!display_record,"comparison/transfer keep two independent source layouts alive");
+        FSPARADESCRIPTION old_paras[2]{},fresh_paras[2]{};require(FsQuerySubtrackParaList(context,old_display,2,old_paras,&actual_count)==0&&FsQuerySubtrackParaList(context,fresh_display,2,fresh_paras,&actual_count)==0,"display snapshots expose distinct real paragraph clients");
+        for(auto& para:old_paras)static_cast<DisplayClient*>(para.pfsparaclient)->visual=true;
+        FSCOMPRESULT comparison=fscmprChangeInside;int display_shift=99;
+        require(FsCompareSubtrack(context,old_display,old_display,0,&comparison,&display_shift)==0&&comparison==fscmprNoChange&&!display_shift,"self comparison preserves native immutable content identity");
+        require(FsCompareSubtrack(context,old_display,fresh_display,0,&comparison,&display_shift)==0&&comparison==fscmprChangeInside&&!display_shift,"distinct opaque line clients are conservatively changed even with equal source geometry");
+        compare_error=PTS_tserrCallbackException;
+        require(FsCompareSubtrack(context,old_display,fresh_display,0,&comparison,&display_shift)==PTS_tserrCallbackException&&comparison==fscmprChangeInside&&!display_shift,"comparison callback failure propagates with clean outputs");compare_error=0;
+        transfer_fail=2;
+        require(FsTransferDisplayInfoSubtrack(context,old_display,fresh_display)==PTS_tserrCallbackException&&transfer_attempts==2&&!static_cast<DisplayClient*>(old_paras[0].pfsparaclient)->visual&&static_cast<DisplayClient*>(fresh_paras[0].pfsparaclient)->visual&&static_cast<DisplayClient*>(old_paras[1].pfsparaclient)->visual,"partial transfer moves accepted visual ownership and preserves later unaccepted owners");transfer_fail=-1;
+        require(FsTransferDisplayInfoSubtrack(context,old_display,fresh_display)==0&&transfer_attempts==3&&!static_cast<DisplayClient*>(old_paras[1].pfsparaclient)->visual&&static_cast<DisplayClient*>(fresh_paras[1].pfsparaclient)->visual,"retry skips accepted transfers rather than overwriting adopted visuals");
+        require(FsTransferDisplayInfoSubtrack(context,old_display,fresh_display)==0&&transfer_attempts==3&&FsTransferDisplayInfoSubtrack(context,fresh_display,fresh_display)==0&&transfer_attempts==3,"successful repeated/self transfer has no duplicate ownership callbacks");
+        require(FsTransferDisplayInfoSubtrack(reinterpret_cast<void*>(999),old_display,fresh_display)==PTS_tserrInvalidQuery&&FsCompareSubtrack(context,old_display,fresh_display,4,&comparison,&display_shift)==PTS_tserrNotImplemented,"display APIs reject foreign owners and mismatched track direction");
+        require(destroy_subtrack(context,old_display)==0&&destroy_subtrack(context,fresh_display)==0&&display_clients.empty()&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"transferred visuals do not keep old source clients/records alive");
+        para_count=0;reset_page_counts();
+        require(format_display(&old_display)==0&&format_display(&fresh_display)==0,"empty display layouts still retain validated native ownership");
+        require(FsCompareSubtrack(context,old_display,fresh_display,0,&comparison,&display_shift)==0&&comparison==fscmprNoChange&&!display_shift,"distinct empty tracks compare by their complete geometry");
+        require(destroy_subtrack(context,fresh_display)==0,"replace only fresh empty geometry");display_rect.v+=15;
+        require(format_display(&fresh_display)==0&&FsCompareSubtrack(context,old_display,fresh_display,0,&comparison,&display_shift)==0&&comparison==fscmprShifted&&display_shift==15,"empty track comparison reports exact uniform vertical shift");
+        require(FsTransferDisplayInfoSubtrack(context,old_display,fresh_display)==0&&destroy_subtrack(context,old_display)==0&&destroy_subtrack(context,fresh_display)==0,"empty shifted tracks transfer without client callbacks");
+        para_count=2;reset_page_counts();transfer_attempts=0;display_rect.v=20;FSCOLUMNINFO display_column{0,100};
+        auto format_display_page=[&](void** out){return create_subpage(context,nullptr,0,reinterpret_cast<void*>(77),nullptr,0,1,0,110,100,&display_rect,1,&display_column,0,0,nullptr,nullptr,0,nullptr,nullptr,0,fsksuppresshardbreakbeforefirstparaNone,&formatted,out,&display_record,&used,&bbox,&margin,&top_space);};
+        require(format_display_page(&old_display)==0&&!display_record&&format_display_page(&fresh_display)==0&&!display_record,"display pages retain two source-owned trees");
+        require(FsQuerySubpageDetails(context,old_display,&sub_details)==0&&FsQueryTrackParaList(context,sub_details.u.simple.trackdescr.pfstrack,2,old_paras,&actual_count)==0&&actual_count==2,"old display page exposes two managed source clients");
+        require(FsQuerySubpageDetails(context,fresh_display,&sub_details)==0&&FsQueryTrackParaList(context,sub_details.u.simple.trackdescr.pfstrack,2,fresh_paras,&actual_count)==0&&actual_count==2,"fresh display page exposes two managed source clients");
+        for(auto& para:old_paras)static_cast<DisplayClient*>(para.pfsparaclient)->visual=true;
+        require(FsCompareSubpages(context,old_display,old_display,&comparison)==0&&comparison==fscmprNoChange&&FsCompareSubpages(context,old_display,fresh_display,&comparison)==0&&comparison==fscmprChangeInside,"subpage comparison retains identity and conservative fresh-content contract");
+        require(FsTransferDisplayInfoSubpage(context,old_display,fresh_display)==0&&transfer_attempts==2&&FsTransferDisplayInfoSubpage(context,old_display,fresh_display)==0&&transfer_attempts==2,"subpage transfer recursively moves each client once");
+        require(!static_cast<DisplayClient*>(old_paras[0].pfsparaclient)->visual&&static_cast<DisplayClient*>(fresh_paras[0].pfsparaclient)->visual,"subpage transfer releases old visual ownership");
+        require(FsTransferDisplayInfoSubpage(reinterpret_cast<void*>(999),old_display,fresh_display)==PTS_tserrInvalidQuery&&FsCompareSubtrack(context,old_display,fresh_display,0,&comparison,&display_shift)==PTS_tserrInvalidQuery,"subpage APIs validate owner and prohibit cross-kind handles");
+        require(destroy_subpage(context,old_display)==0&&FsCompareSubpages(context,old_display,fresh_display,&comparison)==PTS_tserrInvalidQuery&&comparison==fscmprChangeInside&&destroy_subpage(context,fresh_display)==0,"display comparison rejects stale page owners with cleared output");
+        require(display_clients.empty()&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"display page transfer tears down every original client/record once");
+        std::puts("native display comparison/transfer: identity versus opaque content, callback failure, partial ownership, retry/idempotence, empty shifted tracks, subpages, foreign/stale/type/direction validation and exact cleanup PASS");
+        display_test=false;
         columns=1;require(DestroyDocContext(context)==0&&DestroyInstalledObjectsInfo(installed)==0,"failed page creation leaves no retained resources");
         std::puts("native finite pages: actual callback geometry/ranges/break records, query/update state, foreign/stale handles, exact teardown, partial failure rollback and unsupported paths PASS");
         std::printf("native paragraph records: context=%zu, methods=%zu, callbacks=%zu; copied ownership, callbacks, rollback, invalid states and teardown PASS\n",sizeof(FSCONTEXTINFO),sizeof(FSIMETHODS),sizeof(FSCBK));return 0;

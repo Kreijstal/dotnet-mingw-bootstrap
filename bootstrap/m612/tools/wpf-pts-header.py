@@ -133,7 +133,9 @@ for name in ('GetPageDimensions', 'GetSectionProperties', 'GetMainTextSegment',
              'GetTableProperties', 'AutofitTable', 'GetMCSClientAfterTable', 'GetFirstHeaderRow', 'GetFirstFooterRow',
              'GetFirstRow', 'GetNextRow', 'GetDistributionKind', 'GetRowProperties', 'GetCells',
              'FormatCellFinite', 'FormatCellBottomless', 'SetCellHeight', 'DestroyCell', 'DestroyCellBreakRecord',
-             'ClearUpdateInfoInCell', 'CalcHorizontalBBoxOfRow', 'GetFigureProperties', 'CalcFigurePosition'):
+             'ClearUpdateInfoInCell', 'CalcHorizontalBBoxOfRow', 'GetFigureProperties', 'CalcFigurePosition',
+             'UpdGetParaChange', 'ObjComparePara', 'CompareFloaterContents', 'CompareCells',
+             'TransferDisplayInfo', 'ObjTransferDisplayInfoPara', 'TransferDisplayInfoInFloaterContent', 'TransferDisplayInfoCell'):
     match = re.search(r'\bdelegate\s+int\s+' + name + r'\s*\((.*?)\)\s*;', text, re.S)
     if not match:
         raise SystemExit('Missing source callback: ' + name)
