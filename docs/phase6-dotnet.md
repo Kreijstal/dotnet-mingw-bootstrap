@@ -10646,3 +10646,60 @@ incremental reuse/comparison/display transfer, complex figure collision/search/
 composite-line layouts, advanced spans, balancing/footnotes, optimal/interruptible
 algorithms and complete native-language behavior remain open. The WPF goal stays
 active.
+
+## 165. Installed release 33: horizontal bidi scopes
+
+The 2026-10-14 continuation packages section 164 as WindowsDesktop 8.0.0-33.
+Declared/checksummed 0033-bidi-reversals.patch follows the prior 32 patches.
+Clean pinned sources plus all patches reproduce the five committed feature files
+byte for byte; actual private sources have matching hashes. Source/private trees
+rebuild native output/inventory/layout and pass exact reversal geometry, depth,
+coalesced-control and cloned-continuation tests, prior line/paragraph regressions
+and 441 original paragraph ABI field checks. Each tree passes all 21 offline WPF
+SDK consumer gates and retained interim WinForms checks. Unchanged managed/
+graphics/printing outputs remain private source builds.
+
+Validation commands:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+# In the CLANG64 package workspace, with srcdir set to its src/ directory:
+makepkg --verifysource --force
+source PKGBUILD
+_wpf native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+makepkg --printsrcinfo > .SRCINFO
+makepkg --repackage --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-33-any.pkg.tar.zst
+/usr/bin/python3 check-staged.py /clang64/lib/dotnet
+bash "$(_driver)/wpf-tests/check-bidi-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-bidi-sdk-check
+bash "$(_driver)/wpf-tests/check-justification-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-bidi-justification-sdk-check
+pacman -Q mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap
+sha256sum mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-33-any.pkg.tar.zst
+```
+
+All final commands pass. Staged/installed checks cover 42 managed implementation/
+reference assemblies, eight native libraries, SDK tasks and interim WinForms
+versions. Installed Hebrew/Arabic/Latin/numeric/combining/trailing-space cases
+pass in both directions and text modes, with real glyph raster, complete glyph
+source enumeration, caret/point mapping and selection bounds. Wrapped mixed
+source retains all 203 characters across 18 lines. Original TextBlock layout,
+point hits and glyph raster pass in both directions. Intrinsic widths agree
+with isolated words and whole-paragraph formatting. Default-justified mixed
+FlowDocuments complete four pages with all 699 source characters exactly once,
+original GetPageNumber agreement and disposed-page regeneration after GC.
+Installed existing nominal/shaped justification and TextBlock regressions remain
+green. Shared-framework and self-contained consumers pass with SDK roots/toolchain
+PATH removed, zero warnings/errors. The existing srcdir provenance warning remains.
+
+Artifact: mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-33-any.pkg.tar.zst.
+SHA-256: b218169a2268bc37a1ef9e156e728e3b25a974e9b2d254d5924dd2b54930a956.
+Recipe commit: msys2-ur c7eec63; feature commit: 6fbd31b.
+Source evidence is archived under tmp/wpf8-support/validation/bidi-20261014.
+Artifact, recipe, metadata, patch, hashes and package/installed logs are archived
+under tmp/wpf8-support/validation/bidi-package-20261014.
+Imported native coverage remains 111/139 with 28 absent. Horizontal line bidi is
+extended; full RTL paragraph/page layout, advanced bidi decorations/objects/
+expansion, selective incremental reuse/comparison/display transfer, complex
+figure collision/search/composite-line layouts, advanced spans, balancing/
+footnotes, optimal/interruptible algorithms and full native-language services
+remain unfinished. The WPF goal stays active.
