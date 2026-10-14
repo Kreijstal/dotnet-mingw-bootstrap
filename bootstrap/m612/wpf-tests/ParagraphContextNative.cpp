@@ -19,6 +19,8 @@ static bool containers=false,lose_subtrack=false;
 static bool structural_line=false;
 static bool subpage_parent=false,table_mode=false,inside_table_cell=false,lose_table_cell=false;
 static int table_cells_created=0,table_cells_destroyed=0,table_fail_cell=-1,table_rows_count=3;
+static bool split_table_cells=false,short_table_cell=false;
+static int table_records_created=0,table_records_destroyed=0;
 static int(WINAPI* table_handler)(const FSTABLEOBJINIT*,void*)=nullptr;
 static int(WINAPI* clear_cell_subpage)(void*,void*)=nullptr;
 struct MockTableCell {void* page;};
@@ -82,6 +84,7 @@ static int WINAPI line_format(void*,void*,void* name,int,int dcp,void* incoming,
     ++lines_created;*line=reinterpret_cast<void*>(1000+lines_created);*br=reinterpret_cast<void*>(2000+lines_created);
     *consumed=5;*forced=0;*result=dcp==0?fsflrOutOfSpace:fsflrEndOfParagraph;*ascent=7;*descent=3;*bbox=start;*bbox_width=75;*depend=*reformat=0;
     if(inline_anchor_mode){if(start!=(width==100?10:50)||(width!=60&&width!=100))return PTS_tserrInvalidParameter;*consumed=std::min(5,10-dcp);if(inline_anchor_mode==2&&dcp==0&&width==60)*consumed=2;*result=dcp+*consumed==10?fsflrEndOfParagraph:fsflrOutOfSpace;}
+    if(split_table_cells&&short_table_cell&&dcp==0)*result=fsflrEndOfParagraph;
     if(structural_line&&dcp==0){*ascent=*descent=*bbox_width=0;}
     if(lines_created==fail_line)return PTS_tserrCallbackException;
     return 0;
@@ -116,18 +119,20 @@ static int WINAPI table_next(void*,void*,void* current,int* found,void** name){a
 static int WINAPI table_row_props(void*,void*,uint32_t,FSTABLEROWPROPS* props){*props={};props->cCells=2;props->dvrAboveRow=props->dvrBelowRow=props->dvrAboveTopRow=props->dvrBelowBottomRow=props->dvrAboveRowBreak=props->dvrBelowRowBreak=1;return 0;}
 static int WINAPI table_get_cells(void*,void* row,int count,void** names,FSTABLEKCELLMERGE* merge){if(count!=2)return PTS_tserrInvalidParameter;auto n=reinterpret_cast<uintptr_t>(row);for(int i=0;i<2;++i){names[i]=reinterpret_cast<void*>(601+(n-501)*2+i);merge[i]=fskcellmergeNo;}return 0;}
 static int WINAPI table_cell_format(void*,void*,void* input,void* name,void*,int empty,uint32_t direction,int extra,int available,FSFMTR* formatted,void** output,void** br,int* height){
-    *formatted={};*output=*br=nullptr;*height=0;if(input||extra)return PTS_tserrInvalidParameter;if(empty&&available<20){formatted->kstop=fmtrNoProgressOutOfSpace;return 0;}
+    *formatted={};*output=*br=nullptr;*height=0;if((input&&!split_table_cells)||extra)return PTS_tserrInvalidParameter;if(empty&&available<20){formatted->kstop=fmtrNoProgressOutOfSpace;return 0;}
     FSRECT rect{10,20,100,available};FSCOLUMNINFO column{0,100};FSBBOX bbox{};void* margin=nullptr;int top=0;void* page=nullptr;
-    inside_table_cell=true;int status=create_subpage(page_context,nullptr,0,name,nullptr,empty,1,direction,200,20+available,&rect,1,&column,0,0,nullptr,nullptr,0,nullptr,nullptr,0,fsksuppresshardbreakbeforefirstparaNone,formatted,&page,br,height,&bbox,&margin,&top);inside_table_cell=false;
+    inside_table_cell=true;short_table_cell=split_table_cells&&name==reinterpret_cast<void*>(601);int status=create_subpage(page_context,input,input?1:0,name,nullptr,empty,1,direction,200,20+available,&rect,1,&column,0,0,nullptr,nullptr,0,nullptr,nullptr,0,fsksuppresshardbreakbeforefirstparaNone,formatted,&page,br,height,&bbox,&margin,&top);inside_table_cell=false;short_table_cell=false;
+    if(*br)++table_records_created;
     if(status)return status;if(margin)return PTS_tserrInvalidClientOutput;
     auto cell=new MockTableCell{page};++table_cells_created;*output=cell;
     if(lose_table_cell){delete cell;++table_cells_destroyed;*output=*br=nullptr;return PTS_tserrCallbackException;}
     return table_cells_created==table_fail_cell?PTS_tserrCallbackException:0;
 }
 static int WINAPI table_destroy_cell(void* handle){auto cell=static_cast<MockTableCell*>(handle);int status=destroy_subpage(page_context,cell->page);delete cell;++table_cells_destroyed;return status;}
-static int WINAPI table_set_height(void*,void*,void*,void*,int,uint32_t,int height){return height==20?0:PTS_tserrInvalidClientOutput;}
+static int WINAPI table_set_height(void*,void*,void*,void*,int,uint32_t,int height){return (split_table_cells?height>=0&&height<=20:height==20)?0:PTS_tserrInvalidClientOutput;}
 static int WINAPI table_clear_cell(void* handle){return clear_cell_subpage(page_context,static_cast<MockTableCell*>(handle)->page);}
-static int WINAPI table_object_handler(void* output){FSTABLEOBJINIT init{};init.tableobjcbk.pfnGetTableProperties=reinterpret_cast<void*>(table_props);init.tableobjcbk.pfnAutofitTable=reinterpret_cast<void*>(table_fit);init.tableobjcbk.pfnGetMCSClientAfterTable=reinterpret_cast<void*>(block_after);auto& fetch=init.tablecbkfetch;fetch.pfnGetFirstRow=reinterpret_cast<void*>(table_first);fetch.pfnGetNextRow=reinterpret_cast<void*>(table_next);fetch.pfnGetRowProperties=reinterpret_cast<void*>(table_row_props);fetch.pfnGetCells=reinterpret_cast<void*>(table_get_cells);auto& cells=init.tablecbkcell;cells.pfnFormatCellFinite=reinterpret_cast<void*>(table_cell_format);cells.pfnDestroyCell=reinterpret_cast<void*>(table_destroy_cell);cells.pfnDestroyCellBreakRecord=reinterpret_cast<void*>(subpage_destroy_record);cells.pfnSetCellHeight=reinterpret_cast<void*>(table_set_height);cells.pfnClearUpdateInfoInCell=reinterpret_cast<void*>(table_clear_cell);return table_handler(&init,output);}
+static int WINAPI table_destroy_record(void*,void* record){int status=destroy_subpage_record(page_context,record);if(!status)++table_records_destroyed;return status;}
+static int WINAPI table_object_handler(void* output){FSTABLEOBJINIT init{};init.tableobjcbk.pfnGetTableProperties=reinterpret_cast<void*>(table_props);init.tableobjcbk.pfnAutofitTable=reinterpret_cast<void*>(table_fit);init.tableobjcbk.pfnGetMCSClientAfterTable=reinterpret_cast<void*>(block_after);auto& fetch=init.tablecbkfetch;fetch.pfnGetFirstRow=reinterpret_cast<void*>(table_first);fetch.pfnGetNextRow=reinterpret_cast<void*>(table_next);fetch.pfnGetRowProperties=reinterpret_cast<void*>(table_row_props);fetch.pfnGetCells=reinterpret_cast<void*>(table_get_cells);auto& cells=init.tablecbkcell;cells.pfnFormatCellFinite=reinterpret_cast<void*>(table_cell_format);cells.pfnDestroyCell=reinterpret_cast<void*>(table_destroy_cell);cells.pfnDestroyCellBreakRecord=reinterpret_cast<void*>(table_destroy_record);cells.pfnSetCellHeight=reinterpret_cast<void*>(table_set_height);cells.pfnClearUpdateInfoInCell=reinterpret_cast<void*>(table_clear_cell);return table_handler(&init,output);}
 static int WINAPI block_handler(void*,int id,void* output) {
     if(id==3&&table_mode)return table_object_handler(output);
     if(id!=2)return PTS_tserrInvalidParameter;
@@ -579,6 +584,22 @@ int main(int argc,char** argv) {
         for(bool lost:{false,true}){reset_page_counts();table_cells_created=table_cells_destroyed=0;table_fail_cell=lost?-1:2;lose_table_cell=lost;
             require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrCallbackException&&!page_handle&&!page_break&&table_cells_created==table_cells_destroyed&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"failed populated or lost cell outputs release every prior and speculative native subpage");
         }
+        table_fail_cell=-1;lose_table_cell=false;split_table_cells=true;table_rows_count=1;reset_page_counts();table_cells_created=table_cells_destroyed=table_records_created=table_records_destroyed=0;
+        FSRECT split_row_area{10,20,100,10};
+        require(format_subtrack(context,nullptr,0,reinterpret_cast<void*>(77),0,nullptr,nullptr,0,1,0,&split_row_area,nullptr,fskclearNone,fsksuppresshardbreakbeforefirstparaNone,&formatted,&subtrack,&subrecord,&used,&bbox,&margin,&clear,&top_space)==0&&subrecord&&used==10&&table_records_created==1,"split row preserves an actual cell subpage continuation and a completed neighboring cell");
+        require(FsDuplicateSubtrackBreakRecord(context,subrecord,&clone)==0&&clone!=subrecord&&destroy_subtrack_record(context,subrecord)==0&&destroy_subtrack(context,subtrack)==0&&table_records_destroyed==0,"cloned row continuation keeps cell records alive after the original track and wrapper are destroyed");
+        FSRECT no_row_space{10,20,100,10};
+        require(format_subtrack(context,clone,1,reinterpret_cast<void*>(77),0,nullptr,nullptr,1,1,0,&no_row_space,nullptr,fskclearNone,fsksuppresshardbreakbeforefirstparaNone,&formatted,&subtrack,&subrecord,&used,&bbox,&margin,&clear,&top_space)==0&&subrecord&&used==0&&formatted.kstop==fmtrNoProgressOutOfSpace&&table_records_destroyed==0,"no-progress split row retains the original cell checkpoint");
+        require(destroy_subtrack(context,subtrack)==0&&destroy_subtrack_record(context,subrecord)==0,"discarded row no-progress outputs release without consuming input");
+        FSRECT resumed_row_area{10,20,100,80};table_fail_cell=table_cells_created+1;
+        require(format_subtrack(context,clone,1,reinterpret_cast<void*>(77),0,nullptr,nullptr,0,1,0,&resumed_row_area,nullptr,fskclearNone,fsksuppresshardbreakbeforefirstparaNone,&formatted,&subtrack,&subrecord,&used,&bbox,&margin,&clear,&top_space)==PTS_tserrCallbackException&&!subtrack&&!subrecord&&table_records_destroyed==0,"failed populated resumed cell preserves the input record and releases its temporary page");table_fail_cell=-1;
+        for(int branch=0;branch<2;++branch){
+            require(format_subtrack(context,clone,1,reinterpret_cast<void*>(77),0,nullptr,nullptr,0,1,0,&resumed_row_area,nullptr,fskclearNone,fsksuppresshardbreakbeforefirstparaNone,&formatted,&subtrack,&subrecord,&used,&bbox,&margin,&clear,&top_space)==0&&!subrecord&&used==12,"independent cloned row resumes complete from the same immutable cell input");
+            require(FsQuerySubtrackParaList(context,subtrack,1,paras,&actual_count)==0&&FsQueryTableObjRowList(context,paras[0].pfspara,3,table_rows,&actual_count)==0&&actual_count==1&&FsQueryTableObjCellList(context,table_rows[0].pfstablerow,2,cell_updates,cell_handles,cell_merges,&actual_count)==0&&actual_count==2&&!cell_handles[0]&&cell_handles[1],"completed cell has no repeated content handle on later row chunks");
+            require(destroy_subtrack(context,subtrack)==0,"independent terminal row content release");
+        }
+        require(destroy_subtrack_record(context,clone)==0&&table_records_created==table_records_destroyed&&table_cells_created==table_cells_destroyed&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"split/cloned/failed/no-progress/terminal row cases release every cell/record/client/line once");split_table_cells=false;table_rows_count=3;
+        std::puts("native split tables: actual cell records, completed-cell omission, immutable cloned resumes, no-progress preservation, populated failure and exact final teardown PASS");
         table_fail_cell=-1;lose_table_cell=table_mode=false;para_count=2;available_height=80;
         std::puts("native tables: original cell/subpage callbacks, exact rows/heights/spacing, typed queries/capacity/update/stale state, row resume and populated/lost-output cleanup PASS");
         columns=1;require(DestroyDocContext(context)==0&&DestroyInstalledObjectsInfo(installed)==0,"failed page creation leaves no retained resources");

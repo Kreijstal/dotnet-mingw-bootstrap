@@ -162,6 +162,12 @@ struct FloaterBreakData {
     ~FloaterBreakData(){if(handle)reinterpret_cast<PtsDestroyFloaterContentBreakRecord>(callbacks.pfnDestroyFloaterContentBreakRecord)(context->info.pfsclient,handle);--context->resources;}
 };
 struct PendingFloater { int anchor=0; void* name=nullptr; std::shared_ptr<FloaterBreakData> record; };
+struct CellBreakData {
+    std::shared_ptr<Context> context;FSTABLECBKCELL callbacks{};void* handle=nullptr;
+    explicit CellBreakData(std::shared_ptr<Context> value):context(std::move(value)){++context->resources;}
+    ~CellBreakData(){if(handle)reinterpret_cast<PtsDestroyCellBreakRecord>(callbacks.pfnDestroyCellBreakRecord)(context->info.pfsclient,handle);--context->resources;}
+};
+struct PendingTableCell {void* name=nullptr;std::shared_ptr<CellBreakData> record;bool done=false;};
 struct Continuation {
     std::shared_ptr<Context> context;
     void* segment=nullptr;
@@ -171,6 +177,7 @@ struct Continuation {
     std::shared_ptr<BreakData> child;
     int child_object=0;
     void* table_row=nullptr;
+    std::vector<PendingTableCell> table_cells;
     bool text_ended=false;
     std::vector<PendingFloater> floaters;
     ~Continuation();
@@ -702,16 +709,27 @@ int format_table(const std::shared_ptr<ParaData>& para,uint32_t direction,const 
         int above=data->rows.empty()?(first_table?row_props.dvrAboveTopRow:row_props.dvrAboveRowBreak):row_props.dvrAboveRow;
         int below=has_next?row_props.dvrBelowRow:row_props.dvrBelowBottomRow;
         if(above<0||below<0||int64_t(used)+above+below+top>INT32_MAX)return PTS_tserrInvalidClientOutput;
-        int available=std::max(0,rect.dv-top-used-above-below),height=0;bool defer=false;bool row_empty_ok=empty_ok||!data->rows.empty();
+        bool resumed=input&&data->rows.empty()&&input->table_row==name&&!input->table_cells.empty();
+        below=std::max(below,row_props.dvrBelowRowBreak);
+        int available=std::max(0,rect.dv-top-used-above-below),height=0;bool defer=false,split=false,row_forced=false;bool row_empty_ok=empty_ok||!data->rows.empty();
         auto row=std::make_shared<TableRowData>(context);row->description.fsnmRow=name;row->description.pfstablerow=row.get();row->description.fsupdinf.fskupd=fskupdNew;
         std::vector<void*> names(row_props.cCells);std::vector<FSTABLEKCELLMERGE> merge(row_props.cCells);
         status=reinterpret_cast<PtsGetCells>(fetch.pfnGetCells)(client,name,row_props.cCells,names.data(),merge.data());if(status)return status;
+        if(resumed&&input->table_cells.size()!=names.size())return PTS_tserrInvalidBreakRecord;
         for(int i=0;i<row_props.cCells;++i){
             if(!names[i]||merge[i]!=fskcellmergeNo)return PTS_tserrNotImplemented;
+            if(resumed&&input->table_cells[i].name!=names[i])return PTS_tserrInvalidBreakRecord;
+            if(resumed&&input->table_cells[i].done){row->cells.push_back(nullptr);continue;}
+            void* cell_input=resumed&&input->table_cells[i].record?input->table_cells[i].record->handle:nullptr;
             auto cell=std::make_shared<TableCellData>(context);cell->callbacks=cells;cell->name=names[i];CallbackTracks pending;
             if(bottomless){FSFMTRBL formatted{};status=reinterpret_cast<PtsFormatCellBottomless>(cells.pfnFormatCellBottomless)(client,para->desc.pfsparaclient,names[i],direction,&formatted,&cell->handle,&cell->height);if(!status&&formatted!=fmtrblGoalReached)status=PTS_tserrNotImplemented;}
-            else {FSFMTR formatted{};status=reinterpret_cast<PtsFormatCellFinite>(cells.pfnFormatCellFinite)(client,para->desc.pfsparaclient,nullptr,names[i],nullptr,row_empty_ok,direction,0,available,&formatted,&cell->handle,&cell->record,&cell->height);
-                if(!status&&(cell->record||formatted.kstop!=fmtrGoalReached)){if(row_empty_ok)defer=true;else status=PTS_tserrNotImplemented;}
+            else {FSFMTR formatted{};status=reinterpret_cast<PtsFormatCellFinite>(cells.pfnFormatCellFinite)(client,para->desc.pfsparaclient,cell_input,names[i],nullptr,row_empty_ok,direction,0,available,&formatted,&cell->handle,&cell->record,&cell->height);
+                row_forced=row_forced||formatted.fForcedProgress;
+                if(!status&&(cell->record||formatted.kstop!=fmtrGoalReached)){
+                    if(row_empty_ok)defer=true;
+                    else if(cell->record&&formatted.kstop==fmtrBrokenOutOfSpace)split=true;
+                    else status=PTS_tserrNotImplemented;
+                }
             }
             // The callback reports a managed CellParaClient handle. Its original
             // DestroyCell callback owns the native subpage(s) created inside it.
@@ -722,15 +740,28 @@ int format_table(const std::shared_ptr<ParaData>& para,uint32_t direction,const 
             height=std::max(height,cell->height);row->cells.push_back(cell);
         }
         if(int64_t(rect.v)+top+used+above+height+below>INT32_MAX)return PTS_tserrInvalidGeometry;
-        if(!bottomless&&int64_t(top)+used+above+height+below>rect.dv){if(row_empty_ok)defer=true;else return PTS_tserrNotImplemented;}
-        if(defer){output=std::make_shared<Continuation>();output->context=context;output->paragraph=para->desc.nmp;output->table_row=name;if(!data->rows.empty()){auto& last=data->rows.back();last->details.fskboundaryBelow=fsktablerowboundaryBreak;}break;}
-        for(const auto& cell:row->cells){status=reinterpret_cast<PtsSetCellHeight>(cells.pfnSetCellHeight)(cell->handle,para->desc.pfsparaclient,nullptr,cell->name,0,direction,height);if(status)return status;}
+        if(!bottomless&&int64_t(top)+used+above+height+below>rect.dv){if(row_empty_ok)defer=true;else if(!row_forced)return PTS_tserrNotImplemented;}
+        if(defer){output=std::make_shared<Continuation>();output->context=context;output->paragraph=para->desc.nmp;output->table_row=name;if(resumed)output->table_cells=input->table_cells;if(!data->rows.empty()){auto& last=data->rows.back();last->details.fskboundaryBelow=fsktablerowboundaryBreak;}break;}
+        for(size_t i=0;i<row->cells.size();++i){const auto& cell=row->cells[i];if(!cell)continue;
+            void* cell_input=resumed&&input->table_cells[i].record?input->table_cells[i].record->handle:nullptr;
+            status=reinterpret_cast<PtsSetCellHeight>(cells.pfnSetCellHeight)(cell->handle,para->desc.pfsparaclient,cell_input,cell->name,cell->record!=nullptr,direction,height);if(status)return status;
+        }
+        row->details.fForcedRow=row_forced;para->forced_progress=para->forced_progress||row_forced;
         row->description.u.dvrRow=above+height+below;row->details.fskboundaryAbove=data->rows.empty()?(first_table?fsktablerowboundaryOuter:fsktablerowboundaryBreak):fsktablerowboundaryInner;
-        row->details.fskboundaryBelow=has_next?fsktablerowboundaryInner:fsktablerowboundaryOuter;row->details.dvrAbove=above;row->details.dvrBelow=below;row->details.cCells=int(row->cells.size());
-        used+=row->description.u.dvrRow;data->rows.push_back(row);name=next;found=has_next;
+        row->details.fskboundaryBelow=split?fsktablerowboundaryBreak:has_next?fsktablerowboundaryInner:fsktablerowboundaryOuter;row->details.dvrAbove=above;row->details.dvrBelow=below;row->details.cCells=int(row->cells.size());
+        used+=row->description.u.dvrRow;data->rows.push_back(row);
+        if(split){
+            output=std::make_shared<Continuation>();output->context=context;output->paragraph=para->desc.nmp;output->table_row=name;
+            for(size_t i=0;i<row->cells.size();++i){const auto& cell=row->cells[i];PendingTableCell pending{names[i],nullptr,!cell||!cell->record};
+                if(cell&&cell->record){auto record=std::make_shared<CellBreakData>(context);record->callbacks=cells;record->handle=cell->record;cell->record=nullptr;pending.record=record;}
+                output->table_cells.push_back(pending);
+            }
+            break;
+        }
+        name=next;found=has_next;
     }
     data->details.fsnmTable=para->desc.nmp;data->details.fsrcTableObj={rect.u,rect.v+top,width,used};data->details.fswdirTable=direction;data->details.fskupdTableProper=fskupdNew;data->details.pfstableProper=data.get();data->proper={used,int(data->rows.size())};
-    para->desc.pfspara=data.get();para->desc.dvrTopSpace=top;para->desc.dvrUsed=data->rows.empty()&&output?0:top+used;
+    para->desc.pfspara=data.get();para->desc.dvrTopSpace=top;para->desc.dvrUsed=data->rows.empty()&&output?0:para->forced_progress?std::min(top+used,rect.dv):top+used;
     if(used)para->desc.fsbbox={1,data->details.fsrcTableObj};
     if(!output){status=reinterpret_cast<PtsGetMCSClientAfterTable>(table.pfnGetMCSClientAfterTable)(client,para->desc.pfsparaclient,para->desc.nmp,direction,input_margin,margin_output);if(status)return status;}
     {std::lock_guard<std::mutex> lock(gate);tables[data.get()]=data;for(const auto& row:data->rows)table_rows[row.get()]=row;}
@@ -857,7 +888,7 @@ void clear_track(const std::shared_ptr<TrackData>& track,bool inherited=false) {
     for(const auto& para:track->paras) {
         para->desc.fsupdinf.fskupd=update;
         if(para->floater)para->floater->details.fskupdContent=update;
-        if(para->table){para->table->details.fskupdTableProper=update;for(const auto& row:para->table->rows){row->description.fsupdinf.fskupd=update;for(const auto& cell:row->cells){cell->update=update;if(cell->callbacks.pfnClearUpdateInfoInCell)reinterpret_cast<PtsClearUpdateInfoInCell>(cell->callbacks.pfnClearUpdateInfoInCell)(cell->handle);}}}
+        if(para->table){para->table->details.fskupdTableProper=update;for(const auto& row:para->table->rows){row->description.fsupdinf.fskupd=update;for(const auto& cell:row->cells){if(!cell)continue;cell->update=update;if(cell->callbacks.pfnClearUpdateInfoInCell)reinterpret_cast<PtsClearUpdateInfoInCell>(cell->callbacks.pfnClearUpdateInfoInCell)(cell->handle);}}}
         if(para->text)for(const auto& object:para->text->attached){object.para->desc.fsupdinf.fskupd=update;object.para->floater->details.fskupdContent=update;auto content=lookup_owned(pages,track->context.get(),object.para->floater->details.pfsFloaterContent);if(content&&content->subpage){content->inherit_updates=content->inherit_updates||inherited;clear_subpage(content);}}
         if(para->desc.idobj==0){auto child=lookup_owned(tracks,track->context.get(),para->desc.pfspara);if(child)clear_track(child,inherited);}
         if(para->desc.idobj==1){auto child=lookup_owned(pages,track->context.get(),para->desc.pfspara);if(child&&child->subpage){child->inherit_updates=child->inherit_updates||inherited;clear_subpage(child);}}
@@ -1074,7 +1105,7 @@ struct TrackShift {
         }
         return 0;
     }
-    void apply(){for(const auto& item:values)*item.first=item.second;for(const auto& track:owners){track->update=fskupdNew;for(const auto& para:track->paras){para->desc.fsupdinf.fskupd=fskupdNew;if(para->floater)para->floater->details.fskupdContent=fskupdNew;if(para->table){para->table->details.fskupdTableProper=fskupdNew;for(const auto& row:para->table->rows){row->description.fsupdinf.fskupd=fskupdNew;for(const auto& cell:row->cells)cell->update=fskupdNew;}}if(para->text)for(const auto& object:para->text->attached){object.para->desc.fsupdinf.fskupd=fskupdNew;object.para->floater->details.fskupdContent=fskupdNew;}}}}
+    void apply(){for(const auto& item:values)*item.first=item.second;for(const auto& track:owners){track->update=fskupdNew;for(const auto& para:track->paras){para->desc.fsupdinf.fskupd=fskupdNew;if(para->floater)para->floater->details.fskupdContent=fskupdNew;if(para->table){para->table->details.fskupdTableProper=fskupdNew;for(const auto& row:para->table->rows){row->description.fsupdinf.fskupd=fskupdNew;for(const auto& cell:row->cells)if(cell)cell->update=fskupdNew;}}if(para->text)for(const auto& object:para->text->attached){object.para->desc.fsupdinf.fskupd=fskupdNew;object.para->floater->details.fskupdContent=fskupdNew;}}}}
 };
 }
 extern "C" __declspec(dllexport) int WINAPI FsSynchronizeBottomlessSubtrack(void* context_handle,void* handle,void* geometry,uint32_t direction,int shift) {
@@ -1161,7 +1192,7 @@ extern "C" __declspec(dllexport) int WINAPI FsQueryTableObjRowDetails(void* cont
 extern "C" __declspec(dllexport) int WINAPI FsQueryTableObjCellList(void* context,void* handle,int capacity,FSKUPDATE* updates,void** handles,FSTABLEKCELLMERGE* merges,int* count) {
     if(!count)return PTS_tserrNullOutputParameter;*count=0;auto data=lookup_weak_owned(table_rows,context,handle);if(!data)return PTS_tserrInvalidQuery;
     if(capacity<0||size_t(capacity)<data->cells.size()||((!updates||!handles||!merges)&&!data->cells.empty()))return PTS_tserrInvalidParameter;
-    for(const auto& cell:data->cells){updates[*count]=cell->update;handles[*count]=cell->handle;merges[*count]=fskcellmergeNo;++*count;}return 0;
+    for(const auto& cell:data->cells){updates[*count]=cell?cell->update:fskupdNoChange;handles[*count]=cell?cell->handle:nullptr;merges[*count]=fskcellmergeNo;++*count;}return 0;
 }
 extern "C" __declspec(dllexport) int WINAPI FsQueryTextDetails(void* context,void* handle,FSTEXTDETAILS* output) {
     if(!output)return PTS_tserrNullOutputParameter;*output={};auto text=find_text(context,handle);if(!text)return PTS_tserrInvalidQuery;

@@ -10033,3 +10033,60 @@ vertical spans and repeated headers/footers, figures, complex center/clear
 policies, comparison/display transfer, balancing/spans/footnotes, advanced/
 optimal/incremental/interruptible algorithms and full bidi/native-language
 behavior remain incomplete. The full WPF goal stays active.
+
+## 154. Independently continued table cells and split rows
+
+The 2026-10-14 continuation retains original cell subpage break records in
+immutable row continuation state. A fresh formatting area accepts partial cell
+content; an occupied area can still defer the row intact. Each cell advances
+independently. Completed cells remain present as null content slots on later row
+chunks, preventing repeated text while preserving the original cell array shape.
+Unfinished cells resume through original FormatCellFinite callbacks; SetCellHeight
+receives actual incoming record and broken-here state. Row boundary queries
+identify split chunks, and following rows resume after the split row completes.
+
+Cell break owners retain context/callbacks until their last continuation owner
+releases them. Native record clones share immutable positions and can format
+independent later content. No-progress retains original pending cell state;
+reported output records/content from failed callbacks are released. Null cell
+slots are supported by queries, update clearing and vertical synchronization.
+Original forced-progress flags propagate to table/row/track results; oversized
+row ink remains in actual geometry while consumed height clips to the page.
+
+Native fixtures create an actual native cell subpage break record, complete its
+shorter neighbor, clone the row continuation and destroy the original wrapper/
+track. They discard a no-progress resume, inject populated resumed-cell failure,
+then independently resume the clone twice. Completed cells expose null content
+handles; both terminal branches complete without phantom records. Every cell,
+cell record, paragraph client, original line and line break releases once.
+
+Original public WPF split rows pass Ideal/Display cases with cells of different
+lengths: four pages cover all 384 characters, and a three-line neighbor appears
+only once while the tall cell spans four pages (232 characters total). A preceding
+six-line paragraph defers the initial row, then completes five pages with all
+454 characters. Two-column continuation completes two pages with all 384
+characters. Two rows after the split row complete five pages with all 408
+characters. Original page-number mapping and disposed chunk regeneration match
+actual source ranges across GC; real green glyph ink is checked independently.
+A 400x10 paginator with 32-DIP cell text completes three pages with all 30
+characters covered once, demonstrating source progress when a line exceeds the
+available page height. Prior intact/styled/nested/empty/scrolling cases pass.
+
+Focused validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 check-paragraph-context-native
+/usr/bin/python3 ~/wpfboot/refresh-finite-native.py
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-tables-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/split-tables-sdk-check
+```
+
+Final focused commands pass with zero consumer warnings/errors. Both normal
+shared-framework and self-contained runs pass; the portable run clears SDK
+roots/toolchain PATH. Bash recipe syntax and git whitespace checks pass. Evidence
+is archived under tmp/wpf8-support/validation/split-tables-20261014.
+
+Imported native coverage remains 109/139 with 30 absent. Cell/row splitting now
+works in the exercised cases. Vertical spans and repeated headers/footers,
+figures, complex center/clear policies, comparison/display transfer, balancing/
+spans/footnotes, advanced/optimal/incremental/interruptible algorithms and full
+bidi/native-language behavior remain incomplete. The full WPF goal stays active.
