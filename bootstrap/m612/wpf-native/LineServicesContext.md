@@ -65,9 +65,9 @@ separators retain their own zero-width position and original run identity.
 The original nested query layouts are generated from LineServices.cs:
 LsQSubInfo 120 bytes and LsTextCell 40 bytes on x64. Public Indic leading/trailing
 hits, caret navigation, distances and selection rectangles pass after GC.
-Queries reject RTL/nonmonotonic cluster maps and graphemes spanning client runs;
-cross-run caret ownership remains unfinished even though wrapping respects
-those graphemes.
+Queries join graphemes across client-run boundaries, retaining each requested
+code point's source run metadata. Nonmonotonic glyph cluster maps and other
+advanced geometry still require further work.
 
 LoDisplayLine obtains underline and strikethrough metrics through the original
 callbacks and draws each retained decorated run with its original identity,
@@ -150,3 +150,21 @@ pass in both formatting modes across GC and disposal. These exports implement
 resource ownership; they do not claim penalty scoring or optimal paragraph
 formatting. The paragraph-service context implementation separately retains
 original generated callback/configuration records and installed method tables.
+
+Cross-run query cells use Unicode grapheme boundaries over the retained source.
+Internal reversal controls are excluded from segmentation but remain in LS source
+ranges. Joined cells cover one contiguous visual interval, retain glyph counts and
+actual run identities, and expose stable caret sublines across internal reversal
+scopes. Unknown noncontiguous geometry still fails explicitly. PresentationCore's
+FullTextLine recognizes cells spanning source runs and maps their LSCP endpoints
+back to external source CPs for caret lengths. This prevents hidden controls from
+becoming caret stops while keeping ordinary within-run character navigation.
+
+Native fixtures cover split combining marks, surrogate pairs, ZWJ emoji and flags,
+exact complete-cell geometry, distinct per-CP client run metadata, both point edges,
+tiny-width wrapping and disposed-line rejection. The public SDK consumer covers
+64 split-grapheme combinations per execution: Ideal/Display, LTR/RTL paragraphs,
+style changes, tiny/full widths, Latin combining/Indic/emoji/flags. Forward/backward
+carets, every interior code-unit query, hit testing, selection width, glyph source
+coverage, compacting GC and real raster output are checked, alongside ordinary
+same-run character carets. Shared and portable executions remain separate checks.

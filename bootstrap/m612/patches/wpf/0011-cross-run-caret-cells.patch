@@ -1,0 +1,59 @@
+--- a/src/Microsoft.DotNet.Wpf/src/PresentationCore/MS/internal/TextFormatting/FullTextLine.cs
++++ b/src/Microsoft.DotNet.Wpf/src/PresentationCore/MS/internal/TextFormatting/FullTextLine.cs
+@@ -922,12 +922,13 @@
+ 
+                     if (    lsrun.IsHitTestable
+                         &&  (   lsrun.HasExtendedCharacter
+-                            ||  lsrun.NeedsCaretInfo)
++                            ||  lsrun.NeedsCaretInfo
++                            ||  CellSpansRuns(lsTextCell, sublineInfo[actualSublineCount - 1]))
+                         )
+                     {
+                         // A hit-testable run with caret stops at every cluster boundaries,
+                         // e.g. run with combining mark, with extended characters or complex scripts such as Thai
+-                        codepointsToNextCaretStop = caretStopCount;
++                        codepointsToNextCaretStop = GetExternalCp(lsTextCell.lscpEndCell) + 1 - GetExternalCp(lsTextCell.lscpStartCell);
+                         caretStopCount = 1;
+                     }
+ 
+@@ -1063,6 +1064,14 @@
+             }
+ 
+ 
++            // A Unicode text cell can span font/style runs. Run-local character
++            // flags alone cannot describe caret boundaries in that cell.
++            private static bool CellSpansRuns(LsTextCell cell, LsQSubInfo run)
++            {
++                return cell.lscpStartCell < run.lscpFirstRun
++                    || cell.lscpEndCell >= (long)run.lscpFirstRun + run.lsdcpRun;
++            }
++
+             /// <summary>
+             /// Get distance from the start of text cell to the specified lscp
+             /// </summary>
+@@ -1093,7 +1102,8 @@
+ 
+                 if (    lsrun.IsHitTestable
+                     &&  (   lsrun.HasExtendedCharacter
+-                        ||  lsrun.NeedsCaretInfo)
++                        ||  lsrun.NeedsCaretInfo
++                            ||  CellSpansRuns(lsTextCell, sublineInfo[actualSublineCount - 1]))
+                     )
+                 {
+                     // A hit-testable run with caret stops at every cluster boundaries,
+@@ -1366,12 +1376,13 @@
+                     if (lsrun.IsHitTestable)
+                     {
+                         if (    lsrun.HasExtendedCharacter
+-                            ||  (direction != CaretDirection.Backspace && lsrun.NeedsCaretInfo)
++                            ||  (direction != CaretDirection.Backspace
++                                 && (lsrun.NeedsCaretInfo || CellSpansRuns(lsTextCell, sublineInfo[actualSublineCount - 1])))
+                             )
+                         {
+                             // LsTextCell.lscpEndCell is the index to the last lscp still in the cell.
+                             // The number of LSCP within the text cell is equal to the number of CP.
+-                            offsetToNextCaretStopIndex = lsTextCell.lscpEndCell + 1 - lsTextCell.lscpStartCell;
++                            offsetToNextCaretStopIndex = GetExternalCp(lsTextCell.lscpEndCell) + 1 - GetExternalCp(lsTextCell.lscpStartCell);
+                         }
+                         else
+                         {

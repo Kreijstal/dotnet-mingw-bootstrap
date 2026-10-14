@@ -6,6 +6,7 @@
 #include <string>
 #include <algorithm>
 #include <vector>
+#include <utility>
 #include "LineServicesNative.h"
 #include "../wpf-native/ReverseObjectHandler.h"
 static bool abort_fetch=false,bidi_mode=false;
@@ -30,7 +31,7 @@ static int draws=0;
 static std::wstring sample=L"abc  \u2029";
 static uint32_t paragraph_flags=0;
 static int run_length=9600;
-static bool uniform_width=false;
+static bool uniform_width=false,distinct_caret_runs=false;
 static int hyphen_mode=0,hyphen_draws=0,hyphen_sources=0,hyphen_characters=0;
 static int WINAPI hyphen_opportunity(void*,int first,int length,int* found,int* position,LsHyph* detail){*found=0;*position=0;*detail={};if(hyphen_mode==2)return LS_ClientAbort;if(hyphen_mode==3){*found=1;*position=first+length;return 0;}for(int cp:{3,6})if(cp>=first&&cp<first+length){*found=1;*position=cp;break;}return 0;}
 static int WINAPI hyphen_draw(void*,uint32_t id,LSPOINT* point,WCHAR* text,int*,int count,int flow,uint32_t,LSPOINT*,LsHeights*,int width,LSRECT*){if(id!=5||flow)return LS_ClientAbort;if(text[0]==L'-'){if(count!=1||width!=10||point->x!=44)return LS_ClientAbort;}else if(count!=4||width!=40||point->x!=4)return LS_ClientAbort;++hyphen_draws;return 0;}
@@ -67,6 +68,7 @@ static int WINAPI fetch(void*,int cp,int,void*,WCHAR* buffer,int capacity,int* u
     int end=static_cast<int>(sample.size())-1;
     if(cp<0 || cp>end) return LS_WrongGivenCp;
     *count=cp<end?std::min(run_length,end-cp):1; *output=nullptr; *used=0; *hidden=0; *chp={}; chp->idObj=bidi_mode&&sample[cp]==0xFFFC?0:0xFFFF; *id=bidi_mode&&sample[cp]==0xFFFB?0:cp<end?5:8;
+    if(distinct_caret_runs&&cp<end)*id=100+cp;
     if(bidi_mode&&(sample[cp]==0xFFFC||sample[cp]==0xFFFB)){*count=1;while(cp+*count<end&&sample[cp+*count]==sample[cp])++*count;}
     if(decorate && cp<end) chp->flags=0x60000;
     if(capacity>=*count) { std::memcpy(buffer,sample.data()+cp,*count*sizeof(WCHAR)); *used=1; }
@@ -198,8 +200,20 @@ int main(int argc,char** argv) {
         require(LoDisposeLine(line,FALSE)==0,"remeasured prefix line disposal");contextual_widths=false;
         sample=L"a\u0301b\u2029"; run_length=1;
         require(LoCreateLine(context,0,0,5,0,nullptr,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==2,"combining grapheme spans client runs at tiny width");
-        require(LoQueryLineCpPpoint(line,0,1,&sub,&queried_depth,&cell)==LS_NotImplemented&&queried_depth==0,"cross-run caret ownership remains explicit rather than splitting a grapheme");
+        for(int cp:{0,1})require(LoQueryLineCpPpoint(line,cp,1,&sub,&queried_depth,&cell)==0&&queried_depth==1&&cell.lscpStartCell==0&&cell.lscpEndCell==1&&cell.cCharsInCell==2&&cell.dupCell==20,"cross-run combining text retains one complete caret cell for either source code unit");
+        LSPOINT cluster_point{19,0};require(LoQueryLinePointPcp(line,&cluster_point,1,&sub,&queried_depth,&cell)==0&&cell.lscpStartCell==0&&cell.lscpEndCell==1&&cell.dupCell==20,"cross-run combining point hit retains the complete text element");
         require(LoDisposeLine(line,FALSE)==0,"grapheme line disposal");
+        distinct_caret_runs=true;
+        for(const auto& value:std::vector<std::pair<std::wstring,int>>{{L"a\u0301b\u2029",2},{L"\xd83d\xdc69\u200d\xd83d\xdcbbx\u2029",5},{L"\xd83c\xdde9\xd83c\xddeax\u2029",4}}) {
+            sample=value.first;
+            require(LoCreateLine(context,0,0,5,0,nullptr,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==value.second,"tiny-width wrapping retains the complete cross-run text element");
+            for(int cp=0;cp<value.second;++cp)require(LoQueryLineCpPpoint(line,cp,1,&sub,&queried_depth,&cell)==0&&cell.lscpStartCell==0&&cell.lscpEndCell==value.second-1&&cell.cCharsInCell==value.second&&cell.dupCell==10*value.second&&sub.plsrun==reinterpret_cast<void*>(uintptr_t(100+cp))&&sub.lscpFirstRun==cp&&sub.lsdcpRun==1,"cross-run grapheme geometry is atomic while each CP query retains its actual style-run identity and metrics");
+            LSPOINT before{5,0},after{3+10*value.second,0};
+            for(auto point:{before,after})require(LoQueryLinePointPcp(line,&point,1,&sub,&queried_depth,&cell)==0&&cell.lscpStartCell==0&&cell.lscpEndCell==value.second-1&&cell.dupCell==10*value.second,"both physical edges hit the same retained cross-run grapheme");
+            require(LoDisposeLine(line,FALSE)==0&&LoQueryLineCpPpoint(line,0,1,&sub,&queried_depth,&cell)==LS_InvalidLine&&!queried_depth,"cross-run grapheme queries reject disposed line state");
+        }
+        distinct_caret_runs=false;
+
         sample=L"a  \u2029";
         require(LoCreateLine(context,0,0,14,0,nullptr,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==4&&info.endr==2&&measured.upStartTrailing==14,"trailing spaces across runs retain paragraph end");
         require(LoDisposeLine(line,FALSE)==0,"trailing line disposal");

@@ -854,6 +854,7 @@ step_check_sdk() {
   bash "$here/wpf-tests/check-sdk.sh" "$root" "$build/sdk-check"
   bash "$here/wpf-tests/check-image-codecs-sdk.sh" "$root" "$build/image-codecs-sdk-check"
   bash "$here/wpf-tests/check-text-tabs-sdk.sh" "$root" "$build/tabs-sdk-check"
+  bash "$here/wpf-tests/check-cross-run-carets-sdk.sh" "$root" "$build/cross-run-carets-sdk-check"
   bash "$here/wpf-tests/check-inline-objects-sdk.sh" "$root" "$build/inline-sdk-check"
   bash "$here/wpf-tests/check-justification-sdk.sh" "$root" "$build/justification-sdk-check"
   bash "$here/wpf-tests/check-paragraph-widths-sdk.sh" "$root" "$build/paragraph-widths-sdk-check"

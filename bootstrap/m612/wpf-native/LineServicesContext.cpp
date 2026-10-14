@@ -709,26 +709,19 @@ RunGeometry visual_runs(const Line& line) {
 struct Cell {
     const Run* run;
     int cp,length,x,width,glyphs,run_x;
+    int flow=0,level=0;bool joined=false;
 };
 
 int text_cells(const Line& line,std::vector<Cell>& cells) {
-    // A query cell names one client run. Until cross-run caret ownership is
-    // implemented, reject graphemes crossing those runs rather than splitting
-    // a user-perceived character at an artificial buffer boundary.
-    if(line.runs.size()>1) {
-        std::vector<UChar> text;
-        for(const auto& run:line.runs) if(run.synthetic)continue;else if(run.level_delta)text.insert(text.end(),run.text.size(),0x2060);else text.insert(text.end(),run.text.begin(),run.text.end());
-        UErrorCode error=U_ZERO_ERROR;
-        auto* raw=ubrk_open(UBRK_CHARACTER,"root",text.data(),static_cast<int>(text.size()),&error);
-        if(U_FAILURE(error) || !raw) return LS_InvalidFormatterResult;
-        std::unique_ptr<UBreakIterator,decltype(&ubrk_close)> iterator(raw,ubrk_close);
-        int end=0;
-        for(const auto& run:line.runs) {
-            if(run.synthetic)continue;
-            end+=static_cast<int>(run.text.size());
-            if(!ubrk_isBoundary(raw,end)) return LS_NotImplemented;
-        }
-    }
+    // Unicode text elements are properties of the complete retained line,
+    // including when font/style/client buffers divide one grapheme.
+    std::vector<UChar> text;std::vector<int> logical{0};
+    // Reversal controls belong to the LS transport, not the Unicode source.
+    for(const auto& run:line.runs)if(!run.synthetic)for(WCHAR ch:run.text){if(!run.level_delta)text.push_back(ch);logical.push_back(int(text.size()));}
+    UErrorCode error=U_ZERO_ERROR;
+    auto* raw=ubrk_open(UBRK_CHARACTER,"root",text.data(),static_cast<int>(text.size()),&error);
+    if(U_FAILURE(error)||!raw)return LS_InvalidFormatterResult;
+    std::unique_ptr<UBreakIterator,decltype(&ubrk_close)> graphemes(raw,ubrk_close);
     auto geometry=visual_runs(line);int x=line.widths.upStartMainText;
     for(size_t index=0;index<line.runs.size();++index) {
         const auto& run=line.runs[index];if(run.synthetic)continue;x=geometry.edge[index];int sign=run.flow==line.base_flow?1:-1;
@@ -764,17 +757,37 @@ int text_cells(const Line& line,std::vector<Cell>& cells) {
             x+=sign*width; start=end;
         }
     }
+    std::vector<Cell> joined;
+    for(size_t index=0;index<cells.size();++index) {
+        Cell cell=cells[index];cell.flow=cell.run->flow;cell.level=cell.run->level;
+        int left=cell.x-(cell.flow!=line.base_flow?cell.width:0),right=left+cell.width;
+        while(!ubrk_isBoundary(graphemes.get(),logical.at(cell.cp-line.first+cell.length))) {
+            if(index+1>=cells.size())return LS_InvalidFormatterResult;
+            const auto& next=cells[++index];
+            if(next.cp!=cell.cp+cell.length)return LS_InvalidFormatterResult;
+            int next_left=next.x-(next.run->flow!=line.base_flow?next.width:0);
+            if(next.width){left=std::min(left,next_left);right=std::max(right,next_left+next.width);}
+            if(int64_t(cell.width)+next.width>INT_MAX||int64_t(cell.glyphs)+next.glyphs>INT_MAX)return LS_InvalidFormatterResult;
+            cell.length+=next.length;cell.width+=next.width;cell.glyphs+=next.glyphs;cell.joined=true;
+        }
+        // A single cell can contain internal reversal controls and style runs,
+        // but must occupy one contiguous visual interval without foreign ink.
+        if(int64_t(right)-left!=cell.width)return LS_NotImplemented;
+        cell.x=cell.flow==line.base_flow?left:right;
+        joined.push_back(cell);
+    }
+    cells.swap(joined);
     for(const auto& run:line.runs)if(run.synthetic){auto at=std::find_if(cells.begin(),cells.end(),[&](const Cell& cell){return run.cp>=cell.cp&&run.cp<cell.cp+cell.length;});if(at!=cells.end())at->width+=run.width;}
-    std::sort(cells.begin(),cells.end(),[&](const Cell& a,const Cell& b){int ax=a.x-(a.run->flow!=line.base_flow?a.width:0),bx=b.x-(b.run->flow!=line.base_flow?b.width:0);return ax<bx;});
+    std::sort(cells.begin(),cells.end(),[&](const Cell& a,const Cell& b){int ax=a.x-(a.flow!=line.base_flow?a.width:0),bx=b.x-(b.flow!=line.base_flow?b.width:0);return ax<bx;});
     x=line.widths.upLimLine;
-    if(line.has_terminator) cells.push_back({&line.terminator,line.terminator.cp,1,x,0,0,x});
+    if(line.has_terminator) cells.push_back({&line.terminator,line.terminator.cp,1,x,0,0,x,line.terminator.flow,line.terminator.level});
     return LS_None;
 }
 
 void fill_query(const Line& line,const Cell& cell,LsQSubInfo& sub,LsTextCell& text) {
     const Run& run=*cell.run;
     sub={}; text={};
-    sub.lstflowSubLine=run.flow; sub.lscpFirstSubLine=line.first;
+    sub.lstflowSubLine=cell.flow; sub.lscpFirstSubLine=line.first;
     sub.lsdcpSubLine=line.info.cpLimToContinue-line.first;
     sub.pointUvStartSubLine={line.widths.upStartMainText,0};
     sub.lsHeightsPresSubLine={line.info.dvpAscent,line.info.dvpDescent,line.info.dvpMultiLineHeight};
@@ -790,15 +803,24 @@ void fill_query(const Line& line,const Cell& cell,LsQSubInfo& sub,LsTextCell& te
     text.cCharsInCell=cell.length; text.cGlyphsInCell=cell.glyphs;
 }
 
-int query_cell(const Line& line,const Cell& cell,int capacity,LsQSubInfo* sub,int* depth,LsTextCell* text) {
-    int base=line.base_flow==4?1:0,needed=std::max(1,cell.run->level-base+1);
+int query_cell(const Line& line,const Cell& source,int capacity,LsQSubInfo* sub,int* depth,LsTextCell* text,int cp=-1) {
+    Cell cell=source;auto geometry=visual_runs(line);
+    // A complete text cell may cross style runs; the subline record must still
+    // identify the actual source run containing a requested code point.
+    if(cp>=0)for(size_t at=0;at<line.runs.size();++at){const auto& run=line.runs[at];if(!run.synthetic&&cp>=run.cp&&cp<run.cp+int(run.text.size())){cell.run=&run;cell.run_x=geometry.edge[at];break;}}
+    int base=line.base_flow==4?1:0,needed=std::max(1,cell.level-base+1);
     if(capacity<needed)return LS_InvalidParameter;
     fill_query(line,cell,sub[needed-1],*text);
-    auto geometry=visual_runs(line);size_t index=0;while(index<line.runs.size()&& &line.runs[index]!=cell.run)++index;
+    size_t index=0;while(index<line.runs.size()&& &line.runs[index]!=cell.run)++index;
     for(int offset=0;offset<needed;++offset){
         auto value=sub[needed-1];value.lstflowSubLine=((base+offset)&1)?4:0;
         if(offset==0){value.lscpFirstSubLine=line.first;value.lsdcpSubLine=line.info.cpLimToContinue-line.first;value.pointUvStartSubLine={line.widths.upStartMainText,0};value.dupSubLine=line.widths.upLimLine-line.widths.upStartMainText;}
-        else {
+        else if(cell.joined) {
+            // Internal client reversal scopes do not divide one source text
+            // element. Every CP in the cell observes the same caret subline.
+            value.lscpFirstSubLine=cell.cp;value.lsdcpSubLine=cell.length;
+            value.pointUvStartSubLine={cell.x,0};value.dupSubLine=cell.width;
+        } else {
             size_t first=index,last=index;int level=base+offset;
             while(first&&line.runs[first-1].level>=level)--first;
             while(last+1<line.runs.size()&&line.runs[last+1].level>=level)++last;
@@ -1394,7 +1416,7 @@ extern "C" __declspec(dllexport) int WINAPI LoQueryLineCpPpoint(void* handle,int
         std::vector<Cell> cells;
         int status=text_cells(*line,cells); if(status) return status;
         for(const auto& cell:cells) if(cp>=cell.cp && cp<cell.cp+cell.length) {
-            return query_cell(*line,cell,capacity,sub,depth,text);
+            return query_cell(*line,cell,capacity,sub,depth,text,cp);
         }
         return LS_WrongGivenCp;
     } catch(const std::bad_alloc&) { return LS_OutOfMemory; }
@@ -1416,7 +1438,7 @@ extern "C" __declspec(dllexport) int WINAPI LoQueryLinePointPcp(void* handle,con
         for(const auto& cell:cells) {
             if(cell.width<=0) continue;
             chosen=&cell;
-            int end=cell.x+(cell.run->flow==line->base_flow?cell.width:0);if(static_cast<int64_t>(point->x)<end) break;
+            int end=cell.x+(cell.flow==line->base_flow?cell.width:0);if(static_cast<int64_t>(point->x)<end) break;
         }
         if(!chosen) chosen=&cells.front();
         return query_cell(*line,*chosen,capacity,sub,depth,text);
