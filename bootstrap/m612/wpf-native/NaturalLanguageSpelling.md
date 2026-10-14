@@ -27,8 +27,23 @@ Verification mode reports errors without suggestions. Word-breaking mode does no
 check spelling. Custom lexicons decode UTF-8 and BOM-tagged UTF-16 LE/BE, match
 words without case and honor #LID culture metadata. Contexts can add/remove
 lexicons and release all lexicons without changing the user's persistent OS
-dictionary. Multiword checking, compound subsegments and legacy German/French
-pre/post reform selection remain explicitly unsupported.
+dictionary. Compound subsegments and legacy German/French pre/post reform
+selection remain explicitly unsupported.
+
+IsSpellSuggestingMWEs enables whole-input ComprehensiveCheck using the original
+Windows provider. Native UTF-16 error spans become incorrect segments, retaining
+unaffected ICU word fragments and sentence ordering. Replacement actions return
+the provider's exact replacement; deletion actions return an owned empty-string
+suggestion. Suggestion-list actions use the provider's Suggest enumeration.
+Verification mode still has no suggestions, and word-breaking-only mode does not
+invoke spelling even when multiword is enabled. Disabling the option restores the
+original independent-word checking path.
+
+Explicit input spans separated by embedded NULs are checked independently while
+preserving offsets into the original buffer. Provider ranges/actions are validated
+before publication, and overlapping errors are rejected. Culture-scoped custom
+lexicons suppress spelling errors without suppressing contextual deletion. Snapshots
+retain their original source, roles and suggestions after chunk/mode changes.
 
 The companion managed patch retains a culture-aware custom-word set in each
 WinRT provider, alongside the original Windows dictionary registration. Original

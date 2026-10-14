@@ -22,8 +22,29 @@ int main(int argc,char** argv){try{
  NlIProcessingOptions* optionsRaw=nullptr;require(context->get_Options(&optionsRaw)==S_OK,"processing options");Com<NlIProcessingOptions> options(optionsRaw);
  NlIProcessingOptions* unsupported=reinterpret_cast<NlIProcessingOptions*>(1);require(context->get_Capabilities(0x7fffffff,&unsupported)==E_INVALIDARG&&!unsupported,"unavailable culture rejects with cleared capability output");
  VARIANT key{},value{};key.vt=VT_BSTR;key.bstrVal=SysAllocString(L"IsSpellChecking");value.vt=VT_BOOL;value.boolVal=VARIANT_TRUE;HRESULT result=options->put_Item(key,value);VariantClear(&key);require(result==S_OK,"VARIANT-by-value option ABI");
- key.vt=VT_BSTR;key.bstrVal=SysAllocString(L"IsSpellSuggestingMWEs");value.boolVal=VARIANT_TRUE;result=options->put_Item(key,value);VariantClear(&key);require(result==E_NOTIMPL,"unsupported compound spelling is explicit");
+ key.vt=VT_BSTR;key.bstrVal=SysAllocString(L"IsSpellSuggestingMWEs");value.boolVal=VARIANT_TRUE;result=options->put_Item(key,value);VariantClear(&key);require(result==S_OK,"whole-input multiword option is accepted");
+ value.boolVal=VARIANT_FALSE;key.vt=VT_BSTR;key.bstrVal=SysAllocString(L"IsSpellSuggestingMWEs");require(options->put_Item(key,value)==S_OK,"multiword can be disabled");VariantClear(&key);
  require(chunk->SetInputArray(nullptr,1)==E_INVALIDARG&&chunk->SetInputArray(L"hello speling",-1)==E_INVALIDARG,"invalid input lengths");
+ auto option=[&](const WCHAR* name,bool enabled){VARIANT k{},v{};k.vt=VT_BSTR;k.bstrVal=SysAllocString(name);v.vt=VT_BOOL;v.boolVal=enabled?VARIANT_TRUE:VARIANT_FALSE;HRESULT hr=options->put_Item(k,v);VariantClear(&k);require(hr==S_OK,"multiword option/mode transition");};
+ auto errors=[&](const WCHAR* text,LONG length,LONG expectedStart,bool verify){
+  option(L"IsSpellSuggestingMWEs",true);option(L"IsSpellVerifyOnly",verify);require(chunk->SetInputArray(text,length)==S_OK,"explicit multiword UTF-16 input");
+  IEnumVARIANT* e=nullptr;require(chunk->GetEnumerator(&e)==S_OK&&e,"multiword snapshot");Com<IEnumVARIANT> en(e);int found=0;
+  IEnumVARIANT* duplicate=nullptr;require(en->Clone(&duplicate)==S_OK&&duplicate,"contextual snapshot clone");Com<IEnumVARIANT> snapshotClone(duplicate);
+  option(L"IsSpellSuggestingMWEs",false);option(L"IsSpellVerifyOnly",!verify);require(chunk->SetInputArray(L"changed",7)==S_OK,"replace source after snapshot");
+  for(;;){VARIANT sentenceValue{};ULONG n=0;HRESULT hr=en->Next(1,&sentenceValue,&n);require(SUCCEEDED(hr),"sentence enumeration HRESULT");if(!n)break;
+   NlISentence* sentencePointer=nullptr;require(sentenceValue.punkVal->QueryInterface(NL_IID_ISentence,reinterpret_cast<void**>(&sentencePointer))==S_OK,"sentence ABI");Com<NlISentence> sentence(sentencePointer);VariantClear(&sentenceValue);LONG size=0;require(sentence->get_Count(&size)==S_OK,"segment count");
+   for(LONG index=0;index<size;++index){NlITextSegment* pointer=nullptr;require(sentence->get_Item(index,&pointer)==S_OK,"multiword segment");Com<NlITextSegment> segment(pointer);LONG role=0;NlTextRange range{};require(segment->get_Role(&role)==S_OK&&segment->get_Range(&range)==S_OK,"multiword range/role ABI");if(role!=NL_ecrrIncorrect)continue;++found;
+    require(range.start==expectedStart&&range.length==3,"whole-text repeated-word offsets retain surrogate/NUL source coordinates");IEnumVARIANT* choices=nullptr;require(segment->get_Suggestions(&choices)==S_OK,"deletion suggestion ABI");Com<IEnumVARIANT> suggestions(choices);
+    if(verify)require(!choices,"verification mode has no suggestions");else{VARIANT choice{};ULONG got=0;require(choices&&choices->Next(1,&choice,&got)==S_OK&&got==1&&choice.vt==(VT_UI2|VT_BYREF)&&choice.puiVal&&!*choice.puiVal,"delete is an owned empty UTF-16 suggestion");}
+   }
+  }require(found==1,"one contextual repeated-word error survives source/mode changes");
+  VARIANT cloned{};ULONG cloned_count=0;require(snapshotClone->Next(1,&cloned,&cloned_count)==S_OK&&cloned_count==1,"contextual clone retains independent position and source");VariantClear(&cloned);
+ };
+ key.vt=VT_BSTR;key.bstrVal=SysAllocString(L"IsSpellSuggestingMWEs");value.vt=VT_I4;value.lVal=1;require(options->put_Item(key,value)==E_INVALIDARG,"multiword option rejects non-BOOL VARIANT");VariantClear(&key);
+ key.vt=VT_BSTR;key.bstrVal=SysAllocString(L"SpellingReform");value.vt=VT_I4;value.lVal=1;require(options->put_Item(key,value)==E_NOTIMPL,"legacy reform selector stays explicitly unsupported");VariantClear(&key);
+ errors(L"the the",7,4,false);errors(L"\U0001f600 the the",10,7,false);errors(L"the\0the the",11,8,false);errors(L"the the",7,4,true);
+ option(L"IsSpellSuggestingMWEs",false);option(L"IsSpellVerifyOnly",true);
+ std::puts("native multiword spelling: actual context, deletion suggestion, UTF-16/surrogate/embedded-NUL offsets and verification modes PASS");
  require(chunk->SetInputArray(L"hello speling",13)==S_OK,"source input");IEnumVARIANT* enumRaw=nullptr;require(chunk->GetEnumerator(&enumRaw)==S_OK&&enumRaw,"sentences");Com<IEnumVARIANT> enumeration(enumRaw);
  IEnumVARIANT* cloneRaw=nullptr;require(enumeration->Clone(&cloneRaw)==S_OK&&cloneRaw,"enumerator clone");Com<IEnumVARIANT> clone(cloneRaw);
  // Enumeration must own a snapshot after the chunk and its context disappear.

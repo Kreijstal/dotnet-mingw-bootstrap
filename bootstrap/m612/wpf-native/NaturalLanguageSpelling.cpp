@@ -55,7 +55,7 @@ HRESULT checker(LONG locale,Com<ISpellChecker>& value,std::string& icu) {
     ISpellChecker* raw=nullptr;result=provider->CreateSpellChecker(name,&raw);value.reset(raw);return result;
 }
 struct Options : Object<NlIProcessingOptions,&NL_IID_IProcessingOptions> {
-    bool spelling=false,verify=true;
+    bool spelling=false,verify=true,multiword=false;
     HRESULT STDMETHODCALLTYPE put_Item(VARIANT key,VARIANT value) override {return protect([&]() -> HRESULT {
         if(key.vt!=VT_BSTR||!key.bstrVal)return E_INVALIDARG;
         std::wstring name(key.bstrVal,SysStringLen(key.bstrVal));
@@ -64,7 +64,7 @@ struct Options : Object<NlIProcessingOptions,&NL_IID_IProcessingOptions> {
             bool enabled=value.boolVal!=VARIANT_FALSE;
             if(name==L"IsSpellChecking")spelling=enabled;
             else if(name==L"IsSpellVerifyOnly")verify=enabled;
-            else if(enabled)return E_NOTIMPL;
+            else multiword=enabled;
             return S_OK;
         }
         // The OS provider does not expose the legacy pre/post reform selector.
@@ -175,14 +175,53 @@ struct Sentence : Object<NlISentence,&NL_IID_ISentence> {
         *output=segments[index].get();(*output)->AddRef();return S_OK;
     }
 };
+HRESULT suggest_segment(ISpellChecker* provider,Segment& segment,const std::wstring& word) {
+    IEnumString* list=nullptr;HRESULT result=provider->Suggest(word.c_str(),&list);Com<IEnumString> choices(list);if(FAILED(result))return result;
+    if(choices)for(;;){LPOLESTR text=nullptr;ULONG fetched=0;result=choices->Next(1,&text,&fetched);
+        std::unique_ptr<WCHAR,decltype(&CoTaskMemFree)> allocation(text,CoTaskMemFree);if(FAILED(result))return result;if(!fetched)break;if(text)segment.suggestions.emplace_back(text);}
+    return S_OK;
+}
 HRESULT spell_segment(ISpellChecker* provider,Segment& segment,const std::wstring& word,bool suggestions) {
     IEnumSpellingError* raw=nullptr;HRESULT result=provider->Check(word.c_str(),&raw);Com<IEnumSpellingError> errors(raw);if(FAILED(result))return result;
     if(!errors)return S_OK;ISpellingError* first=nullptr;result=errors->Next(&first);Com<ISpellingError> error(first);if(FAILED(result))return result;if(!error)return S_OK;
     CORRECTIVE_ACTION action{};result=error->get_CorrectiveAction(&action);if(FAILED(result))return result;if(action==CORRECTIVE_ACTION_NONE)return S_OK;
     segment.role=NL_ecrrIncorrect;if(!suggestions)return S_OK;
-    IEnumString* list=nullptr;result=provider->Suggest(word.c_str(),&list);Com<IEnumString> choices(list);if(FAILED(result))return result;
-    if(choices)for(;;){LPOLESTR text=nullptr;ULONG fetched=0;result=choices->Next(1,&text,&fetched);
-        std::unique_ptr<WCHAR,decltype(&CoTaskMemFree)> allocation(text,CoTaskMemFree);if(FAILED(result))return result;if(!fetched)break;if(text)segment.suggestions.emplace_back(text);}
+    return suggest_segment(provider,segment,word);
+}
+HRESULT context_errors(ISpellChecker* provider,const Context& context,LONG locale,const std::wstring& input,bool suggestions,std::vector<Com<Segment>>& output) {
+    // Windows accepts NUL-terminated text. Check each explicit-input span
+    // separately so embedded NULs do not silently truncate the later source.
+    for(size_t base=0;base<input.size();) {
+        size_t limit=input.find(L'\0',base);if(limit==std::wstring::npos)limit=input.size();
+        if(limit>base) {
+            IEnumSpellingError* raw=nullptr;HRESULT result=provider->ComprehensiveCheck(input.c_str()+base,&raw);Com<IEnumSpellingError> errors(raw);if(FAILED(result))return result;
+            if(errors)for(;;) {
+                ISpellingError* item=nullptr;result=errors->Next(&item);Com<ISpellingError> error(item);if(FAILED(result))return result;if(!error)break;
+                ULONG start=0,length=0;CORRECTIVE_ACTION action{};
+                if(FAILED(result=error->get_StartIndex(&start))||FAILED(result=error->get_Length(&length))||FAILED(result=error->get_CorrectiveAction(&action)))return result;
+                if(action==CORRECTIVE_ACTION_NONE)continue;
+                if(action<CORRECTIVE_ACTION_GET_SUGGESTIONS||action>CORRECTIVE_ACTION_DELETE)return E_UNEXPECTED;
+                if(!length||start>limit-base||length>limit-base-start)return E_UNEXPECTED;
+                auto word=input.substr(base+start,length);
+                // Lexicons suppress spelling errors, while contextual deletion
+                // remains meaningful even for words accepted by a lexicon.
+                if(action!=CORRECTIVE_ACTION_DELETE&&context.accepts(word,locale))continue;
+                Com<Segment> segment{new Segment};segment->range={LONG(base+start),LONG(length)};segment->role=NL_ecrrIncorrect;
+                if(suggestions) {
+                    if(action==CORRECTIVE_ACTION_DELETE)segment->suggestions.emplace_back();
+                    else if(action==CORRECTIVE_ACTION_REPLACE) {
+                        LPWSTR raw_text=nullptr;result=error->get_Replacement(&raw_text);std::unique_ptr<WCHAR,decltype(&CoTaskMemFree)> text(raw_text,CoTaskMemFree);if(FAILED(result))return result;if(!text)return E_UNEXPECTED;
+                        segment->suggestions.emplace_back(text.get());
+                    } else if(action==CORRECTIVE_ACTION_GET_SUGGESTIONS) {result=suggest_segment(provider,*segment,word);if(FAILED(result))return result;}
+                    else return E_UNEXPECTED;
+                }
+                output.push_back(std::move(segment));
+            }
+        }
+        base=limit==input.size()?limit:limit+1;
+    }
+    std::sort(output.begin(),output.end(),[](const auto& a,const auto& b){return a->range.start<b->range.start;});
+    LONG limit=0;for(const auto& error:output){if(error->range.start<limit)return E_UNEXPECTED;limit=error->range.start+error->range.length;}
     return S_OK;
 }
 struct Chunk : Object<NlITextChunk,&NL_IID_ITextChunk> {
@@ -194,6 +233,9 @@ struct Chunk : Object<NlITextChunk,&NL_IID_ITextChunk> {
         if(!context)return E_UNEXPECTED;Com<ISpellChecker> provider;std::string name;
         if(context->options->spelling){HRESULT result=checker(locale,provider,name);if(FAILED(result))return result;}
         else {WCHAR tag[LOCALE_NAME_MAX_LENGTH]{};if(!LCIDToLocaleName(locale?locale:GetUserDefaultLCID(),tag,LOCALE_NAME_MAX_LENGTH,LOCALE_ALLOW_NEUTRAL_NAMES))return E_INVALIDARG;for(const WCHAR* p=tag;*p;++p)name.push_back(char(*p));}
+        const bool multiword=provider&&context->options->multiword;
+        std::vector<Com<Segment>> reported;
+        if(multiword){HRESULT result=context_errors(provider.get(),*context,locale?locale:GetUserDefaultLCID(),input,!context->options->verify,reported);if(FAILED(result))return result;}
         UErrorCode error=U_ZERO_ERROR;
         using Break=std::unique_ptr<UBreakIterator,decltype(&ubrk_close)>;
         Break boundary(ubrk_open(UBRK_SENTENCE,name.c_str(),reinterpret_cast<const UChar*>(input.data()),int(input.size()),&error),ubrk_close);
@@ -207,13 +249,23 @@ struct Chunk : Object<NlITextChunk,&NL_IID_ITextChunk> {
                 if(ubrk_getRuleStatus(words.get())>=UBRK_WORD_NUMBER) {
                     Com<Segment> segment{new Segment};segment->range={start+left,right-left};
                     std::wstring word=input.substr(start+left,right-left);
-                    if(provider&&ubrk_getRuleStatus(words.get())>=UBRK_WORD_LETTER&&!context->accepts(word,locale?locale:GetUserDefaultLCID())) {
+                    if(provider&&!multiword&&ubrk_getRuleStatus(words.get())>=UBRK_WORD_LETTER&&!context->accepts(word,locale?locale:GetUserDefaultLCID())) {
                         HRESULT result=spell_segment(provider.get(),*segment,word,!context->options->verify);if(FAILED(result))return result;
                     }
-                    sentence->segments.push_back(std::move(segment));
+                    if(!multiword)sentence->segments.push_back(std::move(segment));
+                    else {
+                        LONG cursor=segment->range.start,limit=cursor+segment->range.length;
+                        for(const auto& error:reported){LONG a=error->range.start,b=a+error->range.length;if(b<=cursor)continue;if(a>=limit)break;
+                            if(a>cursor){Com<Segment> piece{new Segment};piece->range={cursor,a-cursor};sentence->segments.push_back(std::move(piece));}
+                            cursor=std::min(limit,b);if(cursor==limit)break;
+                        }
+                        if(cursor<limit){Com<Segment> piece{new Segment};piece->range={cursor,limit-cursor};sentence->segments.push_back(std::move(piece));}
+                    }
                 }
                 left=right;
             }
+            if(multiword){for(const auto& error:reported)if(error->range.start>=start&&error->range.start<end)sentence->segments.push_back(retain(error.get()));
+                std::sort(sentence->segments.begin(),sentence->segments.end(),[](const auto& a,const auto& b){return a->range.start<b->range.start;});}
             if(!sentence->segments.empty())sentences.push_back(std::move(sentence));start=end;
         }
         return S_OK;
