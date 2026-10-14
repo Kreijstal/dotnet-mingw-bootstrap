@@ -11156,3 +11156,61 @@ polygon geometry, advanced composite optimizations, clipped figure overflow,
 complex object layouts, general column spans, footnotes, optimal/interruptible
 algorithms and complete native-language services remain unfinished. The WPF goal
 stays active.
+
+
+## 173. Installed release 37: rectangular composite text rows
+
+The 2026-10-14 continuation packages section 172 as WindowsDesktop 8.0.0-37.
+Declared/checksummed 0037-composite-lines.patch follows the preceding 36 patches.
+Clean pinned sources plus all patches reproduce the six feature files byte for
+byte; the private package sources match the driver. The declared patch equals
+the committed feature diff. Source and private package native rebuilds, original
+ABI/lifecycle/native paragraph/line checks and all 25 offline WPF SDK gates
+complete with exit zero. Interim WinForms shared/self-contained checks also pass.
+The package continues using its own private source-built managed, graphics, pen
+and printing outputs.
+
+Final validation, packaging and installation:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+# In the CLANG64 package workspace, with srcdir set to its src/ directory:
+source PKGBUILD
+_wpf native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+makepkg --printsrcinfo > .SRCINFO
+makepkg --repackage --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-37-any.pkg.tar.zst
+/usr/bin/python3 check-staged.py /clang64/lib/dotnet
+bash "$(_driver)/wpf-tests/check-composite-lines-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-composite-sdk-check
+bash "$(_driver)/wpf-tests/check-figures-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-composite-figures-sdk-check
+bash "$(_driver)/wpf-tests/check-balancing-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-composite-balancing-sdk-check
+pacman -Q mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap
+sha256sum mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-37-any.pkg.tar.zst
+```
+
+All commands pass. Staged and installed payload checks cover 42 managed
+implementation/reference assemblies, eight native libraries, SDK tasks and
+interim WinForms versions. Installed original composite clients cover both text
+modes/directions, late anchors, nested figure content, mixed font sizes and narrow
+columns. Actual dark glyphs occupy both sides of the centered obstacle without
+intersection; 100 caret/point queries per case, all 667/726 source characters,
+original GetPageNumber agreement, page regeneration and GC pass. Installed figure
+anchor/offset/wrapping/source/disposal cases and balancing/keep/metric/source/
+raster checks also pass. Each of the three installed consumers runs through
+shared-framework and portable self-contained execution with SDK roots/toolchain
+PATH removed. Builds have zero warnings/errors. The existing srcdir provenance
+warning remains during package creation.
+
+Artifact: mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-37-any.pkg.tar.zst.
+SHA-256: e34706542df5b03d2d1b16c3d54b6e3eefa5d916a03cff1eec12b94e5ba15aa1.
+Recipe commit: msys2-ur 8d5d470; feature commit: 1d658fa.
+Source evidence is archived under
+ tmp/wpf8-support/validation/composite-lines-20261014. Artifact, recipe, metadata,
+patch, hashes and package/installed/private-regression logs are archived under
+ tmp/wpf8-support/validation/composite-lines-package-20261014. The downloaded
+artifact's SHA-256 matches the validation host.
+Imported native coverage is 119/139 with 20 absent; original paragraph ABI expands
+to 470 fields. Polygon geometry and advanced composite optimizations, clipped
+figure overflow, complex object/layout constraints, general column spans,
+advanced bidi, footnotes, optimal/interruptible algorithms and complete native-
+language services remain unfinished. The WPF goal stays active.
