@@ -324,6 +324,7 @@ struct TrackData {
     FSBBOX bbox{};
     int used=0;
     int flow_used=0;
+    int clearing_space=0;
     std::vector<FloatObstacle> inherited,obstacles;
     std::shared_ptr<Continuation> continuation;
     FSFMTRKSTOP stop=fmtrGoalReached;
@@ -1119,9 +1120,10 @@ int format_table(const std::shared_ptr<ParaData>& para,uint32_t direction,const 
     return 0;
 }
 int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t direction,const FSRECT& rect,
-    int suppress,void* incoming,std::shared_ptr<TrackData>& result,void** margin_output,bool bottomless=false,const std::shared_ptr<Continuation>& input={},bool empty_ok=false,bool previous_page=true,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA suppress_break=fsksuppresshardbreakbeforefirstparaPageAndColumn,bool keep_self=false) {
+    int suppress,void* incoming,std::shared_ptr<TrackData>& result,void** margin_output,bool bottomless=false,const std::shared_ptr<Continuation>& input={},bool empty_ok=false,bool previous_page=true,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA suppress_break=fsksuppresshardbreakbeforefirstparaPageAndColumn,bool keep_self=false,FSKCLEAR requested_clear=fskclearNone) {
     auto& cb=context->info.fscbk.cbkgen;void* client=context->info.pfsclient;
     if(!segment||(direction!=PTS_fswdirES&&direction!=PTS_fswdirWS)||rect.du<=0||rect.dv<0||int64_t(rect.u)+rect.du>INT32_MAX||int64_t(rect.v)+rect.dv>INT32_MAX)return PTS_tserrNotImplemented;
+    if(requested_clear<fskclearNone||requested_clear>fskclearBoth)return PTS_tserrInvalidParameter;
     if(!cb.pfnGetFirstPara||!cb.pfnGetNextPara||!cb.pfnGetParaProperties||!cb.pfnCreateParaclient||!cb.pfnDestroyParaclient||!context->info.fscbk.cbkobj.pfnDestroyMcsclient)return PTS_tserrInvalidParameter;
     auto track=std::make_shared<TrackData>(context);track->segment=segment;track->direction=direction;track->rect=rect;track->bottomless=bottomless;
     if(ContainerFlow::current){FSRECT page=FigureGeometry::current?FigureGeometry::current->page:rect;int status=transform_obstacles(*ContainerFlow::current->obstacles,ContainerFlow::current->direction,direction,page,track->inherited);if(status)return status;}
@@ -1129,6 +1131,25 @@ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t 
     int found=0,status=0;void* name=nullptr;
     if(input){if(input->segment!=segment)return PTS_tserrInvalidBreakRecord;name=input->paragraph;found=1;}
     else {status=reinterpret_cast<PtsGetFirstPara>(cb.pfnGetFirstPara)(client,segment,&found,&name);if(status)return status;}
+    int clearance=0;
+    if(found&&requested_clear!=fskclearNone) {
+        int64_t bottom=rect.v,mid=int64_t(rect.u)+rect.du/2;
+        for(const auto& obstacle:track->inherited) {
+            const auto& box=obstacle.rect;
+            if(box.u>=int64_t(rect.u)+rect.du||int64_t(box.u)+box.du<=rect.u)continue;
+            bool left=box.u<mid,right=int64_t(box.u)+box.du>mid;
+            if(obstacle.floater){left=obstacle.props.fskfloatalignment!=fskfloatalignMax;right=obstacle.props.fskfloatalignment!=fskfloatalignMin;}
+            if(requested_clear==fskclearBoth||(requested_clear==fskclearLeft&&left)||(requested_clear==fskclearRight&&right))bottom=std::max(bottom,int64_t(box.v)+box.dv);
+        }
+        if(bottom>INT32_MAX||bottom-rect.v>INT32_MAX)return PTS_tserrInvalidGeometry;
+        clearance=int(bottom-rect.v);
+        if(!bottomless&&clearance&&clearance>=rect.dv) {
+            track->continuation=input?input:std::make_shared<Continuation>();
+            if(!input){track->continuation->context=context;track->continuation->segment=segment;track->continuation->paragraph=name;}
+            track->stop=fmtrNoProgressOutOfSpace;result=track;return 0;
+        }
+        track->used=track->flow_used=track->clearing_space=clearance;
+    }
     static thread_local std::vector<std::pair<void*,void*>> active;
     const auto key=std::make_pair(static_cast<void*>(context.get()),segment);
     if(active.size()>=128 || std::find(active.begin(),active.end(),key)!=active.end())return PTS_tserrInvalidClientOutput;
@@ -1233,7 +1254,7 @@ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t 
         if(!bottomless&&next_position&&para->desc.dvrUsed==0&&chain_start>=0&&(chain_start>0||empty_ok)) {
             // None of the following paragraph fits. Remove accepted members
             // of the keep chain and resume from its original immutable start.
-            track->paras.resize(chain_start);track->used=0;track->bbox={};
+            track->paras.resize(chain_start);track->used=clearance;track->bbox={};
             for(const auto& accepted:track->paras){track->used+=accepted->desc.dvrUsed;status=merge_bbox(track->bbox,accepted->desc.fsbbox);if(status)return status;}
             margin.reset();margin.value=chain_margin.value;chain_margin.value=nullptr;
             track->continuation=chain_position;track->stop=track->paras.empty()?fmtrNoProgressOutOfSpace:fmtrBrokenOutOfSpace;break;
@@ -1248,6 +1269,7 @@ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t 
         if(!props.fKeepWithNext){chain_start=-1;chain_position.reset();chain_margin.reset();}
         found=following_found;name=following_name;
     }
+    if(clearance&&track->continuation&&track->paras.empty())track->used=track->flow_used=track->clearing_space=0;
     FSRECT flow_page=FigureGeometry::current?FigureGeometry::current->page:rect;
     for(const auto& para:track->paras){status=para_obstacles(para,direction,flow_page,track->obstacles);if(status)return status;}
     if(bottomless)track->rect.dv=track->used;
@@ -1297,21 +1319,21 @@ extern "C" __declspec(dllexport) int WINAPI FsFormatSubtrackFinite(void* context
     *formatted={};*output=*break_output=*margin_output=nullptr;*used=*top_space=0;*bbox={};*clear_output=fskclearNone;
     auto context=find_context(context_handle);if(!context)return PTS_tserrInvalidPtsContext;
     if(!rect)return PTS_tserrInvalidParameter;
-    if(area||footnote||geometry||clear!=fskclearNone)return PTS_tserrNotImplemented;
+    if(area||footnote||geometry)return PTS_tserrNotImplemented;
     std::shared_ptr<BreakData> input;
     if(break_input){input=lookup_owned(records,context_handle,break_input);if(!input||input->page||input->subpage)return PTS_tserrInvalidBreakRecord;}
     try {
         std::shared_ptr<TrackData> track;MarginOwner margin{context};
         FSPAP owner{};auto properties=context->info.fscbk.cbkgen.pfnGetParaProperties;if(!properties)return PTS_tserrInvalidParameter;
         int status=reinterpret_cast<PtsGetParaProperties>(properties)(context->info.pfsclient,segment,&owner);if(status)return status;
-        status=format_track(context,segment,direction,*rect,suppress,margin_input,track,&margin.value,false,input?input->position:nullptr,empty_ok!=0,previous_page!=0,suppress_break,owner.fKeepWithNext!=0);if(status)return status;
+        status=format_track(context,segment,direction,*rect,suppress,margin_input,track,&margin.value,false,input?input->position:nullptr,empty_ok!=0,previous_page!=0,suppress_break,owner.fKeepWithNext!=0,clear);if(status)return status;
         track->subtrack=true;
         if(callback_tracks)callback_tracks->push_back(track);
         {std::lock_guard<std::mutex> lock(gate);tracks.emplace(track.get(),track);}
         std::shared_ptr<BreakData> outgoing;
         try {if(track->continuation)outgoing=make_record(context,track->continuation,false);}
         catch(...){{std::lock_guard<std::mutex> lock(gate);tracks.erase(track.get());}throw;}
-        *output=track.get();*used=track->used;*bbox=track->bbox;*margin_output=margin.value;margin.value=nullptr;formatted->kstop=track->stop;formatted->fForcedProgress=track->forced_progress;*break_output=outgoing?outgoing.get():nullptr;return 0;
+        *output=track.get();*used=track->used;*top_space=track->clearing_space;*bbox=track->bbox;*margin_output=margin.value;margin.value=nullptr;formatted->kstop=track->stop;formatted->fForcedProgress=track->forced_progress;*break_output=outgoing?outgoing.get():nullptr;return 0;
     }catch(const std::bad_alloc&){return PTS_tserrOutOfMemory;}
 }
 extern "C" __declspec(dllexport) int WINAPI FsDestroySubtrack(void* context_handle,void* handle) {
@@ -1484,13 +1506,13 @@ extern "C" __declspec(dllexport) int WINAPI FsFormatSubtrackBottomless(void* con
     if(!formatted||!output||!used||!bbox||!margin_output||!clear_output||!top_space||!can_interrupt)return PTS_tserrNullOutputParameter;
     *formatted=fmtrblGoalReached;*output=*margin_output=nullptr;*used=*top_space=*can_interrupt=0;*bbox={};*clear_output=fskclearNone;
     auto context=find_context(context_handle);if(!context)return PTS_tserrInvalidPtsContext;
-    if(v<0||area||geometry||clear!=fskclearNone)return PTS_tserrNotImplemented;
+    if(v<0||area||geometry)return PTS_tserrNotImplemented;
     try {
         FSRECT rect{u,v,width,INT32_MAX-v};std::shared_ptr<TrackData> track;MarginOwner margin{context};
-        int status=format_track(context,segment,direction,rect,suppress,margin_input,track,&margin.value,true);if(status)return status;
+        int status=format_track(context,segment,direction,rect,suppress,margin_input,track,&margin.value,true,{},false,true,fsksuppresshardbreakbeforefirstparaPageAndColumn,false,clear);if(status)return status;
         track->subtrack=true;if(callback_tracks)callback_tracks->push_back(track);
         {std::lock_guard<std::mutex> lock(gate);tracks.emplace(track.get(),track);}
-        *output=track.get();*used=track->used;*bbox=track->bbox;*margin_output=margin.value;margin.value=nullptr;return 0;
+        *output=track.get();*used=track->used;*top_space=track->clearing_space;*bbox=track->bbox;*margin_output=margin.value;margin.value=nullptr;return 0;
     }catch(const std::bad_alloc&){return PTS_tserrOutOfMemory;}
 }
 extern "C" __declspec(dllexport) int WINAPI FsUpdateBottomlessSubtrack(void* context_handle,void* handle,void* segment,int area,void* geometry,int suppress,uint32_t direction,
@@ -1500,10 +1522,10 @@ extern "C" __declspec(dllexport) int WINAPI FsUpdateBottomlessSubtrack(void* con
     *formatted=fmtrblGoalReached;*margin_output=nullptr;*used=*top_space=*uninterruptible=0;*bbox={};*clear_output=fskclearNone;
     auto track=lookup_owned(tracks,context_handle,handle);
     if(!track||!track->subtrack||!track->bottomless||track->segment!=segment)return PTS_tserrInvalidQuery;
-    if(area||geometry||clear!=fskclearNone)return PTS_tserrNotImplemented;if(v<0)return PTS_tserrInvalidGeometry;
+    if(area||geometry)return PTS_tserrNotImplemented;if(v<0)return PTS_tserrInvalidGeometry;
     try {
         FSRECT rect{u,v,width,INT32_MAX-v};std::shared_ptr<TrackData> replacement;MarginOwner margin{track->context};
-        int status=format_track(track->context,segment,direction,rect,suppress,margin_input,replacement,&margin.value,true);if(status)return status;
+        int status=format_track(track->context,segment,direction,rect,suppress,margin_input,replacement,&margin.value,true,{},false,true,fsksuppresshardbreakbeforefirstparaPageAndColumn,false,clear);if(status)return status;
         {
             std::lock_guard<std::mutex> lock(gate);
             // Keep the exported track identity and move the old owned clients
@@ -1511,11 +1533,12 @@ extern "C" __declspec(dllexport) int WINAPI FsUpdateBottomlessSubtrack(void* con
             std::swap(track->rect,replacement->rect);std::swap(track->bbox,replacement->bbox);
             std::swap(track->used,replacement->used);track->paras.swap(replacement->paras);
             std::swap(track->flow_used,replacement->flow_used);track->inherited.swap(replacement->inherited);track->obstacles.swap(replacement->obstacles);
+            std::swap(track->clearing_space,replacement->clearing_space);
             track->continuation.swap(replacement->continuation);
             std::swap(track->stop,replacement->stop);std::swap(track->forced_progress,replacement->forced_progress);
             track->update=fskupdNew;
         }
-        *used=track->used;*bbox=track->bbox;*margin_output=margin.value;margin.value=nullptr;*uninterruptible=1;return 0;
+        *used=track->used;*top_space=track->clearing_space;*bbox=track->bbox;*margin_output=margin.value;margin.value=nullptr;*uninterruptible=1;return 0;
     }catch(const std::bad_alloc&){return PTS_tserrOutOfMemory;}
 }
 namespace {
@@ -1612,7 +1635,7 @@ int compare_paras(const std::shared_ptr<ParaData>& old,const std::shared_ptr<Par
 }
 int compare_tracks(const std::shared_ptr<TrackData>& old,const std::shared_ptr<TrackData>& fresh,int shift,bool& equal) {
     equal=false;if(old==fresh){equal=true;return 0;}
-    if(old->segment!=fresh->segment||old->bottomless!=fresh->bottomless||old->direction!=fresh->direction||old->used!=fresh->used||old->flow_used!=fresh->flow_used||old->stop!=fresh->stop||old->forced_progress!=fresh->forced_progress||old->paras.size()!=fresh->paras.size()||old->inherited.size()!=fresh->inherited.size()||old->obstacles.size()!=fresh->obstacles.size()||!equal_rect(old->rect,fresh->rect,shift)||!equal_bbox(old->bbox,fresh->bbox,shift))return 0;
+    if(old->segment!=fresh->segment||old->bottomless!=fresh->bottomless||old->direction!=fresh->direction||old->used!=fresh->used||old->flow_used!=fresh->flow_used||old->clearing_space!=fresh->clearing_space||old->stop!=fresh->stop||old->forced_progress!=fresh->forced_progress||old->paras.size()!=fresh->paras.size()||old->inherited.size()!=fresh->inherited.size()||old->obstacles.size()!=fresh->obstacles.size()||!equal_rect(old->rect,fresh->rect,shift)||!equal_bbox(old->bbox,fresh->bbox,shift))return 0;
     for(size_t i=0;i<old->inherited.size();++i)if(!equal_rect(old->inherited[i].rect,fresh->inherited[i].rect,shift))return 0;
     for(size_t i=0;i<old->obstacles.size();++i)if(!equal_rect(old->obstacles[i].rect,fresh->obstacles[i].rect,shift))return 0;
     for(size_t i=0;i<old->paras.size();++i){bool same=false;int status=compare_paras(old->paras[i],fresh->paras[i],shift,same);if(status||!same)return status;}equal=true;return 0;
@@ -1751,7 +1774,7 @@ extern "C" __declspec(dllexport) int WINAPI FsQueryTrackDetails(void* context,vo
 }
 extern "C" __declspec(dllexport) int WINAPI FsQuerySubtrackDetails(void* context,void* handle,FSSUBTRACKDETAILS* output) {
     if(!output)return PTS_tserrNullOutputParameter;*output={};auto track=lookup_owned(tracks,context,handle);
-    if(!track||!track->subtrack)return PTS_tserrInvalidQuery;output->fsupdinf.fskupd=track->update;output->nms=track->segment;output->fsrc=track->rect;output->cParas=int(track->paras.size());return 0;
+    if(!track||!track->subtrack)return PTS_tserrInvalidQuery;output->fsupdinf.fskupd=track->update;output->nms=track->segment;output->fsrc=track->rect;output->fsrc.v+=track->clearing_space;output->fsrc.dv-=track->clearing_space;output->cParas=int(track->paras.size());return 0;
 }
 namespace {
 // WPF's original TextParagraph reports zero footnotes, and its creation/info
