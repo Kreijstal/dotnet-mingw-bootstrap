@@ -9973,3 +9973,63 @@ headers/footers. Figures, complex center/clear policies, comparison/display
 transfer, balancing/spans/footnotes, advanced/optimal/incremental/interruptible
 algorithms and full bidi/native-language behavior remain incomplete. The full
 WPF goal remains active.
+
+## 153. Installed release 27: public table layout
+
+The 2026-10-14 continuation packages section 152 as WindowsDesktop 8.0.0-27.
+Declared/checksummed 0027-public-tables.patch follows the prior 26 patches. Clean
+pinned sources plus all 27 patches match the six committed feature files byte
+for byte; actual private package sources have identical SHA-256 hashes. Source
+and private trees rebuild native output, inventory and layout and pass original
+429-field ABI checks, native table/row/cell/resource gates, all paragraph/line
+regressions and the complete SDK suite including the new public table consumer.
+Unchanged managed/graphics/printing outputs remain its own private source builds.
+The README's current coverage and checksum were updated before final source
+verification, metadata generation and archive creation.
+
+Validation commands:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+# In the CLANG64 package workspace:
+makepkg --verifysource --force
+source PKGBUILD                 # with srcdir set to this workspace's src/
+_wpf native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+makepkg --printsrcinfo > .SRCINFO
+makepkg --repackage --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-27-any.pkg.tar.zst
+/usr/bin/python3 check-staged.py /clang64/lib/dotnet
+bash "$(_driver)/wpf-tests/check-tables-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-tables-sdk-check
+bash "$(_driver)/wpf-tests/check-subpages-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-tables-subpages-sdk-check
+pacman -Q mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap
+sha256sum mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-27-any.pkg.tar.zst
+```
+
+All final commands pass. Staged/installed payload checks cover 42 managed
+implementation/reference assemblies, eight native libraries, SDK tasks and
+retained interim WinForms versions. Installed auto/fixed-width tables paginate
+two pages, styled/multiple-row-group/horizontally-spanned tables three pages,
+tables after preceding text three pages, two-column tables one page and nested
+tables three pages in both formatting modes. All 156/149/226/182 source
+characters are covered once with original GetPageNumber agreement and disposed
+page regeneration. Real green glyphs are required separately from black borders
+and red/blue cell backgrounds. Empty tables finish one page. Scrolling edits
+change actual row height, raster and full extent and reach the document end.
+Native failures preserve clean outputs and release both prior reported cells
+and unreported source-built subpages. Installed original subpage finite/chunk/
+clone/arrange/raster and bottomless update checks remain green, including all
+699/1339 characters covered once. Shared-framework and self-contained execution
+pass with SDK roots/toolchain PATH removed, zero consumer warnings/errors. Full
+source/private suites pass all other consumers including interim WinForms. The
+existing source-bootstrap.json srcdir provenance warning remains.
+
+Artifact: mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-27-any.pkg.tar.zst.
+SHA-256: b9407f1686530d79c481390474e943380352049f9236d0fb6d3884ab44e3c3b1.
+Recipe commit: msys2-ur ac5bc5f; feature commit: 32c0cd4.
+Artifact, recipe, metadata, patch, hashes and logs are archived under
+ tmp/wpf8-support/validation/tables-package-20261014.
+Imported native coverage is 109/139 with 30 absent. Table cell/row splitting,
+vertical spans and repeated headers/footers, figures, complex center/clear
+policies, comparison/display transfer, balancing/spans/footnotes, advanced/
+optimal/incremental/interruptible algorithms and full bidi/native-language
+behavior remain incomplete. The full WPF goal stays active.
