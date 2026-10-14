@@ -119,17 +119,27 @@ step_native_win32() {
   /usr/bin/python3 "$here/tools/wpf-pts-header.py" \
     "$source/src/Microsoft.DotNet.Wpf/src/PresentationFramework/MS/Internal/PtsHost/Pts.cs" "$work/ParagraphServicesNative.h"
   /usr/bin/python3 "$here/tools/wpf-hyphen-data.py" "$here/wpf-native/hyphen" "$work/HyphenPatterns.h"
+  /usr/bin/python3 "$here/tools/wpf-nlg-header.py" \
+    "$source/src/Microsoft.DotNet.Wpf/src/PresentationFramework/System/Windows/Documents/NLGSpellerInterop.cs" "$work/NaturalLanguageNative.h"
   /clang64/bin/clang.exe -O2 -c "$here/wpf-native/hyphen/engine/hyphen.c" -I "$here/wpf-native/hyphen/engine" -o "$work/hyphen.o"
   /clang64/bin/clang.exe -O2 -c "$here/wpf-native/hyphen/engine/hnjalloc.c" -I "$here/wpf-native/hyphen/engine" -o "$work/hnjalloc.o"
   /clang64/bin/clang++.exe -O2 -shared "$here/wpf-native/PresentationNativeWin32.cpp" \
-    "$here/wpf-native/Classification.cpp" "$here/wpf-native/TextAnalysis.cpp" "$here/wpf-native/LineServicesContext.cpp" "$here/wpf-native/ParagraphServicesContext.cpp" "$here/wpf-native/NaturalLanguageHyphenation.cpp" "$work/hyphen.o" "$work/hnjalloc.o" -I "$work" \
-    -o "$build/lib/PresentationNative_cor3.dll" -luser32 -lgdi32 -licuuc -licuin
+    "$here/wpf-native/Classification.cpp" "$here/wpf-native/TextAnalysis.cpp" "$here/wpf-native/LineServicesContext.cpp" "$here/wpf-native/ParagraphServicesContext.cpp" "$here/wpf-native/NaturalLanguageHyphenation.cpp" "$here/wpf-native/NaturalLanguageSpelling.cpp" "$work/hyphen.o" "$work/hnjalloc.o" -I "$work" \
+    -o "$build/lib/PresentationNative_cor3.dll" -luser32 -lgdi32 -lole32 -loleaut32 -luuid -licuuc -licuin
 }
 
 step_check_hyphenation_native() {
   local work=$build/hyphenation-native
   mkdir -p "$work"
   /clang64/bin/clang++.exe -std=c++17 -O2 "$here/wpf-tests/HyphenationNative.cpp" -o "$work/check.exe"
+  "$work/check.exe" "$build/lib/PresentationNative_cor3.dll"
+}
+
+step_check_spelling_native() {
+  local work=$build/spelling-native
+  mkdir -p "$work"
+  /clang64/bin/clang++.exe -std=c++17 -O2 "$here/wpf-tests/SpellingNative.cpp" \
+    -I "$build/classification-native" -lole32 -loleaut32 -luuid -o "$work/check.exe"
   "$work/check.exe" "$build/lib/PresentationNative_cor3.dll"
 }
 
@@ -866,6 +876,7 @@ step_check_sdk() {
   bash "$here/wpf-tests/check-figures-sdk.sh" "$root" "$build/figures-sdk-check"
   bash "$here/wpf-tests/check-composite-lines-sdk.sh" "$root" "$build/composite-lines-sdk-check"
   bash "$here/wpf-tests/check-hyphenation-sdk.sh" "$root" "$build/hyphenation-sdk-check"
+  bash "$here/wpf-tests/check-spell-check-sdk.sh" "$root" "$build/spell-check-sdk-check"
   bash "$here/wpf-tests/check-paragraph-breaks-sdk.sh" "$root" "$build/paragraph-breaks-sdk-check"
   bash "$here/wpf-tests/check-optimal-paragraph-sdk.sh" "$root" "$build/optimal-paragraph-sdk-check"
   bash "$here/wpf-tests/check-list-markers-sdk.sh" "$root" "$build/list-markers-sdk-check"
