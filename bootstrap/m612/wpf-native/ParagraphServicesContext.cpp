@@ -196,6 +196,7 @@ Continuation::~Continuation() {
     if(child)reinterpret_cast<PtsObjDestroyBreakRecord>(context->installed->methods[child_object].pfnDestroyBreakRecord)(context->object_contexts[child_object],child.get());
 }
 
+struct FigureData { FSFIGUREPROPS props{}; FSFIGUREDETAILS details{}; };
 struct ParaData;
 struct AttachedData { int anchor=0; FSFLOATERPROPS props{}; std::shared_ptr<ParaData> para; };
 struct TextData {
@@ -259,12 +260,15 @@ struct TableData {
     explicit TableData(std::shared_ptr<Context> value):context(std::move(value)){++context->resources;}
     ~TableData(){erase_table(this);rows.clear();--context->resources;}
 };
+struct PageData;
 struct ParaData {
     std::shared_ptr<Context> context;
     FSPARADESCRIPTION desc{};
     bool forced_progress=false;
     std::shared_ptr<TextData> text;
     std::shared_ptr<FloaterData> floater;
+    std::shared_ptr<FigureData> figure;
+    std::vector<std::shared_ptr<PageData>> figure_pages;
     std::shared_ptr<TableData> table;
     ~ParaData();
 };
@@ -311,6 +315,7 @@ struct PageData {
 std::unordered_map<void*,std::shared_ptr<TrackData>> tracks;
 std::unordered_map<void*,std::weak_ptr<TextData>> texts;
 std::unordered_map<void*,std::weak_ptr<FloaterData>> floaters;
+std::unordered_map<void*,std::weak_ptr<ParaData>> figures;
 std::unordered_map<void*,std::shared_ptr<PageData>> pages;
 std::unordered_map<void*,std::shared_ptr<BreakData>> records;
 std::unordered_map<void*,std::weak_ptr<SectionData>> sections;
@@ -325,11 +330,12 @@ ParaData::~ParaData() {
     // Arranged original subpage clients own their subpage handle themselves.
     // Let them dispose it first; an unarranged client leaves native ownership
     // here. Container clients retain the original object-before-client order.
-    if(desc.idobj==1&&desc.pfsparaclient){reinterpret_cast<PtsDestroyParaclient>(context->info.fscbk.cbkgen.pfnDestroyParaclient)(context->info.pfsclient,desc.pfsparaclient);desc.pfsparaclient=nullptr;}
+    if((desc.idobj==1||figure)&&desc.pfsparaclient){reinterpret_cast<PtsDestroyParaclient>(context->info.fscbk.cbkgen.pfnDestroyParaclient)(context->info.pfsclient,desc.pfsparaclient);desc.pfsparaclient=nullptr;}
     bool destroy_subpage=false;
     if(desc.idobj==1&&desc.pfspara){std::lock_guard<std::mutex> lock(gate);auto found=pages.find(desc.pfspara);destroy_subpage=found!=pages.end()&&found->second->subpage&&found->second->context==context;}
     if(desc.pfspara&&(desc.idobj==0||destroy_subpage))reinterpret_cast<PtsObjDestroyPara>(context->installed->methods[desc.idobj].pfnDestroyPara)(desc.pfspara);
-    text.reset();floater.reset();table.reset();
+    if(figure){std::lock_guard<std::mutex> lock(gate);figures.erase(figure.get());}
+    figure.reset();figure_pages.clear();text.reset();floater.reset();table.reset();
     if(desc.pfsparaclient)reinterpret_cast<PtsDestroyParaclient>(context->info.fscbk.cbkgen.pfnDestroyParaclient)(context->info.pfsclient,desc.pfsparaclient);
 }
 // A managed object callback may successfully format a native subtrack and then
@@ -397,6 +403,53 @@ int merge_bbox(FSBBOX& box,const FSBBOX& add) {
     box.fsrc={int(left),int(top),int(right-left),int(bottom-top)};return 0;
 }
 
+struct FigureGeometry {
+    FSRECT page,margin;
+    FigureGeometry* previous;
+    static thread_local FigureGeometry* current;
+    FigureGeometry(const FSRECT& p,const FSRECT& m):page(p),margin(m),previous(current){current=this;}
+    ~FigureGeometry(){current=previous;}
+};
+thread_local FigureGeometry* FigureGeometry::current=nullptr;
+FSRECT& attachment_rect(const std::shared_ptr<ParaData>& para) {
+    return para->figure?para->figure->details.fsrcFlowAround:para->floater->details.fsrcFloater;
+}
+int format_figure(const std::shared_ptr<ParaData>& para,uint32_t direction,const FSRECT& track,bool bottomless,bool force,bool& deferred) {
+    if(bottomless)return PTS_tserrNotImplemented;
+    auto& cb=para->context->info.fscbk.cbkfig;
+    if(!cb.pfnGetFigureProperties||!cb.pfnCalcFigurePosition)return PTS_tserrInvalidParameter;
+    auto data=std::make_shared<FigureData>();para->figure=data;
+    int width=0,height=0,polygons=0,vertices=0,left=0,right=0,top=0,bottom=0;CallbackTracks pending;
+    int status=reinterpret_cast<PtsGetFigureProperties>(cb.pfnGetFigureProperties)(para->context->info.pfsclient,para->desc.pfsparaclient,para->desc.nmp,1,direction,0,&width,&height,&data->props,&polygons,&vertices,&left,&right,&top,&bottom);
+    if(status)return status;
+    // The original FigureParaClient owns successful subpage output, including
+    // autosizing reformat. It disposes that handle before its native references.
+    pending.claimed_pages=true;
+    for(const auto& page:pending.created_pages)if(lookup_owned(pages,para->context.get(),page.get()))para->figure_pages.push_back(page);
+    if(width<0||height<0||left<0||right<0||top<0||bottom<0)return PTS_tserrInvalidClientOutput;
+    if(polygons||vertices||data->props.fNonTextPlane||data->props.fAllowOverlap)return PTS_tserrNotImplemented;
+    FSRECT page=FigureGeometry::current?FigureGeometry::current->page:track;
+    FSRECT margin=FigureGeometry::current?FigureGeometry::current->margin:track;
+    auto origin=[&](FSKREF reference,FSKALIGNFIG alignment,bool horizontal,int size,int& out)->bool {
+        const FSRECT* base=reference==fskrefPage?&page:reference==fskrefMargin?&margin:reference==fskrefParagraph||reference==fskrefChar?&track:nullptr;
+        if(!base||alignment<fskalfMin||alignment>fskalfMax)return false;
+        int64_t value=horizontal?base->u:base->v;int extent=horizontal?base->du:base->dv;
+        if(alignment==fskalfCenter)value+=(int64_t(extent)-size)/2;
+        if(alignment==fskalfMax)value+=int64_t(extent)-size;
+        if(value<INT32_MIN||value>INT32_MAX)return false;out=int(value);return true;
+    };
+    FSRECT preliminary{0,0,width,height};
+    if(!origin(data->props.fskrefU,data->props.fskalfU,true,width,preliminary.u)||!origin(data->props.fskrefV,data->props.fskalfV,false,height,preliminary.v))return PTS_tserrNotImplemented;
+    int push=0;FSRECT overlap{},search{},track_rect=track;auto& details=data->details;details.fsptPosPreliminary={preliminary.u,preliminary.v};
+    status=reinterpret_cast<PtsCalcFigurePosition>(cb.pfnCalcFigurePosition)(para->context->info.pfsclient,para->desc.pfsparaclient,para->desc.nmp,direction,&page,&margin,&track_rect,&preliminary,force||!data->props.fDelayable,1,&push,&details.fsrcFlowAround,&overlap,&details.fsbbox,&search);
+    if(status)return status;
+    auto& rect=details.fsrcFlowAround;
+    if(rect.du<0||rect.dv<0||int64_t(rect.u)+rect.du>INT32_MAX||int64_t(rect.v)+rect.dv>INT32_MAX)return PTS_tserrInvalidClientOutput;
+    if(push&&data->props.fDelayable&&!force){deferred=true;return 0;}
+    para->desc.pfspara=data.get();para->desc.fsbbox=details.fsbbox;para->desc.dvrUsed=rect.dv;
+    {std::lock_guard<std::mutex> lock(gate);figures[data.get()]=para;}
+    return 0;
+}
 int format_block_ui(const std::shared_ptr<ParaData>& para,uint32_t direction,const FSRECT& rect,
     void* input_margin,bool bottomless,bool empty_ok,int suppress,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA suppress_break,
     std::shared_ptr<Continuation>& output,void** margin_output,bool floating=false,FSFLOATERPROPS* floater_props=nullptr,
@@ -407,33 +460,36 @@ int format_attached_objects(const std::shared_ptr<ParaData>& para,int dcp,uint32
     int count=int(names.size()),status=0;deferred=false;
     for(int index=0;index<count;++index) {
         maximum_anchor=std::max(maximum_anchor,anchors[index]);
-        if(kinds[index]!=2||!names[index]||anchors[index]<dcp)return PTS_tserrNotImplemented;
+        if((kinds[index]!=2&&kinds[index]!=-2)||!names[index]||anchors[index]<dcp)return PTS_tserrNotImplemented;
         auto& attached=para->text->attached;
         if(std::any_of(attached.begin(),attached.end(),[&](const AttachedData& value){return value.para->desc.nmp==names[index];}))continue;
-        auto child=std::make_shared<ParaData>();child->context=context;child->desc.nmp=names[index];child->desc.idobj=2;child->desc.fsupdinf.fskupd=fskupdNew;
+        auto child=std::make_shared<ParaData>();child->context=context;child->desc.nmp=names[index];child->desc.idobj=kinds[index];child->desc.fsupdinf.fskupd=fskupdNew;
         status=reinterpret_cast<PtsCreateParaclient>(context->info.fscbk.cbkgen.pfnCreateParaclient)(client,names[index],&child->desc.pfsparaclient);if(status)return status;
         if(!child->desc.pfsparaclient)return PTS_tserrInvalidClientOutput;
         std::shared_ptr<Continuation> next;std::shared_ptr<FloaterBreakData> tail;MarginOwner margin{context};FSFLOATERPROPS props{};
-        status=format_block_ui(child,direction,rect,nullptr,bottomless,!force,1,fsksuppresshardbreakbeforefirstparaPageAndColumn,next,&margin.value,true,&props,resume?resume->record->handle:nullptr,&tail,previous_page);if(status)return status;
+        if(kinds[index]==-2){status=format_figure(child,direction,rect,bottomless,force,deferred);if(status||deferred)return status;props.fskwr=child->figure->props.fskwrap;}
+        else {status=format_block_ui(child,direction,rect,nullptr,bottomless,!force,1,fsksuppresshardbreakbeforefirstparaPageAndColumn,next,&margin.value,true,&props,resume?resume->record->handle:nullptr,&tail,previous_page);if(status)return status;}
         if(next){if(force)return PTS_tserrNotImplemented;deferred=true;return 0;}
-        auto& candidate=child->floater->details.fsrcFloater;
+        auto& candidate=attachment_rect(child);
         int64_t placed=candidate.v;
         // Keep each object's requested horizontal edge. If its rectangle
         // collides with an earlier object, move it below that rectangle.
         // Opposite edges can share a row when their rectangles do not overlap.
         for(;;){int64_t next_top=placed;
-            for(const auto& previous:attached){const auto& obstacle=previous.para->floater->details.fsrcFloater;
+            for(const auto& previous:attached){const auto& obstacle=attachment_rect(previous.para);
                 bool horizontal=int64_t(candidate.u)<int64_t(obstacle.u)+obstacle.du&&int64_t(obstacle.u)<int64_t(candidate.u)+candidate.du;
                 if(horizontal&&placed<int64_t(obstacle.v)+obstacle.dv&&int64_t(obstacle.v)<placed+candidate.dv)next_top=std::max(next_top,int64_t(obstacle.v)+obstacle.dv);
             }
             if(next_top==placed)break;placed=next_top;
         }
         if(placed+candidate.dv>INT32_MAX)return PTS_tserrInvalidGeometry;
-        if(!bottomless&&placed+candidate.dv>int64_t(rect.v)+rect.dv){if(force)return PTS_tserrNotImplemented;deferred=true;return 0;}
+        int64_t placement_bottom=int64_t(rect.v)+rect.dv;
+        if(child->figure&&FigureGeometry::current){auto reference=child->figure->props.fskrefV;if(reference==fskrefPage)placement_bottom=int64_t(FigureGeometry::current->page.v)+FigureGeometry::current->page.dv;else if(reference==fskrefMargin)placement_bottom=int64_t(FigureGeometry::current->margin.v)+FigureGeometry::current->margin.dv;}
+        if(!bottomless&&placed+candidate.dv>placement_bottom){if(force)return PTS_tserrNotImplemented;deferred=true;return 0;}
         int64_t shift=placed-candidate.v;
         auto& box=child->desc.fsbbox;
         if(box.fDefined&&(int64_t(box.fsrc.v)+shift<INT32_MIN||int64_t(box.fsrc.v)+shift+box.fsrc.dv>INT32_MAX))return PTS_tserrInvalidGeometry;
-        candidate.v=int(placed);if(box.fDefined)box.fsrc.v=int(int64_t(box.fsrc.v)+shift);
+        candidate.v=int(placed);if(box.fDefined)box.fsrc.v=int(int64_t(box.fsrc.v)+shift);if(child->figure)child->figure->details.fsbbox=box;
         attached.push_back({anchors[index],props,child});
         if(tail)para->text->pending_floaters.push_back({anchors[index],names[index],tail});
     }
@@ -471,10 +527,11 @@ int postpone_unconsumed_objects(TextData& text,const FSLINEDESCRIPTIONSINGLE& li
     // so retrying cannot oscillate between wide and narrow line layouts.
     for(auto& object:text.attached) {
         if(object.anchor<line.dcpLim)continue;
-        auto& candidate=object.para->floater->details.fsrcFloater;
+        if(object.para->figure&&object.para->figure->props.fskrefV!=fskrefParagraph&&object.para->figure->props.fskrefV!=fskrefChar)continue;
+        auto& candidate=attachment_rect(object.para);
         int64_t placed=std::max(int64_t(candidate.v),int64_t(line.vrStart)+line.dvrAscent+line.dvrDescent);
         for(;;){int64_t next=placed;
-            for(const auto& earlier:text.attached){if(&earlier==&object)continue;const auto& obstacle=earlier.para->floater->details.fsrcFloater;
+            for(const auto& earlier:text.attached){if(&earlier==&object)continue;const auto& obstacle=attachment_rect(earlier.para);
                 if(earlier.anchor<object.anchor&&int64_t(candidate.u)<int64_t(obstacle.u)+obstacle.du&&int64_t(obstacle.u)<int64_t(candidate.u)+candidate.du&&placed<int64_t(obstacle.v)+obstacle.dv&&int64_t(obstacle.v)<placed+candidate.dv)next=std::max(next,int64_t(obstacle.v)+obstacle.dv);
             }
             if(next==placed)break;placed=next;
@@ -483,30 +540,38 @@ int postpone_unconsumed_objects(TextData& text,const FSLINEDESCRIPTIONSINGLE& li
         if(!bottomless&&placed+candidate.dv>int64_t(rect.v)+rect.dv){deferred=true;return 0;}
         auto& box=object.para->desc.fsbbox;int64_t shift=placed-candidate.v;
         if(box.fDefined&&(int64_t(box.fsrc.v)+shift<INT32_MIN||int64_t(box.fsrc.v)+shift+box.fsrc.dv>INT32_MAX))return PTS_tserrInvalidGeometry;
-        candidate.v=int(placed);if(box.fDefined)box.fsrc.v=int(int64_t(box.fsrc.v)+shift);
+        candidate.v=int(placed);if(box.fDefined)box.fsrc.v=int(int64_t(box.fsrc.v)+shift);if(object.para->figure)object.para->figure->details.fsbbox=box;
     }
     return 0;
 }
 int line_area(const TextData& text,const FSRECT& rect,int& used,int& u,int& width,int height_hint=0) {
-    // Each retained rectangle excludes space until its bottom edge. When no
-    // allowed side has space, advance vertically past the active obstacle.
+    // Intersect every obstacle's permitted regions before choosing a contiguous
+    // line interval. Choosing after each obstacle can discard a valid side.
     for(;;) {
-        int64_t left=rect.u,right=int64_t(rect.u)+rect.du;int next=INT32_MAX;bool active=false;
-        for(const auto& object:text.attached){const auto& obstacle=object.para->floater->details.fsrcFloater;int bottom=obstacle.v+obstacle.dv;
-            if(int64_t(obstacle.v)>=int64_t(rect.v)+used+std::max(1,height_hint)||bottom<=rect.v+used)continue;active=true;next=std::min(next,bottom);
-            bool at_left=obstacle.u==rect.u,at_right=int64_t(obstacle.u)+obstacle.du==int64_t(rect.u)+rect.du;
-            auto wrap=object.props.fskwr;
-            if(wrap==fskwrNone){left=right;continue;}
-            if(at_left&&wrap!=fskwrLeft)left=std::max(left,int64_t(obstacle.u)+obstacle.du);
-            else if(at_right&&wrap!=fskwrRight)right=std::min(right,int64_t(obstacle.u));
-            else if(at_left||at_right)left=right;
-            else return PTS_tserrNotImplemented;
+        using Interval=std::pair<int64_t,int64_t>;
+        std::vector<Interval> intervals{{rect.u,int64_t(rect.u)+rect.du}};
+        int next=INT32_MAX;bool active=false;
+        for(const auto& object:text.attached){const auto& obstacle=attachment_rect(object.para);int bottom=obstacle.v+obstacle.dv;
+            if(int64_t(obstacle.v)>=int64_t(rect.v)+used+std::max(1,height_hint)||bottom<=rect.v+used)continue;
+            active=true;next=std::min(next,bottom);auto wrap=object.props.fskwr;
+            if(wrap==fskwrNone){intervals.clear();continue;}
+            int64_t cut_left=wrap==fskwrRight?rect.u:obstacle.u;
+            int64_t cut_right=wrap==fskwrLeft?int64_t(rect.u)+rect.du:int64_t(obstacle.u)+obstacle.du;
+            std::vector<Interval> remaining;
+            for(const auto& interval:intervals){
+                if(cut_right<=interval.first||cut_left>=interval.second){remaining.push_back(interval);continue;}
+                if(cut_left>interval.first)remaining.push_back({interval.first,std::min(cut_left,interval.second)});
+                if(cut_right<interval.second)remaining.push_back({std::max(cut_right,interval.first),interval.second});
+            }
+            intervals=std::move(remaining);
         }
-        if(right>left){u=int(left);width=int(right-left);return 0;}
+        auto chosen=std::max_element(intervals.begin(),intervals.end(),[](const Interval& a,const Interval& b){return a.second-a.first<b.second-b.first;});
+        if(chosen!=intervals.end()&&chosen->second>chosen->first){u=int(chosen->first);width=int(chosen->second-chosen->first);return 0;}
         if(!active||next==INT32_MAX||next<rect.v)return PTS_tserrInvalidGeometry;
         used=next-rect.v;
     }
 }
+
 int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const FSRECT& rect,
     const std::shared_ptr<Continuation>& input,std::shared_ptr<Continuation>& output,bool bottomless,bool force,bool keep_self=false,bool previous_page=true) {
     auto context=para->context;auto& cb=context->info.fscbk.cbktxt;void* client=context->info.pfsclient;
@@ -602,7 +667,7 @@ int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const F
     }
     int limit=text->lines.empty()?(input?input->dcp:props.dcpStartContent):text->lines.back().dcpLim;
     text->attached.erase(std::remove_if(text->attached.begin(),text->attached.end(),[&](const AttachedData& value){return value.anchor>=limit;}),text->attached.end());
-    for(const auto& object:text->attached){status=merge_bbox(para->desc.fsbbox,object.para->desc.fsbbox);if(status)return status;const auto& obstacle=object.para->floater->details.fsrcFloater;used=std::max(used,obstacle.v-rect.v+obstacle.dv);}
+    for(const auto& object:text->attached){status=merge_bbox(para->desc.fsbbox,object.para->desc.fsbbox);if(status)return status;const auto& obstacle=attachment_rect(object.para);used=std::max(used,object.para->figure?std::min(rect.dv,std::max(0,obstacle.v-rect.v+obstacle.dv)):obstacle.v-rect.v+obstacle.dv);}
     text->pending_floaters.erase(std::remove_if(text->pending_floaters.begin(),text->pending_floaters.end(),[&](const PendingFloater& value){return value.anchor>=limit;}),text->pending_floaters.end());
     if(!text->pending_floaters.empty()) {
         if(!output){output=std::make_shared<Continuation>();output->context=context;output->paragraph=para->desc.nmp;output->dcp=limit;output->line_break=text->lines.empty()?text->incoming:text->breaks.back();output->text_ended=ended;}
@@ -986,7 +1051,7 @@ void clear_track(const std::shared_ptr<TrackData>& track,bool inherited=false) {
         para->desc.fsupdinf.fskupd=update;
         if(para->floater)para->floater->details.fskupdContent=update;
         if(para->table){para->table->details.fskupdTableProper=update;for(const auto& row:para->table->rows){row->description.fsupdinf.fskupd=update;for(const auto& cell:row->cells){if(!cell)continue;cell->update=update;if(cell->callbacks.pfnClearUpdateInfoInCell)reinterpret_cast<PtsClearUpdateInfoInCell>(cell->callbacks.pfnClearUpdateInfoInCell)(cell->handle);}}}
-        if(para->text)for(const auto& object:para->text->attached){object.para->desc.fsupdinf.fskupd=update;object.para->floater->details.fskupdContent=update;auto content=lookup_owned(pages,track->context.get(),object.para->floater->details.pfsFloaterContent);if(content&&content->subpage){content->inherit_updates=content->inherit_updates||inherited;clear_subpage(content);}}
+        if(para->text)for(const auto& object:para->text->attached){object.para->desc.fsupdinf.fskupd=update;if(object.para->floater)object.para->floater->details.fskupdContent=update;for(const auto& figure_page:object.para->figure_pages)clear_subpage(figure_page);auto content=object.para->floater?lookup_owned(pages,track->context.get(),object.para->floater->details.pfsFloaterContent):nullptr;if(content&&content->subpage){content->inherit_updates=content->inherit_updates||inherited;clear_subpage(content);}}
         if(para->desc.idobj==0){auto child=lookup_owned(tracks,track->context.get(),para->desc.pfspara);if(child)clear_track(child,inherited);}
         if(para->desc.idobj==1){auto child=lookup_owned(pages,track->context.get(),para->desc.pfspara);if(child&&child->subpage){child->inherit_updates=child->inherit_updates||inherited;clear_subpage(child);}}
     }
@@ -1058,6 +1123,7 @@ int build_page(const std::shared_ptr<Context>& context,void* section,bool bottom
     if(direction!=PTS_fswdirES||section_direction!=direction||header||columns<1||segments||heights||balance|| (bottomless&&columns!=1))return PTS_tserrNotImplemented;
     if(width<=0||(!bottomless&&height<=0)||rect.u<0||rect.v<0||rect.du<=0||int64_t(rect.u)+rect.du>width||(!bottomless&&int64_t(rect.v)+rect.dv>height))return PTS_tserrInvalidGeometry;
     if(bottomless)rect.dv=INT32_MAX-rect.v;
+    FigureGeometry figure_geometry({0,0,width,height},rect);
     void* segment=nullptr;status=reinterpret_cast<PtsGetMainTextSegment>(cb.pfnGetMainTextSegment)(client,section,&segment);if(status)return status;
     auto page=std::make_shared<PageData>(context);page->bottomless=bottomless;MarginOwner margin{context};
     auto& details=page->details;details.fskupd=fskupdNew;
@@ -1195,14 +1261,14 @@ struct TrackShift {
             status=box(para->desc.fsbbox);if(status)return status;
             if(para->text)for(auto& line:para->text->lines){status=add(line.vrStart,int64_t(line.dvrAscent)+line.dvrDescent);if(status)return status;}
             if(para->floater){auto& rect=para->floater->details.fsrcFloater;status=add(rect.v,rect.dv);if(status)return status;}
-            if(para->text)for(const auto& object:para->text->attached){status=box(object.para->desc.fsbbox);if(status)return status;auto& rect=object.para->floater->details.fsrcFloater;status=add(rect.v,rect.dv);if(status)return status;}
+            if(para->text)for(const auto& object:para->text->attached){status=box(object.para->desc.fsbbox);if(status)return status;auto& rect=attachment_rect(object.para);status=add(rect.v,rect.dv);if(status)return status;if(object.para->figure){status=box(object.para->figure->details.fsbbox);if(status)return status;status=add(object.para->figure->details.fsptPosPreliminary.v,0);if(status)return status;}}
             if(para->desc.idobj==0){auto child=lookup_owned(tracks,track->context.get(),para->desc.pfspara);if(!child)return PTS_tserrInvalidQuery;status=collect(child);if(status)return status;}
             // Subpage content uses its own local coordinate system. Its outer
             // paragraph bbox moves here; its local tracks remain unchanged.
         }
         return 0;
     }
-    void apply(){for(const auto& item:values)*item.first=item.second;for(const auto& track:owners){track->update=fskupdNew;for(const auto& para:track->paras){para->desc.fsupdinf.fskupd=fskupdNew;if(para->floater)para->floater->details.fskupdContent=fskupdNew;if(para->table){para->table->details.fskupdTableProper=fskupdNew;for(const auto& row:para->table->rows){row->description.fsupdinf.fskupd=fskupdNew;for(const auto& cell:row->cells)if(cell)cell->update=fskupdNew;}}if(para->text)for(const auto& object:para->text->attached){object.para->desc.fsupdinf.fskupd=fskupdNew;object.para->floater->details.fskupdContent=fskupdNew;}}}}
+    void apply(){for(const auto& item:values)*item.first=item.second;for(const auto& track:owners){track->update=fskupdNew;for(const auto& para:track->paras){para->desc.fsupdinf.fskupd=fskupdNew;if(para->floater)para->floater->details.fskupdContent=fskupdNew;if(para->table){para->table->details.fskupdTableProper=fskupdNew;for(const auto& row:para->table->rows){row->description.fsupdinf.fskupd=fskupdNew;for(const auto& cell:row->cells)if(cell)cell->update=fskupdNew;}}if(para->text)for(const auto& object:para->text->attached){object.para->desc.fsupdinf.fskupd=fskupdNew;if(object.para->floater)object.para->floater->details.fskupdContent=fskupdNew;}}}}
 };
 }
 extern "C" __declspec(dllexport) int WINAPI FsSynchronizeBottomlessSubtrack(void* context_handle,void* handle,void* geometry,uint32_t direction,int shift) {
@@ -1256,6 +1322,12 @@ extern "C" __declspec(dllexport) int WINAPI FsQueryTrackParaList(void* context,v
 extern "C" __declspec(dllexport) int WINAPI FsQuerySubtrackParaList(void* context,void* handle,int capacity,FSPARADESCRIPTION* output,int* count) {
     return FsQueryTrackParaList(context,handle,capacity,output,count);
 }
+extern "C" __declspec(dllexport) int WINAPI FsQueryFigureObjectDetails(void* context,void* handle,FSFIGUREDETAILS* output) {
+    if(!output)return PTS_tserrNullOutputParameter;*output={};std::shared_ptr<ParaData> para;
+    {std::lock_guard<std::mutex> lock(gate);if(contexts.find(context)==contexts.end())return PTS_tserrInvalidQuery;auto at=figures.find(handle);if(at!=figures.end())para=at->second.lock();}
+    if(!para||para->context.get()!=context||!para->figure)return PTS_tserrInvalidQuery;
+    *output=para->figure->details;return 0;
+}
 extern "C" __declspec(dllexport) int WINAPI FsQueryFloaterDetails(void* context,void* handle,FSFLOATERDETAILS* output) {
     if(!output)return PTS_tserrNullOutputParameter;*output={};
     std::shared_ptr<FloaterData> data;
@@ -1300,7 +1372,7 @@ extern "C" __declspec(dllexport) int WINAPI FsQueryTextDetails(void* context,voi
 extern "C" __declspec(dllexport) int WINAPI FsQueryAttachedObjectList(void* context,void* handle,int capacity,FSATTACHEDOBJECTDESCRIPTION* output,int* count) {
     if(!count)return PTS_tserrNullOutputParameter;*count=0;auto text=find_text(context,handle);if(!text)return PTS_tserrInvalidQuery;
     if(capacity<0||size_t(capacity)<text->attached.size()||(!output&&!text->attached.empty()))return PTS_tserrInvalidParameter;
-    for(const auto& object:text->attached){const auto& para=object.para;auto& desc=output[(*count)++];desc={};desc.fsupdinf=para->desc.fsupdinf;desc.pfspara=para->desc.pfspara;desc.pfsparaclient=para->desc.pfsparaclient;desc.nmp=para->desc.nmp;desc.idobj=para->desc.idobj;desc.vrStart=para->floater->details.fsrcFloater.v;desc.dvrUsed=para->desc.dvrUsed;desc.fsbbox=para->desc.fsbbox;desc.dvrTopSpace=para->desc.dvrTopSpace;}return 0;
+    for(const auto& object:text->attached){const auto& para=object.para;auto& desc=output[(*count)++];desc={};desc.fsupdinf=para->desc.fsupdinf;desc.pfspara=para->desc.pfspara;desc.pfsparaclient=para->desc.pfsparaclient;desc.nmp=para->desc.nmp;desc.idobj=para->desc.idobj;desc.vrStart=attachment_rect(para).v;desc.dvrUsed=para->desc.dvrUsed;desc.fsbbox=para->desc.fsbbox;desc.dvrTopSpace=para->desc.dvrTopSpace;}return 0;
 }
 extern "C" __declspec(dllexport) int WINAPI FsQueryLineListSingle(void* context,void* handle,int capacity,FSLINEDESCRIPTIONSINGLE* output,int* count) {
     if(!count)return PTS_tserrNullOutputParameter;*count=0;auto text=find_text(context,handle);if(!text)return PTS_tserrInvalidQuery;

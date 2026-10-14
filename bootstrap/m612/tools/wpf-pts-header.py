@@ -117,7 +117,7 @@ for name in ('FSIMETHODS', 'FSCONTEXTINFO', 'FSRECT', 'FSPOINT', 'FSBBOX',
              'FSSECTIONDESCRIPTION', 'FSSECTIONDETAILS', 'FSTEXTDETAILS',
              'FSLINEDESCRIPTIONSINGLE', 'FSSUBTRACKDETAILS', 'FSCOLUMNINFO',
              'FSFLOATERINIT', 'FSFLOATERPROPS', 'FSFLOATERDETAILS', 'FSSUBPAGEDETAILS', 'FSATTACHEDOBJECTDESCRIPTION', 'FSTABLEOBJINIT', 'FSTABLEOBJPROPS',
-             'FSTABLEROWPROPS', 'FSTABLEOBJDETAILS', 'FSTABLEDETAILS', 'FSTABLEROWDESCRIPTION', 'FSTABLEROWDETAILS'):
+             'FSFIGUREPROPS', 'FSFIGUREDETAILS', 'FSTABLEROWPROPS', 'FSTABLEOBJDETAILS', 'FSTABLEDETAILS', 'FSTABLEROWDESCRIPTION', 'FSTABLEROWDETAILS'):
     emit(name)
 # Derive callback function signatures from the same source declarations.
 for name in ('GetPageDimensions', 'GetSectionProperties', 'GetMainTextSegment',
@@ -133,7 +133,7 @@ for name in ('GetPageDimensions', 'GetSectionProperties', 'GetMainTextSegment',
              'GetTableProperties', 'AutofitTable', 'GetMCSClientAfterTable', 'GetFirstHeaderRow', 'GetFirstFooterRow',
              'GetFirstRow', 'GetNextRow', 'GetDistributionKind', 'GetRowProperties', 'GetCells',
              'FormatCellFinite', 'FormatCellBottomless', 'SetCellHeight', 'DestroyCell', 'DestroyCellBreakRecord',
-             'ClearUpdateInfoInCell', 'CalcHorizontalBBoxOfRow'):
+             'ClearUpdateInfoInCell', 'CalcHorizontalBBoxOfRow', 'GetFigureProperties', 'CalcFigurePosition'):
     match = re.search(r'\bdelegate\s+int\s+' + name + r'\s*\((.*?)\)\s*;', text, re.S)
     if not match:
         raise SystemExit('Missing source callback: ' + name)

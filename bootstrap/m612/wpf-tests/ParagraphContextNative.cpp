@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <climits>
 #include <unordered_set>
+#include <unordered_map>
 #include "ParagraphServicesNative.h"
 static int creates=0,destroys=0,fail_id=-1;
 static void require(bool value,const char* why){if(!value)throw std::runtime_error(why);}
@@ -16,6 +17,9 @@ static int WINAPI create_object(void* client,void* context,FSCBKOBJ* callbacks,u
 static int WINAPI destroy_object(void* value){if(value!=reinterpret_cast<void*>(100)&&value!=reinterpret_cast<void*>(101))return PTS_tserrInvalidParameter;++destroys;return 0;}
 static int lines_created=0,lines_destroyed=0,breaks_destroyed=0,clients_created=0,clients_destroyed=0,fail_line=-1,columns=1,available_height=80,invalid_columns=false,hard_break=0,keep_mode=0,keep_next=0,para_count=2;
 static bool containers=false,lose_subtrack=false;
+static bool attached_figure=false,figure_fail_properties=false,figure_fail_position=false,inside_figure=false;
+static int figure_alignment=0;
+static std::unordered_map<void*,void*> figure_content;
 static bool structural_line=false;
 static bool subpage_parent=false,table_mode=false,inside_table_cell=false,lose_table_cell=false;
 static int table_cells_created=0,table_cells_destroyed=0,table_fail_cell=-1,table_rows_count=3;
@@ -76,15 +80,15 @@ static int WINAPI first_para(void*,void* segment,int* found,void** name){if(segm
 static int WINAPI next_para(void*,void* segment,void* current,int* found,void** next){*found=segment==reinterpret_cast<void*>(77)&&reinterpret_cast<uintptr_t>(current)<uintptr_t(100+para_count);*next=*found?reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(current)+1):nullptr;return 0;}
 static int WINAPI para_properties(void*,void* name,FSPAP* pap){*pap={};pap->idobj=table_mode&&!inside_table_cell&&!(span_prefix&&name==reinterpret_cast<void*>(101))?3:subpage_parent&&reinterpret_cast<uintptr_t>(name)<200?1:block_ui&&name==reinterpret_cast<void*>(102)?2:containers&&reinterpret_cast<uintptr_t>(name)<200?0:-1;pap->fKeepWithNext=keep_next&&name==reinterpret_cast<void*>(102);if(name==reinterpret_cast<void*>(102)){pap->fBreakPageBefore=hard_break==1;pap->fBreakColumnBefore=hard_break==2;}return 0;}
 static int WINAPI para_client(void*,void* name,void** output){++clients_created;*output=name;return 0;}
-static int WINAPI destroy_para_client(void*,void*){++clients_destroyed;return 0;}
+static int WINAPI destroy_para_client(void*,void* client){auto at=figure_content.find(client);if(at!=figure_content.end()){void* page=at->second;figure_content.erase(at);require(destroy_subpage(page_context,page)==0,"original figure client owns its subpage through disposal");}++clients_destroyed;return 0;}
 static int WINAPI text_properties(void*,void* name,int,FSTXTPROPS* props){*props={};props->fKeepTogether=keep_mode==2||(keep_mode==1&&name==reinterpret_cast<void*>(102));return 0;}
 static int WINAPI line_format(void*,void*,void* name,int,int dcp,void* incoming,uint32_t direction,
     int start,int width,int track_start,int track_width,int margin,int hyphen,int left,int right,int first,int last,int suppress,
     void** line,int* consumed,void** br,int* forced,FSFLRES* result,int* ascent,int* descent,int* bbox,int* bbox_width,int* depend,int* reformat) {
-    if(direction||(!attached_float&&(start!=track_start||width!=100))||(track_start!=10&&track_start!=120)||track_width!=100||margin!=track_start||hyphen||left||right||last||first!=(dcp==0)||bool(incoming)!=(dcp!=0))return PTS_tserrInvalidParameter;
+    if(!inside_figure&&(direction||(!attached_float&&!attached_figure&&(start!=track_start||width!=100))||(track_start!=10&&track_start!=120)||track_width!=100||margin!=track_start||hyphen||left||right||last||first!=(dcp==0)||bool(incoming)!=(dcp!=0)))return PTS_tserrInvalidParameter;
     if(attached_float&&!inline_anchor_mode&&(!deferred_attachment||name==reinterpret_cast<void*>(102))&&(width!=(multiple_opposite?20:60)||start!=(attached_right?10:50)))return PTS_tserrInvalidParameter;
     ++lines_created;*line=reinterpret_cast<void*>(1000+lines_created);*br=reinterpret_cast<void*>(2000+lines_created);
-    *consumed=5;*forced=0;*result=dcp==0?fsflrOutOfSpace:fsflrEndOfParagraph;*ascent=7;*descent=3;*bbox=start;*bbox_width=75;*depend=*reformat=0;
+    *consumed=5;*forced=0;*result=dcp==0?fsflrOutOfSpace:fsflrEndOfParagraph;*ascent=7;*descent=3;*bbox=start;*bbox_width=attached_figure?std::min(75,width):75;*depend=*reformat=0;
     if(inline_anchor_mode){if(start!=(width==100?10:50)||(width!=60&&width!=100))return PTS_tserrInvalidParameter;*consumed=std::min(5,10-dcp);if(inline_anchor_mode==2&&dcp==0&&width==60)*consumed=2;*result=dcp+*consumed==10?fsflrEndOfParagraph:fsflrOutOfSpace;}
     if(split_table_cells&&short_table_cell&&dcp==0)*result=fsflrEndOfParagraph;
     if(long_table_cell)*result=dcp+5>=45?fsflrEndOfParagraph:fsflrOutOfSpace;
@@ -145,10 +149,26 @@ static int WINAPI block_handler(void*,int id,void* output) {
     cb.pfnDestroyFloaterContentBreakRecord=reinterpret_cast<void*>(block_destroy_break);cb.pfnGetMCSClientAfterFloater=reinterpret_cast<void*>(block_after);
     return floater_handler(&init,output);
 }
-static int WINAPI attached_count(void*,void* name,int dcp,int* count){*count=attached_float&&(!inline_anchor_mode||inline_anchor_mode==6)&&name==reinterpret_cast<void*>(deferred_attachment?102:101)&&dcp==0?(multiple_float?2:1):0;return 0;}
-static int WINAPI attached_objects(void*,void*,int,int capacity,void** names,int* kinds,int* anchors,int* actual,int* ended){if(capacity!=(multiple_float?2:1))return PTS_tserrInvalidParameter;for(int index=0;index<capacity;++index){names[index]=reinterpret_cast<void*>((inline_anchor_mode==6?302:301)+index);kinds[index]=2;anchors[index]=index;}*actual=capacity;*ended=0;return 0;}
+static int WINAPI attached_count(void*,void* name,int dcp,int* count){*count=(attached_float||attached_figure)&&(!inline_anchor_mode||inline_anchor_mode==6)&&name==reinterpret_cast<void*>(deferred_attachment?102:101)&&dcp==0?(multiple_float?2:1):0;return 0;}
+static int WINAPI attached_objects(void*,void*,int,int capacity,void** names,int* kinds,int* anchors,int* actual,int* ended){if(capacity!=(multiple_float?2:1))return PTS_tserrInvalidParameter;for(int index=0;index<capacity;++index){names[index]=reinterpret_cast<void*>((inline_anchor_mode==6?302:301)+index);kinds[index]=attached_figure?-2:2;anchors[index]=index;}*actual=capacity;*ended=0;return 0;}
 static int WINAPI attached_in_line(void*,void*,void*,int first,int limit,int,int,int* count){int anchor=inline_anchor_mode==2?4:2;*count=inline_anchor_mode&&first<=anchor&&anchor<limit?1:0;if(inline_anchor_mode==3)*count=-1;return 0;}
 static int WINAPI inline_objects(void*,void*,void*,int,int,int,int,int capacity,void** names,int* kinds,int* anchors,int* actual){if(capacity!=1)return PTS_tserrInvalidParameter;names[0]=reinterpret_cast<void*>(301);kinds[0]=2;anchors[0]=inline_anchor_mode==2?4:2;*actual=inline_anchor_mode==4?0:1;return inline_anchor_mode==5?PTS_tserrCallbackException:0;}
+static int WINAPI figure_properties(void*,void* client,void* name,int in_line,uint32_t direction,int bottomless,int* width,int* height,FSFIGUREPROPS* props,int* polygons,int* vertices,int* left,int* right,int* top,int* bottom) {
+    *props={};props->fskrefU=props->fskrefV=fskrefParagraph;props->fskalfU=static_cast<FSKALIGNFIG>(figure_alignment);props->fskwrap=fskwrBoth;props->fDelayable=1;
+    *width=40;*height=25;*polygons=*vertices=*left=*right=*top=*bottom=0;
+    if(name!=reinterpret_cast<void*>(301)||!in_line||bottomless)return PTS_tserrInvalidParameter;
+    FSRECT rect{0,0,40,80};FSCOLUMNINFO column{0,40};FSFMTR formatted{};FSBBOX box{};void* page=nullptr;void* br=nullptr;void* margin=nullptr;int used=0,space=0;
+    inside_table_cell=inside_figure=true;int status=create_subpage(page_context,nullptr,0,name,nullptr,0,1,direction,40,80,&rect,1,&column,0,0,nullptr,nullptr,0,nullptr,nullptr,0,fsksuppresshardbreakbeforefirstparaNone,&formatted,&page,&br,&used,&box,&margin,&space);inside_table_cell=inside_figure=false;
+    if(status)return status;
+    require(!br&&!margin&&used==20,"figure properties produce an original complete finite subpage");
+    if(figure_fail_properties)return PTS_tserrCallbackException;
+    figure_content[client]=page;return 0;
+}
+static int WINAPI figure_position(void*,void*,void*,uint32_t,FSRECT* page,FSRECT* margin,FSRECT* track,FSRECT* preliminary,int,int,int* push,FSRECT* flow,FSRECT* overlap,FSBBOX* box,FSRECT* search) {
+    require(page->du==200&&page->dv==140&&margin->u==10&&margin->v==20&&track->du==100,"figure position receives actual source page/margin/track rectangles");
+    *push=0;*flow=*overlap=*preliminary;*box={1,*flow};*search=*track;
+    return figure_fail_position?PTS_tserrCallbackException:0;
+}
 static void reset_page_counts(){lines_created=lines_destroyed=breaks_destroyed=clients_created=clients_destroyed=0;}
 
 int main(int argc,char** argv) {
@@ -239,6 +259,7 @@ int main(int argc,char** argv) {
         gen.pfnCreateParaclient=reinterpret_cast<void*>(para_client);gen.pfnDestroyParaclient=reinterpret_cast<void*>(destroy_para_client);
         txt.pfnGetTextProperties=reinterpret_cast<void*>(text_properties);txt.pfnFormatLine=reinterpret_cast<void*>(line_format);
         txt.pfnGetNumberAttachedObjectsBeforeTextLine=reinterpret_cast<void*>(attached_count);txt.pfnGetAttachedObjectsBeforeTextLine=reinterpret_cast<void*>(attached_objects);txt.pfnGetNumberAttachedObjectsInTextLine=reinterpret_cast<void*>(attached_in_line);txt.pfnGetAttachedObjectsInTextLine=reinterpret_cast<void*>(inline_objects);
+        info.fscbk.cbkfig.pfnGetFigureProperties=reinterpret_cast<void*>(figure_properties);info.fscbk.cbkfig.pfnCalcFigurePosition=reinterpret_cast<void*>(figure_position);
         txt.pfnDestroyLine=reinterpret_cast<void*>(destroy_line);txt.pfnDestroyLineBreakRecord=reinterpret_cast<void*>(destroy_break);
         info.fscbk.cbkobj.pfnDestroyMcsclient=reinterpret_cast<void*>(destroy_margin);
         floater_handler=reinterpret_cast<decltype(floater_handler)>(GetProcAddress(dll,"GetFloaterHandlerInfo"));require(floater_handler!=nullptr,"floater handler registration export");
@@ -490,6 +511,24 @@ int main(int argc,char** argv) {
         require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrCallbackException&&!page_handle&&!page_break&&lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"lost successful subpage and break outputs roll back complete callback transaction");lose_subtrack=false;subpage_parent=false;
         std::puts("native installed subpage objects: typed nested continuation, independent root/page lifetime, client ownership and lost-output callback rollback PASS");
         using QueryAttached=int(WINAPI*)(void*,void*,int,FSATTACHEDOBJECTDESCRIPTION*,int*);PROC(FsQueryAttachedObjectList,QueryAttached);
+        using QueryFigure=int(WINAPI*)(void*,void*,FSFIGUREDETAILS*);PROC(FsQueryFigureObjectDetails,QueryFigure);
+        available_height=80;para_count=1;attached_figure=true;
+        for(int alignment:{0,1,2}) {
+            figure_alignment=alignment;reset_page_counts();
+            require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&!page_break,"figure attachments format through original content and position callbacks");
+            require(FsQueryPageDetails(context,page_handle,&details)==0&&FsQueryTrackParaList(context,details.u.simple.trackdescr.pfstrack,2,paras,&actual_count)==0,"figure host track query");
+            FSATTACHEDOBJECTDESCRIPTION object{};FSFIGUREDETAILS figure_details{};
+            require(FsQueryAttachedObjectList(context,paras[0].pfspara,1,&object,&actual_count)==0&&actual_count==1&&object.idobj==-2&&object.nmp==reinterpret_cast<void*>(301),"figure query exposes original source name and managed client");
+            require(FsQueryFigureObjectDetails(context,object.pfspara,&figure_details)==0&&figure_details.fsrcFlowAround.u==10+30*alignment&&figure_details.fsrcFlowAround.v==20&&figure_details.fsrcFlowAround.du==40&&figure_details.fsrcFlowAround.dv==25,"actual left/center/right figure details agree with callback geometry");
+            require(FsQueryFigureObjectDetails(reinterpret_cast<void*>(999),object.pfspara,&figure_details)==PTS_tserrInvalidQuery&&!figure_details.fsbbox.fDefined&&FsQueryFigureObjectDetails(context,object.pfspara,nullptr)==PTS_tserrNullOutputParameter,"figure query validates context and resets rejected output");
+            require(FsClearUpdateInfoInPage(context,page_handle)==0&&FsDestroyPage(context,page_handle)==0&&FsQueryFigureObjectDetails(context,object.pfspara,&figure_details)==PTS_tserrInvalidQuery&&figure_content.empty()&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"figure content/client/line resources release exactly once and stale handles reject");
+        }
+        for(int failure:{0,1}) {
+            figure_fail_properties=failure==0;figure_fail_position=failure==1;reset_page_counts();
+            require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrCallbackException&&!page_handle&&!page_break&&figure_content.empty()&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"lost subpage and populated position failure clean up all speculative original resources");
+        }
+        figure_fail_properties=figure_fail_position=attached_figure=false;
+        std::puts("native figures: original subpage/position callbacks, source geometry, typed/capacity/context/stale queries, lost-output and position failure cleanup PASS");
         available_height=80;para_count=1;attached_float=true;
         for(bool right:{false,true}) {
             attached_right=right;reset_page_counts();float_created=float_destroyed=0;

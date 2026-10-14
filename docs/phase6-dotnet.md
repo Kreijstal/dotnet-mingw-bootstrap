@@ -10380,3 +10380,56 @@ break arrangements, repeated headers/footers, figures, complex center/clear
 policies, comparison/display transfer, balancing/spans/footnotes, advanced/
 optimal/incremental/interruptible algorithms and full bidi/native-language
 behavior remain incomplete. The full WPF goal stays active.
+
+## 160. Original finite Figure content and positioning
+
+The 2026-10-14 continuation implements finite Figure attachments through the
+original FSCBKFIG callbacks. GetFigureProperties formats the real managed
+FigureParaClient's subpage, including its autosizing second pass; successful
+content retains that client's original ownership. Failed unreported content
+remains under callback rollback. CalcFigurePosition receives source page,
+margin and current track rectangles and returns flow/bounds/search geometry.
+The native figure-details query validates live context/owner identity and
+exposes actual flow rectangles, bounds and preliminary position. Original
+attached-object queries return the figure's managed client and source name.
+
+Page/margin/paragraph horizontal and vertical references use source geometry.
+Offsets are applied by the original positioning callback. Delayable late
+paragraph figures defer intact; page-bottom figures may extend through the
+page margin without dropping their contents or consuming another host page.
+Rectangular wrapping intersects the regions permitted by every active object
+before choosing one contiguous line interval, retaining alternatives when
+multiple obstacles constrain the same line. Original figure/subpage disposal
+precedes native retained-content release, and figure bounds/preliminary position
+participate in vertical synchronization.
+
+Native fixtures format owned finite subpages, compare left/center/right figure
+geometry, reject foreign/null/stale queries, clear page state and verify exact
+client/line/record cleanup. A callback failing after unreported subpage creation
+and a later populated position failure both release speculative resources.
+The ABI generator derives FSFIGUREPROPS, FSFIGUREDETAILS and callback signatures
+from original Pts.cs; the original managed reflection gate now covers 441 fields.
+
+The public offline WPF SDK fixture runs ten scenarios in Ideal/Display: left,
+right and center column anchors, horizontal/vertical offsets, initial deferral,
+two columns, page-left/page-bottom anchors, autosizing and nested Section content.
+Ordinary cases retain 587 characters exactly once; the late-anchor document
+retains 682 and places its figure on the following page. All cases verify original
+GetPageNumber against text ranges, blue content glyphs, red background position,
+zero host glyph overlap and disposed-page regeneration after GC.
+
+Validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 inventory check-paragraph-context-native check-paragraph-context
+/usr/bin/python3 ~/wpfboot/refresh-finite-native.py
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-figures-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/figures-sdk-check
+```
+
+The final focused native/public commands pass with zero consumer warnings/errors;
+shared-framework and self-contained runs pass with SDK roots/toolchain PATH
+removed. Native import coverage rises to 110/139 with 29 absent. More complex
+figure collision/search policies, composite lines on both sides of inset
+obstacles, advanced span/row-break layouts, balancing/footnotes, optimal/
+incremental/interruptible algorithms and full bidi/native-language behavior
+remain incomplete. The full WPF goal stays active.
