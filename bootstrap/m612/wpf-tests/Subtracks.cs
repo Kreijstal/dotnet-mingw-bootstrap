@@ -46,6 +46,9 @@ class Check {
         return ranges;
     }
     static void Coverage(object context,IntPtr handle,IntPtr track,Run run) {
+        // Coverage runs inside the original document arrange context, which
+        // already owns the PTS entry scope needed by recursive callbacks.
+        object[] args={track,99};if((int)Call(Get(context,"_ptsHost"),"SubtrackGetNumberFootnotes",args)!=0||(int)args[1]!=0)throw new Exception("original subtrack footnote query must match retained empty source collection");
         var ranges=Ranges(context,handle,track);
         for(int at=0;at<run.Text.Length;++at){var position=run.ContentStart.GetPositionAtOffset(at,LogicalDirection.Forward);if(ranges.Count(r=>position.CompareTo(r.Start)>=0&&position.CompareTo(r.End)<0)!=1)throw new Exception("source text must belong to exactly one real native text range at "+at);}
     }

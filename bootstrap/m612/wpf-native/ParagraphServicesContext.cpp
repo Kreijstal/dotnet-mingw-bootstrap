@@ -1750,6 +1750,93 @@ extern "C" __declspec(dllexport) int WINAPI FsQuerySubtrackDetails(void* context
     if(!output)return PTS_tserrNullOutputParameter;*output={};auto track=lookup_owned(tracks,context,handle);
     if(!track||!track->subtrack)return PTS_tserrInvalidQuery;output->fsupdinf.fskupd=track->update;output->nms=track->segment;output->fsrc=track->rect;output->cParas=int(track->paras.size());return 0;
 }
+namespace {
+// WPF's original TextParagraph reports zero footnotes, and its creation/info
+// callbacks do not implement positive collections. Verify the retained source
+// range and every real nested object's callback before reporting an empty list.
+// Reentrant callbacks can query a child native object, but must not cycle back
+// to an object already being queried on this thread.
+struct FootnoteQueryScope {
+    const void* handle;FootnoteQueryScope* previous;bool entered=true;
+    static thread_local FootnoteQueryScope* current;
+    explicit FootnoteQueryScope(const void* value):handle(value),previous(current) {
+        for(auto at=current;at;at=at->previous)if(at->handle==value){entered=false;return;}
+        current=this;
+    }
+    ~FootnoteQueryScope(){if(entered)current=previous;}
+};
+thread_local FootnoteQueryScope* FootnoteQueryScope::current=nullptr;
+int validate_empty_footnotes(const std::shared_ptr<PageData>& page);
+int validate_footnote_count(int status,int count) {
+    if(status)return status;
+    if(count<0)return PTS_tserrInvalidClientOutput;
+    return count?PTS_tserrNotImplemented:0;
+}
+int validate_empty_footnotes(const std::shared_ptr<ParaData>& para) {
+    auto context=para->context;
+    if(para->text) {
+        const auto& text=*para->text;
+        if(!text.lines.empty()) {
+            auto callback=context->info.fscbk.cbktxt.pfnGetNumberFootnotes;
+            if(!callback)return PTS_tserrNotImplemented;
+            int count=0,status=reinterpret_cast<PtsGetNumberFootnotes>(callback)(context->info.pfsclient,para->desc.nmp,text.lines.front().dcpFirst,text.lines.back().dcpLim,&count);
+            status=validate_footnote_count(status,count);if(status)return status;
+        }
+        for(const auto& object:text.attached){int status=validate_empty_footnotes(object.para);if(status)return status;}
+    } else if(para->desc.idobj==0||para->desc.idobj==1) {
+        auto callback=context->installed->methods[para->desc.idobj].pfnGetNumberFootnotes;
+        if(!callback)return PTS_tserrNotImplemented;
+        int count=0,status=reinterpret_cast<PtsObjGetNumberFootnotes>(callback)(para->desc.pfspara,&count);
+        return validate_footnote_count(status,count);
+    } else if(para->floater) {
+        auto callback=para->floater->callbacks.pfnGetFloaterContentNumberFootnotes;
+        if(!callback)return PTS_tserrNotImplemented;
+        int count=0,status=reinterpret_cast<PtsGetFloaterContentNumberFootnotes>(callback)(para->floater->details.pfsFloaterContent,&count);
+        return validate_footnote_count(status,count);
+    } else if(para->figure) {
+        for(const auto& page:para->figure_pages){int status=validate_empty_footnotes(page);if(status)return status;}
+    } else if(para->table) {
+        std::unordered_set<const TableCellData*> seen;
+        for(const auto& row:para->table->rows)for(const auto& cell:row->cells)if(cell&&seen.insert(cell.get()).second) {
+            auto callback=cell->callbacks.pfnGetCellNumberFootnotes;if(!callback)return PTS_tserrNotImplemented;
+            int count=0,status=reinterpret_cast<PtsGetCellNumberFootnotes>(callback)(cell->handle,&count);
+            status=validate_footnote_count(status,count);if(status)return status;
+        }
+    } else return PTS_tserrNotImplemented;
+    return 0;
+}
+int validate_empty_footnotes(const std::shared_ptr<TrackData>& track) {
+    FootnoteQueryScope scope(track.get());if(!scope.entered)return PTS_tserrInvalidQuery;
+    for(const auto& para:track->paras){int status=validate_empty_footnotes(para);if(status)return status;}
+    return 0;
+}
+int validate_empty_footnotes(const std::shared_ptr<PageData>& page) {
+    FootnoteQueryScope scope(page.get());if(!scope.entered)return PTS_tserrInvalidQuery;
+    if(page->section){for(const auto& track:page->section->columns){int status=validate_empty_footnotes(track);if(status)return status;}}
+    else if(page->track)return validate_empty_footnotes(page->track);
+    else return PTS_tserrInvalidQuery;
+    return 0;
+}
+}
+extern "C" __declspec(dllexport) int WINAPI FsGetNumberSubtrackFootnotes(void* context,void* handle,int* count) {
+    if(!count)return PTS_tserrNullOutputParameter;*count=0;
+    auto track=lookup_owned(tracks,context,handle);if(!track||!track->subtrack)return PTS_tserrInvalidQuery;
+    try{return validate_empty_footnotes(track);}catch(const std::bad_alloc&){return PTS_tserrOutOfMemory;}
+}
+extern "C" __declspec(dllexport) int WINAPI FsGetNumberSubpageFootnotes(void* context,void* handle,int* count) {
+    if(!count)return PTS_tserrNullOutputParameter;*count=0;
+    auto page=lookup_owned(pages,context,handle);if(!page||!page->subpage)return PTS_tserrInvalidQuery;
+    try{return validate_empty_footnotes(page);}catch(const std::bad_alloc&){return PTS_tserrOutOfMemory;}
+}
+extern "C" __declspec(dllexport) int WINAPI FsGetSubpageFootnoteInfo(void* context,void* handle,int capacity,int first,uint32_t* direction,FSFTNINFO* output,int* limit) {
+    if(!direction||!limit)return PTS_tserrNullOutputParameter;*direction=0;*limit=0;
+    auto page=lookup_owned(pages,context,handle);if(!page||!page->subpage)return PTS_tserrInvalidQuery;
+    if(capacity<0||first<0||first>capacity||(capacity&&!output))return PTS_tserrInvalidParameter;
+    try {
+        int status=validate_empty_footnotes(page);if(status)return status;
+        *direction=page->section?page->section->direction:page->track->direction;*limit=first;return 0;
+    }catch(const std::bad_alloc&){return PTS_tserrOutOfMemory;}
+}
 extern "C" __declspec(dllexport) int WINAPI FsQueryTrackParaList(void* context,void* handle,int capacity,FSPARADESCRIPTION* output,int* count) {
     if(!count)return PTS_tserrNullOutputParameter;*count=0;
     auto track=lookup_owned(tracks,context,handle);if(!track)return PTS_tserrInvalidQuery;

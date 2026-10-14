@@ -25,6 +25,16 @@ class Check {
     static int Native(string method,params object[] args) {
         int status=(int)Pts.GetMethod(method,S).Invoke(null,args);if(status!=0)throw new Exception(method+" status "+status);return status;
     }
+    static void Footnotes(object context,IntPtr handle,IntPtr page) {
+        Call(context,"Enter");try {
+            var host=Get(context,"_ptsHost");
+            foreach(var method in new[]{"SubpageGetNumberFootnotes","GetFloaterContentNumberFootnotes"}) {
+                object[] args={page,99};if((int)Call(host,method,args)!=0||(int)args[1]!=0)throw new Exception("original "+method+" must query retained empty source collection");
+            }
+            object[] info={page,0u,0,0,null,99};if((int)Call(host,"SubpageGetFootnoteInfo",info)!=0||(int)info[5]!=0)throw new Exception("original subpage empty footnote info");
+            object[] native={handle,page,0,0,99u,null,99};Native("FsGetSubpageFootnoteInfo",native);if((uint)native[4]!=0||(int)native[6]!=0)throw new Exception("empty footnote direction and starting index");
+        }finally{Call(context,"Leave");}
+    }
     static int Ink(Visual visual) {
         var image=new RenderTargetBitmap(400,180,96,96,PixelFormats.Pbgra32);image.Render(visual);var bytes=new byte[400*180*4];image.CopyPixels(bytes,400*4,0);
         int ink=0;for(int i=0;i<bytes.Length;i+=4)if(bytes[i+3]>100&&bytes[i]<100&&bytes[i+1]<100&&bytes[i+2]<100)++ink;
@@ -65,6 +75,7 @@ class Check {
                     }
                     incoming=(IntPtr)args[13];var subpage=(IntPtr)args[12];
                     if(subpage==IntPtr.Zero)throw new Exception("original subpage callback returned no formatted object");
+                    Footnotes(context,handle,subpage);
                     using((IDisposable)Call(cache,"SetDocumentArrangeContext",ownerPage)) {
                         var arrange=Get(cache,"CurrentArrangeContext");Call(arrange,"PushNewPageData",Get(ownerPage,"PageContext"),Rect(0,0,Dpi(400),Dpi(180)),true);
                         try {Call(client,"Arrange",subpage,Rect(0,0,Dpi(400),(int)args[14]),(int)args[18],0u);Call(client,"ValidateVisual",Enum("FSKUPDATE",2));Call(client,"UpdateViewport",Rect(0,0,Dpi(400),Dpi(180)));}
@@ -88,6 +99,7 @@ class Check {
                     }
                     byte[] beforeRaster;
                     if((int)args[11]<=Dpi(180)||(int)args[16]!=1)throw new Exception("original bottomless subpage must retain full content extent");
+                    Footnotes(context,handle,(IntPtr)args[10]);
                     using((IDisposable)Call(cache,"SetDocumentArrangeContext",ownerPage)) {
                         var arrange=Get(cache,"CurrentArrangeContext");Call(arrange,"PushNewPageData",Get(ownerPage,"PageContext"),Rect(0,0,Dpi(400),(int)args[11]),false);
                         try {Call(client,"Arrange",args[10],Rect(0,0,Dpi(400),(int)args[11]),(int)args[15],0u);Call(client,"ValidateVisual",Enum("FSKUPDATE",2));Call(client,"UpdateViewport",Rect(0,0,Dpi(400),Dpi(180)));Ink((Visual)Get(client,"Visual"));
@@ -104,6 +116,7 @@ class Check {
                         try {Call(paragraph,"UpdateBottomlessPara",update);}finally{Call(format,"PopPageData");}
                     }
                     if((int)update[11]<=previousHeight||(int)update[16]!=1||(IntPtr)Get(Get(client,"_paraHandle"),"Value")!=stable)throw new Exception("original bottomless update must retain handle and grow full extent");
+                    Footnotes(context,handle,stable);
                     using((IDisposable)Call(cache,"SetDocumentArrangeContext",ownerPage)) {
                         var arrange=Get(cache,"CurrentArrangeContext");Call(arrange,"PushNewPageData",Get(ownerPage,"PageContext"),Rect(0,0,Dpi(300),(int)update[11]),false);
                         try {

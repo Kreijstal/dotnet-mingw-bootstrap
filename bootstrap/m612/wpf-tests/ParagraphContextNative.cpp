@@ -66,6 +66,20 @@ static std::unordered_set<void*> float_live_records;
 static int float_created=0,float_destroyed=0,float_fail_at=-1;
 static int(WINAPI* floater_handler)(const FSFLOATERINIT*,void*)=nullptr;
 static void* page_context=nullptr;
+using FootnoteCount=int(WINAPI*)(void*,void*,int*);
+static FootnoteCount subtrack_footnotes=nullptr,subpage_footnotes=nullptr;
+static int footnote_status=0,footnote_value=0,footnote_calls=0;
+static void* footnote_cycle=nullptr;
+static int footnote_first=-1,footnote_limit=-1;
+static int WINAPI text_footnotes(void*,void*,int first,int limit,int* count) {
+    ++footnote_calls;footnote_first=first;footnote_limit=limit;*count=footnote_value;
+    if(footnote_cycle)return subtrack_footnotes(page_context,footnote_cycle,count);
+    return footnote_status;
+}
+static int WINAPI container_footnotes(void* track,int* count){return subtrack_footnotes(page_context,track,count);}
+static int WINAPI page_footnotes(void* page,int* count){return subpage_footnotes(page_context,page,count);}
+static int block_footnote_calls=0;
+static int WINAPI block_footnotes(void*,int* count){++block_footnote_calls;*count=0;return 0;}
 using SubtrackFormat=int(WINAPI*)(void*,void*,int,void*,int,void*,void*,int,int,uint32_t,const FSRECT*,void*,FSKCLEAR,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA,FSFMTR*,void**,void**,int*,FSBBOX*,void**,FSKCLEAR*,int*);
 static SubtrackFormat format_subtrack=nullptr;
 static int WINAPI container_balance(void* content,uint32_t direction,int* lines,int* sum,int* minimum){if(balancing_error)return balancing_error;return balance_track(page_context,content,direction,lines,sum,minimum);}
@@ -175,14 +189,17 @@ static int WINAPI table_cell_format(void*,void*,void* input,void* name,void*,int
 static int WINAPI table_cell_bottomless(void* client,void* table,void* name,uint32_t direction,FSFMTRBL* formatted,void** output,int* height){FSFMTR finite{};void* br=nullptr;int status=table_cell_format(client,table,nullptr,name,nullptr,0,direction,0,long_span?200:80,&finite,output,&br,height);*formatted=fmtrblGoalReached;if(br)return PTS_tserrInvalidClientOutput;if(!status&&name==reinterpret_cast<void*>(601))*height=long_span?150:45;return status;}
 static int WINAPI table_destroy_cell(void* handle){auto cell=static_cast<MockTableCell*>(handle);int status=destroy_subpage(page_context,cell->page);delete cell;++table_cells_destroyed;return status;}
 static int WINAPI table_set_height(void*,void*,void*,void* name,int,uint32_t,int height){if(table_spans){if(name==reinterpret_cast<void*>(601))span_set_height=height;if(long_span)return height>=0?0:PTS_tserrInvalidClientOutput;return height==(name==reinterpret_cast<void*>(601)?64:20)?0:PTS_tserrInvalidClientOutput;}return (split_table_cells?height>=0&&height<=20:height==20)?0:PTS_tserrInvalidClientOutput;}
+static int table_footnote_calls=0;
+static int WINAPI table_cell_footnotes(void* handle,int* count){++table_footnote_calls;return subpage_footnotes(page_context,static_cast<MockTableCell*>(handle)->page,count);}
 static int WINAPI table_clear_cell(void* handle){return clear_cell_subpage(page_context,static_cast<MockTableCell*>(handle)->page);}
 static int WINAPI table_destroy_record(void*,void* record){int status=destroy_subpage_record(page_context,record);if(!status)++table_records_destroyed;return status;}
-static int WINAPI table_object_handler(void* output){FSTABLEOBJINIT init{};init.tableobjcbk.pfnGetTableProperties=reinterpret_cast<void*>(table_props);init.tableobjcbk.pfnAutofitTable=reinterpret_cast<void*>(table_fit);init.tableobjcbk.pfnGetMCSClientAfterTable=reinterpret_cast<void*>(block_after);auto& fetch=init.tablecbkfetch;fetch.pfnGetFirstRow=reinterpret_cast<void*>(table_first);fetch.pfnGetNextRow=reinterpret_cast<void*>(table_next);fetch.pfnGetRowProperties=reinterpret_cast<void*>(table_row_props);fetch.pfnGetCells=reinterpret_cast<void*>(table_get_cells);auto& cells=init.tablecbkcell;cells.pfnFormatCellFinite=reinterpret_cast<void*>(table_cell_format);cells.pfnFormatCellBottomless=reinterpret_cast<void*>(table_cell_bottomless);cells.pfnDestroyCell=reinterpret_cast<void*>(table_destroy_cell);cells.pfnDestroyCellBreakRecord=reinterpret_cast<void*>(table_destroy_record);cells.pfnSetCellHeight=reinterpret_cast<void*>(table_set_height);cells.pfnClearUpdateInfoInCell=reinterpret_cast<void*>(table_clear_cell);return table_handler(&init,output);}
+static int WINAPI table_object_handler(void* output){FSTABLEOBJINIT init{};init.tableobjcbk.pfnGetTableProperties=reinterpret_cast<void*>(table_props);init.tableobjcbk.pfnAutofitTable=reinterpret_cast<void*>(table_fit);init.tableobjcbk.pfnGetMCSClientAfterTable=reinterpret_cast<void*>(block_after);auto& fetch=init.tablecbkfetch;fetch.pfnGetFirstRow=reinterpret_cast<void*>(table_first);fetch.pfnGetNextRow=reinterpret_cast<void*>(table_next);fetch.pfnGetRowProperties=reinterpret_cast<void*>(table_row_props);fetch.pfnGetCells=reinterpret_cast<void*>(table_get_cells);auto& cells=init.tablecbkcell;cells.pfnFormatCellFinite=reinterpret_cast<void*>(table_cell_format);cells.pfnFormatCellBottomless=reinterpret_cast<void*>(table_cell_bottomless);cells.pfnDestroyCell=reinterpret_cast<void*>(table_destroy_cell);cells.pfnDestroyCellBreakRecord=reinterpret_cast<void*>(table_destroy_record);cells.pfnSetCellHeight=reinterpret_cast<void*>(table_set_height);cells.pfnClearUpdateInfoInCell=reinterpret_cast<void*>(table_clear_cell);cells.pfnGetCellNumberFootnotes=reinterpret_cast<void*>(table_cell_footnotes);return table_handler(&init,output);}
 static int WINAPI block_handler(void*,int id,void* output) {
     if(id==3&&table_mode)return table_object_handler(output);
     if(id!=2)return PTS_tserrInvalidParameter;
     FSFLOATERINIT init{};auto& cb=init.fsfloatercbk;cb.pfnGetFloaterProperties=reinterpret_cast<void*>(block_props);
     cb.pfnFormatFloaterContentFinite=reinterpret_cast<void*>(block_finite);cb.pfnDestroyFloaterContent=reinterpret_cast<void*>(block_destroy);
+    cb.pfnGetFloaterContentNumberFootnotes=reinterpret_cast<void*>(block_footnotes);
     cb.pfnDestroyFloaterContentBreakRecord=reinterpret_cast<void*>(block_destroy_break);cb.pfnGetMCSClientAfterFloater=reinterpret_cast<void*>(block_after);
     return floater_handler(&init,output);
 }
@@ -288,8 +305,13 @@ int main(int argc,char** argv) {
         methods.pfnFormatParaFinite=reinterpret_cast<void*>(container_format);methods.pfnDestroyPara=reinterpret_cast<void*>(container_destroy);
         create_subpage=reinterpret_cast<NativeSubpageFinite>(GetProcAddress(dll,"FsCreateSubpageFinite"));destroy_subpage=reinterpret_cast<decltype(destroy_subpage)>(GetProcAddress(dll,"FsDestroySubpage"));destroy_subpage_record=reinterpret_cast<decltype(destroy_subpage_record)>(GetProcAddress(dll,"FsDestroySubpageBreakRecord"));require(create_subpage&&destroy_subpage&&destroy_subpage_record,"subpage object exports");
         balance_track=reinterpret_cast<BalanceTrack>(GetProcAddress(dll,"FsGetSubtrackColumnBalancingInfo"));balance_page=reinterpret_cast<BalancePage>(GetProcAddress(dll,"FsGetSubpageColumnBalancingInfo"));require(balance_track&&balance_page,"column balancing measurement exports");
+        PROC(FsGetNumberSubtrackFootnotes,FootnoteCount);PROC(FsGetNumberSubpageFootnotes,FootnoteCount);
+        using FootnoteInfo=int(WINAPI*)(void*,void*,int,int,uint32_t*,FSFTNINFO*,int*);
+        PROC(FsGetSubpageFootnoteInfo,FootnoteInfo);subtrack_footnotes=FsGetNumberSubtrackFootnotes;subpage_footnotes=FsGetNumberSubpageFootnotes;
         methods.pfnGetColumnBalancingInfo=reinterpret_cast<void*>(container_balance);
+        methods.pfnGetNumberFootnotes=reinterpret_cast<void*>(container_footnotes);
         FSIMETHODS subpage_methods=methods;subpage_methods.pfnGetColumnBalancingInfo=reinterpret_cast<void*>(subpage_balance);subpage_methods.pfnFormatParaFinite=reinterpret_cast<void*>(subpage_format);subpage_methods.pfnDestroyPara=reinterpret_cast<void*>(subpage_destroy);subpage_methods.pfnDestroyBreakRecord=reinterpret_cast<void*>(subpage_destroy_record);
+        subpage_methods.pfnGetNumberFootnotes=reinterpret_cast<void*>(page_footnotes);
         require(CreateInstalledObjectsInfo(&methods,&subpage_methods,&installed,&count)==0,"page installed registration");
         info.version=0;info.pInstalledObjects=installed;
         auto& gen=info.fscbk.cbkgen;auto& txt=info.fscbk.cbktxt;
@@ -298,6 +320,7 @@ int main(int argc,char** argv) {
         gen.pfnUpdGetParaChange=reinterpret_cast<void*>(source_change);gen.pfnTransferDisplayInfo=reinterpret_cast<void*>(transfer_visual);
         gen.pfnCreateParaclient=reinterpret_cast<void*>(para_client);gen.pfnDestroyParaclient=reinterpret_cast<void*>(destroy_para_client);
         txt.pfnGetTextProperties=reinterpret_cast<void*>(text_properties);txt.pfnFormatLine=reinterpret_cast<void*>(line_format);txt.pfnReconstructLineVariant=reinterpret_cast<void*>(line_reconstruct);
+        txt.pfnGetNumberFootnotes=reinterpret_cast<void*>(text_footnotes);
         txt.pfnGetNumberAttachedObjectsBeforeTextLine=reinterpret_cast<void*>(attached_count);txt.pfnGetAttachedObjectsBeforeTextLine=reinterpret_cast<void*>(attached_objects);txt.pfnGetNumberAttachedObjectsInTextLine=reinterpret_cast<void*>(attached_in_line);txt.pfnGetAttachedObjectsInTextLine=reinterpret_cast<void*>(inline_objects);
         info.fscbk.cbkfig.pfnGetFigureProperties=reinterpret_cast<void*>(figure_properties);info.fscbk.cbkfig.pfnCalcFigurePosition=reinterpret_cast<void*>(figure_position);
         txt.pfnDestroyLine=reinterpret_cast<void*>(destroy_line);txt.pfnDestroyLineBreakRecord=reinterpret_cast<void*>(destroy_break);
@@ -421,14 +444,24 @@ int main(int argc,char** argv) {
         PROC(FsDuplicateSubtrackBreakRecord,CloneRecord);reset_page_counts();
         FSRECT small{10,20,100,10};void* subtrack=nullptr;void* subrecord=nullptr;void* clone=nullptr;void* margin=nullptr;int used=0,top_space=0;FSBBOX bbox{};FSKCLEAR clear{};
         require(format_subtrack(context,nullptr,0,reinterpret_cast<void*>(77),0,nullptr,nullptr,0,1,0,&small,nullptr,fskclearNone,fsksuppresshardbreakbeforefirstparaNone,&formatted,&subtrack,&subrecord,&used,&bbox,&margin,&clear,&top_space)==0&&subrecord&&used==10,"standalone finite subtrack exports a continuation");
+        int footnote_count=99;footnote_calls=0;
+        require(FsGetNumberSubtrackFootnotes(context,subtrack,&footnote_count)==0&&!footnote_count&&footnote_calls==1&&footnote_first==0&&footnote_limit==5,"subtrack footnote query calls original text callback only for retained CPs");
+        require(FsGetNumberSubpageFootnotes(context,subtrack,&footnote_count)==PTS_tserrInvalidQuery&&!footnote_count&&FsGetNumberSubtrackFootnotes(reinterpret_cast<void*>(1),subtrack,&footnote_count)==PTS_tserrInvalidQuery&&!footnote_count&&FsGetNumberSubtrackFootnotes(context,subtrack,nullptr)==PTS_tserrNullOutputParameter,"footnote counts reject foreign context, wrong object kind and null output");
+        for(int value:{-1,1}){footnote_value=value;footnote_count=99;require(FsGetNumberSubtrackFootnotes(context,subtrack,&footnote_count)==(value<0?PTS_tserrInvalidClientOutput:PTS_tserrNotImplemented)&&!footnote_count,"negative and unsupported positive footnote collections fail with clean count");}footnote_value=0;
+        footnote_status=PTS_tserrCallbackException;require(FsGetNumberSubtrackFootnotes(context,subtrack,&footnote_count)==PTS_tserrCallbackException&&!footnote_count,"original footnote callback errors propagate");footnote_status=0;
+        footnote_cycle=subtrack;require(FsGetNumberSubtrackFootnotes(context,subtrack,&footnote_count)==PTS_tserrInvalidQuery&&!footnote_count,"cyclic callback reentry cannot recurse into the same queried object");footnote_cycle=nullptr;
+        require(FsGetNumberSubtrackFootnotes(context,subtrack,&footnote_count)==0&&!footnote_count,"failed callback query leaves the live object reusable");
         require(FsDuplicateSubtrackBreakRecord(context,subrecord,&clone)==0&&clone&&clone!=subrecord,"subtrack clone has independent wrapper identity");
         require(destroy_subtrack_record(context,subrecord)==0&&destroy_subtrack(context,subtrack)==0,"original subtrack and record can be released before their clone");
         require(DestroyDocContext(context)==PTS_tserrInvalidPtsContext&&FsDestroyPageBreakRecord(context,clone)==PTS_tserrInvalidBreakRecord,"clone retains context and rejects the wrong record destruction kind");
         require(format_subtrack(context,clone,1,reinterpret_cast<void*>(77),0,nullptr,nullptr,0,1,0,&small,nullptr,fskclearNone,fsksuppresshardbreakbeforefirstparaNone,&formatted,&subtrack,&subrecord,&used,&bbox,&margin,&clear,&top_space)==0&&used==10,"clone retains original line-break state and resumes after page/subtrack destruction");
+        footnote_calls=0;require(FsGetNumberSubtrackFootnotes(context,subtrack,&footnote_count)==0&&!footnote_count&&footnote_calls==1&&footnote_first==5&&footnote_limit==10,"cloned continuation footnote query uses exact resumed source interval");
         require(destroy_subtrack_record(context,clone)==0&&destroy_subtrack_record(context,clone)==PTS_tserrInvalidBreakRecord&&destroy_subtrack(context,subtrack)==0&&destroy_subtrack_record(context,subrecord)==0,"cloned and continued records tear down independently and reject double release");
         require(lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"subtrack cloning releases every callback handle exactly once");
         clone=reinterpret_cast<void*>(1);require(FsDuplicateSubtrackBreakRecord(context,reinterpret_cast<void*>(1),&clone)==PTS_tserrInvalidBreakRecord&&!clone,"invalid clone clears output without dereferencing");
         std::puts("native continuation cloning: independent identities, retained resume state/context, wrong/stale records, reset-output rollback and exact teardown PASS");
+        require(FsGetNumberSubtrackFootnotes(context,subtrack,&footnote_count)==PTS_tserrInvalidQuery&&!footnote_count,"destroyed subtrack has no queryable footnote collection");
+        std::puts("native subtrack footnotes: retained/cloned CPs, original callback count, missing positive support, negative/error/cycle rejection, clean outputs and stale/foreign/kind/null validation PASS");
         available_height=20;columns=2;reset_page_counts();
         require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&page_handle&&!page_break&&formatted.kstop==fmtrGoalReached,"two-column page fills both original source tracks");
         require(FsQueryPageDetails(context,page_handle,&details)==0&&!details.fSimple&&details.u.complex.cSections==1,"column page reports complex section hierarchy");
@@ -530,18 +563,39 @@ int main(int argc,char** argv) {
         PROC(FsDestroySubpage,PageAction);PROC(FsDestroySubpageBreakRecord,PageAction);PROC(FsDuplicateSubpageBreakRecord,CloneRecord);PROC(FsClearUpdateInfoInSubpage,PageAction);
         FSSUBPAGEDETAILS sub_details{};FSRECT sub_rect{10,20,100,10};FSCOLUMNINFO sub_columns[2]{{0,100},{10,100}};
         int sub_used=0,sub_top=0;FSBBOX sub_box{};void* sub_margin=nullptr;FSTRACKDESCRIPTION sub_tracks[2]{};
-        auto sub_create=[&](void* input,int count=1){return FsCreateSubpageFinite(context,input,1,reinterpret_cast<void*>(77),nullptr,0,1,0,240,140,&sub_rect,count,sub_columns,0,0,nullptr,nullptr,0,nullptr,nullptr,0,fsksuppresshardbreakbeforefirstparaPageAndColumn,&formatted,&page_handle,&page_break,&sub_used,&sub_box,&sub_margin,&sub_top);};
+        auto sub_create=[&](void* input,int count=1,uint32_t direction=0){return FsCreateSubpageFinite(context,input,1,reinterpret_cast<void*>(77),nullptr,0,1,direction,240,140,&sub_rect,count,sub_columns,0,0,nullptr,nullptr,0,nullptr,nullptr,0,fsksuppresshardbreakbeforefirstparaPageAndColumn,&formatted,&page_handle,&page_break,&sub_used,&sub_box,&sub_margin,&sub_top);};
         reset_page_counts();incoming_record=nullptr;
         for(int number=0;number<4;++number) {
             require(sub_create(incoming_record)==0&&page_handle&&bool(page_break)==(number<3),"finite subpage advances its actual source checkpoint");
             if(incoming_record)require(FsDestroySubpageBreakRecord(context,incoming_record)==0,"subpage input release");
             require(FsQueryPageDetails(context,page_handle,&details)==PTS_tserrInvalidQuery&&FsDestroyPage(context,page_handle)==PTS_tserrInvalidQuery,"subpages reject top-level page API ownership");
             require(FsQuerySubpageDetails(context,page_handle,&sub_details)==0&&sub_details.fSimple&&sub_used==10&&FsQueryTrackParaList(context,sub_details.u.simple.trackdescr.pfstrack,2,paras,&actual_count)==0&&actual_count==1&&FsQueryTextDetails(context,paras[0].pfspara,&text_details)==0&&text_details.u.full.dcpFirst==(number%2)*5&&text_details.u.full.dcpLim==(number%2)*5+5,"subpage queries retain actual per-page character ranges");
+            footnote_calls=0;footnote_count=99;
+            require(FsGetNumberSubpageFootnotes(context,page_handle,&footnote_count)==0&&!footnote_count&&footnote_calls==1&&footnote_first==(number%2)*5&&footnote_limit==(number%2)*5+5,"subpage footnote count queries only its own retained source interval");
+            FSFTNINFO footnote_buffer[3]{{reinterpret_cast<void*>(1),2,3},{reinterpret_cast<void*>(4),5,6},{reinterpret_cast<void*>(7),8,9}};
+            uint32_t footnote_direction=99;int footnote_end=99;
+            require(FsGetSubpageFootnoteInfo(context,page_handle,3,1,&footnote_direction,footnote_buffer,&footnote_end)==0&&!footnote_direction&&footnote_end==1&&footnote_buffer[0].nmftn==reinterpret_cast<void*>(1)&&footnote_buffer[1].vrAccept==5&&footnote_buffer[2].vrReject==9,"empty footnote info retains caller's starting index, actual direction and untouched array entries");
+            require(FsGetSubpageFootnoteInfo(context,page_handle,0,0,&footnote_direction,nullptr,&footnote_end)==0&&!footnote_end,"zero-capacity empty footnote enumeration needs no output array");
+            for(auto pair:{std::pair<int,int>{-1,0},{3,-1},{3,4}})require(FsGetSubpageFootnoteInfo(context,page_handle,pair.first,pair.second,&footnote_direction,footnote_buffer,&footnote_end)==PTS_tserrInvalidParameter&&!footnote_direction&&!footnote_end,"invalid footnote array capacity/index clears scalar outputs without writing the buffer");
+            require(FsGetSubpageFootnoteInfo(context,page_handle,3,1,&footnote_direction,nullptr,&footnote_end)==PTS_tserrInvalidParameter&&FsGetSubpageFootnoteInfo(context,page_handle,3,1,nullptr,footnote_buffer,&footnote_end)==PTS_tserrNullOutputParameter,"footnote info validates required output pointers");
+            footnote_status=PTS_tserrCallbackException;require(FsGetSubpageFootnoteInfo(context,page_handle,3,1,&footnote_direction,footnote_buffer,&footnote_end)==PTS_tserrCallbackException&&!footnote_direction&&!footnote_end,"failed original footnote callback preserves caller buffer with clean scalar outputs");footnote_status=0;
             require(FsClearUpdateInfoInSubpage(context,page_handle)==0&&FsQuerySubpageDetails(context,page_handle,&sub_details)==0&&sub_details.u.simple.trackdescr.fsupdinf.fskupd==fskupdNoChange,"subpage recursive update clearing");
             if(number==0){void* clone=nullptr;require(FsDuplicateSubpageBreakRecord(context,page_break,&clone)==0&&clone!=page_break&&destroy_subtrack_record(context,clone)==PTS_tserrInvalidBreakRecord&&FsDestroyPageBreakRecord(context,clone)==PTS_tserrInvalidBreakRecord&&FsDestroySubpageBreakRecord(context,page_break)==0,"subpage clones have independent identity and reject other record kinds");page_break=clone;}
             require(FsDestroySubpage(context,page_handle)==0&&FsQuerySubpageDetails(context,page_handle,&sub_details)==PTS_tserrInvalidQuery,"subpage disposal invalidates layout query");incoming_record=page_break;
         }
         require(lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"subpage continuation and clones release every callback resource once");
+        require(FsGetNumberSubpageFootnotes(context,page_handle,&footnote_count)==PTS_tserrInvalidQuery&&!footnote_count,"disposed subpage footnotes cannot be queried");
+        sub_rect.dv=80;containers=true;reset_page_counts();footnote_calls=0;
+        require(sub_create(nullptr)==0&&!page_break&&FsGetNumberSubpageFootnotes(context,page_handle,&footnote_count)==0&&!footnote_count&&footnote_calls==2,"original nested container callbacks recursively validate both retained child collections");
+        require(FsGetNumberSubtrackFootnotes(context,page_handle,&footnote_count)==PTS_tserrInvalidQuery&&!footnote_count&&FsGetNumberSubpageFootnotes(reinterpret_cast<void*>(1),page_handle,&footnote_count)==PTS_tserrInvalidQuery&&!footnote_count,"subpage counts reject wrong object kind and foreign context");
+        require(FsDestroySubpage(context,page_handle)==0&&lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"recursive footnote queries acquire no new layout owners");containers=false;
+        attached_float=true;para_count=1;reset_page_counts();float_created=float_destroyed=block_footnote_calls=0;
+        require(sub_create(nullptr)==0&&!page_break&&FsGetNumberSubpageFootnotes(context,page_handle,&footnote_count)==0&&!footnote_count&&block_footnote_calls==1,"attached object footnote query uses its retained content callback");
+        require(FsDestroySubpage(context,page_handle)==0&&float_created==float_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"queried floating content and clients release once");attached_float=false;para_count=2;
+        text_direction=PTS_fswdirWS;reset_page_counts();uint32_t rtl_footnote_direction=0;int rtl_footnote_limit=99;
+        require(sub_create(nullptr,1,PTS_fswdirWS)==0&&!page_break&&FsGetSubpageFootnoteInfo(context,page_handle,0,0,&rtl_footnote_direction,nullptr,&rtl_footnote_limit)==0&&rtl_footnote_direction==PTS_fswdirWS&&!rtl_footnote_limit,"empty subpage footnote info returns its actual RTL writing direction");
+        require(FsDestroySubpage(context,page_handle)==0&&lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"RTL footnote queries retain exact callback ownership");text_direction=PTS_fswdirES;
+        std::puts("native subpage footnotes: finite/cloned ranges, recursive container and object callbacks, actual LTR/RTL direction, untouched indexed buffers, failure/argument validation and exact cleanup PASS");
         structural_line=true;sub_rect.dv=4;reset_page_counts();incoming_record=nullptr;bool structural_coverage[2][10]{};
         for(int number=0;number<2;++number){require(sub_create(incoming_record)==0&&formatted.fForcedProgress&&sub_used==4&&bool(page_break)==(number==0),"structural marker prefix preserves forced visible-line progress");if(incoming_record)require(FsDestroySubpageBreakRecord(context,incoming_record)==0,"structural prefix input release");require(FsQuerySubpageDetails(context,page_handle,&sub_details)==0&&FsQueryTrackParaList(context,sub_details.u.simple.trackdescr.pfstrack,2,paras,&actual_count)==0&&actual_count==(number==0?2:1),"zero-height structural source remains a retained paragraph on the page");for(int index=0;index<actual_count;++index){require(FsQueryTextDetails(context,paras[index].pfspara,&text_details)==0,"structural text query");int owner=int(reinterpret_cast<uintptr_t>(paras[index].nmp))-101;for(int at=text_details.u.full.dcpFirst;at<text_details.u.full.dcpLim;++at){require(owner>=0&&owner<2&&at>=0&&at<10&&!structural_coverage[owner][at],"structural/visible source is consumed once");structural_coverage[owner][at]=true;}}require(FsDestroySubpage(context,page_handle)==0,"structural prefix subpage release");incoming_record=page_break;}
         require(lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"structural and visible lines release all callback resources");structural_line=false;for(const auto& paragraph:structural_coverage)for(bool seen:paragraph)require(seen,"structural and visible source coverage has no gaps");
@@ -617,6 +671,7 @@ int main(int argc,char** argv) {
         require(composite_page(nullptr)==0&&page_break&&FsQuerySubpageDetails(context,page_handle,&sub_details)==0&&FsQueryTrackParaList(context,sub_details.u.simple.trackdescr.pfstrack,2,paras,&actual_count)==0&&FsQueryTextDetails(context,paras[0].pfspara,&text_details)==0&&text_details.u.full.cLines==2&&text_details.u.full.dcpLim==20,"finite fit counts composite rows rather than individual elements");
         int row_count=0,row_sum=0,row_min=0;uint32_t row_direction=99;
         require(balance_page(context,page_handle,&row_direction,&row_count,&row_sum,&row_min)==0&&!row_direction&&row_count==2&&row_sum==20&&row_min==10,"balancing measurement counts two actual rows, not four formatted elements");
+        footnote_calls=0;require(FsGetNumberSubpageFootnotes(context,page_handle,&footnote_count)==0&&!footnote_count&&footnote_calls>=2,"figure content footnotes query the actual retained native subpage and host ranges");
         require(FsDuplicateSubpageBreakRecord(context,page_break,&clone)==0&&FsDestroySubpageBreakRecord(context,page_break)==0&&FsDestroySubpage(context,page_handle)==0,"independent composite continuation retains the last accepted element record after old page destruction");
         require(composite_page(clone)==0&&!page_break&&FsQuerySubpageDetails(context,page_handle,&sub_details)==0&&FsQueryTrackParaList(context,sub_details.u.simple.trackdescr.pfstrack,2,paras,&actual_count)==0&&FsQueryTextDetails(context,paras[0].pfspara,&text_details)==0&&text_details.u.full.dcpFirst==20&&text_details.u.full.dcpLim==30&&text_details.u.full.cLines==2&&!text_details.u.full.fLinesComposite,"composite continuation resumes exact source and can return ordinary rows beyond the old obstacle");
         require(FsDestroySubpageBreakRecord(context,clone)==0&&FsDestroySubpage(context,page_handle)==0&&figure_content.empty()&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"composite continuation and cloned owner clean up every original record once");available_height=80;
@@ -789,6 +844,11 @@ int main(int argc,char** argv) {
         std::puts("native split spans: actual cell records, shared resumed master/omitted completed cells, immutable clones, no-progress/failure preservation and exact teardown PASS");
         table_fail_cell=-1;malformed_span=table_spans=false;
         std::puts("native vertical spans: original shared client/merge states, combined row height, intact deferral/resume, partial failures and exact single-owner cleanup PASS");
+        table_spans=true;para_count=1;reset_page_counts();table_cells_created=table_cells_destroyed=table_footnote_calls=0;
+        FSRECT footnote_table_area{10,20,100,80};
+        require(format_subtrack(context,nullptr,0,reinterpret_cast<void*>(77),0,nullptr,nullptr,0,1,0,&footnote_table_area,nullptr,fskclearNone,fsksuppresshardbreakbeforefirstparaNone,&formatted,&subtrack,&subrecord,&used,&bbox,&margin,&clear,&top_space)==0&&!subrecord&&FsGetNumberSubtrackFootnotes(context,subtrack,&footnote_count)==0&&!footnote_count&&table_footnote_calls==4,"shared spanning table cell footnotes are queried through their original callback exactly once");
+        require(destroy_subtrack(context,subtrack)==0&&table_cells_created==table_cells_destroyed&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"table footnote queries preserve exact shared cell and source callback ownership");table_spans=false;
+        std::puts("native table footnotes: original cell/subpage callbacks, shared span deduplication and exact query/disposal ownership PASS");
         table_fail_cell=-1;lose_table_cell=table_mode=false;para_count=2;available_height=80;
         std::puts("native tables: original cell/subpage callbacks, exact rows/heights/spacing, typed queries/capacity/update/stale state, row resume and populated/lost-output cleanup PASS");
         rtl_matrix=true;

@@ -112,7 +112,7 @@ def emit(name):
     done.add(name)
 
 for name in ('FSIMETHODS', 'FSCONTEXTINFO', 'FSRECT', 'FSPOINT', 'FSBBOX',
-             'FSFMTR', 'FSPAP', 'FSTXTPROPS', 'FSPARADESCRIPTION',
+             'FSFMTR', 'FSPAP', 'FSTXTPROPS', 'FSPARADESCRIPTION', 'FSFTNINFO',
              'FSTRACKDETAILS', 'FSTRACKDESCRIPTION', 'FSPAGEDETAILS',
              'FSSECTIONDESCRIPTION', 'FSSECTIONDETAILS', 'FSTEXTDETAILS',
              'FSLINEDESCRIPTIONSINGLE', 'FSLINEDESCRIPTIONCOMPOSITE', 'FSLINEELEMENT', 'FSLINEVARIANT', 'FSSUBTRACKDETAILS', 'FSCOLUMNINFO',
@@ -137,7 +137,8 @@ for name in ('GetPageDimensions', 'GetSectionProperties', 'GetMainTextSegment',
              'ClearUpdateInfoInCell', 'CalcHorizontalBBoxOfRow', 'GetFigureProperties', 'CalcFigurePosition',
              'UpdGetParaChange', 'ObjComparePara', 'CompareFloaterContents', 'CompareCells',
              'TransferDisplayInfo', 'ObjTransferDisplayInfoPara', 'TransferDisplayInfoInFloaterContent', 'TransferDisplayInfoCell',
-             'ObjGetColumnBalancingInfo', 'GetFloaterContentColumnBalancingInfo'):
+             'ObjGetColumnBalancingInfo', 'GetFloaterContentColumnBalancingInfo',
+             'GetNumberFootnotes', 'ObjGetNumberFootnotes', 'GetFloaterContentNumberFootnotes', 'GetCellNumberFootnotes'):
     match = re.search(r'\bdelegate\s+int\s+' + name + r'\s*\((.*?)\)\s*;', text, re.S)
     if not match:
         raise SystemExit('Missing source callback: ' + name)
