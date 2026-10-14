@@ -59,6 +59,8 @@ static NativeSubpageFinite create_subpage=nullptr;
 static int(WINAPI* destroy_subpage)(void*,void*)=nullptr;
 static int(WINAPI* destroy_subpage_record)(void*,void*)=nullptr;
 static bool block_ui=false,float_obstacle=false,fail_float=false,attached_float=false,attached_right=false,multiple_float=false,multiple_opposite=false;
+static FSKCLEAR block_clear=fskclearNone;
+static bool cleared_block_child=false;
 static int inline_anchor_mode=0;
 static bool deferred_attachment=false,split_attachment=false,forced_attachment=false;
 static int float_records_destroyed=0,float_records_created=0;
@@ -124,7 +126,7 @@ static int WINAPI column_info(void*,void*,uint32_t,int capacity,FSCOLUMNINFO* ou
 static int WINAPI main_segment(void*,void*,void** segment){*segment=reinterpret_cast<void*>(77);return 0;}
 static int WINAPI first_para(void*,void* segment,int* found,void** name){if(segment!=reinterpret_cast<void*>(77)&&!containers&&!subpage_parent&&!inside_table_cell)return PTS_tserrInvalidParameter;*found=para_count!=0;*name=segment==reinterpret_cast<void*>(77)?reinterpret_cast<void*>(101):reinterpret_cast<void*>(201);return 0;}
 static int WINAPI next_para(void*,void* segment,void* current,int* found,void** next){*found=segment==reinterpret_cast<void*>(77)&&reinterpret_cast<uintptr_t>(current)<uintptr_t(100+para_count);*next=*found?reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(current)+1):nullptr;return 0;}
-static int WINAPI para_properties(void*,void* name,FSPAP* pap){*pap={};pap->idobj=table_mode&&!inside_table_cell&&!(span_prefix&&name==reinterpret_cast<void*>(101))?3:subpage_parent&&reinterpret_cast<uintptr_t>(name)<200?1:block_ui&&name==reinterpret_cast<void*>(102)?2:containers&&reinterpret_cast<uintptr_t>(name)<200&&(!clearing_container||name==reinterpret_cast<void*>(102))?0:-1;pap->fKeepWithNext=keep_next&&name==reinterpret_cast<void*>(102);if(name==reinterpret_cast<void*>(102)){pap->fBreakPageBefore=hard_break==1;pap->fBreakColumnBefore=hard_break==2;}return 0;}
+static int WINAPI para_properties(void*,void* name,FSPAP* pap){*pap={};pap->idobj=cleared_block_child&&name==reinterpret_cast<void*>(201)?2:table_mode&&!inside_table_cell&&!(span_prefix&&name==reinterpret_cast<void*>(101))?3:subpage_parent&&reinterpret_cast<uintptr_t>(name)<200?1:block_ui&&name==reinterpret_cast<void*>(102)?2:containers&&reinterpret_cast<uintptr_t>(name)<200&&(!clearing_container||name==reinterpret_cast<void*>(102))?0:-1;pap->fKeepWithNext=keep_next&&name==reinterpret_cast<void*>(102);if(name==reinterpret_cast<void*>(102)){pap->fBreakPageBefore=hard_break==1;pap->fBreakColumnBefore=hard_break==2;}return 0;}
 static int WINAPI para_client(void*,void* name,void** output){++clients_created;*output=name;if(display_test){auto client=new DisplayClient;display_clients.insert(client);*output=client;}return 0;}
 static int WINAPI destroy_para_client(void*,void* client){auto at=figure_content.find(client);if(at!=figure_content.end()){void* page=at->second;figure_content.erase(at);require(destroy_subpage(page_context,page)==0,"original figure client owns its subpage through disposal");}if(display_clients.erase(client))delete static_cast<DisplayClient*>(client);++clients_destroyed;return 0;}
 static int WINAPI text_properties(void*,void* name,int,FSTXTPROPS* props){*props={};props->fswdir=text_direction;props->fKeepTogether=keep_mode==2||(keep_mode==1&&name==reinterpret_cast<void*>(102));return 0;}
@@ -157,7 +159,7 @@ static int WINAPI line_reconstruct(void* client,void* para,void* name,int area,i
 static int WINAPI destroy_line(void*,void*){++lines_destroyed;return 0;}
 static int WINAPI destroy_break(void*,void*){++breaks_destroyed;return 0;}
 static int WINAPI destroy_margin(void*,void*){return 0;}
-static int WINAPI block_props(void*,void* name,uint32_t,FSFLOATERPROPS* output){*output={};output->fFloat=float_obstacle||attached_float;output->fskwr=inline_anchor_mode==6&&name==reinterpret_cast<void*>(302)?fskwrNone:attached_float?fskwrBoth:fskwrNone;output->fskfloatalignment=(attached_right||((multiple_opposite||inline_anchor_mode==6)&&name==reinterpret_cast<void*>(302)))?fskfloatalignMax:fskfloatalignMin;return 0;}
+static int WINAPI block_props(void*,void* name,uint32_t,FSFLOATERPROPS* output){*output={};bool block=cleared_block_child&&name==reinterpret_cast<void*>(201);output->fFloat=!block&&(float_obstacle||attached_float);output->fskclear=block||(block_ui&&name==reinterpret_cast<void*>(102))?block_clear:fskclearNone;output->fskwr=block?fskwrNone:inline_anchor_mode==6&&name==reinterpret_cast<void*>(302)?fskwrNone:attached_float?fskwrBoth:fskwrNone;output->fskfloatalignment=(attached_right||((multiple_opposite||inline_anchor_mode==6)&&name==reinterpret_cast<void*>(302)))?fskfloatalignMax:fskfloatalignMin;return 0;}
 static int WINAPI block_margin(void*,void*,void*,uint32_t,void*,int,int* output){*output=0;return 0;}
 static int WINAPI block_after(void*,void*,void*,uint32_t,void*,void** output){*output=nullptr;return 0;}
 static int WINAPI block_destroy(void*){++float_destroyed;return 0;}
@@ -168,7 +170,7 @@ static int WINAPI block_finite(void*,void* para,void* input,int previous,void*,v
     if(height<25&&empty){*used_width=40;*used_height=25;
         if(split_attachment){++float_created;*content=para;*br=reinterpret_cast<void*>(4001);formatted->kstop=fmtrBrokenOutOfSpace;}
         else formatted->kstop=fmtrNoProgressOutOfSpace;return 0;}
-    ++float_created;*content=para;*used_width=attached_float?40:width;*used_height=25;*box={1,{0,0,*used_width,25}};formatted->fForcedProgress=height<25;
+    ++float_created;*content=para;*used_width=attached_float&&!(cleared_block_child&&para==reinterpret_cast<void*>(201))?40:width;*used_height=25;*box={1,{0,0,*used_width,25}};formatted->fForcedProgress=height<25;
     if(paginate_float){
         if(input&&!float_live_records.count(input))return PTS_tserrInvalidBreakRecord;
         if(bool(input)!=bool(previous))return PTS_tserrInvalidParameter;
@@ -562,6 +564,14 @@ int main(int argc,char** argv) {
         std::puts("native subtrack clear parameters: all valid values, clean invalid outputs, failed-update retention and exact source resource disposal PASS");
 
         using QueryFloater=int(WINAPI*)(void*,void*,FSFLOATERDETAILS*);PROC(FsQueryFloaterDetails,QueryFloater);
+        block_ui=true;available_height=80;
+        for(auto value:{fskclearNone,fskclearLeft,fskclearRight,fskclearBoth}) {
+            block_clear=value;reset_page_counts();float_created=float_destroyed=0;
+            require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&!page_break&&FsDestroyPage(context,page_handle)==0&&float_created==float_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"valid block clear values without obstacles retain source and exact ownership");
+        }
+        block_clear=static_cast<FSKCLEAR>(99);reset_page_counts();float_created=float_destroyed=0;
+        require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrInvalidClientOutput&&!page_handle&&!page_break&&float_created==0&&lines_created==lines_destroyed&&clients_created==clients_destroyed,"invalid block clear callback fails with clean outputs before content is created");
+        block_clear=fskclearNone;
         block_ui=true;available_height=30;reset_page_counts();float_created=float_destroyed=0;
         require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&page_break,"block defers intact after preceding text");
         require(FsQueryPageDetails(context,page_handle,&details)==0&&FsQueryTrackParaList(context,details.u.simple.trackdescr.pfstrack,2,paras,&actual_count)==0&&actual_count==1&&paras[0].idobj==-1&&float_created==0,"deferred block retains no content and consumes no source");
@@ -823,6 +833,24 @@ int main(int argc,char** argv) {
             require(FsQuerySubtrackParaList(context,paras[1].pfspara,1,&child_para,&actual_count)==0&&actual_count==1&&FsQueryLineListSingle(context,child_para.pfspara,2,child_lines,&actual_count)==0&&actual_count==2&&child_lines[0].vrStart==(clears?45:40)+inset&&child_lines[0].dur==(clears||inset?100:60)&&child_lines[1].dur==100&&paras[1].dvrUsed==(clears?25:20)+inset&&paras[1].dvrTopSpace==(clears?5:0),"selective inherited clearing changes original child line position, available width and consumed height exactly");
             require(FsDestroyPage(context,page_handle)==0&&float_created==float_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"cleared child tracks own every earlier floating/line/client resource exactly once");
         }
+        cleared_block_child=true;container_inset=0;container_clear=fskclearNone;
+        for(bool right:{false,true})for(auto value:{fskclearNone,fskclearLeft,fskclearRight,fskclearBoth}) {
+            attached_right=right;block_clear=value;available_height=80;reset_page_counts();float_created=float_destroyed=0;
+            require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&!page_break&&FsQueryPageDetails(context,page_handle,&details)==0&&FsQueryTrackParaList(context,details.u.simple.trackdescr.pfstrack,2,paras,&actual_count)==0&&actual_count==2,"inherited block clearance formats actual floating host and container source");
+            FSPARADESCRIPTION child{};FSFLOATERDETAILS box{};bool clears=value==fskclearBoth||(right?value==fskclearRight:value==fskclearLeft);
+            require(FsQuerySubtrackParaList(context,paras[1].pfspara,1,&child,&actual_count)==0&&actual_count==1&&child.idobj==2&&child.dvrUsed==(clears?30:25)&&child.dvrTopSpace==(clears?5:0)&&FsQueryFloaterDetails(context,child.pfspara,&box)==0&&box.fsrcFloater.u==10&&box.fsrcFloater.v==(clears?45:40)&&box.fsrcFloater.du==100&&box.fsrcFloater.dv==25,"block clearance retains exact selected side, original content position, consumed gap and top space");
+            require(FsDestroyPage(context,page_handle)==0&&float_created==float_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"accepted cleared block releases all floating, line and client ownership exactly once");
+        }
+        block_clear=fskclearBoth;attached_right=false;available_height=45;reset_page_counts();float_created=float_destroyed=0;
+        require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&page_break&&FsQueryPageDetails(context,page_handle,&details)==0&&FsQueryTrackParaList(context,details.u.simple.trackdescr.pfstrack,2,paras,&actual_count)==0&&actual_count==1,"clear gap plus intact block height defers without accepting container child source");
+        incoming_record=page_break;
+        require(FsDestroyPage(context,page_handle)==0,"release inherited host before cleared block resume");
+        require(FsCreatePageFinite(context,incoming_record,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&!page_break&&FsDestroyPageBreakRecord(context,incoming_record)==0&&FsDestroyPage(context,page_handle)==0&&float_created==float_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"deferred cleared block resumes on a fresh page with no stale inherited gap and exact cleanup");
+        available_height=80;reset_page_counts();float_created=float_destroyed=0;float_fail_at=2;
+        require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrCallbackException&&!page_handle&&!page_break&&float_created==float_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"cleared block populated callback failure rolls back all speculative content and source ownership");
+        float_fail_at=-1;
+        cleared_block_child=false;block_clear=fskclearNone;
+        std::puts("native block clearing: all valid/invalid values, selective inherited geometry, intact deferral/resume, populated failure and exact ownership PASS");
         container_inset=0;attached_right=false;container_clear=fskclearBoth;available_height=20;reset_page_counts();float_created=float_destroyed=0;
         require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&page_break&&FsQueryPageDetails(context,page_handle,&details)==0&&FsQueryTrackParaList(context,details.u.simple.trackdescr.pfstrack,2,paras,&actual_count)==0&&actual_count==1&&paras[0].nmp==reinterpret_cast<void*>(101),"clearance beyond remaining space defers the container without publishing empty child source");
         incoming_record=page_break;

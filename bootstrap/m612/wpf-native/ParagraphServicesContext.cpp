@@ -520,7 +520,7 @@ int format_figure(const std::shared_ptr<ParaData>& para,uint32_t direction,const
 int format_block_ui(const std::shared_ptr<ParaData>& para,uint32_t direction,const FSRECT& rect,
     void* input_margin,bool bottomless,bool empty_ok,int suppress,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA suppress_break,
     std::shared_ptr<Continuation>& output,void** margin_output,bool floating=false,FSFLOATERPROPS* floater_props=nullptr,
-    void* floater_input=nullptr,std::shared_ptr<FloaterBreakData>* floater_output=nullptr,bool previous_page=true,const TextData* enclosing=nullptr);
+    void* floater_input=nullptr,std::shared_ptr<FloaterBreakData>* floater_output=nullptr,bool previous_page=true,const TextData* enclosing=nullptr,const std::vector<FloatObstacle>* inherited=nullptr);
 int format_attached_objects(const std::shared_ptr<ParaData>& para,int dcp,uint32_t direction,const FSRECT& rect,bool bottomless,bool force,
     const std::vector<void*>& names,const std::vector<int>& kinds,const std::vector<int>& anchors,int& maximum_anchor,bool& deferred,const PendingFloater* resume=nullptr,bool previous_page=true) {
     auto context=para->context;void* client=context->info.pfsclient;
@@ -849,7 +849,7 @@ int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const F
 
 int format_block_ui(const std::shared_ptr<ParaData>& para,uint32_t direction,const FSRECT& input_rect,
     void* input_margin,bool bottomless,bool empty_ok,int suppress,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA suppress_break,
-    std::shared_ptr<Continuation>& output,void** margin_output,bool floating,FSFLOATERPROPS* floater_props,void* floater_input,std::shared_ptr<FloaterBreakData>* floater_output,bool previous_page,const TextData* enclosing) {
+    std::shared_ptr<Continuation>& output,void** margin_output,bool floating,FSFLOATERPROPS* floater_props,void* floater_input,std::shared_ptr<FloaterBreakData>* floater_output,bool previous_page,const TextData* enclosing,const std::vector<FloatObstacle>* inherited) {
     FSRECT rect=input_rect;
     auto context=para->context;auto& obj=context->info.fscbk.cbkobj;void* client=context->info.pfsclient;
     if(!obj.pfnGetObjectHandlerInfo||!obj.pfnConvertMcsclient)return PTS_tserrInvalidParameter;
@@ -862,13 +862,14 @@ int format_block_ui(const std::shared_ptr<ParaData>& para,uint32_t direction,con
     FSFLOATERPROPS props{};
     status=reinterpret_cast<PtsGetFloaterProperties>(cb.pfnGetFloaterProperties)(client,para->desc.nmp,direction,&props);if(status)return status;
     if(bool(props.fFloat)!=floating||(!floating&&props.fskwr!=fskwrNone))return PTS_tserrNotImplemented;
-    if(!floating&&props.fskclear!=fskclearNone)return PTS_tserrNotImplemented;
     if(props.fskclear<fskclearNone||props.fskclear>fskclearBoth)return PTS_tserrInvalidClientOutput;
     if(props.fskfloatalignment<fskfloatalignMin||props.fskfloatalignment>fskfloatalignMax)return PTS_tserrInvalidClientOutput;
-    if(floating&&enclosing&&props.fskclear!=fskclearNone) {
+    int clearing_space=0;
+    if(props.fskclear!=fskclearNone) {
         int64_t top=rect.v,mid=int64_t(rect.u)+rect.du/2;
-        visit_obstacles(*enclosing,[&](const FloatObstacle& earlier) {
+        auto consider=[&](const FloatObstacle& earlier) {
             const auto& obstacle=earlier.rect;
+            if(obstacle.u>=int64_t(rect.u)+rect.du||int64_t(obstacle.u)+obstacle.du<=rect.u)return;
             bool left=obstacle.u<mid,right=int64_t(obstacle.u)+obstacle.du>mid;
             if(earlier.floater) {
                 // A wide left-aligned floater remains a left-side object even
@@ -877,9 +878,12 @@ int format_block_ui(const std::shared_ptr<ParaData>& para,uint32_t direction,con
                 right=earlier.props.fskfloatalignment!=fskfloatalignMin;
             }
             if(props.fskclear==fskclearBoth||(props.fskclear==fskclearLeft&&left)||(props.fskclear==fskclearRight&&right))top=std::max(top,int64_t(obstacle.v)+obstacle.dv);
-        });
-        if(top>INT_MAX)return PTS_tserrInvalidGeometry;
+        };
+        if(floating&&enclosing)visit_obstacles(*enclosing,consider);
+        if(!floating&&inherited)for(const auto& earlier:*inherited)consider(earlier);
+        if(top>INT_MAX||top-rect.v>INT_MAX)return PTS_tserrInvalidGeometry;
         int64_t gap=top-rect.v;rect.v=int(top);rect.dv=int(std::max<int64_t>(0,int64_t(rect.dv)-gap));
+        if(!floating)clearing_space=int(gap);
     }
     if(floater_props)*floater_props=props;
     int top=0;
@@ -926,9 +930,13 @@ int format_block_ui(const std::shared_ptr<ParaData>& para,uint32_t direction,con
            int64_t(box.fsrc.v)+rect.v+top<INT32_MIN||int64_t(box.fsrc.v)+rect.v+top>INT32_MAX)return PTS_tserrInvalidClientOutput;
         box.fsrc.u+=left;box.fsrc.v+=rect.v+top;
     }
-    para->desc.fsbbox=box;para->desc.pfspara=data.get();para->desc.dvrTopSpace=top;
+    // Block clearance belongs to the accepted paragraph's consumed extent.
+    // Attached floaters retain their host's separate placement/extent accounting.
+    int64_t top_space=int64_t(clearing_space)+top,total=top_space+height;
+    if(top_space<INT32_MIN||top_space>INT32_MAX||total>INT32_MAX)return PTS_tserrInvalidGeometry;
+    para->desc.fsbbox=box;para->desc.pfspara=data.get();para->desc.dvrTopSpace=int(top_space);
     para->forced_progress=!bottomless&&finite.fForcedProgress;
-    para->desc.dvrUsed=int(std::max<int64_t>(0,bottomless?int64_t(top)+height:std::min<int64_t>(int64_t(top)+height,rect.dv)));
+    para->desc.dvrUsed=int(std::max<int64_t>(0,bottomless?total:std::min<int64_t>(total,floating?rect.dv:input_rect.dv)));
     status=reinterpret_cast<PtsGetMCSClientAfterFloater>(cb.pfnGetMCSClientAfterFloater)(client,para->desc.pfsparaclient,para->desc.nmp,direction,input_margin,margin_output);if(status)return status;
     if(split){auto record=std::make_shared<FloaterBreakData>(context);record->callbacks=cb;record->handle=data->break_record;data->break_record=nullptr;*floater_output=record;}
     {std::lock_guard<std::mutex> lock(gate);floaters[data.get()]=data;}
@@ -1205,7 +1213,7 @@ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t 
         }
         else if(props.idobj==2) {
             void* margin_next=nullptr;
-            status=format_block_ui(para,direction,available,input_margin,bottomless,empty_ok||!track->paras.empty(),suppress&&first,first?suppress_break:fsksuppresshardbreakbeforefirstparaNone,next_position,&margin_next);
+            status=format_block_ui(para,direction,available,input_margin,bottomless,empty_ok||!track->paras.empty(),suppress&&first,first?suppress_break:fsksuppresshardbreakbeforefirstparaNone,next_position,&margin_next,false,nullptr,nullptr,nullptr,previous_page,nullptr,&inherited);
             // Deferral preserves the incoming margin. Accepted content returns
             // a newly owned bottom-margin state through the original callback.
             if(!next_position){margin.reset();margin.value=margin_next;input_margin=margin.value;}

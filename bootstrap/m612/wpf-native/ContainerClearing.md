@@ -50,3 +50,21 @@ This is an incremental horizontal container port. Vertical layout, arbitrary
 polygon/object geometry and the other documented advanced layout gaps remain
 unfinished. More complex styled nesting and margin-collapse conformance still
 need broader coverage.
+
+BlockUIContainer uses the original UIElementParagraph GetFloaterProperties callback
+and accepts the same clear values. Its formatter receives inherited obstacles in
+the current track direction and advances past the selected side before collapsing
+its top margin and laying out its border/padding/content. Accepted leading space
+is included in dvrUsed and dvrTopSpace; queried floater/content bounds retain the
+actual cleared position. A deferred block consumes neither the gap nor its source;
+a fresh-page continuation recomputes against that page's actual obstacles.
+
+Native block fixtures check all valid values without obstacles, invalid callback
+output before content creation, eight side/clear combinations with exact positions,
+consumed gaps and top space, intact deferral/resume, populated callback failure and
+single disposal of every accepted/speculative line, client and floating content.
+The BlockUiClearing SDK consumer checks 64 finite source/pagination cases, 16 styled
+margin/border/padding cases and eight bottomless cases that each change the clear
+property five times. Every scenario runs in shared and portable execution, covering
+Ideal/Display formatting, both horizontal page directions and opposing container
+directions, exact source/page ownership, regeneration and compacting collections.
