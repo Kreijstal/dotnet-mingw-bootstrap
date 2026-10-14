@@ -12866,3 +12866,118 @@ layout, full bidi/optimizer conformance, legacy compound/multiword/reform spelli
 and full physical printing remain incomplete or unproven. WinForms8 metadata
 bootstrapping and current Greenshot compatibility remain open. The full WPF goal
 stays active.
+
+
+## 200. Checksum-locked LLVM23 C++/CLI frontend port
+
+The host's LLVM23 upgrade removed the LLVM22 ABI-pinned compiler, forcing releases
+48–50 to repackage already validated WPF trees with an explicit unused-compiler
+check exception. Source feature commit 75139d4 adds a separately pinned LLVM23.1.3
+parser/plugin target while retaining LLVM22.1.8 source support. cppcli.sh selects
+llvm-config's exact version; CMake checks that version against installed LLVM.
+The LLVM23 private parser includes all nineteen upstream translation units,
+including ParseReflect.cpp. That file supplies upstream parser implementation;
+managed reflection syntax is not added to the advertised language subset.
+
+The existing CLI changes merge cleanly against both release-tag source trees.
+A full-context LLVM23 patch preserves upstream changes, and every parser input
+has a committed checksum. Offline preparation and LLVM23/22/23 switching pass,
+including removal of stale reflection sources. CMake emits clang-version.txt next
+to the plugin/driver and records the selected version in generated capabilities.
+The driver rejects incompatible Clang and version-prefix collisions before loading
+the plugin. Legacy builds without the record retain the original LLVM22 guard.
+
+The source plugin and all nineteen parser units build with LLVM23. Initial
+configuration found a missing intrinsic header in the partial development copy;
+synchronizing the full compiler source tree resolves it. After that copy, metadata
+incremental timestamps retained the previous helper binary, so its narrow
+-t:Rebuild regenerated the helper. Both failures were diagnosed before claiming
+compiler success. The managed helper rebuild has zero warnings/errors.
+
+The core Unicode comparison then exposed host console code page 850. The saved
+LLVM22 control app produces the same replacement characters; both emitted IL
+contain the correct UTF-16 lambda/surrogate bytes. A scoped test script selects
+UTF-8 code page 65001 and restores its prior setting on exit. All original runtime
+and rejection assertions remain active. The full eighteen package check groups
+then exit zero on the LLVM23 compiler.
+
+With the standard source WPF environment and
+WPF_CPPCLI_BUILD=/home/topkek/wpfboot/cppcli-llvm23:
+
+```sh
+bash ~/wpfboot/driver/bootstrap/m612/cppcli.sh build
+bash ~/wpfboot/cppcli-llvm23-checks.sh
+bash ~/wpfboot/driver/bootstrap/m612/wpf.sh build-directwrite build-printing check-directwrite-assembly check-printing-assembly check-printing-runtime
+```
+
+All final commands exit zero. Original DirectWriteForwarder and System.Printing
+compile with the new parser/plugin; source assemblies load and prepare their
+managed bodies. System.Printing loads 235 types and prepares 2,017 bodies with
+zero failures. Original printing properties/disposal/GC, native queue enumeration
+and local vector XPS writer/readback also pass. This is not a full physical print
+job or complete native WPF conformance claim.
+
+Source provenance, parser inputs and exact check script/logs are archived under
+`tmp/wpf8-support/validation/cppcli-llvm23-port-20261014`. The msys2-ur compiler
+candidate uses the existing pinned bootstrap archive plus declared
+0003-llvm23-parser-and-abi.patch (SHA-256
+a5cda253c85eb2a92f403bf4355ddc8e896b2703ae9bdb239bc2367bafad04ee).
+Clean replay matches all eight committed source port files. Fresh compiler
+package/install verification and a WPF rebuild using the installed compiler are
+still required at this point; the WPF goal stays active.
+
+
+## 201. Installed LLVM23 compiler package and clean WPF rebuild
+
+The 2026-10-14 continuation completes the clean C++/CLI 0.3.0-2 package and installs
+it on the LLVM23 host. Compiler recipe commit 7152bc2 pins Clang/clang-libs/llvm-libs
+23.1.3, declares all nineteen parser sources and the source port patch, and installs
+the generated ABI record and capabilities. Its .SRCINFO has 28 source/hash entries;
+all 28 downloaded/local declared input hashes match. Parser preparation verifies
+those local inputs with network proxies disabled. All runtime/rejection package
+checks, the Unicode launcher checks and clean package build pass without dependency
+exceptions or skipped gates. The check subshell temporarily selects UTF-8 console
+output and restores its prior code page even on failure.
+
+Exact clean compiler package and install commands on win11:
+
+```sh
+# CLANG64, ~/dotnetboot/packages/cppcli-llvm23-0.3.0
+makepkg --noconfirm --force
+bash ~/wpfboot/install-cppcli-llvm23.sh
+```
+
+Both commands exit zero. Installed clang-version.txt and generated capabilities
+report 23.1.3; the LLVM23 source manifest is included. The installed launcher compiles
+and executes the original inline UTF-16 array pin/GC fixture. Sourcing the current
+WPF recipe and checking every depends/makedepends with pacman -T now passes, including
+the compiler. The unused-compiler dependency exception recorded for releases48–50
+is no longer needed for builds on this host.
+
+The 1,209,968-byte artifact and exact source/package/check/install logs are archived
+under `tmp/wpf8-support/validation/cppcli-llvm23-package-20261014`:
+
+```text
+mingw-w64-clang-x86_64-cppcli-0.3.0-2-any.pkg.tar.zst
+SHA-256: cefacba22f7b641f4b8a30ffd4552b82ecb2aee1bf381fe4cb2dc77d7cf950e0
+```
+
+The downloaded hash and byte count match the installed host artifact. Source port
+and actual original WPF bridge evidence are separately archived in section200's
+source validation directory.
+
+A fresh WPF workspace is now building with the installed compiler and normal
+makepkg dependency checks. The archived start-clean-wpf-build.sh requires a new
+~/dotnetboot/packages/wpf-llvm23-clean directory, copies only PKGBUILD and its declared
+source inputs, verifies all dependencies and runs makepkg --noconfirm --force.
+It preserves the existing installed release50 and validated private tree. The
+current log is ~/wpfboot/wpf-llvm23-clean-package.log; local observation session92909
+remains pending. Authoritative process inspection confirms makepkg is running and
+has completed source checksums/extraction/prepare, applied all50 patches and rebuilt
+SystemEvents before continuing Drawing/desktop prerequisites. This is a live clean
+source build, not proof of a completed new WPF artifact.
+
+Do not restart that build from an observation timeout. Poll the same session or
+inspect the live process/log. Final build/check results, artifact hash and installed
+verification are still required. Broader native layout/conformance and the other
+open WPF work remain unfinished; the full goal stays active.
