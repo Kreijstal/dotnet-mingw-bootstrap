@@ -17,3 +17,12 @@ consume a prebuilt Microsoft native DLL or shader compiler.
 The inherited port disables WPP tracing and does not translate SEH exceptions
 into C++ exceptions through `_set_se_translator`. These limitations remain;
 export/handshake checks do not prove all rendering, multimedia or failure paths.
+
+The public DrawingEffects SDK consumer additionally forces SoftwareOnly rendering
+and checks exact premultiplied opacity, transformed geometry clips, nearest-neighbor
+image tiling, sRGB gradients, opacity masks, retained VisualBrush tiles/source
+invalidation, Gaussian blur, drop-shadow placement/property invalidation and
+identical retained raster after compacting GC. It saves source-generated PNGs and
+runs against shared and self-contained SDK outputs. This is runtime coverage of
+the original graphics port; it does not remove the exception/tracing limitations
+or establish full multimedia/hardware conformance.

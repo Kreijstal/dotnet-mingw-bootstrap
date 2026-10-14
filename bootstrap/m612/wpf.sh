@@ -853,6 +853,7 @@ step_check_sdk() {
   cp -a "${WPF_LAYOUT:-$build/layout}/." "$root/"
   bash "$here/wpf-tests/check-sdk.sh" "$root" "$build/sdk-check"
   bash "$here/wpf-tests/check-image-codecs-sdk.sh" "$root" "$build/image-codecs-sdk-check"
+  bash "$here/wpf-tests/check-drawing-effects-sdk.sh" "$root" "$build/drawing-effects-sdk-check"
   bash "$here/wpf-tests/check-text-tabs-sdk.sh" "$root" "$build/tabs-sdk-check"
   bash "$here/wpf-tests/check-cross-run-carets-sdk.sh" "$root" "$build/cross-run-carets-sdk-check"
   bash "$here/wpf-tests/check-inline-objects-sdk.sh" "$root" "$build/inline-sdk-check"
