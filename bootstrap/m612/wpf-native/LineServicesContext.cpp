@@ -542,6 +542,52 @@ int justify_line(Line& line,int target,int& total,int& trailing,int* minimum_tot
     total=int(int64_t(total)+direction*added);trailing=int(int64_t(trailing)+direction*added);return LS_None;
 }
 
+// Justification moves embedded objects as well as text. Rebuild spacing from
+// nominal metrics while retaining each object's latest measured dimensions,
+// then measure at the resulting pen. Never publish a stale object or accumulate
+// a previous iteration's whitespace adjustments.
+int justify_objects(Line& line,int target,int& total,int& trailing,int* minimum_total=nullptr,int* minimum_trailing=nullptr) {
+    if(target==trailing)return LS_None;
+    if(std::none_of(line.runs.begin(),line.runs.end(),[](const Run& run){return run.embedded&&run.position_used;}))
+        return justify_line(line,target,total,trailing,minimum_total,minimum_trailing);
+    const auto nominal=line.runs;
+    auto settle=[&](Line& working,int desired,int& full,int& visible)->int {
+        std::vector<ObjDim> previous(working.runs.size());
+        auto same_height=[](const LsHeights& a,const LsHeights& b){return a.dvAscent==b.dvAscent&&a.dvDescent==b.dvDescent&&a.dvMultiLineHeight==b.dvMultiLineHeight;};
+        for(int attempt=0;attempt<64;++attempt) {
+            for(size_t i=0;i<working.runs.size();++i) {
+                if(!working.runs[i].embedded)working.runs[i]=nominal[i];
+                else previous[i]=working.runs[i].object_metrics;
+            }
+            int status=layout_tabs(working,working.widths.upStartMainText,full,false);if(status)return status;
+            visible=full;
+            for(auto item=working.runs.rbegin();item!=working.runs.rend();++item){bool all_spaces=false;visible-=trailing_width(*item,all_spaces);if(!all_spaces)break;}
+            status=justify_line(working,desired,full,visible);if(status)return status;
+            status=layout_tabs(working,working.widths.upStartMainText,full);if(status)return status;
+            bool stable=true;
+            for(size_t i=0;i<working.runs.size();++i)if(working.runs[i].embedded) {
+                const auto& dim=working.runs[i].object_metrics;const auto& before=previous[i];
+                if(dim.dur!=before.dur||!same_height(dim.heightsRef,before.heightsRef)||!same_height(dim.heightsPres,before.heightsPres))stable=false;
+            }
+            if(stable)return LS_None;
+        }
+        return LS_InvalidFormatterResult;
+    };
+    int smallest_total=total,smallest_trailing=trailing;
+    if(line.justification==4&&(minimum_total||minimum_trailing)) {
+        Line minimum=line;
+        int status=settle(minimum,INT_MIN,smallest_total,smallest_trailing);if(status)return status;
+        // Carry the last measured object state into the accepted pass. If its
+        // pen changes, the original callback runs again; if it does not, its
+        // retained metrics already describe the source object's drawing state.
+        for(size_t i=0;i<line.runs.size();++i)if(line.runs[i].embedded)line.runs[i]=std::move(minimum.runs[i]);
+    }
+    int status=settle(line,target,total,trailing);if(status)return status;
+    if(minimum_total)*minimum_total=smallest_total;
+    if(minimum_trailing)*minimum_trailing=smallest_trailing;
+    return LS_None;
+}
+
 struct BreakGeometry {
     std::vector<UChar> text;
     std::vector<int64_t> width{0};
@@ -1230,7 +1276,7 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
             (result->info.endr==0||result->info.endr==1||(paragraph.lskj==4&&int64_t(trailing)>int64_t(column)-properties.durRightJustify))) {
             int64_t target=static_cast<int64_t>(column)-properties.durRightJustify;
             if(target<INT_MIN || target>INT_MAX) return LS_InvalidFormatterResult;
-            status=justify_line(*result,static_cast<int>(target),total,trailing,&minimum_total,&minimum_trailing); if(status) return status;
+            status=justify_objects(*result,static_cast<int>(target),total,trailing,&minimum_total,&minimum_trailing); if(status) return status;
         }
         if(minmax) {
             status=paragraph_widths(*result,total,trailing,minimum_total,minimum_trailing);if(status)return status;
@@ -1381,7 +1427,7 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateBreaks(void* handle,int cp,v
             int64_t nominal_visible=visible;
             if(visible>available&&paragraph.fJustify&&paragraph.lskj==4) {
                 int total=line->widths.upLimLine,trailing=line->widths.upStartTrailing;
-                result=justify_line(*line,session->width-properties.durRightBreak,total,trailing,&line->widths.upMinLimLine,&line->widths.upMinStartTrailing);if(result)return result;
+                result=justify_objects(*line,session->width-properties.durRightBreak,total,trailing,&line->widths.upMinLimLine,&line->widths.upMinStartTrailing);if(result)return result;
                 line->widths.upLimLine=total;line->widths.upStartTrailing=trailing;
                 visible=int64_t(trailing)-properties.durLeft;
             }

@@ -233,3 +233,23 @@ Same-level joined graphemes retain their common enclosing directional subline;
 an artificial subline per grapheme causes overlapping multi-grapheme selection
 rectangles. Cross-level cells retain a stable synthetic scope. Actual per-CP
 source-run ownership is preserved in either case.
+
+Justified lines settle position-dependent objects after spacing adjustments.
+Each pass restores nominal text/glyph metrics while retaining the latest object
+dimensions, recalculates tab pens without premature object measurement, adjusts
+spacing, then measures flexible objects at the resulting accepted pens. All object
+dimensions/heights must agree before publication. A64-pass outer bound rejects
+oscillation with no published line; callback failures propagate unchanged.
+Fixed-size objects and lines without dependent objects keep their existing paths.
+
+The same settle step participates in optimal compressed-candidate feasibility.
+FullMixed minima settle the maximum allowed compression with its own dependent
+object measurements. The accepted pass starts from that last measured object
+state and runs last, preserving callback drawing state. InterWord keeps its valid
+nominal minimum; already fitting aligned fields need no adjustment. Final line
+heights use accepted object metrics. Native fixtures cover
+exact InterWord/FullMixed expansion, compression, two interacting objects, drawing,
+failure/oscillation isolation and context reuse. Public checks cover Ideal/Display,
+normal and reconstructed lines, left tabs, fixed/flexible caching, actual nominal
+overflow/compression, exact raw-to-display endpoints, remaining width, atomic
+carets/point/source selection, raster, GC and callback failure/reuse.
