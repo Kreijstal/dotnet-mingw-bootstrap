@@ -10433,3 +10433,57 @@ figure collision/search policies, composite lines on both sides of inset
 obstacles, advanced span/row-break layouts, balancing/footnotes, optimal/
 incremental/interruptible algorithms and full bidi/native-language behavior
 remain incomplete. The full WPF goal stays active.
+
+## 161. Installed release 31: finite Figure attachments
+
+The 2026-10-14 continuation packages section 160 as WindowsDesktop 8.0.0-31.
+Declared/checksummed 0031-figures.patch follows the prior 30 patches. Clean pinned
+sources plus all patches reproduce the six committed feature files byte for
+byte; actual private package sources have matching hashes. Both source and
+private trees rebuild native output/inventory/layout and pass figure ownership,
+position, context/stale-query and lost/populated callback failure gates, 441
+original ABI field checks and paragraph/line regressions. Each tree passes all
+19 offline WPF SDK consumers and the retained interim WinForms checks. Unchanged
+managed/graphics/printing outputs remain private source builds.
+
+Validation commands:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+# In the CLANG64 package workspace, with srcdir set to its src/ directory:
+makepkg --verifysource --force
+source PKGBUILD
+_wpf native-win32 inventory check-paragraph-context-native check-paragraph-context check-lineservices-line-native layout check-sdk
+makepkg --printsrcinfo > .SRCINFO
+makepkg --repackage --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-31-any.pkg.tar.zst
+/usr/bin/python3 check-staged.py /clang64/lib/dotnet
+bash "$(_driver)/wpf-tests/check-figures-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-figures-sdk-check
+bash "$(_driver)/wpf-tests/check-floaters-sdk.sh" /clang64/lib/dotnet ~/wpfboot/installed-figures-floaters-sdk-check
+pacman -Q mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap
+sha256sum mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-31-any.pkg.tar.zst
+```
+
+All final commands pass. Staged/installed payload checks cover 42 managed
+implementation/reference assemblies, eight native libraries, SDK tasks and
+retained interim WinForms versions. The installed figure consumer runs all ten
+scenarios in Ideal/Display twice, through the shared framework and a portable
+self-contained publish with SDK roots/toolchain PATH removed. It verifies all
+587 ordinary/682 late-anchor source characters exactly once, page mapping,
+actual anchors/offsets, glyph/background raster, zero host overlap and disposed
+page regeneration after GC. Installed floater checks retain left/right, multiple/
+inline/deferred/split/column/nested/scrolling behavior after rectangular wrapping
+changes. Consumer builds report zero warnings/errors. The existing srcdir
+provenance warning remains.
+
+Artifact: mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap-8.0.0-31-any.pkg.tar.zst.
+SHA-256: 837471d3cb53448244425c4c6510cc30372d65493667b48f335e8a933ea81e6e.
+Recipe commit: msys2-ur 6fbc534; feature commit: 36cb38c.
+Source evidence is archived under tmp/wpf8-support/validation/figures-20261014.
+Artifact, recipe, metadata, patch, hashes and package/installed validation logs
+are archived under tmp/wpf8-support/validation/figures-package-20261014.
+Imported native coverage is 110/139 with 29 absent. Complex figure collision/
+search policies, composite lines on both sides of inset obstacles, advanced
+span/row-break layouts, balancing/footnotes, optimal/incremental/interruptible
+algorithms and full bidi/native-language behavior remain incomplete. The full
+WPF goal stays active.
