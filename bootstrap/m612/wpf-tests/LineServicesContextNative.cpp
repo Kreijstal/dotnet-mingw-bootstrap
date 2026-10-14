@@ -7,6 +7,7 @@
 #include <thread>
 #include <atomic>
 #include "LineServicesNative.h"
+#include "../wpf-native/ReverseObjectHandler.h"
 struct State {
     uint32_t version;
     int32_t estimated,priorities,handlers,breaking,incremental,tab_count,display,equal;
@@ -29,6 +30,8 @@ int main(int argc,char** argv) {
         using Esc=void (WINAPI *)(EscStringInfo*);
         PROC(LoCreateContext,Create); PROC(LoDestroyContext,Destroy); PROC(LoSetBreaking,Breaking);
         PROC(LoSetDoc,Doc); PROC(LoSetTabs,Tabs); PROC(WpfGetLineServicesContextState,Snapshot); PROC(LoGetEscString,Esc);
+        using Handler=int(WINAPI*)(void*,uint32_t,void*);
+        PROC(LocbkGetObjectHandlerInfo,Handler);
         EscStringInfo escapes{}; LoGetEscString(&escapes);
         require(*static_cast<WCHAR*>(escapes.szParaSeparator)==0x2029&&*static_cast<WCHAR*>(escapes.szLineSeparator)==0x2028&&
                 *static_cast<WCHAR*>(escapes.szNbsp)==0xA0,"Unicode escape/control vocabulary");
@@ -40,6 +43,17 @@ int main(int argc,char** argv) {
         info.cInstalledHandlers=1; info.plsimethods=&handler;
         void* context=nullptr;
         require(LoCreateContext(&info,&callbacks,&context)==LS_None&&context&&info.pols==context,"owned context creation");
+        WpfReverseObjectHandler reverse{};
+        require(LocbkGetObjectHandlerInfo(context,0,&reverse)==0&&!reverse.version&&reverse.kind==WpfReverseObjectKind&&reverse.context==context&&reverse.transition,"original native object zero returns a live context-bound reverse handler");
+        int level=99;
+        require(reverse.transition(context,0,0,2,&level)==0&&level==2&&reverse.transition(context,0,2,-2,&level)==0&&!level,"reverse handler performs actual opening/closing level transitions");
+        require(reverse.transition(context,0,0,125,&level)==0&&level==125&&reverse.transition(context,1,1,124,&level)==0&&level==125,"reverse handler permits the original maximum level for LTR and RTL bases");
+        require(reverse.transition(context,0,124,2,&level)==LS_InvalidFormatterResult&&!level&&reverse.transition(context,1,1,-1,&level)==LS_InvalidFormatterResult&&!level,"reverse overflow and closing below paragraph base reject with clean outputs");
+        require(reverse.transition(context,2,2,1,&level)==LS_InvalidParameter&&!level&&reverse.transition(context,0,0,0,&level)==LS_InvalidParameter&&!level&&reverse.transition(context,0,0,1,nullptr)==LS_NullOutputParameter,"reverse transition validates its base, delta and output");
+        require(reverse.transition(nullptr,0,0,1,&level)==LS_InvalidContext&&!level,"an absent active scope cannot validate a null borrowed owner");
+        WpfReverseObjectHandler untouched=reverse;
+        require(LocbkGetObjectHandlerInfo(context,1,&untouched)==LS_NotImplemented&&untouched.context==context&&untouched.transition==reverse.transition,"unknown object IDs cannot overwrite a different handler's opaque buffer");
+        require(LocbkGetObjectHandlerInfo(reinterpret_cast<void*>(1),0,&untouched)==LS_InvalidContext&&!untouched.kind&&!untouched.context&&!untouched.transition&&LocbkGetObjectHandlerInfo(context,0,nullptr)==LS_NullOutputParameter,"invalid contexts clear the known reverse record and null output rejects");
         info.version=0; callbacks.pfnFetchRunRedefined=nullptr; handler.pfnFmt=nullptr;
         State state{}; require(WpfGetLineServicesContextState(context,&state)==0&&state.version==4&&state.fetch_run==pointer&&state.handlers==1,"copied input/handler/callback state");
         LsDevRes resolution{1440,1440,1440,1440};
@@ -55,6 +69,8 @@ int main(int argc,char** argv) {
         for(int n=0;n<1000;++n) require(LoSetBreaking(context,n%2)==0,"concurrent configuration");
         reader.join(); require(stable,"concurrent context lifetime");
         require(LoDestroyContext(context)==0&&LoDestroyContext(context)==LS_InvalidContext,"destroy/double-destroy");
+        require(reverse.transition(context,0,0,1,&level)==LS_InvalidContext&&!level&&LocbkGetObjectHandlerInfo(context,0,&untouched)==LS_InvalidContext&&!untouched.transition,"borrowed reverse handler cannot operate after its owner context is destroyed");
+        std::puts("native reverse object handler: original registration, actual bounded LTR/RTL transitions, clean invalid inputs, opaque foreign IDs and stale owner rejection PASS");
         require(LoSetDoc(context,1,1,&resolution)==LS_InvalidContext,"stale context rejection");
         context=reinterpret_cast<void*>(1); require(LoCreateContext(nullptr,nullptr,&context)==LS_InvalidParameter&&!context,"invalid creation output cleared");
         require(LoCreateContext(nullptr,nullptr,nullptr)==LS_NullOutputParameter,"null output rejection");

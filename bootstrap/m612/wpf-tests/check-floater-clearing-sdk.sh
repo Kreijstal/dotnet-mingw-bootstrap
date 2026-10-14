@@ -17,12 +17,14 @@ export NUGET_PACKAGES=$(cygpath -m "$work/empty-packages")
   --configfile "$(cygpath -m "$work/NuGet.config")" -v:q -p:UseSharedCompilation=false
 # Shared-framework execution must load the installed/overlaid desktop pack.
 test ! -e "$work/bin/Release/net8.0-windows/PresentationCore.dll"
-timeout 60 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0-windows/FloaterClearingSdkCheck.dll")"
+# All 64 finite cases plus four bottomless resize/scroll/GC cases took 62.21s
+# on installed release 47. Keep every assertion and allow host-load variation.
+timeout 180 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0-windows/FloaterClearingSdkCheck.dll")"
 "$sdk/dotnet.exe" publish "$(cygpath -m "$work/FloaterClearingSdkCheck.csproj")" -r win-x64 --self-contained true \
   --configfile "$(cygpath -m "$work/NuGet.config")" -p:UseAppHost=true -v:q -p:UseSharedCompilation=false
 # Verify the published implementation/resource bytes came from this SDK's pack.
 cmp "$work/bin/Release/net8.0-windows/win-x64/publish/PresentationCore.dll" \
   "$sdk/shared/Microsoft.WindowsDesktop.App/8.0.0-bootstrap.wpf.8.0.0/PresentationCore.dll"
 env -u DOTNET_ROOT -u DOTNET_ROOT_X64 PATH=/usr/bin:/c/Windows/System32 \
-  timeout 60 "$work/bin/Release/net8.0-windows/win-x64/publish/FloaterClearingSdkCheck.exe"
+  timeout 180 "$work/bin/Release/net8.0-windows/win-x64/publish/FloaterClearingSdkCheck.exe"
 printf 'PASS normal offline WPF SDK floater clearing check and self-contained publish with SDK roots removed\n'

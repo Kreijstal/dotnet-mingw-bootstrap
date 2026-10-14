@@ -7,7 +7,23 @@
 #include <algorithm>
 #include <vector>
 #include "LineServicesNative.h"
+#include "../wpf-native/ReverseObjectHandler.h"
 static bool abort_fetch=false,bidi_mode=false;
+using ReverseInfo=int(WINAPI*)(void*,uint32_t,void*);
+static ReverseInfo reverse_info=nullptr;
+static int(WINAPI* reverse_destroy_context)(void*)=nullptr;
+static int reverse_mode=0,reverse_requests=0;
+static int WINAPI reverse_handler(void* context,uint32_t object,void* output) {
+    ++reverse_requests;if(object!=0)return LS_ClientAbort;
+    if(reverse_mode==1)return LS_ClientAbort;
+    if(reverse_destroy_context(context)!=LS_ContextInUse)return LS_ClientAbort;
+    int status=reverse_info(context,object,output);if(status)return status;
+    auto handler=static_cast<WpfReverseObjectHandler*>(output);
+    if(reverse_mode==2)handler->version=1;
+    if(reverse_mode==3)handler->context=reinterpret_cast<void*>(1);
+    if(reverse_mode==4)handler->transition=nullptr;
+    return 0;
+}
 struct BidiCall { WCHAR ch;int x,flow; };
 static std::vector<BidiCall> bidi_calls;
 static int draws=0;
@@ -106,6 +122,8 @@ int main(int argc,char** argv) {
         PROC(LoAcquireBreakRecord,Acquire); PROC(LoCloneBreakRecord,Acquire); PROC(LoDisposeBreakRecord,DisposeLine);
         PROC(LoQueryLineCpPpoint,CpQuery); PROC(LoQueryLinePointPcp,PointQuery);
         PROC(LoSetTabs,SetTabs); PROC(LoEnumLine,EnumLine);
+        PROC(LocbkGetObjectHandlerInfo,ReverseInfo);reverse_info=LocbkGetObjectHandlerInfo;
+        reverse_destroy_context=LoDestroyContext;
         LsContextInfo config{}; config.version=4; config.pfnFetchPap=reinterpret_cast<void*>(pap);
         config.pfnGetRunTextMetrics=reinterpret_cast<void*>(metrics); config.pfnGetRunCharWidths=reinterpret_cast<void*>(widths);
         config.pfnDrawTextRun=reinterpret_cast<void*>(draw);
@@ -251,7 +269,9 @@ int main(int argc,char** argv) {
         std::puts("native min/max exact column-independent widths, trailing spaces, cross-run words, hard-line paragraph coverage and NBSP boundaries PASS");
         bidi_mode=true;sample=L"a\uFFFCbc\uFFFBd\u2029";run_length=1;paragraph_flags=0;
         config.pfnDrawTextRun=reinterpret_cast<void*>(bidi_draw);void* bidi_context=nullptr;
+        config.pfnGetObjectHandlerInfo=reinterpret_cast<void*>(reverse_handler);
         require(LoCreateContext(&config,&callbacks,&bidi_context)==0&&LoSetDoc(bidi_context,1,1,&resolution)==0,"bidi context creation and original device setup");
+        for(int mode:{1,2,3,4}){reverse_mode=mode;require(LoCreateLine(bidi_context,0,0,1000,0,nullptr,&info,&line,&depth,&measured)==(mode==1?LS_ClientAbort:LS_InvalidFormatterResult)&&!line&&!depth&&!measured.upLimLine,"failed/malformed/foreign/incomplete native handler callback clears line outputs without publishing a binding");}reverse_mode=0;
         int bidi_status=LoCreateLine(bidi_context,0,0,1000,0,nullptr,&info,&line,&depth,&measured);if(bidi_status||depth!=2||info.cpLimToContinue!=7||measured.upLimLine!=44)std::printf("bidi status=%d depth=%d cp=%d width=%d\n",bidi_status,depth,info.cpLimToContinue,measured.upLimLine);require(bidi_status==0&&depth==2&&info.cpLimToContinue==7&&measured.upLimLine==44,"reversal controls consume source units without glyph width and report real query depth");
         LsQSubInfo hierarchy[2]{};
         require(LoQueryLineCpPpoint(line,2,2,hierarchy,&queried_depth,&cell)==0&&queried_depth==2&&hierarchy[0].lstflowSubLine==0&&hierarchy[1].lstflowSubLine==4&&hierarchy[1].lscpFirstSubLine==2&&hierarchy[1].lsdcpSubLine==2&&hierarchy[1].pointUvStartSubLine.x==34&&cell.pointUvStartCell.x==34&&cell.dupCell==10,"logical first reverse character has right-edge caret and owning reversed subline");
@@ -268,7 +288,11 @@ int main(int argc,char** argv) {
         sample=L"\uFFFC\uFFFCab\uFFFB\uFFFB\u2029";paragraph_flags=0;
         require(LoCreateLine(bidi_context,0,0,1000,0,nullptr,&info,&line,&depth,&measured)==0&&depth==3&&measured.upLimLine==24,"coalesced native control spans represent two embedding scopes without backing-buffer glyphs");
         LsQSubInfo nested[3]{};require(LoQueryLineCpPpoint(line,2,3,nested,&queried_depth,&cell)==0&&queried_depth==3&&nested[0].lstflowSubLine==0&&nested[1].lstflowSubLine==4&&nested[2].lstflowSubLine==0,"nested reversal hierarchy retains its intermediate direction");
-        require(LoDisposeLine(line,FALSE)==0&&LoDestroyContext(bidi_context)==0,"bidi record/context cleanup");bidi_mode=false;paragraph_flags=0;
+        require(LoDisposeLine(line,FALSE)==0&&reverse_requests==5,"successful reverse binding is reused across nested controls and cloned continuations after four failed callbacks");
+        sample=L"\uFFFBa\u2029";
+        require(LoCreateLine(bidi_context,0,0,1000,0,nullptr,&info,&line,&depth,&measured)==LS_InvalidFormatterResult&&!line&&!depth,"handler rejects a closing reverse below the paragraph base without retaining a partial line");
+        require(LoDestroyContext(bidi_context)==0,"bidi record/context cleanup");bidi_mode=false;paragraph_flags=0;
+        std::puts("native reverse binding: original handler callback, failed/malformed/foreign/incomplete retry, stable owned binding, actual nested/continued transitions and clean invalid close PASS");
         std::puts("native bidi reversals: control ownership, visual origins, nested caret/point geometry, depth validation, wrapped embedding and independent cloned continuations PASS");
         sample=L"abcdefghij\u2029";run_length=9600;uniform_width=true;paragraph_flags=0x100040;hyphen_mode=1;
         config.pfnDrawTextRun=reinterpret_cast<void*>(hyphen_draw);config.pfnEnumText=reinterpret_cast<void*>(hyphen_enum);config.pfnGetNextHyphenOpp=reinterpret_cast<void*>(hyphen_opportunity);

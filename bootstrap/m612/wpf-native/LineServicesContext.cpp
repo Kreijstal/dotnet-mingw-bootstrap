@@ -12,6 +12,7 @@
 #include <unicode/ubidi.h>
 #include <unicode/uchar.h>
 #include "LineServicesNative.h"
+#include "ReverseObjectHandler.h"
 
 namespace {
 struct Context {
@@ -23,6 +24,7 @@ struct Context {
     int breaking=0,incremental_tab=0;
     std::vector<LsTbd> tabs;
     bool in_use=false;
+    WpfReverseObjectHandler reverse_handler{};
 };
 
 struct GlyphOffset { int32_t du,dv; };
@@ -84,6 +86,10 @@ std::unordered_map<void*,std::shared_ptr<BreakRecord>> records;
 std::unordered_map<void*,std::shared_ptr<PenaltyModule>> penalties;
 std::unordered_map<void*,std::shared_ptr<ParaSession>> sessions;
 std::unordered_map<void*,std::weak_ptr<BreakPenalty>> break_penalties;
+// A formatting scope retains this owner and prevents its destruction. Avoid
+// registry locking for every control in optimal/geometry reconstruction; direct
+// borrowed-handler calls outside that scope still validate the live registry.
+static thread_local Context* reverse_active_context=nullptr;
 
 using FetchPap=int (WINAPI *)(void*,int,LsPap*);
 using FetchProps=int (WINAPI *)(void*,int,int,LsLineProps*);
@@ -106,6 +112,30 @@ using CharExpansion=int(WINAPI*)(void*,int,int,LsCharRunInfo*,LsNeighborInfo*,Ls
 using GlyphExpansion=int(WINAPI*)(void*,int,int,LsGlyphRunInfo*,LsNeighborInfo*,LsNeighborInfo*,int,int**,int**,uint8_t*,int*);
 using HyphenOpportunity=int(WINAPI*)(void*,int,int,int*,int*,LsHyph*);
 using AutoNumber=int(WINAPI*)(void*,int*,LsChp*,uintptr_t*,uint16_t*,LsChp*,uintptr_t*,int*,int*,int*);
+
+int WINAPI reverse_transition(void* handle,int base,int level,int delta,int* output) {
+    if(!output)return LS_NullOutputParameter;*output=0;
+    if(!reverse_active_context||reverse_active_context!=handle){std::lock_guard<std::mutex> lock(gate);if(contexts.find(handle)==contexts.end())return LS_InvalidContext;}
+    if((base!=0&&base!=1)||!delta)return LS_InvalidParameter;
+    int64_t next=int64_t(level)+delta;
+    if(level<base||level>125||next<base||next>125)return LS_InvalidFormatterResult;
+    *output=int(next);return LS_None;
+}
+int transition_reverse(Context& context,Run& run,int base,int& level,int count,bool opening) {
+    if(!context.reverse_handler.transition) {
+        if(!context.info.pfnGetObjectHandlerInfo)return LS_NotImplemented;
+        WpfReverseObjectHandler handler{};
+        using Request=int(WINAPI*)(void*,uint32_t,void*);
+        int status=reinterpret_cast<Request>(context.info.pfnGetObjectHandlerInfo)(context.info.pols,0,&handler);
+        if(status)return status;
+        if(handler.version||handler.kind!=WpfReverseObjectKind||handler.context!=context.info.pols||handler.transition!=reverse_transition)return LS_InvalidFormatterResult;
+        context.reverse_handler=handler;
+    }
+    int delta=opening?count:-count,next=0;
+    int status=context.reverse_handler.transition(context.reverse_handler.context,base,level,delta,&next);
+    if(status)return status;
+    run.level_delta=delta;level=next;return LS_None;
+}
 
 int format_object(Context& context,Run& run,int position,int margin) {
     if(!context.info.pfnGetObjectHandlerInfo) return LS_NotImplemented;
@@ -209,8 +239,8 @@ int format_marker(Line& line,int requested,int& main_start) {
         bool opening=run.properties.idObj==0;
         bool closing=run.properties.idObj==0xFFFF && text[0]==0xFFFB && (run.id&0x0FFFFFFFu)==0;
         if(opening||closing) {
-            if(opening){if(text[0]!=0xFFFC||count>125-level)return LS_InvalidFormatterResult;run.level_delta=count;level+=count;}
-            else {if(count>level-(line.base_flow==4?1:0))return LS_InvalidFormatterResult;run.level_delta=-count;level-=count;}
+            if(opening&&text[0]!=0xFFFC)return LS_InvalidFormatterResult;
+            status=transition_reverse(context,run,line.base_flow==4?1:0,level,count,opening);if(status)return status;
             run.hidden=true;run.text.assign(count,opening?0xFFFC:0xFFFB);run.widths.assign(count,0);
             line.markers.push_back(std::move(run));position+=count;continue;
         }
@@ -823,6 +853,16 @@ extern "C" __declspec(dllexport) int WINAPI LoDestroyContext(void* handle) {
     contexts.erase(found); return LS_None;
 }
 
+extern "C" __declspec(dllexport) int WINAPI LocbkGetObjectHandlerInfo(void* handle,uint32_t object_id,void* output) {
+    if(!output)return LS_NullOutputParameter;
+    // Only object zero uses this private record. Do not write an unknown
+    // object's output buffer, whose size/protocol is not ours to assume.
+    if(object_id!=0)return LS_NotImplemented;
+    auto handler=static_cast<WpfReverseObjectHandler*>(output);*handler={};
+    {std::lock_guard<std::mutex> lock(gate);if(contexts.find(handle)==contexts.end())return LS_InvalidContext;}
+    *handler={0,WpfReverseObjectKind,handle,reverse_transition};return LS_None;
+}
+
 extern "C" __declspec(dllexport) int WINAPI LoSetBreaking(void* handle,int strategy) {
     std::lock_guard<std::mutex> lock(gate);
     auto found=contexts.find(handle); if(found==contexts.end()) return LS_InvalidContext;
@@ -897,7 +937,9 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
     }
     struct Active {
         std::shared_ptr<Context> context;
-        ~Active() { std::lock_guard<std::mutex> lock(gate); context->in_use=false; }
+        Context* previous;
+        explicit Active(std::shared_ptr<Context> value):context(std::move(value)),previous(reverse_active_context){reverse_active_context=context.get();}
+        ~Active() { reverse_active_context=previous;std::lock_guard<std::mutex> lock(gate); context->in_use=false; }
     } active{context};
     const bool minmax=(flags&8)!=0;
     try {
@@ -955,8 +997,7 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
                 if(limit>0)count=std::min(count,limit-(position-cp));
                 // Original SpanVector coalesces adjacent identical control IDs;
                 // their one-character backing buffer represents count scopes.
-                if(reversal){if(count>125-level)return LS_InvalidFormatterResult;run.level_delta=count;level+=count;}
-                else {if(count>level-(flow==4?1:0))return LS_InvalidFormatterResult;run.level_delta=-count;level-=count;}
+                status=transition_reverse(*context,run,flow==4?1:0,level,count,reversal);if(status)return status;
                 run.hidden=true;run.text.assign(count,reversal?0xFFFC:0xFFFB);run.widths.assign(count,0);result->runs.push_back(std::move(run));position+=count;continue;
             }
             run.embedded=run.properties.idObj==1;
