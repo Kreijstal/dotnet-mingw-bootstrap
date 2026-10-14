@@ -10487,3 +10487,52 @@ search policies, composite lines on both sides of inset obstacles, advanced
 span/row-break layouts, balancing/footnotes, optimal/incremental/interruptible
 algorithms and full bidi/native-language behavior remain incomplete. The full
 WPF goal stays active.
+
+## 162. Finite page updates with atomic layout replacement
+
+The 2026-10-14 continuation implements original FsUpdateFinitePage. It validates
+a live finite root page and any context-owned page break record, using the
+record's source section and immutable continuation when supplied. A complete
+new layout and outgoing checkpoint are formatted and registered before commit.
+The existing page handle then adopts the new simple track or multi-column
+section. Old track/section/text query handles invalidate; prior content and
+continuation owners remain alive until after releasing the registry lock, so
+original managed destruction callbacks can reenter safely. Failed formatting
+returns clean outputs and preserves the old page and incoming checkpoint.
+
+This is full page reformatting under the finite-update entry point. Selective
+incremental paragraph/line reuse and display transfer remain separate work.
+
+Native fixtures replace two paragraphs with three under the same page handle,
+check old text/track invalidation and exact superseded-content release, inject
+a populated line failure, reject foreign contexts/unknown records and confirm
+old-layout retention. A resumed update and independent page creation reuse the
+same incoming line checkpoint and own distinct outgoing records. Multi-column
+replacement invalidates the previous section and releases both old/new owned
+hierarchies exactly once.
+
+The original managed page fixture retains an actual FlowDocumentPage outside
+the paginator's break table, whose normal edit path disposes cached pages. It
+calls original FormatFinite/Arrange, edits the real Run and verifies the original
+PrepareForFiniteUpdate/UpdateFinitePage path preserves the native page handle.
+Both text modes, with/without columns, accept longer text, a 719-character
+multi-page edit and a shorter final edit. Changed glyph raster and original text
+ranges validate the replacement. Long content resumes through real original
+page break records into three rendered pages, covering every source character
+exactly once. Original page/record disposal and compacting GC pass.
+
+Focused validation on win11:
+
+```sh
+M612=/home/topkek/dotnetboot/m612 MSYSTEM=CLANG64 WPF_BUILD=/home/topkek/wpfboot/build bash ~/wpfboot/driver/bootstrap/m612/wpf.sh native-win32 inventory check-paragraph-context-native
+/usr/bin/python3 ~/wpfboot/refresh-finite-native.py
+bash ~/wpfboot/driver/bootstrap/m612/wpf-tests/check-finite-updates-sdk.sh ~/wpfboot/build/sdk-check-root ~/wpfboot/finite-update-sdk-check
+```
+
+The final focused commands pass with zero consumer warnings/errors. Shared-
+framework and self-contained runs pass with SDK roots/toolchain PATH removed.
+ABI scope remains 441 source-derived fields. Imported native coverage rises to
+111/139 with 28 absent. Selective incremental reuse, comparison/display transfer,
+complex figure collision/search/composite-line layouts, advanced span/row breaks,
+balancing/footnotes, optimal/interruptible algorithms and full bidi/native-language
+behavior remain incomplete. The full WPF goal stays active.

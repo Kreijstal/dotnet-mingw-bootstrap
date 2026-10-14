@@ -1278,6 +1278,40 @@ extern "C" __declspec(dllexport) int WINAPI FsSynchronizeBottomlessSubtrack(void
     try {TrackShift plan{shift};int status=plan.collect(track);if(status)return status;std::lock_guard<std::mutex> lock(gate);plan.apply();return 0;}
     catch(const std::bad_alloc&){return PTS_tserrOutOfMemory;}
 }
+extern "C" __declspec(dllexport) int WINAPI FsUpdateFinitePage(void* context_handle,void* handle,void* break_input,void* section,FSFMTR* formatted,void** break_output) {
+    if(!formatted||!break_output)return PTS_tserrNullOutputParameter;
+    *formatted={};*break_output=nullptr;
+    auto page=lookup_owned(pages,context_handle,handle);
+    if(!page||page->subpage||page->bottomless)return PTS_tserrInvalidQuery;
+    std::shared_ptr<BreakData> input;
+    if(break_input){input=lookup_owned(records,context_handle,break_input);if(!input||!input->page)return PTS_tserrInvalidBreakRecord;section=input->section;}
+    try {
+        // Format and register a complete replacement before touching the live
+        // page. Input positions are immutable and remain reusable after failure.
+        std::shared_ptr<PageData> replacement;
+        int status=build_page(page->context,section,false,replacement,input?input->position:nullptr);if(status)return status;
+        if(replacement->stop==fmtrNoProgressOutOfSpace)return PTS_tserrNotImplemented;
+        auto outgoing=replacement->continuation?make_record(page->context,replacement->continuation,true,section):nullptr;
+        try {register_page(replacement);}catch(...){if(outgoing)destroy_record(context_handle,outgoing.get(),true);throw;}
+        // Keep every old owner alive until after the registry lock is released.
+        // Paragraph and break destruction reenters original managed callbacks.
+        auto previous_track=page->track;auto previous_section=page->section;auto previous_position=page->continuation;
+        bool live=false;
+        {std::lock_guard<std::mutex> lock(gate);
+            auto current=pages.find(handle);live=current!=pages.end()&&current->second==page;
+            if(live){
+                if(previous_section){for(const auto& track:previous_section->columns)tracks.erase(track.get());sections.erase(previous_section.get());}
+                else tracks.erase(previous_track.get());
+                pages.erase(replacement.get());
+                page->track=replacement->track;page->section=replacement->section;page->details=replacement->details;
+                page->continuation=replacement->continuation;page->stop=replacement->stop;page->forced_progress=replacement->forced_progress;
+            }
+        }
+        if(!live){unregister_page(replacement);if(outgoing)destroy_record(context_handle,outgoing.get(),true);return PTS_tserrInvalidQuery;}
+        formatted->kstop=page->stop;formatted->fForcedProgress=page->forced_progress;
+        *break_output=outgoing?outgoing.get():nullptr;return 0;
+    }catch(const std::bad_alloc&){return PTS_tserrOutOfMemory;}
+}
 extern "C" __declspec(dllexport) int WINAPI FsUpdateBottomlessPage(void* context_handle,void* handle,void* section,FSFMTRBL* formatted) {
     if(!formatted)return PTS_tserrNullOutputParameter;*formatted=fmtrblGoalReached;
     auto page=lookup_owned(pages,context_handle,handle);if(!page||page->subpage||!page->bottomless)return PTS_tserrInvalidQuery;

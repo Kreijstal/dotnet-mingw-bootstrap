@@ -285,6 +285,42 @@ int main(int argc,char** argv) {
         require(FsClearUpdateInfoInPage(context,page_handle)==0&&FsQueryPageDetails(context,page_handle,&details)==0&&details.fskupd==fskupdNoChange,"page update clear is retained");
         require(FsDestroyPage(context,page_handle)==0&&lines_destroyed==4&&breaks_destroyed==4&&clients_destroyed==2&&FsDestroyPage(context,page_handle)==PTS_tserrInvalidQuery,"page teardown releases every callback handle exactly once");
         require(FsQueryTextDetails(context,paras[0].pfspara,&text_details)==PTS_tserrInvalidQuery&&FsQueryTrackDetails(context,track,&track_details)==PTS_tserrInvalidQuery,"page teardown invalidates child queries");
+        PROC(FsDestroyPageBreakRecord,PageAction);
+        using QuerySections=int(WINAPI*)(void*,void*,int,FSSECTIONDESCRIPTION*,int*);
+        using QuerySection=int(WINAPI*)(void*,void*,FSSECTIONDETAILS*);
+        using QueryColumns=int(WINAPI*)(void*,void*,int,FSTRACKDESCRIPTION*,int*);
+        PROC(FsQueryPageSectionList,QuerySections);PROC(FsQuerySectionDetails,QuerySection);PROC(FsQuerySectionBasicColumnList,QueryColumns);
+        using FiniteUpdate=int(WINAPI*)(void*,void*,void*,void*,FSFMTR*,void**);PROC(FsUpdateFinitePage,FiniteUpdate);
+        {
+            available_height=80;para_count=2;reset_page_counts();void* updated_record=nullptr;
+            require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&!page_break&&FsQueryPageDetails(context,page_handle,&details)==0,"finite update starts from a live page");
+            void* old_track=details.u.simple.trackdescr.pfstrack;
+            require(FsQueryTrackParaList(context,old_track,2,paras,&actual_count)==0,"finite update retains original text query handles");void* old_text=paras[0].pfspara;
+            para_count=3;
+            require(FsUpdateFinitePage(context,page_handle,nullptr,reinterpret_cast<void*>(66),&formatted,&updated_record)==0&&!updated_record&&formatted.kstop==fmtrGoalReached&&FsQueryPageDetails(context,page_handle,&details)==0&&details.u.simple.trackdescr.pfstrack!=old_track,"finite update preserves page identity and replaces source layout");
+            require(FsQueryTrackDetails(context,details.u.simple.trackdescr.pfstrack,&track_details)==0&&track_details.cParas==3&&FsQueryTrackDetails(context,old_track,&track_details)==PTS_tserrInvalidQuery&&FsQueryTextDetails(context,old_text,&text_details)==PTS_tserrInvalidQuery&&lines_created==10&&lines_destroyed==4&&clients_destroyed==2,"accepted update invalidates old track/text and releases only superseded content");
+            old_track=details.u.simple.trackdescr.pfstrack;int retained_lines=lines_created-lines_destroyed,retained_clients=clients_created-clients_destroyed;
+            fail_line=lines_created+3;updated_record=reinterpret_cast<void*>(1);formatted.kstop=fmtrBrokenOutOfSpace;
+            require(FsUpdateFinitePage(context,page_handle,nullptr,reinterpret_cast<void*>(66),&formatted,&updated_record)==PTS_tserrCallbackException&&!updated_record&&formatted.kstop==fmtrGoalReached&&FsQueryPageDetails(context,page_handle,&details)==0&&details.u.simple.trackdescr.pfstrack==old_track&&lines_created-lines_destroyed==retained_lines&&clients_created-clients_destroyed==retained_clients,"failed finite update clears outputs, discards speculative clients and retains the old page");fail_line=-1;
+            require(FsUpdateFinitePage(reinterpret_cast<void*>(999),page_handle,nullptr,reinterpret_cast<void*>(66),&formatted,&updated_record)==PTS_tserrInvalidQuery&&!updated_record&&FsUpdateFinitePage(context,page_handle,reinterpret_cast<void*>(999),nullptr,&formatted,&updated_record)==PTS_tserrInvalidBreakRecord&&!updated_record,"finite update rejects foreign contexts and unknown input records before callbacks");
+            require(FsDestroyPage(context,page_handle)==0&&lines_created==lines_destroyed&&clients_created==clients_destroyed&&breaks_destroyed==lines_created,"updated and failed finite pages release every original resource exactly once");
+            available_height=10;para_count=2;reset_page_counts();
+            require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&page_break,"finite continuation update starts from actual input checkpoint");void* update_input=page_break;
+            require(FsUpdateFinitePage(context,page_handle,update_input,nullptr,&formatted,&updated_record)==0&&updated_record&&updated_record!=update_input&&FsQueryPageDetails(context,page_handle,&details)==0&&FsQueryTrackParaList(context,details.u.simple.trackdescr.pfstrack,2,paras,&actual_count)==0&&FsQueryTextDetails(context,paras[0].pfspara,&text_details)==0&&text_details.u.full.dcpFirst==5&&text_details.u.full.dcpLim==10,"updated page resumes the immutable incoming line position and creates its own output checkpoint");
+            void* independent=nullptr;void* independent_record=nullptr;
+            require(FsCreatePageFinite(context,update_input,nullptr,&formatted,&independent,&independent_record)==0&&independent_record&&FsQueryPageDetails(context,independent,&details)==0&&FsQueryTrackParaList(context,details.u.simple.trackdescr.pfstrack,2,paras,&actual_count)==0&&FsQueryTextDetails(context,paras[0].pfspara,&text_details)==0&&text_details.u.full.dcpFirst==5,"accepted update does not consume or mutate its input checkpoint");
+            require(FsDestroyPage(context,page_handle)==0&&FsDestroyPage(context,independent)==0&&FsDestroyPageBreakRecord(context,updated_record)==0&&FsDestroyPageBreakRecord(context,independent_record)==0&&FsDestroyPageBreakRecord(context,update_input)==0&&lines_created==lines_destroyed&&clients_created==clients_destroyed&&breaks_destroyed==lines_created,"independent update and creation branches own records and content once");
+            columns=2;available_height=20;para_count=3;reset_page_counts();
+            require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&page_break&&FsQueryPageDetails(context,page_handle,&details)==0&&!details.fSimple,"finite update creates a real multi-column section");
+            FSSECTIONDESCRIPTION before_section{};require(FsQueryPageSectionList(context,page_handle,1,&before_section,&actual_count)==0,"old multi-column section query");
+            require(FsDestroyPageBreakRecord(context,page_break)==0,"old output record remains independently owned");
+            available_height=80;
+            require(FsUpdateFinitePage(context,page_handle,nullptr,reinterpret_cast<void*>(66),&formatted,&updated_record)==0&&!updated_record&&FsQueryPageDetails(context,page_handle,&details)==0&&!details.fSimple,"multi-column update preserves the public page handle");
+            FSSECTIONDETAILS old_section_details{};require(FsQuerySectionDetails(context,before_section.pfssection,&old_section_details)==PTS_tserrInvalidQuery,"replacement invalidates the old section registry");
+            require(FsDestroyPage(context,page_handle)==0&&lines_created==lines_destroyed&&clients_created==clients_destroyed&&breaks_destroyed==lines_created,"multi-column replacement owns its section/columns and releases superseded hierarchy once");
+            columns=1;available_height=80;para_count=2;
+        }
+        std::puts("native finite page update: stable identity, source replacement, stale hierarchy, immutable input records, independent branches, failed-update retention and exact cleanup PASS");
         containers=true;reset_page_counts();
         require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&page_handle&&clients_created==4&&lines_created==4,"container callbacks recursively format real subtracks");
         require(FsDestroyPage(context,page_handle)==0&&clients_destroyed==4&&lines_destroyed==4&&breaks_destroyed==4,"recursive container teardown releases child tracks and callback handles");
@@ -296,7 +332,6 @@ int main(int argc,char** argv) {
         reset_page_counts();fail_line=2;page_handle=reinterpret_cast<void*>(1);page_break=reinterpret_cast<void*>(1);
         require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrCallbackException&&!page_handle&&!page_break&&lines_created==lines_destroyed&&lines_created==breaks_destroyed&&clients_created==clients_destroyed,"partial callback allocation failure rolls back line/client/break ownership");
         fail_line=-1;available_height=10;reset_page_counts();
-        PROC(FsDestroyPageBreakRecord,PageAction);
         void* incoming_record=nullptr;keep_mode=2;
         for(int number=0;number<4;++number) {
             require(FsCreatePageFinite(context,incoming_record,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&page_handle,"finite continuation formats the next real page");
@@ -355,10 +390,6 @@ int main(int argc,char** argv) {
         clone=reinterpret_cast<void*>(1);require(FsDuplicateSubtrackBreakRecord(context,reinterpret_cast<void*>(1),&clone)==PTS_tserrInvalidBreakRecord&&!clone,"invalid clone clears output without dereferencing");
         std::puts("native continuation cloning: independent identities, retained resume state/context, wrong/stale records, reset-output rollback and exact teardown PASS");
         available_height=20;columns=2;reset_page_counts();
-        using QuerySections=int(WINAPI*)(void*,void*,int,FSSECTIONDESCRIPTION*,int*);
-        using QuerySection=int(WINAPI*)(void*,void*,FSSECTIONDETAILS*);
-        using QueryColumns=int(WINAPI*)(void*,void*,int,FSTRACKDESCRIPTION*,int*);
-        PROC(FsQueryPageSectionList,QuerySections);PROC(FsQuerySectionDetails,QuerySection);PROC(FsQuerySectionBasicColumnList,QueryColumns);
         require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&page_handle&&!page_break&&formatted.kstop==fmtrGoalReached,"two-column page fills both original source tracks");
         require(FsQueryPageDetails(context,page_handle,&details)==0&&!details.fSimple&&details.u.complex.cSections==1,"column page reports complex section hierarchy");
         FSSECTIONDESCRIPTION section_desc{};FSSECTIONDETAILS section_details{};FSTRACKDESCRIPTION column_desc[2]{};
