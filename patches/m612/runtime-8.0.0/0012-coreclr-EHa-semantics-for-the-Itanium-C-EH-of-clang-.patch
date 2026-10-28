@@ -6,9 +6,10 @@ Subject: [PATCH 12/16] coreclr: /EHa semantics for the Itanium C++ EH of
 
 CoreCLR's Windows code relies on MSVC /EHa: destructors run when an SEH
 exception (access violation, managed exception) unwinds a frame, and
-catch(...) (EX_CATCH) catches SEH exceptions. libunwind/libc++abi ignore
-foreign exceptions. minipal/Windows/mingw_eha.cpp adds that behaviour,
-linked into coreclr.dll and clrjit.dll with lld --wrap:
+catch(...) (EX_CATCH) catches SEH exceptions. libunwind/libc++abi (and
+libgcc/libstdc++) ignore foreign exceptions. minipal/Windows/mingw_eha.cpp
+adds that behaviour, linked into coreclr.dll and clrjit.dll with the
+linker's --wrap:
 - __gxx_personality_seh0: for SEH exceptions, phase 1 takes the
   exception into a catch(...) found in the LSDA (wrapped into a C++
   exception object); phase 2 enters cleanup landing pads by collided
@@ -21,14 +22,16 @@ linked into coreclr.dll and clrjit.dll with lld --wrap:
 - CLR_MinGW_RtlUnwind for the managed exception dispatch (ClrUnwindEx).
 Unwinds are described by a record whose EXCEPTION_RECORD copy is tagged,
 so that the handlers of every module can resume them.
+The same file works with GCC/libstdc++ (built with -fnon-call-exceptions,
+__try from ReactOS's gcc_plugin_seh).
 mingw_guids.cpp: IID_IInspectable, missing from mingw-w64's libuuid.
 ---
  src/coreclr/jit/CMakeLists.txt              |   3 +
  src/coreclr/minipal/Windows/CMakeLists.txt  |  13 +
- src/coreclr/minipal/Windows/mingw_eha.cpp   | 663 ++++++++++++++++++++
+ src/coreclr/minipal/Windows/mingw_eha.cpp   | 700 ++++++++++++++++++++
  src/coreclr/minipal/Windows/mingw_guids.cpp |  10 +
  src/coreclr/vm/exceptionhandling.cpp        |   5 +
- 5 files changed, 694 insertions(+)
+ 5 files changed, 731 insertions(+)
  create mode 100644 src/coreclr/minipal/Windows/mingw_eha.cpp
  create mode 100644 src/coreclr/minipal/Windows/mingw_guids.cpp
 
@@ -69,25 +72,26 @@ index 3f8368bd4..32fa1d4aa 100644
 +endif()
 diff --git a/src/coreclr/minipal/Windows/mingw_eha.cpp b/src/coreclr/minipal/Windows/mingw_eha.cpp
 new file mode 100644
-index 000000000..4676dc432
+index 000000000..a583791a6
 --- /dev/null
 +++ b/src/coreclr/minipal/Windows/mingw_eha.cpp
-@@ -0,0 +1,663 @@
+@@ -0,0 +1,700 @@
 +// Licensed to the .NET Foundation under one or more agreements.
 +// The .NET Foundation licenses this file to you under the MIT license.
 +
 +//
-+// /EHa semantics for CoreCLR built by clang for x86_64-w64-mingw32.
++// /EHa semantics for CoreCLR built by clang or GCC for x86_64-w64-mingw32.
 +//
 +// CoreCLR's Windows code is written for MSVC's /EHa: C++ destructors run when
 +// *any* SEH exception (an access violation, a managed exception raised as
 +// EXCEPTION_COMPLUS, ...) unwinds a frame, and catch(...) (EX_CATCH) catches SEH
 +// exceptions. With MinGW, C++ uses the Itanium EH model on top of SEH
-+// (libc++abi's __gxx_personality_seh0 over libunwind's _GCC_specific_handler),
-+// which deliberately ignores foreign (non-C++) exceptions: no destructor runs and
-+// no catch(...) matches. This file adds the /EHa behavior:
++// (__gxx_personality_seh0 of libc++abi or libstdc++, over the
++// _GCC_specific_handler of libunwind or libgcc), which deliberately ignores
++// foreign (non-C++) exceptions: no destructor runs and no catch(...) matches.
++// This file adds the /EHa behavior:
 +//
-+//  * __gxx_personality_seh0 (wrapped with lld --wrap): for a foreign exception,
++//  * __gxx_personality_seh0 (wrapped with the linker's --wrap): for a foreign exception,
 +//    phase 1 looks for a catch(...) clause covering the frame's PC in the LSDA;
 +//    if there is one, the exception is wrapped into a C++ exception object of
 +//    type EhaSehException and the stack is unwound to that catch(...) landing pad
@@ -117,7 +121,13 @@ index 000000000..4676dc432
 +// Limitation: clang (without -fasync-exceptions, which it cannot combine with the
 +// Itanium C++ ABI) only records call sites in the LSDA and in __try ranges, so a
 +// hardware fault raised by a non-call instruction of a C++ function or a __try
-+// block is attributed to no handler of that function.
++// block is attributed to no handler of that function. GCC needs
++// -fnon-call-exceptions: without it, it also drops the call sites of calls to
++// functions it finds cannot throw a C++ exception (e.g. one that only faults),
++// and records no trapping instructions. With GCC, __try/__except/__finally come
++// from a GCC plugin that emits the __C_specific_handler scope tables (ReactOS's
++// gcc_plugin_seh); it must register the handler with @unwind for an __except
++// too, as clang does, or the unwinds started here are never seen to end.
 +//
 +
 +#if defined(__MINGW32__) && defined(__x86_64__)
@@ -131,8 +141,9 @@ index 000000000..4676dc432
 +#include <typeinfo>
 +#include <new>
 +
-+#define STATUS_GCC_THROW  0x20474343   // libunwind: C++ throw (phase 1, and phase 2 started by libunwind)
-+#define STATUS_GCC_UNWIND 0x21474343   // libunwind: collided unwind to a landing pad
++#define STATUS_GCC_THROW  0x20474343   // libunwind/libgcc: C++ throw (phase 1, and phase 2 started by them)
++#define STATUS_GCC_UNWIND 0x21474343   // libunwind/libgcc: collided unwind to a landing pad
++#define STATUS_GCC_FORCED 0x22474343   // libgcc: forced unwind (_Unwind_ForcedUnwind)
 +
 +#ifndef EXCEPTION_UNWINDING
 +#define EXCEPTION_UNWINDING 0x2
@@ -145,20 +156,27 @@ index 000000000..4676dc432
 +#endif
 +#define EHA_IS_UNWINDING(flags) (((flags) & (EXCEPTION_UNWINDING | EXCEPTION_EXIT_UNWIND)) != 0)
 +
++#if defined(__GLIBCXX__)
++#include <exception>
++#endif
++
 +extern "C" {
-+// the wrapped implementations (lld --wrap)
++// the wrapped implementations (--wrap)
 +EXCEPTION_DISPOSITION __real___gxx_personality_seh0(PEXCEPTION_RECORD, void*, PCONTEXT, PDISPATCHER_CONTEXT);
 +void __real__Unwind_Resume(_Unwind_Exception*);
 +void __real___cxa_rethrow();
 +
-+// libc++abi
++// libc++abi / libstdc++ (both return the exception header, unused here)
 +void* __cxa_allocate_exception(size_t) noexcept;
 +void* __cxa_init_primary_exception(void* object, std::type_info* tinfo, void (*dest)(void*)) noexcept;
++std::type_info* __cxa_current_exception_type() noexcept;
++void* __cxa_get_globals() noexcept;
++#if !defined(__GLIBCXX__)
++// libc++abi only
 +void __cxa_increment_exception_refcount(void*) noexcept;
 +void __cxa_decrement_exception_refcount(void*) noexcept;
-+std::type_info* __cxa_current_exception_type() noexcept;
 +void* __cxa_current_primary_exception() noexcept;
-+void* __cxa_get_globals() noexcept;
++#endif
 +}
 +
 +namespace
@@ -166,7 +184,11 @@ index 000000000..4676dc432
 +
 +const ULONG_PTR kEhaMagic = 0x6148452D57474E4DULL;          // "MNGW-EHa"
 +const uint64_t kEhaClass  = 0x0041484543534548ULL;          // exception_class of EhaUnwind::ue ("HESCEHA")
++#if defined(__GLIBCXX__)
++const uint64_t kCxxClass  = 0x474E5543432B2B00ULL;          // libstdc++'s "GNUCC++\0"
++#else
 +const uint64_t kCxxClass  = 0x434C4E47432B2B00ULL;          // libc++abi's "CLNGC++\0"
++#endif
 +const int kSlotPtr   = 13;                                   // EXCEPTION_RECORD::ExceptionInformation slots
 +const int kSlotMagic = 14;                                   // used to tag our copies
 +
@@ -280,7 +302,7 @@ index 000000000..4676dc432
 +    return u;
 +}
 +
-+// C++ exceptions unwound by an __except or by CoreCLR: libunwind's landing pads
++// C++ exceptions unwound by an __except or by CoreCLR: the landing pads
 +// end in _Unwind_Resume, which must come back here (see WrapUnwindResume).
 +void AttachCxx(EhaUnwind* u)
 +{
@@ -292,7 +314,7 @@ index 000000000..4676dc432
 +            exc->private_[0] = 0;              // not a forced unwind
 +            exc->private_[5] = (uintptr_t)u;
 +        }
-+        // libunwind compares ExceptionInformation[1] with the frame to find "its" handler frame
++        // libunwind/libgcc compare ExceptionInformation[1] with the frame to find "its" handler frame
 +        u->rec.ExceptionInformation[1] = 0;
 +        u->orig.ExceptionInformation[1] = 0;
 +    }
@@ -318,7 +340,7 @@ index 000000000..4676dc432
 +}
 +
 +//
-+// LSDA (gcc_except_table) reading, enough for the tables clang emits
++// LSDA (gcc_except_table) reading, enough for the tables clang and GCC emit
 +//
 +
 +enum
@@ -531,8 +553,14 @@ index 000000000..4676dc432
 +    EhaSehException* e = new (obj) EhaSehException;
 +    e->unwind = u;
 +    e->record = u->orig;
-+    __cxa_init_primary_exception(obj, const_cast<std::type_info*>(&typeid(EhaSehException)), SehExceptionDtor);
++    void* header = __cxa_init_primary_exception(obj, const_cast<std::type_info*>(&typeid(EhaSehException)), SehExceptionDtor);
++#if defined(__GLIBCXX__)
++    // as __cxa_throw: header is a __cxa_refcounted_exception, whose first member is the count
++    __atomic_store_n((int*)header, 1, __ATOMIC_RELAXED);
++#else
++    (void)header;
 +    __cxa_increment_exception_refcount(obj);                     // as __cxa_throw
++#endif
 +    ((EhGlobals*)__cxa_get_globals())->uncaughtExceptions += 1;  // as __cxa_throw; __cxa_begin_catch takes it back
 +    _Unwind_Exception* ue = (_Unwind_Exception*)obj - 1;          // the header ends with the unwind header
 +    if (ue->exception_class != kCxxClass)
@@ -626,7 +654,7 @@ index 000000000..4676dc432
 +__wrap___gxx_personality_seh0(PEXCEPTION_RECORD rec, void* frame, PCONTEXT ctx, PDISPATCHER_CONTEXT disp)
 +{
 +    DWORD code = rec->ExceptionCode;
-+    if (code == STATUS_GCC_THROW || code == STATUS_GCC_UNWIND)
++    if (code == STATUS_GCC_THROW || code == STATUS_GCC_UNWIND || code == STATUS_GCC_FORCED)
 +        return __real___gxx_personality_seh0(rec, frame, ctx, disp);
 +    return ForeignPersonality(rec, frame, ctx, disp);
 +}
@@ -648,9 +676,21 @@ index 000000000..4676dc432
 +    std::type_info* t = __cxa_current_exception_type();
 +    if (t != nullptr && *t == typeid(EhaSehException))
 +    {
++#if defined(__GLIBCXX__)
++        EXCEPTION_RECORD r;
++        {
++            // std::exception_ptr holds just the exception object
++            std::exception_ptr p = std::current_exception();
++            static_assert(sizeof(p) == sizeof(void*), "std::exception_ptr layout");
++            EhaSehException* e;
++            memcpy(&e, &p, sizeof(e));
++            r = e->record;
++        }
++#else
 +        EhaSehException* e = (EhaSehException*)__cxa_current_primary_exception();
 +        EXCEPTION_RECORD r = e->record;
 +        __cxa_decrement_exception_refcount(e);
++#endif
 +        EHA_TRACE("rethrow of SEH exception %08lx\n", r.ExceptionCode);
 +        // /EHa: "throw;" in a catch(...) that caught an SEH exception raises it again.
 +        // The catch block's own cleanup (__cxa_end_catch) runs when it unwinds.

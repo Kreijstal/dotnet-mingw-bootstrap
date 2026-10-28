@@ -72,6 +72,22 @@ step_test() {
   clang++ -O2 -fms-extensions -fno-rtti "$here/tests/coreclr/eha.cpp" "$T/eha.o" -o "$T/eha.exe" -static \
     -Wl,--wrap=__gxx_personality_seh0 -Wl,--wrap=_Unwind_Resume -Wl,--wrap=__cxa_rethrow -Wl,--wrap=__C_specific_handler
   "$T/eha.exe"
+  # The same shim with UCRT64 GCC/libstdc++; __try comes from ReactOS's gcc_plugin_seh
+  # (needs mingw-w64-ucrt-x86_64-gcc-plugin; REACTOS_SRC: a checkout with its @unwind fix).
+  if [ -z "${REACTOS_SRC:-}" ]; then
+    log "EHa shim self-test with GCC skipped (set REACTOS_SRC)"
+    return
+  fi
+  log "EHa shim self-test with GCC (tests/coreclr/eha.cpp)"
+  ( PATH=/ucrt64/bin:$PATH
+    P=$(g++ -print-file-name=plugin)
+    g++ -shared -O2 -fno-rtti -I"$P/include" "$REACTOS_SRC/sdk/tools/gcc_plugin_seh/main.cpp" "$P/cc1plus.exe.a" \
+      -o "$T/gxx_seh.dll"
+    g++ -O2 -frtti -c "$SRC/src/coreclr/minipal/Windows/mingw_eha.cpp" -o "$T/eha-gcc.o"
+    g++ -O2 -fno-rtti -fnon-call-exceptions -fplugin="$T/gxx_seh.dll" -I"$REACTOS_SRC/sdk/lib/pseh/include/pseh" \
+      "$here/tests/coreclr/eha.cpp" "$T/eha-gcc.o" -o "$T/eha-gcc.exe" -static \
+      -Wl,--wrap=__gxx_personality_seh0 -Wl,--wrap=_Unwind_Resume -Wl,--wrap=__cxa_rethrow -Wl,--wrap=__C_specific_handler
+    "$T/eha-gcc.exe" )
 }
 
 for s in $steps; do "step_$s"; done
