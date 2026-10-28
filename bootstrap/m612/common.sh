@@ -79,7 +79,7 @@ keyfile() {
 }
 
 # fetch_tarball <url> <file>
-fetch_tarball() { [ -f "$2" ] || { log "fetch $1"; curl -fsSL -o "$2.part" "$1" && mv "$2.part" "$2"; }; }
+fetch_tarball() { [ -f "$2" ] || die "package source closure missing: $2 ($1)"; }
 # delete_binaries <tree> : provenance rule, no PE/archives/object files survive
 delete_binaries() {
   scan_binaries "$1" > "$1/.deleted-binaries.txt" || true

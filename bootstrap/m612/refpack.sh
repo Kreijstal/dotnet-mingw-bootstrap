@@ -156,6 +156,14 @@ step_refs() {
 }
 
 # targeting pack layout: packs/Microsoft.NETCore.App.Ref/<ver>/{ref/net8.0,data/FrameworkList.xml}
+# The runtime's compiled source libraries use RT_VER; pure forwarding shims
+# are copied from this reference pack and retain PACK_VER in their file version.
+framework_file_version() {
+  case $1 in System|System.Data|mscorlib) echo "$RT_VER.0" ;;
+    *) if [ -f "$L/shims/$1/src/$1.csproj" ]; then echo "$PACK_VER.0"; else echo "$RT_VER.0"; fi ;;
+  esac
+}
+
 step_pack() {
   local n av tok f
   rm -rf "${PACK:?}"; mkdir -p "$PACK/ref/$TFM" "$PACK/data" "$PACK/analyzers/dotnet/cs"
@@ -170,7 +178,7 @@ step_pack() {
   done
   { echo "<FileList TargetFrameworkIdentifier=\".NETCoreApp\" TargetFrameworkVersion=\"${TFM#net}\" FrameworkName=\"Microsoft.NETCore.App\" Name=\".NET Runtime\">"
     for f in "$O"/*.meta; do read -r n av tok < "$f"
-      echo "  <File Type=\"Managed\" Path=\"ref/$TFM/$n.dll\" AssemblyName=\"$n\" PublicKeyToken=\"$tok\" AssemblyVersion=\"$av\" FileVersion=\"$PACK_VER.0\" />"
+      echo "  <File Type=\"Managed\" Path=\"ref/$TFM/$n.dll\" AssemblyName=\"$n\" PublicKeyToken=\"$tok\" AssemblyVersion=\"$av\" FileVersion=\"$(framework_file_version "$n")\" />"
     done
     for f in "$PACK"/analyzers/dotnet/cs/*.dll; do [ -e "$f" ] || continue; n=$(basename "$f" .dll)
       echo "  <File Type=\"Analyzer\" Language=\"cs\" Path=\"analyzers/dotnet/cs/$n.dll\" AssemblyName=\"$n\" PublicKeyToken=\"cc7b13ffcd2ddd51\" AssemblyVersion=\"${RT_VER%%.*}.0.0.0\" FileVersion=\"$PACK_VER.0\" />"
@@ -178,7 +186,7 @@ step_pack() {
     echo "</FileList>"; } > "$PACK/data/FrameworkList.xml"
   # data/PlatformManifest.txt: what the shared framework carries, for the SDK's package conflict resolution
   # (without it a net8.0 publish copies lower package versions of framework assemblies next to the app)
-  for f in "$O"/*.meta; do read -r n av tok < "$f"; echo "$n.dll|Microsoft.NETCore.App.Ref|$av|$PACK_VER.0"; done | sort > "$PACK/data/PlatformManifest.txt"
+  for f in "$O"/*.meta; do read -r n av tok < "$f"; echo "$n.dll|Microsoft.NETCore.App.Ref|$av|$(framework_file_version "$n")"; done | sort > "$PACK/data/PlatformManifest.txt"
   # tell the SDK about the pack (KnownFrameworkReference) and where packs live
   local bv="$SDKROOT/sdk/8.0.131/Microsoft.NETCoreSdk.BundledVersions.props"
   [ -f "$bv" ] || return 0

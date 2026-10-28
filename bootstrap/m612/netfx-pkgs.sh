@@ -46,6 +46,12 @@ prep_sources() {
     tar -C "$RT" --strip-components=1 -xzf "$M612/src/runtime-$RT_VER.tar.gz" "runtime-$RT_VER/src/installer/managed"
     delete_binaries "$RT"
   fi
+  # HostModel shares Win32-resource readers with the CoreCLR compiler tools.
+  if [ ! -d "$RT/src/coreclr/tools/Common" ]; then
+    tar -C "$RT" --strip-components=1 -xzf "$M612/src/runtime-$RT_VER.tar.gz" \
+      "runtime-$RT_VER/src/coreclr/tools/Common" "runtime-$RT_VER/LICENSE.TXT" "runtime-$RT_VER/THIRD-PARTY-NOTICES.TXT"
+    delete_binaries "$RT"
+  fi
   # managed-only fixes (the native tree for corehost.sh is a separate copy)
   apply_patches "$RT" "$here/../../patches/m612/runtime-$RT_VER-managed"
 }

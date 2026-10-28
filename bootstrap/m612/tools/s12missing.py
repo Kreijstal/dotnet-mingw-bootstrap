@@ -19,6 +19,12 @@ for m in re.finditer(r'error NU110[123]: Unable to find package (\S+?)(?:\. No p
 # NU1603 (warning as error in some repos): "X depends on Y (>= V) but Y V was not found"
 for m in re.finditer(r'NU1603: (?:Warning As Error: )?.*? depends on (\S+) \(>= ([^)]+)\) but', text):
     ids.setdefault(m.group(1), set()).add(m.group(2).strip())
+# A newer seed can satisfy a >= range while being incompatible with the TFM
+# or causing a downgrade of another central version. Build the exact direct
+# references from SBRP instead of treating that newer selection as sufficient.
+exact_references = bool(re.search(r'error NU(?:1202|1109):', text))
+refs = os.path.join(sbrp, 'src', 'referencePackages', 'src')
+text_only = os.path.join(sbrp, 'src', 'textOnlyPackages', 'src')
 # requested ranges from the assets files
 for dp, dn, fn in os.walk(tree):
     dn[:] = [d for d in dn if d not in ('.git', 'node_modules')]
@@ -29,6 +35,11 @@ for dp, dn, fn in os.walk(tree):
             continue
         for fw in j.get('project', {}).get('frameworks', {}).values():
             for name, d in fw.get('dependencies', {}).items():
+                if exact_references and 'version' in d:
+                    version = re.sub(r'[\[\]()\s]', '', d['version']).split(',')[0].lstrip('>=')
+                    if (os.path.isdir(os.path.join(refs, name.lower(), version)) or
+                            os.path.isdir(os.path.join(text_only, name.lower(), version))):
+                        ids.setdefault(name, set()).add(d['version'])
                 for i in ids:
                     if i.lower() == name.lower() and 'version' in d:
                         ids[i].add(d['version'])

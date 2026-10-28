@@ -309,6 +309,8 @@ def main():
     ap.add_argument('--default-items', action='store_true',
                     help='SDK default Compile glob (**/*.cs minus bin/obj) unless the project sets EnableDefaultCompileItems=false')
     a = ap.parse_args()
+    if not os.path.isabs(a.project) and os.environ.get("PWD"):
+        a.project = os.path.join(os.environ["PWD"], a.project)
     props = {}
     for kv in a.p:
         k, _, v = kv.partition('='); props[k] = v
@@ -347,7 +349,9 @@ def main():
         key = os.path.normpath(p)
         if key in seen: continue
         seen.add(key)
-        rel = os.path.relpath(p) if os.path.isabs(p) else p
+        # Native Windows getcwd resolves junctions; Bash PWD preserves the
+        # logical project directory used by callers to prefix these items.
+        rel = os.path.relpath(p, os.environ.get("PWD") or os.getcwd()) if os.path.isabs(p) else p
         rel = rel.replace('\\', '/')
         print(rel + ('\t' + meta.get(a.meta, '') if a.meta else ''))
 

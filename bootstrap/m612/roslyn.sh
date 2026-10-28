@@ -153,7 +153,7 @@ step_install() {
 step_test() {
   # compile and run every tests/csNN.cs up to the language version of $V
   local T=$B/obj/test maxlang n t rc=0; mkdir -p "$T"; cd "$T"
-  case $V in 4.0.*|4.1.*|4.2.*|4.3.*) maxlang=10 ;; 4.4.*|4.5.*|4.6.*|4.7.*) maxlang=11 ;; 4.8.*|4.9.*|4.10.*|4.11.*) maxlang=12 ;; 4.1[2-9].*) maxlang=13 ;; *) maxlang=14 ;; esac
+  case $V in 4.0.*|4.1.*|4.2.*|4.3.*) maxlang=10 ;; 4.4.*|4.5.*|4.6.*|4.7.*) maxlang=11 ;; 4.8.*|4.9.*|4.10.*|4.11.*) maxlang=12 ;; 4.1[2-9].*|5.0.0-p4) maxlang=13 ;; *) maxlang=14 ;; esac
   for t in "$here"/tests/cs[0-9][0-9].cs; do
     n=$(basename "$t" .cs); [ "${n#cs}" -le "$maxlang" ] || continue
     mono "$OUT/csc.exe" -nologo -langversion:latest -out:$n.exe "$(cygpath -m "$t")" "$(cygpath -m "$here/tests/polyfill.cs")" || { rc=1; continue; }

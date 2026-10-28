@@ -122,6 +122,13 @@ step_vbc() {
 }
 
 step_install() {
+  # vbc was compiled against the current source-built package assemblies.
+  # The shared prefix still has Roslyn step 4's seed copies unless refreshed.
+  local d
+  for d in $(pkg_runtime_files System.Collections.Immutable System.Reflection.Metadata System.Memory \
+    System.Buffers System.Runtime.CompilerServices.Unsafe System.Threading.Tasks.Extensions System.Numerics.Vectors); do
+    cp "$d" "$OUT/"
+  done
   cp "$B"/obj/{Microsoft.CodeAnalysis.VisualBasic.dll,vbc.exe} "$OUT/"
   cp "$B"/obj/Microsoft.CodeAnalysis.VisualBasic.pdb "$B"/obj/vbc.pdb "$OUT/" 2>/dev/null || true
   cp "$B/src/Compilers/VisualBasic/vbc/App.config" "$OUT/vbc.exe.config"

@@ -37,7 +37,9 @@ step_prep() {
     mkdir -p "$SRC"
     tar -C "$SRC" --strip-components=1 -xzf "$tb"
     delete_binaries "$SRC"
-    zcat "$tb" | git get-tar-commit-id > "$SRC/.commit"
+    # git reads only the tar header; gzip may get SIGPIPE after it exits.
+    (set +o pipefail; gzip -dc "$tb" | git get-tar-commit-id) > "$SRC/.commit"
+    [ -s "$SRC/.commit" ] || die "source tarball lacks a commit identity"
     touch "$SRC/.extracted"
   fi
   apply_patches "$SRC" "$P"

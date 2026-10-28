@@ -168,17 +168,17 @@ s12_build() {
   cd "$tree"
   versions_props
   for t in "${tgts[@]}"; do
-    s12_restore "$L-restore.log" "$tree" dn restore "$t" "${P[@]}" -v:m || die "$name: restore of $t failed ($L-restore.log)"
+    s12_restore "$L-restore.log" "$tree" dn restore "$(m "$tree/$t")" "${P[@]}" -v:m || die "$name: restore of $t failed ($L-restore.log)"
   done
   echo "TIME $name restore $((SECONDS - t0)) s"; t0=$SECONDS
   for t in "${tgts[@]}"; do
-    dn build "$t" --no-restore "${P[@]}" -v:m -bl:"$(w "$L-$(basename "$t").binlog")" > "$L-build.log" 2>&1 \
+    dn build "$(m "$tree/$t")" --no-restore "${P[@]}" -v:m -bl:"$(w "$L-$(basename "$t").binlog")" > "$L-build.log" 2>&1 \
       || { grep -E ': error' "$L-build.log" | sed 's/ \[[A-Z]:.*//' | sort -u | head -40; die "$name: build of $t failed ($L-build.log)"; }
   done
   echo "TIME $name build $((SECONDS - t0)) s"; t0=$SECONDS
   if [ -z "${S12_NOPACK:-}" ]; then
     for t in "${tgts[@]}"; do
-      dn pack "$t" --no-restore "${P[@]}" -v:m > "$L-pack.log" 2>&1 \
+      dn pack "$(m "$tree/$t")" --no-restore "${P[@]}" -v:m > "$L-pack.log" 2>&1 \
         || { grep -E ': error' "$L-pack.log" | sed 's/ \[[A-Z]:.*//' | sort -u | head -40; die "$name: pack of $t failed ($L-pack.log)"; }
     done
     echo "TIME $name pack $((SECONDS - t0)) s"

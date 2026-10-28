@@ -6,8 +6,8 @@ set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 . "$here/../env-m612.sh"
 R() { cygpath -m "$M612/roslyn-$1/csc.exe"; }
-start=${1:-1}
-step() { local n=$1; shift; [ "$n" -ge "$start" ] || return 0; log "chain step $n: $*"; "$@"; }
+start=${1:-1}; stop=${2:-50}
+step() { local n=$1; shift; [ "$n" -ge "$start" ] && [ "$n" -le "$stop" ] || return 0; log "chain step $n: $*"; "$@"; }
 
 # 1-4: Roslyn from the seed csc 3.9 (C# 9) up to 4.8 (C# 12), seed package assemblies
 step 1 bash "$here/roslyn.sh" 4.0.1 "$SEED_CSC"
@@ -119,7 +119,7 @@ step 44 env ROOT="$M612/dotnet-sdk-8.0.131-net8-coreclr-r2r" TESTDIR="$M612/test
 #     fixed targeting pack, the seed feed, then Arcade, xliff-tasks, Roslyn, MSBuild, Newtonsoft.Json, xdt,
 #     NuGet.Client, command-line-api, templating, deployment-tools, sourcelink and dotnet/sdk with
 #     `dotnet build` of their own project files, and m612/dotnet-sdk-8.0.131-stage2 laid out from their outputs
-step 45 env STAGE=2 bash "$here/s12-stage.sh"
+step 45 env STAGE=2 bash "$here/s12-stage.sh" "${DOTNET_S12_START:-1}"
 # 46: the end-to-end SDK proof on the stage-2 root
 step 46 env ROOT="$M612/dotnet-sdk-8.0.131-stage2" TESTDIR="$M612/test/sdk-stage2" bash "$here/sdk-net8-test.sh" \
   info new pkgref addpackage multi roslyncore generators selfcontained trimmed
