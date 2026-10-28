@@ -1,0 +1,16 @@
+--- a/src/Cli/dotnet/ShellShim/EnvironmentPathFactory.cs
++++ b/src/Cli/dotnet/ShellShim/EnvironmentPathFactory.cs
+@@ -26,6 +26,13 @@
+                     // On Windows MSI will in charge of appending ToolShimPath
+                     environmentPath = new DoNothingEnvironmentPath();
+                 }
++                else if (!string.IsNullOrEmpty(environmentProvider.GetEnvironmentVariable("DOTNET_CLI_HOME")))
++                {
++                    // A custom CLI home (a build or test sandbox) must not leave its
++                    // tools directory in the persistent user PATH; every new home
++                    // would add another entry.
++                    environmentPath = new DoNothingEnvironmentPath();
++                }
+                 else
+                 {
+                     environmentPath = new WindowsEnvironmentPath(
