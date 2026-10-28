@@ -17,7 +17,7 @@ args = parser.parse_args()
 seed, host, out = (p.resolve() for p in [args.sdk_seed, args.prepared_host, args.destination])
 assert not out.exists()
 sha = lambda data: hashlib.sha256(data).hexdigest()
-assert sha(seed.read_bytes()) == '3e23ceeddb31efcd60b25238115deda3daf7de6ba4b42db143974e9b031c04b5'
+assert sha(seed.read_bytes()) == '4d2c8e8f23a26c38cbd4edd5acb3b412c7c77e4a7a21379d7ef5b35274184166'
 out.mkdir()
 baseline = {}
 info = None
@@ -41,7 +41,7 @@ with subprocess.Popen(['zstd', '-dc', str(seed)], stdout=subprocess.PIPE) as pro
     while process.stdout.read(1024 * 1024):
         pass
     assert process.wait() == 0
-assert 'pkgver = 8.0.131-2\n' in info
+assert 'pkgver = 8.0.131-3\n' in info
 assert 'pkgname = mingw-w64-clang-x86_64-dotnet-sdk\n' in info
 
 dotnet_root = out / 'clang64/lib/dotnet'
