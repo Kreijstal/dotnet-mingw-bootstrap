@@ -87,10 +87,13 @@ def main():
     ap.add_argument("--plugin", type=Path)
     ap.add_argument("--metadata-tool", type=Path)
     a = ap.parse_args(arguments)
-    version = subprocess.check_output([a.clang, "--version"], text=True)
-    if "clang version 22.1.8" not in version:
-        ap.error("the frontend plugin requires Clang 22.1.8")
     build = Path(__file__).resolve().parent
+    version_file = build / "clang-version.txt"
+    required_version = version_file.read_text().strip() if version_file.is_file() else "22.1.8"
+    version = subprocess.check_output([a.clang, "--version"], text=True)
+    match = re.search(r"clang version (\d+\.\d+\.\d+)\b", version)
+    if not match or match.group(1) != required_version:
+        ap.error("the frontend plugin requires Clang " + required_version)
     plugin = a.plugin or build / ("cli_ast.dll" if os.name == "nt" else "cli_ast.so")
     metadata_tool = a.metadata_tool or build / "metadata/metadata.dll"
     if not a.sdk:

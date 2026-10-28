@@ -23,10 +23,12 @@ EOF
     "-p:BaseIntermediateOutputPath=$(cygpath -m "$build/metadata-obj")/" \
     "-p:OutputPath=$(cygpath -m "$build/metadata")/" -p:NuGetAudit=false
   log "Build Clang token adapter and AST emitter"
-  /clang64/bin/python.exe "$src/fetch-clang-parse.py" "$M612/src/clang-parse-22.1.8" "$build/clang-parse"
+  local llvm_version
+  llvm_version=$(/clang64/bin/llvm-config.exe --version)
+  /clang64/bin/python.exe "$src/fetch-clang-parse.py" "$M612/src/clang-parse-$llvm_version" "$build/clang-parse" --llvm-version "$llvm_version"
   /clang64/bin/cmake.exe -S "$src" -B "$build" -GNinja -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_C_COMPILER=/clang64/bin/clang.exe -DCMAKE_CXX_COMPILER=/clang64/bin/clang++.exe \
-    -DLLVM_DIR=/clang64/lib/cmake/llvm -DCPPCLI_PARSE_DIR="$build/clang-parse"
+    -DLLVM_DIR=/clang64/lib/cmake/llvm -DCPPCLI_PARSE_DIR="$build/clang-parse" -DCPPCLI_LLVM_VERSION="$llvm_version"
   /clang64/bin/cmake.exe --build "$build" --target cli_ast -j2
 }
 compile() {
