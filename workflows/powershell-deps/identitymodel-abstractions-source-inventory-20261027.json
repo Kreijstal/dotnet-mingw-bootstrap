@@ -1,0 +1,59 @@
+{
+  "source_commit": "c94c7fc235501d478221e979062bd8837a55575b",
+  "source_archive_sha256": "c8bb5a2b1a946b98dc7165ed8e01439b76cc2d91c1b3ab168e613f0120b763f2",
+  "original_cs": {
+    "src/Microsoft.IdentityModel.Abstractions/EventLogLevel.cs": "7245e22220583581b39274f5f8c92d9c6acf4ee28ab3975d770bc947a4bda890",
+    "src/Microsoft.IdentityModel.Abstractions/IIdentityLogger.cs": "7a449e714810fb7c3a9901ed1a2dfcb5f67930a10df652904a3c627b21464ef4",
+    "src/Microsoft.IdentityModel.Abstractions/ITelemetryClient.cs": "a5f641693d801e7c5af08821976d2310b73f5885067e781f28fc0de78fc08ee3",
+    "src/Microsoft.IdentityModel.Abstractions/LogEntry.cs": "3a6eddab6871c6e9e4da7a7e6a61b02d2054aa86ac79803dae77ea3b5f49935c",
+    "src/Microsoft.IdentityModel.Abstractions/NullIdentityModelLogger.cs": "7fcae49cb822e6ab57e9412040bda5652eabe41507947ddba20c2b1cbc727b36",
+    "src/Microsoft.IdentityModel.Abstractions/NullTelemetryClient.cs": "4df63dbd783d7fd3a582b81191c1cdc99d4e4efe320956bad93d603c256cab4f",
+    "src/Microsoft.IdentityModel.Abstractions/ObservabilityConstants.cs": "c20c0cc60bb00fc44441b927e015f6d9511a785b87ffe3a578cf4298b024f262",
+    "src/Microsoft.IdentityModel.Abstractions/TelemetryEventDetails.cs": "1cc8b3e4a8d6a965c0d9f7e7f807b16ed158601ea6c9dd33928266051748f143",
+    "src/Microsoft.IdentityModel.Abstractions/Properties/AssemblyInfo.cs": "b2505f36fd191534e2a16271e0ff9627646b6e671c30bdf87f7905fca8df3f3b"
+  },
+  "ci_version_metadata": {
+    "src/Microsoft.IdentityModel.Abstractions/Properties/AssemblyInfo.cs": "5376de431ba559c098cba64c3899bb13660b2b3b55b0452088861ee7114abc52"
+  },
+  "production_algorithm_changes": [],
+  "original_project_metadata": {
+    "src/Microsoft.IdentityModel.Abstractions/Microsoft.IdentityModel.Abstractions.csproj": "16db46af53c833a573100bd9e2ce6f2e424cda275f407f5eb307ddeb9037b544",
+    "build/common.props": "e98efe57473b4564c32601e39e8913d124cde891b69e9cb4729147dbb808144b",
+    "build/targets.props": "e944f80ba94a3da51ebfad1520596392cd63aa987f357bd9dcb596f9561d739a",
+    "build/dependencies.props": "e7ca0b51f2a304a92c9ed4319a5d55073f3203422e2c178fe2c2e1d39ff6d9e3",
+    "build/version.props": "9a84e27c620c537895b39b546cbb6236b124f1c7911c89fd9ceea25ebb8d4bdf",
+    "updateAssemblyInfo.ps1": "12e32110b4fdd2e0166a9c2496b8cdab48621e0d1fff4108fef6b469810bebb9",
+    "buildConfiguration.xml": "59b2df02b61d739bca68731491c58a86ce5c2c8926b482b775b091e804d88a60"
+  },
+  "prepared_project_metadata": {
+    "src/Microsoft.IdentityModel.Abstractions/Microsoft.IdentityModel.Abstractions.csproj": "3e0eebbe8c93e8e6bdf4a104f304692927c6de31c7d978d2cd688b4e78b85d3c",
+    "build/common.props": "c2a18acd3c286a267c70ea8b7f9a3773e52e80aaf1593bd09c47a03812246c1c",
+    "Directory.Build.targets": "8adc5901f75ffee8af60fee1293b375d9f0d4f6bee04b1e8f13f9084739c4b8f"
+  },
+  "removed_build_only_package_references": [
+    "Microsoft.SourceLink.GitHub",
+    "Microsoft.CodeAnalysis.FxCopAnalyzers"
+  ],
+  "original_signing_key_sha256": "6fe03f0bbe162b4b24d9f9ba0b07204d8325f15533f9b276b58a4e0db0b24cd1",
+  "original_telemetry_test_sha256": "124655a5170cbb78409341b067127e492b2ada8840b3a8b292371a94c194540e",
+  "adapted_test_sha256": "857a5bc10d2bed629e55022a2fbf7fe105c4d703212e604cc22b34d34bbc5298",
+  "test_fixture_changes": "Replace four Moq constructions/CallBase/Object with concrete owned subclass; six original assertion bodies and derived-type helpers retained",
+  "actual_compiler_inputs": {
+    "src/Microsoft.IdentityModel.Abstractions/EventLogLevel.cs": "7245e22220583581b39274f5f8c92d9c6acf4ee28ab3975d770bc947a4bda890",
+    "src/Microsoft.IdentityModel.Abstractions/IIdentityLogger.cs": "7a449e714810fb7c3a9901ed1a2dfcb5f67930a10df652904a3c627b21464ef4",
+    "src/Microsoft.IdentityModel.Abstractions/ITelemetryClient.cs": "a5f641693d801e7c5af08821976d2310b73f5885067e781f28fc0de78fc08ee3",
+    "src/Microsoft.IdentityModel.Abstractions/LogEntry.cs": "3a6eddab6871c6e9e4da7a7e6a61b02d2054aa86ac79803dae77ea3b5f49935c",
+    "src/Microsoft.IdentityModel.Abstractions/NullIdentityModelLogger.cs": "7fcae49cb822e6ab57e9412040bda5652eabe41507947ddba20c2b1cbc727b36",
+    "src/Microsoft.IdentityModel.Abstractions/NullTelemetryClient.cs": "4df63dbd783d7fd3a582b81191c1cdc99d4e4efe320956bad93d603c256cab4f",
+    "src/Microsoft.IdentityModel.Abstractions/ObservabilityConstants.cs": "c20c0cc60bb00fc44441b927e015f6d9511a785b87ffe3a578cf4298b024f262",
+    "src/Microsoft.IdentityModel.Abstractions/Properties/AssemblyInfo.cs": "5376de431ba559c098cba64c3899bb13660b2b3b55b0452088861ee7114abc52",
+    "src/Microsoft.IdentityModel.Abstractions/TelemetryEventDetails.cs": "1cc8b3e4a8d6a965c0d9f7e7f807b16ed158601ea6c9dd33928266051748f143"
+  },
+  "generated_sdk_metadata": {
+    "src/Microsoft.IdentityModel.Abstractions/obj/Release/net8.0/.NETCoreApp,Version=v8.0.AssemblyAttributes.cs": "f89fe7daba0b69d2b95cbfd10e2064c276b691ccd8c8301930f6978b67caf1b8",
+    "src/Microsoft.IdentityModel.Abstractions/obj/Release/net8.0/Microsoft.IdentityModel.Abstractions.AssemblyInfo.cs": "afd0629bafe8bc906b94a3a6d628da21da520938152a69e53da6112189f7fd52"
+  },
+  "implementation_sha256": "3afcbdc1b1c0695f2afb8b24226fd810d101d65a7c3fc584d73ffe41086f0e66",
+  "reference_sha256": "cf4f09824cb5c5ca780a3f62964ae9e083db4a91b62a05df41ec3357cc9e39e7",
+  "documentation_sha256": "5e729e604a63929ba0d77d1b484da1144d719e5a76dc32a8109acf609ca2fc3b"
+}

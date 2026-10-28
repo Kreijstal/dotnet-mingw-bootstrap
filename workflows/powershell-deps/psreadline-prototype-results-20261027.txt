@@ -1,0 +1,247 @@
+PSReadLine2.3.6 source candidate (not packaged), 2026-10-27
+Host: win11 / MSYS2 CLANG64
+Root: /home/topkek/psreadline-source.6Ja5rq
+Current production build: psreadline-prepared2
+Current editing check: editing-4
+
+Progress: all48 original production C# files/resource unchanged, source.NET8
+build with complete sourceSMA7.4.20 and installed sourcePager1.0.0 passes0warnings/
+0errors. All457 published public/protected metadata declarations match exactly.
+Script body matches published module after normalization; published manifest adds
+only PrivateData.PSData.ProjectUri to the otherwise matching source fields. Vendor DLL only read
+as metadata, never used as compile reference or executed.
+
+Source v2.3.6 annotated tag29df75b2560eb8edfc9416b1820c2a14aa345d00 peels to actual
+commitd2e770f93b7a53d8660a6402eb29d1ae1c35e767. Current inventory uses the peeled
+commit, confirmed by git ls-remote refs/tags/v2.3.6*.
+
+First metadata comparison with SDK references left vendor Desktop mscorlib types
+unresolved (466 entries). Complete source runtime facade/CoreLib references resolve
+those types: both vendor and source expose457 entries, with no missing/extra APIs.
+No member filtering/allowlist was used to eliminate the false differences.
+
+Import/module/GUID/5cmdlets/assembly/real options and key-handler set/get/remove
+pass in original source host. HistorySaveStyleSaveNothing and owned history path
+are configured by the actual cmdlet; no user history file touched.
+
+8 owned actual ReadLine-loop cases pass using unchanged original MockConsole.cs:
+typed text, cursor insertion, backspace, home/end, kill/yank, history recall,
+Unicode input and Vi delete/insert. Complete upstream xUnit suite and actual
+terminal/ConsoleHost integration remain unverified. No keyboard-layout or
+foreground-window mutation.
+
+Fixture-only failures retained below:
+- Assigning HistorySavePath on a bare new SetPSReadLineOption PSCmdlet lacked its
+  SessionState/provider context. Moved that setting to the real cmdlet invocation.
+- Keyboard harness initially used ConsoleKey.NoName for spaces, which production
+  correctly ignores. It now uses Spacebar and keycode0 for unmapped Unicode /
+  character input. No production code changed to accommodate the fixture.
+
+Exact final commands, MSYSTEM=CLANG64, from candidate root (all exit0):
+/usr/bin/python3 mingw-w64-powershell-psreadline/prepare.py PSReadLine-2.3.6 psreadline-prepared2
+bash mingw-w64-powershell-psreadline/build.sh psreadline-prepared2 /clang64/lib/dotnet/library-packs
+bash mingw-w64-powershell-psreadline/check-editing.sh PSReadLine-2.3.6 psreadline-prepared2/PSReadLine/bin/Release/net8.0 editing-4
+/clang64/lib/dotnet/dotnet.exe E:/msys64/home/topkek/threadjob-package.Xa8epS/mingw-w64-powershell-threadjob/src/check/metadata/Api/bin/Release/net8.0/Inspect.dll E:/msys64/clang64/lib/dotnet/shared/Microsoft.NETCore.App/8.0.0 E:/msys64/home/topkek/psreadline-source.6Ja5rq/psreadline-prepared2/PSReadLine/bin/Release/net8.0/Microsoft.PowerShell.PSReadLine2.dll E:/msys64/clang64/lib/dotnet/tools/powershell-module-test-host > psreadline-source2-api-runtime.json
+
+Smoke command (initial same-source build, exit0):
+/clang64/bin/powershell-module-test-host E:/msys64/home/topkek/psreadline-source.6Ja5rq/mingw-w64-powershell-psreadline/Smoke.ps1 E:/msys64/home/topkek/psreadline-source.6Ja5rq/psreadline-prepared/PSReadLine/bin/Release/net8.0/PSReadLine.psd1 E:/msys64/home/topkek/psreadline-source.6Ja5rq/smoke-owned
+
+Next: complete NuGet/root module assets plus original Core Polyfiller forwarders,
+source/resource/manifest/layout gates, clean MSYS2 package build/install and fresh
+installed consumer. Broader editing/prediction/help/terminal integration remains.
+PSReadLine is not marked package_completed and is not counted verified.
+
+
+LOG editing-1.log
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\psreadline-source.6Ja5rq\editing-1\Check.csproj (in 60 ms).
+  Check -> E:\msys64\home\topkek\psreadline-source.6Ja5rq\editing-1\bin\Release\net8.0\PSReadLine.Tests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.90
+System.Management.Automation.MethodInvocationException: Exception calling "Run" with "1" argument(s): "Object reference not set to an instance of an object."
+ ---> System.NullReferenceException: Object reference not set to an instance of an object.
+   at System.Management.Automation.PSCmdlet.GetUnresolvedProviderPathFromPSPath(String path)
+   at Microsoft.PowerShell.SetPSReadLineOption.set_HistorySavePath(String value) in E:\msys64\home\topkek\psreadline-source.6Ja5rq\psreadline-prepared\PSReadLine\Cmdlets.cs:line 794
+   at Test.OwnedEditing.Run(String ownedHistory) in E:\msys64\home\topkek\psreadline-source.6Ja5rq\editing-1\EditingCheck.cs:line 35
+   at CallSite.Target(Closure, CallSite, Type, Object)
+   --- End of inner exception stack trace ---
+   at System.Management.Automation.Runspaces.PipelineBase.Invoke(IEnumerable input)
+   at System.Management.Automation.Runspaces.Pipeline.Invoke()
+   at System.Management.Automation.PowerShell.Worker.ConstructPipelineAndDoWork(Runspace rs, Boolean performSyncInvoke)
+   at System.Management.Automation.PowerShell.Worker.CreateRunspaceIfNeededAndDoWork(Runspace rsToUse, Boolean isSync)
+   at System.Management.Automation.PowerShell.CoreInvokeHelper[TInput,TOutput](PSDataCollection`1 input, PSDataCollection`1 output, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.CoreInvoke[TInput,TOutput](PSDataCollection`1 input, PSDataCollection`1 output, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.CoreInvoke[TOutput](IEnumerable input, PSDataCollection`1 output, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.Invoke(IEnumerable input, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.Invoke()
+   at ModuleHost.Main(String[] args)
+
+
+LOG editing-2.log
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\psreadline-source.6Ja5rq\editing-2\Check.csproj (in 76 ms).
+  Check -> E:\msys64\home\topkek\psreadline-source.6Ja5rq\editing-2\bin\Release\net8.0\PSReadLine.Tests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.25
+System.Management.Automation.MethodInvocationException: Exception calling "Run" with "1" argument(s): "typed text expected 'echo abc', got 'echoabc'"
+ ---> System.Exception: typed text expected 'echo abc', got 'echoabc'
+   at Test.OwnedEditing.<Run>g__Case|4_0(String name, String expected, Object[] input, <>c__DisplayClass4_0&) in E:\msys64\home\topkek\psreadline-source.6Ja5rq\editing-2\EditingCheck.cs:line 51
+   at Test.OwnedEditing.Run(String ownedHistory) in E:\msys64\home\topkek\psreadline-source.6Ja5rq\editing-2\EditingCheck.cs:line 54
+   at CallSite.Target(Closure, CallSite, Type, Object)
+   --- End of inner exception stack trace ---
+   at System.Management.Automation.Runspaces.PipelineBase.Invoke(IEnumerable input)
+   at System.Management.Automation.Runspaces.Pipeline.Invoke()
+   at System.Management.Automation.PowerShell.Worker.ConstructPipelineAndDoWork(Runspace rs, Boolean performSyncInvoke)
+   at System.Management.Automation.PowerShell.Worker.CreateRunspaceIfNeededAndDoWork(Runspace rsToUse, Boolean isSync)
+   at System.Management.Automation.PowerShell.CoreInvokeHelper[TInput,TOutput](PSDataCollection`1 input, PSDataCollection`1 output, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.CoreInvoke[TInput,TOutput](PSDataCollection`1 input, PSDataCollection`1 output, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.CoreInvoke[TOutput](IEnumerable input, PSDataCollection`1 output, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.Invoke(IEnumerable input, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.Invoke()
+   at ModuleHost.Main(String[] args)
+
+
+LOG editing-3.log
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\psreadline-source.6Ja5rq\editing-3\Check.csproj (in 60 ms).
+  Check -> E:\msys64\home\topkek\psreadline-source.6Ja5rq\editing-3\bin\Release\net8.0\PSReadLine.Tests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.08
+PASS 8 owned editing/history/Unicode/Vi cases using the unchanged original PSReadLine TestConsole and production editing algorithms
+
+
+LOG editing-4.log
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\psreadline-source.6Ja5rq\editing-4\Check.csproj (in 61 ms).
+  Check -> E:\msys64\home\topkek\psreadline-source.6Ja5rq\editing-4\bin\Release\net8.0\PSReadLine.Tests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.93
+PASS 8 owned editing/history/Unicode/Vi cases using the unchanged original PSReadLine TestConsole and production editing algorithms
+
+
+LOG psreadline-build.log
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\psreadline-source.6Ja5rq\psreadline-prepared\PSReadLine\PSReadLine.csproj (in 162 ms).
+  PSReadLine -> E:\msys64\home\topkek\psreadline-source.6Ja5rq\psreadline-prepared\PSReadLine\bin\Release\net8.0\Microsoft.PowerShell.PSReadLine2.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.73
+
+
+LOG psreadline-build2.log
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\psreadline-source.6Ja5rq\psreadline-prepared2\PSReadLine\PSReadLine.csproj (in 148 ms).
+  PSReadLine -> E:\msys64\home\topkek\psreadline-source.6Ja5rq\psreadline-prepared2\PSReadLine\bin\Release\net8.0\Microsoft.PowerShell.PSReadLine2.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.68
+
+
+LOG psreadline-smoke.log
+PASS source PSReadLine import, module/assembly/exports, options, live key-handler set/get/remove and disabled history persistence

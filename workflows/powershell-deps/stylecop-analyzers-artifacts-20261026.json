@@ -1,0 +1,64 @@
+[
+  {
+    "recipe": "mingw-w64-dotnet-stylecop-analyzers",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-stylecop-analyzers-1.2.0.beta556-1-any.pkg.tar.zst",
+    "sha256": "2b3bcae2b25f262286ce8f95814afa69ab9df7dd72af8a3b9176aeeaccf0ac75",
+    "nuget_id": "StyleCop.Analyzers",
+    "nuget_version": "1.2.0-beta.556",
+    "nuget_dependencies": {
+      "StyleCop.Analyzers.Unstable": "[1.2.0.556]"
+    },
+    "source_commit": "73a46ae2e65e7870fefe35e2c4c12bb7152f4ec5",
+    "source_tree": "c825926498b59694e7f559cd6d55377bbac57283",
+    "managed_payload_sha256": {},
+    "analyzer_classes": 182,
+    "codefix_classes": 89,
+    "diagnostic_ids": 178,
+    "resource_sets": 17,
+    "resource_strings": 857,
+    "upstream_vectors": 2880,
+    "owned_vectors": 16,
+    "source_files": [
+      7,
+      313,
+      107
+    ],
+    "assembly_version": "1.2.0.556",
+    "public_key_token": "cfeb5dbada5e1c25"
+  },
+  {
+    "recipe": "mingw-w64-dotnet-stylecop-analyzers",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-stylecop-analyzers-unstable-1.2.0.beta556-1-any.pkg.tar.zst",
+    "sha256": "68b6d8d76d7db3bfc490acce0b56f47c31d281f10c9359ebbd2527f9d31d36ff",
+    "nuget_id": "StyleCop.Analyzers.Unstable",
+    "nuget_version": "1.2.0.556",
+    "nuget_dependencies": {},
+    "source_commit": "73a46ae2e65e7870fefe35e2c4c12bb7152f4ec5",
+    "source_tree": "c825926498b59694e7f559cd6d55377bbac57283",
+    "managed_payload_sha256": {
+      "analyzers/dotnet/cs/StyleCop.Analyzers.CodeFixes.dll": "b9279c5c47406aeea1820dcdbcf2facca760fca418b26a73081cdc98de2af654",
+      "analyzers/dotnet/cs/StyleCop.Analyzers.dll": "da3475117536c21579d22d6b61f36f586a6de2f5246498d71d9dd25de2b4bdf8",
+      "analyzers/dotnet/cs/de-DE/StyleCop.Analyzers.resources.dll": "d1e42393798604744ba1348b6e0a7a27854009eefe6ff1173643ce3376a79430",
+      "analyzers/dotnet/cs/en-GB/StyleCop.Analyzers.resources.dll": "7ddf2a623cf5ef11b354c64a5d1e9ffc3a8b5bffaf37fe0c5980142ecdc429e2",
+      "analyzers/dotnet/cs/es-MX/StyleCop.Analyzers.resources.dll": "558c17552700d252cd19e30108b36ec82957a54ef395ac31ba301d3adbbc3e18",
+      "analyzers/dotnet/cs/fr-FR/StyleCop.Analyzers.resources.dll": "55e078a9c2f953b63421a0ed772dd927d6f0598ed598d0b945caf3104eab0f03",
+      "analyzers/dotnet/cs/pl-PL/StyleCop.Analyzers.resources.dll": "d46834f8668c77d669a3d2ef159572e75438a5c0408058d28058518bbe54878a",
+      "analyzers/dotnet/cs/pt-BR/StyleCop.Analyzers.resources.dll": "f86d599a31695dd91d97ec095eaca08d28a04e9309f33f7d6ce5e34a629d7579",
+      "analyzers/dotnet/cs/ru-RU/StyleCop.Analyzers.resources.dll": "9cc5f21725189f359b69e178137762456e77cd25dcae13b7176901a0c969a871"
+    },
+    "analyzer_classes": 182,
+    "codefix_classes": 89,
+    "diagnostic_ids": 178,
+    "resource_sets": 17,
+    "resource_strings": 857,
+    "upstream_vectors": 2880,
+    "owned_vectors": 16,
+    "source_files": [
+      7,
+      313,
+      107
+    ],
+    "assembly_version": "1.2.0.556",
+    "public_key_token": "cfeb5dbada5e1c25"
+  }
+]

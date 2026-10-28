@@ -1,0 +1,35 @@
+{
+  "Microsoft.Extensions.Primitives": {
+    "artifact": "mingw-w64-clang-x86_64-dotnet-extensions-primitives6-6.0.0-1-any.pkg.tar.zst",
+    "sha256": "2ee60eee950ba80ca4d8ac4a29b08e6a08c9375a7dd9e1778ad36ac396ca4d9d",
+    "original_compile_inputs": 12,
+    "public_api_declarations": 151,
+    "resource_manifests": 2,
+    "resource_values": 10,
+    "production_cs_changes": [],
+    "implementation_sha256": "4f3576424629d209be7b43ac729db0c05dffc668fa791ff99ad4e50f2d112759",
+    "reference_sha256": "63fb1b3f71b60344a5580d6af01a49cc825070ab0c3acee085040bcf03a673d3"
+  },
+  "Microsoft.Extensions.FileProviders.Abstractions": {
+    "artifact": "mingw-w64-clang-x86_64-dotnet-fileproviders-abstractions6-6.0.0-1-any.pkg.tar.zst",
+    "sha256": "5d8252c2c0582a70da27f48030c8ed587d46fb557062ee54bbc7266f36de27ab",
+    "original_compile_inputs": 9,
+    "public_api_declarations": 46,
+    "resource_manifests": 2,
+    "resource_values": 2,
+    "production_cs_changes": [],
+    "implementation_sha256": "0ea6931be619ef09b0ead37fce88965e22b0fd9e7403e69a1329d6d3ec939d55",
+    "reference_sha256": "cde8d3e21b964f99fa9f77d100771c41ef6cc4113eb5851a407d7b872954754b"
+  },
+  "Microsoft.Extensions.FileSystemGlobbing": {
+    "artifact": "mingw-w64-clang-x86_64-dotnet-filesystem-globbing6-6.0.0-1-any.pkg.tar.zst",
+    "sha256": "1e1ee382e817449f0427fbe61dfcb9523e012f8d6f91e06782b3a152de8e1cc7",
+    "original_compile_inputs": 35,
+    "public_api_declarations": 185,
+    "resource_manifests": 2,
+    "resource_values": 8,
+    "production_cs_changes": [],
+    "implementation_sha256": "5b7cf65d95b830bc606715cc41c6d0062f2845bfc10438b19049236646aa9953",
+    "reference_sha256": "5722295a1966d72f1de88b4d168138e19a8d8357b6ab7628b49be3d63fccf4a7"
+  }
+}

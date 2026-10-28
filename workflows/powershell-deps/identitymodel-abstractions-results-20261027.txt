@@ -1,0 +1,254 @@
+Microsoft.IdentityModel.Abstractions6.35.0 source packaging milestone,2026-10-27
+Host:win11 / Windows11 build26200 / MSYS2 CLANG64
+Build root:/home/topkek/identitymodel-package.t4VJUh
+Fresh installed root:/home/topkek/identitymodel-installed.xbKHka
+
+Result: clean source build/package, install, fresh source-only consumer and independent audit passed.
+Complete original project/common imports and nine original C# inputs. Eight implementation
+files unchanged; Properties/AssemblyInfo.cs has only the three version attributes frozen
+exactly as the original updateAssemblyInfo.ps1 CI operation. Source commit
+c94c7fc235501d478221e979062bd8837a55575b, original public key/token31bf3856ad364e35.
+Assembly6.35.0.0/file6.35.0.41201/info6.35.0.41201040912.commit.
+No production algorithm changes, build/runtime vendor implementations or policy changes.
+
+Commands/results:
+PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm
+  exit0;source/consumer/tool builds0 warnings,0 errors.
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-identitymodel-abstractions-6.35.0-1-any.pkg.tar.zst
+  exit0.
+bash check.sh /home/topkek/identitymodel-installed.xbKHka/check
+  exit0;new cache and installed source feed only.
+python3 tests/powershell-deps/audit-identitymodel-abstractions.py
+  exit0;all14 pinned inputs,exact nine original compiler inputs/CI version-only overlay,
+  original/adapted test content,implementation/reference/XML payloads,dependency metadata/licenses.
+Post-install byte check:built/installed/freshly restored nupkg and source license exactly match.
+
+All52 published net6 public/protected declarations and release/signing identities match.
+All six original TelemetryEventDetails assertion cases execute, changing only four Moq
+constructions/CallBase/Object to a concrete subclass. Derived-type helpers retained.
+Additional owned interface dispatch covers every telemetry method/overload, all property
+kinds,null/empty keys/null values,live dictionary view,Unicode,original logger/telemetry
+singletons and observability constants. No telemetry/authentication traffic is sent.
+Runtime assembly location/hash prevents foreign implementation substitution; actual compiler
+reference and runtime assets match the source NuGet inventories.
+
+The independent audit initially stripped the original upstream fixture's UTF8 BOM;
+prepare/build correctly preserved it. Verifier was corrected to preserve the BOM and
+compare every adapted fixture byte; no production/package change was needed.
+
+Original build-only SourceLink/FxCop package references were omitted. SDK trimming task
+restore/old baseline validation disabled;original IsTrimmable metadata remains. Broader
+upstream/framework/trimming matrices and MSAL/Azure/PSResourceGet integration remain open.
+Actual CLR8.0.0 servicing is unchanged.
+
+makepkg1.log:
+==> Making package: mingw-w64-dotnet-identitymodel-abstractions 6.35.0-1 (27 Oct 2026 10:38:59)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found identitymodel-c94c7fc235501d478221e979062bd8837a55575b.tar.gz
+  -> Found extract.py
+  -> Found prepare.py
+  -> Found verify-build.py
+  -> Found pack.py
+  -> Found Check.cs
+  -> Found check.sh
+  -> Found check-payload.py
+  -> Found compare.py
+  -> Found InspectApi.cs
+  -> Found InspectAssemblyMetadata.cs
+  -> Found published-api.json
+  -> Found published-metadata.json
+  -> Found README.md
+==> Validating source files with sha256sums...
+    identitymodel-c94c7fc235501d478221e979062bd8837a55575b.tar.gz ... Passed
+    extract.py ... Passed
+    prepare.py ... Passed
+    verify-build.py ... Passed
+    pack.py ... Passed
+    Check.cs ... Passed
+    check.sh ... Passed
+    check-payload.py ... Passed
+    compare.py ... Passed
+    InspectApi.cs ... Passed
+    InspectAssemblyMetadata.cs ... Passed
+    published-api.json ... Passed
+    published-metadata.json ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+==> Starting prepare()...
+PASS pinned complete original Abstractions production/build/test inputs
+PASS all nine original C# inputs; only original CI assembly-version attributes changed; six upstream telemetry cases retained
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\identitymodel-package.t4VJUh\src\prepared\src\Microsoft.IdentityModel.Abstractions\Microsoft.IdentityModel.Abstractions.csproj (in 224 ms).
+  Microsoft.IdentityModel.Abstractions -> E:\msys64\home\topkek\identitymodel-package.t4VJUh\src\prepared\src\Microsoft.IdentityModel.Abstractions\bin\Release\net8.0\Microsoft.IdentityModel.Abstractions.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:14.26
+PASS all nine original compiler items, two SDK metadata files, recorded CI metadata-only overlay and source implementation/reference/XML outputs
+PASS gated source implementation/reference/XML, original license and original/adapted source/test metadata
+==> Starting check()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\identitymodel-package.t4VJUh\src\check\Check.csproj (in 669 ms).
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Check -> E:\msys64\home\topkek\identitymodel-package.t4VJUh\src\check\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:11.25
+PASS original upstream assertion case TestNameSetGet
+PASS original upstream assertion case SetPropertyArgumentNullException
+PASS original upstream assertion case SetPropertyNoConflict
+PASS original upstream assertion case SetPropertyWithConflict
+PASS original upstream assertion case VerifyDerivedTypesCanAddArbitraryTypes
+PASS original upstream assertion case VerifyExtensibilityForClassification
+PASS source Abstractions: six original telemetry cases, all interface overloads, live/null/Unicode data, original logger/telemetry singletons and constants; exact runtime bytes/location
+PASS source package test fixture/reference/runtime hashes and actual compiler/runtime asset selection
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\identitymodel-package.t4VJUh\src\check\Api\Inspect.csproj (in 1.12 sec).
+  Inspect -> E:\msys64\home\topkek\identitymodel-package.t4VJUh\src\check\Api\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:15.09
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\identitymodel-package.t4VJUh\src\check\Pe\Inspect.csproj (in 290 ms).
+  Inspect -> E:\msys64\home\topkek\identitymodel-package.t4VJUh\src\check\Pe\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:13.61
+PASS all52 exact published API declarations and release/signing identities
+PASS fresh source Abstractions consumer, upstream telemetry cases, exact API/identity/payload gates
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-identitymodel-abstractions"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-identitymodel-abstractions 6.35.0-1 (27 Oct 2026 10:41:14)
+
+install.log:
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-dotnet-identitymodel-abstractions-6.35.0-1
+
+Total Installed Size:  0.02 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+installing mingw-w64-clang-x86_64-dotnet-identitymodel-abstractions...
+
+installed-check.log:
+FRESH INSTALLED ROOT: /home/topkek/identitymodel-installed.xbKHka
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\identitymodel-installed.xbKHka\check\Check.csproj (in 640 ms).
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Check -> E:\msys64\home\topkek\identitymodel-installed.xbKHka\check\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:11.51
+PASS original upstream assertion case TestNameSetGet
+PASS original upstream assertion case SetPropertyArgumentNullException
+PASS original upstream assertion case SetPropertyNoConflict
+PASS original upstream assertion case SetPropertyWithConflict
+PASS original upstream assertion case VerifyDerivedTypesCanAddArbitraryTypes
+PASS original upstream assertion case VerifyExtensibilityForClassification
+PASS source Abstractions: six original telemetry cases, all interface overloads, live/null/Unicode data, original logger/telemetry singletons and constants; exact runtime bytes/location
+PASS source package test fixture/reference/runtime hashes and actual compiler/runtime asset selection
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\identitymodel-installed.xbKHka\check\Api\Inspect.csproj (in 1.4 sec).
+  Inspect -> E:\msys64\home\topkek\identitymodel-installed.xbKHka\check\Api\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:16.65
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\identitymodel-installed.xbKHka\check\Pe\Inspect.csproj (in 246 ms).
+  Inspect -> E:\msys64\home\topkek\identitymodel-installed.xbKHka\check\Pe\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:15.47
+PASS all52 exact published API declarations and release/signing identities
+PASS fresh source Abstractions consumer, upstream telemetry cases, exact API/identity/payload gates

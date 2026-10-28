@@ -1,0 +1,205 @@
+Original full PowerShell7.4.20 SDK/console/LocalAccounts and gallery integration
+Host: win11/MSYS2 CLANG64. Full dependency goal remains incomplete.
+
+{
+  "previous_goal_turn_classification": "progress",
+  "current_goal_turn_classification": "progress",
+  "build_root": "/home/topkek/powershell-full-sdk.K5kDMN",
+  "source_version": "7.4.20",
+  "runtime_native_package": "8.0.31-3",
+  "original_sdk_build_exit_code": 0,
+  "original_console_build_exit_code": 0,
+  "initial_full_build_harness_exit_code": 1,
+  "initial_localaccounts_diagnostics": 80,
+  "corrected_localaccounts_build_exit_code": 0,
+  "corrected_localaccounts_warnings": 0,
+  "corrected_localaccounts_errors": 0,
+  "analyzers_retained": true,
+  "localaccounts_original_sources": 26,
+  "localaccounts_adapted_sources": 22,
+  "localaccounts_public_protected_api_entries": 459,
+  "emitted_api_original_identity_and_key_match": true,
+  "legacy_constructor_annotations_added": 17,
+  "original_sdk_catalog_references": 213,
+  "independent_original_catalog_regeneration_exit_code": 0,
+  "full_source_compiler_inventory_exit_code": 0,
+  "original_source_inputs_total": 1031,
+  "staged_files": 604,
+  "source_binary_assets": 383,
+  "original_project_dlls": 13,
+  "source_reference_dlls": 163,
+  "source_gallery_modules": [
+    "Microsoft.PowerShell.Archive",
+    "Microsoft.PowerShell.PSResourceGet",
+    "PSReadLine",
+    "PackageManagement",
+    "PowerShellGet",
+    "ThreadJob"
+  ],
+  "source_archive_native_owners": 85,
+  "commands": {
+    "localaccounts-build": "/clang64/lib/dotnet/dotnet.exe build \"$(cygpath -am PowerShell-7.4.20/src/Microsoft.PowerShell.LocalAccounts/Microsoft.PowerShell.LocalAccounts.csproj)\" -c Release --no-restore -p:BuildProjectReferences=false -p:UseSharedCompilation=false -v:minimal",
+    "source-audit": "/usr/bin/python3 tests/powershell-full-sdk/audit-source.py .",
+    "emitted-api-audit": "bash tests/powershell-full-sdk/check-localaccounts-api.sh . localaccounts-api4",
+    "stage": "/usr/bin/python3 tests/powershell-full-sdk/stage.py . app1",
+    "payload-audit": "/usr/bin/python3 tests/powershell-full-sdk/audit-payload.py . app1",
+    "original-console-smoke": "/clang64/lib/dotnet/dotnet.exe \"$(cygpath -am app1/pwsh.dll)\" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File \"$(cygpath -am tests/powershell-full-sdk/Smoke.ps1)\"",
+    "gallery-smoke": "/clang64/lib/dotnet/dotnet.exe \"$(cygpath -am app1/pwsh.dll)\" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File \"$(cygpath -am tests/powershell-full-sdk/GallerySmoke.ps1)\" -Output \"$(cygpath -am gallery-smoke1)\"",
+    "fresh-prepare": "/usr/bin/python3 tests/powershell-full-sdk/prepare.py fresh-prepare1/PowerShell-7.4.20"
+  },
+  "command_exit_codes": {
+    "localaccounts-build": 0,
+    "source-audit": 0,
+    "emitted-api-audit": 0,
+    "stage": 0,
+    "payload-audit": 0,
+    "original-console-smoke": 0,
+    "gallery-smoke": 0,
+    "fresh-prepare": 0
+  },
+  "full_shipping_powershell_complete": false,
+  "remaining": [
+    "native executable/apphost and real child Start-Job in this original-project payload",
+    "conditional WindowsDesktop/GraphicalHost",
+    "native package and complete license closure",
+    "serviced SDK host/runtime-pack integration",
+    "MMI3/SqlClient/Windows.Compatibility broader native/remote behavior",
+    "PowerShell7.6/.NET10"
+  ]
+}
+
+Build/test environment:
+export DOTNET_ROOT=$(cygpath -am /clang64/lib/dotnet) DOTNET_ROOT_X64=$(cygpath -am /clang64/lib/dotnet)
+export DOTNET_CLI_HOME=$(cygpath -am "$PWD/cli-home") NUGET_PACKAGES=$(cygpath -am "$PWD/empty-packages")
+export DOTNET_CLI_TELEMETRY_OPTOUT=1 POWERSHELL_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false
+
+Initial failures retained:
+LocalAccounts initial full build:80 diagnostics (previous build-results-20261027.txt).
+First overlay rebuild:one further CA1822 for the stateless caller; corrected by explicit private-static adapters.
+First emitted API audit omitted private metadata accessors; corrected to MetadataImportOptions.All.
+First inspector invocation included a CLI welcome banner in captured symbols; corrected in fixture parsing.
+First console File invocation encountered script execution policy; passing invocation uses the original CLI process-only flag.
+No package implementation/analyzer disabling was used to pass these gates.
+
+Recorded localaccounts-build2.log:
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+E:\msys64\home\topkek\powershell-full-sdk.K5kDMN\PowerShell-7.4.20\src\Microsoft.PowerShell.LocalAccounts\LocalAccounts\Sam.cs(3025,34): error CA1822: Member 'GetPrincipalSource' does not access instance data and can be marked as static (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1822) [E:\msys64\home\topkek\powershell-full-sdk.K5kDMN\PowerShell-7.4.20\src\Microsoft.PowerShell.LocalAccounts\Microsoft.PowerShell.LocalAccounts.csproj]
+
+Build FAILED.
+
+E:\msys64\home\topkek\powershell-full-sdk.K5kDMN\PowerShell-7.4.20\src\Microsoft.PowerShell.LocalAccounts\LocalAccounts\Sam.cs(3025,34): error CA1822: Member 'GetPrincipalSource' does not access instance data and can be marked as static (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1822) [E:\msys64\home\topkek\powershell-full-sdk.K5kDMN\PowerShell-7.4.20\src\Microsoft.PowerShell.LocalAccounts\Microsoft.PowerShell.LocalAccounts.csproj]
+    0 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:15.14
+
+Recorded localaccounts-build3.log:
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Microsoft.PowerShell.LocalAccounts -> E:\msys64\home\topkek\powershell-full-sdk.K5kDMN\PowerShell-7.4.20\src\Microsoft.PowerShell.LocalAccounts\bin\Release\net8.0\Microsoft.PowerShell.LocalAccounts.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:12.49
+
+Recorded full-source-audit3.log:
+PASS exact original Windows source inventories/hashes, documented exclusions, fresh generators and retained explicit source analyzers: {'System.Management.Automation': (697, 77), 'Microsoft.PowerShell.CoreCLR.Eventing': (9, 3), 'PSVersionInfoGenerator': (1, 2), 'Microsoft.Management.Infrastructure.CimCmdlets': (35, 3), 'ResGen': (1, 2), 'TypeCatalogGen': (1, 2), 'Microsoft.PowerShell.Security': (11, 9), 'Microsoft.PowerShell.Commands.Management': (60, 15), 'Microsoft.PowerShell.Commands.Utility': (142, 37), 'Microsoft.PowerShell.ConsoleHost': (27, 11), 'Microsoft.PowerShell.Commands.Diagnostics': (8, 3), 'Microsoft.WSMan.Management': (11, 3), 'Microsoft.WSMan.Runtime': (1, 2)}
+PASS original full SDK/core/console/LocalAccounts source hashes, generator paths and source analyzer coverage: {'System.Management.Automation': 697, 'Microsoft.PowerShell.CoreCLR.Eventing': 9, 'PSVersionInfoGenerator': 1, 'Microsoft.Management.Infrastructure.CimCmdlets': 35, 'ResGen': 1, 'TypeCatalogGen': 1, 'Microsoft.PowerShell.Security': 11, 'Microsoft.PowerShell.Commands.Management': 60, 'Microsoft.PowerShell.Commands.Utility': 142, 'Microsoft.PowerShell.ConsoleHost': 27, 'Microsoft.PowerShell.Commands.Diagnostics': 8, 'Microsoft.WSMan.Management': 11, 'Microsoft.WSMan.Runtime': 1, 'Microsoft.PowerShell.LocalAccounts': 26, 'pwsh': 1, 'Microsoft.PowerShell.SDK': 0}
+
+Recorded localaccounts-api1.log:
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-full-sdk.K5kDMN\localaccounts-api1\Check.csproj (in 424 ms).
+  Check -> E:\msys64\home\topkek\powershell-full-sdk.K5kDMN\localaccounts-api1\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:08.28
+Unhandled exception. System.Exception: E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/PowerShell-7.4.20/src/Microsoft.PowerShell.LocalAccounts/gen/Microsoft.PowerShell.LocalAccounts.Strings.cs(1,1): error CS8301: Invalid name for a preprocessing symbol; 'Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+TRACE' is not a valid identifier
+   at Program.Inspect(CSharpCompilation compilation) in E:\msys64\home\topkek\powershell-full-sdk.K5kDMN\localaccounts-api1\Program.cs:line 30
+   at Program.Main(String[] args) in E:\msys64\home\topkek\powershell-full-sdk.K5kDMN\localaccounts-api1\Program.cs:line 84
+
+Recorded localaccounts-api3.log:
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-full-sdk.K5kDMN\localaccounts-api3\Check.csproj (in 683 ms).
+  Check -> E:\msys64\home\topkek\powershell-full-sdk.K5kDMN\localaccounts-api3\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:11.40
+Unhandled exception. System.Exception: Emitted API mismatch:
+MISSING Property public int Microsoft.PowerShell.Commands.Win32InternalException.NativeErrorCode { get; private set; }
+MISSING Property public object Microsoft.PowerShell.Commands.LocalAccountsException.Target { get; private set; }
+MISSING Property public System.Management.Automation.ErrorCategory Microsoft.PowerShell.Commands.LocalAccountsException.ErrorCategory { get; private set; }
+MISSING Property public uint Microsoft.PowerShell.Commands.InternalException.StatusCode { get; private set; }
+EXTRA Property public int Microsoft.PowerShell.Commands.Win32InternalException.NativeErrorCode { get; }
+EXTRA Property public object Microsoft.PowerShell.Commands.LocalAccountsException.Target { get; }
+EXTRA Property public System.Management.Automation.ErrorCategory Microsoft.PowerShell.Commands.LocalAccountsException.ErrorCategory { get; }
+EXTRA Property public uint Microsoft.PowerShell.Commands.InternalException.StatusCode { get; }
+   at Program.Main(String[] args) in E:\msys64\home\topkek\powershell-full-sdk.K5kDMN\localaccounts-api3\Program.cs:line 100
+
+Recorded localaccounts-api4.log:
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-full-sdk.K5kDMN\localaccounts-api4\Check.csproj (in 466 ms).
+  Check -> E:\msys64\home\topkek\powershell-full-sdk.K5kDMN\localaccounts-api4\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:09.85
+PASS all 459 original LocalAccounts public/protected entries and attributes; actual emitted declarations/identity/public key;17 serialization annotations; no unpatched assembly emitted
+
+Recorded app1-payload-audit.log:
+PASS all 604 staged files, 383 source binary assets, 13 original project DLLs,163 reference assemblies and six source gallery modules; source archive/native owners recorded
+
+Recorded smoke1.log:
+[31;1mSecurityError: [31;1mFile E:\msys64\home\topkek\powershell-full-sdk.K5kDMN\tests\powershell-full-sdk\Smoke.ps1 cannot be loaded because running scripts is disabled on this system. For more information, see about_Execution_Policies at https://go.microsoft.com/fwlink/?LinkID=135170.[0m
+
+Recorded smoke3.log:
+CATALOG System.Data.SqlClient.SqlConnection -> System.Data.SqlClient
+CATALOG System.ServiceModel.BasicHttpBinding -> System.Private.ServiceModel
+CATALOG System.ServiceModel.NetTcpBinding -> System.Private.ServiceModel
+CATALOG System.IO.Packaging.Package -> System.IO.Packaging
+CATALOG System.Speech.Synthesis.SpeechSynthesizer -> System.Speech
+CATALOG System.Drawing.Bitmap -> System.Drawing.Common
+CATALOG System.Management.ManagementObjectSearcher -> System.Management
+PASS original full SDK catalog/console, module discovery, CIM/GetOwner/serialization, JSON/Add-Type/Authenticode, LocalAccounts and no Framework implementations
+
+Recorded gallery-smoke1.log:
+MODULE PackageManagement 1.4.8.1 E:\msys64\home\topkek\powershell-full-sdk.K5kDMN\app1\Modules\PackageManagement
+MODULE ThreadJob 2.0.3 E:\msys64\home\topkek\powershell-full-sdk.K5kDMN\app1\Modules\ThreadJob
+MODULE PSReadLine 2.3.6 E:\msys64\home\topkek\powershell-full-sdk.K5kDMN\app1\Modules\PSReadLine
+MODULE Microsoft.PowerShell.Archive 1.2.6 E:\msys64\home\topkek\powershell-full-sdk.K5kDMN\app1\Modules\Microsoft.PowerShell.Archive
+MODULE Microsoft.PowerShell.PSResourceGet 1.1.1 E:\msys64\home\topkek\powershell-full-sdk.K5kDMN\app1\Modules\Microsoft.PowerShell.PSResourceGet
+MODULE PowerShellGet 2.2.5 E:\msys64\home\topkek\powershell-full-sdk.K5kDMN\app1\Modules\PowerShellGet
+PASS six source gallery modules in original console, source NuGet provider, PSReadLine options, Unicode archive round trip and real ThreadJob/CIM/Unicode execution
+
+Recorded fresh-prepare1.log:
+Prepared complete original Windows core projects, original source generators and installed-source-only feed
+PASS exact LocalAccounts analyzer adaptations: 22 files; all original sources retained
+PASS full original SDK/project graph retained; original catalog generation target selected
+

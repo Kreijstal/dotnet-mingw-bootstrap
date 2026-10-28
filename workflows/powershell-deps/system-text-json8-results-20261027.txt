@@ -1,0 +1,316 @@
+System.Text.Json8.0.5 .NET8 source package milestone, 2026-10-27
+Host: win11 / Windows11 build26200 / MSYS2 CLANG64
+Formal root: /home/topkek/j805pkg.AZP1vB
+Prototype root: /home/topkek/json805-source.sV2f99
+Fresh installed root: /home/topkek/j805-installed.OOpyyR
+
+Result: clean source build/package, installed/fresh consumers and independent archive audit passed.
+Source commit81cabf2857a01351e5ab578947c7403a5b128ad1 is explicitly named by
+published8.0.5 nuspec; original ServicingVersion5. Selected net8 library assembly
+8.0.0.0/file8.0.1024.46610/info8.0.10+commit; original net462 bundle version differs.
+The three source generators retain assembly/file8.0.10.46610. Original Open key/token
+cc7b13ffcd2ddd51 and public signing. No production C# changes or vendor implementation
+build/runtime references. Metadata-only vendor DLLs remained isolated outside build inputs.
+
+All497 actual unchanged original C# items: Lib320,Gen3.11=55,Gen4.0=65,Gen4.4=57.
+Four generated SR bindings/eight SDK metadata files. All1784 original API declarations,
+43 assembly identities/resource sets and1460 original neutral/XLF strings match. The
+original combined reflection/resource-key ILLink substitutions are embedded and compared
+structurally. Package contains44 DLL assets: one source library/reference pair plus42
+generator/satellite assets. MIT license/notices, XML docs and source inventories included.
+
+Commands/results:
+PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm
+  exit0;10 original XML/nullable source warnings,0 errors. Owned consumer/tool builds0 warnings/errors.
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-system-text-json8-8.0.5-1-any.pkg.tar.zst
+  exit0.
+bash check.sh /home/topkek/j805-installed.OOpyyR/check
+  exit0; new cache and installed source feed only.
+python3 tests/powershell-deps/audit-system-text-json8.py
+  exit0; all18 pinned source/recipe inputs, exact selected source/resource metadata,
+  original compiler inputs, all library/reference/generator bytes, dependency metadata/licenses.
+Post-install byte check: source-built feed, installed feed and fresh restored nupkg exactly equal;
+installed native licenses/notices/README match source inputs.
+
+Owned runtime behavior: reflection/required/extension/polymorphic metadata, Unicode,
+DOM cloning/lifetime/mutation, async streams/enumerables, segmented UTF8, numeric limits,
+malformed/depth rejection. Runtime path/hash/file-version checks prevent inbox JSON substitution.
+Each original generator variant compiles/executes a generated serializer with reflection
+fallback disabled, rejects invalid nonpartial context viaSYSLIB1032, and loads German diagnostic
+resources. Actual SDK PackageReference sample proves analyzer selection, exact generator
+bytes, generated source files and runtime execution with reflection disabled.
+
+Compiler host is the installed source CSharp4.9.2, explicitly selected with CscToolPath/
+CscToolExe and shared compilation off. Generator variants target.NET8/source Roslyn4.9.2;
+old Roslyn/.NETStandard host compatibility is not claimed. Main target is net8.0.
+Actual CLR remains8.0.0; this private package does not upgrade shared-framework servicing.
+Broader upstream/linker/AOT/older-target matrices and full PSResourceGet/Azure integration remain.
+Packaging's native-root reference warning is solely the documented compiler-path example in
+README.md; an independent native archive scan found no such reference in DLLs.
+
+
+makepkg1.log:
+==> Making package: mingw-w64-dotnet-system-text-json8 8.0.5-1 (27 Oct 2026 10:15:36)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found runtime-81cabf2857a01351e5ab578947c7403a5b128ad1.tar.gz
+  -> Found extract.py
+  -> Found prepare.py
+  -> Found verify-build.py
+  -> Found pack.py
+  -> Found prepare-check.py
+  -> Found verify-consumer.py
+  -> Found verify-sdk.py
+  -> Found check.sh
+  -> Found Check.cs
+  -> Found SdkSample.cs
+  -> Found InspectApi.cs
+  -> Found InspectAssemblyMetadata.cs
+  -> Found compare.py
+  -> Found Open.pubkey.hex
+  -> Found published-metadata.json
+  -> Found published-api.json
+  -> Found README.md
+==> Validating source files with sha256sums...
+    runtime-81cabf2857a01351e5ab578947c7403a5b128ad1.tar.gz ... Passed
+    extract.py ... Passed
+    prepare.py ... Passed
+    verify-build.py ... Passed
+    pack.py ... Passed
+    prepare-check.py ... Passed
+    verify-consumer.py ... Passed
+    verify-sdk.py ... Passed
+    check.sh ... Passed
+    Check.cs ... Passed
+    SdkSample.cs ... Passed
+    InspectApi.cs ... Passed
+    InspectAssemblyMetadata.cs ... Passed
+    compare.py ... Passed
+    Open.pubkey.hex ... Passed
+    published-metadata.json ... Passed
+    published-api.json ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+==> Starting prepare()...
+PASS pinned complete JSON source/generators/shared tree: 4148 files
+PASS complete original JSON/generator imports and selected compiler items: {'Lib': 320, 'Gen3.11': 55, 'Gen4.0': 65, 'Gen4.4': 57}
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\j805pkg.AZP1vB\src\prepared\Lib\Library.csproj (in 354 ms).
+  Restored E:\msys64\home\topkek\j805pkg.AZP1vB\src\prepared\Gen4.0\Library.csproj (in 1.8 sec).
+  Restored E:\msys64\home\topkek\j805pkg.AZP1vB\src\prepared\Gen4.4\Library.csproj (in 1.8 sec).
+  Restored E:\msys64\home\topkek\j805pkg.AZP1vB\src\prepared\Gen3.11\Library.csproj (in 1.81 sec).
+E:\msys64\home\topkek\j805pkg.AZP1vB\src\source\src\libraries\System.Text.Json\gen\Model\TypeGenerationSpec.cs(67,87): warning CS1584: XML comment has syntactically incorrect cref attribute 'null' [E:\msys64\home\topkek\j805pkg.AZP1vB\src\prepared\Gen4.4\Library.csproj]
+E:\msys64\home\topkek\j805pkg.AZP1vB\src\source\src\libraries\System.Text.Json\gen\Model\TypeGenerationSpec.cs(67,87): warning CS1658: Identifier expected; 'null' is a keyword. See also error CS1041. [E:\msys64\home\topkek\j805pkg.AZP1vB\src\prepared\Gen4.4\Library.csproj]
+E:\msys64\home\topkek\j805pkg.AZP1vB\src\source\src\libraries\System.Text.Json\gen\Model\TypeGenerationSpec.cs(67,87): warning CS1584: XML comment has syntactically incorrect cref attribute 'null' [E:\msys64\home\topkek\j805pkg.AZP1vB\src\prepared\Gen3.11\Library.csproj]
+E:\msys64\home\topkek\j805pkg.AZP1vB\src\source\src\libraries\System.Text.Json\gen\Model\TypeGenerationSpec.cs(67,87): warning CS1658: Identifier expected; 'null' is a keyword. See also error CS1041. [E:\msys64\home\topkek\j805pkg.AZP1vB\src\prepared\Gen3.11\Library.csproj]
+E:\msys64\home\topkek\j805pkg.AZP1vB\src\source\src\libraries\System.Text.Json\gen\Model\TypeGenerationSpec.cs(67,87): warning CS1584: XML comment has syntactically incorrect cref attribute 'null' [E:\msys64\home\topkek\j805pkg.AZP1vB\src\prepared\Gen4.0\Library.csproj]
+E:\msys64\home\topkek\j805pkg.AZP1vB\src\source\src\libraries\System.Text.Json\gen\Model\TypeGenerationSpec.cs(67,87): warning CS1658: Identifier expected; 'null' is a keyword. See also error CS1041. [E:\msys64\home\topkek\j805pkg.AZP1vB\src\prepared\Gen4.0\Library.csproj]
+E:\msys64\home\topkek\j805pkg.AZP1vB\src\source\src\libraries\Common\src\Roslyn\CSharpSyntaxHelper.cs(97,34): warning CS8604: Possible null reference argument for parameter 'name' in 'SimpleNameSyntax RoslynExtensions.GetUnqualifiedName(NameSyntax name)'. [E:\msys64\home\topkek\j805pkg.AZP1vB\src\prepared\Gen4.0\Library.csproj]
+E:\msys64\home\topkek\j805pkg.AZP1vB\src\source\src\libraries\Common\src\Roslyn\SyntaxValueProvider_ForAttributeWithMetadataName.cs(89,34): warning CS1573: Parameter 'this' has no matching param tag in the XML comment for 'SyntaxValueProviderExtensions.ForAttributeWithMetadataName<T>(SyntaxValueProvider, IncrementalGeneratorInitializationContext, string, Func<SyntaxNode, CancellationToken, bool>, Func<GeneratorAttributeSyntaxContext, CancellationToken, T>)' (but other parameters do) [E:\msys64\home\topkek\j805pkg.AZP1vB\src\prepared\Gen4.0\Library.csproj]
+E:\msys64\home\topkek\j805pkg.AZP1vB\src\source\src\libraries\Common\src\Roslyn\SyntaxValueProvider_ForAttributeWithMetadataName.cs(90,51): warning CS1573: Parameter 'context' has no matching param tag in the XML comment for 'SyntaxValueProviderExtensions.ForAttributeWithMetadataName<T>(SyntaxValueProvider, IncrementalGeneratorInitializationContext, string, Func<SyntaxNode, CancellationToken, bool>, Func<GeneratorAttributeSyntaxContext, CancellationToken, T>)' (but other parameters do) [E:\msys64\home\topkek\j805pkg.AZP1vB\src\prepared\Gen4.0\Library.csproj]
+E:\msys64\home\topkek\j805pkg.AZP1vB\src\source\src\libraries\Common\src\Roslyn\SyntaxValueProvider_ForAttributeWithMetadataName.cs(91,16): warning CS1573: Parameter 'fullyQualifiedMetadataName' has no matching param tag in the XML comment for 'SyntaxValueProviderExtensions.ForAttributeWithMetadataName<T>(SyntaxValueProvider, IncrementalGeneratorInitializationContext, string, Func<SyntaxNode, CancellationToken, bool>, Func<GeneratorAttributeSyntaxContext, CancellationToken, T>)' (but other parameters do) [E:\msys64\home\topkek\j805pkg.AZP1vB\src\prepared\Gen4.0\Library.csproj]
+  Library -> E:\msys64\home\topkek\j805pkg.AZP1vB\src\prepared\Gen4.4\bin\Release\net8.0\System.Text.Json.SourceGeneration.dll
+  Library -> E:\msys64\home\topkek\j805pkg.AZP1vB\src\prepared\Gen3.11\bin\Release\net8.0\System.Text.Json.SourceGeneration.dll
+  Library -> E:\msys64\home\topkek\j805pkg.AZP1vB\src\prepared\Gen4.0\bin\Release\net8.0\System.Text.Json.SourceGeneration.dll
+  Library -> E:\msys64\home\topkek\j805pkg.AZP1vB\src\prepared\Lib\bin\Release\net8.0\System.Text.Json.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\j805pkg.AZP1vB\src\source\src\libraries\System.Text.Json\gen\Model\TypeGenerationSpec.cs(67,87): warning CS1584: XML comment has syntactically incorrect cref attribute 'null' [E:\msys64\home\topkek\j805pkg.AZP1vB\src\prepared\Gen4.4\Library.csproj]
+E:\msys64\home\topkek\j805pkg.AZP1vB\src\source\src\libraries\System.Text.Json\gen\Model\TypeGenerationSpec.cs(67,87): warning CS1658: Identifier expected; 'null' is a keyword. See also error CS1041. [E:\msys64\home\topkek\j805pkg.AZP1vB\src\prepared\Gen4.4\Library.csproj]
+E:\msys64\home\topkek\j805pkg.AZP1vB\src\source\src\libraries\System.Text.Json\gen\Model\TypeGenerationSpec.cs(67,87): warning CS1584: XML comment has syntactically incorrect cref attribute 'null' [E:\msys64\home\topkek\j805pkg.AZP1vB\src\prepared\Gen3.11\Library.csproj]
+E:\msys64\home\topkek\j805pkg.AZP1vB\src\source\src\libraries\System.Text.Json\gen\Model\TypeGenerationSpec.cs(67,87): warning CS1658: Identifier expected; 'null' is a keyword. See also error CS1041. [E:\msys64\home\topkek\j805pkg.AZP1vB\src\prepared\Gen3.11\Library.csproj]
+E:\msys64\home\topkek\j805pkg.AZP1vB\src\source\src\libraries\System.Text.Json\gen\Model\TypeGenerationSpec.cs(67,87): warning CS1584: XML comment has syntactically incorrect cref attribute 'null' [E:\msys64\home\topkek\j805pkg.AZP1vB\src\prepared\Gen4.0\Library.csproj]
+E:\msys64\home\topkek\j805pkg.AZP1vB\src\source\src\libraries\System.Text.Json\gen\Model\TypeGenerationSpec.cs(67,87): warning CS1658: Identifier expected; 'null' is a keyword. See also error CS1041. [E:\msys64\home\topkek\j805pkg.AZP1vB\src\prepared\Gen4.0\Library.csproj]
+E:\msys64\home\topkek\j805pkg.AZP1vB\src\source\src\libraries\Common\src\Roslyn\CSharpSyntaxHelper.cs(97,34): warning CS8604: Possible null reference argument for parameter 'name' in 'SimpleNameSyntax RoslynExtensions.GetUnqualifiedName(NameSyntax name)'. [E:\msys64\home\topkek\j805pkg.AZP1vB\src\prepared\Gen4.0\Library.csproj]
+E:\msys64\home\topkek\j805pkg.AZP1vB\src\source\src\libraries\Common\src\Roslyn\SyntaxValueProvider_ForAttributeWithMetadataName.cs(89,34): warning CS1573: Parameter 'this' has no matching param tag in the XML comment for 'SyntaxValueProviderExtensions.ForAttributeWithMetadataName<T>(SyntaxValueProvider, IncrementalGeneratorInitializationContext, string, Func<SyntaxNode, CancellationToken, bool>, Func<GeneratorAttributeSyntaxContext, CancellationToken, T>)' (but other parameters do) [E:\msys64\home\topkek\j805pkg.AZP1vB\src\prepared\Gen4.0\Library.csproj]
+E:\msys64\home\topkek\j805pkg.AZP1vB\src\source\src\libraries\Common\src\Roslyn\SyntaxValueProvider_ForAttributeWithMetadataName.cs(90,51): warning CS1573: Parameter 'context' has no matching param tag in the XML comment for 'SyntaxValueProviderExtensions.ForAttributeWithMetadataName<T>(SyntaxValueProvider, IncrementalGeneratorInitializationContext, string, Func<SyntaxNode, CancellationToken, bool>, Func<GeneratorAttributeSyntaxContext, CancellationToken, T>)' (but other parameters do) [E:\msys64\home\topkek\j805pkg.AZP1vB\src\prepared\Gen4.0\Library.csproj]
+E:\msys64\home\topkek\j805pkg.AZP1vB\src\source\src\libraries\Common\src\Roslyn\SyntaxValueProvider_ForAttributeWithMetadataName.cs(91,16): warning CS1573: Parameter 'fullyQualifiedMetadataName' has no matching param tag in the XML comment for 'SyntaxValueProviderExtensions.ForAttributeWithMetadataName<T>(SyntaxValueProvider, IncrementalGeneratorInitializationContext, string, Func<SyntaxNode, CancellationToken, bool>, Func<GeneratorAttributeSyntaxContext, CancellationToken, T>)' (but other parameters do) [E:\msys64\home\topkek\j805pkg.AZP1vB\src\prepared\Gen4.0\Library.csproj]
+    10 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:01:49.30
+PASS all497 actual original C# compiler items, four generated SR bindings/eight SDK metadata items and43 source DLL outputs
+PASS source JSON NuGet: library/reference/XML docs, all42 generator/satellite assets, licenses and inventories
+==> Starting check()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\j805pkg.AZP1vB\src\check\Check.csproj (in 1.11 sec).
+  Check -> E:\msys64\home\topkek\j805pkg.AZP1vB\src\check\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:16.67
+PASS all43 restored source DLLs, compiler reference and runtime implementation bytes; copied metadata-inspection inputs
+PASS source JSON reflection/required/extension/polymorphic metadata, DOM lifetimes/mutation, async streams/enumerables, segmented UTF8, Unicode, numeric boundaries and malformed/depth rejection
+PASS original generator E:/msys64/home/topkek/j805pkg.AZP1vB/src/check/copies/Gen3.11/bin/Release/net8.0/System.Text.Json.SourceGeneration.dll: generated compilation/execution with reflection disabled, SYSLIB1032 rejection and German diagnostic satellite
+PASS original generator E:/msys64/home/topkek/j805pkg.AZP1vB/src/check/copies/Gen4.0/bin/Release/net8.0/System.Text.Json.SourceGeneration.dll: generated compilation/execution with reflection disabled, SYSLIB1032 rejection and German diagnostic satellite
+PASS original generator E:/msys64/home/topkek/j805pkg.AZP1vB/src/check/copies/Gen4.4/bin/Release/net8.0/System.Text.Json.SourceGeneration.dll: generated compilation/execution with reflection disabled, SYSLIB1032 rejection and German diagnostic satellite
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\j805pkg.AZP1vB\src\check\sample\Check.csproj (in 554 ms).
+  Check -> E:\msys64\home\topkek\j805pkg.AZP1vB\src\check\sample\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:19.65
+PASS SDK NuGet analyzer discovery, original generated context and execution with reflection disabled
+PASS exact SDK-selected source generator bytes, generated files and sample runtime payload
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\j805pkg.AZP1vB\src\check\tools\Check.csproj (in 617 ms).
+  Check -> E:\msys64\home\topkek\j805pkg.AZP1vB\src\check\tools\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:16.78
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\j805pkg.AZP1vB\src\check\pe\Check.csproj (in 162 ms).
+  Check -> E:\msys64\home\topkek\j805pkg.AZP1vB\src\check\pe\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:13.72
+PASS all1784 published API declarations,43 assembly identities/resource sets and1460 neutral/localized strings
+PASS fresh source JSON consumer, all generator variants/SDK discovery, exact API/resource/linker/payload gates
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> WARNING: Package contains reference to $(cygpath -m /)
+==> Creating package "mingw-w64-clang-x86_64-dotnet-system-text-json8"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-system-text-json8 8.0.5-1 (27 Oct 2026 10:21:19)
+
+install.log:
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-dotnet-system-text-json8-8.0.5-1
+
+Total Installed Size:  1.26 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+installing mingw-w64-clang-x86_64-dotnet-system-text-json8...
+
+installed-check.log:
+FRESH INSTALLED ROOT: /home/topkek/j805-installed.OOpyyR
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\j805-installed.OOpyyR\check\Check.csproj (in 1.23 sec).
+  Check -> E:\msys64\home\topkek\j805-installed.OOpyyR\check\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:15.86
+PASS all43 restored source DLLs, compiler reference and runtime implementation bytes; copied metadata-inspection inputs
+PASS source JSON reflection/required/extension/polymorphic metadata, DOM lifetimes/mutation, async streams/enumerables, segmented UTF8, Unicode, numeric boundaries and malformed/depth rejection
+PASS original generator E:/msys64/home/topkek/j805-installed.OOpyyR/check/copies/Gen3.11/bin/Release/net8.0/System.Text.Json.SourceGeneration.dll: generated compilation/execution with reflection disabled, SYSLIB1032 rejection and German diagnostic satellite
+PASS original generator E:/msys64/home/topkek/j805-installed.OOpyyR/check/copies/Gen4.0/bin/Release/net8.0/System.Text.Json.SourceGeneration.dll: generated compilation/execution with reflection disabled, SYSLIB1032 rejection and German diagnostic satellite
+PASS original generator E:/msys64/home/topkek/j805-installed.OOpyyR/check/copies/Gen4.4/bin/Release/net8.0/System.Text.Json.SourceGeneration.dll: generated compilation/execution with reflection disabled, SYSLIB1032 rejection and German diagnostic satellite
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\j805-installed.OOpyyR\check\sample\Check.csproj (in 478 ms).
+  Check -> E:\msys64\home\topkek\j805-installed.OOpyyR\check\sample\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:16.84
+PASS SDK NuGet analyzer discovery, original generated context and execution with reflection disabled
+PASS exact SDK-selected source generator bytes, generated files and sample runtime payload
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\j805-installed.OOpyyR\check\tools\Check.csproj (in 681 ms).
+  Check -> E:\msys64\home\topkek\j805-installed.OOpyyR\check\tools\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:15.62
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\j805-installed.OOpyyR\check\pe\Check.csproj (in 170 ms).
+  Check -> E:\msys64\home\topkek\j805-installed.OOpyyR\check\pe\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:15.57
+PASS all1784 published API declarations,43 assembly identities/resource sets and1460 neutral/localized strings
+PASS fresh source JSON consumer, all generator variants/SDK discovery, exact API/resource/linker/payload gates

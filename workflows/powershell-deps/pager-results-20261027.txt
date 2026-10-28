@@ -1,0 +1,250 @@
+Microsoft.PowerShell.Pager1.0.0 source package, 2026-10-27
+Host: win11 / MSYS2 CLANG64
+Formal root: /home/topkek/pager-package.gBFF9N/mingw-w64-dotnet-powershell-pager
+Installed check: /home/topkek/pager-installed-check-20261027
+
+All final commands exited0. Complete two-file original production source,
+.NET8 target, unchanged C# algorithms; original assembly1.0.0.0/file1.0.0.0/info1.0.0
+and all3 public/protected API declarations match published metadata. No runtime
+NuGet dependencies. Original license/readme/source inventory included.
+
+All4 original Pager test method bodies execute with unchanged original TestConsole
+in clean build and fresh installed-feed consumers. Fixture-only adaptations remove
+xUnit discovery attributes and use an owned ordinal assertion for the4 string
+comparisons. No substitute xUnit API/library is built. This verifies console-model
+rendering, Q exit, downward scrolling, padding, regex positioning; actual terminal
+integration is a separate PSReadLine check.
+
+Source tag v1.0.0 is annotated: tag object915645b4edca9e320c5a06c6582bd4b58aeed0ae,
+peeled commit965675f549dfa074eb02a47ca6d6e07d0ee7771f. The source inventory and
+NuGet RepositoryCommit use the peeled commit. Canonical/old PSPager alias downloads
+have identical archive SHA2560edb02979a44d94c8fd527a9339d891abe39c18eaca0287e950e00e3b74492ef.
+Published DLL inspected as metadata only; not executed or used as build input.
+Initial prototype pack's missing-readme message is resolved by including README
+and original license/source inventory. Formal builds/checks have no warnings/errors.
+
+Exact commands from formal root, MSYSTEM=CLANG64:
+PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-powershell-pager-1.0.0-1-any.pkg.tar.zst
+bash check.sh /home/topkek/pager-installed-check-20261027 src/Pager-1.0.0
+
+Independent local audit (exit0):
+python3 tests/powershell-deps/audit-powershell-pager.py
+
+
+LOG install.log
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-dotnet-powershell-pager-1.0.0-1
+
+Total Installed Size:  0.01 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+installing mingw-w64-clang-x86_64-dotnet-powershell-pager...
+
+
+LOG installed-check.log
+Staged all four original Pager rendering/scrolling cases and unchanged original TestConsole
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\pager-installed-check-20261027\Check.csproj (in 180 ms).
+  Check -> E:\msys64\home\topkek\pager-installed-check-20261027\bin\Release\net8.0\test.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.70
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\pager-installed-check-20261027\metadata\Api\Inspect.csproj (in 63 ms).
+  Inspect -> E:\msys64\home\topkek\pager-installed-check-20261027\metadata\Api\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.86
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\pager-installed-check-20261027\metadata\Identity\Inspect.csproj (in 55 ms).
+  Inspect -> E:\msys64\home\topkek\pager-installed-check-20261027\metadata\Identity\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.56
+PASS source Pager full source inventory/license, exact three-entry API and frozen identity; sole source implementation asset
+PASS upstream Pager Large_BufferHeight_Rendering_Small_Content_No_Scroll
+PASS upstream Pager Pressing_Down_Scrolls_One_Line
+PASS upstream Pager Pressing_Q_CanExit
+PASS upstream Pager Scrolling_To_Line
+PASS all four original Pager cases against the restored source package
+
+
+LOG makepkg.log
+==> Making package: mingw-w64-dotnet-powershell-pager 1.0.0-1 (27 Oct 2026 05:28:35)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found pager-1.0.0.tar.gz
+  -> Found prepare.py
+  -> Found build.sh
+  -> Found check.sh
+  -> Found prepare-tests.py
+  -> Found Check.cs
+  -> Found verify-restored.py
+  -> Found inspect.sh
+  -> Found InspectApi.cs
+  -> Found InspectIdentity.cs
+  -> Found published-provenance.json
+  -> Found README.md
+==> Validating source files with sha256sums...
+    pager-1.0.0.tar.gz ... Passed
+    prepare.py ... Passed
+    build.sh ... Passed
+    check.sh ... Passed
+    prepare-tests.py ... Passed
+    Check.cs ... Passed
+    verify-restored.py ... Passed
+    inspect.sh ... Passed
+    InspectApi.cs ... Passed
+    InspectIdentity.cs ... Passed
+    published-provenance.json ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+  -> Extracting pager-1.0.0.tar.gz with bsdtar
+==> Starting prepare()...
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\pager-package.gBFF9N\mingw-w64-dotnet-powershell-pager\src\prepared\src\Microsoft.PowerShell.Pager.csproj (in 63 ms).
+  Microsoft.PowerShell.Pager -> E:\msys64\home\topkek\pager-package.gBFF9N\mingw-w64-dotnet-powershell-pager\src\prepared\src\bin\Release\net8.0\Microsoft.PowerShell.Pager.dll
+  Successfully created package 'E:\msys64\home\topkek\pager-package.gBFF9N\mingw-w64-dotnet-powershell-pager\src\prepared\feed\Microsoft.PowerShell.Pager.1.0.0.nupkg'.
+==> Starting check()...
+Staged all four original Pager rendering/scrolling cases and unchanged original TestConsole
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\pager-package.gBFF9N\mingw-w64-dotnet-powershell-pager\src\check\Check.csproj (in 169 ms).
+  Check -> E:\msys64\home\topkek\pager-package.gBFF9N\mingw-w64-dotnet-powershell-pager\src\check\bin\Release\net8.0\test.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.26
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\pager-package.gBFF9N\mingw-w64-dotnet-powershell-pager\src\check\metadata\Api\Inspect.csproj (in 83 ms).
+  Inspect -> E:\msys64\home\topkek\pager-package.gBFF9N\mingw-w64-dotnet-powershell-pager\src\check\metadata\Api\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.75
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\pager-package.gBFF9N\mingw-w64-dotnet-powershell-pager\src\check\metadata\Identity\Inspect.csproj (in 54 ms).
+  Inspect -> E:\msys64\home\topkek\pager-package.gBFF9N\mingw-w64-dotnet-powershell-pager\src\check\metadata\Identity\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.55
+PASS source Pager full source inventory/license, exact three-entry API and frozen identity; sole source implementation asset
+PASS upstream Pager Large_BufferHeight_Rendering_Small_Content_No_Scroll
+PASS upstream Pager Pressing_Down_Scrolls_One_Line
+PASS upstream Pager Pressing_Q_CanExit
+PASS upstream Pager Scrolling_To_Line
+PASS all four original Pager cases against the restored source package
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-powershell-pager"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-powershell-pager 1.0.0-1 (27 Oct 2026 05:29:10)

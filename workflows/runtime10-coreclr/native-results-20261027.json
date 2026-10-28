@@ -1,0 +1,218 @@
+{
+  "previous_goal_turn_classification": "progress",
+  "current_goal_turn_classification": "progress",
+  "date_utc": "2026-10-27",
+  "host": "topkek@win11",
+  "build_root": "/c/codex-dotnet10/c1.1BZ8KU",
+  "runtime_source_version": "10.0.5",
+  "runtime_source_commit": "081d220c0a773ffb7c6bea6b48727833576a65ef",
+  "runtime_source_archive_sha256": "1692acae5e3adfd625452fbc9db4fd4e982c10e38189358ae245c74dd5514d7a",
+  "native_source_port_files": 64,
+  "native_source_patch_sha256": "1175aaa81f9b16e46aa7b5a7398e261fe58c4e1b1eaa778660fa0421fe9e3862",
+  "all_current_port_hashes_verified": true,
+  "standalone_patch_clean_apply_exit_code": 0,
+  "source_compilation_incremental": true,
+  "formal_coreclr_package_built": false,
+  "coreclr_runtime_package_installed": false,
+  "final_build_command": "CDAC_BOOTSTRAP_DIR=\"$PWD/cdac-bootstrap5\" bash workflow/build-coreclr.sh . 2",
+  "final_build_exit_code": 0,
+  "native_targets": [
+    "coreclr",
+    "clrjit",
+    "mscorrc",
+    "clretwrc"
+  ],
+  "native_audit_command": "/usr/bin/python3 workflow/audit-native.py .",
+  "native_audit_exit_code": 0,
+  "native_probe_build_command": "bash workflow/build-native-probe.sh . native-probe2",
+  "native_probe_build_exit_code": 0,
+  "native_check_command": "/clang64/bin/python.exe \"$(cygpath -am workflow/check-native.py)\" \"$(cygpath -am .)\" \"$(cygpath -am native-check1)\" \"$(cygpath -am native-probe2/native-jit-probe.exe)\"",
+  "native_check_exit_code": 0,
+  "jit_observed_host_callbacks": 120,
+  "native_api_checks": {
+    "native_api_exit_code": 0,
+    "source_file_versions": {
+      "coreclr": "10.0.526.11800",
+      "clrjit": "10.0.526.11800",
+      "mscorrc": "10.0.526.11800",
+      "clretwrc": "10.0.526.11800"
+    },
+    "original_jit_ee_guid": "7a8cbc56-9e19-4321-80b9-a0d2c578c945",
+    "jit_startup_original_host_callbacks_and_interface_guid_passed": true,
+    "unicode_native_layout": true,
+    "coreclr_load_and_exported_descriptor_passed": true,
+    "descriptor_bytes_match_original_generated_c": true,
+    "descriptor_json_sha256": "0704fee79c122767aed110bed81153fb9559f3ac4be7ec15eca354f99bbc2fbf",
+    "descriptor_bytes": 10826,
+    "descriptor_pointer_count": 25,
+    "contracts": 15,
+    "types": 102,
+    "globals": 71,
+    "managed_coreclr10_execution_verified": false,
+    "full_runtime10_built": false,
+    "full_sdk10_built": false,
+    "full_dependency_goal_complete": false
+  },
+  "native_image_audit": {
+    "runtime_source_version": "10.0.5",
+    "images": {
+      "coreclr": {
+        "build_path": "dlls/mscoree/coreclr/coreclr.dll",
+        "sha256": "2ffbb2ea67c3446474d59003ff9f309c03e8624766ad88432d3b1af04ebe6907",
+        "imports": [
+          "KERNEL32.dll",
+          "ADVAPI32.dll",
+          "ole32.dll",
+          "OLEAUT32.dll",
+          "USER32.dll",
+          "api-ms-win-crt-stdio-l1-1-0.dll",
+          "api-ms-win-crt-convert-l1-1-0.dll",
+          "api-ms-win-crt-runtime-l1-1-0.dll",
+          "api-ms-win-crt-string-l1-1-0.dll",
+          "api-ms-win-crt-private-l1-1-0.dll",
+          "api-ms-win-crt-time-l1-1-0.dll",
+          "api-ms-win-crt-math-l1-1-0.dll",
+          "api-ms-win-crt-heap-l1-1-0.dll",
+          "api-ms-win-crt-environment-l1-1-0.dll",
+          "api-ms-win-crt-utility-l1-1-0.dll",
+          "api-ms-win-crt-filesystem-l1-1-0.dll",
+          "api-ms-win-crt-locale-l1-1-0.dll",
+          "VERSION.dll",
+          "api-ms-win-core-winrt-l1-1-0.dll"
+        ],
+        "delay_imports": [
+          "VERSION.dll",
+          "api-ms-win-core-winrt-l1-1-0.dll"
+        ],
+        "exports": [
+          "g_CLREngineMetrics",
+          "CLRJitAttachState",
+          "DotNetRuntimeContractDescriptor",
+          "GetCLRRuntimeHost",
+          "MetaDataGetDispenser",
+          "coreclr_create_delegate",
+          "coreclr_execute_assembly",
+          "coreclr_initialize",
+          "coreclr_set_error_writer",
+          "coreclr_shutdown",
+          "coreclr_shutdown_2"
+        ]
+      },
+      "clrjit": {
+        "build_path": "jit/clrjit.dll",
+        "sha256": "f18629b740576fb3105f53e668b262ab84b363139ca487724ac7f7f2bf2ba1b7",
+        "imports": [
+          "KERNEL32.dll",
+          "api-ms-win-crt-stdio-l1-1-0.dll",
+          "api-ms-win-crt-runtime-l1-1-0.dll",
+          "api-ms-win-crt-math-l1-1-0.dll",
+          "api-ms-win-crt-string-l1-1-0.dll",
+          "api-ms-win-crt-convert-l1-1-0.dll",
+          "api-ms-win-crt-private-l1-1-0.dll",
+          "api-ms-win-crt-heap-l1-1-0.dll",
+          "api-ms-win-crt-environment-l1-1-0.dll",
+          "api-ms-win-crt-filesystem-l1-1-0.dll",
+          "api-ms-win-crt-utility-l1-1-0.dll",
+          "api-ms-win-crt-locale-l1-1-0.dll"
+        ],
+        "delay_imports": [],
+        "exports": [
+          "getJit",
+          "getLikelyClasses",
+          "getLikelyMethods",
+          "jitBuildString",
+          "jitStartup"
+        ]
+      },
+      "mscorrc": {
+        "build_path": "dlls/mscorrc/mscorrc.dll",
+        "sha256": "688d10837cc6af99df77213f60dd96833bb5d6509d622e46af8791a98531958a",
+        "imports": [
+          "KERNEL32.dll",
+          "api-ms-win-crt-runtime-l1-1-0.dll",
+          "api-ms-win-crt-private-l1-1-0.dll",
+          "api-ms-win-crt-stdio-l1-1-0.dll"
+        ],
+        "delay_imports": [],
+        "exports": []
+      },
+      "clretwrc": {
+        "build_path": "dlls/clretwrc/clretwrc.dll",
+        "sha256": "d7bb676a08b4f7ee41efa900b05b9f25b55ea4895f1447be7c0960c9ba844020",
+        "imports": [
+          "KERNEL32.dll",
+          "api-ms-win-crt-runtime-l1-1-0.dll",
+          "api-ms-win-crt-private-l1-1-0.dll",
+          "api-ms-win-crt-stdio-l1-1-0.dll"
+        ],
+        "delay_imports": [],
+        "exports": []
+      }
+    },
+    "original_cdac_contract_descriptor_generated": true,
+    "generated_cdac_source_sha256": "5d868957a49ed1105750665f7070add86fde9b10d74e18475f96ac3fb670c220",
+    "managed_execution_verified": false,
+    "full_runtime10_built": false,
+    "full_sdk10_built": false,
+    "full_dependency_goal_complete": false
+  },
+  "source_eha_check_command": "bash workflow/check-eha.sh . eha-check1",
+  "source_eha_check_exit_code": 0,
+  "source_eha_checks": {
+    "exit_code": 0,
+    "all_printed_cases_passed": true,
+    "case_count": 11,
+    "stress_round_trips": 200000,
+    "cases": [
+      "AV -> __except, dtors of C++ frames run                 ok   [d2 d1 ]",
+      "RaiseException -> __except, dtors run                   ok   [d2 d1 ]",
+      "C++ throw -> __except, dtors run                        ok   [d2 d1 ]",
+      "AV -> catch(...) (EHa)                                  ok   [d2 d1 d0 catch ]",
+      "RaiseException -> catch(...) (EHa)                      ok   [d2 d1 d0 catch ]",
+      "C++ throw -> catch(...)                                 ok   [d2 d1 d0 catch ]",
+      "AV skips catch(int), outer catch(...)                   ok   [d2 d1 outer ]",
+      "C++ int -> catch(int)                                   ok   [d2 d1 int ]",
+      "throw; of an AV re-raises it                            ok   [d2 d1 c1 x ]",
+      "AV caught inside a catch block                          ok   [d2 d1 inner outer ]",
+      "200000 more round trips                                 ok   []"
+    ],
+    "full_coreclr10_execution_verified": false
+  },
+  "cdac_prepare_command": "/usr/bin/python3 workflow/prepare-cdac.py . workflow/command-line-api-c7b5e07c.tar.gz cdac-bootstrap5",
+  "cdac_prepare_exit_code": 0,
+  "cdac_build_command": "bash workflow/build-cdac.sh . cdac-bootstrap5",
+  "cdac_build_exit_code": 0,
+  "cdac_tool_original_cs": 11,
+  "command_line_original_cs": 74,
+  "command_line_original_inputs_match_runtime_vmr": true,
+  "cdac_production_cs_changes": 0,
+  "cdac_private_bootstrap_framework": "net8.0",
+  "cdac_source_compiler": "source Roslyn5.0.0 on source.NET8 through private original Program.Run/analyzer-loader adapter",
+  "source_compiler_bytes_unchanged": true,
+  "source_compiler_csharp14_compile_and_execution_passed": true,
+  "source_compiler_probe_command": "/clang64/lib/dotnet/dotnet.exe \"$(cygpath -am \"$out/compiler-probe/bin/Release/net8.0/CSharp14BootstrapProbe.dll\")\"",
+  "cdac_stub_replaced_by_original_generated_descriptor": true,
+  "private_failed_compiler_host_experiments_shipped": false,
+  "retained_upstream_vxsort": true,
+  "retained_secure_delay_load_imports": [
+    "VERSION.dll",
+    "api-ms-win-core-winrt-l1-1-0.dll"
+  ],
+  "managed_coreclr10_execution_verified": false,
+  "full_runtime10_built": false,
+  "full_sdk10_built": false,
+  "powershell76_application_built": false,
+  "verified_dependency_count_increment": 0,
+  "full_dependency_goal_complete": false,
+  "remaining": [
+    "Matching CoreLib10 and managed framework/native interop/reference assemblies",
+    "Managed execution, real runtime/threading/GC/exception/COM behavior",
+    "Actual ETW provider registration; EventPipe runtime execution",
+    "DAC/out-of-process debugging and full cDAC consumer validation",
+    "GNU EHa foreign-unwind/non-call hardware fault coverage and remaining limitations",
+    "ReadyToRun/NativeAOT/crossgen/toolchain and SDK10.0.201",
+    "WindowsDesktop10 and PowerShell7.6 dependency/application closure",
+    "Previously recorded MMI3 authenticated/provider/streaming and SQL/native/full Windows compatibility gaps"
+  ],
+  "native_audit_hashes_match_images_actually_loaded_and_tested": true
+}

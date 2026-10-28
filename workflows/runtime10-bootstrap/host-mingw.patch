@@ -1,0 +1,254 @@
+--- a/eng/native/configurecompiler.cmake
++++ b/eng/native/configurecompiler.cmake
+@@ -462,9 +462,15 @@
+   add_definitions(-DHOST_WINDOWS)
+ 
+   # Define the CRT lib references that link into Desktop imports
++  if(MINGW)
++    set(STATIC_MT_CRT_LIB "")
++    set(STATIC_MT_VCRT_LIB "")
++    set(STATIC_MT_CPP_LIB "")
++  else()
+   set(STATIC_MT_CRT_LIB  "libcmt$<$<OR:$<CONFIG:Debug>,$<CONFIG:Checked>>:d>.lib")
+   set(STATIC_MT_VCRT_LIB  "libvcruntime$<$<OR:$<CONFIG:Debug>,$<CONFIG:Checked>>:d>.lib")
+   set(STATIC_MT_CPP_LIB  "libcpmt$<$<OR:$<CONFIG:Debug>,$<CONFIG:Checked>>:d>.lib")
++  endif()
+ endif(CLR_CMAKE_HOST_WIN32)
+ 
+ # Unconditionally define _FILE_OFFSET_BITS as 64 on all platforms.
+@@ -1009,7 +1015,15 @@
+ endif()
+ 
+ # Ensure other tools are present
+-if (CLR_CMAKE_HOST_WIN32)
++if (CLR_CMAKE_HOST_WIN32 AND MINGW)
++    add_link_options(-static)
++    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-fms-extensions>)
++    set(CMAKE_SHARED_LIBRARY_PREFIX "")
++    set(CMAKE_IMPORT_LIBRARY_PREFIX "")
++    add_link_options($<$<STREQUAL:$<TARGET_PROPERTY:TYPE>,EXECUTABLE>:-municode>)
++    enable_language(ASM_MASM)
++    set(CMAKE_ASM_MASM_FLAGS "${CMAKE_ASM_MASM_FLAGS} -win64 -nologo")
++elseif (CLR_CMAKE_HOST_WIN32)
+     if(CLR_CMAKE_HOST_ARCH_ARM64)
+       # Explicitly specify the assembler to be used for Arm64 compile
+       if (CMAKE_SYSTEM_PROCESSOR STREQUAL "ARM64")
+@@ -1053,4 +1067,4 @@
+ 
+     enable_language(ASM)
+ 
+-endif(CLR_CMAKE_HOST_WIN32)
++endif()
+--- a/eng/native/configureoptimization.cmake
++++ b/eng/native/configureoptimization.cmake
+@@ -1,4 +1,4 @@
+-if(CLR_CMAKE_HOST_WIN32)
++if(CLR_CMAKE_HOST_WIN32 AND MSVC)
+     add_compile_options($<$<AND:$<COMPILE_LANGUAGE:C,CXX>,$<CONFIG:Debug>>:/Od>)
+     if (CLR_CMAKE_HOST_ARCH_I386)
+         # The Windows x86 Checked CLR has some kind of problem with exception handling
+@@ -9,6 +9,11 @@
+     endif()
+     add_compile_options($<$<AND:$<COMPILE_LANGUAGE:C,CXX>,$<CONFIG:Release>>:/Ox>)
+     add_compile_options($<$<AND:$<COMPILE_LANGUAGE:C,CXX>,$<CONFIG:RelWithDebInfo>>:/O2>)
++elseif(MINGW)
++    add_compile_options($<$<AND:$<COMPILE_LANGUAGE:C,CXX>,$<CONFIG:Debug>>:-O0>)
++    add_compile_options($<$<AND:$<COMPILE_LANGUAGE:C,CXX>,$<CONFIG:Checked>>:-O2>)
++    add_compile_options($<$<AND:$<COMPILE_LANGUAGE:C,CXX>,$<CONFIG:Release>>:-O3>)
++    add_compile_options($<$<AND:$<COMPILE_LANGUAGE:C,CXX>,$<CONFIG:RelWithDebInfo>>:-O2>)
+ elseif(CLR_CMAKE_HOST_UNIX)
+     add_compile_options($<$<CONFIG:Debug>:-O0>)
+     add_compile_options($<$<CONFIG:Checked>:-O2>)
+--- a/eng/native/functions.cmake
++++ b/eng/native/functions.cmake
+@@ -657,7 +657,7 @@
+ endfunction()
+ 
+ function(link_natvis_sources_for_target targetName linkKind)
+-    if (NOT CLR_CMAKE_HOST_WIN32)
++    if (NOT CLR_CMAKE_HOST_WIN32 OR NOT MSVC)
+         return()
+     endif()
+     foreach(source ${ARGN})
+--- a/src/native/corehost/apphost/standalone/CMakeLists.txt
++++ b/src/native/corehost/apphost/standalone/CMakeLists.txt
+@@ -43,11 +43,17 @@
+ 
+ if(CLR_CMAKE_TARGET_WIN32)
+     # Disable manifest generation into the file .exe on Windows
+-    target_link_options(apphost PRIVATE "/MANIFEST:NO")
++    if(MSVC)
++        target_link_options(apphost PRIVATE "/MANIFEST:NO")
++    endif()
+ 
+     # Enable CET-compatibility
+     if (CLR_CMAKE_HOST_ARCH_AMD64)
+-        target_link_options(apphost PRIVATE "/CETCOMPAT")
++        if(MSVC)
++            target_link_options(apphost PRIVATE "/CETCOMPAT")
++        elseif(MINGW)
++            target_link_options(apphost PRIVATE "LINKER:--Xlink=/CETCOMPAT")
++        endif()
+     endif()
+ endif()
+ 
+--- a/src/native/corehost/comhost/clsidmap.cpp
++++ b/src/native/corehost/comhost/clsidmap.cpp
+@@ -103,7 +103,7 @@
+         if (!json.parse_raw_data(reinterpret_cast<char*>(data), size, _X("<embedded .clsidmap>")))
+         {
+             trace::error(_X("Embedded .clsidmap is invalid.\n  %s"), json.get_error_message().c_str());
+-            throw HResultException{ StatusCode::InvalidConfigFile };
++            throw HResultException{ static_cast<HRESULT>(StatusCode::InvalidConfigFile) };
+         }
+ 
+         return get_map_from_json(json);
+@@ -181,7 +181,7 @@
+         if (!json.parse_file(map_file_name))
+         {
+             trace::error(_X("File .clsidmap [%s] is invalid.\n  %s"), map_file_name.c_str(), json.get_error_message().c_str());
+-            throw HResultException{ StatusCode::InvalidConfigFile };
++            throw HResultException{ static_cast<HRESULT>(StatusCode::InvalidConfigFile) };
+         }
+ 
+         return get_map_from_json(json);
+--- a/src/native/corehost/coreclr_delegates.h
++++ b/src/native/corehost/coreclr_delegates.h
+@@ -14,7 +14,7 @@
+ 
+ #if defined(_WIN32)
+     #define CORECLR_DELEGATE_CALLTYPE __stdcall
+-    #ifdef _WCHAR_T_DEFINED
++    #if defined(_WCHAR_T_DEFINED) || defined(__cplusplus)
+         typedef wchar_t char_t;
+     #else
+         typedef unsigned short char_t;
+--- a/src/native/corehost/hostfxr.h
++++ b/src/native/corehost/hostfxr.h
+@@ -14,7 +14,7 @@
+ 
+ #if defined(_WIN32)
+     #define HOSTFXR_CALLTYPE __cdecl
+-    #ifdef _WCHAR_T_DEFINED
++    #if defined(_WCHAR_T_DEFINED) || defined(__cplusplus)
+         typedef wchar_t char_t;
+     #else
+         typedef unsigned short char_t;
+--- a/src/native/corehost/hostmisc/pal.h
++++ b/src/native/corehost/hostmisc/pal.h
+@@ -23,13 +23,16 @@
+ 
+ #define NOMINMAX
+ #include <windows.h>
++#include <share.h>
+ 
+ #define xerr std::wcerr
+ #define xout std::wcout
+ #define DIR_SEPARATOR L'\\'
+ #define DIR_SEPARATOR_STR L"\\"
+ #define PATH_SEPARATOR L';'
++#ifndef PATH_MAX
+ #define PATH_MAX MAX_PATH
++#endif
+ #define _X(s) L ## s
+ 
+ #else
+@@ -113,7 +116,9 @@
+ #define SHARED_API extern "C"
+ #endif
+ 
++#ifndef STDMETHODCALLTYPE
+ #define STDMETHODCALLTYPE __stdcall
++#endif
+ 
+     typedef wchar_t char_t;
+     typedef std::wstring string_t;
+@@ -209,7 +214,9 @@
+ #if !defined(TARGET_FREEBSD)
+ #define __fastcall /* nothing */
+ #endif
++#ifndef STDMETHODCALLTYPE
+ #define STDMETHODCALLTYPE __stdcall
++#endif
+ 
+     typedef char char_t;
+     typedef std::string string_t;
+--- a/src/native/corehost/hostmisc/pal.windows.cpp
++++ b/src/native/corehost/hostmisc/pal.windows.cpp
+@@ -298,7 +298,7 @@
+     HMODULE dummy_module;
+     if (!::GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_PIN, path.c_str(), &dummy_module))
+     {
+-        trace::error(_X("Failed to pin library [%s] in [%s]"), path.c_str(), _STRINGIFY(__FUNCTION__));
++        trace::error(_X("Failed to pin library [%s] in [%s]"), path.c_str(), _X("pal::load_library"));
+         return false;
+     }
+ 
+@@ -757,7 +757,7 @@
+ bool pal::get_current_module(dll_t *mod)
+ {
+     HMODULE hmod = nullptr;
+-    if (!GetModuleHandleFromAddress(&get_current_module, &hmod))
++    if (!GetModuleHandleFromAddress(reinterpret_cast<void*>(&get_current_module), &hmod))
+         return false;
+ 
+     *mod = (pal::dll_t)hmod;
+@@ -767,7 +767,7 @@
+ bool pal::get_own_module_path(string_t* recv)
+ {
+     HMODULE hmod;
+-    if (!GetModuleHandleFromAddress(&get_own_module_path, &hmod))
++    if (!GetModuleHandleFromAddress(reinterpret_cast<void*>(&get_own_module_path), &hmod))
+         return false;
+ 
+     return GetModuleFileNameWrapper(hmod, recv);
+--- a/src/native/corehost/ijwhost/pedecoder.h
++++ b/src/native/corehost/ijwhost/pedecoder.h
+@@ -6,6 +6,10 @@
+ #define PEDECODER_H
+ 
+ #include "pal.h"
++#if defined(__MINGW32__) && !defined(COMIMAGE_FLAGS_NATIVE_ENTRYPOINT)
++// ECMA CLI header flag; present in the runtime source corhdr.h, absent in MinGW.
++#define COMIMAGE_FLAGS_NATIVE_ENTRYPOINT 0x00000010
++#endif
+ 
+ struct IMAGE_COR_VTABLEFIXUP;
+ 
+--- a/src/native/corehost/nethost/nethost.h
++++ b/src/native/corehost/nethost/nethost.h
+@@ -20,7 +20,7 @@
+     #endif
+ 
+     #define NETHOST_CALLTYPE __stdcall
+-    #ifdef _WCHAR_T_DEFINED
++    #if defined(_WCHAR_T_DEFINED) || defined(__cplusplus)
+         typedef wchar_t char_t;
+     #else
+         typedef unsigned short char_t;
+--- a/src/native/corehost/test/CMakeLists.txt
++++ b/src/native/corehost/test/CMakeLists.txt
+@@ -3,7 +3,7 @@
+ add_subdirectory(mockhostfxr)
+ add_subdirectory(mockhostpolicy)
+ add_subdirectory(nativehost)
+-if (CLR_CMAKE_HOST_WIN32)
++if (CLR_CMAKE_HOST_WIN32 AND NOT MINGW)
+     add_subdirectory(comsxs)
+     add_subdirectory(ijw)
+     add_subdirectory(typelibs)
+--- a/src/native/corehost/test/nativehost/CMakeLists.txt
++++ b/src/native/corehost/test/nativehost/CMakeLists.txt
+@@ -51,7 +51,11 @@
+ target_link_libraries(nativehost PRIVATE nethost hostmisc)
+ 
+ if (CLR_CMAKE_TARGET_WIN32)
+-    target_link_options(nativehost PRIVATE /DELAYLOAD:$<TARGET_FILE_NAME:nethost>)
++    if(MSVC)
++        target_link_options(nativehost PRIVATE /DELAYLOAD:$<TARGET_FILE_NAME:nethost>)
++    elseif(MINGW)
++        target_link_options(nativehost PRIVATE "LINKER:--delayload=$<TARGET_FILE_NAME:nethost>")
++    endif()
+     target_link_libraries(nativehost PRIVATE delayimp.lib ole32 oleaut32)
+ endif()
+ 

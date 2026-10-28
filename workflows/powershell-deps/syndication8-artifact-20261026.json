@@ -1,0 +1,15 @@
+{
+  "recipe": "mingw-w64-dotnet-syndication8",
+  "artifact": "mingw-w64-clang-x86_64-dotnet-syndication8-8.0.31-1-any.pkg.tar.zst",
+  "sha256": "0cfc170052bd5474381fe77577a937932f71e2108a50cfb16a1e87d192795e1f",
+  "nuget_id": "System.ServiceModel.Syndication",
+  "nuget_version": "8.0.0",
+  "source_tag": "runtime v8.0.31",
+  "source_sha256": "b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070",
+  "framework": "net8.0",
+  "assembly_version": "8.0.0.0",
+  "public_key_token": "cc7b13ffcd2ddd51",
+  "upstream_api_signatures": 639,
+  "neutral_resource_strings": 37,
+  "dependencies": {}
+}

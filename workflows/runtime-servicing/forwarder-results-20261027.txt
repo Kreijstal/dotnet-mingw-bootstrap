@@ -1,0 +1,111 @@
+Framework forwarding compatibility regression and source repair
+Previous goal turn:progress. Current goal turn:progress. Full objective incomplete.
+
+Initial prototype project accidentally included .cs files under its in-project
+NuGet cache:503 compiler errors, no runtime consumer executed. Restricted the
+project to Program.cs (EnableDefaultItems=false) and reran. The real corrected
+probe built with0 errors, then exited127 on installed8.0.31-2: System.Data tried
+to bind SqlClient8.0.0.0/cc7 while source SqlClient is4.6.1.6/b03.
+
+Pinned source diagnosis:
+- Original stub projects declare Microsoft keys for SqlClient and several other
+  satellites. Bootstrap build_stub did not read the stub .csproj's key.
+- src/libraries/shims/Directory.Build.props sets GenFacadesForceZeroVersionSeeds
+  for all22 NetFxReference shim names. Original Arcade ClearVersion.targets runs
+  the ClearAssemblyReferenceVersions task. Bootstrap helpers omitted that step.
+
+Repair: build the unchanged original task from runtime-pinned Arcade444c2ef3,
+keep production C# sources unchanged, correct stub key selection, apply original
+zero-version policy to source reference/runtime shims. All20 used stub keys and
+44 reference/runtime shim DLLs pass an independent metadata audit.
+
+Focused exact commands, in /home/topkek/runtime8pkg2.ym1eaB:
+$ /usr/bin/python3 shim-correction-tools/prepare-framework.py src/prepared
+$ ONLY="stub:System.Data.SqlClient System.Data" REBUILD=1 bash shim-correction-tools/build-framework.sh src/prepared refs
+$ ONLY=System.Data REBUILD=1 bash shim-correction-tools/build-framework.sh src/prepared build
+$ DOTNET_ROOT="$(cygpath -am shim-fixed-layout)" DOTNET_ROOT_X64="$(cygpath -am shim-fixed-layout)" DOTNET_MULTILEVEL_LOOKUP=0 timeout 60 shim-fixed-layout/dotnet.exe exec --fx-version 8.0.31 /home/topkek/runtime-forwarder-check.dNaVb0/bin/Release/net8.0/Check.dll
+First SQL regression:exit0. The private layout copies the original complete
+layout plus the corrected source shim. Installed files were not patched.
+
+Then rebuilt all20 stubs/all22 reference shims with ONLY set to the original
+NetFxReference names and all stub project names, using REBUILD=1. Rebuilt runtime
+System/System.Data/mscorlib, copied the remaining19 reference facades by the same
+rule as the original helper, then ran:
+$ /usr/bin/python3 shim-correction-tools/audit-shim-identities.py src/prepared
+PASS all20 original stub signing keys and all22 framework shim zero-version identities: 44 reference/runtime DLLs
+RESULT:exit0
+$ bash shim-correction-tools/check-framework-forwarders.sh shim-fixed-layout shim-forwarder-check2
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\runtime8pkg2.ym1eaB\shim-forwarder-check2\Check.csproj (in 465 ms).
+E:\msys64\home\topkek\runtime8pkg2.ym1eaB\shim-forwarder-check2\Program.cs(13,37): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\runtime8pkg2.ym1eaB\shim-forwarder-check2\Check.csproj]
+  Check -> E:\msys64\home\topkek\runtime8pkg2.ym1eaB\shim-forwarder-check2\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\runtime8pkg2.ym1eaB\shim-forwarder-check2\Program.cs(13,37): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\runtime8pkg2.ym1eaB\shim-forwarder-check2\Check.csproj]
+    1 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:07.19
+Runtime: 8.0.31
+PASS System.Data -> System.Data.SqlClient.SqlConnection, System.Data.SqlClient, Version=4.6.1.6, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS WindowsBase -> System.IO.Packaging.Package, System.IO.Packaging, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS System.Security -> System.Security.Cryptography.Pkcs.ContentInfo, System.Security.Cryptography.Pkcs, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS System.Security -> System.Security.Cryptography.ProtectedData, System.Security.Cryptography.ProtectedData, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS System.ServiceProcess -> System.ServiceProcess.ServiceController, System.ServiceProcess.ServiceController, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS mscorlib -> System.Security.AccessControl.EventWaitHandleSecurity, System.Threading.AccessControl, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS six original framework facades resolve to actual source-built NuGet types, including lower-version SqlClient
+RESULT:exit0 (six real source NuGet forwarding cases).
+
+This is an incremental private prototype, not release provenance for every
+unchanged framework compiler input. The corrected runtime3 clean source build
+is active in /home/topkek/runtime8pkg3.RGUgSb, session9245. Source archive49 files,
+SHA2561901796a07f37c06c6a5423cce5ce67b98fd300a7201f9a055e998f30d062356.
+All four sources passed makepkg --verifysource --noconfirm. The obsolete
+incorrect targeting1 build was scoped-stopped after the confirmed defect:
+exit4, no native artifact/install. Corrected targeting2 workflow54 files,
+SHA256ea3a74e166369a9c17dba161a1198693d854c7bdcd9704e28783133453b257a8.
+It requires installed runtime>=8.0.31-3 before a normal clean package build.
+
+Actual red consumer output (after fixing test cache globbing):
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+E:\msys64\home\topkek\runtime-forwarder-check.dNaVb0\Program.cs(1,233): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\runtime-forwarder-check.dNaVb0\Check.csproj]
+  Check -> E:\msys64\home\topkek\runtime-forwarder-check.dNaVb0\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\runtime-forwarder-check.dNaVb0\Program.cs(1,233): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\runtime-forwarder-check.dNaVb0\Check.csproj]
+    1 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:06.14
+Runtime: 8.0.31
+Unhandled exception. System.IO.FileNotFoundException: Could not load file or assembly 'System.Data.SqlClient, Version=8.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51'. The system cannot find the file specified.
+File name: 'System.Data.SqlClient, Version=8.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51'
+   at System.Reflection.RuntimeAssembly.<GetTypeCore>g____PInvoke|26_0(QCallAssembly __assembly_native, Byte* __typeName_native, IntPtr* __nestedTypeNames_native, Int32 __nestedTypeNamesLength_native, ObjectHandleOnStack __retType_native)
+   at System.Reflection.RuntimeAssembly.GetTypeCore(QCallAssembly assembly, String typeName, ReadOnlySpan`1 nestedTypeNames, Int32 nestedTypeNamesLength, ObjectHandleOnStack retType)
+   at System.Reflection.RuntimeAssembly.GetTypeCore(String typeName, ReadOnlySpan`1 nestedTypeNames, Boolean throwOnError, Boolean ignoreCase)
+   at System.Reflection.TypeNameParser.GetType(String typeName, ReadOnlySpan`1 nestedTypeNames, String assemblyNameIfAny)
+   at System.Reflection.TypeNameParser.NamespaceTypeName.ResolveType(TypeNameParser& parser, String containingAssemblyIfAny)
+   at System.Reflection.TypeNameParser.Parse()
+   at System.Reflection.TypeNameParser.GetType(String typeName, Func`2 assemblyResolver, Func`4 typeResolver, Assembly requestingAssembly, Boolean throwOnError, Boolean ignoreCase, Boolean extensibleParser)
+   at System.Reflection.TypeNameParser.GetType(String typeName, Assembly requestingAssembly, Boolean throwOnError, Boolean ignoreCase)
+   at System.Type.GetType(String typeName, Boolean throwOnError)
+   at Program.Main() in E:\msys64\home\topkek\runtime-forwarder-check.dNaVb0\Program.cs:line 1

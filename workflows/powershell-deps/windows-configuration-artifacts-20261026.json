@@ -1,0 +1,140 @@
+[
+  {
+    "recipe": "mingw-w64-dotnet-windows-configuration",
+    "package_suffix": "dotnet-systemevents",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-systemevents-8.0.31-1-any.pkg.tar.zst",
+    "sha256": "b5fe18fc8e07f04e9a2f3c67bc8aa85d9c34dabf4fb01f6f2617154d661c93e4",
+    "nuget_id": "Microsoft.Win32.SystemEvents",
+    "nuget_version": "8.0.0",
+    "dependencies": {},
+    "source_tag": "v8.0.31",
+    "source_sha256": "b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070",
+    "removed_binary_count": 1
+  },
+  {
+    "recipe": "mingw-w64-dotnet-windows-configuration",
+    "package_suffix": "dotnet-drawing-common",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-drawing-common-8.0.31-1-any.pkg.tar.zst",
+    "sha256": "517549aaa498d06fd077569d9e9ad21b751e944ca0333a2b089b04dd0e71dc33",
+    "nuget_id": "System.Drawing.Common",
+    "nuget_version": "8.0.31",
+    "dependencies": {
+      "Microsoft.Win32.SystemEvents": "8.0.0"
+    },
+    "source_tag": "v8.0.31",
+    "source_sha256": "bb2e9937d65e29d3812f7172e03cd86ac1ee5b3f9da3584f00ddd5523c42cbb7",
+    "removed_binary_count": 1
+  },
+  {
+    "recipe": "mingw-w64-dotnet-windows-configuration",
+    "package_suffix": "dotnet-windows-extensions",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-windows-extensions-8.0.31-1-any.pkg.tar.zst",
+    "sha256": "ace6fa8ea52f613eecdb6aef83e6f6251bfba7f0b3c03d118b03562deb8ae1d7",
+    "nuget_id": "System.Windows.Extensions",
+    "nuget_version": "8.0.0",
+    "dependencies": {
+      "System.Drawing.Common": "8.0.31"
+    },
+    "source_tag": "v8.0.31",
+    "source_sha256": "b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070",
+    "removed_binary_count": 1
+  },
+  {
+    "recipe": "mingw-w64-dotnet-windows-configuration",
+    "package_suffix": "dotnet-security-permissions",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-security-permissions-8.0.31-1-any.pkg.tar.zst",
+    "sha256": "fe948d86c491285b485b8062a78067f283c5b084e74186d243965697a213517f",
+    "nuget_id": "System.Security.Permissions",
+    "nuget_version": "8.0.0",
+    "dependencies": {
+      "System.Windows.Extensions": "8.0.0"
+    },
+    "source_tag": "v8.0.31",
+    "source_sha256": "b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070",
+    "removed_binary_count": 1
+  },
+  {
+    "recipe": "mingw-w64-dotnet-windows-configuration",
+    "package_suffix": "dotnet-eventlog",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-eventlog-8.0.31-1-any.pkg.tar.zst",
+    "sha256": "1f8faed4c47f38373ee648267ba7614379e689fc10ef36b11091729c867c4192",
+    "nuget_id": "System.Diagnostics.EventLog",
+    "nuget_version": "8.0.2",
+    "dependencies": {},
+    "source_tag": "v8.0.31",
+    "source_sha256": "b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070",
+    "removed_binary_count": 1
+  },
+  {
+    "recipe": "mingw-w64-dotnet-windows-configuration",
+    "package_suffix": "dotnet-configuration-manager",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-configuration-manager-8.0.31-1-any.pkg.tar.zst",
+    "sha256": "6d32709cc72d8e550f98298ae5d57fdd8c8808fb59a92f8c35cc37d7a7e1b59d",
+    "nuget_id": "System.Configuration.ConfigurationManager",
+    "nuget_version": "8.0.1",
+    "dependencies": {
+      "System.Security.Permissions": "8.0.0",
+      "System.Diagnostics.EventLog": "8.0.2",
+      "System.Security.Cryptography.ProtectedData": "8.0.0"
+    },
+    "source_tag": "v8.0.31",
+    "source_sha256": "b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070",
+    "removed_binary_count": 1
+  },
+  {
+    "recipe": "mingw-w64-dotnet-windows-configuration",
+    "package_suffix": "dotnet-runtime-caching",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-runtime-caching-8.0.31-1-any.pkg.tar.zst",
+    "sha256": "32fb3e9f66cb1011443b26da20d388be44d39abe884fdbdf9543bb8e5b65c26a",
+    "nuget_id": "System.Runtime.Caching",
+    "nuget_version": "8.0.1",
+    "dependencies": {
+      "System.Configuration.ConfigurationManager": "8.0.1"
+    },
+    "source_tag": "v8.0.31",
+    "source_sha256": "b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070",
+    "removed_binary_count": 1
+  },
+  {
+    "recipe": "mingw-w64-dotnet-windows-configuration",
+    "package_suffix": "dotnet-performancecounter",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-performancecounter-8.0.31-1-any.pkg.tar.zst",
+    "sha256": "a50d43540db4ae0aedd9b0f6059511b5ef01a92d3740b4d2d13a6ec9545ad1da",
+    "nuget_id": "System.Diagnostics.PerformanceCounter",
+    "nuget_version": "8.0.1",
+    "dependencies": {
+      "System.Configuration.ConfigurationManager": "8.0.1"
+    },
+    "source_tag": "v8.0.31",
+    "source_sha256": "b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070",
+    "removed_binary_count": 1
+  },
+  {
+    "recipe": "mingw-w64-dotnet-windows-configuration",
+    "package_suffix": "dotnet-servicecontroller",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-servicecontroller-8.0.31-1-any.pkg.tar.zst",
+    "sha256": "9ba9a97f4d7ec544fad72f8ba832d32e90d60feb25186eb876aaac0f2d38ce8d",
+    "nuget_id": "System.ServiceProcess.ServiceController",
+    "nuget_version": "8.0.1",
+    "dependencies": {
+      "System.Diagnostics.EventLog": "8.0.2"
+    },
+    "source_tag": "v8.0.31",
+    "source_sha256": "b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070",
+    "removed_binary_count": 1
+  },
+  {
+    "recipe": "mingw-w64-dotnet-windows-configuration",
+    "package_suffix": "dotnet-directoryservices",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-directoryservices-8.0.31-1-any.pkg.tar.zst",
+    "sha256": "9537f147cbb071b7df5ac74bd3ab67ec78bdccb93ac823639b70dd9202d52900",
+    "nuget_id": "System.DirectoryServices",
+    "nuget_version": "8.0.0",
+    "dependencies": {
+      "System.Security.Permissions": "8.0.0"
+    },
+    "source_tag": "v8.0.31",
+    "source_sha256": "b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070",
+    "removed_binary_count": 1
+  }
+]

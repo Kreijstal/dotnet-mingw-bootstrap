@@ -1,0 +1,939 @@
+PSResourceGet1.1.1 complete original source module packaging and installed validation
+Host: win11, Windows11 build26200 / MSYS2 CLANG64
+Date: 2026-10-27
+Formal build root: /home/topkek/psresourceget-package.EnwsuK
+Fresh installed root: /home/topkek/psresourceget-installed.Ujm5EA
+Source commit: 44697aed1740126153a8d9dd0ef368261b2fe45c
+Source archive SHA256: 4819dc0283c6a28979aa5a26aa70ad41468de1a2a52e0729a61062086c08bc03
+
+Result: final clean makepkg, fresh installed/restored/relocated module checks,
+independent full artifact/source/private-closure audit and owned HTTP V3 test all exit0.
+All56 original C# inputs are compiled:55 unchanged plus one exact NuGet type qualifier.
+Two generated SDK metadata inputs, all six original module assets, original assembly/
+file1.1.0.1/informational identities and all460 public/protected APIs pass.
+All26 private DLLs, including Windows RID PKCS, match their independently audited
+source-built native/NuGet packages; their original license texts and nuspecs are shipped.
+Complete loose-module/NuGet files, compiler inventories, implementation/ref/XML and
+exact overlay/wrapper projects are byte checked. No vendor implementations are used.
+All17 original cmdlets and the nested script module import in the actual source host.
+Original script metadata operations and ACR version-selection helper checks pass.
+
+Original local lifecycle: repository register/get/set, publish/find, dependency save/
+install, NuGet archive save, installed metadata, update, Unicode module execution,
+uninstall and missing-package error behavior. GUID-owned repositories and module paths
+are cleaned; existing repository entries and the process module path are preserved.
+HTTP V3: real index/registration JSON, 401 challenges and Basic credentials, latest/
+exact versions, byte-identical NuGet downloads, extracted Unicode execution and404
+PackageNotFound mapping pass. Counts:19 challenges,18 authenticated requests,2 package
+downloads,1 missing request. V3 dependency installation is unsupported in this upstream
+release and emits its original warning; dependency installation passes with the local
+repository. These tests do not establish remote/cloud service authentication parity.
+
+The source build retains243 original XML/nullability/value-comparison warnings and0
+errors. Consumer inspection tools build with0 warnings/errors. Actual runtime is.NET8.0.0.
+Packaging warns about absolute MSYS root references in compiler provenance metadata;
+the installed and relocated loose-module checks pass. Runtime servicing and complete
+shipping PowerShell/SDK integration remain open. MMI3, SqlClient and the compatibility
+umbrella remain unfinished; the overall goal is not complete.
+
+Earlier attempt evidence:
+- makepkg1: exit4 after successful source build/inventory; licensing gate found that
+  System.Formats.Asn1's NuGet archive has a license expression but no text. Staging
+  now copies/records exact license texts from the installed native owner package.
+- makepkg2: exit0, superseded after closure review found Windows RID PKCS omitted by
+  the initial runtime-only asset selector. Final staging includes runtimeTargets too.
+- makepkg3: exit0 with all26 private DLLs. installed1: exit1 NU1100 because the fixture
+  listed one canonical installed feed under two source mapping names. The check now
+  deduplicates those URLs. installed2: exit0. makepkg4 and installed3 below validate
+  the final pinned recipe and native package on fresh caches.
+- The external auditor's first run matched both MSAL split-package filenames in one
+  glob. The corrected numeric-version pattern selects the exact owner; final audit0.
+
+Exact successful commands (remote commands use MSYSTEM=CLANG64 bash -lc):
+$ cd /home/topkek/psresourceget-package.EnwsuK
+$ PATH=/usr/bin:/clang64/bin:$PATH makepkg --printsrcinfo > .SRCINFO
+$ PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm
+RESULT makepkg4: exit0
+$ pacman -U --noconfirm mingw-w64-clang-x86_64-powershell-psresourceget-1.1.1-1-any.pkg.tar.zst
+RESULT final install: exit0
+$ cd /home/topkek/psresourceget-installed.Ujm5EA
+$ bash check.sh check3 /clang64/lib/dotnet/library-packs /clang64/lib/powershell/Modules/Microsoft.PowerShell.PSResourceGet/1.1.1
+RESULT installed3: exit0
+$ POWERSHELL_TELEMETRY_OPTOUT=1 /usr/bin/python3 http/check.py /clang64/lib/powershell/Modules/Microsoft.PowerShell.PSResourceGet/1.1.1/Microsoft.PowerShell.PSResourceGet.psd1 check3/lifecycle-2/repository http1
+RESULT owned HTTP V3: exit0
+Local independent audit:
+$ python3 tests/powershell-deps/audit-psresourceget.py
+PASS PSResourceGet all18 pinned inputs, complete original56-input/module/compiler provenance, exact type qualification, 26 independent source package payloads/licenses including Windows RID PKCS, native/NuGet/loose module/ref/XML identities and bytes
+RESULT artifact audit: exit0
+
+makepkg4.log:
+==> Making package: mingw-w64-powershell-psresourceget 1.1.1-1 (27 Oct 2026 13:26:12)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found psresourceget-44697aed1740126153a8d9dd0ef368261b2fe45c.tar.gz
+  -> Found extract.py
+  -> Found prepare.py
+  -> Found verify-build.py
+  -> Found stage.py
+  -> Found pack.py
+  -> Found check.sh
+  -> Found verify-restored.py
+  -> Found compare.py
+  -> Found InspectApi.cs
+  -> Found InspectAssemblyMetadata.cs
+  -> Found Smoke.ps1
+  -> Found OwnedVersionPort.cs
+  -> Found Lifecycle.ps1
+  -> Found source-inputs.json
+  -> Found published-api.json
+  -> Found published-metadata.json
+  -> Found README.md
+==> Validating source files with sha256sums...
+    psresourceget-44697aed1740126153a8d9dd0ef368261b2fe45c.tar.gz ... Passed
+    extract.py ... Passed
+    prepare.py ... Passed
+    verify-build.py ... Passed
+    stage.py ... Passed
+    pack.py ... Passed
+    check.sh ... Passed
+    verify-restored.py ... Passed
+    compare.py ... Passed
+    InspectApi.cs ... Passed
+    InspectAssemblyMetadata.cs ... Passed
+    Smoke.ps1 ... Passed
+    OwnedVersionPort.cs ... Passed
+    Lifecycle.ps1 ... Passed
+    source-inputs.json ... Passed
+    published-api.json ... Passed
+    published-metadata.json ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+==> Starting prepare()...
+PASS complete pinned PSResourceGet source archive hash and extraction
+PASS full56-input PSResourceGet source inventory:55 unchanged, one explicit NuGet type qualification; complete module assets and exact source dependencies
+==> Removing existing $pkgdir/ directory...
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj (in 643 ms).
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptHelp.cs(219,55): warning CS1570: XML comment has badly formed XML -- 'An identifier was expected.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\NuGetServerAPICalls.cs(100,92): warning CS1570: XML comment has badly formed XML -- 'Reference to undefined entity 'searchTerm'.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\IServerAPICalls.cs(70,9): warning CS1570: XML comment has badly formed XML -- 'End tag was not expected at this location.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\LocalServerApiCalls.cs(58,115): warning CS1570: XML comment has badly formed XML -- 'Reference to undefined entity 'searchTerm'.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\SetPSResourceRepository.cs(36,15): warning CS1570: XML comment has badly formed XML -- 'End tag 'sumamry' does not match the start tag 'summary'.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptHelp.cs(219,55): warning CS1570: XML comment has badly formed XML -- 'The character(s) '#' cannot be used at this location.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptHelp.cs(220,15): warning CS1570: XML comment has badly formed XML -- 'End tag 'summary' does not match the start tag ''.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\NuGetServerAPICalls.cs(100,112): warning CS1570: XML comment has badly formed XML -- 'Reference to undefined entity 'includePrerelease'.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\SetPSResourceRepository.cs(44,15): warning CS1570: XML comment has badly formed XML -- 'End tag 'sumamry' does not match the start tag 'summary'.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptHelp.cs(221,1): warning CS1570: XML comment has badly formed XML -- 'Expected an end tag for element 'summary'.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\LocalServerApiCalls.cs(58,135): warning CS1570: XML comment has badly formed XML -- 'Reference to undefined entity 'includePrerelease'.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\SetPSResourceRepository.cs(87,15): warning CS1570: XML comment has badly formed XML -- 'End tag 'sumamry' does not match the start tag 'summary'.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\LocalServerApiCalls.cs(129,102): warning CS1570: XML comment has badly formed XML -- 'Reference to undefined entity 'searchTerm'.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptHelp.cs(282,86): warning CS1570: XML comment has badly formed XML -- 'An identifier was expected.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\NuGetServerAPICalls.cs(225,79): warning CS1570: XML comment has badly formed XML -- 'Reference to undefined entity 'searchTerm'.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptHelp.cs(282,86): warning CS1570: XML comment has badly formed XML -- 'The character(s) '#' cannot be used at this location.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptHelp.cs(283,15): warning CS1570: XML comment has badly formed XML -- 'End tag 'summary' does not match the start tag ''.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptHelp.cs(284,1): warning CS1570: XML comment has badly formed XML -- 'Expected an end tag for element 'summary'.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\IServerAPICalls.cs(78,9): warning CS1570: XML comment has badly formed XML -- 'End tag was not expected at this location.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptMetadata.cs(400,46): warning CS1570: XML comment has badly formed XML -- 'An identifier was expected.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptMetadata.cs(400,46): warning CS1570: XML comment has badly formed XML -- 'The character(s) '#' cannot be used at this location.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptMetadata.cs(401,15): warning CS1570: XML comment has badly formed XML -- 'End tag 'summary' does not match the start tag ''.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptMetadata.cs(402,1): warning CS1570: XML comment has badly formed XML -- 'Expected an end tag for element 'summary'.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSRepositoryInfo.cs(98,13): warning CS1570: XML comment has badly formed XML -- 'End tag was not expected at this location.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\RegisterPSResourceRepository.cs(90,15): warning CS1570: XML comment has badly formed XML -- 'End tag 'sumamry' does not match the start tag 'summary'.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UpdateModuleManifest.cs(225,1): warning CS1570: XML comment has badly formed XML -- 'Expected an end tag for element 'summary'.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UpdateModuleManifest.cs(226,13): warning CS1570: XML comment has badly formed XML -- 'End tag was not expected at this location.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\SavePSResource.cs(113,1): warning CS1570: XML comment has badly formed XML -- 'Expected an end tag for element 'summary'.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\SavePSResource.cs(114,13): warning CS1570: XML comment has badly formed XML -- 'End tag was not expected at this location.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UpdatePSResource.cs(77,1): warning CS1570: XML comment has badly formed XML -- 'Expected an end tag for element 'summary'.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UpdatePSResource.cs(78,13): warning CS1570: XML comment has badly formed XML -- 'End tag was not expected at this location.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UpdatePSResource.cs(144,1): warning CS1570: XML comment has badly formed XML -- 'Expected an end tag for element 'summary'.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UpdatePSResource.cs(145,13): warning CS1570: XML comment has badly formed XML -- 'End tag was not expected at this location.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptMetadata.cs(406,14): warning CS1570: XML comment has badly formed XML -- 'An identifier was expected.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptMetadata.cs(406,14): warning CS1570: XML comment has badly formed XML -- 'The character(s) '#' cannot be used at this location.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptMetadata.cs(428,1): warning CS1570: XML comment has badly formed XML -- 'Expected an end tag for element ''.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\V2QueryBuilder.cs(38,96): warning CS1584: XML comment has syntactically incorrect cref attribute 'null' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\V2QueryBuilder.cs(38,96): warning CS1658: Identifier expected; 'null' is a keyword. See also error CS1041. [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\V2QueryBuilder.cs(190,62): warning CS1584: XML comment has syntactically incorrect cref attribute 'HashSet{string}.Add(string)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\V2QueryBuilder.cs(190,70): warning CS1658: Type parameter declaration must be an identifier not a type. See also error CS0081. [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\V2QueryBuilder.cs(217,62): warning CS1584: XML comment has syntactically incorrect cref attribute 'HashSet{string}.Remove(string)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\V2QueryBuilder.cs(217,70): warning CS1658: Type parameter declaration must be an identifier not a type. See also error CS0081. [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\V2ServerAPICalls.cs(182,107): warning CS1570: XML comment has badly formed XML -- 'The character(s) '$' cannot be used at this location.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\V2ServerAPICalls.cs(182,229): warning CS1570: XML comment has badly formed XML -- 'The character(s) '$' cannot be used at this location.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\V2ServerAPICalls.cs(182,246): warning CS1570: XML comment has badly formed XML -- 'The character(s) '$' cannot be used at this location.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\V2ServerAPICalls.cs(182,268): warning CS1570: XML comment has badly formed XML -- 'The character(s) '$' cannot be used at this location.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\V2ServerAPICalls.cs(182,276): warning CS1570: XML comment has badly formed XML -- 'The character(s) '$' cannot be used at this location.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\V2ServerAPICalls.cs(469,102): warning CS1570: XML comment has badly formed XML -- 'Reference to undefined entity 'searchTerm'.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\V3ServerAPICalls.cs(486,1): warning CS1570: XML comment has badly formed XML -- 'Expected an end tag for element 'summary'.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\V3ServerAPICalls.cs(1261,1): warning CS1570: XML comment has badly formed XML -- 'Expected an end tag for element 'summary'.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptMetadata.cs(118,21): warning CS8073: The result of the expression is always 'false' since a value of type 'Guid' is never equal to 'null' of type 'Guid?' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\GroupPolicyRepositoryEnforcement.cs(172,54): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\GroupPolicyRepositoryEnforcement.cs(173,66): warning CS8604: Possible null reference argument for parameter 'regValue' in 'KeyValuePair<string, Uri> GroupPolicyRepositoryEnforcement.ConvertRegValue(string regValue)'. [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UpdateModuleManifest.cs(607,17): warning CS8073: The result of the expression is always 'true' since a value of type 'SwitchParameter' is never equal to 'null' of type 'SwitchParameter?' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UpdateModuleManifest.cs(956,17): warning CS8073: The result of the expression is always 'true' since a value of type 'SwitchParameter' is never equal to 'null' of type 'SwitchParameter?' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\CompressPSResource.cs(60,33): warning CS1591: Missing XML comment for publicly visible type or member 'CompressPSResource.BeginProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\CompressPSResource.cs(76,33): warning CS1591: Missing XML comment for publicly visible type or member 'CompressPSResource.EndProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\FindPSResource.cs(116,33): warning CS1591: Missing XML comment for publicly visible type or member 'FindPSResource.BeginProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\FindPSResource.cs(132,33): warning CS1591: Missing XML comment for publicly visible type or member 'FindPSResource.StopProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\FindPSResource.cs(137,33): warning CS1591: Missing XML comment for publicly visible type or member 'FindPSResource.EndProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\FindPSResource.cs(143,33): warning CS1591: Missing XML comment for publicly visible type or member 'FindPSResource.ProcessRecord()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\GetInstalledPSResource.cs(63,33): warning CS1591: Missing XML comment for publicly visible type or member 'GetInstalledPSResourceCommand.BeginProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\GetInstalledPSResource.cs(120,33): warning CS1591: Missing XML comment for publicly visible type or member 'GetInstalledPSResourceCommand.ProcessRecord()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\GetPSResourceRepository.cs(38,33): warning CS1591: Missing XML comment for publicly visible type or member 'GetPSResourceRepository.BeginProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\GetPSResourceRepository.cs(43,33): warning CS1591: Missing XML comment for publicly visible type or member 'GetPSResourceRepository.ProcessRecord()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\GetPSScriptFileInfo.cs(30,33): warning CS1591: Missing XML comment for publicly visible type or member 'GetPSScriptFileInfo.EndProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\InstallPSResource.cs(261,33): warning CS1591: Missing XML comment for publicly visible type or member 'InstallPSResource.BeginProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\InstallPSResource.cs(277,33): warning CS1591: Missing XML comment for publicly visible type or member 'InstallPSResource.ProcessRecord()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\ModuleInitAndCleanup.cs(9,18): warning CS1591: Missing XML comment for publicly visible type or member 'UnsafeAssemblyHandler' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\ModuleInitAndCleanup.cs(38,21): warning CS1591: Missing XML comment for publicly visible type or member 'UnsafeAssemblyHandler.OnImport()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\ModuleInitAndCleanup.cs(43,21): warning CS1591: Missing XML comment for publicly visible type or member 'UnsafeAssemblyHandler.OnRemove(PSModuleInfo)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\NewPSScriptFile.cs(151,33): warning CS1591: Missing XML comment for publicly visible type or member 'NewPSScriptFile.EndProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PublishPSResource.cs(118,23): warning CS1591: Missing XML comment for publicly visible type or member 'PublishPSResource.NupkgPath' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PublishPSResource.cs(123,23): warning CS1591: Missing XML comment for publicly visible type or member 'PublishPSResource.GetDynamicParameters()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PublishPSResource.cs(148,33): warning CS1591: Missing XML comment for publicly visible type or member 'PublishPSResource.BeginProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PublishPSResource.cs(177,33): warning CS1591: Missing XML comment for publicly visible type or member 'PublishPSResource.EndProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PublishPSResource.cs(198,18): warning CS1591: Missing XML comment for publicly visible type or member 'ContainerRegistryDynamicParameters' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PublishPSResource.cs(201,23): warning CS1591: Missing XML comment for publicly visible type or member 'ContainerRegistryDynamicParameters.ModulePrefix' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\RegisterPSResourceRepository.cs(116,33): warning CS1591: Missing XML comment for publicly visible type or member 'RegisterPSResourceRepository.BeginProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\RegisterPSResourceRepository.cs(120,33): warning CS1591: Missing XML comment for publicly visible type or member 'RegisterPSResourceRepository.ProcessRecord()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\SavePSResource.cs(184,33): warning CS1591: Missing XML comment for publicly visible type or member 'SavePSResource.BeginProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\SavePSResource.cs(202,33): warning CS1591: Missing XML comment for publicly visible type or member 'SavePSResource.ProcessRecord()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\SetPSResourceRepository.cs(107,33): warning CS1591: Missing XML comment for publicly visible type or member 'SetPSResourceRepository.BeginProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\SetPSResourceRepository.cs(112,33): warning CS1591: Missing XML comment for publicly visible type or member 'SetPSResourceRepository.ProcessRecord()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\TestPSScriptFile.cs(32,33): warning CS1591: Missing XML comment for publicly visible type or member 'TestPSScriptFileInfo.EndProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UninstallPSResource.cs(72,29): warning CS1591: Missing XML comment for publicly visible type or member 'UninstallPSResource.PSScriptFileExt' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UninstallPSResource.cs(73,39): warning CS1591: Missing XML comment for publicly visible type or member 'UninstallPSResource.OsPlatform' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UninstallPSResource.cs(85,33): warning CS1591: Missing XML comment for publicly visible type or member 'UninstallPSResource.BeginProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UninstallPSResource.cs(90,33): warning CS1591: Missing XML comment for publicly visible type or member 'UninstallPSResource.ProcessRecord()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UninstallPSResource.cs(170,33): warning CS1591: Missing XML comment for publicly visible type or member 'UninstallPSResource.EndProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UnregisterPSResourceRepository.cs(42,33): warning CS1591: Missing XML comment for publicly visible type or member 'UnregisterPSResourceRepository.BeginProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UnregisterPSResourceRepository.cs(46,33): warning CS1591: Missing XML comment for publicly visible type or member 'UnregisterPSResourceRepository.ProcessRecord()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UpdateModuleManifest.cs(270,33): warning CS1591: Missing XML comment for publicly visible type or member 'UpdateModuleManifest.EndProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UpdatePSResource.cs(153,33): warning CS1591: Missing XML comment for publicly visible type or member 'UpdatePSResource.BeginProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UpdatePSResource.cs(171,33): warning CS1591: Missing XML comment for publicly visible type or member 'UpdatePSResource.ProcessRecord()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UpdatePSResource.cs(230,33): warning CS1591: Missing XML comment for publicly visible type or member 'UpdatePSResource.StopProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UpdatePSResource.cs(235,33): warning CS1591: Missing XML comment for publicly visible type or member 'UpdatePSResource.EndProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UpdatePSScriptFileInfo.cs(152,33): warning CS1591: Missing XML comment for publicly visible type or member 'UpdatePSScriptFileInfo.EndProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\ContainerRegistryInfo.cs(10,22): warning CS1591: Missing XML comment for publicly visible type or member 'ContainerRegistryInfo' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\ContainerRegistryInfo.cs(14,17): warning CS1591: Missing XML comment for publicly visible type or member 'ContainerRegistryInfo.Name' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\ContainerRegistryInfo.cs(15,17): warning CS1591: Missing XML comment for publicly visible type or member 'ContainerRegistryInfo.Metadata' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\ContainerRegistryInfo.cs(16,23): warning CS1591: Missing XML comment for publicly visible type or member 'ContainerRegistryInfo.ResourceType' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\FindResults.cs(17,9): warning CS1591: Missing XML comment for publicly visible type or member 'FindResponseType.None' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\FindResults.cs(18,9): warning CS1591: Missing XML comment for publicly visible type or member 'FindResponseType.ResponseString' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\FindResults.cs(19,9): warning CS1591: Missing XML comment for publicly visible type or member 'FindResponseType.ResponseHashtable' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\FindResults.cs(22,25): warning CS1591: Missing XML comment for publicly visible type or member 'FindResults' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\FindResults.cs(24,25): warning CS1591: Missing XML comment for publicly visible type or member 'FindResults.StringResponse' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\FindResults.cs(25,28): warning CS1591: Missing XML comment for publicly visible type or member 'FindResults.HashtableResponse' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\FindResults.cs(26,33): warning CS1591: Missing XML comment for publicly visible type or member 'FindResults.ResponseType' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\FindResults.cs(28,16): warning CS1591: Missing XML comment for publicly visible type or member 'FindResults.FindResults()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\FindResults.cs(35,16): warning CS1591: Missing XML comment for publicly visible type or member 'FindResults.FindResults(string[], Hashtable[], FindResponseType)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\FindResults.cs(42,21): warning CS1591: Missing XML comment for publicly visible type or member 'FindResults.IsFindResultsEmpty()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\InternalHooks.cs(8,18): warning CS1591: Missing XML comment for publicly visible type or member 'InternalHooks' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\InternalHooks.cs(20,28): warning CS1591: Missing XML comment for publicly visible type or member 'InternalHooks.SetTestHook(string, object)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(8,18): warning CS1591: Missing XML comment for publicly visible type or member 'ResourceNotFoundException' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(10,16): warning CS1591: Missing XML comment for publicly visible type or member 'ResourceNotFoundException.ResourceNotFoundException(string, Exception)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(16,18): warning CS1591: Missing XML comment for publicly visible type or member 'UnauthorizedException' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(18,16): warning CS1591: Missing XML comment for publicly visible type or member 'UnauthorizedException.UnauthorizedException(string, Exception)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(24,18): warning CS1591: Missing XML comment for publicly visible type or member 'JsonParsingException' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(26,16): warning CS1591: Missing XML comment for publicly visible type or member 'JsonParsingException.JsonParsingException(string, Exception)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(32,18): warning CS1591: Missing XML comment for publicly visible type or member 'XmlParsingException' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(34,16): warning CS1591: Missing XML comment for publicly visible type or member 'XmlParsingException.XmlParsingException(string, Exception)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(40,18): warning CS1591: Missing XML comment for publicly visible type or member 'ConvertToPSResourceException' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(42,16): warning CS1591: Missing XML comment for publicly visible type or member 'ConvertToPSResourceException.ConvertToPSResourceException(string, Exception)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(48,18): warning CS1591: Missing XML comment for publicly visible type or member 'InvalidOrEmptyResponse' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(50,16): warning CS1591: Missing XML comment for publicly visible type or member 'InvalidOrEmptyResponse.InvalidOrEmptyResponse(string, Exception)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(56,18): warning CS1591: Missing XML comment for publicly visible type or member 'LocalResourceEmpty' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(58,16): warning CS1591: Missing XML comment for publicly visible type or member 'LocalResourceEmpty.LocalResourceEmpty(string, Exception)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(64,18): warning CS1591: Missing XML comment for publicly visible type or member 'LocalResourceNotFoundException' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(66,16): warning CS1591: Missing XML comment for publicly visible type or member 'LocalResourceNotFoundException.LocalResourceNotFoundException(string, Exception)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(72,18): warning CS1591: Missing XML comment for publicly visible type or member 'ProcessDependencyException' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(74,16): warning CS1591: Missing XML comment for publicly visible type or member 'ProcessDependencyException.ProcessDependencyException(string, Exception)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(80,18): warning CS1591: Missing XML comment for publicly visible type or member 'SendRequestException' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(82,16): warning CS1591: Missing XML comment for publicly visible type or member 'SendRequestException.SendRequestException(string, Exception)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(88,18): warning CS1591: Missing XML comment for publicly visible type or member 'UploadBlobException' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(90,16): warning CS1591: Missing XML comment for publicly visible type or member 'UploadBlobException.UploadBlobException(string, Exception)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSRepositoryInfo.cs(20,21): warning CS1591: Missing XML comment for publicly visible type or member 'PSRepositoryInfo.APIVersion' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSRepositoryInfo.cs(22,13): warning CS1591: Missing XML comment for publicly visible type or member 'PSRepositoryInfo.APIVersion.Unknown' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSRepositoryInfo.cs(23,13): warning CS1591: Missing XML comment for publicly visible type or member 'PSRepositoryInfo.APIVersion.V2' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSRepositoryInfo.cs(24,13): warning CS1591: Missing XML comment for publicly visible type or member 'PSRepositoryInfo.APIVersion.V3' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSRepositoryInfo.cs(25,13): warning CS1591: Missing XML comment for publicly visible type or member 'PSRepositoryInfo.APIVersion.Local' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSRepositoryInfo.cs(26,13): warning CS1591: Missing XML comment for publicly visible type or member 'PSRepositoryInfo.APIVersion.NugetServer' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSRepositoryInfo.cs(27,13): warning CS1591: Missing XML comment for publicly visible type or member 'PSRepositoryInfo.APIVersion.ContainerRegistry' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSRepositoryInfo.cs(34,16): warning CS1591: Missing XML comment for publicly visible type or member 'PSRepositoryInfo.PSRepositoryInfo(string, Uri, int, bool, PSCredentialInfo, PSRepositoryInfo.APIVersion, bool)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSRepositoryInfo.cs(49,21): warning CS1591: Missing XML comment for publicly visible type or member 'PSRepositoryInfo.RepositoryProviderType' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSRepositoryInfo.cs(51,13): warning CS1591: Missing XML comment for publicly visible type or member 'PSRepositoryInfo.RepositoryProviderType.None' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSRepositoryInfo.cs(52,13): warning CS1591: Missing XML comment for publicly visible type or member 'PSRepositoryInfo.RepositoryProviderType.ACR' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSRepositoryInfo.cs(53,13): warning CS1591: Missing XML comment for publicly visible type or member 'PSRepositoryInfo.RepositoryProviderType.AzureDevOps' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(20,17): warning CS1591: Missing XML comment for publicly visible type or member 'ResourceType' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(22,9): warning CS1591: Missing XML comment for publicly visible type or member 'ResourceType.None' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(23,9): warning CS1591: Missing XML comment for publicly visible type or member 'ResourceType.Module' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(24,9): warning CS1591: Missing XML comment for publicly visible type or member 'ResourceType.Script' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(25,9): warning CS1591: Missing XML comment for publicly visible type or member 'ResourceType.Nupkg' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(28,17): warning CS1591: Missing XML comment for publicly visible type or member 'VersionType' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(30,9): warning CS1591: Missing XML comment for publicly visible type or member 'VersionType.NoVersion' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(31,9): warning CS1591: Missing XML comment for publicly visible type or member 'VersionType.SpecificVersion' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(32,9): warning CS1591: Missing XML comment for publicly visible type or member 'VersionType.VersionRange' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(35,17): warning CS1591: Missing XML comment for publicly visible type or member 'ScopeType' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(37,9): warning CS1591: Missing XML comment for publicly visible type or member 'ScopeType.CurrentUser' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(38,9): warning CS1591: Missing XML comment for publicly visible type or member 'ScopeType.AllUsers' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(45,25): warning CS1591: Missing XML comment for publicly visible type or member 'ResourceIncludes' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(49,25): warning CS1591: Missing XML comment for publicly visible type or member 'ResourceIncludes.Cmdlet' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(51,25): warning CS1591: Missing XML comment for publicly visible type or member 'ResourceIncludes.Command' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(53,25): warning CS1591: Missing XML comment for publicly visible type or member 'ResourceIncludes.DscResource' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(55,25): warning CS1591: Missing XML comment for publicly visible type or member 'ResourceIncludes.Function' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(57,25): warning CS1591: Missing XML comment for publicly visible type or member 'ResourceIncludes.RoleCapability' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(59,25): warning CS1591: Missing XML comment for publicly visible type or member 'ResourceIncludes.Workflow' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(109,26): warning CS1591: Missing XML comment for publicly visible type or member 'ResourceIncludes.ConvertToHashtable()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(148,25): warning CS1591: Missing XML comment for publicly visible type or member 'Dependency' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(152,23): warning CS1591: Missing XML comment for publicly visible type or member 'Dependency.Name' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(154,29): warning CS1591: Missing XML comment for publicly visible type or member 'Dependency.VersionRange' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(176,25): warning CS1591: Missing XML comment for publicly visible type or member 'PSCommandResourceInfo' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(182,25): warning CS1591: Missing XML comment for publicly visible type or member 'PSCommandResourceInfo.Names' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(184,31): warning CS1591: Missing XML comment for publicly visible type or member 'PSCommandResourceInfo.ParentResource' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(208,25): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(212,43): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.AdditionalMetadata' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(213,23): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.Author' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(214,23): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.CompanyName' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(215,23): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.Copyright' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(216,29): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.Dependencies' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(217,23): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.Description' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(218,20): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.IconUri' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(219,33): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.Includes' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(220,26): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.InstalledDate' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(221,23): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.InstalledLocation' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(222,21): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.IsPrerelease' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(223,20): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.LicenseUri' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(224,23): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.Name' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(226,23): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.Prerelease' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(227,20): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.ProjectUri' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(228,26): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.PublishedDate' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(229,23): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.ReleaseNotes' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(230,23): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.Repository' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(231,23): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.RepositorySourceLocation' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(232,25): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.Tags' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(233,29): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.Type' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(234,26): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.UpdatedDate' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(235,24): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.Version' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(1087,28): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.TryConvertFromHashtableForPsd1(Hashtable, out PSResourceInfo, out string, PSRepositoryInfo)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(1185,28): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.TryConvertFromHashtableForPs1(Hashtable, out PSResourceInfo, out string, PSRepositoryInfo)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(1256,28): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.TryConvertFromHashtableForNuspec(Hashtable, out PSResourceInfo, out string, PSRepositoryInfo)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(1943,25): warning CS1591: Missing XML comment for publicly visible type or member 'TestHooks' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(1945,32): warning CS1591: Missing XML comment for publicly visible type or member 'TestHooks.ReadPSGetResourceInfo(string)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(1955,28): warning CS1591: Missing XML comment for publicly visible type or member 'TestHooks.WritePSGetResourceInfo(string, PSObject)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceResult.cs(8,25): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceResult' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceResult.cs(16,16): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceResult.PSResourceResult(PSResourceInfo, Exception, bool)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceResult.cs(24,16): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceResult.PSResourceResult(PSCommandResourceInfo, Exception, bool)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptFileInfo.cs(21,33): warning CS1591: Missing XML comment for publicly visible type or member 'PSScriptFileInfo.ScriptMetadataComment' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptFileInfo.cs(23,29): warning CS1591: Missing XML comment for publicly visible type or member 'PSScriptFileInfo.ScriptHelpComment' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptFileInfo.cs(25,33): warning CS1591: Missing XML comment for publicly visible type or member 'PSScriptFileInfo.ScriptRequiresComment' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptFileInfo.cs(27,33): warning CS1591: Missing XML comment for publicly visible type or member 'PSScriptFileInfo.ScriptContent' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\RepositorySettings.cs(226,26): warning CS1572: XML comment has a param tag for 'sectionName', but there is no parameter by that name [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\RepositorySettings.cs(227,51): warning CS1573: Parameter 'repoName' has no matching param tag in the XML comment for 'RepositorySettings.Add(string, Uri, int, bool, PSCredentialInfo, PSRepositoryInfo.APIVersion, bool)' (but other parameters do) [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\RepositorySettings.cs(227,65): warning CS1573: Parameter 'repoUri' has no matching param tag in the XML comment for 'RepositorySettings.Add(string, Uri, int, bool, PSCredentialInfo, PSRepositoryInfo.APIVersion, bool)' (but other parameters do) [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\RepositorySettings.cs(227,78): warning CS1573: Parameter 'repoPriority' has no matching param tag in the XML comment for 'RepositorySettings.Add(string, Uri, int, bool, PSCredentialInfo, PSRepositoryInfo.APIVersion, bool)' (but other parameters do) [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\RepositorySettings.cs(227,97): warning CS1573: Parameter 'repoTrusted' has no matching param tag in the XML comment for 'RepositorySettings.Add(string, Uri, int, bool, PSCredentialInfo, PSRepositoryInfo.APIVersion, bool)' (but other parameters do) [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\RepositorySettings.cs(227,127): warning CS1573: Parameter 'repoCredentialInfo' has no matching param tag in the XML comment for 'RepositorySettings.Add(string, Uri, int, bool, PSCredentialInfo, PSRepositoryInfo.APIVersion, bool)' (but other parameters do) [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\RepositorySettings.cs(227,175): warning CS1573: Parameter 'apiVersion' has no matching param tag in the XML comment for 'RepositorySettings.Add(string, Uri, int, bool, PSCredentialInfo, PSRepositoryInfo.APIVersion, bool)' (but other parameters do) [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\RepositorySettings.cs(227,192): warning CS1573: Parameter 'force' has no matching param tag in the XML comment for 'RepositorySettings.Add(string, Uri, int, bool, PSCredentialInfo, PSRepositoryInfo.APIVersion, bool)' (but other parameters do) [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\RepositorySettings.cs(474,26): warning CS1572: XML comment has a param tag for 'sectionName', but there is no parameter by that name [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\RepositorySettings.cs(475,62): warning CS1573: Parameter 'repoNames' has no matching param tag in the XML comment for 'RepositorySettings.Remove(string[], out string[])' (but other parameters do) [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\RepositorySettings.cs(475,86): warning CS1573: Parameter 'errorList' has no matching param tag in the XML comment for 'RepositorySettings.Remove(string[], out string[])' (but other parameters do) [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\IServerAPICalls.cs(10,18): warning CS1591: Missing XML comment for publicly visible type or member 'IServerAPICalls' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\InstallPkgParams.cs(9,14): warning CS1591: Missing XML comment for publicly visible type or member 'InstallPkgParams' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\InstallPkgParams.cs(11,19): warning CS1591: Missing XML comment for publicly visible type or member 'InstallPkgParams.Name' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\InstallPkgParams.cs(12,25): warning CS1591: Missing XML comment for publicly visible type or member 'InstallPkgParams.Version' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\InstallPkgParams.cs(13,19): warning CS1591: Missing XML comment for publicly visible type or member 'InstallPkgParams.Repository' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\InstallPkgParams.cs(14,17): warning CS1591: Missing XML comment for publicly visible type or member 'InstallPkgParams.AcceptLicense' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\InstallPkgParams.cs(15,17): warning CS1591: Missing XML comment for publicly visible type or member 'InstallPkgParams.Prerelease' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\InstallPkgParams.cs(16,22): warning CS1591: Missing XML comment for publicly visible type or member 'InstallPkgParams.Scope' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\InstallPkgParams.cs(17,17): warning CS1591: Missing XML comment for publicly visible type or member 'InstallPkgParams.Quiet' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\InstallPkgParams.cs(18,17): warning CS1591: Missing XML comment for publicly visible type or member 'InstallPkgParams.Reinstall' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\InstallPkgParams.cs(19,17): warning CS1591: Missing XML comment for publicly visible type or member 'InstallPkgParams.Force' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\InstallPkgParams.cs(20,17): warning CS1591: Missing XML comment for publicly visible type or member 'InstallPkgParams.TrustRepository' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\InstallPkgParams.cs(21,17): warning CS1591: Missing XML comment for publicly visible type or member 'InstallPkgParams.NoClobber' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\InstallPkgParams.cs(22,17): warning CS1591: Missing XML comment for publicly visible type or member 'InstallPkgParams.SkipDependencyCheck' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\InstallPkgParams.cs(28,17): warning CS1591: Missing XML comment for publicly visible type or member 'InstallPkgParams.SetProperty(string, string, out ErrorRecord)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptHelp.cs(83,13): warning CS1587: XML comment is not placed on a valid language element [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptMetadata.cs(236,13): warning CS1587: XML comment is not placed on a valid language element [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptMetadata.cs(404,13): warning CS1587: XML comment is not placed on a valid language element [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptRequires.cs(54,13): warning CS1587: XML comment is not placed on a valid language element [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UpdateModuleManifest.cs(1060,13): warning CS1587: XML comment is not placed on a valid language element [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\V3ServerAPICalls.cs(945,13): warning CS1587: XML comment is not placed on a valid language element [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+  Library -> E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\bin\Release\net8.0\Microsoft.PowerShell.PSResourceGet.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptHelp.cs(219,55): warning CS1570: XML comment has badly formed XML -- 'An identifier was expected.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\NuGetServerAPICalls.cs(100,92): warning CS1570: XML comment has badly formed XML -- 'Reference to undefined entity 'searchTerm'.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\IServerAPICalls.cs(70,9): warning CS1570: XML comment has badly formed XML -- 'End tag was not expected at this location.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\LocalServerApiCalls.cs(58,115): warning CS1570: XML comment has badly formed XML -- 'Reference to undefined entity 'searchTerm'.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\SetPSResourceRepository.cs(36,15): warning CS1570: XML comment has badly formed XML -- 'End tag 'sumamry' does not match the start tag 'summary'.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptHelp.cs(219,55): warning CS1570: XML comment has badly formed XML -- 'The character(s) '#' cannot be used at this location.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptHelp.cs(220,15): warning CS1570: XML comment has badly formed XML -- 'End tag 'summary' does not match the start tag ''.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\NuGetServerAPICalls.cs(100,112): warning CS1570: XML comment has badly formed XML -- 'Reference to undefined entity 'includePrerelease'.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\SetPSResourceRepository.cs(44,15): warning CS1570: XML comment has badly formed XML -- 'End tag 'sumamry' does not match the start tag 'summary'.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptHelp.cs(221,1): warning CS1570: XML comment has badly formed XML -- 'Expected an end tag for element 'summary'.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\LocalServerApiCalls.cs(58,135): warning CS1570: XML comment has badly formed XML -- 'Reference to undefined entity 'includePrerelease'.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\SetPSResourceRepository.cs(87,15): warning CS1570: XML comment has badly formed XML -- 'End tag 'sumamry' does not match the start tag 'summary'.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\LocalServerApiCalls.cs(129,102): warning CS1570: XML comment has badly formed XML -- 'Reference to undefined entity 'searchTerm'.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptHelp.cs(282,86): warning CS1570: XML comment has badly formed XML -- 'An identifier was expected.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\NuGetServerAPICalls.cs(225,79): warning CS1570: XML comment has badly formed XML -- 'Reference to undefined entity 'searchTerm'.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptHelp.cs(282,86): warning CS1570: XML comment has badly formed XML -- 'The character(s) '#' cannot be used at this location.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptHelp.cs(283,15): warning CS1570: XML comment has badly formed XML -- 'End tag 'summary' does not match the start tag ''.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptHelp.cs(284,1): warning CS1570: XML comment has badly formed XML -- 'Expected an end tag for element 'summary'.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\IServerAPICalls.cs(78,9): warning CS1570: XML comment has badly formed XML -- 'End tag was not expected at this location.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptMetadata.cs(400,46): warning CS1570: XML comment has badly formed XML -- 'An identifier was expected.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptMetadata.cs(400,46): warning CS1570: XML comment has badly formed XML -- 'The character(s) '#' cannot be used at this location.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptMetadata.cs(401,15): warning CS1570: XML comment has badly formed XML -- 'End tag 'summary' does not match the start tag ''.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptMetadata.cs(402,1): warning CS1570: XML comment has badly formed XML -- 'Expected an end tag for element 'summary'.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSRepositoryInfo.cs(98,13): warning CS1570: XML comment has badly formed XML -- 'End tag was not expected at this location.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\RegisterPSResourceRepository.cs(90,15): warning CS1570: XML comment has badly formed XML -- 'End tag 'sumamry' does not match the start tag 'summary'.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UpdateModuleManifest.cs(225,1): warning CS1570: XML comment has badly formed XML -- 'Expected an end tag for element 'summary'.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UpdateModuleManifest.cs(226,13): warning CS1570: XML comment has badly formed XML -- 'End tag was not expected at this location.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\SavePSResource.cs(113,1): warning CS1570: XML comment has badly formed XML -- 'Expected an end tag for element 'summary'.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\SavePSResource.cs(114,13): warning CS1570: XML comment has badly formed XML -- 'End tag was not expected at this location.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UpdatePSResource.cs(77,1): warning CS1570: XML comment has badly formed XML -- 'Expected an end tag for element 'summary'.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UpdatePSResource.cs(78,13): warning CS1570: XML comment has badly formed XML -- 'End tag was not expected at this location.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UpdatePSResource.cs(144,1): warning CS1570: XML comment has badly formed XML -- 'Expected an end tag for element 'summary'.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UpdatePSResource.cs(145,13): warning CS1570: XML comment has badly formed XML -- 'End tag was not expected at this location.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptMetadata.cs(406,14): warning CS1570: XML comment has badly formed XML -- 'An identifier was expected.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptMetadata.cs(406,14): warning CS1570: XML comment has badly formed XML -- 'The character(s) '#' cannot be used at this location.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptMetadata.cs(428,1): warning CS1570: XML comment has badly formed XML -- 'Expected an end tag for element ''.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\V2QueryBuilder.cs(38,96): warning CS1584: XML comment has syntactically incorrect cref attribute 'null' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\V2QueryBuilder.cs(38,96): warning CS1658: Identifier expected; 'null' is a keyword. See also error CS1041. [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\V2QueryBuilder.cs(190,62): warning CS1584: XML comment has syntactically incorrect cref attribute 'HashSet{string}.Add(string)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\V2QueryBuilder.cs(190,70): warning CS1658: Type parameter declaration must be an identifier not a type. See also error CS0081. [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\V2QueryBuilder.cs(217,62): warning CS1584: XML comment has syntactically incorrect cref attribute 'HashSet{string}.Remove(string)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\V2QueryBuilder.cs(217,70): warning CS1658: Type parameter declaration must be an identifier not a type. See also error CS0081. [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\V2ServerAPICalls.cs(182,107): warning CS1570: XML comment has badly formed XML -- 'The character(s) '$' cannot be used at this location.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\V2ServerAPICalls.cs(182,229): warning CS1570: XML comment has badly formed XML -- 'The character(s) '$' cannot be used at this location.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\V2ServerAPICalls.cs(182,246): warning CS1570: XML comment has badly formed XML -- 'The character(s) '$' cannot be used at this location.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\V2ServerAPICalls.cs(182,268): warning CS1570: XML comment has badly formed XML -- 'The character(s) '$' cannot be used at this location.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\V2ServerAPICalls.cs(182,276): warning CS1570: XML comment has badly formed XML -- 'The character(s) '$' cannot be used at this location.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\V2ServerAPICalls.cs(469,102): warning CS1570: XML comment has badly formed XML -- 'Reference to undefined entity 'searchTerm'.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\V3ServerAPICalls.cs(486,1): warning CS1570: XML comment has badly formed XML -- 'Expected an end tag for element 'summary'.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\V3ServerAPICalls.cs(1261,1): warning CS1570: XML comment has badly formed XML -- 'Expected an end tag for element 'summary'.' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptMetadata.cs(118,21): warning CS8073: The result of the expression is always 'false' since a value of type 'Guid' is never equal to 'null' of type 'Guid?' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\GroupPolicyRepositoryEnforcement.cs(172,54): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\GroupPolicyRepositoryEnforcement.cs(173,66): warning CS8604: Possible null reference argument for parameter 'regValue' in 'KeyValuePair<string, Uri> GroupPolicyRepositoryEnforcement.ConvertRegValue(string regValue)'. [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UpdateModuleManifest.cs(607,17): warning CS8073: The result of the expression is always 'true' since a value of type 'SwitchParameter' is never equal to 'null' of type 'SwitchParameter?' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UpdateModuleManifest.cs(956,17): warning CS8073: The result of the expression is always 'true' since a value of type 'SwitchParameter' is never equal to 'null' of type 'SwitchParameter?' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\CompressPSResource.cs(60,33): warning CS1591: Missing XML comment for publicly visible type or member 'CompressPSResource.BeginProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\CompressPSResource.cs(76,33): warning CS1591: Missing XML comment for publicly visible type or member 'CompressPSResource.EndProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\FindPSResource.cs(116,33): warning CS1591: Missing XML comment for publicly visible type or member 'FindPSResource.BeginProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\FindPSResource.cs(132,33): warning CS1591: Missing XML comment for publicly visible type or member 'FindPSResource.StopProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\FindPSResource.cs(137,33): warning CS1591: Missing XML comment for publicly visible type or member 'FindPSResource.EndProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\FindPSResource.cs(143,33): warning CS1591: Missing XML comment for publicly visible type or member 'FindPSResource.ProcessRecord()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\GetInstalledPSResource.cs(63,33): warning CS1591: Missing XML comment for publicly visible type or member 'GetInstalledPSResourceCommand.BeginProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\GetInstalledPSResource.cs(120,33): warning CS1591: Missing XML comment for publicly visible type or member 'GetInstalledPSResourceCommand.ProcessRecord()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\GetPSResourceRepository.cs(38,33): warning CS1591: Missing XML comment for publicly visible type or member 'GetPSResourceRepository.BeginProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\GetPSResourceRepository.cs(43,33): warning CS1591: Missing XML comment for publicly visible type or member 'GetPSResourceRepository.ProcessRecord()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\GetPSScriptFileInfo.cs(30,33): warning CS1591: Missing XML comment for publicly visible type or member 'GetPSScriptFileInfo.EndProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\InstallPSResource.cs(261,33): warning CS1591: Missing XML comment for publicly visible type or member 'InstallPSResource.BeginProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\InstallPSResource.cs(277,33): warning CS1591: Missing XML comment for publicly visible type or member 'InstallPSResource.ProcessRecord()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\ModuleInitAndCleanup.cs(9,18): warning CS1591: Missing XML comment for publicly visible type or member 'UnsafeAssemblyHandler' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\ModuleInitAndCleanup.cs(38,21): warning CS1591: Missing XML comment for publicly visible type or member 'UnsafeAssemblyHandler.OnImport()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\ModuleInitAndCleanup.cs(43,21): warning CS1591: Missing XML comment for publicly visible type or member 'UnsafeAssemblyHandler.OnRemove(PSModuleInfo)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\NewPSScriptFile.cs(151,33): warning CS1591: Missing XML comment for publicly visible type or member 'NewPSScriptFile.EndProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PublishPSResource.cs(118,23): warning CS1591: Missing XML comment for publicly visible type or member 'PublishPSResource.NupkgPath' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PublishPSResource.cs(123,23): warning CS1591: Missing XML comment for publicly visible type or member 'PublishPSResource.GetDynamicParameters()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PublishPSResource.cs(148,33): warning CS1591: Missing XML comment for publicly visible type or member 'PublishPSResource.BeginProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PublishPSResource.cs(177,33): warning CS1591: Missing XML comment for publicly visible type or member 'PublishPSResource.EndProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PublishPSResource.cs(198,18): warning CS1591: Missing XML comment for publicly visible type or member 'ContainerRegistryDynamicParameters' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PublishPSResource.cs(201,23): warning CS1591: Missing XML comment for publicly visible type or member 'ContainerRegistryDynamicParameters.ModulePrefix' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\RegisterPSResourceRepository.cs(116,33): warning CS1591: Missing XML comment for publicly visible type or member 'RegisterPSResourceRepository.BeginProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\RegisterPSResourceRepository.cs(120,33): warning CS1591: Missing XML comment for publicly visible type or member 'RegisterPSResourceRepository.ProcessRecord()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\SavePSResource.cs(184,33): warning CS1591: Missing XML comment for publicly visible type or member 'SavePSResource.BeginProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\SavePSResource.cs(202,33): warning CS1591: Missing XML comment for publicly visible type or member 'SavePSResource.ProcessRecord()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\SetPSResourceRepository.cs(107,33): warning CS1591: Missing XML comment for publicly visible type or member 'SetPSResourceRepository.BeginProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\SetPSResourceRepository.cs(112,33): warning CS1591: Missing XML comment for publicly visible type or member 'SetPSResourceRepository.ProcessRecord()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\TestPSScriptFile.cs(32,33): warning CS1591: Missing XML comment for publicly visible type or member 'TestPSScriptFileInfo.EndProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UninstallPSResource.cs(72,29): warning CS1591: Missing XML comment for publicly visible type or member 'UninstallPSResource.PSScriptFileExt' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UninstallPSResource.cs(73,39): warning CS1591: Missing XML comment for publicly visible type or member 'UninstallPSResource.OsPlatform' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UninstallPSResource.cs(85,33): warning CS1591: Missing XML comment for publicly visible type or member 'UninstallPSResource.BeginProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UninstallPSResource.cs(90,33): warning CS1591: Missing XML comment for publicly visible type or member 'UninstallPSResource.ProcessRecord()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UninstallPSResource.cs(170,33): warning CS1591: Missing XML comment for publicly visible type or member 'UninstallPSResource.EndProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UnregisterPSResourceRepository.cs(42,33): warning CS1591: Missing XML comment for publicly visible type or member 'UnregisterPSResourceRepository.BeginProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UnregisterPSResourceRepository.cs(46,33): warning CS1591: Missing XML comment for publicly visible type or member 'UnregisterPSResourceRepository.ProcessRecord()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UpdateModuleManifest.cs(270,33): warning CS1591: Missing XML comment for publicly visible type or member 'UpdateModuleManifest.EndProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UpdatePSResource.cs(153,33): warning CS1591: Missing XML comment for publicly visible type or member 'UpdatePSResource.BeginProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UpdatePSResource.cs(171,33): warning CS1591: Missing XML comment for publicly visible type or member 'UpdatePSResource.ProcessRecord()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UpdatePSResource.cs(230,33): warning CS1591: Missing XML comment for publicly visible type or member 'UpdatePSResource.StopProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UpdatePSResource.cs(235,33): warning CS1591: Missing XML comment for publicly visible type or member 'UpdatePSResource.EndProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UpdatePSScriptFileInfo.cs(152,33): warning CS1591: Missing XML comment for publicly visible type or member 'UpdatePSScriptFileInfo.EndProcessing()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\ContainerRegistryInfo.cs(10,22): warning CS1591: Missing XML comment for publicly visible type or member 'ContainerRegistryInfo' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\ContainerRegistryInfo.cs(14,17): warning CS1591: Missing XML comment for publicly visible type or member 'ContainerRegistryInfo.Name' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\ContainerRegistryInfo.cs(15,17): warning CS1591: Missing XML comment for publicly visible type or member 'ContainerRegistryInfo.Metadata' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\ContainerRegistryInfo.cs(16,23): warning CS1591: Missing XML comment for publicly visible type or member 'ContainerRegistryInfo.ResourceType' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\FindResults.cs(17,9): warning CS1591: Missing XML comment for publicly visible type or member 'FindResponseType.None' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\FindResults.cs(18,9): warning CS1591: Missing XML comment for publicly visible type or member 'FindResponseType.ResponseString' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\FindResults.cs(19,9): warning CS1591: Missing XML comment for publicly visible type or member 'FindResponseType.ResponseHashtable' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\FindResults.cs(22,25): warning CS1591: Missing XML comment for publicly visible type or member 'FindResults' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\FindResults.cs(24,25): warning CS1591: Missing XML comment for publicly visible type or member 'FindResults.StringResponse' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\FindResults.cs(25,28): warning CS1591: Missing XML comment for publicly visible type or member 'FindResults.HashtableResponse' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\FindResults.cs(26,33): warning CS1591: Missing XML comment for publicly visible type or member 'FindResults.ResponseType' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\FindResults.cs(28,16): warning CS1591: Missing XML comment for publicly visible type or member 'FindResults.FindResults()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\FindResults.cs(35,16): warning CS1591: Missing XML comment for publicly visible type or member 'FindResults.FindResults(string[], Hashtable[], FindResponseType)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\FindResults.cs(42,21): warning CS1591: Missing XML comment for publicly visible type or member 'FindResults.IsFindResultsEmpty()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\InternalHooks.cs(8,18): warning CS1591: Missing XML comment for publicly visible type or member 'InternalHooks' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\InternalHooks.cs(20,28): warning CS1591: Missing XML comment for publicly visible type or member 'InternalHooks.SetTestHook(string, object)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(8,18): warning CS1591: Missing XML comment for publicly visible type or member 'ResourceNotFoundException' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(10,16): warning CS1591: Missing XML comment for publicly visible type or member 'ResourceNotFoundException.ResourceNotFoundException(string, Exception)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(16,18): warning CS1591: Missing XML comment for publicly visible type or member 'UnauthorizedException' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(18,16): warning CS1591: Missing XML comment for publicly visible type or member 'UnauthorizedException.UnauthorizedException(string, Exception)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(24,18): warning CS1591: Missing XML comment for publicly visible type or member 'JsonParsingException' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(26,16): warning CS1591: Missing XML comment for publicly visible type or member 'JsonParsingException.JsonParsingException(string, Exception)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(32,18): warning CS1591: Missing XML comment for publicly visible type or member 'XmlParsingException' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(34,16): warning CS1591: Missing XML comment for publicly visible type or member 'XmlParsingException.XmlParsingException(string, Exception)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(40,18): warning CS1591: Missing XML comment for publicly visible type or member 'ConvertToPSResourceException' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(42,16): warning CS1591: Missing XML comment for publicly visible type or member 'ConvertToPSResourceException.ConvertToPSResourceException(string, Exception)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(48,18): warning CS1591: Missing XML comment for publicly visible type or member 'InvalidOrEmptyResponse' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(50,16): warning CS1591: Missing XML comment for publicly visible type or member 'InvalidOrEmptyResponse.InvalidOrEmptyResponse(string, Exception)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(56,18): warning CS1591: Missing XML comment for publicly visible type or member 'LocalResourceEmpty' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(58,16): warning CS1591: Missing XML comment for publicly visible type or member 'LocalResourceEmpty.LocalResourceEmpty(string, Exception)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(64,18): warning CS1591: Missing XML comment for publicly visible type or member 'LocalResourceNotFoundException' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(66,16): warning CS1591: Missing XML comment for publicly visible type or member 'LocalResourceNotFoundException.LocalResourceNotFoundException(string, Exception)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(72,18): warning CS1591: Missing XML comment for publicly visible type or member 'ProcessDependencyException' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(74,16): warning CS1591: Missing XML comment for publicly visible type or member 'ProcessDependencyException.ProcessDependencyException(string, Exception)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(80,18): warning CS1591: Missing XML comment for publicly visible type or member 'SendRequestException' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(82,16): warning CS1591: Missing XML comment for publicly visible type or member 'SendRequestException.SendRequestException(string, Exception)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(88,18): warning CS1591: Missing XML comment for publicly visible type or member 'UploadBlobException' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSGetException.cs(90,16): warning CS1591: Missing XML comment for publicly visible type or member 'UploadBlobException.UploadBlobException(string, Exception)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSRepositoryInfo.cs(20,21): warning CS1591: Missing XML comment for publicly visible type or member 'PSRepositoryInfo.APIVersion' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSRepositoryInfo.cs(22,13): warning CS1591: Missing XML comment for publicly visible type or member 'PSRepositoryInfo.APIVersion.Unknown' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSRepositoryInfo.cs(23,13): warning CS1591: Missing XML comment for publicly visible type or member 'PSRepositoryInfo.APIVersion.V2' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSRepositoryInfo.cs(24,13): warning CS1591: Missing XML comment for publicly visible type or member 'PSRepositoryInfo.APIVersion.V3' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSRepositoryInfo.cs(25,13): warning CS1591: Missing XML comment for publicly visible type or member 'PSRepositoryInfo.APIVersion.Local' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSRepositoryInfo.cs(26,13): warning CS1591: Missing XML comment for publicly visible type or member 'PSRepositoryInfo.APIVersion.NugetServer' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSRepositoryInfo.cs(27,13): warning CS1591: Missing XML comment for publicly visible type or member 'PSRepositoryInfo.APIVersion.ContainerRegistry' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSRepositoryInfo.cs(34,16): warning CS1591: Missing XML comment for publicly visible type or member 'PSRepositoryInfo.PSRepositoryInfo(string, Uri, int, bool, PSCredentialInfo, PSRepositoryInfo.APIVersion, bool)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSRepositoryInfo.cs(49,21): warning CS1591: Missing XML comment for publicly visible type or member 'PSRepositoryInfo.RepositoryProviderType' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSRepositoryInfo.cs(51,13): warning CS1591: Missing XML comment for publicly visible type or member 'PSRepositoryInfo.RepositoryProviderType.None' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSRepositoryInfo.cs(52,13): warning CS1591: Missing XML comment for publicly visible type or member 'PSRepositoryInfo.RepositoryProviderType.ACR' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSRepositoryInfo.cs(53,13): warning CS1591: Missing XML comment for publicly visible type or member 'PSRepositoryInfo.RepositoryProviderType.AzureDevOps' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(20,17): warning CS1591: Missing XML comment for publicly visible type or member 'ResourceType' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(22,9): warning CS1591: Missing XML comment for publicly visible type or member 'ResourceType.None' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(23,9): warning CS1591: Missing XML comment for publicly visible type or member 'ResourceType.Module' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(24,9): warning CS1591: Missing XML comment for publicly visible type or member 'ResourceType.Script' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(25,9): warning CS1591: Missing XML comment for publicly visible type or member 'ResourceType.Nupkg' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(28,17): warning CS1591: Missing XML comment for publicly visible type or member 'VersionType' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(30,9): warning CS1591: Missing XML comment for publicly visible type or member 'VersionType.NoVersion' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(31,9): warning CS1591: Missing XML comment for publicly visible type or member 'VersionType.SpecificVersion' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(32,9): warning CS1591: Missing XML comment for publicly visible type or member 'VersionType.VersionRange' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(35,17): warning CS1591: Missing XML comment for publicly visible type or member 'ScopeType' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(37,9): warning CS1591: Missing XML comment for publicly visible type or member 'ScopeType.CurrentUser' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(38,9): warning CS1591: Missing XML comment for publicly visible type or member 'ScopeType.AllUsers' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(45,25): warning CS1591: Missing XML comment for publicly visible type or member 'ResourceIncludes' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(49,25): warning CS1591: Missing XML comment for publicly visible type or member 'ResourceIncludes.Cmdlet' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(51,25): warning CS1591: Missing XML comment for publicly visible type or member 'ResourceIncludes.Command' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(53,25): warning CS1591: Missing XML comment for publicly visible type or member 'ResourceIncludes.DscResource' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(55,25): warning CS1591: Missing XML comment for publicly visible type or member 'ResourceIncludes.Function' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(57,25): warning CS1591: Missing XML comment for publicly visible type or member 'ResourceIncludes.RoleCapability' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(59,25): warning CS1591: Missing XML comment for publicly visible type or member 'ResourceIncludes.Workflow' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(109,26): warning CS1591: Missing XML comment for publicly visible type or member 'ResourceIncludes.ConvertToHashtable()' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(148,25): warning CS1591: Missing XML comment for publicly visible type or member 'Dependency' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(152,23): warning CS1591: Missing XML comment for publicly visible type or member 'Dependency.Name' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(154,29): warning CS1591: Missing XML comment for publicly visible type or member 'Dependency.VersionRange' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(176,25): warning CS1591: Missing XML comment for publicly visible type or member 'PSCommandResourceInfo' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(182,25): warning CS1591: Missing XML comment for publicly visible type or member 'PSCommandResourceInfo.Names' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(184,31): warning CS1591: Missing XML comment for publicly visible type or member 'PSCommandResourceInfo.ParentResource' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(208,25): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(212,43): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.AdditionalMetadata' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(213,23): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.Author' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(214,23): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.CompanyName' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(215,23): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.Copyright' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(216,29): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.Dependencies' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(217,23): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.Description' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(218,20): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.IconUri' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(219,33): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.Includes' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(220,26): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.InstalledDate' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(221,23): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.InstalledLocation' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(222,21): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.IsPrerelease' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(223,20): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.LicenseUri' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(224,23): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.Name' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(226,23): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.Prerelease' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(227,20): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.ProjectUri' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(228,26): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.PublishedDate' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(229,23): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.ReleaseNotes' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(230,23): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.Repository' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(231,23): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.RepositorySourceLocation' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(232,25): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.Tags' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(233,29): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.Type' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(234,26): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.UpdatedDate' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(235,24): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.Version' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(1087,28): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.TryConvertFromHashtableForPsd1(Hashtable, out PSResourceInfo, out string, PSRepositoryInfo)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(1185,28): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.TryConvertFromHashtableForPs1(Hashtable, out PSResourceInfo, out string, PSRepositoryInfo)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(1256,28): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceInfo.TryConvertFromHashtableForNuspec(Hashtable, out PSResourceInfo, out string, PSRepositoryInfo)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(1943,25): warning CS1591: Missing XML comment for publicly visible type or member 'TestHooks' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(1945,32): warning CS1591: Missing XML comment for publicly visible type or member 'TestHooks.ReadPSGetResourceInfo(string)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceInfo.cs(1955,28): warning CS1591: Missing XML comment for publicly visible type or member 'TestHooks.WritePSGetResourceInfo(string, PSObject)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceResult.cs(8,25): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceResult' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceResult.cs(16,16): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceResult.PSResourceResult(PSResourceInfo, Exception, bool)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSResourceResult.cs(24,16): warning CS1591: Missing XML comment for publicly visible type or member 'PSResourceResult.PSResourceResult(PSCommandResourceInfo, Exception, bool)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptFileInfo.cs(21,33): warning CS1591: Missing XML comment for publicly visible type or member 'PSScriptFileInfo.ScriptMetadataComment' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptFileInfo.cs(23,29): warning CS1591: Missing XML comment for publicly visible type or member 'PSScriptFileInfo.ScriptHelpComment' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptFileInfo.cs(25,33): warning CS1591: Missing XML comment for publicly visible type or member 'PSScriptFileInfo.ScriptRequiresComment' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptFileInfo.cs(27,33): warning CS1591: Missing XML comment for publicly visible type or member 'PSScriptFileInfo.ScriptContent' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\RepositorySettings.cs(226,26): warning CS1572: XML comment has a param tag for 'sectionName', but there is no parameter by that name [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\RepositorySettings.cs(227,51): warning CS1573: Parameter 'repoName' has no matching param tag in the XML comment for 'RepositorySettings.Add(string, Uri, int, bool, PSCredentialInfo, PSRepositoryInfo.APIVersion, bool)' (but other parameters do) [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\RepositorySettings.cs(227,65): warning CS1573: Parameter 'repoUri' has no matching param tag in the XML comment for 'RepositorySettings.Add(string, Uri, int, bool, PSCredentialInfo, PSRepositoryInfo.APIVersion, bool)' (but other parameters do) [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\RepositorySettings.cs(227,78): warning CS1573: Parameter 'repoPriority' has no matching param tag in the XML comment for 'RepositorySettings.Add(string, Uri, int, bool, PSCredentialInfo, PSRepositoryInfo.APIVersion, bool)' (but other parameters do) [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\RepositorySettings.cs(227,97): warning CS1573: Parameter 'repoTrusted' has no matching param tag in the XML comment for 'RepositorySettings.Add(string, Uri, int, bool, PSCredentialInfo, PSRepositoryInfo.APIVersion, bool)' (but other parameters do) [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\RepositorySettings.cs(227,127): warning CS1573: Parameter 'repoCredentialInfo' has no matching param tag in the XML comment for 'RepositorySettings.Add(string, Uri, int, bool, PSCredentialInfo, PSRepositoryInfo.APIVersion, bool)' (but other parameters do) [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\RepositorySettings.cs(227,175): warning CS1573: Parameter 'apiVersion' has no matching param tag in the XML comment for 'RepositorySettings.Add(string, Uri, int, bool, PSCredentialInfo, PSRepositoryInfo.APIVersion, bool)' (but other parameters do) [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\RepositorySettings.cs(227,192): warning CS1573: Parameter 'force' has no matching param tag in the XML comment for 'RepositorySettings.Add(string, Uri, int, bool, PSCredentialInfo, PSRepositoryInfo.APIVersion, bool)' (but other parameters do) [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\RepositorySettings.cs(474,26): warning CS1572: XML comment has a param tag for 'sectionName', but there is no parameter by that name [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\RepositorySettings.cs(475,62): warning CS1573: Parameter 'repoNames' has no matching param tag in the XML comment for 'RepositorySettings.Remove(string[], out string[])' (but other parameters do) [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\RepositorySettings.cs(475,86): warning CS1573: Parameter 'errorList' has no matching param tag in the XML comment for 'RepositorySettings.Remove(string[], out string[])' (but other parameters do) [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\IServerAPICalls.cs(10,18): warning CS1591: Missing XML comment for publicly visible type or member 'IServerAPICalls' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\InstallPkgParams.cs(9,14): warning CS1591: Missing XML comment for publicly visible type or member 'InstallPkgParams' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\InstallPkgParams.cs(11,19): warning CS1591: Missing XML comment for publicly visible type or member 'InstallPkgParams.Name' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\InstallPkgParams.cs(12,25): warning CS1591: Missing XML comment for publicly visible type or member 'InstallPkgParams.Version' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\InstallPkgParams.cs(13,19): warning CS1591: Missing XML comment for publicly visible type or member 'InstallPkgParams.Repository' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\InstallPkgParams.cs(14,17): warning CS1591: Missing XML comment for publicly visible type or member 'InstallPkgParams.AcceptLicense' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\InstallPkgParams.cs(15,17): warning CS1591: Missing XML comment for publicly visible type or member 'InstallPkgParams.Prerelease' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\InstallPkgParams.cs(16,22): warning CS1591: Missing XML comment for publicly visible type or member 'InstallPkgParams.Scope' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\InstallPkgParams.cs(17,17): warning CS1591: Missing XML comment for publicly visible type or member 'InstallPkgParams.Quiet' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\InstallPkgParams.cs(18,17): warning CS1591: Missing XML comment for publicly visible type or member 'InstallPkgParams.Reinstall' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\InstallPkgParams.cs(19,17): warning CS1591: Missing XML comment for publicly visible type or member 'InstallPkgParams.Force' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\InstallPkgParams.cs(20,17): warning CS1591: Missing XML comment for publicly visible type or member 'InstallPkgParams.TrustRepository' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\InstallPkgParams.cs(21,17): warning CS1591: Missing XML comment for publicly visible type or member 'InstallPkgParams.NoClobber' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\InstallPkgParams.cs(22,17): warning CS1591: Missing XML comment for publicly visible type or member 'InstallPkgParams.SkipDependencyCheck' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\InstallPkgParams.cs(28,17): warning CS1591: Missing XML comment for publicly visible type or member 'InstallPkgParams.SetProperty(string, string, out ErrorRecord)' [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptHelp.cs(83,13): warning CS1587: XML comment is not placed on a valid language element [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptMetadata.cs(236,13): warning CS1587: XML comment is not placed on a valid language element [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptMetadata.cs(404,13): warning CS1587: XML comment is not placed on a valid language element [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\PSScriptRequires.cs(54,13): warning CS1587: XML comment is not placed on a valid language element [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\UpdateModuleManifest.cs(1060,13): warning CS1587: XML comment is not placed on a valid language element [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\source\src\code\V3ServerAPICalls.cs(945,13): warning CS1587: XML comment is not placed on a valid language element [E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\prepared\Library.csproj]
+    243 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.76
+PASS all56 source inputs, exact NuGet type-qualification overlay, complete module assets, two SDK metadata files and actual source engine/dependency references
+PASS complete original module assets and 26 private DLLs byte-identical to source-built NuGet runtime assets
+PASS PSResourceGet PSModule package: full original module, private source dependencies/licenses, reference/XML and source/compiler provenance
+==> Starting check()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\check\Restore.csproj (in 386 ms).
+PASS all restored/loose module files, original56-input/compiler/engine provenance, implementation/ref/XML and26 private source-built dependency/license payloads
+PASS original ACR version-selection helper in an active source cmdlet: qualified NuGet key, numeric ordering, stable/prerelease ranges, normalized exact match and invalid-version error
+PASS original full manifest/module initializer,17cmdlet exports/nested module, source engine import and new/get/test/update script metadata with private source NuGet dependencies
+PASS original local repository register/get/set, publish/find, dependency save/install, NuGet save, installed metadata/update/module execution, uninstall and missing-package behavior
+PASS owned repository/module cleanup; existing repository entries preserved
+PASS all restored/loose module files, original56-input/compiler/engine provenance, implementation/ref/XML and26 private source-built dependency/license payloads
+PASS original ACR version-selection helper in an active source cmdlet: qualified NuGet key, numeric ordering, stable/prerelease ranges, normalized exact match and invalid-version error
+PASS original full manifest/module initializer,17cmdlet exports/nested module, source engine import and new/get/test/update script metadata with private source NuGet dependencies
+PASS original local repository register/get/set, publish/find, dependency save/install, NuGet save, installed metadata/update/module execution, uninstall and missing-package behavior
+PASS owned repository/module cleanup; existing repository entries preserved
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\check\Api\Inspect.csproj (in 328 ms).
+  Inspect -> E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\check\Api\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.95
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\check\Pe\Inspect.csproj (in 57 ms).
+  Inspect -> E:\msys64\home\topkek\psresourceget-package.EnwsuK\src\check\Pe\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.07
+PASS all460 exact published API declarations and release/signing identities
+PASS fresh/relocated source PSResourceGet: full module, script metadata, repository/package/dependency lifecycle, exact API/identity and payload/license gates
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> WARNING: Package contains reference to $(cygpath -m /)
+==> Creating package "mingw-w64-clang-x86_64-powershell-psresourceget"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-powershell-psresourceget 1.1.1-1 (27 Oct 2026 13:27:16)
+
+install2.log:
+warning: mingw-w64-clang-x86_64-powershell-psresourceget-1.1.1-1 is up to date -- reinstalling
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-powershell-psresourceget-1.1.1-1
+
+Total Installed Size:  11.13 MiB
+Net Upgrade Size:       0.00 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+reinstalling mingw-w64-clang-x86_64-powershell-psresourceget...
+
+installed3.log:
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\psresourceget-installed.Ujm5EA\check3\Restore.csproj (in 490 ms).
+PASS all restored/loose module files, original56-input/compiler/engine provenance, implementation/ref/XML and26 private source-built dependency/license payloads
+PASS all restored/loose module files, original56-input/compiler/engine provenance, implementation/ref/XML and26 private source-built dependency/license payloads
+PASS original ACR version-selection helper in an active source cmdlet: qualified NuGet key, numeric ordering, stable/prerelease ranges, normalized exact match and invalid-version error
+PASS original full manifest/module initializer,17cmdlet exports/nested module, source engine import and new/get/test/update script metadata with private source NuGet dependencies
+PASS original local repository register/get/set, publish/find, dependency save/install, NuGet save, installed metadata/update/module execution, uninstall and missing-package behavior
+PASS owned repository/module cleanup; existing repository entries preserved
+PASS all restored/loose module files, original56-input/compiler/engine provenance, implementation/ref/XML and26 private source-built dependency/license payloads
+PASS original ACR version-selection helper in an active source cmdlet: qualified NuGet key, numeric ordering, stable/prerelease ranges, normalized exact match and invalid-version error
+PASS original full manifest/module initializer,17cmdlet exports/nested module, source engine import and new/get/test/update script metadata with private source NuGet dependencies
+PASS original local repository register/get/set, publish/find, dependency save/install, NuGet save, installed metadata/update/module execution, uninstall and missing-package behavior
+PASS owned repository/module cleanup; existing repository entries preserved
+PASS all restored/loose module files, original56-input/compiler/engine provenance, implementation/ref/XML and26 private source-built dependency/license payloads
+PASS original ACR version-selection helper in an active source cmdlet: qualified NuGet key, numeric ordering, stable/prerelease ranges, normalized exact match and invalid-version error
+PASS original full manifest/module initializer,17cmdlet exports/nested module, source engine import and new/get/test/update script metadata with private source NuGet dependencies
+PASS original local repository register/get/set, publish/find, dependency save/install, NuGet save, installed metadata/update/module execution, uninstall and missing-package behavior
+PASS owned repository/module cleanup; existing repository entries preserved
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\psresourceget-installed.Ujm5EA\check3\Api\Inspect.csproj (in 454 ms).
+  Inspect -> E:\msys64\home\topkek\psresourceget-installed.Ujm5EA\check3\Api\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.80
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\psresourceget-installed.Ujm5EA\check3\Pe\Inspect.csproj (in 66 ms).
+  Inspect -> E:\msys64\home\topkek\psresourceget-installed.Ujm5EA\check3\Pe\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.86
+PASS all460 exact published API declarations and release/signing identities
+PASS fresh/relocated source PSResourceGet: full module, script metadata, repository/package/dependency lifecycle, exact API/identity and payload/license gates
+
+http1.log:
+PASS original PSResourceGet HTTP V3 index/registration JSON,401 credential challenge/authentication, version selection, exact NuGet download, extracted Unicode execution and404 error mapping
+PASS owned HTTP repository cleanup and pre-existing settings preservation
+WARNING Installing dependencies is not currently supported for V3 server protocol repositories. The package will be installed without installing dependencies.
+WARNING Installing dependencies is not currently supported for V3 server protocol repositories. The package will be installed without installing dependencies.
+WARNING Installing dependencies is not currently supported for V3 server protocol repositories. The package will be installed without installing dependencies.
+WARNING Installing dependencies is not currently supported for V3 server protocol repositories. The package will be installed without installing dependencies.
+PASS real owned HTTP requests, credential challenges, authenticated registration/downloads and404: {'challenges': 19, 'authenticated': 18, 'downloads': 2, 'missing': 1}
+
+requests.json:
+{
+  "counts": {
+    "challenges": 19,
+    "authenticated": 18,
+    "downloads": 2,
+    "missing": 1
+  },
+  "requests": [
+    {
+      "path": "/v3/index.json",
+      "authenticated": false
+    },
+    {
+      "path": "/v3/index.json",
+      "authenticated": false
+    },
+    {
+      "path": "/v3/index.json",
+      "authenticated": true
+    },
+    {
+      "path": "/registration/owneddependency970e72f8ba3e4ef7beb1b6aa615e33d5/index.json",
+      "authenticated": false
+    },
+    {
+      "path": "/registration/owneddependency970e72f8ba3e4ef7beb1b6aa615e33d5/index.json",
+      "authenticated": true
+    },
+    {
+      "path": "/v3/index.json",
+      "authenticated": false
+    },
+    {
+      "path": "/v3/index.json",
+      "authenticated": true
+    },
+    {
+      "path": "/registration/ownedmodule970e72f8ba3e4ef7beb1b6aa615e33d5/index.json",
+      "authenticated": false
+    },
+    {
+      "path": "/registration/ownedmodule970e72f8ba3e4ef7beb1b6aa615e33d5/index.json",
+      "authenticated": true
+    },
+    {
+      "path": "/v3/index.json",
+      "authenticated": false
+    },
+    {
+      "path": "/v3/index.json",
+      "authenticated": true
+    },
+    {
+      "path": "/registration/ownedmodule970e72f8ba3e4ef7beb1b6aa615e33d5/index.json",
+      "authenticated": false
+    },
+    {
+      "path": "/registration/ownedmodule970e72f8ba3e4ef7beb1b6aa615e33d5/index.json",
+      "authenticated": true
+    },
+    {
+      "path": "/v3/index.json",
+      "authenticated": false
+    },
+    {
+      "path": "/v3/index.json",
+      "authenticated": true
+    },
+    {
+      "path": "/registration/owneddependency970e72f8ba3e4ef7beb1b6aa615e33d5/index.json",
+      "authenticated": false
+    },
+    {
+      "path": "/registration/owneddependency970e72f8ba3e4ef7beb1b6aa615e33d5/index.json",
+      "authenticated": true
+    },
+    {
+      "path": "/v3/index.json",
+      "authenticated": false
+    },
+    {
+      "path": "/v3/index.json",
+      "authenticated": true
+    },
+    {
+      "path": "/registration/owneddependency970e72f8ba3e4ef7beb1b6aa615e33d5/index.json",
+      "authenticated": false
+    },
+    {
+      "path": "/registration/owneddependency970e72f8ba3e4ef7beb1b6aa615e33d5/index.json",
+      "authenticated": true
+    },
+    {
+      "path": "/flat/owneddependency970e72f8ba3e4ef7beb1b6aa615e33d5/1.0.0/owneddependency970e72f8ba3e4ef7beb1b6aa615e33d5.1.0.0.nupkg",
+      "authenticated": false
+    },
+    {
+      "path": "/flat/owneddependency970e72f8ba3e4ef7beb1b6aa615e33d5/1.0.0/owneddependency970e72f8ba3e4ef7beb1b6aa615e33d5.1.0.0.nupkg",
+      "authenticated": true
+    },
+    {
+      "path": "/v3/index.json",
+      "authenticated": false
+    },
+    {
+      "path": "/v3/index.json",
+      "authenticated": true
+    },
+    {
+      "path": "/registration/owneddependency970e72f8ba3e4ef7beb1b6aa615e33d5/index.json",
+      "authenticated": false
+    },
+    {
+      "path": "/registration/owneddependency970e72f8ba3e4ef7beb1b6aa615e33d5/index.json",
+      "authenticated": true
+    },
+    {
+      "path": "/v3/index.json",
+      "authenticated": false
+    },
+    {
+      "path": "/v3/index.json",
+      "authenticated": true
+    },
+    {
+      "path": "/registration/owneddependency970e72f8ba3e4ef7beb1b6aa615e33d5/index.json",
+      "authenticated": false
+    },
+    {
+      "path": "/registration/owneddependency970e72f8ba3e4ef7beb1b6aa615e33d5/index.json",
+      "authenticated": true
+    },
+    {
+      "path": "/flat/owneddependency970e72f8ba3e4ef7beb1b6aa615e33d5/1.0.0/owneddependency970e72f8ba3e4ef7beb1b6aa615e33d5.1.0.0.nupkg",
+      "authenticated": false
+    },
+    {
+      "path": "/flat/owneddependency970e72f8ba3e4ef7beb1b6aa615e33d5/1.0.0/owneddependency970e72f8ba3e4ef7beb1b6aa615e33d5.1.0.0.nupkg",
+      "authenticated": true
+    },
+    {
+      "path": "/v3/index.json",
+      "authenticated": false
+    },
+    {
+      "path": "/v3/index.json",
+      "authenticated": true
+    },
+    {
+      "path": "/registration/ownedmissinghttppackage/index.json",
+      "authenticated": false
+    },
+    {
+      "path": "/registration/ownedmissinghttppackage/index.json",
+      "authenticated": true
+    }
+  ]
+}

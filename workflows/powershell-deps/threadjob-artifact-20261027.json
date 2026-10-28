@@ -1,0 +1,16 @@
+{
+  "artifact": "mingw-w64-clang-x86_64-powershell-threadjob-2.0.3-1-any.pkg.tar.zst",
+  "sha256": "52471ddc2c383cbee4ad68bf836d435c7aa75b5dfe07225378313bce8aa83cb9",
+  "nuget_sha256": "dff5f445591d1c6dd568309ead81933de5d3e24b444c31307d74d5b5d54feeb4",
+  "source_dll_sha256": "895e05525e1129a7fb77aed135c80fbac96e2c7248e11cff49b63bac21ff6696",
+  "pinned_inputs": 16,
+  "source_commit": "99bfe5adc30ed066973114ea18d7c5091197ee14",
+  "original_cs_files": 3,
+  "source_overlays": 1,
+  "public_api_entries": 55,
+  "assembly_version": "2.0.1.0",
+  "module_nuget_version": "2.0.3",
+  "loose_nuget_bytes_equal": true,
+  "source_reference": "complete original SMA7.4.20",
+  "constrained_language_machine_policy_cases_verified": false
+}

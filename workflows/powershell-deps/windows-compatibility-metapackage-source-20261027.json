@@ -1,0 +1,19 @@
+{
+  "source_commit": "337963009d48a3016b50172b451b4e80f78791a7",
+  "source_archive_sha256": "e5f9b43643a3dfdf1afae7e2f3f54d5e140513191c82dadcc56301b9cb494b94",
+  "original_file_sha256": {
+    "eng/Versions.props": "24bf5c0aa67c88af4cae379f0a316b2f7e30ca0ba1cecd1944fa74bf2b8c7d8c",
+    "eng/Version.Details.xml": "ac16fdcb87ba019785a14d33f0c7b2e668a9e20c54f972246bc4013bae593dcb",
+    "Directory.Build.props": "03470c1d6877e92209240ee26b03e309e9f1ae7455da272887561186970b984d",
+    "LICENSE": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+    "src/Microsoft.Windows.Compatibility/src/Microsoft.Windows.Compatibility.csproj": "b5dd53f89e4d2f8d45fe1341781f487816409216614aa529ae4f7cea8ec0f34e",
+    "src/Microsoft.Windows.Compatibility/src/PACKAGE.md": "c4962b03f1d625c34928dbecb4217a16d80edbfe400b5ecd9d9dfa824d742165"
+  },
+  "original_project_sdk": "Microsoft.Build.NoTargets",
+  "metadata_only_adapter": "Remove SDK import for metadata evaluation only; source NuGet.Packaging creates the codeless package",
+  "production_csharp_changes": [],
+  "arcade_source_commit": "444c2ef3c414558e2e409ee346f1faebb19687eb",
+  "original_icon_path": "src/Microsoft.DotNet.Arcade.Sdk/tools/Assets/DotNetPackageIcon.png",
+  "icon_sha256": "3356b59b6d9c24db3a22398c0fb3430724052fe75ae5e8430ee8ede2fb713356",
+  "full_dependency_goal_complete": false
+}

@@ -1,0 +1,401 @@
+Fresh user-requested MMI/CIM/WMI retest, started 2026-10-27 05:40 UTC
+Completed: 2026-10-27T05:43:24.616347+00:00
+Host: win11, Windows 11 build 26200 / MSYS2 CLANG64
+Remote root: /home/topkek/mmi-cim-wmi-user-retest.0qkjzA
+
+Final result: all seven runtime/API checks and five source/package/payload audits passed.
+The first runner exited 1 solely because the uploaded standalone WMI harness was missing
+mingw-w64-dotnet-management/check-installed.sh. The missing harness was supplied unchanged
+from this workspace; its narrow retry exited 0. Initial failure retained below.
+PowerShell rebuild: three existing CA1846 warnings, zero errors. Other consumers: zero errors.
+No implementation changes. Local coverage only; experimental MMI3 full compatibility,
+authenticated remote/provider coverage and full pwsh remain open. Actual CLR: .NET 8.0.0.
+
+mmi-user-test-inputs.tar.gz SHA256: 5ab61a8ed66518f4dc7d22b2f5d0e8ae02d58f5c819268b90e123fd1d9bdf519
+wmi-retest-harness.tar.gz SHA256: a1ce7435aff08709c86873d3ccdade0b0d0d95af9ee9be364441bdcc3c006fa8
+
+Exact runner (initial exit 1):
+#!/usr/bin/env bash
+set -uo pipefail
+cd /home/topkek/mmi-cim-wmi-user-retest.0qkjzA
+export PATH=/clang64/bin:/usr/bin:$PATH
+status=0
+run() {
+  local label=$1
+  shift
+  printf '\n$ '
+  printf '%q ' "$@"
+  printf '\n'
+  "$@" > "$label.log" 2>&1
+  local result=$?
+  cat "$label.log"
+  printf 'RESULT %s: exit %s\n' "$label" "$result"
+  if (( result != 0 )); then status=1; fi
+}
+pacman -Q mingw-w64-clang-x86_64-dotnet-sdk mingw-w64-clang-x86_64-dotnet-runtime mingw-w64-clang-x86_64-dotnet-mmi mingw-w64-clang-x86_64-dotnet-mmi3 mingw-w64-clang-x86_64-dotnet-management
+run mmi2 bash tests/mmi-cim-wmi/check-installed.sh mmi2-consumer
+run mmi3 bash mingw-w64-dotnet-mmi3/check.sh mmi3-consumer
+run mmi3-api bash mingw-w64-dotnet-mmi3/check-api.sh mmi3-consumer mmi3-api
+run wmi bash tests/mmi-cim-wmi/check-wmi.sh wmi-consumer
+run combined2 bash tests/mmi-cim-wmi/check-combined-source.sh combined2-consumer
+run combined3 bash tests/mmi-cim-wmi/check-mmi3-combined.sh combined3-consumer
+run powershell-cim bash tests/powershell-core/check-cim.sh /home/topkek/powershell-core.af76rh powershell-cim-consumer
+run powershell-source-audit /usr/bin/python3 tests/powershell-core/audit-source.py /home/topkek/powershell-core.af76rh
+run powershell-payload-audit /usr/bin/python3 tests/powershell-core/audit-payload.py /home/topkek/powershell-core.af76rh powershell-cim-consumer
+exit "$status"
+
+Runtime/API and source/payload audit logs:
+mingw-w64-clang-x86_64-dotnet-sdk 8.0.131-2
+mingw-w64-clang-x86_64-dotnet-runtime 8.0.131-1
+mingw-w64-clang-x86_64-dotnet-mmi 2.0.0.preview1-4
+mingw-w64-clang-x86_64-dotnet-mmi3 3.0.0-1
+mingw-w64-clang-x86_64-dotnet-management 8.0.0-1
+
+$ bash tests/mmi-cim-wmi/check-installed.sh mmi2-consumer 
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\mmi-cim-wmi-user-retest.0qkjzA\mmi2-consumer\check.csproj (in 159 ms).
+  check -> E:\msys64\home\topkek\mmi-cim-wmi-user-retest.0qkjzA\mmi2-consumer\bin\Release\net8.0\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.13
+Runtime: .NET 8.0.0
+MMI: Microsoft.Management.Infrastructure, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+CIM OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+CIM process: dotnet.exe; PID matches current source-built runtime
+CIM invalid class: correctly returned InvalidClass
+CIM OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+CIM process: dotnet.exe; PID matches current source-built runtime
+CIM invalid class: correctly returned InvalidClass
+Native dependency: C:\WINDOWS\SYSTEM32\mi.dll
+PASS: source-built MMI local DCOM/default queries, errors, disposal and reopen
+Runtime: .NET 8.0.0
+MMI: Microsoft.Management.Infrastructure, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+Streaming mode 0
+Streaming mode 1
+Streaming mode 2
+Streaming mode 3
+Streaming mode 4
+Streaming mode 5
+Streaming mode 6
+PASS native stream ABI for all 32 MI types, scalar/chunk flattening, Unicode/null/empty values, clone lifetimes/session metadata, shortening, errors/ack failures, regular final result and GC/root cleanup
+Native original interval=0 count=2
+Native option result=0 type=12 flags=0
+Native option result=0 type=21 flags=0
+Native interval clone probe (before/after MI_Result): 606
+PASS mi.h native prompt/error/message/progress callback table, Unicode values, cloned error instance, reply values/exactly-once replies, managed/reply exceptions, compacting GC, options clone and root cleanup
+PASS native credential union ABI, all destination/proxy authentication forms, Unicode user/domain/password, independent SecureString copy, native clone after source disposal, validation and native DCOM transport error propagation
+PASS: native operation/session timeouts, microseconds, infinity, negatives and timed query
+PASS: native MI_XML instance/class round-trips, offsets, Unicode, arrays, intervals, capacity, cached classes, errors and disposal
+PASS: native asynchronous instances/classes/methods/errors, observer exceptions, compacting GC, independent result lifetime, unsubscribe, CancellationToken, callback-root cleanup and session close
+Native dependency: C:\WINDOWS\SYSTEM32\mi.dll
+PASS: MMI timeout and serialization port checks
+Runtime: .NET 8.0.0
+MMI: Microsoft.Management.Infrastructure, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+CAPABILITY operation timeout: PASS
+CAPABILITY class metadata: PASS
+CAPABILITY instance serialization: PASS
+CAPABILITY asynchronous query: PASS
+RESULT mmi2: exit 0
+
+$ bash mingw-w64-dotnet-mmi3/check.sh mmi3-consumer 
+PASS native mi.h credential size=32 union-offset=8; native round trips; DCOM Default=0 NegoNoCreds=7 empty-Default-query=1
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\mmi-cim-wmi-user-retest.0qkjzA\mmi3-consumer\Check.csproj (in 211 ms).
+  Restored E:\msys64\home\topkek\mmi-cim-wmi-user-retest.0qkjzA\mmi3-consumer\friend-sma\Friend.csproj (in 211 ms).
+  Restored E:\msys64\home\topkek\mmi-cim-wmi-user-retest.0qkjzA\mmi3-consumer\friend-cim\Friend.csproj (in 211 ms).
+  Friend -> E:\msys64\home\topkek\mmi-cim-wmi-user-retest.0qkjzA\mmi3-consumer\friend-cim\bin\Release\net8.0\Microsoft.Management.Infrastructure.CimCmdlets.dll
+  Friend -> E:\msys64\home\topkek\mmi-cim-wmi-user-retest.0qkjzA\mmi3-consumer\friend-sma\bin\Release\net8.0\System.Management.Automation.dll
+  Check -> E:\msys64\home\topkek\mmi-cim-wmi-user-retest.0qkjzA\mmi3-consumer\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:08.52
+PASS MMI3 source-port identity/version/location, corrected enum contracts and signed friend access used by PowerShell sources
+Runtime: .NET 8.0.0
+MMI: Microsoft.Management.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+CIM OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+CIM process: dotnet.exe; PID matches current source-built runtime
+CIM invalid class: correctly returned InvalidClass
+CIM OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+CIM process: dotnet.exe; PID matches current source-built runtime
+CIM invalid class: correctly returned InvalidClass
+Native dependency: C:\WINDOWS\SYSTEM32\mi.dll
+PASS: source-built MMI local DCOM/default queries, errors, disposal and reopen
+PASS MMI3 source-port identity/version/location, corrected enum contracts and signed friend access used by PowerShell sources
+Runtime: .NET 8.0.0
+MMI: Microsoft.Management.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+Streaming mode 0
+Streaming mode 1
+Streaming mode 2
+Streaming mode 3
+Streaming mode 4
+Streaming mode 5
+Streaming mode 6
+PASS native stream ABI for all 32 MI types, scalar/chunk flattening, Unicode/null/empty values, clone lifetimes/session metadata, shortening, errors/ack failures, regular final result and GC/root cleanup
+Native original interval=0 count=2
+Native option result=0 type=12 flags=0
+Native option result=0 type=21 flags=0
+Native interval clone probe (before/after MI_Result): 606
+PASS mi.h native prompt/error/message/progress callback table, Unicode values, cloned error instance, reply values/exactly-once replies, managed/reply exceptions, compacting GC, options clone and root cleanup
+PASS native credential union ABI, all destination/proxy authentication forms, Unicode user/domain/password, independent SecureString copy, native clone after source disposal, validation and native DCOM transport error propagation
+PASS: native operation/session timeouts, microseconds, infinity, negatives and timed query
+PASS: native MI_XML instance/class round-trips, offsets, Unicode, arrays, intervals, capacity, cached classes, errors and disposal
+PASS: native asynchronous instances/classes/methods/errors, observer exceptions, compacting GC, independent result lifetime, unsubscribe, CancellationToken, callback-root cleanup and session close
+Native dependency: C:\WINDOWS\SYSTEM32\mi.dll
+PASS: MMI timeout and serialization port checks
+PASS MMI3 source-port identity/version/location, corrected enum contracts and signed friend access used by PowerShell sources
+Runtime: .NET 8.0.0
+MMI: Microsoft.Management.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+CAPABILITY operation timeout: PASS
+CAPABILITY class metadata: PASS
+CAPABILITY instance serialization: PASS
+CAPABILITY asynchronous query: PASS
+RESULT mmi3: exit 0
+
+$ bash mingw-w64-dotnet-mmi3/check-api.sh mmi3-consumer mmi3-api 
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\mmi-cim-wmi-user-retest.0qkjzA\mmi3-api\Inspect.csproj (in 315 ms).
+  Inspect -> E:\msys64\home\topkek\mmi-cim-wmi-user-retest.0qkjzA\mmi3-api\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.26
+PASS all 512 published MMI3 public/protected metadata declarations, exact assembly identity and three explicit cleanup finalizers
+RESULT mmi3-api: exit 0
+
+$ bash tests/mmi-cim-wmi/check-wmi.sh wmi-consumer 
+bash: /home/topkek/mmi-cim-wmi-user-retest.0qkjzA/tests/mmi-cim-wmi/../../mingw-w64-dotnet-management/check-installed.sh: No such file or directory
+RESULT wmi: exit 127
+
+$ bash tests/mmi-cim-wmi/check-combined-source.sh combined2-consumer 
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\mmi-cim-wmi-user-retest.0qkjzA\combined2-consumer\check.csproj (in 197 ms).
+  check -> E:\msys64\home\topkek\mmi-cim-wmi-user-retest.0qkjzA\combined2-consumer\bin\Release\net8.0\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.51
+Runtime: .NET 8.0.0
+MMI: Microsoft.Management.Infrastructure, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+WMI: System.Management, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+Native dependency: C:\WINDOWS\SYSTEM32\mi.dll
+PASS installed source-built CIM/MMI and WMI share one process, agree on OS build 26200, survive GC and load no Framework implementations
+MMI required 3.0 compatibility remains unverified; this integration uses the experimental 2.0 port.
+RESULT combined2: exit 0
+
+$ bash tests/mmi-cim-wmi/check-mmi3-combined.sh combined3-consumer 
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\mmi-cim-wmi-user-retest.0qkjzA\combined3-consumer\check.csproj (in 167 ms).
+  check -> E:\msys64\home\topkek\mmi-cim-wmi-user-retest.0qkjzA\combined3-consumer\bin\Release\net8.0\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.19
+Runtime: .NET 8.0.0
+MMI: Microsoft.Management.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+WMI: System.Management, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+Native dependency: C:\WINDOWS\SYSTEM32\mi.dll
+PASS installed source-built CIM/MMI and WMI share one process, agree on OS build 26200, survive GC and load no Framework implementations
+This uses the experimental MMI3 contract port; full PowerShell/remote/ownership compatibility remains open.
+RESULT combined3: exit 0
+
+$ bash tests/powershell-core/check-cim.sh /home/topkek/powershell-core.af76rh powershell-cim-consumer 
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj (in 1.52 sec).
+  Restored E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\System.Management.Automation.csproj (in 1.52 sec).
+  Restored E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\Microsoft.Management.Infrastructure.CimCmdlets\Microsoft.Management.Infrastructure.CimCmdlets.csproj (in 1.52 sec).
+  Restored E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\Microsoft.PowerShell.CoreCLR.Eventing\Microsoft.PowerShell.CoreCLR.Eventing.csproj (in 1.52 sec).
+  Restored E:\msys64\home\topkek\mmi-cim-wmi-user-retest.0qkjzA\powershell-cim-consumer\Check.csproj (in 9 ms).
+E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.cs(123,25): warning CA1846: Prefer 'AsSpan' over 'Substring' when span-based overloads are available (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1846) [E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj]
+E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.cs(124,25): warning CA1846: Prefer 'AsSpan' over 'Substring' when span-based overloads are available (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1846) [E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj]
+E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.cs(125,25): warning CA1846: Prefer 'AsSpan' over 'Substring' when span-based overloads are available (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1846) [E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj]
+  PSVersionInfoGenerator -> E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\bin\Release\net8.0\SMA.Generator.dll
+  Microsoft.PowerShell.CoreCLR.Eventing -> E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\Microsoft.PowerShell.CoreCLR.Eventing\bin\Release\net8.0\Microsoft.PowerShell.CoreCLR.Eventing.dll
+  System.Management.Automation -> E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\bin\Release\net8.0\System.Management.Automation.dll
+  Microsoft.Management.Infrastructure.CimCmdlets -> E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\Microsoft.Management.Infrastructure.CimCmdlets\bin\Release\net8.0\Microsoft.Management.Infrastructure.CimCmdlets.dll
+  Check -> E:\msys64\home\topkek\mmi-cim-wmi-user-retest.0qkjzA\powershell-cim-consumer\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.cs(123,25): warning CA1846: Prefer 'AsSpan' over 'Substring' when span-based overloads are available (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1846) [E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj]
+E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.cs(124,25): warning CA1846: Prefer 'AsSpan' over 'Substring' when span-based overloads are available (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1846) [E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj]
+E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.cs(125,25): warning CA1846: Prefer 'AsSpan' over 'Substring' when span-based overloads are available (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1846) [E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj]
+    3 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:01:11.37
+PASS invocation Import-Module 'E:\msys64\home\topkek\mmi-cim-wmi-user-retest.0qkjzA\powershell-cim-consumer\bin\Release\net8.0\Microsoft.Management.Infrastructure.CimCmdlets.dll' -ErrorAction Stop
+PASS invocation Get-Command Get-CimInstance
+PASS invocation $script:OwnedOs = Get-CimInstance -Namespace root/cimv2 -ClassName Win32_OperatingSystem -ErrorAction Stop; $script:OwnedOs
+PASS invocation Get-CimClass -Namespace root/cimv2 -ClassName Win32_Process -ErrorAction Stop
+PASS invocation Get-CimInstance -Namespace root/cimv2 -ClassName Win32_Process -Filter 'ProcessId = 5324' -ErrorAction Stop
+PASS invocation $p=Get-CimInstance -ClassName Win32_Process -Filter 'ProcessId = 5324'; Invoke-CimMethod -InputObject $p -MethodName GetOwner -ErrorAction Stop
+PASS invocation try { Get-CimInstance -ClassName Missing_Source_Port_Class -ErrorAction Stop; 'missed' } catch { $_.Exception.GetType().FullName }
+PASS invocation $xml=[System.Management.Automation.PSSerializer]::Serialize($script:OwnedOs); $copy=[System.Management.Automation.PSSerializer]::Deserialize($xml); $copy.BuildNumber
+PASS invocation $s=[System.Management.ManagementObjectSearcher]::new('SELECT BuildNumber FROM Win32_OperatingSystem'); try { foreach($o in $s.Get()) { $o.BuildNumber } } finally { $s.Dispose() }
+PASS invocation $script:OwnedOs.BuildNumber
+PASS actual source PowerShell7.4.20/CimCmdlets with experimental MMI3: module import, local OS/process queries, class metadata, GetOwner, native errors, CIM serialization, shared WMI/CIM OS build 26200, GC and no Framework implementation
+RESULT powershell-cim: exit 0
+
+$ /usr/bin/python3 tests/powershell-core/audit-source.py /home/topkek/powershell-core.af76rh 
+PASS exact original Windows source inventories/hashes, documented exclusions, fresh generators and retained explicit source analyzers: {'System.Management.Automation': (697, 77), 'Microsoft.PowerShell.CoreCLR.Eventing': (9, 3), 'PSVersionInfoGenerator': (1, 2), 'Microsoft.Management.Infrastructure.CimCmdlets': (35, 3), 'ResGen': (1, 2), 'TypeCatalogGen': (1, 2)}
+RESULT powershell-source-audit: exit 0
+
+$ /usr/bin/python3 tests/powershell-core/audit-payload.py /home/topkek/powershell-core.af76rh powershell-cim-consumer 
+PASS every one of 27 consumer DLLs matches rebuilt project bytes or an installed source-built NuGet payload
+RESULT powershell-payload-audit: exit 0
+
+Standalone WMI retry (exit 0):
+$ MSYSTEM=CLANG64 bash -lc 'export PATH=/clang64/bin:/usr/bin:$PATH; cd /home/topkek/mmi-cim-wmi-user-retest.0qkjzA && tar -xzf wmi-retest-harness.tar.gz && bash tests/mmi-cim-wmi/check-wmi.sh wmi-consumer > wmi-retry.log 2>&1'
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\mmi-cim-wmi-user-retest.0qkjzA\wmi-consumer\check.csproj (in 267 ms).
+  check -> E:\msys64\home\topkek\mmi-cim-wmi-user-retest.0qkjzA\wmi-consumer\bin\Release\net8.0\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.95
+Runtime: .NET 8.0.0
+WMI: System.Management, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS WMI identity/source/location, exported types and 79 resource strings
+WMI OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+WMI process: dotnet.exe; PID matches current source-built runtime
+WMI invalid class: correctly returned InvalidClass
+WMI OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+WMI process: dotnet.exe; PID matches current source-built runtime
+WMI invalid class: correctly returned InvalidClass
+PASS WMI metadata/types/origins, qualifier and method enumeration, clone/compare/MOF, in-memory class/property/method/qualifier edits; no repository writes
+PASS WMI native GetOwner method invocation and independent enumerator clones
+PASS WMI native asynchronous sink delivery/completion and compacting GC
+PASS WMI native process event callback, owned child PID and subscription cancellation
+PASS WMI EnablePrivileges query and restored thread identity
+Source-built WMI backend: E:\msys64\home\topkek\mmi-cim-wmi-user-retest.0qkjzA\wmi-consumer\bin\Release\net8.0\runtimes\win-x64\native\msys-wmi-native.dll
+PASS native WMI ABI/null-pointer validation and temporary privilege token setup/reset
+PASS: source-built System.Management local WMI queries, errors, disposal and reopen
+
+Local package audits:
+
+$ python3 tests/mmi-cim-wmi/audit-mmi.py
+MMI credential/callback/stream port pkgrel 4: exact pinned source/checksums, runtime dependency, license and sole source-built managed payload PASS
+
+RESULT tests/mmi-cim-wmi/audit-mmi.py: exit 0
+
+$ python3 tests/mmi-cim-wmi/audit-mmi3.py
+MMI3 candidate: exact pinned inputs, identity/version/dependencies, 512-entry contract metadata, license and sole managed payload PASS; full compatibility remains open
+
+RESULT tests/mmi-cim-wmi/audit-mmi3.py: exit 0
+
+$ python3 tests/powershell-deps/audit-management.py
+System.Management: checksums, licenses, dependency metadata, resource baseline and exact NuGet payload PASS
+
+RESULT tests/powershell-deps/audit-management.py: exit 0

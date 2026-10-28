@@ -1,0 +1,568 @@
+Complete Extensions6 source packages, 2026-10-27
+
+Build root: /home/topkek/extensions6-package.D5bnik/mingw-w64-dotnet-extensions6
+Final clean build: PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm (makepkg5.log, exit0).
+Final install: pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-extensions-primitives6-6.0.0-1-any.pkg.tar.zst mingw-w64-clang-x86_64-dotnet-fileproviders-abstractions6-6.0.0-1-any.pkg.tar.zst mingw-w64-clang-x86_64-dotnet-filesystem-globbing6-6.0.0-1-any.pkg.tar.zst (exit0).
+Fresh installed consumer: bash check.sh /home/topkek/extensions6-installed-check-20261027-refs (exit0).
+Independent audit: python3 tests/powershell-deps/audit-extensions6.py (exit0).
+All56 actual original C# compile inputs, three generated resource bindings and six SDK metadata inputs verified.
+All382 original APIs, exact original signing/identity/file/informational versions, six resource manifests and all20 string values verified.
+Owned behavior: Unicode strings/slices/tokenization, token callbacks/resubscription/disposal, null file/directory/watch contracts and physical/in-memory globbing.
+Source implementation/reference metadata, XML docs, exact inventories and licenses packaged. Explicit reference groups match ref assets.
+No production C# changes. Original annotations-only nullable mode retained; source.NET8 supplies actual Unsafe and System.* framework refs.
+Initial failures retained: Windows resource input path length, archive root spelling, extensionless SDK license target and missing explicit nuspec reference groups.
+A prototype token fixture was corrected to publish its next token before cancelling its previous token. Production token logic unchanged.
+Final build and consumer have zero warnings/errors. Full NuGet/PSResourceGet graph remains incomplete; actual CLR8.0.0 servicing remains open.
+
+--- makepkg5.log ---
+==> Making package: mingw-w64-dotnet-extensions6 6.0.0-1 (27 Oct 2026 08:33:43)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found runtime-4822e3c3aa77eb82b2fb33c9321f923cf11ddde6.tar.gz
+  -> Found extract.py
+  -> Found prepare.py
+  -> Found verify-build.py
+  -> Found check.sh
+  -> Found Check.cs
+  -> Found InspectApi.cs
+  -> Found compare-api.py
+  -> Found AspNetCore.pubkey.hex
+  -> Found published-provenance.json
+  -> Found published-metadata.json
+  -> Found published-api.json
+  -> Found README.md
+==> Validating source files with sha256sums...
+    runtime-4822e3c3aa77eb82b2fb33c9321f923cf11ddde6.tar.gz ... Passed
+    extract.py ... Passed
+    prepare.py ... Passed
+    verify-build.py ... Passed
+    check.sh ... Passed
+    Check.cs ... Passed
+    InspectApi.cs ... Passed
+    compare-api.py ... Passed
+    AspNetCore.pubkey.hex ... Passed
+    published-provenance.json ... Passed
+    published-metadata.json ... Passed
+    published-api.json ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+==> Starting prepare()...
+Extracted complete three-library source trees/shared inputs into short source root: 61 files
+PASS full original Extensions6 source/resource inputs: {'Microsoft.Extensions.Primitives': 12, 'Microsoft.Extensions.FileProviders.Abstractions': 9, 'Microsoft.Extensions.FileSystemGlobbing': 35}
+==> Removing existing $pkgdir/ directory...
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\prepared\Microsoft.Extensions.Primitives\Library.csproj (in 133 ms).
+  Library -> E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\prepared\Microsoft.Extensions.Primitives\bin\Release\net8.0\Microsoft.Extensions.Primitives.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:08.03
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\prepared\Microsoft.Extensions.FileProviders.Abstractions\Library.csproj (in 119 ms).
+  1 of 2 projects are up-to-date for restore.
+  Library -> E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\prepared\Microsoft.Extensions.Primitives\bin\Release\net8.0\Microsoft.Extensions.Primitives.dll
+  Library -> E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\prepared\Microsoft.Extensions.FileProviders.Abstractions\bin\Release\net8.0\Microsoft.Extensions.FileProviders.Abstractions.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.33
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\prepared\Microsoft.Extensions.FileSystemGlobbing\Library.csproj (in 94 ms).
+  Library -> E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\prepared\Microsoft.Extensions.FileSystemGlobbing\bin\Release\net8.0\Microsoft.Extensions.FileSystemGlobbing.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:06.48
+PASS all56 actual unchanged original C# compiler inputs, three generated resource bindings and six SDK metadata files
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Successfully created package 'E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\feed\Microsoft.Extensions.Primitives.6.0.0.nupkg'.
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Successfully created package 'E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\feed\Microsoft.Extensions.FileProviders.Abstractions.6.0.0.nupkg'.
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Successfully created package 'E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\feed\Microsoft.Extensions.FileSystemGlobbing.6.0.0.nupkg'.
+==> Starting check()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\check\Check.csproj (in 283 ms).
+  Check -> E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\check\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:06.10
+PASS exact three source identities, six resource manifests and all20 original string values
+PASS source primitives: string/Unicode slices and values, tokenization, resubscription, composite notification and disposal
+PASS source file provider abstractions: null files/directories/watch, Unicode name and missing-stream error
+PASS source globbing: actual owned files, recursive includes/excludes, case/Unicode, in-memory matching and stems
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\check\metadata\Inspect.csproj (in 774 ms).
+  Inspect -> E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\check\metadata\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:06.94
+PASS exact382 public/protected API declarations and all three assembly identities
+PASS fresh Extensions6 source-only consumer, owned behavior/resource checks and complete API comparison
+==> Starting package_mingw-w64-clang-x86_64-dotnet-extensions-primitives6()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-extensions-primitives6"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Starting package_mingw-w64-clang-x86_64-dotnet-fileproviders-abstractions6()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-fileproviders-abstractions6"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Starting package_mingw-w64-clang-x86_64-dotnet-filesystem-globbing6()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-filesystem-globbing6"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-extensions6 6.0.0-1 (27 Oct 2026 08:36:17)
+
+
+--- install-refs.log ---
+warning: mingw-w64-clang-x86_64-dotnet-extensions-primitives6-6.0.0-1 is up to date -- reinstalling
+warning: mingw-w64-clang-x86_64-dotnet-fileproviders-abstractions6-6.0.0-1 is up to date -- reinstalling
+warning: mingw-w64-clang-x86_64-dotnet-filesystem-globbing6-6.0.0-1 is up to date -- reinstalling
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (3) mingw-w64-clang-x86_64-dotnet-extensions-primitives6-6.0.0-1  mingw-w64-clang-x86_64-dotnet-fileproviders-abstractions6-6.0.0-1  mingw-w64-clang-x86_64-dotnet-filesystem-globbing6-6.0.0-1
+
+Total Installed Size:  0.10 MiB
+Net Upgrade Size:      0.00 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+reinstalling mingw-w64-clang-x86_64-dotnet-extensions-primitives6...
+reinstalling mingw-w64-clang-x86_64-dotnet-fileproviders-abstractions6...
+reinstalling mingw-w64-clang-x86_64-dotnet-filesystem-globbing6...
+
+
+--- installed-check-refs.log ---
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\extensions6-installed-check-20261027-refs\Check.csproj (in 393 ms).
+  Check -> E:\msys64\home\topkek\extensions6-installed-check-20261027-refs\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:06.26
+PASS exact three source identities, six resource manifests and all20 original string values
+PASS source primitives: string/Unicode slices and values, tokenization, resubscription, composite notification and disposal
+PASS source file provider abstractions: null files/directories/watch, Unicode name and missing-stream error
+PASS source globbing: actual owned files, recursive includes/excludes, case/Unicode, in-memory matching and stems
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\extensions6-installed-check-20261027-refs\metadata\Inspect.csproj (in 393 ms).
+  Inspect -> E:\msys64\home\topkek\extensions6-installed-check-20261027-refs\metadata\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:07.09
+PASS exact382 public/protected API declarations and all three assembly identities
+PASS fresh Extensions6 source-only consumer, owned behavior/resource checks and complete API comparison
+
+
+--- makepkg.log ---
+==> Making package: mingw-w64-dotnet-extensions6 6.0.0-1 (27 Oct 2026 07:57:52)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found runtime-4822e3c3aa77eb82b2fb33c9321f923cf11ddde6.tar.gz
+  -> Found prepare.py
+  -> Found verify-build.py
+  -> Found check.sh
+  -> Found Check.cs
+  -> Found InspectApi.cs
+  -> Found compare-api.py
+  -> Found AspNetCore.pubkey.hex
+  -> Found published-provenance.json
+  -> Found published-metadata.json
+  -> Found published-api.json
+  -> Found README.md
+==> Validating source files with sha256sums...
+    runtime-4822e3c3aa77eb82b2fb33c9321f923cf11ddde6.tar.gz ... Passed
+    prepare.py ... Passed
+    verify-build.py ... Passed
+    check.sh ... Passed
+    Check.cs ... Passed
+    InspectApi.cs ... Passed
+    compare-api.py ... Passed
+    AspNetCore.pubkey.hex ... Passed
+    published-provenance.json ... Passed
+    published-metadata.json ... Passed
+    published-api.json ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+  -> Extracting runtime-4822e3c3aa77eb82b2fb33c9321f923cf11ddde6.tar.gz with bsdtar
+==> Starting prepare()...
+PASS full original Extensions6 source/resource inputs: {'Microsoft.Extensions.Primitives': 12, 'Microsoft.Extensions.FileProviders.Abstractions': 9, 'Microsoft.Extensions.FileSystemGlobbing': 35}
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\prepared\Microsoft.Extensions.Primitives\Library.csproj (in 260 ms).
+  Library -> E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\prepared\Microsoft.Extensions.Primitives\bin\Release\net8.0\Microsoft.Extensions.Primitives.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:11.86
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\prepared\Microsoft.Extensions.FileProviders.Abstractions\Library.csproj (in 257 ms).
+  1 of 2 projects are up-to-date for restore.
+  Library -> E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\prepared\Microsoft.Extensions.Primitives\bin\Release\net8.0\Microsoft.Extensions.Primitives.dll
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Microsoft.Common.CurrentVersion.targets(2382,5): warning MSB3243: No way to resolve conflict between "System.Runtime, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" and "System.Runtime". Choosing "System.Runtime, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" arbitrarily. [E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\prepared\Microsoft.Extensions.FileProviders.Abstractions\Library.csproj]
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Microsoft.Common.CurrentVersion.targets(2382,5): warning MSB3243: No way to resolve conflict between "System.Linq, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" and "System.Linq". Choosing "System.Linq, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" arbitrarily. [E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\prepared\Microsoft.Extensions.FileProviders.Abstractions\Library.csproj]
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Microsoft.Common.CurrentVersion.targets(2382,5): warning MSB3243: No way to resolve conflict between "System.Linq.Expressions, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" and "System.Linq.Expressions". Choosing "System.Linq.Expressions, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" arbitrarily. [E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\prepared\Microsoft.Extensions.FileProviders.Abstractions\Library.csproj]
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Microsoft.Common.CurrentVersion.targets(3345,5): error MSB3552: Resource file "../../runtime-4822e3c3aa77eb82b2fb33c9321f923cf11ddde6/src/libraries/Microsoft.Extensions.FileProviders.Abstractions/src/Resources/Strings.resx" cannot be found. [E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\prepared\Microsoft.Extensions.FileProviders.Abstractions\Library.csproj]
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Microsoft.Common.CurrentVersion.targets(3345,5): error MSB3552: Resource file "../../runtime-4822e3c3aa77eb82b2fb33c9321f923cf11ddde6/src/libraries/Microsoft.Extensions.FileProviders.Abstractions/src/Resources/Strings.resx" cannot be found. [E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\prepared\Microsoft.Extensions.FileProviders.Abstractions\Library.csproj]
+
+Build FAILED.
+
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Microsoft.Common.CurrentVersion.targets(2382,5): warning MSB3243: No way to resolve conflict between "System.Runtime, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" and "System.Runtime". Choosing "System.Runtime, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" arbitrarily. [E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\prepared\Microsoft.Extensions.FileProviders.Abstractions\Library.csproj]
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Microsoft.Common.CurrentVersion.targets(2382,5): warning MSB3243: No way to resolve conflict between "System.Linq, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" and "System.Linq". Choosing "System.Linq, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" arbitrarily. [E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\prepared\Microsoft.Extensions.FileProviders.Abstractions\Library.csproj]
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Microsoft.Common.CurrentVersion.targets(2382,5): warning MSB3243: No way to resolve conflict between "System.Linq.Expressions, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" and "System.Linq.Expressions". Choosing "System.Linq.Expressions, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" arbitrarily. [E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\prepared\Microsoft.Extensions.FileProviders.Abstractions\Library.csproj]
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Microsoft.Common.CurrentVersion.targets(3345,5): error MSB3552: Resource file "../../runtime-4822e3c3aa77eb82b2fb33c9321f923cf11ddde6/src/libraries/Microsoft.Extensions.FileProviders.Abstractions/src/Resources/Strings.resx" cannot be found. [E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\prepared\Microsoft.Extensions.FileProviders.Abstractions\Library.csproj]
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Microsoft.Common.CurrentVersion.targets(3345,5): error MSB3552: Resource file "../../runtime-4822e3c3aa77eb82b2fb33c9321f923cf11ddde6/src/libraries/Microsoft.Extensions.FileProviders.Abstractions/src/Resources/Strings.resx" cannot be found. [E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\prepared\Microsoft.Extensions.FileProviders.Abstractions\Library.csproj]
+    3 Warning(s)
+    2 Error(s)
+
+Time Elapsed 00:00:04.21
+==> ERROR: A failure occurred in build().
+    Aborting...
+
+
+--- makepkg2.log ---
+==> Making package: mingw-w64-dotnet-extensions6 6.0.0-1 (27 Oct 2026 08:10:26)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found runtime-4822e3c3aa77eb82b2fb33c9321f923cf11ddde6.tar.gz
+  -> Found extract.py
+  -> Found prepare.py
+  -> Found verify-build.py
+  -> Found check.sh
+  -> Found Check.cs
+  -> Found InspectApi.cs
+  -> Found compare-api.py
+  -> Found AspNetCore.pubkey.hex
+  -> Found published-provenance.json
+  -> Found published-metadata.json
+  -> Found published-api.json
+  -> Found README.md
+==> Validating source files with sha256sums...
+    runtime-4822e3c3aa77eb82b2fb33c9321f923cf11ddde6.tar.gz ... Passed
+    extract.py ... Passed
+    prepare.py ... Passed
+    verify-build.py ... Passed
+    check.sh ... Passed
+    Check.cs ... Passed
+    InspectApi.cs ... Passed
+    compare-api.py ... Passed
+    AspNetCore.pubkey.hex ... Passed
+    published-provenance.json ... Passed
+    published-metadata.json ... Passed
+    published-api.json ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+==> Starting prepare()...
+Traceback (most recent call last):
+  File "/home/topkek/extensions6-package.D5bnik/mingw-w64-dotnet-extensions6/src/extract.py", line 18, in <module>
+    assert member.name.startswith(prefix),member.name
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: runtime-4822e3c3aa77eb82b2fb33c9321f923cf11ddde6
+==> ERROR: A failure occurred in prepare().
+    Aborting...
+
+
+--- makepkg4.log ---
+==> Making package: mingw-w64-dotnet-extensions6 6.0.0-1 (27 Oct 2026 08:20:54)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found runtime-4822e3c3aa77eb82b2fb33c9321f923cf11ddde6.tar.gz
+  -> Found extract.py
+  -> Found prepare.py
+  -> Found verify-build.py
+  -> Found check.sh
+  -> Found Check.cs
+  -> Found InspectApi.cs
+  -> Found compare-api.py
+  -> Found AspNetCore.pubkey.hex
+  -> Found published-provenance.json
+  -> Found published-metadata.json
+  -> Found published-api.json
+  -> Found README.md
+==> Validating source files with sha256sums...
+    runtime-4822e3c3aa77eb82b2fb33c9321f923cf11ddde6.tar.gz ... Passed
+    extract.py ... Passed
+    prepare.py ... Passed
+    verify-build.py ... Passed
+    check.sh ... Passed
+    Check.cs ... Passed
+    InspectApi.cs ... Passed
+    compare-api.py ... Passed
+    AspNetCore.pubkey.hex ... Passed
+    published-provenance.json ... Passed
+    published-metadata.json ... Passed
+    published-api.json ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+==> Starting prepare()...
+Extracted complete three-library source trees/shared inputs into short source root: 61 files
+PASS full original Extensions6 source/resource inputs: {'Microsoft.Extensions.Primitives': 12, 'Microsoft.Extensions.FileProviders.Abstractions': 9, 'Microsoft.Extensions.FileSystemGlobbing': 35}
+==> Removing existing $pkgdir/ directory...
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\prepared\Microsoft.Extensions.Primitives\Library.csproj (in 57 ms).
+  Library -> E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\prepared\Microsoft.Extensions.Primitives\bin\Release\net8.0\Microsoft.Extensions.Primitives.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.63
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\prepared\Microsoft.Extensions.FileProviders.Abstractions\Library.csproj (in 88 ms).
+  1 of 2 projects are up-to-date for restore.
+  Library -> E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\prepared\Microsoft.Extensions.Primitives\bin\Release\net8.0\Microsoft.Extensions.Primitives.dll
+  Library -> E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\prepared\Microsoft.Extensions.FileProviders.Abstractions\bin\Release\net8.0\Microsoft.Extensions.FileProviders.Abstractions.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.75
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\prepared\Microsoft.Extensions.FileSystemGlobbing\Library.csproj (in 59 ms).
+  Library -> E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\prepared\Microsoft.Extensions.FileSystemGlobbing\bin\Release\net8.0\Microsoft.Extensions.FileSystemGlobbing.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.53
+PASS all56 actual unchanged original C# compiler inputs, three generated resource bindings and six SDK metadata files
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Sdks\NuGet.Build.Tasks.Pack\build\NuGet.Build.Tasks.Pack.targets(221,5): warning NU5131: References were found in the nuspec, but some reference assemblies were not found in both the nuspec and ref folder. Add the following reference assemblies: [E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\prepared\Microsoft.Extensions.Primitives\Library.csproj]
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Sdks\NuGet.Build.Tasks.Pack\build\NuGet.Build.Tasks.Pack.targets(221,5): warning NU5131: - Add Microsoft.Extensions.Primitives.dll to the net8.0 reference group in the nuspec [E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\prepared\Microsoft.Extensions.Primitives\Library.csproj]
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Sdks\NuGet.Build.Tasks.Pack\build\NuGet.Build.Tasks.Pack.targets(221,5): warning NU5131:  [E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\prepared\Microsoft.Extensions.Primitives\Library.csproj]
+  Successfully created package 'E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\feed\Microsoft.Extensions.Primitives.6.0.0.nupkg'.
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Sdks\NuGet.Build.Tasks.Pack\build\NuGet.Build.Tasks.Pack.targets(221,5): warning NU5131: References were found in the nuspec, but some reference assemblies were not found in both the nuspec and ref folder. Add the following reference assemblies: [E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\prepared\Microsoft.Extensions.FileProviders.Abstractions\Library.csproj]
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Sdks\NuGet.Build.Tasks.Pack\build\NuGet.Build.Tasks.Pack.targets(221,5): warning NU5131: - Add Microsoft.Extensions.FileProviders.Abstractions.dll to the net8.0 reference group in the nuspec [E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\prepared\Microsoft.Extensions.FileProviders.Abstractions\Library.csproj]
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Sdks\NuGet.Build.Tasks.Pack\build\NuGet.Build.Tasks.Pack.targets(221,5): warning NU5131:  [E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\prepared\Microsoft.Extensions.FileProviders.Abstractions\Library.csproj]
+  Successfully created package 'E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\feed\Microsoft.Extensions.FileProviders.Abstractions.6.0.0.nupkg'.
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Sdks\NuGet.Build.Tasks.Pack\build\NuGet.Build.Tasks.Pack.targets(221,5): warning NU5131: References were found in the nuspec, but some reference assemblies were not found in both the nuspec and ref folder. Add the following reference assemblies: [E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\prepared\Microsoft.Extensions.FileSystemGlobbing\Library.csproj]
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Sdks\NuGet.Build.Tasks.Pack\build\NuGet.Build.Tasks.Pack.targets(221,5): warning NU5131: - Add Microsoft.Extensions.FileSystemGlobbing.dll to the net8.0 reference group in the nuspec [E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\prepared\Microsoft.Extensions.FileSystemGlobbing\Library.csproj]
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Sdks\NuGet.Build.Tasks.Pack\build\NuGet.Build.Tasks.Pack.targets(221,5): warning NU5131:  [E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\prepared\Microsoft.Extensions.FileSystemGlobbing\Library.csproj]
+  Successfully created package 'E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\feed\Microsoft.Extensions.FileSystemGlobbing.6.0.0.nupkg'.
+==> Starting check()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\check\Check.csproj (in 201 ms).
+  Check -> E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\check\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.91
+PASS exact three source identities, six resource manifests and all20 original string values
+PASS source primitives: string/Unicode slices and values, tokenization, resubscription, composite notification and disposal
+PASS source file provider abstractions: null files/directories/watch, Unicode name and missing-stream error
+PASS source globbing: actual owned files, recursive includes/excludes, case/Unicode, in-memory matching and stems
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\check\metadata\Inspect.csproj (in 307 ms).
+  Inspect -> E:\msys64\home\topkek\extensions6-package.D5bnik\mingw-w64-dotnet-extensions6\src\check\metadata\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.86
+PASS exact382 public/protected API declarations and all three assembly identities
+PASS fresh Extensions6 source-only consumer, owned behavior/resource checks and complete API comparison
+==> Starting package_mingw-w64-clang-x86_64-dotnet-extensions-primitives6()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-extensions-primitives6"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Starting package_mingw-w64-clang-x86_64-dotnet-fileproviders-abstractions6()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-fileproviders-abstractions6"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Starting package_mingw-w64-clang-x86_64-dotnet-filesystem-globbing6()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-filesystem-globbing6"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-extensions6 6.0.0-1 (27 Oct 2026 08:21:59)
+

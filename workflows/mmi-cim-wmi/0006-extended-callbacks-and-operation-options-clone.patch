@@ -1,0 +1,378 @@
+--- a/Native/MI_Operation.cs
++++ b/Native/MI_Operation.cs
+@@ -58,6 +58,12 @@
+         
+         internal static MI_Operation Null { get { return null; } }
+ 
++        private Exception callbackError;
++        internal void RecordCallbackError(Exception error) { System.Threading.Interlocked.CompareExchange(ref callbackError, error, null); }
++        internal void ThrowCallbackError()
++        {
++            if (callbackError != null) System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(callbackError).Throw();
++        }
+         private MI_OperationCallbackBridge callbacks;
+         internal bool HasCallbacks => callbacks != null;
+         internal IntPtr SetCallbacks(MI_OperationCallbacks source)
+@@ -114,6 +120,7 @@
+             instance = instanceLocal;
+             errorMessage = errorMessageLocal.Value;
+             completionDetails = completionDetailsLocal;
++            ThrowCallbackError();
+             return resultLocal;
+         }
+ 
+@@ -147,6 +154,7 @@
+             machineID = machineIDLocal.Value;
+             errorMessage = errorMessageLocal.Value;
+             completionDetails = completionDetailsLocal;
++            ThrowCallbackError();
+             return resultLocal;
+         }
+ 
+@@ -172,6 +180,7 @@
+             classResult = classResultLocal;
+             errorMessage = errorMessageLocal.Value;
+             completionDetails = completionDetailsLocal;
++            ThrowCallbackError();
+             return resultLocal;
+         }
+ 
+--- a/Native/MI_OperationCallbackBridge.cs
++++ b/Native/MI_OperationCallbackBridge.cs
+@@ -3,6 +3,7 @@
+ using System;
+ using System.Runtime.InteropServices;
+ using System.Threading;
++using System.Collections.Generic;
+ using Microsoft.Management.Infrastructure.Internal;
+ 
+ namespace Microsoft.Management.Infrastructure.Native
+@@ -13,7 +14,7 @@
+     {
+         private readonly MI_Operation owner;
+         private readonly MI_OperationCallbacks callbacks;
+-        private readonly Delegate resultDelegate;
++        private readonly List<Delegate> delegates = new List<Delegate>();
+         private GCHandle root;
+         internal IntPtr Pointer { get; private set; }
+         internal static int ActiveCount;
+@@ -31,33 +32,93 @@
+ 
+         internal MI_OperationCallbackBridge(MI_Operation owner, MI_OperationCallbacks callbacks)
+         {
+-            if (callbacks.promptUser != null || callbacks.writeError != null || callbacks.writeMessage != null ||
+-                callbacks.writeProgress != null || callbacks.streamedParameterResult != null)
+-                throw new NotSupportedException("Extended MI semantics and streamed parameters are not yet ported.");
++            if (callbacks.streamedParameterResult != null)
++                throw new NotSupportedException("Streamed parameters are not yet ported.");
+             this.owner = owner;
+             this.callbacks = callbacks;
+-            int slot;
+-            if (callbacks.instanceResult != null)
+-            {
+-                resultDelegate = new InstanceCallback(InstanceResult);
+-                slot = 5;
+-            }
+-            else if (callbacks.classResult != null)
+-            {
+-                resultDelegate = new InstanceCallback(ClassResult);
+-                slot = 7;
+-            }
+-            else if (callbacks.indicationResult != null)
+-            {
+-                resultDelegate = new IndicationCallback(IndicationResult);
+-                slot = 6;
+-            }
+-            else throw new NotSupportedException("An asynchronous MI result callback is required.");
+             Pointer = Marshal.AllocHGlobal(IntPtr.Size * 9);
+             for (int i = 0; i < 9; i++) Marshal.WriteIntPtr(Pointer, i * IntPtr.Size, IntPtr.Zero);
+-            Marshal.WriteIntPtr(Pointer, slot * IntPtr.Size, Marshal.GetFunctionPointerForDelegate(resultDelegate));
++            try
++            {
++                if (callbacks.promptUser != null) Set(1, new PromptCallback(PromptUser));
++                if (callbacks.writeError != null) Set(2, new ErrorCallback(WriteError));
++                if (callbacks.writeMessage != null) Set(3, new MessageCallback(WriteMessage));
++                if (callbacks.writeProgress != null) Set(4, new ProgressCallback(WriteProgress));
++                if (callbacks.instanceResult != null) Set(5, new InstanceCallback(InstanceResult));
++                if (callbacks.indicationResult != null) Set(6, new IndicationCallback(IndicationResult));
++                if (callbacks.classResult != null) Set(7, new InstanceCallback(ClassResult));
++            }
++            catch { Marshal.FreeHGlobal(Pointer); Pointer = IntPtr.Zero; throw; }
+             root = GCHandle.Alloc(this);
+             Interlocked.Increment(ref ActiveCount);
++        }
++
++        [UnmanagedFunctionPointer(MI_PlatformSpecific.MiCallConvention)]
++        private delegate void PromptCallback(IntPtr operation, IntPtr context, IntPtr message, MI_PromptType type, IntPtr reply);
++        [UnmanagedFunctionPointer(MI_PlatformSpecific.MiCallConvention)]
++        private delegate void ErrorCallback(IntPtr operation, IntPtr context, IntPtr error, IntPtr reply);
++        [UnmanagedFunctionPointer(MI_PlatformSpecific.MiCallConvention)]
++        private delegate void MessageCallback(IntPtr operation, IntPtr context, uint channel, IntPtr message);
++        [UnmanagedFunctionPointer(MI_PlatformSpecific.MiCallConvention)]
++        private delegate void ProgressCallback(IntPtr operation, IntPtr context, IntPtr activity, IntPtr current, IntPtr status, uint percent, uint seconds);
++        [UnmanagedFunctionPointer(MI_PlatformSpecific.MiCallConvention)]
++        private delegate MI_Result ReplyCallback(IntPtr operation, MI_OperationCallback_ResponseType response);
++        private void Set(int slot, Delegate callback)
++        {
++            delegates.Add(callback);
++            Marshal.WriteIntPtr(Pointer, slot * IntPtr.Size, Marshal.GetFunctionPointerForDelegate(callback));
++        }
++        private void RecordError(CimOperationCallbackProcessingContext context, Exception error)
++        {
++            owner.RecordCallbackError(error);
++            try { callbacks.InternalErrorCallback?.Invoke(context, error); } catch { }
++        }
++        private void WithReply(IntPtr operation, IntPtr reply,
++            Action<CimOperationCallbackProcessingContext, Action<MI_OperationCallback_ResponseType>> action)
++        {
++            var context = new CimOperationCallbackProcessingContext(callbacks.ManagedOperationContext);
++            var response = MI_OperationCallback_ResponseType.No;
++            Exception pendingError = null;
++            try { action(context, value => response = value); }
++            catch (Exception error) { response = MI_OperationCallback_ResponseType.No; pendingError = error; }
++            finally
++            {
++                try
++                {
++                    if (reply != IntPtr.Zero)
++                    {
++                        MI_Result result = Marshal.GetDelegateForFunctionPointer<ReplyCallback>(reply)(operation, response);
++                        CimException.ThrowIfMiResultFailure(result);
++                    }
++                }
++                catch (Exception error) { pendingError = pendingError ?? error; }
++                // Send the inquiry response before reporting/cancelling an
++                // async operation, so the provider cannot wait on our reply.
++                if (pendingError != null) RecordError(context, pendingError);
++                GC.KeepAlive(this);
++            }
++        }
++        private void PromptUser(IntPtr operation, IntPtr context, IntPtr message, MI_PromptType type, IntPtr reply)
++        {
++            WithReply(operation, reply, (processing, respond) => callbacks.promptUser(owner, processing,
++                MI_PlatformSpecific.PtrToString(message), type, (ignored, value) => respond(value)));
++        }
++        private void WriteError(IntPtr operation, IntPtr context, IntPtr error, IntPtr reply)
++        {
++            using (var value = Instance(error))
++                WithReply(operation, reply, (processing, respond) => callbacks.writeError(owner, processing,
++                    value, (ignored, response) => respond(response)));
++        }
++        private void WriteMessage(IntPtr operation, IntPtr context, uint channel, IntPtr message)
++        {
++            Invoke(operation, IntPtr.Zero, processing => callbacks.writeMessage(owner, processing,
++                (MI_WriteMessageChannel)channel, MI_PlatformSpecific.PtrToString(message)));
++        }
++        private void WriteProgress(IntPtr operation, IntPtr context, IntPtr activity, IntPtr current, IntPtr status, uint percent, uint seconds)
++        {
++            Invoke(operation, IntPtr.Zero, processing => callbacks.writeProgress(owner, processing,
++                MI_PlatformSpecific.PtrToString(activity), MI_PlatformSpecific.PtrToString(current),
++                MI_PlatformSpecific.PtrToString(status), percent, seconds));
+         }
+ 
+         private void Invoke(IntPtr operation, IntPtr acknowledgement, Action<CimOperationCallbackProcessingContext> action)
+@@ -67,7 +128,7 @@
+             catch (Exception error)
+             {
+                 // A managed exception must never unwind through an unmanaged callback.
+-                try { callbacks.InternalErrorCallback?.Invoke(context, error); } catch { }
++                RecordError(context, error);
+             }
+             finally
+             {
+--- a/Native/MI_OperationOptions.cs
++++ b/Native/MI_OperationOptions.cs
+@@ -233,11 +233,23 @@
+             )
+         {
+             MI_OperationOptions newOperationOptionsLocal =
+-                MI_OperationOptions.NewIndirectPtr();
++                MI_OperationOptions.NewDirectPtr();
+ 
+             MI_Result resultLocal = this.ft.Clone(this,
+                 newOperationOptionsLocal);
+ 
++            // Windows MI_OperationOptions_Clone omits the configured timeout.
++            // Preserve it explicitly for the managed deep-copy constructor.
++            if (resultLocal == MI_Result.MI_RESULT_OK)
++            {
++                MI_Interval timeout;
++                UInt32 index;
++                MI_OperationOptionsFlags flags;
++                MI_Result timeoutResult = GetInterval("__MI_OPERATIONOPTIONS_TIMEOUT", out timeout, out index, out flags);
++                if (timeoutResult == MI_Result.MI_RESULT_OK)
++                    resultLocal = newOperationOptionsLocal.SetInterval("__MI_OPERATIONOPTIONS_TIMEOUT", timeout, flags);
++                else if (timeoutResult != MI_Result.MI_RESULT_NOT_FOUND) resultLocal = timeoutResult;
++            }
+             newOperationOptions = newOperationOptionsLocal;
+             return resultLocal;
+         }
+--- a/Options/Internal/CimOperationOptions.cs
++++ b/Options/Internal/CimOperationOptions.cs
+@@ -110,19 +110,22 @@
+                 throw new ArgumentNullException("optionsToClone");
+             }
+ 
+-            this._operationCallback = optionsToClone.GetOperationCallbacks();
++            optionsToClone.AssertNotDisposed();
++            this._operationCallback = new MI_OperationCallbacks();
+             _writeMessageCallback = optionsToClone._writeMessageCallback;
+             _writeProgressCallback = optionsToClone._writeProgressCallback;
+             _writeErrorCallback = optionsToClone._writeErrorCallback;
+             _promptUserCallback = optionsToClone._promptUserCallback;
+-            this._operationOptionsHandle = new Lazy<MI_OperationOptions>(
+-                    delegate
+-                    {
+-                        MI_OperationOptions tmp;
+-                        MI_Result result = optionsToClone.OperationOptionsHandle.Clone(out tmp);
+-                        CimException.ThrowIfMiResultFailure(result);
+-                        return tmp;
+-                    });
++            CancellationToken = optionsToClone.CancellationToken;
++            KeysOnly = optionsToClone.KeysOnly;
++            ClassNamesOnly = optionsToClone.ClassNamesOnly;
++            Flags = optionsToClone.Flags;
++            EnableMethodResultStreaming = optionsToClone.EnableMethodResultStreaming;
++            ShortenLifetimeOfResults = optionsToClone.ShortenLifetimeOfResults;
++            MI_OperationOptions cloned;
++            MI_Result result = optionsToClone.OperationOptionsHandleOnDemand.Clone(out cloned);
++            CimException.ThrowIfMiResultFailure(result);
++            this._operationOptionsHandle = new Lazy<MI_OperationOptions>(() => cloned);
+         }
+ 
+         /// <summary>
+@@ -318,6 +321,36 @@
+ 
+         #region PSSEMANTICS
+ 
++        private static void InvokeUserCallback(CimOperationCallbackProcessingContext context, Action action)
++        {
++            var receiver = context.ManagedOperationContext as CimAsyncCallbacksReceiverBase;
++            if (receiver != null) { receiver.CallIntoUserCallback(context, action); return; }
++            context.InUserCode = true;
++            try { action(); } finally { context.InUserCode = false; }
++        }
++        internal MI_OperationCallbacks CreateCallbacks()
++        {
++            AssertNotDisposed();
++            var result = new MI_OperationCallbacks();
++            if (_writeMessageCallback != null) result.writeMessage = (operation, context, channel, message) =>
++                WriteMessageCallbackInternal((CimOperationCallbackProcessingContext)context, operation, (uint)channel, message);
++            if (_writeProgressCallback != null) result.writeProgress = (operation, context, activity, current, status, percent, seconds) =>
++                WriteProgressCallbackInternal((CimOperationCallbackProcessingContext)context, operation, activity, current, status, percent, seconds);
++            if (_promptUserCallback != null) result.promptUser = (operation, context, message, type, reply) =>
++            {
++                MI_OperationCallback_ResponseType answer;
++                PromptUserCallbackInternal((CimOperationCallbackProcessingContext)context, operation, message, type, out answer);
++                reply(operation, answer);
++            };
++            if (_writeErrorCallback != null) result.writeError = (operation, context, error, reply) =>
++            {
++                MI_OperationCallback_ResponseType answer;
++                WriteErrorCallbackInternal((CimOperationCallbackProcessingContext)context, operation, error, out answer);
++                reply(operation, answer);
++            };
++            return result;
++        }
++
+         internal void WriteMessageCallbackInternal(
+             CimOperationCallbackProcessingContext callbackProcessingContext,
+             MI_Operation operationHandle,
+@@ -326,8 +359,7 @@
+         {
+             if (_writeMessageCallback != null)
+             {
+-                var callbacksReceiverBase = (CimAsyncCallbacksReceiverBase)callbackProcessingContext.ManagedOperationContext;
+-                callbacksReceiverBase.CallIntoUserCallback(
++                InvokeUserCallback(
+                     callbackProcessingContext,
+                     () => _writeMessageCallback(channel, message));
+             }
+@@ -346,8 +378,7 @@
+         {
+             if (_writeProgressCallback != null)
+             {
+-                var callbacksReceiverBase = (CimAsyncCallbacksReceiverBase)callbackProcessingContext.ManagedOperationContext;
+-                callbacksReceiverBase.CallIntoUserCallback(
++                InvokeUserCallback(
+                     callbackProcessingContext,
+                     () => _writeProgressCallback(activity, currentOperation, statusDescription, percentageCompleted, secondsRemaining));
+             }
+@@ -371,9 +402,8 @@
+                     if (!instanceHandle.IsNull)
+                     {
+                         cimInstance = new CimInstance(instanceHandle.Clone());
+-                        var callbacksReceiverBase = (CimAsyncCallbacksReceiverBase)callbackProcessingContext.ManagedOperationContext;
+                         CimResponseType userResponse = CimResponseType.None;
+-                        callbacksReceiverBase.CallIntoUserCallback(
++                        InvokeUserCallback(
+                             callbackProcessingContext,
+                             delegate { userResponse = _writeErrorCallback(cimInstance); });
+                         response = (MI_OperationCallback_ResponseType)userResponse;
+@@ -401,9 +431,8 @@
+             response = MI_OperationCallback_ResponseType.Yes;
+             if (_promptUserCallback != null)
+             {
+-                var callbacksReceiverBase = (CimAsyncCallbacksReceiverBase)callbackProcessingContext.ManagedOperationContext;
+                 CimResponseType userResponse = CimResponseType.None;
+-                callbacksReceiverBase.CallIntoUserCallback(
++                InvokeUserCallback(
+                     callbackProcessingContext,
+                     delegate { userResponse = _promptUserCallback(message, (CimPromptType)promptType); });
+                 response = (MI_OperationCallback_ResponseType)userResponse;
+@@ -487,8 +516,6 @@
+                 }
+                 this.AssertNotDisposed();
+                 _writeMessageCallback = value;
+-                // TODO: Get callbacks working
+-                //OperationCallback.writeMessage = this.WriteMessageCallbackInternal;
+             }
+         }
+ 
+@@ -507,8 +534,6 @@
+                 }
+                 this.AssertNotDisposed();
+                 _writeProgressCallback = value;
+-                // TODO: Get callbacks working
+-                //OperationCallback.WriteProgressCallback = this.WriteProgressCallbackInternal;
+             }
+         }
+ 
+@@ -527,8 +552,6 @@
+                 }
+                 this.AssertNotDisposed();
+                 _writeErrorCallback = value;
+-                // TODO: Get callbacks working
+-                //OperationCallback.WriteErrorCallback = this.WriteErrorCallbackInternal;
+             }
+         }
+ 
+@@ -547,8 +570,6 @@
+                 }
+                 this.AssertNotDisposed();
+                 _promptUserCallback = value;
+-                // TODO: Get callbacks working
+-                //OperationCallback.PromptUserCallback = this.PromptUserCallbackInternal;
+             }
+         }
+ 
+@@ -866,18 +887,7 @@
+     {
+         static internal MI_OperationCallbacks GetOperationCallbacks(this CimOperationOptions operationOptions)
+         {
+-            if (operationOptions != null && operationOptions.HasExtendedSemantics)
+-                throw new NotSupportedException("Extended MI semantic callbacks are not yet ported.");
+-            var operationCallbacks = new MI_OperationCallbacks();
+-            if (operationOptions != null)
+-            {
+-                // TODO: Uncomment these
+-                //operationCallbacks.writeError = operationOptions.OperationCallback.WriteErrorCallback;
+-                //operationCallbacks.writeMessage = operationOptions.OperationCallback.WriteMessageCallback;
+-                //operationCallbacks.writeProgress = operationOptions.OperationCallback.WriteProgressCallback;
+-                //operationCallbacks.promptUser = operationOptions.OperationCallback.PromptUserCallback;
+-            }
+-            return operationCallbacks;
++            return operationOptions != null ? operationOptions.CreateCallbacks() : new MI_OperationCallbacks();
+         }
+ 
+         static internal MI_OperationCallbacks GetOperationCallbacks(

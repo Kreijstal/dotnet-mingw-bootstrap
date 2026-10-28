@@ -1,0 +1,42 @@
+--- a/Native/MI_Session.cs
++++ b/Native/MI_Session.cs
+@@ -427,7 +427,10 @@
+ 
+         internal void AssertValidInternalState()
+         {
+-            throw new NotImplementedException();
++            if (this.IsNull || this.ft == null)
++            {
++                throw new InvalidOperationException("The native MI object is not initialized.");
++            }
+         }
+ 
+         internal static MI_Session Null { get { return null; } }
+--- a/Native/MI_Operation.cs
++++ b/Native/MI_Operation.cs
+@@ -50,7 +50,10 @@
+ 
+         internal void AssertValidInternalState()
+         {
+-            throw new NotImplementedException();
++            if (this.IsNull || this.ft == null)
++            {
++                throw new InvalidOperationException("The native MI object is not initialized.");
++            }
+         }
+         
+         internal static MI_Operation Null { get { return null; } }
+--- a/Native/MI_Instance.cs
++++ b/Native/MI_Instance.cs
+@@ -95,7 +95,10 @@
+ 
+         internal void AssertValidInternalState()
+         {
+-            throw new NotImplementedException();
++            if (this.IsNull || this.ft == null)
++            {
++                throw new InvalidOperationException("The native MI object is not initialized.");
++            }
+         }
+ 
+         internal static MI_Instance Null { get { return null; } }

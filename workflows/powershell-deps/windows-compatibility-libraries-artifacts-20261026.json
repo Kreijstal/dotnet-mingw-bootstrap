@@ -1,0 +1,138 @@
+[
+  {
+    "recipe": "mingw-w64-dotnet-windows-compatibility-libraries",
+    "package_suffix": "dotnet-codedom",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-codedom-8.0.31-1-any.pkg.tar.zst",
+    "sha256": "b4ba6e4902d318add6197d8bcc148c570dc3496582aca939b4e44f11b5e3507c",
+    "nuget_id": "System.CodeDom",
+    "nuget_version": "8.0.0",
+    "dependencies": {},
+    "source_tag": "v8.0.31",
+    "source_sha256": "b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070",
+    "removed_binary_count": 0,
+    "resource_sets": 9,
+    "resource_strings": 967
+  },
+  {
+    "recipe": "mingw-w64-dotnet-windows-compatibility-libraries",
+    "package_suffix": "dotnet-reflection-context",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-reflection-context-8.0.31-1-any.pkg.tar.zst",
+    "sha256": "fa2dc0f5697a239447293b99c624976ba272e3b010b15f085bdff5f18637bc72",
+    "nuget_id": "System.Reflection.Context",
+    "nuget_version": "8.0.0",
+    "dependencies": {},
+    "source_tag": "v8.0.31",
+    "source_sha256": "b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070",
+    "removed_binary_count": 0,
+    "resource_sets": 9,
+    "resource_strings": 967
+  },
+  {
+    "recipe": "mingw-w64-dotnet-windows-compatibility-libraries",
+    "package_suffix": "dotnet-composition",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-composition-8.0.31-1-any.pkg.tar.zst",
+    "sha256": "169e0364bafb5913258110e3910e9dbba19bd4200e4ab0c1ef41c1aa35a23872",
+    "nuget_id": "System.ComponentModel.Composition",
+    "nuget_version": "8.0.0",
+    "dependencies": {},
+    "source_tag": "v8.0.31",
+    "source_sha256": "b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070",
+    "removed_binary_count": 0,
+    "resource_sets": 9,
+    "resource_strings": 967
+  },
+  {
+    "recipe": "mingw-w64-dotnet-windows-compatibility-libraries",
+    "package_suffix": "dotnet-composition-registration",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-composition-registration-8.0.31-1-any.pkg.tar.zst",
+    "sha256": "6a4ca1a0801275a1b5ee9a067373420157ab5f720a34ba229ee966719112c842",
+    "nuget_id": "System.ComponentModel.Composition.Registration",
+    "nuget_version": "8.0.0",
+    "dependencies": {
+      "System.ComponentModel.Composition": "8.0.0",
+      "System.Reflection.Context": "8.0.0"
+    },
+    "source_tag": "v8.0.31",
+    "source_sha256": "b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070",
+    "removed_binary_count": 0,
+    "resource_sets": 9,
+    "resource_strings": 967
+  },
+  {
+    "recipe": "mingw-w64-dotnet-windows-compatibility-libraries",
+    "package_suffix": "dotnet-odbc",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-odbc-8.0.31-1-any.pkg.tar.zst",
+    "sha256": "2acab096aae1a16b90e09a2a27e118416259784a63d70d740d58fa08fe19df85",
+    "nuget_id": "System.Data.Odbc",
+    "nuget_version": "8.0.1",
+    "dependencies": {},
+    "source_tag": "v8.0.31",
+    "source_sha256": "b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070",
+    "removed_binary_count": 0,
+    "resource_sets": 9,
+    "resource_strings": 967
+  },
+  {
+    "recipe": "mingw-w64-dotnet-windows-compatibility-libraries",
+    "package_suffix": "dotnet-oledb",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-oledb-8.0.31-1-any.pkg.tar.zst",
+    "sha256": "2b6723da78c8c7d4143f858f056fe2ed883494df887e76709c2b7f180fd013a9",
+    "nuget_id": "System.Data.OleDb",
+    "nuget_version": "8.0.1",
+    "dependencies": {
+      "System.Configuration.ConfigurationManager": "8.0.1",
+      "System.Diagnostics.PerformanceCounter": "8.0.1"
+    },
+    "source_tag": "v8.0.31",
+    "source_sha256": "b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070",
+    "removed_binary_count": 0,
+    "resource_sets": 9,
+    "resource_strings": 967
+  },
+  {
+    "recipe": "mingw-w64-dotnet-windows-compatibility-libraries",
+    "package_suffix": "dotnet-directoryservices-accountmanagement",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-directoryservices-accountmanagement-8.0.31-1-any.pkg.tar.zst",
+    "sha256": "31ea9a974e98c69205831770f57fd01beb3531d385ad2ead995dfcf4c67f91dc",
+    "nuget_id": "System.DirectoryServices.AccountManagement",
+    "nuget_version": "8.0.1",
+    "dependencies": {
+      "System.Configuration.ConfigurationManager": "8.0.1",
+      "System.DirectoryServices": "8.0.0",
+      "System.DirectoryServices.Protocols": "8.0.2"
+    },
+    "source_tag": "v8.0.31",
+    "source_sha256": "b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070",
+    "removed_binary_count": 0,
+    "resource_sets": 9,
+    "resource_strings": 967
+  },
+  {
+    "recipe": "mingw-w64-dotnet-windows-compatibility-libraries",
+    "package_suffix": "dotnet-io-ports",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-io-ports-8.0.31-1-any.pkg.tar.zst",
+    "sha256": "8858bfc03b824f3070cea8f8a83ec0dfde24cc581572ff617988c5436eadf0bb",
+    "nuget_id": "System.IO.Ports",
+    "nuget_version": "8.0.0",
+    "dependencies": {},
+    "source_tag": "v8.0.31",
+    "source_sha256": "b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070",
+    "removed_binary_count": 0,
+    "resource_sets": 9,
+    "resource_strings": 967
+  },
+  {
+    "recipe": "mingw-w64-dotnet-windows-compatibility-libraries",
+    "package_suffix": "dotnet-speech",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-speech-8.0.31-1-any.pkg.tar.zst",
+    "sha256": "3bc45792cf44ac4b9fec5d5fe12cd696d068a8cb5d63b550671c393635943e68",
+    "nuget_id": "System.Speech",
+    "nuget_version": "8.0.0",
+    "dependencies": {},
+    "source_tag": "v8.0.31",
+    "source_sha256": "b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070",
+    "removed_binary_count": 0,
+    "resource_sets": 9,
+    "resource_strings": 967
+  }
+]

@@ -1,0 +1,315 @@
+Source PowerShellGet2.2.5-1 packaging and installed integration, 2026-10-27
+
+Remote build root: /home/topkek/powershellget-package.X5gJBE/mingw-w64-powershell-powershellget
+Clean build: PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm (makepkg3.log, exit0).
+Install: pacman -U --noconfirm mingw-w64-clang-x86_64-powershell-powershellget-2.2.5-1-any.pkg.tar.zst (exit0).
+Fresh installed feed: bash check.sh /home/topkek/powershellget-installed-check-20261027 (exit0).
+Installed loose byte/import checks: bash /home/topkek/powershellget-package.X5gJBE/pg-installed-loose-smoke.sh (exit0).
+Independent audit: python3 tests/powershell-deps/audit-powershellget.py (exit0).
+Production module build/consumers: no warnings/errors. Test host7.4.20-3 is separately verified.
+Complete original assembler,166 pinned source inputs,16 source/published module asset comparisons.
+No production algorithm patches. Source NuGet and loose module contents are byte identical.
+Both complete module and script local lifecycle fixtures pass with real original Start-Job subprocesses.
+Original local AllVersions stable-filter Boolean/string quirk retained and explicitly tested.
+Core Update-Script moves AllUsers to CurrentUser; two initially absent fixture files are verified/uninstalled, with provenance/byte-only failure cleanup.
+Earlier makepkg.log/makepkg2.log failures retained: fixture scope and missing original child console entry.
+Two early misplaced fixture directories were removed only after exact payload bytes and source-repository provenance checks.
+An initial independent-audit Content_Types check misread .rels via pathlib.suffix; verifier fixed and rerun passed. Package metadata was correct.
+Limits: authenticated/remote feeds, network publishing/bootstrap, broad DSC and complete shipping PowerShell/SDK remain open.
+Actual runtime remains source .NET8.0.0; no servicing claims or machine policy/trust-store changes.
+
+--- makepkg3.log ---
+==> Making package: mingw-w64-powershell-powershellget 2.2.5-1 (27 Oct 2026 07:18:58)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found powershellget-22a87ee00bc461fe49068c9e8e1b079bfdc6c3f8.tar.gz
+  -> Found prepare.py
+  -> Found BuildModule.ps1
+  -> Found pack.py
+  -> Found check.sh
+  -> Found verify-restored.py
+  -> Found Smoke.ps1
+  -> Found Offline.ps1
+  -> Found make-fixtures.py
+  -> Found published-provenance.json
+  -> Found README.md
+==> Validating source files with sha256sums...
+    powershellget-22a87ee00bc461fe49068c9e8e1b079bfdc6c3f8.tar.gz ... Passed
+    prepare.py ... Passed
+    BuildModule.ps1 ... Passed
+    pack.py ... Passed
+    check.sh ... Passed
+    verify-restored.py ... Passed
+    Smoke.ps1 ... Passed
+    Offline.ps1 ... Passed
+    make-fixtures.py ... Passed
+    published-provenance.json ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+  -> Extracting powershellget-22a87ee00bc461fe49068c9e8e1b079bfdc6c3f8.tar.gz with bsdtar
+==> Starting prepare()...
+PASS complete original source inventory and assembler: 166 files
+==> Removing existing $pkgdir/ directory...
+==> Starting build()...
+PASS original PowerShellGet module assembly function completed
+PASS all16 source/published module assets and complete source-only package: /home/topkek/powershellget-package.X5gJBE/mingw-w64-powershell-powershellget/src/feed/powershellget.2.2.5.nupkg
+==> Starting check()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershellget-package.X5gJBE\mingw-w64-powershell-powershellget\src\check\Restore.csproj (in 341 ms).
+PASS fresh PowerShellGet restore: all16 module assets and installed source PackageManagement implementation bytes
+PASS owned offline module feed created
+PASS exact source PowerShellGet2.2.5 import and all exported functions against installed source PackageManagement
+PASS source PowerShellGet repository persistence, find, dependency save/install, installed Unicode module execution, update and uninstall
+PASS source PowerShellGet script metadata create/update/parse, discovery, save, owned install/execution, update and uninstall
+PASS complete source PowerShellGet fresh consumer and owned offline lifecycle checks
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-powershell-powershellget"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-powershell-powershellget 2.2.5-1 (27 Oct 2026 07:20:40)
+
+
+--- install.log ---
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-powershell-powershellget-2.2.5-1
+
+Total Installed Size:  1.00 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+installing mingw-w64-clang-x86_64-powershell-powershellget...
+
+
+--- installed-check.log ---
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershellget-installed-check-20261027\Restore.csproj (in 265 ms).
+PASS fresh PowerShellGet restore: all16 module assets and installed source PackageManagement implementation bytes
+PASS owned offline module feed created
+PASS exact source PowerShellGet2.2.5 import and all exported functions against installed source PackageManagement
+PASS source PowerShellGet repository persistence, find, dependency save/install, installed Unicode module execution, update and uninstall
+PASS source PowerShellGet script metadata create/update/parse, discovery, save, owned install/execution, update and uninstall
+PASS complete source PowerShellGet fresh consumer and owned offline lifecycle checks
+
+
+--- installed-loose-smoke.log ---
+PASS all16 installed loose module files byte-equal installed source NuGet payload
+PASS exact source PowerShellGet2.2.5 import and all exported functions against installed source PackageManagement
+
+
+--- makepkg.log ---
+==> Making package: mingw-w64-powershell-powershellget 2.2.5-1 (27 Oct 2026 06:55:37)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found powershellget-22a87ee00bc461fe49068c9e8e1b079bfdc6c3f8.tar.gz
+  -> Found prepare.py
+  -> Found BuildModule.ps1
+  -> Found pack.py
+  -> Found check.sh
+  -> Found verify-restored.py
+  -> Found Smoke.ps1
+  -> Found Offline.ps1
+  -> Found make-fixtures.py
+  -> Found published-provenance.json
+  -> Found README.md
+==> Validating source files with sha256sums...
+    powershellget-22a87ee00bc461fe49068c9e8e1b079bfdc6c3f8.tar.gz ... Passed
+    prepare.py ... Passed
+    BuildModule.ps1 ... Passed
+    pack.py ... Passed
+    check.sh ... Passed
+    verify-restored.py ... Passed
+    Smoke.ps1 ... Passed
+    Offline.ps1 ... Passed
+    make-fixtures.py ... Passed
+    published-provenance.json ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+  -> Extracting powershellget-22a87ee00bc461fe49068c9e8e1b079bfdc6c3f8.tar.gz with bsdtar
+==> Starting prepare()...
+PASS complete original source inventory and assembler: 166 files
+==> Starting build()...
+PASS original PowerShellGet module assembly function completed
+PASS all16 source/published module assets and complete source-only package: /home/topkek/powershellget-package.X5gJBE/mingw-w64-powershell-powershellget/src/feed/powershellget.2.2.5.nupkg
+==> Starting check()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+
+  Determining projects to restore...
+E:\msys64\home\topkek\powershellget-package.X5gJBE\mingw-w64-powershell-powershellget\src\check\Restore.csproj : warning NU1603: PowerShellGet 2.2.5 depends on PackageManagement (>= 1.4.4) but PackageManagement 1.4.4 was not found. An approximate best match of PackageManagement 1.4.8.1 was resolved.
+  Restored E:\msys64\home\topkek\powershellget-package.X5gJBE\mingw-w64-powershell-powershellget\src\check\Restore.csproj (in 402 ms).
+PASS fresh PowerShellGet restore: all16 module assets and installed source PackageManagement implementation bytes
+PASS owned offline module feed created
+PASS exact source PowerShellGet2.2.5 import and all exported functions against installed source PackageManagement
+System.Management.Automation.RuntimeException: offline PowerShellGet check failed at at <ScriptBlock>, E:\msys64\home\topkek\powershellget-package.X5gJBE\mingw-w64-powershell-powershellget\src\Offline.ps1: line 43: install escaped owned directory C:\Users\topkek\Documents\PowerShell\Modules\Owned.Module\1.1.0
+ ---> System.Management.Automation.RuntimeException: offline PowerShellGet check failed at at <ScriptBlock>, E:\msys64\home\topkek\powershellget-package.X5gJBE\mingw-w64-powershell-powershellget\src\Offline.ps1: line 43: install escaped owned directory C:\Users\topkek\Documents\PowerShell\Modules\Owned.Module\1.1.0
+   --- End of inner exception stack trace ---
+   at System.Management.Automation.Runspaces.PipelineBase.Invoke(IEnumerable input)
+   at System.Management.Automation.Runspaces.Pipeline.Invoke()
+   at System.Management.Automation.PowerShell.Worker.ConstructPipelineAndDoWork(Runspace rs, Boolean performSyncInvoke)
+   at System.Management.Automation.PowerShell.Worker.CreateRunspaceIfNeededAndDoWork(Runspace rsToUse, Boolean isSync)
+   at System.Management.Automation.PowerShell.CoreInvokeHelper[TInput,TOutput](PSDataCollection`1 input, PSDataCollection`1 output, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.CoreInvoke[TInput,TOutput](PSDataCollection`1 input, PSDataCollection`1 output, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.CoreInvoke[TOutput](IEnumerable input, PSDataCollection`1 output, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.Invoke(IEnumerable input, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.Invoke()
+   at ModuleHost.Main(String[] args)
+==> ERROR: A failure occurred in check().
+    Aborting...
+
+
+--- makepkg2.log ---
+==> Making package: mingw-w64-powershell-powershellget 2.2.5-1 (27 Oct 2026 07:00:41)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found powershellget-22a87ee00bc461fe49068c9e8e1b079bfdc6c3f8.tar.gz
+  -> Found prepare.py
+  -> Found BuildModule.ps1
+  -> Found pack.py
+  -> Found check.sh
+  -> Found verify-restored.py
+  -> Found Smoke.ps1
+  -> Found Offline.ps1
+  -> Found make-fixtures.py
+  -> Found published-provenance.json
+  -> Found README.md
+==> Validating source files with sha256sums...
+    powershellget-22a87ee00bc461fe49068c9e8e1b079bfdc6c3f8.tar.gz ... Passed
+    prepare.py ... Passed
+    BuildModule.ps1 ... Passed
+    pack.py ... Passed
+    check.sh ... Passed
+    verify-restored.py ... Passed
+    Smoke.ps1 ... Passed
+    Offline.ps1 ... Passed
+    make-fixtures.py ... Passed
+    published-provenance.json ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+  -> Extracting powershellget-22a87ee00bc461fe49068c9e8e1b079bfdc6c3f8.tar.gz with bsdtar
+==> Starting prepare()...
+PASS complete original source inventory and assembler: 166 files
+==> Removing existing $pkgdir/ directory...
+==> Starting build()...
+PASS original PowerShellGet module assembly function completed
+PASS all16 source/published module assets and complete source-only package: /home/topkek/powershellget-package.X5gJBE/mingw-w64-powershell-powershellget/src/feed/powershellget.2.2.5.nupkg
+==> Starting check()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+
+  Determining projects to restore...
+E:\msys64\home\topkek\powershellget-package.X5gJBE\mingw-w64-powershell-powershellget\src\check\Restore.csproj : warning NU1603: PowerShellGet 2.2.5 depends on PackageManagement (>= 1.4.4) but PackageManagement 1.4.4 was not found. An approximate best match of PackageManagement 1.4.8.1 was resolved.
+  Restored E:\msys64\home\topkek\powershellget-package.X5gJBE\mingw-w64-powershell-powershellget\src\check\Restore.csproj (in 280 ms).
+PASS fresh PowerShellGet restore: all16 module assets and installed source PackageManagement implementation bytes
+PASS owned offline module feed created
+PASS exact source PowerShellGet2.2.5 import and all exported functions against installed source PackageManagement
+System.Management.Automation.RuntimeException: offline PowerShellGet check failed at at <ScriptBlock>, E:\msys64\home\topkek\powershellget-package.X5gJBE\mingw-w64-powershell-powershellget\src\Offline.ps1: line 57: owned uninstall left implementation files; errors=Uninstall-Package: Cannot bind argument to parameter 'Job' because it is null.
+
+Remove-Module: E:\msys64\home\topkek\powershellget-package.X5gJBE\mingw-w64-powershell-powershellget\src\Offline.ps1:55
+Line |
+  55 |      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     |      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | No modules were removed. Verify that the specification of modules to remove is correct and those modules exist in the runspace.
+
+Uninstall-Package: Cannot bind argument to parameter 'Job' because it is null.
+
+Get-Command: The term 'NuGet.exe' is not recognized as a name of a cmdlet, function, script file, or executable program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+
+Get-Variable: Cannot find a variable with the name 'PackageManagementProvider'.
+
+
+ ---> System.Management.Automation.RuntimeException: offline PowerShellGet check failed at at <ScriptBlock>, E:\msys64\home\topkek\powershellget-package.X5gJBE\mingw-w64-powershell-powershellget\src\Offline.ps1: line 57: owned uninstall left implementation files; errors=Uninstall-Package: Cannot bind argument to parameter 'Job' because it is null.
+
+Remove-Module: E:\msys64\home\topkek\powershellget-package.X5gJBE\mingw-w64-powershell-powershellget\src\Offline.ps1:55
+Line |
+  55 |      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     |      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | No modules were removed. Verify that the specification of modules to remove is correct and those modules exist in the runspace.
+
+Uninstall-Package: Cannot bind argument to parameter 'Job' because it is null.
+
+Get-Command: The term 'NuGet.exe' is not recognized as a name of a cmdlet, function, script file, or executable program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+
+Get-Variable: Cannot find a variable with the name 'PackageManagementProvider'.
+
+
+   --- End of inner exception stack trace ---
+   at System.Management.Automation.Runspaces.PipelineBase.Invoke(IEnumerable input)
+   at System.Management.Automation.Runspaces.Pipeline.Invoke()
+   at System.Management.Automation.PowerShell.Worker.ConstructPipelineAndDoWork(Runspace rs, Boolean performSyncInvoke)
+   at System.Management.Automation.PowerShell.Worker.CreateRunspaceIfNeededAndDoWork(Runspace rsToUse, Boolean isSync)
+   at System.Management.Automation.PowerShell.CoreInvokeHelper[TInput,TOutput](PSDataCollection`1 input, PSDataCollection`1 output, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.CoreInvoke[TInput,TOutput](PSDataCollection`1 input, PSDataCollection`1 output, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.CoreInvoke[TOutput](IEnumerable input, PSDataCollection`1 output, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.Invoke(IEnumerable input, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.Invoke()
+   at ModuleHost.Main(String[] args)
+==> ERROR: A failure occurred in check().
+    Aborting...
+

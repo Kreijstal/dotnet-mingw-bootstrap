@@ -1,0 +1,1424 @@
+From f2252cfdc5c612cd7986050afbeafdf64cd6e460 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Fri, 9 Oct 2026 17:26:08 +0200
+Subject: [PATCH 10/16] coreclr: inc/mingw, Windows SDK compatibility headers
+ for MinGW
+
+- msvc_compat.h (force-included): __annotation, the windows.h min/max
+  macros for C++, crtdbg.h (as MSVC's C++ headers include it), missing
+  winnt.h/winerror.h constants, an _rdsspq() with MSVC's signature.
+- sal_legacy.h: the SAL 1 annotations (__in, __success(x) ...) mingw-w64
+  does not define, empty as outside /analyze (names from pal/inc/rt).
+- winnt.h: wraps mingw-w64's; KNONVOLATILE_CONTEXT_POINTERS with the
+  SDK's named members (Rax..R15, Xmm0..Xmm15), C_ASSERT as static_assert.
+- verrsrc.h: mingw-w64 has it in winver.h.
+---
+ src/coreclr/inc/mingw/msvc_compat.h |   61 ++
+ src/coreclr/inc/mingw/sal_legacy.h  | 1255 +++++++++++++++++++++++++++
+ src/coreclr/inc/mingw/verrsrc.h     |    4 +
+ src/coreclr/inc/mingw/winnt.h       |   52 ++
+ 4 files changed, 1372 insertions(+)
+ create mode 100644 src/coreclr/inc/mingw/msvc_compat.h
+ create mode 100644 src/coreclr/inc/mingw/sal_legacy.h
+ create mode 100644 src/coreclr/inc/mingw/verrsrc.h
+ create mode 100644 src/coreclr/inc/mingw/winnt.h
+
+diff --git a/src/coreclr/inc/mingw/msvc_compat.h b/src/coreclr/inc/mingw/msvc_compat.h
+new file mode 100644
+index 000000000..71d716469
+--- /dev/null
++++ b/src/coreclr/inc/mingw/msvc_compat.h
+@@ -0,0 +1,61 @@
++// Licensed to the .NET Foundation under one or more agreements.
++// The .NET Foundation licenses this file to you under the MIT license.
++
++// Force-included into every C/C++ file of CoreCLR when it is built by clang with
++// the GNU driver for Windows (MinGW, x86_64-w64-mingw32).  It stands in for the
++// MSVC-only intrinsics the Windows code paths use; the Unix build gets the same
++// definitions from pal.h.
++#pragma once
++
++// MSVC debugger annotations (no code is generated for them)
++#define __annotation(...) ((void)0)
++
++// mingw-w64's sal.h (SAL 2: _In_, _Out_writes_(n) ...) and the legacy SAL 1
++// names (__in, __success(expr) ...) the SDK also defines.
++#include <sal.h>
++#include "sal_legacy.h"
++
++// windows.h defines min/max as macros (unless NOMINMAX); mingw-w64 only does so
++// for C. The Windows code of CoreCLR relies on them in C++ too. (libc++ saves and
++// undefines them around its own min/max.)
++#ifndef NOMINMAX
++#ifndef max
++#define max(a, b) (((a) > (b)) ? (a) : (b))
++#endif
++#ifndef min
++#define min(a, b) (((a) < (b)) ? (a) : (b))
++#endif
++#endif
++
++// winnt.h (ReplacesCorHdrNumericDefines) constants missing from mingw-w64
++#ifndef COMIMAGE_FLAGS_NATIVE_ENTRYPOINT
++#define COMIMAGE_FLAGS_NATIVE_ENTRYPOINT 0x00000010
++#endif
++
++// MSVC's C++ library headers bring in crtdbg.h (_ASSERTE, _RPT*), and the
++// standalone GC environment relies on that.
++#if defined(__cplusplus)
++#include <crtdbg.h>
++#endif
++
++// _rdsspq(): MSVC's intrinsic takes no argument; clang's takes the value to return
++// when CET is off and needs the shstk target feature. RDSSP is a NOP on processors
++// (and in processes) without CET shadow stacks, so the register keeps its 0.
++#if defined(__cplusplus) && defined(__x86_64__)
++#include <intrin.h>     // (cetintrin.h declares clang's _rdsspq; it must come before the macro)
++static __inline__ unsigned long long __clr_mingw_rdsspq(void)
++{
++    unsigned long long ssp = 0;
++    __asm__ __volatile__("rdsspq %0" : "+r"(ssp));
++    return ssp;
++}
++#define _rdsspq() __clr_mingw_rdsspq()
++#endif
++
++// winerror.h (Windows Runtime) HRESULTs missing from mingw-w64
++#ifndef RO_E_METADATA_NAME_NOT_FOUND
++#define RO_E_METADATA_NAME_NOT_FOUND ((HRESULT)0x8000000FL)
++#endif
++#ifndef RO_E_CLOSED
++#define RO_E_CLOSED ((HRESULT)0x80000013L)
++#endif
+diff --git a/src/coreclr/inc/mingw/sal_legacy.h b/src/coreclr/inc/mingw/sal_legacy.h
+new file mode 100644
+index 000000000..4426789d3
+--- /dev/null
++++ b/src/coreclr/inc/mingw/sal_legacy.h
+@@ -0,0 +1,1255 @@
++// Licensed to the .NET Foundation under one or more agreements.
++// The .NET Foundation licenses this file to you under the MIT license.
++
++// MinGW: the legacy (SAL 1) annotations of the Windows SDK sal.h/specstrings.h
++// (__in, __out_ecount(n), __success(expr), __checkReturn ...), which mingw-w64
++// does not have (it spells them SAL__xxx). They carry no code; outside /analyze
++// the SDK defines them empty too. The names are those defined by
++// src/coreclr/pal/inc/rt/{sal.h,specstrings.h,specstrings_strict.h} (the Unix copies).
++#pragma once
++
++#ifndef __allaccess_impl
++#define __allaccess_impl
++#endif
++#ifndef __allaccess_impl_notref
++#define __allaccess_impl_notref
++#endif
++#ifndef __allocator
++#define __allocator
++#endif
++#ifndef __allowed
++#define __allowed(p)
++#endif
++#ifndef __analysis_assert
++#define __analysis_assert(e)
++#endif
++#ifndef __analysis_assume_nullterminated
++#define __analysis_assume_nullterminated(x)
++#endif
++#ifndef __analysis_hint
++#define __analysis_hint(hint)
++#endif
++#ifndef __analysis_noreturn
++#define __analysis_noreturn
++#endif
++#ifndef __assume_bound
++#define __assume_bound(i)
++#endif
++#ifndef __assume_validated
++#define __assume_validated(p)
++#endif
++#ifndef __bcount
++#define __bcount(size)
++#endif
++#ifndef __bcount_opt
++#define __bcount_opt(size)
++#endif
++#ifndef __blocksOn
++#define __blocksOn(resource)
++#endif
++#ifndef __bound
++#define __bound
++#endif
++#ifndef __byte_readableTo
++#define __byte_readableTo(size)
++#endif
++#ifndef __byte_writableTo
++#define __byte_writableTo(size)
++#endif
++#ifndef __bytecap_c_impl
++#define __bytecap_c_impl(size)
++#endif
++#ifndef __bytecap_impl
++#define __bytecap_impl(size)
++#endif
++#ifndef __bytecap_x_impl
++#define __bytecap_x_impl(size)
++#endif
++#ifndef __bytecount_c_impl
++#define __bytecount_c_impl(size)
++#endif
++#ifndef __bytecount_impl
++#define __bytecount_impl(size)
++#endif
++#ifndef __bytecount_x_impl
++#define __bytecount_x_impl(size)
++#endif
++#ifndef __callback
++#define __callback
++#endif
++#ifndef __cap_c_impl
++#define __cap_c_impl(size)
++#endif
++#ifndef __cap_c_one_notref_impl
++#define __cap_c_one_notref_impl
++#endif
++#ifndef __cap_for_impl
++#define __cap_for_impl(param)
++#endif
++#ifndef __cap_impl
++#define __cap_impl(size)
++#endif
++#ifndef __cap_x_impl
++#define __cap_x_impl(size)
++#endif
++#ifndef __checkReturn
++#define __checkReturn
++#endif
++#ifndef __class_code_content
++#define __class_code_content(typ)
++#endif
++#ifndef __clr_reserved
++#define __clr_reserved
++#endif
++#ifndef __control_entrypoint
++#define __control_entrypoint(category)
++#endif
++#ifndef __count_c_impl
++#define __count_c_impl(size)
++#endif
++#ifndef __count_impl
++#define __count_impl(size)
++#endif
++#ifndef __count_x_impl
++#define __count_x_impl(size)
++#endif
++#ifndef __data_entrypoint
++#define __data_entrypoint(category)
++#endif
++#ifndef __deallocate
++#define __deallocate(kind)
++#endif
++#ifndef __deallocate_opt
++#define __deallocate_opt(kind)
++#endif
++#ifndef __deferTypecheck
++#define __deferTypecheck
++#endif
++#ifndef __deref
++#define __deref
++#endif
++#ifndef __deref_bcount
++#define __deref_bcount(size)
++#endif
++#ifndef __deref_bcount_opt
++#define __deref_bcount_opt(size)
++#endif
++#ifndef __deref_ecount
++#define __deref_ecount(size)
++#endif
++#ifndef __deref_ecount_opt
++#define __deref_ecount_opt(size)
++#endif
++#ifndef __deref_in
++#define __deref_in
++#endif
++#ifndef __deref_in_bcount
++#define __deref_in_bcount(size)
++#endif
++#ifndef __deref_in_bcount_opt
++#define __deref_in_bcount_opt(size)
++#endif
++#ifndef __deref_in_ecount
++#define __deref_in_ecount(size)
++#endif
++#ifndef __deref_in_ecount_iterator
++#define __deref_in_ecount_iterator(size, incr)
++#endif
++#ifndef __deref_in_ecount_opt
++#define __deref_in_ecount_opt(size)
++#endif
++#ifndef __deref_in_opt
++#define __deref_in_opt
++#endif
++#ifndef __deref_in_opt_out
++#define __deref_in_opt_out
++#endif
++#ifndef __deref_in_range
++#define __deref_in_range(lb,ub)
++#endif
++#ifndef __deref_in_xcount
++#define __deref_in_xcount(size)
++#endif
++#ifndef __deref_in_xcount_opt
++#define __deref_in_xcount_opt(size)
++#endif
++#ifndef __deref_inout
++#define __deref_inout
++#endif
++#ifndef __deref_inout_bcount
++#define __deref_inout_bcount(size)
++#endif
++#ifndef __deref_inout_bcount_full
++#define __deref_inout_bcount_full(size)
++#endif
++#ifndef __deref_inout_bcount_full_opt
++#define __deref_inout_bcount_full_opt(size)
++#endif
++#ifndef __deref_inout_bcount_nz
++#define __deref_inout_bcount_nz(size)
++#endif
++#ifndef __deref_inout_bcount_nz_opt
++#define __deref_inout_bcount_nz_opt(size)
++#endif
++#ifndef __deref_inout_bcount_opt
++#define __deref_inout_bcount_opt(size)
++#endif
++#ifndef __deref_inout_bcount_part
++#define __deref_inout_bcount_part(size,length)
++#endif
++#ifndef __deref_inout_bcount_part_opt
++#define __deref_inout_bcount_part_opt(size,length)
++#endif
++#ifndef __deref_inout_bcount_z
++#define __deref_inout_bcount_z(size)
++#endif
++#ifndef __deref_inout_bcount_z_opt
++#define __deref_inout_bcount_z_opt(size)
++#endif
++#ifndef __deref_inout_ecount
++#define __deref_inout_ecount(size)
++#endif
++#ifndef __deref_inout_ecount_full
++#define __deref_inout_ecount_full(size)
++#endif
++#ifndef __deref_inout_ecount_full_opt
++#define __deref_inout_ecount_full_opt(size)
++#endif
++#ifndef __deref_inout_ecount_iterator
++#define __deref_inout_ecount_iterator(size, incr)
++#endif
++#ifndef __deref_inout_ecount_nz
++#define __deref_inout_ecount_nz(size)
++#endif
++#ifndef __deref_inout_ecount_nz_opt
++#define __deref_inout_ecount_nz_opt(size)
++#endif
++#ifndef __deref_inout_ecount_opt
++#define __deref_inout_ecount_opt(size)
++#endif
++#ifndef __deref_inout_ecount_part
++#define __deref_inout_ecount_part(size,length)
++#endif
++#ifndef __deref_inout_ecount_part_opt
++#define __deref_inout_ecount_part_opt(size,length)
++#endif
++#ifndef __deref_inout_ecount_z
++#define __deref_inout_ecount_z(size)
++#endif
++#ifndef __deref_inout_ecount_z_opt
++#define __deref_inout_ecount_z_opt(size)
++#endif
++#ifndef __deref_inout_nz
++#define __deref_inout_nz
++#endif
++#ifndef __deref_inout_nz_opt
++#define __deref_inout_nz_opt
++#endif
++#ifndef __deref_inout_opt
++#define __deref_inout_opt
++#endif
++#ifndef __deref_inout_range
++#define __deref_inout_range(lb,ub)
++#endif
++#ifndef __deref_inout_xcount
++#define __deref_inout_xcount(size)
++#endif
++#ifndef __deref_inout_xcount_full
++#define __deref_inout_xcount_full(size)
++#endif
++#ifndef __deref_inout_xcount_full_opt
++#define __deref_inout_xcount_full_opt(size)
++#endif
++#ifndef __deref_inout_xcount_opt
++#define __deref_inout_xcount_opt(size)
++#endif
++#ifndef __deref_inout_xcount_part
++#define __deref_inout_xcount_part(size,length)
++#endif
++#ifndef __deref_inout_xcount_part_opt
++#define __deref_inout_xcount_part_opt(size,length)
++#endif
++#ifndef __deref_inout_z
++#define __deref_inout_z
++#endif
++#ifndef __deref_inout_z_opt
++#define __deref_inout_z_opt
++#endif
++#ifndef __deref_nonvolatile
++#define __deref_nonvolatile
++#endif
++#ifndef __deref_opt_bcount
++#define __deref_opt_bcount(size)
++#endif
++#ifndef __deref_opt_bcount_opt
++#define __deref_opt_bcount_opt(size)
++#endif
++#ifndef __deref_opt_ecount
++#define __deref_opt_ecount(size)
++#endif
++#ifndef __deref_opt_ecount_opt
++#define __deref_opt_ecount_opt(size)
++#endif
++#ifndef __deref_opt_in
++#define __deref_opt_in
++#endif
++#ifndef __deref_opt_in_bcount
++#define __deref_opt_in_bcount(size)
++#endif
++#ifndef __deref_opt_in_bcount_opt
++#define __deref_opt_in_bcount_opt(size)
++#endif
++#ifndef __deref_opt_in_ecount
++#define __deref_opt_in_ecount(size)
++#endif
++#ifndef __deref_opt_in_ecount_opt
++#define __deref_opt_in_ecount_opt(size)
++#endif
++#ifndef __deref_opt_in_opt
++#define __deref_opt_in_opt
++#endif
++#ifndef __deref_opt_in_xcount
++#define __deref_opt_in_xcount(size)
++#endif
++#ifndef __deref_opt_in_xcount_opt
++#define __deref_opt_in_xcount_opt(size)
++#endif
++#ifndef __deref_opt_inout
++#define __deref_opt_inout
++#endif
++#ifndef __deref_opt_inout_bcount
++#define __deref_opt_inout_bcount(size)
++#endif
++#ifndef __deref_opt_inout_bcount_full
++#define __deref_opt_inout_bcount_full(size)
++#endif
++#ifndef __deref_opt_inout_bcount_full_opt
++#define __deref_opt_inout_bcount_full_opt(size)
++#endif
++#ifndef __deref_opt_inout_bcount_nz
++#define __deref_opt_inout_bcount_nz(size)
++#endif
++#ifndef __deref_opt_inout_bcount_nz_opt
++#define __deref_opt_inout_bcount_nz_opt(size)
++#endif
++#ifndef __deref_opt_inout_bcount_opt
++#define __deref_opt_inout_bcount_opt(size)
++#endif
++#ifndef __deref_opt_inout_bcount_part
++#define __deref_opt_inout_bcount_part(size,length)
++#endif
++#ifndef __deref_opt_inout_bcount_part_opt
++#define __deref_opt_inout_bcount_part_opt(size,length)
++#endif
++#ifndef __deref_opt_inout_bcount_z
++#define __deref_opt_inout_bcount_z(size)
++#endif
++#ifndef __deref_opt_inout_bcount_z_opt
++#define __deref_opt_inout_bcount_z_opt(size)
++#endif
++#ifndef __deref_opt_inout_ecount
++#define __deref_opt_inout_ecount(size)
++#endif
++#ifndef __deref_opt_inout_ecount_full
++#define __deref_opt_inout_ecount_full(size)
++#endif
++#ifndef __deref_opt_inout_ecount_full_opt
++#define __deref_opt_inout_ecount_full_opt(size)
++#endif
++#ifndef __deref_opt_inout_ecount_nz
++#define __deref_opt_inout_ecount_nz(size)
++#endif
++#ifndef __deref_opt_inout_ecount_nz_opt
++#define __deref_opt_inout_ecount_nz_opt(size)
++#endif
++#ifndef __deref_opt_inout_ecount_opt
++#define __deref_opt_inout_ecount_opt(size)
++#endif
++#ifndef __deref_opt_inout_ecount_part
++#define __deref_opt_inout_ecount_part(size,length)
++#endif
++#ifndef __deref_opt_inout_ecount_part_opt
++#define __deref_opt_inout_ecount_part_opt(size,length)
++#endif
++#ifndef __deref_opt_inout_ecount_z
++#define __deref_opt_inout_ecount_z(size)
++#endif
++#ifndef __deref_opt_inout_ecount_z_opt
++#define __deref_opt_inout_ecount_z_opt(size)
++#endif
++#ifndef __deref_opt_inout_nz
++#define __deref_opt_inout_nz
++#endif
++#ifndef __deref_opt_inout_nz_opt
++#define __deref_opt_inout_nz_opt
++#endif
++#ifndef __deref_opt_inout_opt
++#define __deref_opt_inout_opt
++#endif
++#ifndef __deref_opt_inout_xcount
++#define __deref_opt_inout_xcount(size)
++#endif
++#ifndef __deref_opt_inout_xcount_full
++#define __deref_opt_inout_xcount_full(size)
++#endif
++#ifndef __deref_opt_inout_xcount_full_opt
++#define __deref_opt_inout_xcount_full_opt(size)
++#endif
++#ifndef __deref_opt_inout_xcount_opt
++#define __deref_opt_inout_xcount_opt(size)
++#endif
++#ifndef __deref_opt_inout_xcount_part
++#define __deref_opt_inout_xcount_part(size,length)
++#endif
++#ifndef __deref_opt_inout_xcount_part_opt
++#define __deref_opt_inout_xcount_part_opt(size,length)
++#endif
++#ifndef __deref_opt_inout_z
++#define __deref_opt_inout_z
++#endif
++#ifndef __deref_opt_inout_z_opt
++#define __deref_opt_inout_z_opt
++#endif
++#ifndef __deref_opt_out
++#define __deref_opt_out
++#endif
++#ifndef __deref_opt_out_bcount
++#define __deref_opt_out_bcount(size)
++#endif
++#ifndef __deref_opt_out_bcount_full
++#define __deref_opt_out_bcount_full(size)
++#endif
++#ifndef __deref_opt_out_bcount_full_opt
++#define __deref_opt_out_bcount_full_opt(size)
++#endif
++#ifndef __deref_opt_out_bcount_nz_opt
++#define __deref_opt_out_bcount_nz_opt(size)
++#endif
++#ifndef __deref_opt_out_bcount_opt
++#define __deref_opt_out_bcount_opt(size)
++#endif
++#ifndef __deref_opt_out_bcount_part
++#define __deref_opt_out_bcount_part(size,length)
++#endif
++#ifndef __deref_opt_out_bcount_part_opt
++#define __deref_opt_out_bcount_part_opt(size,length)
++#endif
++#ifndef __deref_opt_out_bcount_z_opt
++#define __deref_opt_out_bcount_z_opt(size)
++#endif
++#ifndef __deref_opt_out_ecount
++#define __deref_opt_out_ecount(size)
++#endif
++#ifndef __deref_opt_out_ecount_full
++#define __deref_opt_out_ecount_full(size)
++#endif
++#ifndef __deref_opt_out_ecount_full_opt
++#define __deref_opt_out_ecount_full_opt(size)
++#endif
++#ifndef __deref_opt_out_ecount_nz_opt
++#define __deref_opt_out_ecount_nz_opt(size)
++#endif
++#ifndef __deref_opt_out_ecount_opt
++#define __deref_opt_out_ecount_opt(size)
++#endif
++#ifndef __deref_opt_out_ecount_part
++#define __deref_opt_out_ecount_part(size,length)
++#endif
++#ifndef __deref_opt_out_ecount_part_opt
++#define __deref_opt_out_ecount_part_opt(size,length)
++#endif
++#ifndef __deref_opt_out_ecount_z_opt
++#define __deref_opt_out_ecount_z_opt(size)
++#endif
++#ifndef __deref_opt_out_nz_opt
++#define __deref_opt_out_nz_opt
++#endif
++#ifndef __deref_opt_out_opt
++#define __deref_opt_out_opt
++#endif
++#ifndef __deref_opt_out_xcount
++#define __deref_opt_out_xcount(size)
++#endif
++#ifndef __deref_opt_out_xcount_full
++#define __deref_opt_out_xcount_full(size)
++#endif
++#ifndef __deref_opt_out_xcount_full_opt
++#define __deref_opt_out_xcount_full_opt(size)
++#endif
++#ifndef __deref_opt_out_xcount_opt
++#define __deref_opt_out_xcount_opt(size)
++#endif
++#ifndef __deref_opt_out_xcount_part
++#define __deref_opt_out_xcount_part(size,length)
++#endif
++#ifndef __deref_opt_out_xcount_part_opt
++#define __deref_opt_out_xcount_part_opt(size,length)
++#endif
++#ifndef __deref_opt_out_z
++#define __deref_opt_out_z
++#endif
++#ifndef __deref_opt_out_z_opt
++#define __deref_opt_out_z_opt
++#endif
++#ifndef __deref_opt_xcount
++#define __deref_opt_xcount(size)
++#endif
++#ifndef __deref_opt_xcount_opt
++#define __deref_opt_xcount_opt(size)
++#endif
++#ifndef __deref_out
++#define __deref_out
++#endif
++#ifndef __deref_out_bcount
++#define __deref_out_bcount(size)
++#endif
++#ifndef __deref_out_bcount_full
++#define __deref_out_bcount_full(size)
++#endif
++#ifndef __deref_out_bcount_full_opt
++#define __deref_out_bcount_full_opt(size)
++#endif
++#ifndef __deref_out_bcount_nz
++#define __deref_out_bcount_nz(size)
++#endif
++#ifndef __deref_out_bcount_nz_opt
++#define __deref_out_bcount_nz_opt(size)
++#endif
++#ifndef __deref_out_bcount_opt
++#define __deref_out_bcount_opt(size)
++#endif
++#ifndef __deref_out_bcount_part
++#define __deref_out_bcount_part(size,length)
++#endif
++#ifndef __deref_out_bcount_part_opt
++#define __deref_out_bcount_part_opt(size,length)
++#endif
++#ifndef __deref_out_bcount_z
++#define __deref_out_bcount_z(size)
++#endif
++#ifndef __deref_out_bcount_z_opt
++#define __deref_out_bcount_z_opt(size)
++#endif
++#ifndef __deref_out_bound
++#define __deref_out_bound
++#endif
++#ifndef __deref_out_ecount
++#define __deref_out_ecount(size)
++#endif
++#ifndef __deref_out_ecount_full
++#define __deref_out_ecount_full(size)
++#endif
++#ifndef __deref_out_ecount_full_opt
++#define __deref_out_ecount_full_opt(size)
++#endif
++#ifndef __deref_out_ecount_iterator
++#define __deref_out_ecount_iterator(size, incr)
++#endif
++#ifndef __deref_out_ecount_nz
++#define __deref_out_ecount_nz(size)
++#endif
++#ifndef __deref_out_ecount_nz_opt
++#define __deref_out_ecount_nz_opt(size)
++#endif
++#ifndef __deref_out_ecount_opt
++#define __deref_out_ecount_opt(size)
++#endif
++#ifndef __deref_out_ecount_part
++#define __deref_out_ecount_part(size,length)
++#endif
++#ifndef __deref_out_ecount_part_opt
++#define __deref_out_ecount_part_opt(size,length)
++#endif
++#ifndef __deref_out_ecount_z
++#define __deref_out_ecount_z(size)
++#endif
++#ifndef __deref_out_ecount_z_opt
++#define __deref_out_ecount_z_opt(size)
++#endif
++#ifndef __deref_out_nz
++#define __deref_out_nz
++#endif
++#ifndef __deref_out_nz_opt
++#define __deref_out_nz_opt
++#endif
++#ifndef __deref_out_opt
++#define __deref_out_opt
++#endif
++#ifndef __deref_out_range
++#define __deref_out_range(lb,ub)
++#endif
++#ifndef __deref_out_xcount
++#define __deref_out_xcount(size)
++#endif
++#ifndef __deref_out_xcount_full
++#define __deref_out_xcount_full(size)
++#endif
++#ifndef __deref_out_xcount_full_opt
++#define __deref_out_xcount_full_opt(size)
++#endif
++#ifndef __deref_out_xcount_opt
++#define __deref_out_xcount_opt(size)
++#endif
++#ifndef __deref_out_xcount_part
++#define __deref_out_xcount_part(size,length)
++#endif
++#ifndef __deref_out_xcount_part_opt
++#define __deref_out_xcount_part_opt(size,length)
++#endif
++#ifndef __deref_out_z
++#define __deref_out_z
++#endif
++#ifndef __deref_out_z_opt
++#define __deref_out_z_opt
++#endif
++#ifndef __deref_realloc_bcount
++#define __deref_realloc_bcount(insize, outsize)
++#endif
++#ifndef __deref_volatile
++#define __deref_volatile
++#endif
++#ifndef __deref_xcount
++#define __deref_xcount(size)
++#endif
++#ifndef __deref_xcount_opt
++#define __deref_xcount_opt(size)
++#endif
++#ifndef __ecount
++#define __ecount(size)
++#endif
++#ifndef __ecount_opt
++#define __ecount_opt(size)
++#endif
++#ifndef __elem_readableTo
++#define __elem_readableTo(size)
++#endif
++#ifndef __elem_writableTo
++#define __elem_writableTo(size)
++#endif
++#ifndef __encoded_array
++#define __encoded_array
++#endif
++#ifndef __encoded_pointer
++#define __encoded_pointer
++#endif
++#ifndef __exceptthat
++#define __exceptthat
++#endif
++#ifndef __failure
++#define __failure(x)
++#endif
++#ifndef __failureDefault
++#define __failureDefault(kind)
++#endif
++#ifndef __field_bcount
++#define __field_bcount(size)
++#endif
++#ifndef __field_bcount_full
++#define __field_bcount_full(size)
++#endif
++#ifndef __field_bcount_full_opt
++#define __field_bcount_full_opt(size)
++#endif
++#ifndef __field_bcount_opt
++#define __field_bcount_opt(size)
++#endif
++#ifndef __field_bcount_part
++#define __field_bcount_part(size,init)
++#endif
++#ifndef __field_bcount_part_opt
++#define __field_bcount_part_opt(size,init)
++#endif
++#ifndef __field_data_source
++#define __field_data_source(src_sym)
++#endif
++#ifndef __field_ecount
++#define __field_ecount(size)
++#endif
++#ifndef __field_ecount_full
++#define __field_ecount_full(size)
++#endif
++#ifndef __field_ecount_full_opt
++#define __field_ecount_full_opt(size)
++#endif
++#ifndef __field_ecount_opt
++#define __field_ecount_opt(size)
++#endif
++#ifndef __field_ecount_part
++#define __field_ecount_part(size,init)
++#endif
++#ifndef __field_ecount_part_opt
++#define __field_ecount_part_opt(size,init)
++#endif
++#ifndef __field_encoded_array
++#define __field_encoded_array
++#endif
++#ifndef __field_encoded_pointer
++#define __field_encoded_pointer
++#endif
++#ifndef __field_nullterminated
++#define __field_nullterminated
++#endif
++#ifndef __field_range
++#define __field_range(lb,ub)
++#endif
++#ifndef __field_xcount
++#define __field_xcount(size)
++#endif
++#ifndef __field_xcount_full
++#define __field_xcount_full(size)
++#endif
++#ifndef __field_xcount_full_opt
++#define __field_xcount_full_opt(size)
++#endif
++#ifndef __field_xcount_opt
++#define __field_xcount_opt(size)
++#endif
++#ifndef __field_xcount_part
++#define __field_xcount_part(size,init)
++#endif
++#ifndef __field_xcount_part_opt
++#define __field_xcount_part_opt(size,init)
++#endif
++#ifndef __file_parser
++#define __file_parser(typ)
++#endif
++#ifndef __file_parser_class
++#define __file_parser_class(typ)
++#endif
++#ifndef __file_parser_library
++#define __file_parser_library(typ)
++#endif
++#ifndef __format_string
++#define __format_string
++#endif
++#ifndef __gdi_entry
++#define __gdi_entry
++#endif
++#ifndef __has_cpp_attribute
++#define __has_cpp_attribute(x)
++#endif
++#ifndef __in_awcount
++#define __in_awcount(expr,size)
++#endif
++#ifndef __in_bcount
++#define __in_bcount(size)
++#endif
++#ifndef __in_bcount_nz
++#define __in_bcount_nz(size)
++#endif
++#ifndef __in_bcount_nz_opt
++#define __in_bcount_nz_opt(size)
++#endif
++#ifndef __in_bcount_opt
++#define __in_bcount_opt(size)
++#endif
++#ifndef __in_bcount_z
++#define __in_bcount_z(size)
++#endif
++#ifndef __in_bcount_z_opt
++#define __in_bcount_z_opt(size)
++#endif
++#ifndef __in_bound
++#define __in_bound
++#endif
++#ifndef __in_data_source
++#define __in_data_source(src_sym)
++#endif
++#ifndef __in_ecount
++#define __in_ecount(size)
++#endif
++#ifndef __in_ecount_nz
++#define __in_ecount_nz(size)
++#endif
++#ifndef __in_ecount_nz_opt
++#define __in_ecount_nz_opt(size)
++#endif
++#ifndef __in_ecount_opt
++#define __in_ecount_opt(size)
++#endif
++#ifndef __in_ecount_or_z
++#define __in_ecount_or_z(c)
++#endif
++#ifndef __in_ecount_z
++#define __in_ecount_z(size)
++#endif
++#ifndef __in_ecount_z_opt
++#define __in_ecount_z_opt(size)
++#endif
++#ifndef __in_nz
++#define __in_nz
++#endif
++#ifndef __in_nz_opt
++#define __in_nz_opt
++#endif
++#ifndef __in_opt
++#define __in_opt
++#endif
++#ifndef __in_range
++#define __in_range(lb,ub)
++#endif
++#ifndef __in_xcount
++#define __in_xcount(size)
++#endif
++#ifndef __in_xcount_opt
++#define __in_xcount_opt(size)
++#endif
++#ifndef __in_z
++#define __in_z
++#endif
++#ifndef __in_z_opt
++#define __in_z_opt
++#endif
++#ifndef __inexpressible_readableTo
++#define __inexpressible_readableTo(size)
++#endif
++#ifndef __inexpressible_writableTo
++#define __inexpressible_writableTo(size)
++#endif
++#ifndef __inout
++#define __inout
++#endif
++#ifndef __inout_bcount
++#define __inout_bcount(size)
++#endif
++#ifndef __inout_bcount_full
++#define __inout_bcount_full(size)
++#endif
++#ifndef __inout_bcount_full_opt
++#define __inout_bcount_full_opt(size)
++#endif
++#ifndef __inout_bcount_nz
++#define __inout_bcount_nz(size)
++#endif
++#ifndef __inout_bcount_nz_opt
++#define __inout_bcount_nz_opt(size)
++#endif
++#ifndef __inout_bcount_opt
++#define __inout_bcount_opt(size)
++#endif
++#ifndef __inout_bcount_part
++#define __inout_bcount_part(size,length)
++#endif
++#ifndef __inout_bcount_part_opt
++#define __inout_bcount_part_opt(size,length)
++#endif
++#ifndef __inout_bcount_z
++#define __inout_bcount_z(size)
++#endif
++#ifndef __inout_bcount_z_opt
++#define __inout_bcount_z_opt(size)
++#endif
++#ifndef __inout_ecount
++#define __inout_ecount(size)
++#endif
++#ifndef __inout_ecount_full
++#define __inout_ecount_full(size)
++#endif
++#ifndef __inout_ecount_full_opt
++#define __inout_ecount_full_opt(size)
++#endif
++#ifndef __inout_ecount_nz
++#define __inout_ecount_nz(size)
++#endif
++#ifndef __inout_ecount_nz_opt
++#define __inout_ecount_nz_opt(size)
++#endif
++#ifndef __inout_ecount_opt
++#define __inout_ecount_opt(size)
++#endif
++#ifndef __inout_ecount_part
++#define __inout_ecount_part(size,length)
++#endif
++#ifndef __inout_ecount_part_opt
++#define __inout_ecount_part_opt(size,length)
++#endif
++#ifndef __inout_ecount_z
++#define __inout_ecount_z(size)
++#endif
++#ifndef __inout_ecount_z_opt
++#define __inout_ecount_z_opt(size)
++#endif
++#ifndef __inout_nz
++#define __inout_nz
++#endif
++#ifndef __inout_nz_opt
++#define __inout_nz_opt
++#endif
++#ifndef __inout_opt
++#define __inout_opt
++#endif
++#ifndef __inout_xcount
++#define __inout_xcount(size)
++#endif
++#ifndef __inout_xcount_full
++#define __inout_xcount_full(size)
++#endif
++#ifndef __inout_xcount_full_opt
++#define __inout_xcount_full_opt(size)
++#endif
++#ifndef __inout_xcount_opt
++#define __inout_xcount_opt(size)
++#endif
++#ifndef __inout_xcount_part
++#define __inout_xcount_part(size,length)
++#endif
++#ifndef __inout_xcount_part_opt
++#define __inout_xcount_part_opt(size,length)
++#endif
++#ifndef __inout_z
++#define __inout_z
++#endif
++#ifndef __inout_z_opt
++#define __inout_z_opt
++#endif
++#ifndef __kernel_entry
++#define __kernel_entry
++#endif
++#ifndef __maybenull
++#define __maybenull
++#endif
++#ifndef __maybenull_impl
++#define __maybenull_impl
++#endif
++#ifndef __maybenull_impl_notref
++#define __maybenull_impl_notref
++#endif
++#ifndef __maybereadonly
++#define __maybereadonly
++#endif
++#ifndef __maybevalid
++#define __maybevalid
++#endif
++#ifndef __maybevalid_impl
++#define __maybevalid_impl
++#endif
++#ifndef __maybezterm_impl
++#define __maybezterm_impl
++#endif
++#ifndef __maybzterm_impl
++#define __maybzterm_impl
++#endif
++#ifndef __mult_impl
++#define __mult_impl(mult,size)
++#endif
++#ifndef __nonvolatile
++#define __nonvolatile
++#endif
++#ifndef __nop_impl
++#define __nop_impl(x)
++#endif
++#ifndef __notnull
++#define __notnull
++#endif
++#ifndef __notnull_impl
++#define __notnull_impl
++#endif
++#ifndef __notnull_impl_notref
++#define __notnull_impl_notref
++#endif
++#ifndef __notreadonly
++#define __notreadonly
++#endif
++#ifndef __notvalid
++#define __notvalid
++#endif
++#ifndef __notvalid_impl
++#define __notvalid_impl
++#endif
++#ifndef __notzterm_impl
++#define __notzterm_impl
++#endif
++#ifndef __null
++#define __null
++#endif
++#ifndef __null_impl
++#define __null_impl
++#endif
++#ifndef __null_impl_notref
++#define __null_impl_notref
++#endif
++#ifndef __nullnullterminated
++#define __nullnullterminated
++#endif
++#ifndef __nullterminated
++#define __nullterminated
++#endif
++#ifndef __on_failure
++#define __on_failure(annotes)
++#endif
++#ifndef __out_awcount
++#define __out_awcount(expr,size)
++#endif
++#ifndef __out_bcount
++#define __out_bcount(size)
++#endif
++#ifndef __out_bcount_full
++#define __out_bcount_full(size)
++#endif
++#ifndef __out_bcount_full_opt
++#define __out_bcount_full_opt(size)
++#endif
++#ifndef __out_bcount_full_z
++#define __out_bcount_full_z(size)
++#endif
++#ifndef __out_bcount_full_z_opt
++#define __out_bcount_full_z_opt(size)
++#endif
++#ifndef __out_bcount_nz
++#define __out_bcount_nz(size)
++#endif
++#ifndef __out_bcount_nz_opt
++#define __out_bcount_nz_opt(size)
++#endif
++#ifndef __out_bcount_opt
++#define __out_bcount_opt(size)
++#endif
++#ifndef __out_bcount_part
++#define __out_bcount_part(size,length)
++#endif
++#ifndef __out_bcount_part_opt
++#define __out_bcount_part_opt(size,length)
++#endif
++#ifndef __out_bcount_part_z
++#define __out_bcount_part_z(size,length)
++#endif
++#ifndef __out_bcount_part_z_opt
++#define __out_bcount_part_z_opt(size,length)
++#endif
++#ifndef __out_bcount_z
++#define __out_bcount_z(size)
++#endif
++#ifndef __out_bcount_z_opt
++#define __out_bcount_z_opt(size)
++#endif
++#ifndef __out_bound
++#define __out_bound
++#endif
++#ifndef __out_data_source
++#define __out_data_source(src_sym)
++#endif
++#ifndef __out_ecount
++#define __out_ecount(size)
++#endif
++#ifndef __out_ecount_full
++#define __out_ecount_full(size)
++#endif
++#ifndef __out_ecount_full_opt
++#define __out_ecount_full_opt(size)
++#endif
++#ifndef __out_ecount_full_z
++#define __out_ecount_full_z(size)
++#endif
++#ifndef __out_ecount_full_z_opt
++#define __out_ecount_full_z_opt(size)
++#endif
++#ifndef __out_ecount_nz
++#define __out_ecount_nz(size)
++#endif
++#ifndef __out_ecount_nz_opt
++#define __out_ecount_nz_opt(size)
++#endif
++#ifndef __out_ecount_opt
++#define __out_ecount_opt(size)
++#endif
++#ifndef __out_ecount_part
++#define __out_ecount_part(size,length)
++#endif
++#ifndef __out_ecount_part_opt
++#define __out_ecount_part_opt(size,length)
++#endif
++#ifndef __out_ecount_part_z
++#define __out_ecount_part_z(size,length)
++#endif
++#ifndef __out_ecount_part_z_opt
++#define __out_ecount_part_z_opt(size,length)
++#endif
++#ifndef __out_ecount_z
++#define __out_ecount_z(size)
++#endif
++#ifndef __out_ecount_z_opt
++#define __out_ecount_z_opt(size)
++#endif
++#ifndef __out_has_adt_prop
++#define __out_has_adt_prop(adt,prop)
++#endif
++#ifndef __out_has_type_adt_props
++#define __out_has_type_adt_props(typ)
++#endif
++#ifndef __out_not_has_adt_prop
++#define __out_not_has_adt_prop(adt,prop)
++#endif
++#ifndef __out_nz
++#define __out_nz
++#endif
++#ifndef __out_nz_opt
++#define __out_nz_opt
++#endif
++#ifndef __out_opt
++#define __out_opt
++#endif
++#ifndef __out_range
++#define __out_range(lb,ub)
++#endif
++#ifndef __out_transfer_adt_prop
++#define __out_transfer_adt_prop(arg)
++#endif
++#ifndef __out_validated
++#define __out_validated(typ_sym)
++#endif
++#ifndef __out_xcount
++#define __out_xcount(size)
++#endif
++#ifndef __out_xcount_full
++#define __out_xcount_full(size)
++#endif
++#ifndef __out_xcount_full_opt
++#define __out_xcount_full_opt(size)
++#endif
++#ifndef __out_xcount_opt
++#define __out_xcount_opt(size)
++#endif
++#ifndef __out_xcount_part
++#define __out_xcount_part(size,length)
++#endif
++#ifndef __out_xcount_part_opt
++#define __out_xcount_part_opt(size,length)
++#endif
++#ifndef __out_z
++#define __out_z
++#endif
++#ifndef __out_z_opt
++#define __out_z_opt
++#endif
++#ifndef __override
++#define __override
++#endif
++#ifndef __possibly_notnullterminated
++#define __possibly_notnullterminated
++#endif
++#ifndef __post
++#define __post
++#endif
++#ifndef __post_bcount
++#define __post_bcount(size)
++#endif
++#ifndef __post_deref_except_maybenull
++#define __post_deref_except_maybenull
++#endif
++#ifndef __post_ecount
++#define __post_ecount(size)
++#endif
++#ifndef __post_except_maybenull
++#define __post_except_maybenull
++#endif
++#ifndef __post_invalid
++#define __post_invalid
++#endif
++#ifndef __post_nullnullterminated
++#define __post_nullnullterminated
++#endif
++#ifndef __postcond
++#define __postcond(expr)
++#endif
++#ifndef __pre
++#define __pre
++#endif
++#ifndef __pre_deref_except_maybenull
++#define __pre_deref_except_maybenull
++#endif
++#ifndef __pre_except_maybenull
++#define __pre_except_maybenull
++#endif
++#ifndef __precond
++#define __precond(expr)
++#endif
++#ifndef __range
++#define __range(lb,ub)
++#endif
++#ifndef __range_max
++#define __range_max(a,b)
++#endif
++#ifndef __range_min
++#define __range_min(a,b)
++#endif
++#ifndef __readableTo
++#define __readableTo(extent)
++#endif
++#ifndef __readaccess_impl
++#define __readaccess_impl
++#endif
++#ifndef __readaccess_impl_notref
++#define __readaccess_impl_notref
++#endif
++#ifndef __readonly
++#define __readonly
++#endif
++#ifndef __refparam
++#define __refparam
++#endif
++#ifndef __rpc_entry
++#define __rpc_entry
++#endif
++#ifndef __source_code_content
++#define __source_code_content(typ)
++#endif
++#ifndef __static_context
++#define __static_context(ctx, annotes)
++#endif
++#ifndef __struct_bcount
++#define __struct_bcount(size)
++#endif
++#ifndef __struct_xcount
++#define __struct_xcount(size)
++#endif
++#ifndef __success
++#define __success(expr)
++#endif
++#ifndef __this_out_data_source
++#define __this_out_data_source(src_sym)
++#endif
++#ifndef __this_out_validated
++#define __this_out_validated(typ_sym)
++#endif
++#ifndef __transfer
++#define __transfer(formal)
++#endif
++#ifndef __type_has_adt_prop
++#define __type_has_adt_prop(adt,prop)
++#endif
++#ifndef __typefix
++#define __typefix(ctype)
++#endif
++#ifndef __useHeader
++#define __useHeader
++#endif
++#ifndef __valid
++#define __valid
++#endif
++#ifndef __valid_impl
++#define __valid_impl
++#endif
++#ifndef __valueUndefined
++#define __valueUndefined
++#endif
++#ifndef __volatile
++#define __volatile
++#endif
++#ifndef __writableTo
++#define __writableTo(size)
++#endif
++#ifndef __writeaccess_impl
++#define __writeaccess_impl
++#endif
++#ifndef __writeaccess_impl_notref
++#define __writeaccess_impl_notref
++#endif
++#ifndef __xcount
++#define __xcount(size)
++#endif
++#ifndef __xcount_opt
++#define __xcount_opt(size)
++#endif
++#ifndef __zterm_impl
++#define __zterm_impl
++#endif
+diff --git a/src/coreclr/inc/mingw/verrsrc.h b/src/coreclr/inc/mingw/verrsrc.h
+new file mode 100644
+index 000000000..e5dff013e
+--- /dev/null
++++ b/src/coreclr/inc/mingw/verrsrc.h
+@@ -0,0 +1,4 @@
++// MinGW: the Windows SDK's verrsrc.h (VS_VERSION_INFO, VS_FF_*, VOS_*, VFT_*) is
++// part of mingw-w64's winver.h.
++#pragma once
++#include <winver.h>
+diff --git a/src/coreclr/inc/mingw/winnt.h b/src/coreclr/inc/mingw/winnt.h
+new file mode 100644
+index 000000000..89b8c3229
+--- /dev/null
++++ b/src/coreclr/inc/mingw/winnt.h
+@@ -0,0 +1,52 @@
++// MinGW: wraps mingw-w64's winnt.h for the Windows code of CoreCLR.
++//
++// - C_ASSERT: mingw-w64's is an extern declaration (MSVC's is a typedef), which
++//   is not allowed at class scope, where CoreCLR uses it; in C++ it becomes a
++//   static_assert, as in the PAL.
++// - KNONVOLATILE_CONTEXT_POINTERS (x64): mingw-w64 only has the two arrays
++//   FloatingContext[16]/IntegerContext[16]; the Windows SDK overlays them with the
++//   named members Xmm0..Xmm15 and Rax..R15, which CoreCLR uses. Rename mingw's
++//   definition and provide the SDK's (same layout).
++
++#if defined(__x86_64__)
++#define _KNONVOLATILE_CONTEXT_POINTERS _MINGW_KNONVOLATILE_CONTEXT_POINTERS
++#define KNONVOLATILE_CONTEXT_POINTERS MINGW_KNONVOLATILE_CONTEXT_POINTERS
++#define PKNONVOLATILE_CONTEXT_POINTERS PMINGW_KNONVOLATILE_CONTEXT_POINTERS
++#endif
++
++#include_next <winnt.h>
++
++#if defined(__x86_64__)
++#undef _KNONVOLATILE_CONTEXT_POINTERS
++#undef KNONVOLATILE_CONTEXT_POINTERS
++#undef PKNONVOLATILE_CONTEXT_POINTERS
++#if !defined(CLR_MINGW_KNONVOLATILE_CONTEXT_POINTERS)
++#define CLR_MINGW_KNONVOLATILE_CONTEXT_POINTERS
++typedef struct _KNONVOLATILE_CONTEXT_POINTERS {
++    union {
++        PM128A FloatingContext[16];
++        struct {
++            PM128A Xmm0, Xmm1, Xmm2, Xmm3, Xmm4, Xmm5, Xmm6, Xmm7,
++                   Xmm8, Xmm9, Xmm10, Xmm11, Xmm12, Xmm13, Xmm14, Xmm15;
++        };
++    };
++    union {
++        PDWORD64 IntegerContext[16];
++        struct {
++            PDWORD64 Rax, Rcx, Rdx, Rbx, Rsp, Rbp, Rsi, Rdi,
++                     R8, R9, R10, R11, R12, R13, R14, R15;
++        };
++    };
++} KNONVOLATILE_CONTEXT_POINTERS, *PKNONVOLATILE_CONTEXT_POINTERS;
++#ifdef __cplusplus
++static_assert(sizeof(KNONVOLATILE_CONTEXT_POINTERS) == sizeof(MINGW_KNONVOLATILE_CONTEXT_POINTERS), "layout");
++#endif
++// (the OS's RtlVirtualUnwind is declared with PMINGW_KNONVOLATILE_CONTEXT_POINTERS;
++// CoreCLR calls it through RtlVirtualUnwind_Unsafe, typed with this struct)
++#endif
++#endif
++
++#if defined(__cplusplus)
++#undef C_ASSERT
++#define C_ASSERT(e) static_assert(e, #e)
++#endif
+-- 
+2.55.0
+

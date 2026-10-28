@@ -1,0 +1,31 @@
+{
+  "source_commit": "99bfe5adc30ed066973114ea18d7c5091197ee14",
+  "source_files": {
+    "PSThreadJob/AssemblyInfo.cs": "471cf4886efa73370bb2affa3aba01505963d6f31218f5a6f3b29f419b5dbe9c",
+    "PSThreadJob/PSThreadJob.cs": "501871fba1508b84dbf81207478013e1a34cddbf1d7ba04061f03839ed14d837",
+    "PSThreadJob/Resources.Designer.cs": "d0219dc28a7d04f28d8dff9f37b3112a6e645ae2ca6876d666a1b1221af85927"
+  },
+  "resource_sha256": "d6c319ee703d9b43cbc91da450ff4199df11e0dedffbc02f0073ec56ee8ffc34",
+  "source_algorithm_overlays": [
+    {
+      "path": "PSThreadJob/PSThreadJob.cs",
+      "patch": "0001-use-current-debugger-setbreakpoints-overload.patch",
+      "patch_sha256": "15874b71d06e2c420eeb12a700fa7cc9c1373cca801fe08eb44be7fa8e566eb1",
+      "overlay_sha256": "aee512b148fb730ece35bf7ecc9eda13cc77dadb436286153453f27eae89f8b7",
+      "change": "Forward SetBreakpoints through the current virtual overload with optional runspace identity"
+    }
+  ],
+  "target_framework": "net8.0",
+  "source_engine_reference": "System.Management.Automation7.4.6.500",
+  "omitted_build_references": [
+    "Windows PowerShell GAC",
+    "PowerShellStandard.Library5.1.0-*",
+    "Microsoft.CSharp4.5.0-*"
+  ],
+  "replacement": "Installed complete source PowerShell7.4.20 engine and inbox.NET8 CSharp binder",
+  "source_archive_sha256": "af57cfa480c67e7f23e583fd190964db560d35263b3c021ce621a77eef2e9c8c",
+  "module_files": {
+    "Microsoft.PowerShell.ThreadJob.dll": "895e05525e1129a7fb77aed135c80fbac96e2c7248e11cff49b63bac21ff6696",
+    "ThreadJob.psd1": "fe0cdabb4fc31245d4b06d38e2ceb5d88470cb455a5c2d9b4825f10dc6e3cbc3"
+  }
+}

@@ -1,0 +1,194 @@
+Roslyn dependency packaging verification, 2026-10-26
+Host: win11, CLANG64. Source-built SDK8.0.131-1, runtime8.0.0, targeting pack8.0.131-2.
+Roslyn source4.9.2 commit9934fb9e3527e1c0c51314e57d4aab30f97e8f9e.
+Both packages target net8.0; full PowerShell integration remains unproven.
+
+Clean split-package build
+Run in MSYSTEM=CLANG64 bash -lc:
+cd /home/topkek/powershell-roslyn.CKi6zz/mingw-w64-dotnet-roslyn
+PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm
+result: exit 0
+
+==> Making package: mingw-w64-dotnet-roslyn 4.9.2-1 (26 Oct 2026 15:58:16)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found roslyn-4.9.2.tar.gz
+  -> Found prepare.py
+  -> Found build.sh
+  -> Found check-generated.py
+  -> Found Check.cs
+  -> Found CheckApi.cs
+  -> Found check.sh
+  -> Found README.md
+==> Validating source files with sha256sums...
+    roslyn-4.9.2.tar.gz ... Passed
+    prepare.py ... Passed
+    build.sh ... Passed
+    check-generated.py ... Passed
+    Check.cs ... Passed
+    CheckApi.cs ... Passed
+    check.sh ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+  -> Extracting roslyn-4.9.2.tar.gz with bsdtar
+==> Starting prepare()...
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-roslyn.CKi6zz\mingw-w64-dotnet-roslyn\src\build\CSharpSyntaxGenerator\build.csproj (in 95 ms).
+  build -> E:\msys64\home\topkek\powershell-roslyn.CKi6zz\mingw-w64-dotnet-roslyn\src\build\CSharpSyntaxGenerator\bin\Release\net8.0\CSharpSyntaxGenerator.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.50
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-roslyn.CKi6zz\mingw-w64-dotnet-roslyn\src\build\BoundTreeGenerator\build.csproj (in 61 ms).
+  build -> E:\msys64\home\topkek\powershell-roslyn.CKi6zz\mingw-w64-dotnet-roslyn\src\build\BoundTreeGenerator\bin\Release\net8.0\BoundTreeGenerator.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.06
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-roslyn.CKi6zz\mingw-w64-dotnet-roslyn\src\build\CSharpErrorFactsGenerator\build.csproj (in 64 ms).
+  build -> E:\msys64\home\topkek\powershell-roslyn.CKi6zz\mingw-w64-dotnet-roslyn\src\build\CSharpErrorFactsGenerator\bin\Release\net8.0\CSharpErrorFactsGenerator.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.70
+PASS: all 5 regenerated compiler sources match upstream
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-roslyn.CKi6zz\mingw-w64-dotnet-roslyn\src\build\Microsoft.CodeAnalysis\build.csproj (in 52 ms).
+  build -> E:\msys64\home\topkek\powershell-roslyn.CKi6zz\mingw-w64-dotnet-roslyn\src\build\Microsoft.CodeAnalysis\bin\Release\net8.0\Microsoft.CodeAnalysis.dll
+  Successfully created package 'E:\msys64\home\topkek\powershell-roslyn.CKi6zz\mingw-w64-dotnet-roslyn\src\build\feed\Microsoft.CodeAnalysis.Common.4.9.2.nupkg'.
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-roslyn.CKi6zz\mingw-w64-dotnet-roslyn\src\build\Microsoft.CodeAnalysis.CSharp\build.csproj (in 205 ms).
+  build -> E:\msys64\home\topkek\powershell-roslyn.CKi6zz\mingw-w64-dotnet-roslyn\src\build\Microsoft.CodeAnalysis.CSharp\bin\Release\net8.0\Microsoft.CodeAnalysis.CSharp.dll
+  Successfully created package 'E:\msys64\home\topkek\powershell-roslyn.CKi6zz\mingw-w64-dotnet-roslyn\src\build\feed\Microsoft.CodeAnalysis.CSharp.4.9.2.nupkg'.
+==> Starting check()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-roslyn.CKi6zz\mingw-w64-dotnet-roslyn\src\consumer\check.csproj (in 230 ms).
+  check -> E:\msys64\home\topkek\powershell-roslyn.CKi6zz\mingw-w64-dotnet-roslyn\src\consumer\bin\Release\net8.0\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.85
+Loaded: Microsoft.CodeAnalysis, Version=4.9.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35; E:\msys64\home\topkek\powershell-roslyn.CKi6zz\mingw-w64-dotnet-roslyn\src\consumer\bin\Release\net8.0\Microsoft.CodeAnalysis.dll
+Loaded: Microsoft.CodeAnalysis.CSharp, Version=4.9.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35; E:\msys64\home\topkek\powershell-roslyn.CKi6zz\mingw-w64-dotnet-roslyn\src\consumer\bin\Release\net8.0\Microsoft.CodeAnalysis.CSharp.dll
+PASS: C# 12 parsing, semantics, deterministic PE/portable PDB emission and execution
+PASS: syntax/type/nullable diagnostics, resource text, compiler options and cancellation
+PASS: analyzer file loading/callbacks and incremental generation with AdditionalText
+PASS: Microsoft.CodeAnalysis preserves all 4189 upstream public API declarations
+PASS: Microsoft.CodeAnalysis.CSharp preserves all 6110 upstream public API declarations
+PASS: all 13 cultures, 39 localized resource sets / 35750 strings, and German diagnostics
+PASS: no .NET Framework native helper loaded
+==> Starting package_mingw-w64-clang-x86_64-dotnet-codeanalysis-common()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-codeanalysis-common"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Starting package_mingw-w64-clang-x86_64-dotnet-codeanalysis-csharp()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-codeanalysis-csharp"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-roslyn 4.9.2-1 (26 Oct 2026 16:00:27)
+
+Fresh installed-feed consumer
+Run in MSYSTEM=CLANG64 bash -lc:
+bash /home/topkek/powershell-roslyn.CKi6zz/mingw-w64-dotnet-roslyn/check.sh /home/topkek/powershell-roslyn.CKi6zz/installed-check
+result: exit 0
+
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-roslyn.CKi6zz\installed-check\check.csproj (in 247 ms).
+  check -> E:\msys64\home\topkek\powershell-roslyn.CKi6zz\installed-check\bin\Release\net8.0\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.93
+Loaded: Microsoft.CodeAnalysis, Version=4.9.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35; E:\msys64\home\topkek\powershell-roslyn.CKi6zz\installed-check\bin\Release\net8.0\Microsoft.CodeAnalysis.dll
+Loaded: Microsoft.CodeAnalysis.CSharp, Version=4.9.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35; E:\msys64\home\topkek\powershell-roslyn.CKi6zz\installed-check\bin\Release\net8.0\Microsoft.CodeAnalysis.CSharp.dll
+PASS: C# 12 parsing, semantics, deterministic PE/portable PDB emission and execution
+PASS: syntax/type/nullable diagnostics, resource text, compiler options and cancellation
+PASS: analyzer file loading/callbacks and incremental generation with AdditionalText
+PASS: Microsoft.CodeAnalysis preserves all 4189 upstream public API declarations
+PASS: Microsoft.CodeAnalysis.CSharp preserves all 6110 upstream public API declarations
+PASS: all 13 cultures, 39 localized resource sets / 35750 strings, and German diagnostics
+PASS: no .NET Framework native helper loaded
+
+Artifact audit
+$ python3 tests/powershell-deps/audit-roslyn.py tests/powershell-deps/roslyn-artifacts-20261026.json
+result: exit 0
+Both packages: local source checksums, licenses/notices, exact NuGet payload/dependencies, generator records, API baselines and all localization records PASS.

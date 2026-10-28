@@ -1,0 +1,141 @@
+{
+  "previous_goal_turn_classification": "progress",
+  "current_goal_turn_classification": "progress",
+  "date_utc": "2026-10-27",
+  "host": "topkek@win11",
+  "build_root": "/c/codex-dotnet10/c1.1BZ8KU",
+  "source_runtime_version": "10.0.5",
+  "source_runtime_commit": "081d220c0a773ffb7c6bea6b48727833576a65ef",
+  "source_runtime_archive_sha256": "1692acae5e3adfd625452fbc9db4fd4e982c10e38189358ae245c74dd5514d7a",
+  "source_assembly_version": "10.0.0.0",
+  "source_file_version": "10.0.526.11800",
+  "corelib_public_key_token": "7cec85d7bea7798e",
+  "original_corelib_cs": 1932,
+  "original_corelib_resource_strings": 1421,
+  "original_source_changes": 0,
+  "assembly_references": 0,
+  "metadata_types": 2957,
+  "metadata_methods": 43227,
+  "raw_compile_warning_lines": 549,
+  "runtime_root_types": 363,
+  "generated_cs": 8,
+  "original_generator_cs": {
+    "Microsoft.Interop.SourceGeneration": 96,
+    "Microsoft.Interop.LibraryImportGenerator": 23,
+    "Microsoft.Interop.ComInterfaceGenerator": 46,
+    "System.Private.CoreLib.Generators": 9
+  },
+  "generator_framework": "net8.0 private bootstrap",
+  "generator_roslyn_core": "source5.0.0",
+  "generator_workspaces": "source4.9.2; declared4.14.0 package closure still open",
+  "prepare_generators_command": "/usr/bin/python3 corelib-workflow/prepare-generators.py .",
+  "prepare_generators_exit_code": 0,
+  "build_generators_command": "bash corelib-workflow/build-generators.sh .",
+  "build_generators_exit_code": 0,
+  "corelib_prepare_command": "/usr/bin/python3 corelib-workflow/prepare-corelib.py .",
+  "corelib_prepare_exit_code": 0,
+  "compile_prepare_command": "/usr/bin/python3 corelib-workflow/prepare-compile.py .",
+  "compile_prepare_exit_code": 0,
+  "final_build_command": "bash corelib-workflow/build-corelib.sh .",
+  "final_build_exit_code": 0,
+  "fresh_managed_outputs_rebuilt": true,
+  "fresh_raw_bytes_match_tested_input": true,
+  "raw_corelib_sha256": "ece5bdf9a112c696187298513cb763acb5339779d1c51a1a881765e4ae447bc0",
+  "tested_corelib_sha256": "471b9f9288542ea59550400ec1af78fee82b04ae3e82c3622886f362e889f763",
+  "source_audit_command": "/usr/bin/python3 corelib-workflow/audit-build.py .",
+  "source_audit_exit_code": 0,
+  "corerun_build_and_check_command": "bash corelib-workflow/build-corerun.sh .",
+  "corerun_build_and_check_exit_code": 0,
+  "corerun_original_selftests_passed": true,
+  "corerun_amd64_actual_cet_flag": true,
+  "corerun_port_source_files": 2,
+  "managed_prepare_command": "/usr/bin/python3 corelib-workflow/prepare-managed-check.py . corelib10-1/managed-check2",
+  "managed_prepare_exit_code": 0,
+  "managed_build_and_check_command": "bash corelib-workflow/build-managed-check.sh . corelib10-1/managed-check2",
+  "managed_build_and_check_exit_code": 0,
+  "managed_execution_verified": true,
+  "managed_cases": {
+    "basic": {
+      "command": [
+        "C:\\codex-dotnet10\\c1.1BZ8KU\\corelib10-1\\managed-check2\\native CLR10 \u03bb\\corerun.exe",
+        "-c",
+        "C:\\codex-dotnet10\\c1.1BZ8KU\\corelib10-1\\managed-check2\\native CLR10 \u03bb",
+        "C:\\codex-dotnet10\\c1.1BZ8KU\\corelib10-1\\managed-check2\\native CLR10 \u03bb\\ManagedProbe.dll",
+        "basic"
+      ],
+      "exit_code": 0
+    },
+    "gc": {
+      "command": [
+        "C:\\codex-dotnet10\\c1.1BZ8KU\\corelib10-1\\managed-check2\\native CLR10 \u03bb\\corerun.exe",
+        "-c",
+        "C:\\codex-dotnet10\\c1.1BZ8KU\\corelib10-1\\managed-check2\\native CLR10 \u03bb",
+        "C:\\codex-dotnet10\\c1.1BZ8KU\\corelib10-1\\managed-check2\\native CLR10 \u03bb\\ManagedProbe.dll",
+        "gc"
+      ],
+      "exit_code": 0
+    },
+    "exceptions": {
+      "command": [
+        "C:\\codex-dotnet10\\c1.1BZ8KU\\corelib10-1\\managed-check2\\native CLR10 \u03bb\\corerun.exe",
+        "-c",
+        "C:\\codex-dotnet10\\c1.1BZ8KU\\corelib10-1\\managed-check2\\native CLR10 \u03bb",
+        "C:\\codex-dotnet10\\c1.1BZ8KU\\corelib10-1\\managed-check2\\native CLR10 \u03bb\\ManagedProbe.dll",
+        "exceptions"
+      ],
+      "exit_code": 0
+    },
+    "thread": {
+      "command": [
+        "C:\\codex-dotnet10\\c1.1BZ8KU\\corelib10-1\\managed-check2\\native CLR10 \u03bb\\corerun.exe",
+        "-c",
+        "C:\\codex-dotnet10\\c1.1BZ8KU\\corelib10-1\\managed-check2\\native CLR10 \u03bb",
+        "C:\\codex-dotnet10\\c1.1BZ8KU\\corelib10-1\\managed-check2\\native CLR10 \u03bb\\ManagedProbe.dll",
+        "thread"
+      ],
+      "exit_code": 0
+    }
+  },
+  "tested_files_sha256": {
+    "clretwrc.dll": "d7bb676a08b4f7ee41efa900b05b9f25b55ea4895f1447be7c0960c9ba844020",
+    "clrjit.dll": "f18629b740576fb3105f53e668b262ab84b363139ca487724ac7f7f2bf2ba1b7",
+    "coreclr.dll": "0324a98b41b07a2325623998fb8b96d7a4f332f0b0e93c93e40ba2cc797f3328",
+    "corerun.exe": "ffa574d022e17ccf83f8b153da9a744ca3e43f940c23e7902f53bc6ad3e95e47",
+    "ManagedProbe.dll": "44e6ffe8cca15e72deb6a664d217276f1edf81758ddf5237af71372cc2759463",
+    "mscorrc.dll": "688d10837cc6af99df77213f60dd96833bb5d6509d622e46af8791a98531958a",
+    "System.Private.CoreLib.dll": "471b9f9288542ea59550400ec1af78fee82b04ae3e82c3622886f362e889f763"
+  },
+  "verified_scope": [
+    "actual CoreLib10 assembly identity and Environment.Version10.0.5",
+    "Unicode strings, JIT arithmetic, generics/List sort",
+    "forced compacting GC with retained live objects",
+    "managed exception catch/finally",
+    "managed thread creation, interlocked exchange and join"
+  ],
+  "native_path_boundary": "Native MSYS2 Python os.name nt uses slash paths; normalize corerun Windows paths to backslashes required by binder",
+  "private_startup_trace_changes_restored": true,
+  "all_original_native_port_hashes_restored": true,
+  "fcall_internal_call_rvas_cleared": 1,
+  "all_215_internal_calls_have_zero_body_rva_in_tested_copy": true,
+  "full_original_illink_rewrite_completed": false,
+  "formal_runtime10_package_built": false,
+  "runtime10_installed_globally": false,
+  "full_managed_framework10_built": false,
+  "full_runtime10_built": false,
+  "full_sdk10_built": false,
+  "powershell76_application_built": false,
+  "verified_dependency_count_increment": 0,
+  "full_dependency_goal_complete": false,
+  "remaining": [
+    "Complete original ILLink library rewrite and full reference/implementation framework10 graph",
+    "Remaining native framework interop libraries and broad runtime behavior",
+    "Declared Roslyn4.14 generator dependency closure; SDK10.0.201 toolchain",
+    "Source WindowsDesktop10 and PowerShell7.6 declared dependency/application closure",
+    "ETW provider registration, DAC/debugger, R2R/NativeAOT and EHa limitations",
+    "Previously recorded MMI3 authentication/providers/streaming, SQL/native and full Windows compatibility scenarios"
+  ],
+  "metadata_check_command": "bash corelib-workflow/check-metadata.sh . corelib10-1/managed-check2",
+  "metadata_check_exit_code": 0,
+  "helper_python_syntax_validation_exit_code": 0,
+  "helper_bash_syntax_validation_exit_code": 0
+}

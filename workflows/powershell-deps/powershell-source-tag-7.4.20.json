@@ -1,0 +1,10 @@
+{
+  "ref": "refs/tags/v7.4.20",
+  "node_id": "MDM6UmVmNDk2MDk1ODE6cmVmcy90YWdzL3Y3LjQuMjA=",
+  "url": "https://api.github.com/repos/PowerShell/PowerShell/git/refs/tags/v7.4.20",
+  "object": {
+    "sha": "0d9cf812e58905f307fc73b51b1152394f7f835c",
+    "type": "tag",
+    "url": "https://api.github.com/repos/PowerShell/PowerShell/git/tags/0d9cf812e58905f307fc73b51b1152394f7f835c"
+  }
+}

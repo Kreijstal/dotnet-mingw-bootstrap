@@ -1,0 +1,246 @@
+{
+  "previous_goal_turn_classification": "progress",
+  "current_goal_turn_classification": "progress",
+  "date_utc": "2026-10-27",
+  "local_date": "2026-10-28",
+  "host": "win11",
+  "root": "/c/codex-dotnet10/c1.1BZ8KU",
+  "runtime9_output": "roslyn-deps9-1",
+  "roslyn414_output": "roslyn414-1",
+  "runtime9_version": "9.0.0",
+  "runtime9_commit": "9d5a6a9aa463d6d10b0b0ba6d5982cc82f363dc3",
+  "runtime9_archive_sha256": "32755d528ead386762fb9da054249f6151ac78ef6a92f437044838cd0ab00def",
+  "roslyn414_version": "4.14.0",
+  "roslyn414_commit": "8edf7bcd4f1594c3d68a6a567469f41dbd33dd1b",
+  "roslyn414_archive_sha256": "8cf2d365d1fad52b480f7c68b5c477cb586a935ada0eb309b0c40dacfec5fe9c",
+  "private_framework": "net8.0 (upstream supported variants)",
+  "source_compiler": "unchanged source Roslyn5 through CompilerHost",
+  "bootstrap_sdk": "source SDK8.0.131-3/runtime8.0.31-3",
+  "source_production_cs_changes": 0,
+  "source_archive_audit": {
+    "runtime9": {
+      "original_cs_by_project": {
+        "System.Collections.Immutable": 134,
+        "System.Reflection.Metadata": 232,
+        "System.Composition.AttributedModel": 13,
+        "System.Composition.Runtime": 8,
+        "System.Composition.Hosting": 27,
+        "System.Composition.Convention": 12,
+        "System.Composition.TypedParts": 25,
+        "System.IO.Pipelines": 33
+      },
+      "selected_archive_inputs_verified": 493,
+      "all_selected_inputs_match_pinned_archive": true,
+      "production_cs_changes": 0
+    },
+    "roslyn414": {
+      "original_cs_by_project": {
+        "CSharpSyntaxGenerator": 20,
+        "BoundTreeGenerator": 3,
+        "CSharpErrorFactsGenerator": 1,
+        "Microsoft.CodeAnalysis": 1025,
+        "Microsoft.CodeAnalysis.CSharp": 1127
+      },
+      "selected_archive_inputs_verified": 2217,
+      "all_selected_inputs_match_pinned_archive": true,
+      "production_cs_changes": 0
+    }
+  },
+  "nuget_artifacts": {
+    "System.Composition.Runtime": {
+      "version": "9.0.0",
+      "dependencies": {},
+      "managed_dlls": 1,
+      "all_managed_assets_net8": true,
+      "sha256": "7daf63678623d8bbfe55f464976ae4c4202ad165e11127780ba5821bb114b345"
+    },
+    "System.Composition.Hosting": {
+      "version": "9.0.0",
+      "dependencies": {
+        "System.Composition.Runtime": "[9.0.0]"
+      },
+      "managed_dlls": 1,
+      "all_managed_assets_net8": true,
+      "sha256": "0303c722f356aa962230bd60304c17d7dfdee873023fc0cbf7260a5ab09eb05b"
+    },
+    "System.Composition.Convention": {
+      "version": "9.0.0",
+      "dependencies": {
+        "System.Composition.AttributedModel": "[9.0.0]"
+      },
+      "managed_dlls": 1,
+      "all_managed_assets_net8": true,
+      "sha256": "f3723b312331b26c71a1f1ec58a5f4d5c4d8a90d8e437fa337900566d3d28568"
+    },
+    "System.Composition.AttributedModel": {
+      "version": "9.0.0",
+      "dependencies": {},
+      "managed_dlls": 1,
+      "all_managed_assets_net8": true,
+      "sha256": "a7d6511c58a7813dc4d8eb5f681d5c3d0bf6be2f3a20bc439f429752ffd0dac1"
+    },
+    "System.Collections.Immutable": {
+      "version": "9.0.0",
+      "dependencies": {},
+      "managed_dlls": 1,
+      "all_managed_assets_net8": true,
+      "sha256": "b1af990a7bb03c2da291248dfbdb25577d7c0ac94a6671caa6183c6b9f5b0c34"
+    },
+    "System.Reflection.Metadata": {
+      "version": "9.0.0",
+      "dependencies": {
+        "System.Collections.Immutable": "[9.0.0]"
+      },
+      "managed_dlls": 1,
+      "all_managed_assets_net8": true,
+      "sha256": "90bdb947d72be18f574e2403371efe68f59a7b42f1c411069b757c21bd334d17"
+    },
+    "System.IO.Pipelines": {
+      "version": "9.0.0",
+      "dependencies": {},
+      "managed_dlls": 1,
+      "all_managed_assets_net8": true,
+      "sha256": "b186120e1eec450fccba10abb676f781cd38ed19d724d5499890b3d8f1b24111"
+    },
+    "System.Composition.TypedParts": {
+      "version": "9.0.0",
+      "dependencies": {
+        "System.Composition.AttributedModel": "[9.0.0]",
+        "System.Composition.Hosting": "[9.0.0]",
+        "System.Composition.Runtime": "[9.0.0]"
+      },
+      "managed_dlls": 1,
+      "all_managed_assets_net8": true,
+      "sha256": "948fc1057e24e08638601bd47ecfb4704afa919c427992efa9ce37ee758546d0"
+    },
+    "Microsoft.CodeAnalysis.Common": {
+      "version": "4.14.0",
+      "dependencies": {
+        "System.Collections.Immutable": "[9.0.0]",
+        "System.Reflection.Metadata": "[9.0.0]"
+      },
+      "managed_dlls": 14,
+      "all_managed_assets_net8": true,
+      "sha256": "a232c72833a0445a7d866cf5d6f8e28cafa497f96506a16ce0285d966a3173a9"
+    },
+    "Microsoft.CodeAnalysis.CSharp": {
+      "version": "4.14.0",
+      "dependencies": {
+        "Microsoft.CodeAnalysis.Common": "[4.14.0]",
+        "System.Collections.Immutable": "[9.0.0]",
+        "System.Reflection.Metadata": "[9.0.0]"
+      },
+      "managed_dlls": 14,
+      "all_managed_assets_net8": true,
+      "sha256": "602bf339c2d8a15264962fc042e70a35bee9aef1841ace8d7c0c9e9423c224e9"
+    }
+  },
+  "actual_compiler_package_references_verified": 11,
+  "all_cached_compile_dependency_dlls_match_private_source_packages": true,
+  "warning_log_occurrences_by_code": {
+    "runtime9": {
+      "CS3021": 1,
+      "CS8632": 84,
+      "CS8500": 2
+    },
+    "roslyn414": {}
+  },
+  "runtime9_fresh_consumer_exit_code": 0,
+  "runtime9_resource_sets": 7,
+  "runtime9_resource_values": 213,
+  "runtime9_checks": [
+    "source9 identity and consumer-output loading for eight assemblies",
+    "ImmutableArray construction/add",
+    "new System.Reflection.Metadata.TypeName parser",
+    "MEF imports/shared exports",
+    "async Unicode pipe round trip",
+    "all seven original resource sets and 213 values",
+    "exact fresh-cache nupkg and all managed payload bytes"
+  ],
+  "roslyn414_fresh_consumer_exit_code": 0,
+  "common_public_api_declarations": 4242,
+  "csharp_public_api_declarations": 6237,
+  "roslyn414_resource_sets": 42,
+  "roslyn414_resource_values": 39956,
+  "roslyn414_cultures": 13,
+  "regenerated_compiler_sources_matching_upstream": 5,
+  "roslyn414_checks": [
+    "C#13 params spans, primary constructors, collection expressions and semantic model",
+    "deterministic PE/portable PDB emission and emitted-code execution",
+    "type/nullable diagnostics, compiler options and cancellation",
+    "analyzer file loading/callbacks and incremental source generation",
+    "all10479 original public API declarations with experimental markers and original experimental property attributes",
+    "all13 cultures,42 resource sets/39956 values and German diagnostics",
+    "source identity, file/informational versions, exact source nupkg and satellite DLL bytes",
+    "no .NET Framework native helper loaded"
+  ],
+  "source_workspaces414_built": false,
+  "source_roslyn44_built": false,
+  "complete_original_targeting_generators10_built": false,
+  "final_clean_workflow_rebuild_before_pacman_packaging_pending": true,
+  "formal_pacman_packages_installed": false,
+  "full_sdk10_built": false,
+  "full_dependency_goal_complete": false,
+  "dependency_artifact_counts_unchanged": {
+    "verified_direct": 50,
+    "total_direct": 53,
+    "verified_transitive": 52,
+    "including_experimental": 106
+  },
+  "commands": [
+    {
+      "command": "/usr/bin/python3 generator-deps-workflow/prepare-runtime9.py \"$ROOT\" \"$ROOT/roslyn-deps9-1\"",
+      "exit_code": 0
+    },
+    {
+      "command": "bash generator-deps-workflow/build-runtime9.sh \"$ROOT/roslyn-deps9-1\"",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 generator-deps-workflow/check-runtime9.py \"$ROOT\" \"$ROOT/roslyn-deps9-1\" \"$ROOT/roslyn-deps9-1/consumer1\"",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 generator-deps-workflow/prepare-roslyn414.py \"$ROOT\" \"$ROOT/roslyn414-1\" --resume",
+      "exit_code": 0
+    },
+    {
+      "command": "/clang64/lib/dotnet/dotnet.exe pack \"$(cygpath -am \"$ROOT/roslyn414-1/Microsoft.CodeAnalysis/Build.csproj\")\" -c Release --configfile \"$(cygpath -am \"$ROOT/roslyn414-1/NuGet.config\")\" -o \"$(cygpath -am \"$ROOT/roslyn414-1/feed\")\" -p:UseSharedCompilation=false -v:minimal",
+      "exit_code": 0
+    },
+    {
+      "command": "/clang64/lib/dotnet/dotnet.exe pack \"$(cygpath -am \"$ROOT/roslyn414-1/Microsoft.CodeAnalysis.CSharp/Build.csproj\")\" -c Release --configfile \"$(cygpath -am \"$ROOT/roslyn414-1/NuGet.config\")\" -o \"$(cygpath -am \"$ROOT/roslyn414-1/feed\")\" -p:UseSharedCompilation=false -v:minimal",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 generator-deps-workflow/check-roslyn414.py \"$ROOT\" \"$ROOT/roslyn414-1\" \"$ROOT/roslyn414-1/consumer3\"",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 generator-deps-workflow/audit-compile-sources.py \"$ROOT\"",
+      "exit_code": 0
+    },
+    {
+      "command": "python3 tests/runtime10-generator-deps/audit-source-archives.py /tmp/runtime10-generator-deps1/evidence /tmp/dotnet10-sources",
+      "exit_code": 0
+    },
+    {
+      "command": "python3 tests/runtime10-generator-deps/audit-nuget.py /tmp/runtime10-generator-deps1/evidence",
+      "exit_code": 0
+    }
+  ],
+  "corrected_issues": [
+    "Restored original source-build defines, friend keys and explicit resource class/manifest names before compiling the library candidates.",
+    "Created the private output feed before restoring library projects.",
+    "Restored upstream Settings.props suppression RSEXPERIMENTAL005 for the CSharp library.",
+    "Extended the older public-API verifier to require current experimental attribute markers; property-level annotations verified separately without attributing them to getters."
+  ],
+  "remaining": [
+    "Complete original Workspaces4.14 dependencies and source packages, including Composition9 metapackage and Channels dependency closure.",
+    "Roslyn/Workspaces4.4 source closure for the original JSON generator.",
+    "Complete original generator bundle with its required TFMs; clean source/package/license and installed SDK consumer gates.",
+    "Full framework/reference-pack packaging, SDK10/WindowsDesktop10/PowerShell7.6 and previously recorded compatibility work."
+  ],
+  "evidence_archive_sha256": "7fbf3ce3c8afff7d148534575492b711ae7d2c2a63035a748dfded03c465f91c",
+  "local_evidence": "/tmp/runtime10-generator-deps1/evidence"
+}

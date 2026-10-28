@@ -1,0 +1,132 @@
+--- a/Native/Structures/MI_OperationCallbacks.cs
++++ b/Native/Structures/MI_OperationCallbacks.cs
+@@ -29,6 +29,10 @@
+ 
+             internal MI_OperationCallback_StreamedParameterNative streamedParameterResult;
+         }
++
++        internal bool HasCallbacks => promptUser != null || writeError != null ||
++            writeMessage != null || writeProgress != null || instanceResult != null ||
++            indicationResult != null || classResult != null || streamedParameterResult != null;
+ 
+         internal MI_OperationCallback_PromptUser promptUser;
+         internal MI_OperationCallback_WriteError writeError;
+--- a/Native/MI_Session.cs
++++ b/Native/MI_Session.cs
+@@ -35,7 +35,7 @@
+             out MI_Operation operation
+             )
+         {
+-            if (callbacks != null)
++            if (callbacks != null && callbacks.HasCallbacks)
+             {
+                 throw new NotImplementedException();
+             }
+@@ -62,7 +62,7 @@
+             out MI_Operation operation
+             )
+         {
+-            if (callbacks != null)
++            if (callbacks != null && callbacks.HasCallbacks)
+             {
+                 throw new NotImplementedException();
+             }
+@@ -89,7 +89,7 @@
+             out MI_Operation operation
+             )
+         {
+-            if (callbacks != null)
++            if (callbacks != null && callbacks.HasCallbacks)
+             {
+                 throw new NotImplementedException();
+             }
+@@ -116,7 +116,7 @@
+             out MI_Operation operation
+             )
+         {
+-            if (callbacks != null)
++            if (callbacks != null && callbacks.HasCallbacks)
+             {
+                 throw new NotImplementedException();
+             }
+@@ -146,7 +146,7 @@
+             out MI_Operation operation
+             )
+         {
+-            if (callbacks != null)
++            if (callbacks != null && callbacks.HasCallbacks)
+             {
+                 throw new NotImplementedException();
+             }
+@@ -177,7 +177,7 @@
+             out MI_Operation operation
+             )
+         {
+-            if (callbacks != null)
++            if (callbacks != null && callbacks.HasCallbacks)
+             {
+                 throw new NotImplementedException();
+             }
+@@ -206,7 +206,7 @@
+             out MI_Operation operation
+             )
+         {
+-            if (callbacks != null)
++            if (callbacks != null && callbacks.HasCallbacks)
+             {
+                 throw new NotImplementedException();
+             }
+@@ -239,7 +239,7 @@
+             out MI_Operation operation
+             )
+         {
+-            if (callbacks != null)
++            if (callbacks != null && callbacks.HasCallbacks)
+             {
+                 throw new NotImplementedException();
+             }
+@@ -274,7 +274,7 @@
+             out MI_Operation operation
+             )
+         {
+-            if (callbacks != null)
++            if (callbacks != null && callbacks.HasCallbacks)
+             {
+                 throw new NotImplementedException();
+             }
+@@ -306,7 +306,7 @@
+             out MI_Operation operation
+             )
+         {
+-            if (callbacks != null)
++            if (callbacks != null && callbacks.HasCallbacks)
+             {
+                 throw new NotImplementedException();
+             }
+@@ -335,7 +335,7 @@
+             out MI_Operation operation
+             )
+         {
+-            if (callbacks != null)
++            if (callbacks != null && callbacks.HasCallbacks)
+             {
+                 throw new NotImplementedException();
+             }
+@@ -363,7 +363,7 @@
+             out MI_Operation operation
+             )
+         {
+-            if (callbacks != null)
++            if (callbacks != null && callbacks.HasCallbacks)
+             {
+                 throw new NotImplementedException();
+             }
+@@ -388,7 +388,7 @@
+             out MI_Operation operation
+             )
+         {
+-            if (callbacks != null)
++            if (callbacks != null && callbacks.HasCallbacks)
+             {
+                 throw new NotImplementedException();
+             }

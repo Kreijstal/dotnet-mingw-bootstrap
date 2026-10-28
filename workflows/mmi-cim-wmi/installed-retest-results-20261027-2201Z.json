@@ -1,0 +1,76 @@
+{
+  "date_utc": "2026-10-27",
+  "host": "win11",
+  "root": "/c/codex-dotnet10/cim-wmi-retest.ueSKJ5",
+  "packages": [
+    "mingw-w64-clang-x86_64-powershell 7.4.20-2",
+    "mingw-w64-clang-x86_64-dotnet-management 8.0.0-2",
+    "mingw-w64-clang-x86_64-dotnet-mmi3 3.0.0-1",
+    "mingw-w64-clang-x86_64-dotnet-runtime8-servicing 8.0.31-3",
+    "mingw-w64-clang-x86_64-dotnet-sdk8-servicing 8.0.131-3"
+  ],
+  "harness_sha256": "42ff2113214fef446ba4af56068eca5646995bb324461550eb22a1d25cc56198",
+  "checks": [
+    {
+      "name": "powershell-mta",
+      "command": "timeout -k 10 90 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -MTA -ExecutionPolicy Bypass -File C:/codex-dotnet10/cim-wmi-retest.ueSKJ5/tests/powershell-full-sdk/CimWmiSmoke.ps1",
+      "exit_code": 0,
+      "log_sha256": "2396e461e1afbcdaccf1674e24de344ffd9ac9f7561f8bbdcc5391d4994f6b36"
+    },
+    {
+      "name": "powershell-sta",
+      "command": "timeout -k 10 90 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File C:/codex-dotnet10/cim-wmi-retest.ueSKJ5/tests/powershell-full-sdk/CimWmiSmoke.ps1",
+      "exit_code": 0,
+      "log_sha256": "2396e461e1afbcdaccf1674e24de344ffd9ac9f7561f8bbdcc5391d4994f6b36"
+    },
+    {
+      "name": "powershell-wmi-sta",
+      "command": "timeout -k 10 60 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File C:/codex-dotnet10/cim-wmi-retest.ueSKJ5/tests/powershell-full-sdk/WmiStaProbe.ps1",
+      "exit_code": 0,
+      "log_sha256": "76b4e351007b81902980ac04c8b279478cfe2e46ff9fcf9dbc15372459a234f9"
+    },
+    {
+      "name": "mmi3",
+      "command": "bash mingw-w64-dotnet-mmi3/check.sh mmi3-consumer",
+      "exit_code": 0,
+      "log_sha256": "a308ed1f098f7066eec1ac3131a05455c4f1e496c6eeaa9671bb026c043c6614"
+    },
+    {
+      "name": "wmi-mta",
+      "command": "bash tests/mmi-cim-wmi/check-wmi.sh wmi-mta-consumer",
+      "exit_code": 0,
+      "log_sha256": "6f6e3c2a812b023635e1956ab04d2c121f0b04a113e5595d8582f01f973c79c4"
+    },
+    {
+      "name": "wmi-sta",
+      "command": "bash tests/mmi-cim-wmi/check-source-wmi-sta.sh wmi-sta-consumer",
+      "exit_code": 0,
+      "log_sha256": "c528b40d5ea55d63e1ac70ad7b61ad8287531e6baf1242c16ef4fb431f75e8d0"
+    },
+    {
+      "name": "combined",
+      "command": "bash tests/mmi-cim-wmi/check-mmi3-combined.sh combined-consumer",
+      "exit_code": 0,
+      "log_sha256": "6c3751b39f8c5666f9a523484f1e0b9a227e389cb81f1abe0ea1a7f0889fda21"
+    }
+  ],
+  "all_passed": true,
+  "full_remote_provider_ownership_compatibility_verified": false,
+  "implementation_changed": false,
+  "full_dependency_goal_complete": false,
+  "additional_audits": [
+    {
+      "command": "python3 tests/mmi-cim-wmi/audit-mmi3.py",
+      "exit_code": 0
+    },
+    {
+      "command": "python3 tests/powershell-deps/audit-management.py",
+      "exit_code": 1,
+      "reason": "No package artifact in recipe directory; rerun using isolated recipe copy with existing package artifact."
+    },
+    {
+      "command": "python3 tests/powershell-deps/audit-management.py /tmp/wmi-current-audit.va87uq6d /tmp/wmi-current-audit.va87uq6d/artifact.json",
+      "exit_code": 0
+    }
+  ]
+}

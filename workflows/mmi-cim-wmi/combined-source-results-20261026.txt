@@ -1,0 +1,37 @@
+Combined installed source CIM/MMI and WMI integration, win11 / CLANG64
+Root: /home/topkek/powershell-compatibility.UIIT7O
+$ bash check-combined-source.sh combined-source-check
+Repository command: bash tests/mmi-cim-wmi/check-combined-source.sh NEW_OUTPUT
+Result: exit 0, fresh package cache/output, installed feed only
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-compatibility.UIIT7O\combined-source-check\check.csproj (in 452 ms).
+  check -> E:\msys64\home\topkek\powershell-compatibility.UIIT7O\combined-source-check\bin\Release\net8.0\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.42
+Runtime: .NET 8.0.0
+MMI: Microsoft.Management.Infrastructure, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+WMI: System.Management, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+Native dependency: C:\WINDOWS\SYSTEM32\mi.dll
+PASS installed source-built CIM/MMI and WMI share one process, agree on OS build 26200, survive GC and load no Framework implementations
+MMI required 3.0 compatibility remains unverified; this integration uses the experimental 2.0 port.
+
+This uses experimental MMI 2.0.0-preview.1, not PowerShell-required 3.0.0.
+Only the stated same-process/local/GC integration is established; remote CIM, MMI 3 and complete provider compatibility remain open.

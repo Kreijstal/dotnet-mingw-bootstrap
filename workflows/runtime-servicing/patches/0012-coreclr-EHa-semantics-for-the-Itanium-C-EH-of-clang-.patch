@@ -1,0 +1,773 @@
+From 4bf1579520315b048c1b348fa234a750e2f364f7 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Fri, 9 Oct 2026 17:26:09 +0200
+Subject: [PATCH 12/16] coreclr: /EHa semantics for the Itanium C++ EH of
+ clang/MinGW
+
+CoreCLR's Windows code relies on MSVC /EHa: destructors run when an SEH
+exception (access violation, managed exception) unwinds a frame, and
+catch(...) (EX_CATCH) catches SEH exceptions. libunwind/libc++abi ignore
+foreign exceptions. minipal/Windows/mingw_eha.cpp adds that behaviour,
+linked into coreclr.dll and clrjit.dll with lld --wrap:
+- __gxx_personality_seh0: for SEH exceptions, phase 1 takes the
+  exception into a catch(...) found in the LSDA (wrapped into a C++
+  exception object); phase 2 enters cleanup landing pads by collided
+  unwinds and resumes the unwind after them;
+- _Unwind_Resume: resumes those unwinds;
+- __C_specific_handler: Windows' semantics, plus the bookkeeping that
+  lets C++ cleanups run during the unwinds an __except starts (also for
+  C++ exceptions caught by __except);
+- __cxa_rethrow: "throw;" re-raises a caught SEH exception;
+- CLR_MinGW_RtlUnwind for the managed exception dispatch (ClrUnwindEx).
+Unwinds are described by a record whose EXCEPTION_RECORD copy is tagged,
+so that the handlers of every module can resume them.
+mingw_guids.cpp: IID_IInspectable, missing from mingw-w64's libuuid.
+---
+ src/coreclr/jit/CMakeLists.txt              |   3 +
+ src/coreclr/minipal/Windows/CMakeLists.txt  |  13 +
+ src/coreclr/minipal/Windows/mingw_eha.cpp   | 663 ++++++++++++++++++++
+ src/coreclr/minipal/Windows/mingw_guids.cpp |  10 +
+ src/coreclr/vm/exceptionhandling.cpp        |   5 +
+ 5 files changed, 694 insertions(+)
+ create mode 100644 src/coreclr/minipal/Windows/mingw_eha.cpp
+ create mode 100644 src/coreclr/minipal/Windows/mingw_guids.cpp
+
+diff --git a/src/coreclr/jit/CMakeLists.txt b/src/coreclr/jit/CMakeLists.txt
+index d00b5b27f..fa4d526b7 100644
+--- a/src/coreclr/jit/CMakeLists.txt
++++ b/src/coreclr/jit/CMakeLists.txt
+@@ -549,6 +549,9 @@ else()
+        RuntimeObject.lib
+        coreclrminipal
+     )
++    if(MINGW)
++        list(APPEND JIT_LINK_LIBRARIES clrmingweha)
++    endif()
+ endif(CLR_CMAKE_HOST_UNIX)
+ 
+ # Shared function for generating JIT
+diff --git a/src/coreclr/minipal/Windows/CMakeLists.txt b/src/coreclr/minipal/Windows/CMakeLists.txt
+index 3f8368bd4..32fa1d4aa 100644
+--- a/src/coreclr/minipal/Windows/CMakeLists.txt
++++ b/src/coreclr/minipal/Windows/CMakeLists.txt
+@@ -14,3 +14,16 @@ add_library(coreclrminipal
+     STATIC
+     ${SOURCES}
+ )
++
++if(MINGW)
++    # /EHa semantics for the Itanium C++ EH of clang/libc++abi (see mingw_eha.cpp):
++    # every module built from CoreCLR's Windows code links it.
++    add_library(clrmingweha STATIC mingw_eha.cpp mingw_guids.cpp)
++    # typeid of the wrapper exception type
++    set_source_files_properties(mingw_eha.cpp PROPERTIES COMPILE_OPTIONS -frtti)
++    target_link_options(clrmingweha INTERFACE
++        -Wl,--wrap=__gxx_personality_seh0
++        -Wl,--wrap=_Unwind_Resume
++        -Wl,--wrap=__cxa_rethrow
++        -Wl,--wrap=__C_specific_handler)
++endif()
+diff --git a/src/coreclr/minipal/Windows/mingw_eha.cpp b/src/coreclr/minipal/Windows/mingw_eha.cpp
+new file mode 100644
+index 000000000..4676dc432
+--- /dev/null
++++ b/src/coreclr/minipal/Windows/mingw_eha.cpp
+@@ -0,0 +1,663 @@
++// Licensed to the .NET Foundation under one or more agreements.
++// The .NET Foundation licenses this file to you under the MIT license.
++
++//
++// /EHa semantics for CoreCLR built by clang for x86_64-w64-mingw32.
++//
++// CoreCLR's Windows code is written for MSVC's /EHa: C++ destructors run when
++// *any* SEH exception (an access violation, a managed exception raised as
++// EXCEPTION_COMPLUS, ...) unwinds a frame, and catch(...) (EX_CATCH) catches SEH
++// exceptions. With MinGW, C++ uses the Itanium EH model on top of SEH
++// (libc++abi's __gxx_personality_seh0 over libunwind's _GCC_specific_handler),
++// which deliberately ignores foreign (non-C++) exceptions: no destructor runs and
++// no catch(...) matches. This file adds the /EHa behavior:
++//
++//  * __gxx_personality_seh0 (wrapped with lld --wrap): for a foreign exception,
++//    phase 1 looks for a catch(...) clause covering the frame's PC in the LSDA;
++//    if there is one, the exception is wrapped into a C++ exception object of
++//    type EhaSehException and the stack is unwound to that catch(...) landing pad
++//    (RtlUnwindEx), as MSVC does. In phase 2 (an unwind passing through), the
++//    frame's cleanup landing pad (destructors) is entered with a collided unwind;
++//    when it calls _Unwind_Resume, the original unwind is restarted.
++//  * _Unwind_Resume (wrapped): restarts the unwind a cleanup landing pad
++//    interrupted, for unwinds this file knows about.
++//  * __C_specific_handler (wrapped): the __try/__except/__finally handler, as
++//    Windows' own, except that it records the unwinds it starts (an __except
++//    catching an exception), so that C++ frames in between get their
++//    destructors run and the unwind can be resumed after them.
++//  * __cxa_rethrow (wrapped): "throw;" inside catch(...) of an SEH exception
++//    raises the SEH exception again (MSVC semantics), instead of a C++ exception.
++//  * CLR_MinGW_RtlUnwind: used by CoreCLR's managed exception handling instead of
++//    RtlUnwind, so that its unwinds can be resumed too.
++//
++// An unwind can only be resumed after a landing pad if its target frame, target
++// IP and return value are known, which is why the unwinds are started through
++// these functions and described by an EhaUnwind record. The EXCEPTION_RECORD
++// handed to RtlUnwindEx is a copy inside that record (the original lives on the
++// stack of the exception dispatcher, which a landing pad overwrites), tagged so
++// that every handler, also those of another module (clrjit.dll), can find it.
++// Unwinds started elsewhere (e.g. by an __except in system code) unwind C++ frames
++// without running their destructors, as before; set CLR_MINGW_EHA_TRACE=1 to log them.
++//
++// Limitation: clang (without -fasync-exceptions, which it cannot combine with the
++// Itanium C++ ABI) only records call sites in the LSDA and in __try ranges, so a
++// hardware fault raised by a non-call instruction of a C++ function or a __try
++// block is attributed to no handler of that function.
++//
++
++#if defined(__MINGW32__) && defined(__x86_64__)
++
++#include <windows.h>
++#include <stdint.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <unwind.h>
++#include <typeinfo>
++#include <new>
++
++#define STATUS_GCC_THROW  0x20474343   // libunwind: C++ throw (phase 1, and phase 2 started by libunwind)
++#define STATUS_GCC_UNWIND 0x21474343   // libunwind: collided unwind to a landing pad
++
++#ifndef EXCEPTION_UNWINDING
++#define EXCEPTION_UNWINDING 0x2
++#endif
++#ifndef EXCEPTION_EXIT_UNWIND
++#define EXCEPTION_EXIT_UNWIND 0x4
++#endif
++#ifndef EXCEPTION_TARGET_UNWIND
++#define EXCEPTION_TARGET_UNWIND 0x20
++#endif
++#define EHA_IS_UNWINDING(flags) (((flags) & (EXCEPTION_UNWINDING | EXCEPTION_EXIT_UNWIND)) != 0)
++
++extern "C" {
++// the wrapped implementations (lld --wrap)
++EXCEPTION_DISPOSITION __real___gxx_personality_seh0(PEXCEPTION_RECORD, void*, PCONTEXT, PDISPATCHER_CONTEXT);
++void __real__Unwind_Resume(_Unwind_Exception*);
++void __real___cxa_rethrow();
++
++// libc++abi
++void* __cxa_allocate_exception(size_t) noexcept;
++void* __cxa_init_primary_exception(void* object, std::type_info* tinfo, void (*dest)(void*)) noexcept;
++void __cxa_increment_exception_refcount(void*) noexcept;
++void __cxa_decrement_exception_refcount(void*) noexcept;
++std::type_info* __cxa_current_exception_type() noexcept;
++void* __cxa_current_primary_exception() noexcept;
++void* __cxa_get_globals() noexcept;
++}
++
++namespace
++{
++
++const ULONG_PTR kEhaMagic = 0x6148452D57474E4DULL;          // "MNGW-EHa"
++const uint64_t kEhaClass  = 0x0041484543534548ULL;          // exception_class of EhaUnwind::ue ("HESCEHA")
++const uint64_t kCxxClass  = 0x434C4E47432B2B00ULL;          // libc++abi's "CLNGC++\0"
++const int kSlotPtr   = 13;                                   // EXCEPTION_RECORD::ExceptionInformation slots
++const int kSlotMagic = 14;                                   // used to tag our copies
++
++// An unwind started (or taken over) by this file.
++struct EhaUnwind
++{
++    ULONG_PTR magic;
++    PVOID targetFrame;
++    PVOID targetIp;
++    PVOID returnValue;          // RAX at the target
++    ULONG64 targetRdx;          // RDX at the target (the selector of a catch(...) landing pad)
++    bool setTargetRdx;
++    bool ownedByException;      // freed by the EhaSehException that refers to it
++    volatile bool done;
++    PVOID landingFrame;         // frame whose cleanup landing pad is being entered
++    _Unwind_Exception ue;       // handed to cleanup landing pads (and back to _Unwind_Resume)
++    EXCEPTION_RECORD orig;      // the exception, as it was when the unwind started
++    EXCEPTION_RECORD rec;       // the copy passed to RtlUnwindEx (which updates its flags)
++    EhaUnwind* next;            // this thread's list
++};
++
++// The C++ exception a catch(...) receives for an SEH exception.
++struct EhaSehException
++{
++    EhaUnwind* unwind;
++    EXCEPTION_RECORD record;
++};
++
++thread_local EhaUnwind* t_unwinds;
++
++bool TraceEnabled()
++{
++    static int s_trace = -1;
++    if (s_trace < 0)
++    {
++        char buf[8];
++        s_trace = (GetEnvironmentVariableA("CLR_MINGW_EHA_TRACE", buf, sizeof(buf)) > 0 && buf[0] != '0') ? 1 : 0;
++    }
++    return s_trace == 1;
++}
++
++#define EHA_TRACE(...) do { if (TraceEnabled()) { fprintf(stderr, "[mingw-eha] " __VA_ARGS__); fflush(stderr); } } while (0)
++
++[[noreturn]] void Fatal(const char* what)
++{
++    fprintf(stderr, "[mingw-eha] fatal: %s\n", what);
++    fflush(stderr);
++    RaiseFailFastException(nullptr, nullptr, 0);
++    abort();
++}
++
++void Tag(EhaUnwind* u)
++{
++    if (u->rec.NumberParameters <= kSlotPtr)
++    {
++        u->rec.ExceptionInformation[kSlotPtr] = (ULONG_PTR)u;
++        u->rec.ExceptionInformation[kSlotMagic] = kEhaMagic;
++    }
++}
++
++EhaUnwind* FromRecord(PEXCEPTION_RECORD rec)
++{
++    if (rec == nullptr || rec->NumberParameters > kSlotPtr || rec->ExceptionInformation[kSlotMagic] != kEhaMagic)
++        return nullptr;
++    EhaUnwind* u = (EhaUnwind*)rec->ExceptionInformation[kSlotPtr];
++    if (u == nullptr || u->magic != kEhaMagic || &u->rec != rec)
++        return nullptr;
++    return u;
++}
++
++// Frees the finished unwinds of this thread: those whose target was reached
++// (done), and those whose target frame is no longer on the stack.
++void Collect()
++{
++    ULONG_PTR sp = (ULONG_PTR)__builtin_frame_address(0);
++    EhaUnwind** link = &t_unwinds;
++    while (*link != nullptr)
++    {
++        EhaUnwind* u = *link;
++        if (u->done || (ULONG_PTR)u->targetFrame < sp)
++        {
++            *link = u->next;
++            u->magic = 0;
++            HeapFree(GetProcessHeap(), 0, u);
++        }
++        else
++        {
++            link = &u->next;
++        }
++    }
++}
++
++EhaUnwind* NewUnwind(PEXCEPTION_RECORD rec, bool ownedByException)
++{
++    if (!ownedByException)
++        Collect();
++    EhaUnwind* u = (EhaUnwind*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(EhaUnwind));
++    if (u == nullptr)
++        Fatal("out of memory");
++    u->magic = kEhaMagic;
++    u->orig = *rec;
++    u->rec = u->orig;
++    Tag(u);
++    u->ue.exception_class = kEhaClass;
++    u->ownedByException = ownedByException;
++    if (!ownedByException)
++    {
++        u->next = t_unwinds;
++        t_unwinds = u;
++    }
++    return u;
++}
++
++// C++ exceptions unwound by an __except or by CoreCLR: libunwind's landing pads
++// end in _Unwind_Resume, which must come back here (see WrapUnwindResume).
++void AttachCxx(EhaUnwind* u)
++{
++    if (u->orig.ExceptionCode == STATUS_GCC_THROW && u->orig.NumberParameters >= 1)
++    {
++        _Unwind_Exception* exc = (_Unwind_Exception*)u->orig.ExceptionInformation[0];
++        if (exc != nullptr)
++        {
++            exc->private_[0] = 0;              // not a forced unwind
++            exc->private_[5] = (uintptr_t)u;
++        }
++        // libunwind compares ExceptionInformation[1] with the frame to find "its" handler frame
++        u->rec.ExceptionInformation[1] = 0;
++        u->orig.ExceptionInformation[1] = 0;
++    }
++}
++
++[[noreturn]] void StartUnwind(EhaUnwind* u, PCONTEXT scratch, PUNWIND_HISTORY_TABLE history)
++{
++    u->landingFrame = nullptr;
++    u->rec = u->orig;
++    Tag(u);
++    if (u->orig.ExceptionCode == STATUS_GCC_THROW)
++        u->rec.ExceptionInformation[1] = 0;
++    RtlUnwindEx(u->targetFrame, u->targetIp, &u->rec, u->returnValue, scratch, history);
++    Fatal("RtlUnwindEx returned");
++}
++
++[[noreturn]] void ResumeUnwind(EhaUnwind* u)
++{
++    CONTEXT ctx;
++    UNWIND_HISTORY_TABLE history;
++    memset(&history, 0, sizeof(history));
++    StartUnwind(u, &ctx, &history);
++}
++
++//
++// LSDA (gcc_except_table) reading, enough for the tables clang emits
++//
++
++enum
++{
++    DW_EH_PE_absptr = 0x00, DW_EH_PE_uleb128 = 0x01, DW_EH_PE_udata2 = 0x02, DW_EH_PE_udata4 = 0x03,
++    DW_EH_PE_udata8 = 0x04, DW_EH_PE_sleb128 = 0x09, DW_EH_PE_sdata2 = 0x0A, DW_EH_PE_sdata4 = 0x0B,
++    DW_EH_PE_sdata8 = 0x0C, DW_EH_PE_pcrel = 0x10, DW_EH_PE_indirect = 0x80, DW_EH_PE_omit = 0xFF
++};
++
++uintptr_t ReadUleb(const uint8_t** p)
++{
++    uintptr_t result = 0;
++    unsigned shift = 0;
++    uint8_t b;
++    do
++    {
++        b = *(*p)++;
++        result |= (uintptr_t)(b & 0x7F) << shift;
++        shift += 7;
++    } while (b & 0x80);
++    return result;
++}
++
++intptr_t ReadSleb(const uint8_t** p)
++{
++    uintptr_t result = 0;
++    unsigned shift = 0;
++    uint8_t b;
++    do
++    {
++        b = *(*p)++;
++        result |= (uintptr_t)(b & 0x7F) << shift;
++        shift += 7;
++    } while (b & 0x80);
++    if ((b & 0x40) && shift < sizeof(result) * 8)
++        result |= ~(uintptr_t)0 << shift;
++    return (intptr_t)result;
++}
++
++// returns the raw (unrelocated) value; *applied the value with pcrel/indirect applied
++uintptr_t ReadEncoded(const uint8_t** p, uint8_t enc, uintptr_t* applied = nullptr)
++{
++    const uint8_t* start = *p;
++    uintptr_t v;
++    switch (enc & 0x0F)
++    {
++    case DW_EH_PE_absptr:  memcpy(&v, *p, 8); *p += 8; break;
++    case DW_EH_PE_uleb128: v = ReadUleb(p); break;
++    case DW_EH_PE_sleb128: v = (uintptr_t)ReadSleb(p); break;
++    case DW_EH_PE_udata2:  { uint16_t x; memcpy(&x, *p, 2); *p += 2; v = x; break; }
++    case DW_EH_PE_sdata2:  { int16_t x;  memcpy(&x, *p, 2); *p += 2; v = (uintptr_t)(intptr_t)x; break; }
++    case DW_EH_PE_udata4:  { uint32_t x; memcpy(&x, *p, 4); *p += 4; v = x; break; }
++    case DW_EH_PE_sdata4:  { int32_t x;  memcpy(&x, *p, 4); *p += 4; v = (uintptr_t)(intptr_t)x; break; }
++    case DW_EH_PE_udata8:
++    case DW_EH_PE_sdata8:  memcpy(&v, *p, 8); *p += 8; break;
++    default: Fatal("unsupported LSDA encoding");
++    }
++    if (applied != nullptr)
++    {
++        uintptr_t a = v;
++        if (a != 0)
++        {
++            if ((enc & 0x70) == DW_EH_PE_pcrel)
++                a += (uintptr_t)start;
++            if (enc & DW_EH_PE_indirect)
++                a = *(uintptr_t*)a;
++        }
++        *applied = a;
++    }
++    return v;
++}
++
++size_t EncodedSize(uint8_t enc)
++{
++    switch (enc & 0x0F)
++    {
++    case DW_EH_PE_absptr: case DW_EH_PE_udata8: case DW_EH_PE_sdata8: return 8;
++    case DW_EH_PE_udata4: case DW_EH_PE_sdata4: return 4;
++    case DW_EH_PE_udata2: case DW_EH_PE_sdata2: return 2;
++    default: Fatal("unsupported type table encoding");
++    }
++}
++
++struct CallSite
++{
++    uintptr_t landingPad;       // 0: none
++    const uint8_t* action;      // null: cleanup only
++    const uint8_t* classInfo;   // end of the type table
++    uint8_t ttypeEnc;
++};
++
++// The call-site entry of the LSDA that covers ip; false if there is none
++// (for a foreign exception that means: nothing to do in this frame).
++bool FindCallSite(PDISPATCHER_CONTEXT disp, uintptr_t ip, CallSite* cs)
++{
++    const uint8_t* p = (const uint8_t*)disp->HandlerData;
++    if (p == nullptr || disp->FunctionEntry == nullptr)
++        return false;
++    uintptr_t funcStart = (uintptr_t)disp->ImageBase + disp->FunctionEntry->BeginAddress;
++
++    uint8_t lpStartEnc = *p++;
++    uintptr_t lpStart = funcStart;
++    if (lpStartEnc != DW_EH_PE_omit)
++        ReadEncoded(&p, lpStartEnc, &lpStart);
++    uint8_t ttypeEnc = *p++;
++    const uint8_t* classInfo = nullptr;
++    if (ttypeEnc != DW_EH_PE_omit)
++    {
++        uintptr_t off = ReadUleb(&p);
++        classInfo = p + off;
++    }
++    uint8_t csEnc = *p++;
++    uintptr_t csLen = ReadUleb(&p);
++    const uint8_t* csEnd = p + csLen;
++    const uint8_t* actionTable = csEnd;
++    uintptr_t ipOffset = ip - funcStart;
++
++    while (p < csEnd)
++    {
++        uintptr_t start = ReadEncoded(&p, csEnc);
++        uintptr_t length = ReadEncoded(&p, csEnc);
++        uintptr_t lp = ReadEncoded(&p, csEnc);
++        uintptr_t action = ReadUleb(&p);
++        if (ipOffset < start)
++            break;                       // the table is sorted
++        if (ipOffset < start + length)
++        {
++            cs->landingPad = lp ? lpStart + lp : 0;
++            cs->action = action ? actionTable + action - 1 : nullptr;
++            cs->classInfo = classInfo;
++            cs->ttypeEnc = ttypeEnc;
++            return true;
++        }
++    }
++    return false;
++}
++
++// Walks the action chain of a call site: finds a catch(...) clause (its selector)
++// and whether the landing pad has cleanups.
++void ScanActions(const CallSite& cs, intptr_t* catchAllSelector, bool* hasCleanup)
++{
++    *catchAllSelector = 0;
++    *hasCleanup = false;
++    if (cs.landingPad == 0)
++        return;
++    if (cs.action == nullptr)
++    {
++        *hasCleanup = true;
++        return;
++    }
++    const uint8_t* a = cs.action;
++    for (;;)
++    {
++        intptr_t filter = ReadSleb(&a);
++        const uint8_t* nextBase = a;
++        intptr_t next = ReadSleb(&a);
++        if (filter > 0)
++        {
++            if (cs.classInfo == nullptr)
++                Fatal("catch clause without a type table");
++            const uint8_t* entry = cs.classInfo - (size_t)filter * EncodedSize(cs.ttypeEnc);
++            uintptr_t raw = ReadEncoded(&entry, cs.ttypeEnc);
++            if (raw == 0 && *catchAllSelector == 0)
++                *catchAllSelector = filter;  // catch (...)
++            // typed catch clauses never match an SEH exception (as with /EHa)
++        }
++        else if (filter == 0)
++        {
++            *hasCleanup = true;
++        }
++        // filter < 0: exception specification, not used by C++17 code
++        if (next == 0)
++            break;
++        a = nextBase + next;
++    }
++}
++
++// The PC to look up: the faulting instruction itself in the frame that raised a
++// hardware exception, else a return address, which belongs to the call before it.
++uintptr_t LookupIp(PEXCEPTION_RECORD rec, PDISPATCHER_CONTEXT disp)
++{
++    uintptr_t pc = (uintptr_t)disp->ControlPc;
++    if (pc == (uintptr_t)rec->ExceptionAddress)
++        return pc;
++    return pc - 1;
++}
++
++void SehExceptionDtor(void* p)
++{
++    EhaSehException* e = (EhaSehException*)p;
++    if (e->unwind != nullptr)
++    {
++        e->unwind->magic = 0;
++        HeapFree(GetProcessHeap(), 0, e->unwind);
++        e->unwind = nullptr;
++    }
++}
++
++struct EhGlobals
++{
++    void* caughtExceptions;
++    unsigned int uncaughtExceptions;
++};
++
++// A C++ exception object for an SEH exception about to be caught by catch(...);
++// returns the _Unwind_Exception to hand to the landing pad.
++_Unwind_Exception* MakeCxxException(EhaUnwind* u)
++{
++    void* obj = __cxa_allocate_exception(sizeof(EhaSehException));
++    EhaSehException* e = new (obj) EhaSehException;
++    e->unwind = u;
++    e->record = u->orig;
++    __cxa_init_primary_exception(obj, const_cast<std::type_info*>(&typeid(EhaSehException)), SehExceptionDtor);
++    __cxa_increment_exception_refcount(obj);                     // as __cxa_throw
++    ((EhGlobals*)__cxa_get_globals())->uncaughtExceptions += 1;  // as __cxa_throw; __cxa_begin_catch takes it back
++    _Unwind_Exception* ue = (_Unwind_Exception*)obj - 1;          // the header ends with the unwind header
++    if (ue->exception_class != kCxxClass)
++        Fatal("unexpected __cxa_exception layout");
++    return ue;
++}
++
++EXCEPTION_DISPOSITION ForeignPersonality(PEXCEPTION_RECORD rec, void* frame, PCONTEXT ctx, PDISPATCHER_CONTEXT disp)
++{
++    if (!EHA_IS_UNWINDING(rec->ExceptionFlags))
++    {
++        // phase 1: does a catch(...) of this frame take it?
++        CallSite cs;
++        if (!FindCallSite(disp, LookupIp(rec, disp), &cs))
++            return ExceptionContinueSearch;
++        intptr_t selector;
++        bool cleanup;
++        ScanActions(cs, &selector, &cleanup);
++        if (selector == 0)
++            return ExceptionContinueSearch;
++
++        EHA_TRACE("catch(...) at %p takes exception %08lx\n", (void*)cs.landingPad, rec->ExceptionCode);
++        EhaUnwind* u = NewUnwind(rec, true);
++        u->targetFrame = frame;
++        u->targetIp = (PVOID)cs.landingPad;
++        u->returnValue = MakeCxxException(u);
++        u->targetRdx = (ULONG64)selector;
++        u->setTargetRdx = true;
++        StartUnwind(u, disp->ContextRecord, disp->HistoryTable);
++    }
++
++    // phase 2
++    EhaUnwind* u = FromRecord(rec);
++    if (rec->ExceptionFlags & EXCEPTION_TARGET_UNWIND)
++    {
++        if (u != nullptr && u->landingFrame == frame)
++        {
++            // arriving at a cleanup landing pad of this frame (collided unwind below)
++            disp->ContextRecord->Rdx = 0;
++        }
++        else if (u != nullptr && u->targetFrame == frame && u->setTargetRdx)
++        {
++            // arriving at the catch(...) that took the exception in phase 1
++            disp->ContextRecord->Rdx = u->targetRdx;
++        }
++        return ExceptionContinueSearch;
++    }
++
++    // an unwind passing through this frame: run its destructors
++    CallSite cs;
++    if (!FindCallSite(disp, LookupIp(rec, disp), &cs))
++        return ExceptionContinueSearch;
++    intptr_t selector;
++    bool cleanup;
++    ScanActions(cs, &selector, &cleanup);
++    if (!cleanup)
++        return ExceptionContinueSearch;
++    if (u == nullptr)
++    {
++        EHA_TRACE("unwind (exception %08lx, flags %lx, target ip %p) not started by CoreCLR or an __except of it: "
++                  "skipping the cleanup at %p\n", rec->ExceptionCode, rec->ExceptionFlags, (void*)disp->TargetIp,
++                  (void*)cs.landingPad);
++        return ExceptionContinueSearch;
++    }
++    EHA_TRACE("cleanup at %p (exception %08lx)\n", (void*)cs.landingPad, rec->ExceptionCode);
++    u->landingFrame = frame;
++    CONTEXT scratch;
++    RtlUnwindEx(frame, (PVOID)cs.landingPad, &u->rec, &u->ue, &scratch, disp->HistoryTable);
++    Fatal("RtlUnwindEx (to a cleanup) returned");
++}
++
++// The scope table __C_specific_handler gets as handler data (x64)
++struct EhaScopeTable
++{
++    ULONG Count;
++    struct
++    {
++        ULONG BeginAddress;
++        ULONG EndAddress;
++        ULONG HandlerAddress;
++        ULONG JumpTarget;
++    } ScopeRecord[1];
++};
++
++typedef LONG (*EhaExceptionFilter)(EXCEPTION_POINTERS*, PVOID);
++typedef void (*EhaTerminationHandler)(BOOLEAN, PVOID);
++
++} // namespace
++
++extern "C" EXCEPTION_DISPOSITION
++__wrap___gxx_personality_seh0(PEXCEPTION_RECORD rec, void* frame, PCONTEXT ctx, PDISPATCHER_CONTEXT disp)
++{
++    DWORD code = rec->ExceptionCode;
++    if (code == STATUS_GCC_THROW || code == STATUS_GCC_UNWIND)
++        return __real___gxx_personality_seh0(rec, frame, ctx, disp);
++    return ForeignPersonality(rec, frame, ctx, disp);
++}
++
++extern "C" void __wrap__Unwind_Resume(_Unwind_Exception* ue)
++{
++    EhaUnwind* u = nullptr;
++    if (ue->exception_class == kEhaClass)
++        u = (EhaUnwind*)((char*)ue - offsetof(EhaUnwind, ue));
++    else if (ue->private_[0] == 0 && ue->private_[5] != 0)
++        u = (EhaUnwind*)ue->private_[5];
++    if (u != nullptr && u->magic == kEhaMagic)
++        ResumeUnwind(u);
++    __real__Unwind_Resume(ue);
++}
++
++extern "C" void __wrap___cxa_rethrow()
++{
++    std::type_info* t = __cxa_current_exception_type();
++    if (t != nullptr && *t == typeid(EhaSehException))
++    {
++        EhaSehException* e = (EhaSehException*)__cxa_current_primary_exception();
++        EXCEPTION_RECORD r = e->record;
++        __cxa_decrement_exception_refcount(e);
++        EHA_TRACE("rethrow of SEH exception %08lx\n", r.ExceptionCode);
++        // /EHa: "throw;" in a catch(...) that caught an SEH exception raises it again.
++        // The catch block's own cleanup (__cxa_end_catch) runs when it unwinds.
++        RaiseException(r.ExceptionCode, r.ExceptionFlags & EXCEPTION_NONCONTINUABLE,
++                       r.NumberParameters > EXCEPTION_MAXIMUM_PARAMETERS ? EXCEPTION_MAXIMUM_PARAMETERS : r.NumberParameters,
++                       r.ExceptionInformation);
++        Fatal("rethrown SEH exception continued");
++    }
++    __real___cxa_rethrow();
++}
++
++// Windows' __C_specific_handler, plus the bookkeeping that lets C++ cleanups
++// run during the unwinds it starts.
++extern "C" EXCEPTION_DISPOSITION
++__wrap___C_specific_handler(PEXCEPTION_RECORD rec, void* frame, PCONTEXT ctx, PDISPATCHER_CONTEXT disp)
++{
++    const EhaScopeTable* table = (const EhaScopeTable*)disp->HandlerData;
++    ULONG64 base = disp->ImageBase;
++    ULONG64 pc = disp->ControlPc - base;
++
++    if (EHA_IS_UNWINDING(rec->ExceptionFlags))
++    {
++        ULONG64 target = (ULONG64)disp->TargetIp - base;
++        for (ULONG i = disp->ScopeIndex; i < table->Count; i++)
++        {
++            if (pc < table->ScopeRecord[i].BeginAddress || pc >= table->ScopeRecord[i].EndAddress)
++                continue;
++            if (table->ScopeRecord[i].JumpTarget != 0)
++            {
++                // an __except: stop at the one this unwind goes to
++                if ((rec->ExceptionFlags & EXCEPTION_TARGET_UNWIND) && target == table->ScopeRecord[i].JumpTarget)
++                {
++                    EhaUnwind* u = FromRecord(rec);
++                    if (u != nullptr)
++                        u->done = true;
++                    break;
++                }
++                continue;
++            }
++            // a __finally or a cleanup funclet
++            EhaTerminationHandler handler = (EhaTerminationHandler)(base + table->ScopeRecord[i].HandlerAddress);
++            disp->ScopeIndex = i + 1;
++            handler(TRUE, frame);
++        }
++        return ExceptionContinueSearch;
++    }
++
++    for (ULONG i = disp->ScopeIndex; i < table->Count; i++)
++    {
++        if (pc < table->ScopeRecord[i].BeginAddress || pc >= table->ScopeRecord[i].EndAddress)
++            continue;
++        if (table->ScopeRecord[i].JumpTarget == 0)
++            continue;
++        if (table->ScopeRecord[i].HandlerAddress != EXCEPTION_EXECUTE_HANDLER)
++        {
++            EXCEPTION_POINTERS ptrs = { rec, ctx };
++            EhaExceptionFilter filter = (EhaExceptionFilter)(base + table->ScopeRecord[i].HandlerAddress);
++            LONG r = filter(&ptrs, frame);
++            if (r < 0)
++                return ExceptionContinueExecution;
++            if (r == 0)
++                continue;
++        }
++        EhaUnwind* u = NewUnwind(rec, false);
++        u->targetFrame = frame;
++        u->targetIp = (PVOID)(base + table->ScopeRecord[i].JumpTarget);
++        u->returnValue = (PVOID)(ULONG_PTR)rec->ExceptionCode;   // GetExceptionCode() in the __except block
++        AttachCxx(u);
++        StartUnwind(u, disp->ContextRecord, disp->HistoryTable);
++    }
++    return ExceptionContinueSearch;
++}
++
++// RtlUnwind for CoreCLR's managed exception handling (ClrUnwindEx).
++extern "C" void CLR_MinGW_RtlUnwind(PVOID targetFrame, PVOID targetIp, PEXCEPTION_RECORD rec, PVOID returnValue)
++{
++    EhaUnwind* u = NewUnwind(rec, false);
++    u->targetFrame = targetFrame;
++    u->targetIp = targetIp;
++    u->returnValue = returnValue;
++    AttachCxx(u);
++    ResumeUnwind(u);
++}
++
++#endif // __MINGW32__ && __x86_64__
+diff --git a/src/coreclr/minipal/Windows/mingw_guids.cpp b/src/coreclr/minipal/Windows/mingw_guids.cpp
+new file mode 100644
+index 000000000..8f105990b
+--- /dev/null
++++ b/src/coreclr/minipal/Windows/mingw_guids.cpp
+@@ -0,0 +1,10 @@
++// Licensed to the .NET Foundation under one or more agreements.
++// The .NET Foundation licenses this file to you under the MIT license.
++
++// MinGW: interface IDs the Windows SDK's uuid.lib has and mingw-w64's libuuid lacks.
++#if defined(__MINGW32__)
++#include <windows.h>
++
++// inspectable.h
++EXTERN_C const IID IID_IInspectable = { 0xAF86E2E0, 0xB12D, 0x4C6A, { 0x9C, 0x5A, 0xD7, 0xAA, 0x65, 0x10, 0x1E, 0x90 } };
++#endif
+diff --git a/src/coreclr/vm/exceptionhandling.cpp b/src/coreclr/vm/exceptionhandling.cpp
+index 0621ae03e..1c9d0ef48 100644
+--- a/src/coreclr/vm/exceptionhandling.cpp
++++ b/src/coreclr/vm/exceptionhandling.cpp
+@@ -5412,6 +5412,11 @@ BOOL HandleHardwareException(PAL_SEHException* ex)
+ #endif // TARGET_UNIX
+ 
+ #ifndef TARGET_UNIX
++#ifdef __MINGW32__
++// minipal/Windows/mingw_eha.cpp: an RtlUnwind that C++ cleanup landing pads can resume
++extern "C" void CLR_MinGW_RtlUnwind(PVOID TargetFrame, PVOID TargetIp, PEXCEPTION_RECORD ExceptionRecord, PVOID ReturnValue);
++#define RtlUnwind CLR_MinGW_RtlUnwind
++#endif
+ void ClrUnwindEx(EXCEPTION_RECORD* pExceptionRecord, UINT_PTR ReturnValue, UINT_PTR TargetIP, UINT_PTR TargetFrameSp)
+ {
+     RtlUnwind((PVOID)TargetFrameSp, // TargetFrame
+-- 
+2.55.0
+

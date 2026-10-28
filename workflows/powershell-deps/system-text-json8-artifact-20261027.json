@@ -1,0 +1,14 @@
+{
+  "artifact": "mingw-w64-clang-x86_64-dotnet-system-text-json8-8.0.5-1-any.pkg.tar.zst",
+  "sha256": "7a4bf15d89c1e01f8ff50f54a6f787cbb0c48a02da8519509a81008bdebe203e",
+  "source_commit": "81cabf2857a01351e5ab578947c7403a5b128ad1",
+  "implementation_sha256": "84c58b6e58fdb11720503bb5056c6ed405885a2c5ed25224965df9daffba5765",
+  "reference_sha256": "ff57d206fc067555811e3a9e0a0a2c13de546160ae4efac46a5588d645152d46",
+  "original_compiler_items": 497,
+  "source_dll_assets": 43,
+  "packaged_dll_assets": 44,
+  "public_protected_api_declarations": 1784,
+  "resource_sets": 43,
+  "resource_strings": 1460,
+  "production_cs_changes": []
+}

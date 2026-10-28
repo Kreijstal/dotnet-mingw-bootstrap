@@ -1,0 +1,10 @@
+{
+  "artifact": "mingw-w64-clang-x86_64-dotnet-memory-data-1.0.2-1-any.pkg.tar.zst",
+  "sha256": "87d275d4e82f652831573964615e7e0a3661bff23b913078ddd2a92fbf0d2dc4",
+  "source_commit": "7e3cf643977591e9041f4c628fd4d28237398e0b",
+  "original_compile_items": 2,
+  "public_protected_api_declarations": 20,
+  "production_cs_changes": [],
+  "implementation_sha256": "b816c21e953efe4cdf1d10f9cbee54432c3e2120d074b662547b8739ab16bd9d",
+  "reference_sha256": "aebda739db222b623c69807983b9515542913677e341a41fc5565fdd77ef0937"
+}

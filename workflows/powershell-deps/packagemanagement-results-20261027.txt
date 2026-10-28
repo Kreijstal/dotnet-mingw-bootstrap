@@ -1,0 +1,782 @@
+PackageManagement1.4.8.1 source package, 2026-10-27
+Host: win11 / Windows11 build26200 / MSYS2 CLANG64
+Formal root: /home/topkek/packagemanagement-package.fKyDcn/mingw-w64-powershell-packagemanagement
+Installed check root: /home/topkek/packagemanagement-installed-check-20261027
+Prototype root: /home/topkek/packagemanagement-source.ff5YRn
+
+Final clean source build/check/package/install/fresh installed checks and local
+independent artifact audit passed0. Source commits are OneGet923260b2f2cbc5b66d90ef2e31f240b9d8579a74
+and exact NuGetProvider submoduleb4a79a22f65c85a5de7aa3f23c0505fb38422e1d.
+All277 original Core compiler inputs, original Core exclusions/constants,5 original
+resource-generator outputs and295 resource strings are audited. Three C# files
+only qualify the original IAsyncEnumerable interface to avoid a.NET8 name collision.
+All6 original Core projects are retained with.NET8/sourceSMA7.4.20 compile references.
+NuGetProvider references the complete matching source core instead of vendor core.
+
+All2205 published public/protected declarations, six exact assembly/file/info
+identities and31bf public keys match. Published DebuggableAttribute263 on all six
+assemblies confirms Debug flavor. The Release prototype was missing the original
+DEBUG-only ArchiveProgressEventArgs.ToString; using the original Debug flavor
+restores it with no API exclusions/allowlist or extra algorithm patch.
+Published DLLs are metadata-only baselines, never executed/referenced/staged.
+
+All21 original Core module files are included: six source DLLs,5 root scripts/data
+and10 DSC data/resource files (including source MFL files). NuGet and loose installed
+module bytes match. Original OneGet and NuGetProvider Apache2.0 licenses are present.
+The original loader's coreclr/netstandard2.0 directory is retained; actual target.NET8.
+Desktop/MSI/MSU binaries are not part of the original Core graph and are not shipped.
+
+Build and fresh installed checks each pass:
+- actual module/GUID/source cmdlets and exact-path NuGet provider load;
+- all295 original resource values across five resource-bearing source assemblies;
+- local source register/read/unregister in owned ConfigFile;
+- stable version-range query, original local AllVersions/prerelease behavior;
+- save/install with dependency resolution, Unicode payload extraction;
+- installed inventory and uninstall in owned destination;
+- exact2205 metadata APIs/identities and complete source/asset/overlay/license gates.
+AppData/LocalAppData/ProgramFiles and module search paths are process-scoped to owned
+check locations/source modules; no real packages/repositories are installed/removed.
+All final production/helper builds show0warnings/0errors. Upstream Desktop launcher
+writes HKLM strong-name verification entries and is not invoked; public signing on
+this.NET8 source runtime needs no such change. Broad upstream tests, authenticated
+remote feeds, full DSC and shipping pwsh integration remain open. Actual runtime8.0.0;
+SDK/reference labels are not a later servicing-runtime update.
+
+Preserved failures and corrections:
+- initial wrapper changed generator InvocationName; direct invocation then exposed
+  MSYS git's /home path versus nativeE:/path source-root check;
+- generator adapter changes only two root-derivation assignments to PSScriptRoot;
+  the original resource generation algorithm remains unchanged;
+- original async-enumerable names collided with inbox.NET8 type, fixed by qualification;
+- initial independent glob evaluator treated * as recursive. Corrected to original
+  MSBuild one-segment semantics, retaining13 nested original Common source files;
+- local AllVersions intentionally includes prereleases; the fixture now tests that
+  behavior and tests stable filtering with a minimum-version range;
+- Get-Package/Uninstall-Package do not expose ConfigFile. Fixture uses their supported
+  Destination option, with process-owned AppData protecting default config access;
+- first formal build hit legacy resource-task MAX_PATH at264 characters despite the
+  original generated file existing. Compile original short Messages.resx with exact
+  original logical resource name; generator algorithm/values remain unchanged.
+  The second clean build and all295 runtime resource comparisons passed.
+
+Exact final commands (all exit0), MSYSTEM=CLANG64 from formal root:
+PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-powershell-packagemanagement-1.4.8.1-1-any.pkg.tar.zst
+bash check.sh /home/topkek/packagemanagement-installed-check-20261027 src/oneget-923260b2f2cbc5b66d90ef2e31f240b9d8579a74 src/NuGetProvider-b4a79a22f65c85a5de7aa3f23c0505fb38422e1d
+
+Independent local audit (exit0):
+python3 tests/powershell-deps/audit-packagemanagement.py
+
+
+LOG formal/install.log
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-powershell-packagemanagement-1.4.8.1-1
+
+Total Installed Size:  1.92 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+installing mingw-w64-clang-x86_64-powershell-packagemanagement...
+
+
+LOG formal/installed-check.log
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\packagemanagement-installed-check-20261027\Restore.csproj (in 206 ms).
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\packagemanagement-installed-check-20261027\metadata\Api\Inspect.csproj (in 53 ms).
+  Inspect -> E:\msys64\home\topkek\packagemanagement-installed-check-20261027\metadata\Api\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.75
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\packagemanagement-installed-check-20261027\metadata\Identity\Inspect.csproj (in 66 ms).
+  Inspect -> E:\msys64\home\topkek\packagemanagement-installed-check-20261027\metadata\Identity\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.42
+PASS restored installed NuGet21 module files equal installed loose module bytes
+PASS PackageManagement277 original compiler inputs/five generated classes,295 resources,2205 APIs, six identities, three exact type-name overlays and complete Core module/DSC/license assets
+PASS all295 original PackageManagement/NuGet resource values across five source assemblies
+PASS source PackageManagement import/module/exports, original Core loader and source NuGet provider discovery
+PASS source PackageManagement/NuGet local source registration, stable/prerelease find, dependency save/install, Unicode extraction, inventory and uninstall
+PASS restored source PackageManagement identity/API/resources, Core module/provider load and owned offline package/source lifecycle
+
+
+LOG formal/makepkg.log
+==> Making package: mingw-w64-powershell-packagemanagement 1.4.8.1-1 (27 Oct 2026 06:25:43)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found oneget-1.4.8.1.tar.gz
+  -> Found nugetprovider-b4a79a22f65c85a5de7aa3f23c0505fb38422e1d.tar.gz
+  -> Found prepare.py
+  -> Found build.sh
+  -> Found audit-source.py
+  -> Found stage.py
+  -> Found pack.py
+  -> Found check.sh
+  -> Found inspect.sh
+  -> Found InspectApi.cs
+  -> Found InspectIdentity.cs
+  -> Found verify-restored.py
+  -> Found Smoke.ps1
+  -> Found Offline.ps1
+  -> Found prepare-fixtures.py
+  -> Found 0001-resource-generator-use-script-root-for-archives.patch
+  -> Found 0002-qualify-original-async-enumerable.patch
+  -> Found published-provenance.json
+  -> Found README.md
+==> Validating source files with sha256sums...
+    oneget-1.4.8.1.tar.gz ... Passed
+    nugetprovider-b4a79a22f65c85a5de7aa3f23c0505fb38422e1d.tar.gz ... Passed
+    prepare.py ... Passed
+    build.sh ... Passed
+    audit-source.py ... Passed
+    stage.py ... Passed
+    pack.py ... Passed
+    check.sh ... Passed
+    inspect.sh ... Passed
+    InspectApi.cs ... Passed
+    InspectIdentity.cs ... Passed
+    verify-restored.py ... Passed
+    Smoke.ps1 ... Passed
+    Offline.ps1 ... Passed
+    prepare-fixtures.py ... Passed
+    0001-resource-generator-use-script-root-for-archives.patch ... Passed
+    0002-qualify-original-async-enumerable.patch ... Passed
+    published-provenance.json ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+  -> Extracting oneget-1.4.8.1.tar.gz with bsdtar
+  -> Extracting nugetprovider-b4a79a22f65c85a5de7aa3f23c0505fb38422e1d.tar.gz with bsdtar
+==> Starting prepare()...
+patching file New-StronglyTypedCsFileForResx.ps1
+patching file Microsoft.PackageManagement/Implementation/EnumerableRequestObject.cs
+patching file Microsoft.PackageManagement/Implementation/ProviderBase.cs
+patching file Microsoft.PowerShell.PackageManagement/Cmdlets/CmdletBase.cs
+==> Starting build()...
+E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\prepared\oneget\src\Microsoft.PackageManagement\gen
+E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\prepared\oneget\src\Microsoft.PackageManagement.CoreProviders\gen
+E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\prepared\oneget\src\Microsoft.PackageManagement.MetaProvider.PowerShell\gen
+E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\prepared\oneget\src\Microsoft.PowerShell.PackageManagement\gen
+E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\prepared\oneget\src\Microsoft.PackageManagement.NuGetProvider\gen
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\prepared\oneget\src\Microsoft.PackageManagement\Microsoft.PackageManagement.csproj (in 55 ms).
+  Microsoft.PackageManagement -> E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\prepared\oneget\src\Microsoft.PackageManagement\bin\Debug\net8.0\Microsoft.PackageManagement.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.53
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\prepared\oneget\src\Microsoft.PackageManagement.ArchiverProviders\Microsoft.PackageManagement.ArchiverProviders.csproj (in 76 ms).
+  1 of 2 projects are up-to-date for restore.
+  Microsoft.PackageManagement -> E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\prepared\oneget\src\Microsoft.PackageManagement\bin\Debug\net8.0\Microsoft.PackageManagement.dll
+  Microsoft.PackageManagement.ArchiverProviders -> E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\prepared\oneget\src\Microsoft.PackageManagement.ArchiverProviders\bin\Debug\net8.0\Microsoft.PackageManagement.ArchiverProviders.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:07.68
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\prepared\oneget\src\Microsoft.PackageManagement.CoreProviders\Microsoft.PackageManagement.CoreProviders.csproj (in 83 ms).
+  1 of 2 projects are up-to-date for restore.
+  Microsoft.PackageManagement -> E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\prepared\oneget\src\Microsoft.PackageManagement\bin\Debug\net8.0\Microsoft.PackageManagement.dll
+  Microsoft.PackageManagement.CoreProviders -> E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\prepared\oneget\src\Microsoft.PackageManagement.CoreProviders\bin\Debug\net8.0\Microsoft.PackageManagement.CoreProviders.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:08.86
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\prepared\oneget\src\Microsoft.PackageManagement.MetaProvider.PowerShell\Microsoft.PackageManagement.MetaProvider.PowerShell.csproj (in 69 ms).
+  1 of 2 projects are up-to-date for restore.
+  Microsoft.PackageManagement -> E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\prepared\oneget\src\Microsoft.PackageManagement\bin\Debug\net8.0\Microsoft.PackageManagement.dll
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Microsoft.Common.CurrentVersion.targets(3345,5): error MSB3552: Resource file "resources\Microsoft.PackageManagement.MetaProvider.PowerShell.Internal.Resources.Messages.resx" cannot be found. [E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\prepared\oneget\src\Microsoft.PackageManagement.MetaProvider.PowerShell\Microsoft.PackageManagement.MetaProvider.PowerShell.csproj]
+
+Build FAILED.
+
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Microsoft.Common.CurrentVersion.targets(3345,5): error MSB3552: Resource file "resources\Microsoft.PackageManagement.MetaProvider.PowerShell.Internal.Resources.Messages.resx" cannot be found. [E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\prepared\oneget\src\Microsoft.PackageManagement.MetaProvider.PowerShell\Microsoft.PackageManagement.MetaProvider.PowerShell.csproj]
+    0 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:05.25
+==> ERROR: A failure occurred in build().
+    Aborting...
+
+
+LOG formal/makepkg2.log
+==> Making package: mingw-w64-powershell-packagemanagement 1.4.8.1-1 (27 Oct 2026 06:29:06)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found oneget-1.4.8.1.tar.gz
+  -> Found nugetprovider-b4a79a22f65c85a5de7aa3f23c0505fb38422e1d.tar.gz
+  -> Found prepare.py
+  -> Found build.sh
+  -> Found audit-source.py
+  -> Found stage.py
+  -> Found pack.py
+  -> Found check.sh
+  -> Found inspect.sh
+  -> Found InspectApi.cs
+  -> Found InspectIdentity.cs
+  -> Found verify-restored.py
+  -> Found Smoke.ps1
+  -> Found Offline.ps1
+  -> Found prepare-fixtures.py
+  -> Found 0001-resource-generator-use-script-root-for-archives.patch
+  -> Found 0002-qualify-original-async-enumerable.patch
+  -> Found published-provenance.json
+  -> Found README.md
+==> Validating source files with sha256sums...
+    oneget-1.4.8.1.tar.gz ... Passed
+    nugetprovider-b4a79a22f65c85a5de7aa3f23c0505fb38422e1d.tar.gz ... Passed
+    prepare.py ... Passed
+    build.sh ... Passed
+    audit-source.py ... Passed
+    stage.py ... Passed
+    pack.py ... Passed
+    check.sh ... Passed
+    inspect.sh ... Passed
+    InspectApi.cs ... Passed
+    InspectIdentity.cs ... Passed
+    verify-restored.py ... Passed
+    Smoke.ps1 ... Passed
+    Offline.ps1 ... Passed
+    prepare-fixtures.py ... Passed
+    0001-resource-generator-use-script-root-for-archives.patch ... Passed
+    0002-qualify-original-async-enumerable.patch ... Passed
+    published-provenance.json ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+  -> Extracting oneget-1.4.8.1.tar.gz with bsdtar
+  -> Extracting nugetprovider-b4a79a22f65c85a5de7aa3f23c0505fb38422e1d.tar.gz with bsdtar
+==> Starting prepare()...
+patching file New-StronglyTypedCsFileForResx.ps1
+patching file Microsoft.PackageManagement/Implementation/EnumerableRequestObject.cs
+patching file Microsoft.PackageManagement/Implementation/ProviderBase.cs
+patching file Microsoft.PowerShell.PackageManagement/Cmdlets/CmdletBase.cs
+==> Removing existing $pkgdir/ directory...
+==> Starting build()...
+E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\prepared\oneget\src\Microsoft.PackageManagement\gen
+E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\prepared\oneget\src\Microsoft.PackageManagement.CoreProviders\gen
+E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\prepared\oneget\src\Microsoft.PackageManagement.MetaProvider.PowerShell\gen
+E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\prepared\oneget\src\Microsoft.PowerShell.PackageManagement\gen
+E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\prepared\oneget\src\Microsoft.PackageManagement.NuGetProvider\gen
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\prepared\oneget\src\Microsoft.PackageManagement\Microsoft.PackageManagement.csproj (in 124 ms).
+  Microsoft.PackageManagement -> E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\prepared\oneget\src\Microsoft.PackageManagement\bin\Debug\net8.0\Microsoft.PackageManagement.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.40
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\prepared\oneget\src\Microsoft.PackageManagement.ArchiverProviders\Microsoft.PackageManagement.ArchiverProviders.csproj (in 99 ms).
+  1 of 2 projects are up-to-date for restore.
+  Microsoft.PackageManagement -> E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\prepared\oneget\src\Microsoft.PackageManagement\bin\Debug\net8.0\Microsoft.PackageManagement.dll
+  Microsoft.PackageManagement.ArchiverProviders -> E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\prepared\oneget\src\Microsoft.PackageManagement.ArchiverProviders\bin\Debug\net8.0\Microsoft.PackageManagement.ArchiverProviders.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.05
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\prepared\oneget\src\Microsoft.PackageManagement.CoreProviders\Microsoft.PackageManagement.CoreProviders.csproj (in 65 ms).
+  1 of 2 projects are up-to-date for restore.
+  Microsoft.PackageManagement -> E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\prepared\oneget\src\Microsoft.PackageManagement\bin\Debug\net8.0\Microsoft.PackageManagement.dll
+  Microsoft.PackageManagement.CoreProviders -> E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\prepared\oneget\src\Microsoft.PackageManagement.CoreProviders\bin\Debug\net8.0\Microsoft.PackageManagement.CoreProviders.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.56
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\prepared\oneget\src\Microsoft.PackageManagement.MetaProvider.PowerShell\Microsoft.PackageManagement.MetaProvider.PowerShell.csproj (in 80 ms).
+  1 of 2 projects are up-to-date for restore.
+  Microsoft.PackageManagement -> E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\prepared\oneget\src\Microsoft.PackageManagement\bin\Debug\net8.0\Microsoft.PackageManagement.dll
+  Microsoft.PackageManagement.MetaProvider.PowerShell -> E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\prepared\oneget\src\Microsoft.PackageManagement.MetaProvider.PowerShell\bin\Debug\net8.0\Microsoft.PackageManagement.MetaProvider.PowerShell.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.20
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\prepared\oneget\src\Microsoft.PowerShell.PackageManagement\Microsoft.PowerShell.PackageManagement.csproj (in 87 ms).
+  1 of 2 projects are up-to-date for restore.
+  Microsoft.PackageManagement -> E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\prepared\oneget\src\Microsoft.PackageManagement\bin\Debug\net8.0\Microsoft.PackageManagement.dll
+  Microsoft.PowerShell.PackageManagement -> E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\prepared\oneget\src\Microsoft.PowerShell.PackageManagement\bin\Debug\net8.0\Microsoft.PowerShell.PackageManagement.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.28
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\prepared\oneget\src\Microsoft.PackageManagement.NuGetProvider\NuGetProvider.csproj (in 105 ms).
+  1 of 2 projects are up-to-date for restore.
+  Microsoft.PackageManagement -> E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\prepared\oneget\src\Microsoft.PackageManagement\bin\Debug\net8.0\Microsoft.PackageManagement.dll
+  NuGetProvider -> E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\prepared\oneget\src\Microsoft.PackageManagement.NuGetProvider\bin\Debug\net8.0\Microsoft.PackageManagement.NuGetProvider.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.87
+PASS original Core compiler inputs/exclusions, three exact naming overlays, original generator algorithm, five generated classes and295 resource strings: {'Microsoft.PackageManagement': 116, 'Microsoft.PackageManagement.ArchiverProviders': 37, 'Microsoft.PackageManagement.CoreProviders': 7, 'Microsoft.PackageManagement.MetaProvider.PowerShell': 16, 'Microsoft.PowerShell.PackageManagement': 28, 'Microsoft.PackageManagement.NuGetProvider': 73}
+Staged original Core module/scripts/DSC and all six rebuilt production assemblies
+Packed PackageManagement1.4.8.1:21 original Core module files, six source DLLs, full source/compiler/resource provenance and licenses
+==> Starting check()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\check\Restore.csproj (in 358 ms).
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\check\metadata\Api\Inspect.csproj (in 88 ms).
+  Inspect -> E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\check\metadata\Api\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.86
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\check\metadata\Identity\Inspect.csproj (in 56 ms).
+  Inspect -> E:\msys64\home\topkek\packagemanagement-package.fKyDcn\mingw-w64-powershell-packagemanagement\src\check\metadata\Identity\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.67
+PASS PackageManagement277 original compiler inputs/five generated classes,295 resources,2205 APIs, six identities, three exact type-name overlays and complete Core module/DSC/license assets
+PASS all295 original PackageManagement/NuGet resource values across five source assemblies
+PASS source PackageManagement import/module/exports, original Core loader and source NuGet provider discovery
+PASS source PackageManagement/NuGet local source registration, stable/prerelease find, dependency save/install, Unicode extraction, inventory and uninstall
+PASS restored source PackageManagement identity/API/resources, Core module/provider load and owned offline package/source lifecycle
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-powershell-packagemanagement"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-powershell-packagemanagement 1.4.8.1-1 (27 Oct 2026 06:30:43)
+
+
+LOG prototype/build1.log
+System.Management.Automation.ParameterBindingValidationException: Cannot bind argument to parameter 'Path' because it is an empty string.
+   at System.Management.Automation.Runspaces.PipelineBase.Invoke(IEnumerable input)
+   at System.Management.Automation.Runspaces.Pipeline.Invoke()
+   at System.Management.Automation.PowerShell.Worker.ConstructPipelineAndDoWork(Runspace rs, Boolean performSyncInvoke)
+   at System.Management.Automation.PowerShell.Worker.CreateRunspaceIfNeededAndDoWork(Runspace rsToUse, Boolean isSync)
+   at System.Management.Automation.PowerShell.CoreInvokeHelper[TInput,TOutput](PSDataCollection`1 input, PSDataCollection`1 output, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.CoreInvoke[TInput,TOutput](PSDataCollection`1 input, PSDataCollection`1 output, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.CoreInvoke[TOutput](IEnumerable input, PSDataCollection`1 output, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.Invoke(IEnumerable input, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.Invoke()
+   at ModuleHost.Main(String[] args)
+
+
+LOG prototype/build2.log
+System.Management.Automation.RuntimeException: Not in solution root
+ ---> System.Management.Automation.RuntimeException: Not in solution root
+   --- End of inner exception stack trace ---
+   at System.Management.Automation.Runspaces.PipelineBase.Invoke(IEnumerable input)
+   at System.Management.Automation.Runspaces.Pipeline.Invoke()
+   at System.Management.Automation.PowerShell.Worker.ConstructPipelineAndDoWork(Runspace rs, Boolean performSyncInvoke)
+   at System.Management.Automation.PowerShell.Worker.CreateRunspaceIfNeededAndDoWork(Runspace rsToUse, Boolean isSync)
+   at System.Management.Automation.PowerShell.CoreInvokeHelper[TInput,TOutput](PSDataCollection`1 input, PSDataCollection`1 output, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.CoreInvoke[TInput,TOutput](PSDataCollection`1 input, PSDataCollection`1 output, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.CoreInvoke[TOutput](IEnumerable input, PSDataCollection`1 output, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.Invoke(IEnumerable input, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.Invoke()
+   at ModuleHost.Main(String[] args)
+
+
+LOG prototype/build3.log
+E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared2\oneget\src\Microsoft.PackageManagement\gen
+E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared2\oneget\src\Microsoft.PackageManagement.CoreProviders\gen
+E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared2\oneget\src\Microsoft.PackageManagement.MetaProvider.PowerShell\gen
+E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared2\oneget\src\Microsoft.PowerShell.PackageManagement\gen
+E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared2\oneget\src\Microsoft.PackageManagement.NuGetProvider\gen
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared2\oneget\src\Microsoft.PackageManagement\Microsoft.PackageManagement.csproj (in 64 ms).
+E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared2\oneget\src\Microsoft.PackageManagement\Implementation\EnumerableRequestObject.cs(24,64): error CS0104: 'IAsyncEnumerable<>' is an ambiguous reference between 'Microsoft.PackageManagement.Internal.Utility.Async.IAsyncEnumerable<T>' and 'System.Collections.Generic.IAsyncEnumerable<T>' [E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared2\oneget\src\Microsoft.PackageManagement\Microsoft.PackageManagement.csproj]
+E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared2\oneget\src\Microsoft.PackageManagement\Implementation\EnumerableRequestObject.cs(37,21): error CS0540: 'EnumerableRequestObject<T>.IEnumerable.GetEnumerator()': containing type does not implement interface 'IEnumerable' [E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared2\oneget\src\Microsoft.PackageManagement\Microsoft.PackageManagement.csproj]
+E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared2\oneget\src\Microsoft.PackageManagement\Implementation\ProviderBase.cs(208,16): error CS0104: 'IAsyncEnumerable<>' is an ambiguous reference between 'Microsoft.PackageManagement.Internal.Utility.Async.IAsyncEnumerable<T>' and 'System.Collections.Generic.IAsyncEnumerable<T>' [E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared2\oneget\src\Microsoft.PackageManagement\Microsoft.PackageManagement.csproj]
+
+Build FAILED.
+
+E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared2\oneget\src\Microsoft.PackageManagement\Implementation\EnumerableRequestObject.cs(24,64): error CS0104: 'IAsyncEnumerable<>' is an ambiguous reference between 'Microsoft.PackageManagement.Internal.Utility.Async.IAsyncEnumerable<T>' and 'System.Collections.Generic.IAsyncEnumerable<T>' [E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared2\oneget\src\Microsoft.PackageManagement\Microsoft.PackageManagement.csproj]
+E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared2\oneget\src\Microsoft.PackageManagement\Implementation\EnumerableRequestObject.cs(37,21): error CS0540: 'EnumerableRequestObject<T>.IEnumerable.GetEnumerator()': containing type does not implement interface 'IEnumerable' [E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared2\oneget\src\Microsoft.PackageManagement\Microsoft.PackageManagement.csproj]
+E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared2\oneget\src\Microsoft.PackageManagement\Implementation\ProviderBase.cs(208,16): error CS0104: 'IAsyncEnumerable<>' is an ambiguous reference between 'Microsoft.PackageManagement.Internal.Utility.Async.IAsyncEnumerable<T>' and 'System.Collections.Generic.IAsyncEnumerable<T>' [E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared2\oneget\src\Microsoft.PackageManagement\Microsoft.PackageManagement.csproj]
+    0 Warning(s)
+    3 Error(s)
+
+Time Elapsed 00:00:03.17
+
+
+LOG prototype/build4.log
+E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared3\oneget\src\Microsoft.PackageManagement\gen
+E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared3\oneget\src\Microsoft.PackageManagement.CoreProviders\gen
+E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared3\oneget\src\Microsoft.PackageManagement.MetaProvider.PowerShell\gen
+E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared3\oneget\src\Microsoft.PowerShell.PackageManagement\gen
+E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared3\oneget\src\Microsoft.PackageManagement.NuGetProvider\gen
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared3\oneget\src\Microsoft.PackageManagement\Microsoft.PackageManagement.csproj (in 71 ms).
+  Microsoft.PackageManagement -> E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared3\oneget\src\Microsoft.PackageManagement\bin\Release\net8.0\Microsoft.PackageManagement.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.42
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared3\oneget\src\Microsoft.PackageManagement.ArchiverProviders\Microsoft.PackageManagement.ArchiverProviders.csproj (in 102 ms).
+  1 of 2 projects are up-to-date for restore.
+  Microsoft.PackageManagement -> E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared3\oneget\src\Microsoft.PackageManagement\bin\Release\net8.0\Microsoft.PackageManagement.dll
+  Microsoft.PackageManagement.ArchiverProviders -> E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared3\oneget\src\Microsoft.PackageManagement.ArchiverProviders\bin\Release\net8.0\Microsoft.PackageManagement.ArchiverProviders.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.17
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared3\oneget\src\Microsoft.PackageManagement.CoreProviders\Microsoft.PackageManagement.CoreProviders.csproj (in 69 ms).
+  1 of 2 projects are up-to-date for restore.
+  Microsoft.PackageManagement -> E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared3\oneget\src\Microsoft.PackageManagement\bin\Release\net8.0\Microsoft.PackageManagement.dll
+  Microsoft.PackageManagement.CoreProviders -> E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared3\oneget\src\Microsoft.PackageManagement.CoreProviders\bin\Release\net8.0\Microsoft.PackageManagement.CoreProviders.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.65
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared3\oneget\src\Microsoft.PackageManagement.MetaProvider.PowerShell\Microsoft.PackageManagement.MetaProvider.PowerShell.csproj (in 86 ms).
+  1 of 2 projects are up-to-date for restore.
+  Microsoft.PackageManagement -> E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared3\oneget\src\Microsoft.PackageManagement\bin\Release\net8.0\Microsoft.PackageManagement.dll
+  Microsoft.PackageManagement.MetaProvider.PowerShell -> E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared3\oneget\src\Microsoft.PackageManagement.MetaProvider.PowerShell\bin\Release\net8.0\Microsoft.PackageManagement.MetaProvider.PowerShell.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.74
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared3\oneget\src\Microsoft.PowerShell.PackageManagement\Microsoft.PowerShell.PackageManagement.csproj (in 69 ms).
+  1 of 2 projects are up-to-date for restore.
+  Microsoft.PackageManagement -> E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared3\oneget\src\Microsoft.PackageManagement\bin\Release\net8.0\Microsoft.PackageManagement.dll
+  Microsoft.PowerShell.PackageManagement -> E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared3\oneget\src\Microsoft.PowerShell.PackageManagement\bin\Release\net8.0\Microsoft.PowerShell.PackageManagement.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.10
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared3\oneget\src\Microsoft.PackageManagement.NuGetProvider\NuGetProvider.csproj (in 77 ms).
+  1 of 2 projects are up-to-date for restore.
+  Microsoft.PackageManagement -> E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared3\oneget\src\Microsoft.PackageManagement\bin\Release\net8.0\Microsoft.PackageManagement.dll
+  NuGetProvider -> E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared3\oneget\src\Microsoft.PackageManagement.NuGetProvider\bin\Release\net8.0\Microsoft.PackageManagement.NuGetProvider.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.19
+
+
+LOG prototype/build5-debug.log
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Microsoft.PackageManagement -> E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared3\oneget\src\Microsoft.PackageManagement\bin\Debug\net8.0\Microsoft.PackageManagement.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.32
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Microsoft.PackageManagement -> E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared3\oneget\src\Microsoft.PackageManagement\bin\Debug\net8.0\Microsoft.PackageManagement.dll
+  Microsoft.PackageManagement.ArchiverProviders -> E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared3\oneget\src\Microsoft.PackageManagement.ArchiverProviders\bin\Debug\net8.0\Microsoft.PackageManagement.ArchiverProviders.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.47
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Microsoft.PackageManagement -> E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared3\oneget\src\Microsoft.PackageManagement\bin\Debug\net8.0\Microsoft.PackageManagement.dll
+  Microsoft.PackageManagement.CoreProviders -> E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared3\oneget\src\Microsoft.PackageManagement.CoreProviders\bin\Debug\net8.0\Microsoft.PackageManagement.CoreProviders.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.68
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Microsoft.PackageManagement -> E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared3\oneget\src\Microsoft.PackageManagement\bin\Debug\net8.0\Microsoft.PackageManagement.dll
+  Microsoft.PackageManagement.MetaProvider.PowerShell -> E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared3\oneget\src\Microsoft.PackageManagement.MetaProvider.PowerShell\bin\Debug\net8.0\Microsoft.PackageManagement.MetaProvider.PowerShell.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.02
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Microsoft.PackageManagement -> E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared3\oneget\src\Microsoft.PackageManagement\bin\Debug\net8.0\Microsoft.PackageManagement.dll
+  Microsoft.PowerShell.PackageManagement -> E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared3\oneget\src\Microsoft.PowerShell.PackageManagement\bin\Debug\net8.0\Microsoft.PowerShell.PackageManagement.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.03
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Microsoft.PackageManagement -> E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared3\oneget\src\Microsoft.PackageManagement\bin\Debug\net8.0\Microsoft.PackageManagement.dll
+  NuGetProvider -> E:\msys64\home\topkek\packagemanagement-source.ff5YRn\prepared3\oneget\src\Microsoft.PackageManagement.NuGetProvider\bin\Debug\net8.0\Microsoft.PackageManagement.NuGetProvider.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.83
+
+
+LOG prototype/offline2.log
+System.Management.Automation.RuntimeException: stable local package discovery failed: count=2; items=[{"Name":"Owned.Root","Version":"1.1.0-preview.1","Source":"OwnedSource"},{"Name":"Owned.Root","Version":"1.0.0","Source":"OwnedSource"}]
+ ---> System.Management.Automation.RuntimeException: stable local package discovery failed: count=2; items=[{"Name":"Owned.Root","Version":"1.1.0-preview.1","Source":"OwnedSource"},{"Name":"Owned.Root","Version":"1.0.0","Source":"OwnedSource"}]
+   --- End of inner exception stack trace ---
+   at System.Management.Automation.Runspaces.PipelineBase.Invoke(IEnumerable input)
+   at System.Management.Automation.Runspaces.Pipeline.Invoke()
+   at System.Management.Automation.PowerShell.Worker.ConstructPipelineAndDoWork(Runspace rs, Boolean performSyncInvoke)
+   at System.Management.Automation.PowerShell.Worker.CreateRunspaceIfNeededAndDoWork(Runspace rsToUse, Boolean isSync)
+   at System.Management.Automation.PowerShell.CoreInvokeHelper[TInput,TOutput](PSDataCollection`1 input, PSDataCollection`1 output, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.CoreInvoke[TInput,TOutput](PSDataCollection`1 input, PSDataCollection`1 output, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.CoreInvoke[TOutput](IEnumerable input, PSDataCollection`1 output, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.Invoke(IEnumerable input, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.Invoke()
+   at ModuleHost.Main(String[] args)
+
+
+LOG prototype/offline4.log
+System.Management.Automation.RuntimeException: owned offline check failed at at <ScriptBlock>, E:\msys64\home\topkek\packagemanagement-source.ff5YRn\mingw-w64-powershell-packagemanagement\Offline.ps1: line 31: A parameter cannot be found that matches parameter name 'ConfigFile'.
+ ---> System.Management.Automation.RuntimeException: owned offline check failed at at <ScriptBlock>, E:\msys64\home\topkek\packagemanagement-source.ff5YRn\mingw-w64-powershell-packagemanagement\Offline.ps1: line 31: A parameter cannot be found that matches parameter name 'ConfigFile'.
+   --- End of inner exception stack trace ---
+   at System.Management.Automation.Runspaces.PipelineBase.Invoke(IEnumerable input)
+   at System.Management.Automation.Runspaces.Pipeline.Invoke()
+   at System.Management.Automation.PowerShell.Worker.ConstructPipelineAndDoWork(Runspace rs, Boolean performSyncInvoke)
+   at System.Management.Automation.PowerShell.Worker.CreateRunspaceIfNeededAndDoWork(Runspace rsToUse, Boolean isSync)
+   at System.Management.Automation.PowerShell.CoreInvokeHelper[TInput,TOutput](PSDataCollection`1 input, PSDataCollection`1 output, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.CoreInvoke[TInput,TOutput](PSDataCollection`1 input, PSDataCollection`1 output, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.CoreInvoke[TOutput](IEnumerable input, PSDataCollection`1 output, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.Invoke(IEnumerable input, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.Invoke()
+   at ModuleHost.Main(String[] args)
+
+
+LOG prototype/offline5.log
+PASS source PackageManagement/NuGet local source registration, stable/prerelease find, dependency save/install, Unicode extraction, inventory and uninstall
+
+
+LOG prototype/resource-smoke.log
+PASS all295 original PackageManagement/NuGet resource values across five source assemblies
+PASS source PackageManagement import/module/exports, original Core loader and source NuGet provider discovery
+
+
+LOG prototype/source-audit3-corrected.log
+PASS original Core compiler inputs/exclusions, three exact naming overlays, original generator algorithm, five generated classes and295 resource strings: {'Microsoft.PackageManagement': 116, 'Microsoft.PackageManagement.ArchiverProviders': 37, 'Microsoft.PackageManagement.CoreProviders': 7, 'Microsoft.PackageManagement.MetaProvider.PowerShell': 16, 'Microsoft.PowerShell.PackageManagement': 28, 'Microsoft.PackageManagement.NuGetProvider': 73}
+
+
+LOG prototype/source-audit3.log
+Traceback (most recent call last):
+  File "/home/topkek/packagemanagement-source.ff5YRn/mingw-w64-powershell-packagemanagement/audit-source.py", line 47, in <module>
+    assert actual==expected,(name,expected-actual,actual-expected)
+           ^^^^^^^^^^^^^^^^
+AssertionError: ('Microsoft.PackageManagement', set(), {'providers/inbox/Common/Utility/XmlUtility.cs', 'providers/inbox/Common/Extensions/CollectionExtensions.cs', 'providers/inbox/Common/Utility/FileUtility.cs', 'providers/inbox/Common/Extensions/FilesystemExtensions.cs', 'providers/inbox/Common/Extensions/ReEnumerable.cs', 'providers/inbox/Common/Utility/PathUtility.cs', 'providers/inbox/Common/Version/SemanticVersion.cs', 'providers/inbox/Common/Extensions/Extensions.cs', 'providers/inbox/Common/Version/SemanticVersionTypeConverter.cs', 'providers/inbox/Common/Version/DependencyVersion.cs', 'providers/inbox/Common/Extensions/EnumerableExtensions.cs', 'providers/inbox/Common/Extensions/EqualityComparer.cs', 'providers/inbox/Common/Extensions/MutableEnumerable.cs'})

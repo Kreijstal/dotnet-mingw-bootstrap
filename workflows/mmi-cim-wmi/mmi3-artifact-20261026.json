@@ -1,0 +1,16 @@
+{
+  "recipe": "mingw-w64-dotnet-mmi3",
+  "artifact": "mingw-w64-clang-x86_64-dotnet-mmi3-3.0.0-1-any.pkg.tar.zst",
+  "sha256": "fdcc96ee06ea1fd63322cfacfcff6aa43967c1f35a5af92b43a750d890f02fa5",
+  "nuget_id": "Microsoft.Management.Infrastructure",
+  "nuget_version": "3.0.0",
+  "assembly_version": "1.0.0.0",
+  "public_key_token": "31bf3856ad364e35",
+  "actual_source_commit": "cf32fc695b32c2eae848b693395c09222fe1d2ae",
+  "actual_source_version": "2.0.0-preview.1 plus seven native patches and explicit MMI3 contract corrections",
+  "source_sha256": "acef7ee0e811d3b3c6c0885d34cd4e0f8d28dc4518c1d5550044be1522cdf357",
+  "managed_dll_sha256": "e242ddea0145b6f2ed519ce787228eab26ad08348be678975a5359fc1fc5517a",
+  "expected_api_entries": 512,
+  "permitted_cleanup_finalizers": 3,
+  "status": "experimental contract/native-local port; full PowerShell/remote/ownership compatibility incomplete"
+}

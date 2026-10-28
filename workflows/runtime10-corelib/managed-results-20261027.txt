@@ -1,0 +1,49 @@
+Goal turn: progress. Full dependency goal remains incomplete.
+bash corelib-workflow/check-metadata.sh . corelib10-1/managed-check2 => 0
+Host: topkek@win11 / CLANG64
+Private build root: /c/codex-dotnet10/c1.1BZ8KU
+Source runtime10.0.5 commit081d220c0a773ffb7c6bea6b48727833576a65ef
+
+/usr/bin/python3 corelib-workflow/prepare-generators.py . => 0
+bash corelib-workflow/build-generators.sh . => 0
+/usr/bin/python3 corelib-workflow/prepare-corelib.py . => 0
+/usr/bin/python3 corelib-workflow/prepare-compile.py . => 0
+bash corelib-workflow/build-corelib.sh . => 0
+/usr/bin/python3 corelib-workflow/audit-build.py . => 0
+bash corelib-workflow/build-corerun.sh . => 0
+/usr/bin/python3 corelib-workflow/prepare-managed-check.py . corelib10-1/managed-check2 => 0
+bash corelib-workflow/build-managed-check.sh . corelib10-1/managed-check2 => 0
+
+CoreLib original1932C# inputs unchanged;1421 original resource values match.
+Four original generator source selections96/23/46/9 compiled, private net8
+source Roslyn5/Common+CSharp with existing source Workspaces4.9.2. Declared
+Roslyn4.14 closure remains open; bootstrap binding is not a shipped replacement.
+Native Windows COM/IJW/tracing defines retained. Eight generated C# files
+include original version, runtime event-source and LibraryImport output.
+Original runtime-root task produced363 type entries including __Canon/Object.
+Identity:System.Private.CoreLib10.0.0.0/7cec85d7bea7798e,0 assembly refs,
+2957 types,43227 methods,4 embedded resource payloads.
+Raw compile succeeded with549 warning lines; no production C# patches or
+warning blanket. Fresh managed output rebuild exactly matches tested raw DLL.
+
+Actual clean-source CoreCLR10/corerun managed cases all exit0:
+basic (identity/Environment10.0.5, Unicode, JIT, generic List sort),
+gc (forced compacting collection with live objects),
+exceptions (catch/finally),thread (create/interlocked/join).
+Original corerun self-tests0, AMD64 and actual CET verified.
+Only the tested copy has one InternalCall RVA cleared by the existing
+source bootstrap tool; all215 InternalCalls then have no body RVA.
+Full original ILLink library rewriting remains incomplete.
+
+Initial startup0x80070057 was binder rejection of forward-slash paths from
+native MSYS2 Python(os.name nt, separator /). Native Windows boundary
+normalization passed; private native diagnostics were restored and rebuilt.
+All64 original CoreCLR port input hashes match after restoration.
+
+This is private CoreLib/native bootstrap progress. No full runtime10 package
+is globally installed. Complete managed/native framework10, reference packs,
+ILLink,SDK10,WindowsDesktop,PowerShell7.6 and earlier compatibility gaps remain.
+Dependency counts unchanged:50/53 direct,52 transitive,106 artifacts incl4experimental.
+Raw CoreLib SHA256:ece5bdf9a112c696187298513cb763acb5339779d1c51a1a881765e4ae447bc0
+Tested CoreLib SHA256:471b9f9288542ea59550400ec1af78fee82b04ae3e82c3622886f362e889f763
+Detailed evidence:/tmp/dotnet-corelib10-prototype1/evidence

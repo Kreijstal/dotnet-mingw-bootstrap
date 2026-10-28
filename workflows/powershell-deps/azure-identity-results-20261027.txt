@@ -1,0 +1,249 @@
+Azure.Identity1.11.4 complete source package validation
+Host: win11 / CLANG64; actual runtime8.0.0
+Source commit: 2856f9a00d6cb96f71b724d29b1ce8ce271c4137
+Formal root: /home/topkek/azure-identity-package.OgBKn8
+Fresh installed consumer: /home/topkek/azure-identity-installed.2kTTh1/check
+
+$ MSYSTEM=CLANG64 bash -lc 'PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm'
+RESULT: exit0, first formal clean build.1original SYSLIB0051 source warning;
+all consumer and inspection builds0warnings/errors.
+$ pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-azure-identity-1.11.4-1-any.pkg.tar.zst
+RESULT: exit0
+$ bash /home/topkek/azure-identity-package.OgBKn8/src/check.sh /home/topkek/azure-identity-installed.2kTTh1/check
+RESULT: exit0; installed source feed only, new cache/output
+$ python3 tests/powershell-deps/audit-azure-identity.py
+RESULT: exit0; all16 pinned inputs, full archive/original/shared/compiler hashes,
+exact one-line initializer overlay, five source dependency references, NuGet/native
+metadata/dependencies, implementation/ref/XML/overlay and original MIT license
+$ /usr/bin/python3 /home/topkek/azure-identity-package.OgBKn8/postinstall.py
+RESULT: exit0; builtNuGet=installedfeed=freshcache, license/inventory bytes match
+
+Complete118-file production tree plus15original shared files;132C# inputs total,
+131unchanged plus one explicit AccessToken default-initializer overlay.2SDKmetadata
+inputs. The source tree remains unchanged; compiler overlay bytes and original
+hashes are independently proved. All356published API declarations and frozen
+assembly/file/informational/signing identities match. Implementation/ref/XML and
+actual source reference/runtime assets are gated.
+
+Owned behavior: real TLS/OIDC/token HTTP through source Core/MSAL; Unicode secret
+form encoding, certificate RSA-PSS assertion verification/tamper rejection,
+initial authorization-code exchange, sync silent cache hit, separate CAE-cache
+silent miss falling through to authorization-code reacquisition, CAE cache hit,
+original error wrapping/cancellation and DefaultAzureCredential environment path.
+All process-local environment values are restored. Synthetic credentials and a
+pinned temporary certificate only; no external authentication or certificate-store
+change. JSON reflection disabled; all9loaded implementation paths/hashes match.
+
+Broader credential/broker/interactive/remote/upstream/framework/trimming/AOT and
+full PSResourceGet integration remain open, as does actual CLR servicing.
+This completes this library package, not the full packaging goal.
+
+Full makepkg1.log:
+==> Making package: mingw-w64-dotnet-azure-identity 1.11.4-1 (27 Oct 2026 12:37:48)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found azure-sdk-2856f9a00d6cb96f71b724d29b1ce8ce271c4137.tar.gz
+  -> Found extract.py
+  -> Found prepare.py
+  -> Found verify-build.py
+  -> Found pack.py
+  -> Found Check.cs
+  -> Found OwnedEndpoint.cs
+  -> Found check.sh
+  -> Found check-payload.py
+  -> Found compare.py
+  -> Found InspectApi.cs
+  -> Found InspectAssemblyMetadata.cs
+  -> Found source-inputs.json
+  -> Found published-api.json
+  -> Found published-metadata.json
+  -> Found README.md
+==> Validating source files with sha256sums...
+    azure-sdk-2856f9a00d6cb96f71b724d29b1ce8ce271c4137.tar.gz ... Passed
+    extract.py ... Passed
+    prepare.py ... Passed
+    verify-build.py ... Passed
+    pack.py ... Passed
+    Check.cs ... Passed
+    OwnedEndpoint.cs ... Passed
+    check.sh ... Passed
+    check-payload.py ... Passed
+    compare.py ... Passed
+    InspectApi.cs ... Passed
+    InspectAssemblyMetadata.cs ... Passed
+    source-inputs.json ... Passed
+    published-api.json ... Passed
+    published-metadata.json ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+==> Starting prepare()...
+PASS full pinned Azure archive and complete Azure.Identity component/build metadata extraction
+PASS complete original Azure.Identity project and 132 C# inputs:131 unchanged, one explicit default-initializer port; all15 original shared files retained
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\azure-identity-package.OgBKn8\src\prepared\Library.csproj (in 5.8 sec).
+E:\msys64\home\topkek\azure-identity-package.OgBKn8\src\source\sdk\identity\Azure.Identity\src\AuthenticationFailedException.cs(43,99): warning SYSLIB0051: 'Exception.Exception(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\azure-identity-package.OgBKn8\src\prepared\Library.csproj]
+  Library -> E:\msys64\home\topkek\azure-identity-package.OgBKn8\src\prepared\bin\Release\net8.0\Azure.Identity.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\azure-identity-package.OgBKn8\src\source\sdk\identity\Azure.Identity\src\AuthenticationFailedException.cs(43,99): warning SYSLIB0051: 'Exception.Exception(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\azure-identity-package.OgBKn8\src\prepared\Library.csproj]
+    1 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:18.04
+PASS full132-input source inventory, exact one-line initializer overlay, two SDK metadata files, source references and library/ref/XML outputs
+PASS gated source implementation/reference/XML, original license and source/compiler/reference metadata
+==> Starting check()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\azure-identity-package.OgBKn8\src\check\Check.csproj (in 559 ms).
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Check -> E:\msys64\home\topkek\azure-identity-package.OgBKn8\src\check\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:08.59
+PASS original Azure.Identity real owned TLS/Core/MSAL secret/certificate flows, authorization-code initial and CAE silent-miss fallback paths, sync/async cache, DefaultAzureCredential environment selection, errors/cancellation; reflection-disabled source contexts and all nine runtime hashes
+PASS all nine source runtime hashes and actual Identity/Core/MSAL/dependency compiler/runtime assets
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\azure-identity-package.OgBKn8\src\check\Api\Inspect.csproj (in 646 ms).
+  Inspect -> E:\msys64\home\topkek\azure-identity-package.OgBKn8\src\check\Api\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:13.95
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\azure-identity-package.OgBKn8\src\check\Pe\Inspect.csproj (in 113 ms).
+  Inspect -> E:\msys64\home\topkek\azure-identity-package.OgBKn8\src\check\Pe\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:13.74
+PASS all356 exact published API declarations and release/signing identities
+PASS fresh source Azure.Identity consumer, real TLS/OIDC/auth-code/CAE behavior, exact API/identity/payload gates
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-azure-identity"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-azure-identity 1.11.4-1 (27 Oct 2026 12:40:17)
+
+Full install.log:
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-dotnet-azure-identity-1.11.4-1
+
+Total Installed Size:  0.29 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+installing mingw-w64-clang-x86_64-dotnet-azure-identity...
+
+Full installed-check.log:
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\azure-identity-installed.2kTTh1\check\Check.csproj (in 559 ms).
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Check -> E:\msys64\home\topkek\azure-identity-installed.2kTTh1\check\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.41
+PASS original Azure.Identity real owned TLS/Core/MSAL secret/certificate flows, authorization-code initial and CAE silent-miss fallback paths, sync/async cache, DefaultAzureCredential environment selection, errors/cancellation; reflection-disabled source contexts and all nine runtime hashes
+PASS all nine source runtime hashes and actual Identity/Core/MSAL/dependency compiler/runtime assets
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\azure-identity-installed.2kTTh1\check\Api\Inspect.csproj (in 393 ms).
+  Inspect -> E:\msys64\home\topkek\azure-identity-installed.2kTTh1\check\Api\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.26
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\azure-identity-installed.2kTTh1\check\Pe\Inspect.csproj (in 84 ms).
+  Inspect -> E:\msys64\home\topkek\azure-identity-installed.2kTTh1\check\Pe\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.65
+PASS all356 exact published API declarations and release/signing identities
+PASS fresh source Azure.Identity consumer, real TLS/OIDC/auth-code/CAE behavior, exact API/identity/payload gates
+
+Full postinstall.log:
+PASS built NuGet = installed source feed = fresh installed cache; original license and source inventory bytes match
+NuGet SHA256: 65eb9127ef4f1b445f7e05996a6ab1a9bc5d54c971ca216292fa1a804aa353dd

@@ -1,0 +1,74 @@
+[
+  {
+    "recipe": "mingw-w64-dotnet-roslyn-workspaces",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-codeanalysis-workspaces-common-4.9.2-1-any.pkg.tar.zst",
+    "sha256": "ed27f7709fde83c4b8879a978549e8c56059ddc9afaebbc63acd747558647c8f",
+    "nuget_id": "Microsoft.CodeAnalysis.Workspaces.Common",
+    "nuget_version": "4.9.2",
+    "assembly_identity": "Microsoft.CodeAnalysis.Workspaces, Version=4.9.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35",
+    "published_api_declarations": 1842,
+    "managed_sha256": "2f5614097f7612cab13de4f75e10420e8fcae6b68c5634072a16d64cd2f65255",
+    "source_commit": "9934fb9e3527e1c0c51314e57d4aab30f97e8f9e",
+    "source_sha256": "e01ea67aaec6408de51a0a4c18a7e15b2a527ca7a853c9a0a7742cb5680aeb30",
+    "dependencies": {
+      "Microsoft.CodeAnalysis.Common": "4.9.2",
+      "Humanizer.Core": "2.14.1",
+      "System.Composition": "8.0.0",
+      "System.IO.Pipelines": "8.0.0"
+    },
+    "satellite_cultures": [
+      "cs",
+      "de",
+      "es",
+      "fr",
+      "it",
+      "ja",
+      "ko",
+      "pl",
+      "pt-BR",
+      "ru",
+      "tr",
+      "zh-Hans",
+      "zh-Hant"
+    ],
+    "source_files": 1467,
+    "friend_declarations": 110,
+    "source_build_configuration": "DotNetBuildFromSource=true, DOTNET_BUILD_FROM_SOURCE; upstream excludes optional SQLite cache"
+  },
+  {
+    "recipe": "mingw-w64-dotnet-roslyn-workspaces",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-codeanalysis-csharp-workspaces-4.9.2-1-any.pkg.tar.zst",
+    "sha256": "d17391739f0a84016d5b148d7cbd757f1cafba3f5f85d5cf64a0832d7054d3ed",
+    "nuget_id": "Microsoft.CodeAnalysis.CSharp.Workspaces",
+    "nuget_version": "4.9.2",
+    "assembly_identity": "Microsoft.CodeAnalysis.CSharp.Workspaces, Version=4.9.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35",
+    "published_api_declarations": 56,
+    "managed_sha256": "3d1d303cddfa82b95e0994b4a9542bd1a33d2d030fa1e7a6a3250986f6c11a55",
+    "source_commit": "9934fb9e3527e1c0c51314e57d4aab30f97e8f9e",
+    "source_sha256": "e01ea67aaec6408de51a0a4c18a7e15b2a527ca7a853c9a0a7742cb5680aeb30",
+    "dependencies": {
+      "Microsoft.CodeAnalysis.Common": "4.9.2",
+      "Microsoft.CodeAnalysis.CSharp": "4.9.2",
+      "Microsoft.CodeAnalysis.Workspaces.Common": "4.9.2",
+      "Humanizer.Core": "2.14.1"
+    },
+    "satellite_cultures": [
+      "cs",
+      "de",
+      "es",
+      "fr",
+      "it",
+      "ja",
+      "ko",
+      "pl",
+      "pt-BR",
+      "ru",
+      "tr",
+      "zh-Hans",
+      "zh-Hant"
+    ],
+    "source_files": 272,
+    "friend_declarations": 30,
+    "source_build_configuration": "DotNetBuildFromSource=true, DOTNET_BUILD_FROM_SOURCE; upstream excludes optional SQLite cache"
+  }
+]

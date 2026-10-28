@@ -1,0 +1,33 @@
+Goal turn: progress. Full dependency goal remains incomplete.
+Builder: topkek@win11 / Windows11 / CLANG64
+Private build root: /c/codex-dotnet10/c1.1BZ8KU
+Runtime source10.0.5 commit081d220c0a773ffb7c6bea6b48727833576a65ef
+64-file standalone patch, zero-fuzz clean apply0; final source hashes verified.
+Native prototype compiled incrementally; no CoreCLR10 package installed.
+
+CDAC_BOOTSTRAP_DIR="$PWD/cdac-bootstrap5" bash workflow/build-coreclr.sh . 2 => 0
+/usr/bin/python3 workflow/audit-native.py . => 0
+bash workflow/build-native-probe.sh . native-probe2 => 0
+/clang64/bin/python.exe "$(cygpath -am workflow/check-native.py)" "$(cygpath -am .)" "$(cygpath -am native-check1)" "$(cygpath -am native-probe2/native-jit-probe.exe)" => 0
+bash workflow/check-eha.sh . eha-check1 => 0
+/usr/bin/python3 workflow/prepare-cdac.py . workflow/command-line-api-c7b5e07c.tar.gz cdac-bootstrap5 => 0
+bash workflow/build-cdac.sh . cdac-bootstrap5 => 0
+
+Four original native DLLs built: CoreCLR, RyuJIT, resource DLLs.
+AMD64 images; all PE versions10.0.526.11800; no dynamic MSVC/LLVM CRT.
+Actual delay imports VERSION.dll and api-ms-win-core-winrt-l1-1-0.dll retained.
+Native JIT startup,120 host callbacks, exact original JIT/EE GUID passed.
+Unicode layout CoreCLR load and exported cDAC descriptor passed.
+Loaded descriptor exactly matches original tool-generated C:10826 JSON bytes,
+15 contracts,102 types,71 globals,25 pointer entries.
+Original EHa fixture: all11 printed cases and200000 stress round trips passed.
+Original cDAC11CS + VMR-matched command-line74CS compiled unchanged,0 warnings/errors.
+Private source Roslyn5 native.NET8 adapter retains original compiler and analyzer
+loader bytes; actual C#14 field-backed property compile/execution passed.
+Failed Mono/native desktop argv experiments remain private and are not shipped.
+
+Matching CoreLib10 has NOT been built/executed. Full managed runtime10,SDK10,
+WindowsDesktop and PowerShell7.6 closure remain open. DAC/debugger,ETW provider
+registration, GNU EHa limitations, R2R/NativeAOT and broad runtime testing remain.
+Dependency counts unchanged:50/53 direct,52 transitive,106 artifacts incl4experimental.
+Detailed evidence directory: /tmp/dotnet-coreclr10-prototype1/evidence

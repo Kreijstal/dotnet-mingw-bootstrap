@@ -1,0 +1,386 @@
+PSReadLine2.3.6 source package, 2026-10-27
+Host: win11 / Windows11 build26200 / MSYS2 CLANG64
+Formal root: /home/topkek/psreadline-package.csmMS0/mingw-w64-powershell-psreadline
+Installed check root: /home/topkek/psreadline-installed-check-20261027
+Prototype root: /home/topkek/psreadline-source.6Ja5rq (prepared3/module, editing-5)
+
+Final source package/build/check/install/fresh installed checks and independent
+artifact audit exited0. All48 original main C# files and original Core Polyfill
+source are unchanged. Full245 original resource strings compare at runtime.
+Main457 public/protected APIs and exact original assembly/file/informational
+identity match metadata-only published baselines. Main assembly2.3.6.0/file2.3.6
+and Core assembly1.0.0.0/file1.0.0.0 retain original info+source commitd2e770f...
+Prototype3 omitted those informational suffixes; prepare now preserves both exact
+published suffixes, which agree with the pinned source commit. No C# changes.
+
+The original5 Core forwarders retain their type names/flags and point to the
+installed source SMA7.4.6.500 instead of vendor7.2.22.0. The runtime resolver
+loads the net6plus assembly from the tested module, and all5 resolve to the
+source engine. The forwarder DLL has no legacy prediction implementations.
+Source Pager1.0.0 bundle bytes equal the installed source NuGet package.
+
+Nine module files are preserved in both root PSModule NuGet and loose installed
+layout, with source inventory/hash metadata, original MIT licenses and no vendor
+signatures/binaries or compiler. Source manifest bytes retained; the published
+manifest only adds PrivateData.PSData.ProjectUri. The script matches normalized
+published source. NuGet supplies project/repository URL and exact source commit.
+
+Build and fresh installed checks each pass:
+- exact module/GUID/5cmdlets/assembly, real option and key-handler set/get/remove;
+- all245 resource values,5 metadata/runtime type forwarders and source Pager;
+- 9 owned actual ReadLine-loop cases with unchanged upstream MockConsole:
+  text, insertion, backspace, home/end, kill/yank, history, Unicode, Vi editing,
+  incremental history save;
+- a fresh host process reopens the owned history file and recalls its last line;
+- complete48+1 source hashes, original6 script/data/license assets,457 APIs and
+  all9 NuGet/loose module hashes.
+No keyboard/foreground-window change; history writes only in owned check dirs.
+All production/helper builds report0warnings/0errors. This does not claim complete
+upstream xUnit coverage, actual terminal/ConsoleHost integration or broader
+completion/prediction/help behavior. Desktop/net462 build not supplied by this
+.NET8/Core port. Actual.NET runtime8.0.0; SDK/reference labels do not add servicing.
+
+Exact final commands (all exit0), MSYSTEM=CLANG64 from formal root:
+PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-powershell-psreadline-2.3.6-1-any.pkg.tar.zst
+bash check.sh /home/topkek/psreadline-installed-check-20261027 src/PSReadLine-2.3.6
+
+Independent audit from local repository root (exit0):
+python3 tests/powershell-deps/audit-psreadline.py
+
+
+LOG editing-5.log
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\psreadline-source.6Ja5rq\editing-5\Check.csproj (in 95 ms).
+  Check -> E:\msys64\home\topkek\psreadline-source.6Ja5rq\editing-5\bin\Release\net8.0\PSReadLine.Tests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.94
+PASS 9 owned editing/history/Unicode/Vi/persistence cases using the unchanged original PSReadLine TestConsole and production editing algorithms
+PASS a fresh process reopens and recalls the owned history file
+
+
+LOG install.log
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-powershell-psreadline-2.3.6-1
+
+Total Installed Size:  0.62 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+installing mingw-w64-clang-x86_64-powershell-psreadline...
+
+
+LOG installed-check.log
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\psreadline-installed-check-20261027\Restore.csproj (in 194 ms).
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\psreadline-installed-check-20261027\metadata\Api\Inspect.csproj (in 53 ms).
+  Inspect -> E:\msys64\home\topkek\psreadline-installed-check-20261027\metadata\Api\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.43
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\psreadline-installed-check-20261027\metadata\Identity\Inspect.csproj (in 56 ms).
+  Inspect -> E:\msys64\home\topkek\psreadline-installed-check-20261027\metadata\Identity\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.43
+PASS restored installed NuGet module files equal installed loose module files
+PASS complete48+1 unchanged production sources/resource,9 module files,457 API declarations, original identity and five original Core forwarders retargeted to source SMA
+PASS source PSReadLine import/exports/options/key handlers,245 resource strings, five Core forwarders and bundled source Pager
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\psreadline-installed-check-20261027\editing\Check.csproj (in 58 ms).
+  Check -> E:\msys64\home\topkek\psreadline-installed-check-20261027\editing\bin\Release\net8.0\PSReadLine.Tests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.20
+PASS 9 owned editing/history/Unicode/Vi/persistence cases using the unchanged original PSReadLine TestConsole and production editing algorithms
+PASS a fresh process reopens and recalls the owned history file
+PASS source-only PSReadLine NuGet restore, full source/API/resource/forwarder gates, editing and fresh-process owned history recall
+
+
+LOG makepkg.log
+==> Making package: mingw-w64-powershell-psreadline 2.3.6-1 (27 Oct 2026 05:46:42)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found psreadline-2.3.6.tar.gz
+  -> Found prepare.py
+  -> Found build.sh
+  -> Found pack.py
+  -> Found check.sh
+  -> Found inspect.sh
+  -> Found InspectApi.cs
+  -> Found InspectIdentity.cs
+  -> Found verify-restored.py
+  -> Found check-editing.sh
+  -> Found EditingCheck.cs
+  -> Found RunEditing.ps1
+  -> Found Smoke.ps1
+  -> Found published-provenance.json
+  -> Found README.md
+==> Validating source files with sha256sums...
+    psreadline-2.3.6.tar.gz ... Passed
+    prepare.py ... Passed
+    build.sh ... Passed
+    pack.py ... Passed
+    check.sh ... Passed
+    inspect.sh ... Passed
+    InspectApi.cs ... Passed
+    InspectIdentity.cs ... Passed
+    verify-restored.py ... Passed
+    check-editing.sh ... Passed
+    EditingCheck.cs ... Passed
+    RunEditing.ps1 ... Passed
+    Smoke.ps1 ... Passed
+    published-provenance.json ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+  -> Extracting psreadline-2.3.6.tar.gz with bsdtar
+==> Starting prepare()...
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\psreadline-package.csmMS0\mingw-w64-powershell-psreadline\src\prepared\PSReadLine\PSReadLine.csproj (in 154 ms).
+  PSReadLine -> E:\msys64\home\topkek\psreadline-package.csmMS0\mingw-w64-powershell-psreadline\src\prepared\PSReadLine\bin\Release\net8.0\Microsoft.PowerShell.PSReadLine2.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.79
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\psreadline-package.csmMS0\mingw-w64-powershell-psreadline\src\prepared\Polyfill\Polyfill.csproj (in 57 ms).
+  Polyfill -> E:\msys64\home\topkek\psreadline-package.csmMS0\mingw-w64-powershell-psreadline\src\prepared\Polyfill\bin\Release\net8.0\Microsoft.PowerShell.PSReadLine.Polyfiller.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.85
+Packed complete source PSReadLine Core layout: 9 module files
+==> Starting check()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\psreadline-package.csmMS0\mingw-w64-powershell-psreadline\src\check\Restore.csproj (in 208 ms).
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\psreadline-package.csmMS0\mingw-w64-powershell-psreadline\src\check\metadata\Api\Inspect.csproj (in 57 ms).
+  Inspect -> E:\msys64\home\topkek\psreadline-package.csmMS0\mingw-w64-powershell-psreadline\src\check\metadata\Api\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.58
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\psreadline-package.csmMS0\mingw-w64-powershell-psreadline\src\check\metadata\Identity\Inspect.csproj (in 67 ms).
+  Inspect -> E:\msys64\home\topkek\psreadline-package.csmMS0\mingw-w64-powershell-psreadline\src\check\metadata\Identity\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.39
+PASS complete48+1 unchanged production sources/resource,9 module files,457 API declarations, original identity and five original Core forwarders retargeted to source SMA
+PASS source PSReadLine import/exports/options/key handlers,245 resource strings, five Core forwarders and bundled source Pager
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\psreadline-package.csmMS0\mingw-w64-powershell-psreadline\src\check\editing\Check.csproj (in 89 ms).
+  Check -> E:\msys64\home\topkek\psreadline-package.csmMS0\mingw-w64-powershell-psreadline\src\check\editing\bin\Release\net8.0\PSReadLine.Tests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.67
+PASS 9 owned editing/history/Unicode/Vi/persistence cases using the unchanged original PSReadLine TestConsole and production editing algorithms
+PASS a fresh process reopens and recalls the owned history file
+PASS source-only PSReadLine NuGet restore, full source/API/resource/forwarder gates, editing and fresh-process owned history recall
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-powershell-psreadline"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-powershell-psreadline 2.3.6-1 (27 Oct 2026 05:47:31)
+
+
+LOG psreadline-build3.log
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\psreadline-source.6Ja5rq\psreadline-prepared3\PSReadLine\PSReadLine.csproj (in 156 ms).
+  PSReadLine -> E:\msys64\home\topkek\psreadline-source.6Ja5rq\psreadline-prepared3\PSReadLine\bin\Release\net8.0\Microsoft.PowerShell.PSReadLine2.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.52
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\psreadline-source.6Ja5rq\psreadline-prepared3\Polyfill\Polyfill.csproj (in 52 ms).
+  Polyfill -> E:\msys64\home\topkek\psreadline-source.6Ja5rq\psreadline-prepared3\Polyfill\bin\Release\net8.0\Microsoft.PowerShell.PSReadLine.Polyfiller.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.80
+
+
+LOG smoke-package3.log
+PASS source PSReadLine import/exports/options/key handlers,245 resource strings, five Core forwarders and bundled source Pager

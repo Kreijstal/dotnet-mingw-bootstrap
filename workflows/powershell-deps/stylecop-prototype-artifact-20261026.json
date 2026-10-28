@@ -1,0 +1,67 @@
+{
+  "source_commit": "73a46ae2e65e7870fefe35e2c4c12bb7152f4ec5",
+  "complete": false,
+  "packaged": false,
+  "payload": [
+    {
+      "project": "StyleCop.Analyzers.CodeGeneration",
+      "path": "StyleCop.Analyzers.CodeGeneration/bin/Release/net8.0/StyleCop.Analyzers.CodeGeneration.dll",
+      "sha256": "a2e6c549365b2d87dd3a2f4667837f5816f4e19a78dcb877ab958e5309015c3f",
+      "build_only": true
+    },
+    {
+      "project": "StyleCop.Analyzers",
+      "path": "StyleCop.Analyzers/bin/Release/net8.0/StyleCop.Analyzers.dll",
+      "sha256": "cfe477aef7fc222cf2b051cb72c37a83e0152a24b74f7f1fd9f13e8d8b9aba7d",
+      "build_only": false
+    },
+    {
+      "project": "StyleCop.Analyzers",
+      "path": "StyleCop.Analyzers/bin/Release/net8.0/de-DE/StyleCop.Analyzers.resources.dll",
+      "sha256": "d1e42393798604744ba1348b6e0a7a27854009eefe6ff1173643ce3376a79430",
+      "build_only": false
+    },
+    {
+      "project": "StyleCop.Analyzers",
+      "path": "StyleCop.Analyzers/bin/Release/net8.0/en-GB/StyleCop.Analyzers.resources.dll",
+      "sha256": "7ddf2a623cf5ef11b354c64a5d1e9ffc3a8b5bffaf37fe0c5980142ecdc429e2",
+      "build_only": false
+    },
+    {
+      "project": "StyleCop.Analyzers",
+      "path": "StyleCop.Analyzers/bin/Release/net8.0/es-MX/StyleCop.Analyzers.resources.dll",
+      "sha256": "558c17552700d252cd19e30108b36ec82957a54ef395ac31ba301d3adbbc3e18",
+      "build_only": false
+    },
+    {
+      "project": "StyleCop.Analyzers",
+      "path": "StyleCop.Analyzers/bin/Release/net8.0/fr-FR/StyleCop.Analyzers.resources.dll",
+      "sha256": "55e078a9c2f953b63421a0ed772dd927d6f0598ed598d0b945caf3104eab0f03",
+      "build_only": false
+    },
+    {
+      "project": "StyleCop.Analyzers",
+      "path": "StyleCop.Analyzers/bin/Release/net8.0/pl-PL/StyleCop.Analyzers.resources.dll",
+      "sha256": "d46834f8668c77d669a3d2ef159572e75438a5c0408058d28058518bbe54878a",
+      "build_only": false
+    },
+    {
+      "project": "StyleCop.Analyzers",
+      "path": "StyleCop.Analyzers/bin/Release/net8.0/pt-BR/StyleCop.Analyzers.resources.dll",
+      "sha256": "f86d599a31695dd91d97ec095eaca08d28a04e9309f33f7d6ce5e34a629d7579",
+      "build_only": false
+    },
+    {
+      "project": "StyleCop.Analyzers",
+      "path": "StyleCop.Analyzers/bin/Release/net8.0/ru-RU/StyleCop.Analyzers.resources.dll",
+      "sha256": "9cc5f21725189f359b69e178137762456e77cd25dcae13b7176901a0c969a871",
+      "build_only": false
+    },
+    {
+      "project": "StyleCop.Analyzers.CodeFixes",
+      "path": "StyleCop.Analyzers.CodeFixes/bin/Release/net8.0/StyleCop.Analyzers.CodeFixes.dll",
+      "sha256": "0c2d5ccaa8a40c23bc52bb2787308b9f03195c7a47984ab339af4e5465d2e40d",
+      "build_only": false
+    }
+  ]
+}

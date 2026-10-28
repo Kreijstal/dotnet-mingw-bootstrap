@@ -1,0 +1,20 @@
+[
+  {
+    "name": "Microsoft.Identity.Client",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-msal-4.61.3-1-any.pkg.tar.zst",
+    "sha256": "4d86a84e4657705336b0e8b6ba5ed83e05ab06a0e13b78a7e865c62ef082919a",
+    "original_compile_items": 421,
+    "public_api_declarations": 1068,
+    "implementation_sha256": "c3a31e75f314dbe3aa69b9ff9a976c54e3eddb922d0a5c3f2d98e1efe8d3fa93",
+    "reference_sha256": "314471ec797c7f6ce7bae7fb33eb92908e6836a3938c36b92cc0ae9379a472fd"
+  },
+  {
+    "name": "Microsoft.Identity.Client.Extensions.Msal",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-msal-extensions-4.61.3-1-any.pkg.tar.zst",
+    "sha256": "1eba0350e30af288b6b8ed42f9dfc9c3b50eef49ba5a0eec37a2025f2d9c3625",
+    "original_compile_items": 28,
+    "public_api_declarations": 69,
+    "implementation_sha256": "f2d1e1b63f60bc6a5aff8e905f78d06475352813561e3cf6944bd3082e1e68da",
+    "reference_sha256": "a3be2ac323dd5a4ea1cf6850325415771b79e6dcd0653936ea6505cb114d1ff0"
+  }
+]

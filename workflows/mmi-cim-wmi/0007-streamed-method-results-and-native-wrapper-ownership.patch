@@ -1,0 +1,300 @@
+--- a/Internal/Operations/CimAsyncCallbacksReceiverBase.cs
++++ b/Internal/Operations/CimAsyncCallbacksReceiverBase.cs
+@@ -185,6 +185,7 @@
+                 {
+                     lock (this._suppressFurtherUserCallbacksLock)
+                     {
++                        if (this._suppressFurtherUserCallbacks) return;
+                         try
+                         {
+                             cimOperation.Cancel(CancellationMode.SilentlyStopProducingResults);
+@@ -196,9 +197,12 @@
+                                                                    internalErrorWhileCancellingOperation);
+                         }
+ 
+-                        this.ReportInternalError(callbackProcessingContext, internalError);
+-
+-                        this._suppressFurtherUserCallbacks = true;
++                        // Cancellation suppresses future OnNext callbacks. It
++                        // must not suppress this operation's terminal OnError.
++                        // Keep the lock while allowing that one notification.
++                        this._suppressFurtherUserCallbacks = false;
++                        try { this.ReportInternalError(callbackProcessingContext, internalError); }
++                        finally { this._suppressFurtherUserCallbacks = true; }
+                     }
+                 });
+         }
+--- a/Internal/Operations/CimAsyncMethodResultObserverProxy.cs
++++ b/Internal/Operations/CimAsyncMethodResultObserverProxy.cs
+@@ -66,6 +66,51 @@
+             }
+         }
+         
++        private static void DisposeStreamValue(object value)
++        {
++            (value as CimInstance)?.Dispose();
++        }
++        private void SetSession(object value)
++        {
++            var instance = value as CimInstance;
++            if (instance == null) return;
++            instance.SetCimSessionComputerName(_CimSessionComputerName);
++            instance.SetCimSessionInstanceId(_CimSessionInstanceID);
++        }
++        private void StreamedParameterResultCallback(CimOperationCallbackProcessingContext context,
++            string name, MI_Type type, MI_Value native)
++        {
++            // Strings/primitive arrays are copied by conversion. Embedded
++            // instances/references require native clones before acknowledgement.
++            object converted = native == null ? null :
++                ValueHelpers.ConvertFromNativeLayer(native, type, (MI_Flags)0, clone: true);
++            bool isArray = ((uint)type & 16u) != 0;
++            MI_Type itemType = (MI_Type)((uint)type & ~16u);
++            object[] items;
++            if (isArray)
++            {
++                var array = converted as Array;
++                items = new object[array?.Length ?? 0];
++                for (int i = 0; i < items.Length; i++) items[i] = array.GetValue(i);
++            }
++            else items = new[] { converted };
++            try
++            {
++                for (int i = 0; i < items.Length; i++)
++                {
++                    object value = items[i];
++                    SetSession(value);
++                    var result = new CimMethodStreamedResult(name, value, itemType.ToCimType());
++                    bool delivered = OnNextInternal(context, result);
++                    if (_shortenLifetimeOfResults || !delivered) DisposeStreamValue(value);
++                    // Ownership of a delivered long-lived instance passes to
++                    // the observer. On failure, finally releases pending clones.
++                    items[i] = null;
++                }
++            }
++            finally { foreach (object value in items) DisposeStreamValue(value); }
++        }
++
+         public override void RegisterAcceptedAsyncCallbacks(MI_OperationCallbacks operationCallbacks, CimOperationOptions operationOptions)
+         {
+             base.RegisterAcceptedAsyncCallbacks(operationCallbacks, operationOptions);
+@@ -74,8 +119,8 @@
+                 this.InstanceResultCallback((CimOperationCallbackProcessingContext)context, operation, instance, more, result, message, error);
+             if ((operationOptions != null) && (operationOptions.EnableMethodResultStreaming))
+             {
+-                // TODO: Uncomment and fix below
+-                throw new NotSupportedException("Streamed MI method parameters are not yet ported.");
++                operationCallbacks.streamedParameterResult = (operation, context, name, type, value, acknowledgement) =>
++                    StreamedParameterResultCallback((CimOperationCallbackProcessingContext)context, name, type, value);
+             }
+         }
+     }
+--- a/Internal/Operations/CimAsyncObserverProxyBase.cs
++++ b/Internal/Operations/CimAsyncObserverProxyBase.cs
+@@ -135,11 +135,12 @@
+                 suppressFurtherUserCallbacks: true);
+         }
+ 
+-        private void OnNextInternal(CimOperationCallbackProcessingContext callbackProcessingContext, T item)
++        protected bool OnNextInternal(CimOperationCallbackProcessingContext callbackProcessingContext, T item)
+         {
+-            this.CallIntoUserCallback(
+-                callbackProcessingContext,
+-                () => this._observer.OnNext(item));
++            bool delivered = false;
++            this.CallIntoUserCallback(callbackProcessingContext,
++                () => { this._observer.OnNext(item); delivered = true; });
++            return delivered;
+         }
+ 
+         internal override void ReportInternalError(CimOperationCallbackProcessingContext callbackProcessingContext, Exception internalError)
+--- a/Internal/ValueHelpers.cs
++++ b/Internal/ValueHelpers.cs
+@@ -110,37 +110,46 @@
+ 
+             if (type == MI_Type.MI_INSTANCE || type == MI_Type.MI_REFERENCE)
+             {
+-                CimInstance instance = new CimInstance(
+-                    clone ? value.Instance.Clone() : value.Instance);
+-                if (parent != null)
++                MI_Instance nativeInstance = value.Instance;
++                try
+                 {
+-                    instance.SetCimSessionComputerName(parent.GetCimSessionComputerName());
+-                    instance.SetCimSessionInstanceId(parent.GetCimSessionInstanceId());
++                    if (nativeInstance == null || nativeInstance.IsNull) return null;
++                    CimInstance instance = new CimInstance(clone ? nativeInstance.Clone() : nativeInstance);
++                    if (parent != null)
++                    {
++                        instance.SetCimSessionComputerName(parent.GetCimSessionComputerName());
++                        instance.SetCimSessionInstanceId(parent.GetCimSessionInstanceId());
++                    }
++                    return instance;
+                 }
+-                return instance;
++                finally { if (clone) nativeInstance?.Dispose(); }
+             }
+             else if (type == MI_Type.MI_INSTANCEA || type == MI_Type.MI_REFERENCEA)
+             {
+-                CimInstance[] arrayOfInstances = new CimInstance[value.InstanceA.Length];
+-                for (int i = 0; i < value.InstanceA.Length; i++)
++                MI_Instance[] nativeInstances = value.InstanceA;
++                if (nativeInstances == null) return null;
++                CimInstance[] instances = new CimInstance[nativeInstances.Length];
++                try
+                 {
+-                    MI_Instance h = value.InstanceA[i];
+-                    if (h == null)
++                    for (int i = 0; i < nativeInstances.Length; i++)
+                     {
+-                        arrayOfInstances[i] = null;
+-                    }
+-                    else
+-                    {
+-                        arrayOfInstances[i] = new CimInstance(
+-                            clone ? h.Clone() : h);
++                        MI_Instance handle = nativeInstances[i];
++                        if (handle == null || handle.IsNull) continue;
++                        instances[i] = new CimInstance(clone ? handle.Clone() : handle);
+                         if (parent != null)
+                         {
+-                            arrayOfInstances[i].SetCimSessionComputerName(parent.GetCimSessionComputerName());
+-                            arrayOfInstances[i].SetCimSessionInstanceId(parent.GetCimSessionInstanceId());
++                            instances[i].SetCimSessionComputerName(parent.GetCimSessionComputerName());
++                            instances[i].SetCimSessionInstanceId(parent.GetCimSessionInstanceId());
+                         }
+                     }
++                    return instances;
+                 }
+-                return arrayOfInstances;
++                catch
++                {
++                    if (clone) foreach (CimInstance instance in instances) instance?.Dispose();
++                    throw;
++                }
++                finally { if (clone) foreach (MI_Instance handle in nativeInstances) handle?.Dispose(); }
+             }
+             else if (type == MI_Type.MI_DATETIME)
+             {
+@@ -148,11 +157,13 @@
+             }
+             else if (type == MI_Type.MI_DATETIMEA)
+             {
+-                int length = value.DatetimeA.Length;
++                MI_Datetime[] nativeDatetimes = value.DatetimeA;
++                if (nativeDatetimes == null) return null;
++                int length = nativeDatetimes.Length;
+                 object[] arrayOfDatetimes = new object[length];
+                 for (int i = 0; i < length; i++)
+                 {
+-                    arrayOfDatetimes[i] = value.DatetimeA[i].ConvertFromNativeLayer();
++                    arrayOfDatetimes[i] = nativeDatetimes[i].ConvertFromNativeLayer();
+                 }
+                 return arrayOfDatetimes;
+             }
+--- a/Native/MI_NativeObject.cs
++++ b/Native/MI_NativeObject.cs
+@@ -70,12 +70,12 @@
+ 
+         public virtual void Dispose()
+         {
+-            if (this.allocatedData != IntPtr.Zero)
+-            {
+-                IntPtr tmp = this.allocatedData;
+-                this.ZeroPtr();
+-                Marshal.FreeHGlobal(tmp);
+-            }
++            // Every wrapper owns allocatedData, including the pointer cell of
++            // an indirect wrapper. Clear that allocation address as well as
++            // freeing it: ZeroPtr only cleared the cell's contents, allowing a
++            // repeated Dispose to free the same allocation twice.
++            IntPtr memory = System.Threading.Interlocked.Exchange(ref allocatedData, IntPtr.Zero);
++            if (memory != IntPtr.Zero) Marshal.FreeHGlobal(memory);
+         }
+ 
+         protected MI_NativeObject(bool isDirect)
+--- a/Native/MI_OperationCallbackBridge.cs
++++ b/Native/MI_OperationCallbackBridge.cs
+@@ -32,8 +32,6 @@
+ 
+         internal MI_OperationCallbackBridge(MI_Operation owner, MI_OperationCallbacks callbacks)
+         {
+-            if (callbacks.streamedParameterResult != null)
+-                throw new NotSupportedException("Streamed parameters are not yet ported.");
+             this.owner = owner;
+             this.callbacks = callbacks;
+             Pointer = Marshal.AllocHGlobal(IntPtr.Size * 9);
+@@ -47,6 +45,7 @@
+                 if (callbacks.instanceResult != null) Set(5, new InstanceCallback(InstanceResult));
+                 if (callbacks.indicationResult != null) Set(6, new IndicationCallback(IndicationResult));
+                 if (callbacks.classResult != null) Set(7, new InstanceCallback(ClassResult));
++                if (callbacks.streamedParameterResult != null) Set(8, new StreamedCallback(StreamedParameter));
+             }
+             catch { Marshal.FreeHGlobal(Pointer); Pointer = IntPtr.Zero; throw; }
+             root = GCHandle.Alloc(this);
+@@ -121,19 +120,38 @@
+                 MI_PlatformSpecific.PtrToString(status), percent, seconds));
+         }
+ 
++        [UnmanagedFunctionPointer(MI_PlatformSpecific.MiCallConvention)]
++        private delegate void StreamedCallback(IntPtr operation, IntPtr context, IntPtr name, MI_Type type, IntPtr value, IntPtr acknowledgement);
++        private void StreamedParameter(IntPtr operation, IntPtr context, IntPtr name, MI_Type type, IntPtr value, IntPtr acknowledgement)
++        {
++            Invoke(operation, acknowledgement, processing =>
++            {
++                if ((uint)type > (uint)MI_Type.MI_INSTANCEA) throw new ArgumentOutOfRangeException(nameof(type));
++                using (var borrowed = MI_Value.CopyBorrowedValue(value))
++                    callbacks.streamedParameterResult(owner, processing, MI_PlatformSpecific.PtrToString(name), type, borrowed, null);
++            });
++        }
++
+         private void Invoke(IntPtr operation, IntPtr acknowledgement, Action<CimOperationCallbackProcessingContext> action)
+         {
+             var context = new CimOperationCallbackProcessingContext(callbacks.ManagedOperationContext);
++            Exception pendingError = null;
+             try { action(context); }
+-            catch (Exception error)
+-            {
+-                // A managed exception must never unwind through an unmanaged callback.
+-                RecordError(context, error);
+-            }
++            catch (Exception error) { pendingError = error; }
+             finally
+             {
+-                if (acknowledgement != IntPtr.Zero)
+-                    Marshal.GetDelegateForFunctionPointer<Acknowledge>(acknowledgement)(operation);
++                try
++                {
++                    if (acknowledgement != IntPtr.Zero)
++                    {
++                        MI_Result result = Marshal.GetDelegateForFunctionPointer<Acknowledge>(acknowledgement)(operation);
++                        CimException.ThrowIfMiResultFailure(result);
++                    }
++                }
++                catch (Exception error) { pendingError = pendingError ?? error; }
++                // Release the provider's result before reporting/cancelling an
++                // operation. Never unwind a managed exception into native code.
++                if (pendingError != null) RecordError(context, pendingError);
+                 GC.KeepAlive(this);
+             }
+         }
+--- a/Native/Structures/MI_Value.cs
++++ b/Native/Structures/MI_Value.cs
+@@ -353,6 +353,17 @@
+ 
+         internal static int MI_ValueSize = Marshal.SizeOf<MI_ValueLayout>();
+ 
++        // Own only the union bytes. Pointer members still belong to the native
++        // callback until acknowledgement; Type remains unset so Dispose never
++        // frees provider-owned strings, arrays or instances.
++        internal static MI_Value CopyBorrowedValue(IntPtr pointer)
++        {
++            if (pointer == IntPtr.Zero) return null;
++            var value = new MI_Value();
++            unsafe { Buffer.MemoryCopy((void*)pointer, (void*)value.allocatedData, MI_ValueSize, MI_ValueSize); }
++            return value;
++        }
++
+         internal static MI_Value NewDirectPtr()
+         {
+             return new MI_Value();

@@ -1,0 +1,128 @@
+From d4803f785304a82f9642632da9419e0c69f383c6 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Fri, 9 Oct 2026 17:26:31 +0200
+Subject: [PATCH 13/16] coreclr: work around a clang SEH __finally miscompile
+ (optnone)
+
+LLVM 22 (x86-64, any Windows target) drops the frame-escape offset when a
+__finally block accesses a member at a nonzero offset of a parent-frame
+local (llvm.localrecover + constant): the code reads and writes the saved
+registers instead. ManagedThreadBase_DispatchOuter's catchFrame.Pop()
+zeroed the caller's saved RDI and the finalizer thread crashed at
+shutdown. The functions with such __finally blocks (PAL_FINALLY,
+EE_FINALLY, EX_TRY_NOCATCH, the JIT's finallyErrorTrap) get
+SEH_FINALLY_FUNCTION (optnone) with clang/MinGW.
+---
+ src/coreclr/inc/palclr.h     | 12 ++++++++++++
+ src/coreclr/jit/compiler.cpp |  2 ++
+ src/coreclr/vm/assembly.cpp  |  1 +
+ src/coreclr/vm/syncblk.cpp   |  1 +
+ src/coreclr/vm/threads.cpp   |  4 ++++
+ 5 files changed, 20 insertions(+)
+
+diff --git a/src/coreclr/inc/palclr.h b/src/coreclr/inc/palclr.h
+index 40fe2d1d3..fe0b112d8 100644
+--- a/src/coreclr/inc/palclr.h
++++ b/src/coreclr/inc/palclr.h
+@@ -316,6 +316,18 @@
+ // when these macros are used from within the VM.
+ #define PAL_SEH_RESTORE_GUARD_PAGE
+ 
++// clang (LLVM 22, x86-64 SEH) miscompiles a __finally block -- the outlined funclet and
++// its inlined copy on the normal path -- that accesses a parent-frame local at a nonzero
++// offset (a member of a local struct): the frame-escape offset of llvm.localrecover is
++// dropped and only the member offset is added to the frame pointer, so the access hits
++// the saved registers instead. Functions containing such __finally blocks are compiled
++// without optimization (the bug needs it); see SEH_FINALLY_FUNCTION users.
++#if defined(__clang__) && defined(__MINGW32__)
++#define SEH_FINALLY_FUNCTION __attribute__((optnone, noinline))
++#else
++#define SEH_FINALLY_FUNCTION
++#endif
++
+ #define PAL_TRY_NAKED                                                           \
+     {                                                                           \
+         bool __exHandled; __exHandled = false;                                  \
+diff --git a/src/coreclr/jit/compiler.cpp b/src/coreclr/jit/compiler.cpp
+index 37534460a..029bdcee2 100644
+--- a/src/coreclr/jit/compiler.cpp
++++ b/src/coreclr/jit/compiler.cpp
+@@ -5845,6 +5845,7 @@ bool Compiler::skipMethod()
+ 
+ /*****************************************************************************/
+ 
++SEH_FINALLY_FUNCTION // (finallyErrorTrap is a __finally)
+ int Compiler::compCompile(CORINFO_MODULE_HANDLE classPtr,
+                           void**                methodCodePtr,
+                           uint32_t*             methodCodeSize,
+@@ -7658,6 +7659,7 @@ public:
+ 
+ // Compile a single method
+ 
++SEH_FINALLY_FUNCTION // (finallyErrorTrap is a __finally)
+ int jitNativeCode(CORINFO_METHOD_HANDLE methodHnd,
+                   CORINFO_MODULE_HANDLE classPtr,
+                   COMP_HANDLE           compHnd,
+diff --git a/src/coreclr/vm/assembly.cpp b/src/coreclr/vm/assembly.cpp
+index d196eee3f..56428af44 100644
+--- a/src/coreclr/vm/assembly.cpp
++++ b/src/coreclr/vm/assembly.cpp
+@@ -1317,6 +1317,7 @@ static void RunMainInternal(Param* pParam)
+ }
+ 
+ /* static */
++SEH_FINALLY_FUNCTION   // (EX_TRY_NOCATCH has a __finally)
+ HRESULT RunMain(MethodDesc *pFD ,
+                 short numSkipArgs,
+                 INT32 *piRetVal,
+diff --git a/src/coreclr/vm/syncblk.cpp b/src/coreclr/vm/syncblk.cpp
+index bd235093b..11770f37f 100644
+--- a/src/coreclr/vm/syncblk.cpp
++++ b/src/coreclr/vm/syncblk.cpp
+@@ -537,6 +537,7 @@ void SyncBlockCache::Destroy()
+ // It is put on a cleanup list and at a later time (typically during
+ // finalization, this list is cleaned up.
+ //
++SEH_FINALLY_FUNCTION   // (EE_FINALLY uses __EEparam, param)
+ void SyncBlockCache::CleanupSyncBlocks()
+ {
+     STATIC_CONTRACT_THROWS;
+diff --git a/src/coreclr/vm/threads.cpp b/src/coreclr/vm/threads.cpp
+index edbd6a011..52e1b4f07 100644
+--- a/src/coreclr/vm/threads.cpp
++++ b/src/coreclr/vm/threads.cpp
+@@ -3151,6 +3151,7 @@ BOOL CheckForDuplicateHandles(int countHandles, HANDLE *handles)
+ // Based on whether this thread has a message pump, do the appropriate
+ // style of Wait.
+ //--------------------------------------------------------------------
++SEH_FINALLY_FUNCTION   // (EE_FINALLY uses __EEparam, param)
+ DWORD Thread::DoAppropriateWait(int countHandles, HANDLE *handles, BOOL waitAll,
+                                 DWORD millis, WaitMode mode, PendingSync *syncState)
+ {
+@@ -3199,6 +3200,7 @@ DWORD Thread::DoAppropriateWait(int countHandles, HANDLE *handles, BOOL waitAll,
+     return(param.dwRet);
+ }
+ 
++SEH_FINALLY_FUNCTION   // (EE_FINALLY uses __EEparam, param)
+ DWORD Thread::DoAppropriateWait(AppropriateWaitFunc func, void *args,
+                                 DWORD millis, WaitMode mode,
+                                 PendingSync *syncState)
+@@ -3711,6 +3713,7 @@ WaitCompleted:
+ //--------------------------------------------------------------------
+ // Only one style of wait for DoSignalAndWait since we don't support this on STA Threads
+ //--------------------------------------------------------------------
++SEH_FINALLY_FUNCTION   // (EE_FINALLY uses __EEparam, param)
+ DWORD Thread::DoSignalAndWait(HANDLE *handles, DWORD millis, BOOL alertable, PendingSync *syncState)
+ {
+     STATIC_CONTRACT_THROWS;
+@@ -7373,6 +7376,7 @@ static LONG ThreadBaseRedirectingFilter(PEXCEPTION_POINTERS pExceptionInfo, LPVO
+     return ret;
+ }
+ 
++SEH_FINALLY_FUNCTION   // (the PAL_FINALLY below uses catchFrame)
+ static void ManagedThreadBase_DispatchOuter(ManagedThreadCallState *pCallState)
+ {
+     STATIC_CONTRACT_GC_TRIGGERS;
+-- 
+2.55.0
+

@@ -1,0 +1,23 @@
+{
+  "build_root": "/home/topkek/powershell-full-sdk.K5kDMN",
+  "source_version": "7.4.20",
+  "original_native_console_build_exit_code": 0,
+  "independent_original_sdk_task_replay_exit_code": 0,
+  "native_console_smoke_exit_code": 0,
+  "actual_start_job_child_exit_code": 0,
+  "source_payload_audit_exit_code": 0,
+  "staged_source_binary_assets": 384,
+  "staged_total_files": 605,
+  "original_project_dlls": 13,
+  "template_source_version": "8.0.31",
+  "template_producer": "/home/topkek/sdk8-servicing.H9EQgk/prepared",
+  "template_sdk_provider": "private SDK prototype, formal package build active",
+  "full_shipping_powershell_complete": false,
+  "remaining": [
+    "formal SDK host/runtime pack artifact/install",
+    "fresh full SDK/catalog rebuild with installed serviced targeting/SDK packs",
+    "conditional GraphicalHost",
+    "complete native package/license closure and broader native/remote compatibility",
+    "PowerShell7.6/.NET10"
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "csc.dll": "ffaf3591192b1b539053ab009b33302268b82bddac42fa8cf0bde6fe9ca1889f",
+  "vbc.dll": "7608df73a58152eabd35ce19d9fe43fd400c5aeb9f5bd7d0f2823f6eb54eae69",
+  "Microsoft.CodeAnalysis.dll": "64cfae7a552240c48678a7f24ff579741467e89f7ac87359561ec70fafce94af",
+  "Microsoft.CodeAnalysis.CSharp.dll": "e455f32fc1bf8f48ea2872e08bbabd917625de93340ebe989c2dc9031c9ba502",
+  "Microsoft.CodeAnalysis.VisualBasic.dll": "de5bc1ea939199ce2e5f95a84e6531cb496f61b747a720b0073cbcf530c19f4e"
+}

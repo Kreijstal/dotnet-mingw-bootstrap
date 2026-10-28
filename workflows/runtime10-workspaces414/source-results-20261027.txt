@@ -1,0 +1,269 @@
+Original source Workspaces4.14 and Channels9: source/package/API/runtime checks
+
+{
+  "previous_goal_turn_classification": "progress",
+  "current_goal_turn_classification": "progress",
+  "date_utc": "2026-10-27",
+  "local_date": "2026-10-28",
+  "host": "win11",
+  "root": "/c/codex-dotnet10/c1.1BZ8KU",
+  "output": "workspaces414-1",
+  "roslyn_version": "4.14.0",
+  "roslyn_commit": "8edf7bcd4f1594c3d68a6a567469f41dbd33dd1b",
+  "runtime_dependency_version": "9.0.0",
+  "runtime_commit": "9d5a6a9aa463d6d10b0b0ba6d5982cc82f363dc3",
+  "bootstrap_sdk": "source SDK8.0.131-3/runtime8.0.31-3",
+  "source_compiler": "unchanged source Roslyn5 through CompilerHost",
+  "original_supported_framework": "net8.0",
+  "source_production_cs_changes": 0,
+  "original_cs_inputs_by_project": {
+    "System.Threading.Channels": 27,
+    "Microsoft.CodeAnalysis.Workspaces": 1515,
+    "Microsoft.CodeAnalysis.CSharp.Workspaces": 271
+  },
+  "original_channels_minimum": "7.0.0",
+  "resolved_source_channels_version": "9.0.0",
+  "channels_resolved_version_satisfies_original_minimum": true,
+  "channels_nupkg_and_assembly_version": "9.0.0/9.0.0.0",
+  "nuget_packages": {
+    "Microsoft.CodeAnalysis.CSharp.Workspaces": {
+      "version": "4.14.0",
+      "sha256": "91365a3734f85be5dca2b8309e43988e3161c988ca1673c1b19b0e349cff2269",
+      "dependencies": {
+        "Humanizer.Core": "[2.14.1]",
+        "Microsoft.CodeAnalysis.CSharp": "[4.14.0]",
+        "Microsoft.CodeAnalysis.Common": "[4.14.0]",
+        "Microsoft.CodeAnalysis.Workspaces.Common": "[4.14.0]"
+      }
+    },
+    "Microsoft.CodeAnalysis.Workspaces.Common": {
+      "version": "4.14.0",
+      "sha256": "85d5fb2dc15ce8ad4935a4eb5bb6fdea79c9e8a5a82c675dc75ca8ecdaadf92f",
+      "dependencies": {
+        "Humanizer.Core": "[2.14.1]",
+        "Microsoft.CodeAnalysis.Common": "[4.14.0]",
+        "System.Composition": "[9.0.0]",
+        "System.IO.Pipelines": "[9.0.0]",
+        "System.Threading.Channels": "[9.0.0]"
+      }
+    },
+    "System.Composition": {
+      "version": "9.0.0",
+      "sha256": "8c78cb9f5c3c07b4180dd27996b296dd45b880df47e773f75e62763a5004b3a7",
+      "dependencies": {
+        "System.Composition.AttributedModel": "[9.0.0]",
+        "System.Composition.Convention": "[9.0.0]",
+        "System.Composition.Hosting": "[9.0.0]",
+        "System.Composition.Runtime": "[9.0.0]",
+        "System.Composition.TypedParts": "[9.0.0]"
+      }
+    },
+    "System.Threading.Channels": {
+      "version": "9.0.0",
+      "sha256": "ef971d139eb8e54eb2b8946024a227fe68d94de90b5cc58c7e3f624e4ab2cf6c",
+      "dependencies": {}
+    }
+  },
+  "original_source_archive_audits": {
+    "runtime": {
+      "archive_sha256": "32755d528ead386762fb9da054249f6151ac78ef6a92f437044838cd0ab00def",
+      "selected_original_inputs_verified": 30
+    },
+    "roslyn": {
+      "archive_sha256": "8cf2d365d1fad52b480f7c68b5c477cb586a935ada0eb309b0c40dacfec5fe9c",
+      "selected_original_inputs_verified": 1886
+    }
+  },
+  "actual_source_compile_package_references_verified": 26,
+  "fresh_consumer_source_package_versions_and_hashes": {
+    "Humanizer.Core/2.14.1": "2300a683ce2d6f3517a4c303f5bda9c1f3d82148196484eb94645cdee8ad5ed1",
+    "Microsoft.CodeAnalysis.Common/4.14.0": "a232c72833a0445a7d866cf5d6f8e28cafa497f96506a16ce0285d966a3173a9",
+    "Microsoft.CodeAnalysis.CSharp/4.14.0": "602bf339c2d8a15264962fc042e70a35bee9aef1841ace8d7c0c9e9423c224e9",
+    "Microsoft.CodeAnalysis.CSharp.Workspaces/4.14.0": "91365a3734f85be5dca2b8309e43988e3161c988ca1673c1b19b0e349cff2269",
+    "Microsoft.CodeAnalysis.Workspaces.Common/4.14.0": "85d5fb2dc15ce8ad4935a4eb5bb6fdea79c9e8a5a82c675dc75ca8ecdaadf92f",
+    "System.Collections.Immutable/9.0.0": "b1af990a7bb03c2da291248dfbdb25577d7c0ac94a6671caa6183c6b9f5b0c34",
+    "System.Composition/9.0.0": "8c78cb9f5c3c07b4180dd27996b296dd45b880df47e773f75e62763a5004b3a7",
+    "System.Composition.AttributedModel/9.0.0": "a7d6511c58a7813dc4d8eb5f681d5c3d0bf6be2f3a20bc439f429752ffd0dac1",
+    "System.Composition.Convention/9.0.0": "f3723b312331b26c71a1f1ec58a5f4d5c4d8a90d8e437fa337900566d3d28568",
+    "System.Composition.Hosting/9.0.0": "0303c722f356aa962230bd60304c17d7dfdee873023fc0cbf7260a5ab09eb05b",
+    "System.Composition.Runtime/9.0.0": "7daf63678623d8bbfe55f464976ae4c4202ad165e11127780ba5821bb114b345",
+    "System.Composition.TypedParts/9.0.0": "948fc1057e24e08638601bd47ecfb4704afa919c427992efa9ce37ee758546d0",
+    "System.IO.Pipelines/9.0.0": "b186120e1eec450fccba10abb676f781cd38ed19d724d5499890b3d8f1b24111",
+    "System.Reflection.Metadata/9.0.0": "90bdb947d72be18f574e2403371efe68f59a7b42f1c411069b757c21bd334d17",
+    "System.Threading.Channels/9.0.0": "ef971d139eb8e54eb2b8946024a227fe68d94de90b5cc58c7e3f624e4ab2cf6c"
+  },
+  "compiler_warning_occurrences_by_project": {
+    "System.Threading.Channels": {},
+    "Microsoft.CodeAnalysis.Workspaces": {},
+    "Microsoft.CodeAnalysis.CSharp.Workspaces": {}
+  },
+  "build_exit_code": 0,
+  "fresh_consumer_exit_code": 0,
+  "source_package_audit_exit_code": 0,
+  "common_public_api_declarations": 1834,
+  "csharp_public_api_declarations": 56,
+  "expanded_friend_attributes": {
+    "Microsoft.CodeAnalysis.Workspaces": 104,
+    "Microsoft.CodeAnalysis.CSharp.Workspaces": 29
+  },
+  "original_resource_sets": 98,
+  "original_resource_values": 3486,
+  "runtime_checks": [
+    "exact source identity/file/informational versions and consumer-output loading",
+    "all expanded friend identities and restricted namespaces",
+    "all98 original neutral/translated resource sets and3486 values",
+    "source9 channel bounded backpressure/cancellation/DropOldest/2000 multiwriter items/error identity",
+    "all1890 upstream public/protected API baseline declarations with each file nullable mode",
+    "MEF-hosted CSharp workspace and Unicode documents",
+    "real project references/semantic models/cross-project reference search and rename",
+    "CSharp formatting, simplification, solution changes and PE emit",
+    "real analyzer diagnostics,DocumentEditor/code-fix registration,CodeAction/ApplyChanges operations",
+    "incremental solution edits and cancelled requests",
+    "no .NET Framework implementation module"
+  ],
+  "all_fresh_source_cache_archives_and_selected_runtime_resource_dll_bytes_match": true,
+  "all_unselected_cached_managed_dll_bytes_also_match_source_archives": true,
+  "original_sqlite_source_build_exclusion_retained": true,
+  "formal_pacman_packages_installed": false,
+  "complete_original_targeting_generators10_built": false,
+  "source_roslyn44_built": false,
+  "full_sdk10_built": false,
+  "full_dependency_goal_complete": false,
+  "dependency_artifact_counts_unchanged": {
+    "verified_direct": 50,
+    "total_direct": 53,
+    "verified_transitive": 52,
+    "including_experimental": 106
+  },
+  "commands": [
+    {
+      "command": "/usr/bin/python3 workspaces414-workflow/prepare.py \"$ROOT\" \"$ROOT/workspaces414-1\"",
+      "exit_code": 0
+    },
+    {
+      "command": "bash workspaces414-workflow/build.sh \"$ROOT/workspaces414-1\"",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 workspaces414-workflow/check.py \"$ROOT\" \"$ROOT/workspaces414-1\" \"$ROOT/workspaces414-1/consumer3\"",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 workspaces414-workflow/audit.py \"$ROOT\" \"$ROOT/workspaces414-1\"",
+      "exit_code": 0
+    },
+    {
+      "command": "python3 -m py_compile tests/runtime10-workspaces414/*.py",
+      "exit_code": 0
+    },
+    {
+      "command": "bash -n tests/runtime10-workspaces414/build.sh",
+      "exit_code": 0
+    }
+  ],
+  "corrected_fixture_issues": [
+    "Humanizer includes satellites not selected by SDK8; compare all cache DLLs but stage only assets explicitly selected by project.assets.json.",
+    "Workspaces API baseline files do not enable nullable tracking; formatter now respects each source baseline nullable mode while retaining all declarations and experimental markers."
+  ],
+  "remaining": [
+    "Complete original targeting-generator bundle and required TFMs using declared Workspaces4.14.",
+    "Original Roslyn/Workspaces4.4 source closure for the JSON generator.",
+    "Formal clean package/license/archive and installed SDK consumer checks.",
+    "Full managed/native framework10,SDK10.0.201,WindowsDesktop10,PowerShell7.6 and previously recorded compatibility work."
+  ],
+  "local_evidence": "/tmp/runtime10-workspaces414-1/evidence",
+  "evidence_archive_sha256": "f0c8bbbd52de025415c7c7005701c5354c73cbf514b29c9fcbc500ba6ab6efad"
+}
+
+
+evaluation.log
+Evaluated System.Threading.Channels
+Evaluated Microsoft.CodeAnalysis.Workspaces
+Evaluated Microsoft.CodeAnalysis.CSharp.Workspaces
+
+build-all.log
+PASS original source package: System.Threading.Channels
+PASS original source package: Microsoft.CodeAnalysis.Workspaces
+PASS original source package: Microsoft.CodeAnalysis.CSharp.Workspaces
+
+System.Threading.Channels/build.log
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored C:\codex-dotnet10\c1.1BZ8KU\workspaces414-1\System.Threading.Channels\Build.csproj (in 81 ms).
+  Build -> C:\codex-dotnet10\c1.1BZ8KU\workspaces414-1\System.Threading.Channels\bin\Release\net8.0\System.Threading.Channels.dll
+  The package System.Threading.Channels.9.0.0 is missing a readme. Go to https://aka.ms/nuget/authoring-best-practices/readme to learn why package readmes are important.
+  Successfully created package 'C:\codex-dotnet10\c1.1BZ8KU\workspaces414-1\feed\System.Threading.Channels.9.0.0.nupkg'.
+
+Microsoft.CodeAnalysis.Workspaces/build.log
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored C:\codex-dotnet10\c1.1BZ8KU\workspaces414-1\Microsoft.CodeAnalysis.Workspaces\Build.csproj (in 695 ms).
+  Build -> C:\codex-dotnet10\c1.1BZ8KU\workspaces414-1\Microsoft.CodeAnalysis.Workspaces\bin\Release\net8.0\Microsoft.CodeAnalysis.Workspaces.dll
+  The package Microsoft.CodeAnalysis.Workspaces.Common.4.14.0 is missing a readme. Go to https://aka.ms/nuget/authoring-best-practices/readme to learn why package readmes are important.
+  Successfully created package 'C:\codex-dotnet10\c1.1BZ8KU\workspaces414-1\feed\Microsoft.CodeAnalysis.Workspaces.Common.4.14.0.nupkg'.
+
+Microsoft.CodeAnalysis.CSharp.Workspaces/build.log
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored C:\codex-dotnet10\c1.1BZ8KU\workspaces414-1\Microsoft.CodeAnalysis.CSharp.Workspaces\Build.csproj (in 346 ms).
+  Build -> C:\codex-dotnet10\c1.1BZ8KU\workspaces414-1\Microsoft.CodeAnalysis.CSharp.Workspaces\bin\Release\net8.0\Microsoft.CodeAnalysis.CSharp.Workspaces.dll
+  The package Microsoft.CodeAnalysis.CSharp.Workspaces.4.14.0 is missing a readme. Go to https://aka.ms/nuget/authoring-best-practices/readme to learn why package readmes are important.
+  Successfully created package 'C:\codex-dotnet10\c1.1BZ8KU\workspaces414-1\feed\Microsoft.CodeAnalysis.CSharp.Workspaces.4.14.0.nupkg'.
+
+consumer3/build.log
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored C:\codex-dotnet10\c1.1BZ8KU\workspaces414-1\consumer3\Check.csproj (in 944 ms).
+C:\codex-dotnet10\c1.1BZ8KU\workspaces414-workflow\inputs\CheckApi.cs(34,25): warning CS8632: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context. [C:\codex-dotnet10\c1.1BZ8KU\workspaces414-1\consumer3\Check.csproj]
+C:\codex-dotnet10\c1.1BZ8KU\workspaces414-workflow\inputs\CheckApi.cs(45,24): warning CS8632: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context. [C:\codex-dotnet10\c1.1BZ8KU\workspaces414-1\consumer3\Check.csproj]
+  Check -> C:\codex-dotnet10\c1.1BZ8KU\workspaces414-1\consumer3\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+
+C:\codex-dotnet10\c1.1BZ8KU\workspaces414-workflow\inputs\CheckApi.cs(34,25): warning CS8632: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context. [C:\codex-dotnet10\c1.1BZ8KU\workspaces414-1\consumer3\Check.csproj]
+C:\codex-dotnet10\c1.1BZ8KU\workspaces414-workflow\inputs\CheckApi.cs(45,24): warning CS8632: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context. [C:\codex-dotnet10\c1.1BZ8KU\workspaces414-1\consumer3\Check.csproj]
+    2 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.99
+
+consumer3/run.log
+Microsoft.CodeAnalysis.Workspaces friend attributes: actual=104 expected=104
+Microsoft.CodeAnalysis.CSharp.Workspaces friend attributes: actual=29 expected=29
+PASS source identity/location/types and all expanded friend declarations; 98 resource sets/3486 source strings
+PASS source9 channel backpressure, cancellation, DropOldest,2000 multiwriter items and exact completion-error propagation
+PASS: Microsoft.CodeAnalysis.Workspaces preserves all 1834 upstream public API declarations
+PASS: Microsoft.CodeAnalysis.CSharp.Workspaces preserves all 56 upstream public API declarations
+PASS MEF-hosted CSharp workspace, Unicode documents, project references, semantic models, cross-project reference search/rename, formatting, solution changes and PE emit
+PASS CSharp simplification, real analyzer diagnostics, DocumentEditor/code-fix registration, CodeAction/ApplyChanges operation, incremental solution edits and cancellation
+
+source-package-audit.log
+PASS pinned source archives,4 NuGets and 26 actual compiler-cache source package references

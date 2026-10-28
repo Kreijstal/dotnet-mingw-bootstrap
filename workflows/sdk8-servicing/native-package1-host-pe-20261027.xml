@@ -1,0 +1,5 @@
+<FileList>
+  <File Type="Native" Path="runtimes/win-x64/native/apphost.exe" FileVersion="0.0.0.0" />
+  <File Type="Native" Path="runtimes/win-x64/native/comhost.dll" FileVersion="8.0.3126.42000" />
+  <File Type="Native" Path="runtimes/win-x64/native/nethost.dll" FileVersion="8.0.3126.42000" />
+</FileList>

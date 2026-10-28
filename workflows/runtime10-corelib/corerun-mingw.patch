@@ -1,0 +1,39 @@
+--- a/src/coreclr/hosts/corerun/CMakeLists.txt
++++ b/src/coreclr/hosts/corerun/CMakeLists.txt
+@@ -22,16 +22,20 @@
+ if(CLR_CMAKE_HOST_WIN32)
+     target_link_libraries(corerun
+         PRIVATE
+-        advapi32.lib
+-        oleaut32.lib
+-        uuid.lib
+-        user32.lib
++        $<IF:$<BOOL:${MINGW}>,advapi32,advapi32.lib>
++        $<IF:$<BOOL:${MINGW}>,oleaut32,oleaut32.lib>
++        $<IF:$<BOOL:${MINGW}>,uuid,uuid.lib>
++        $<IF:$<BOOL:${MINGW}>,user32,user32.lib>
+         ${STATIC_MT_CRT_LIB}
+         ${STATIC_MT_VCRT_LIB}
+     )
+     # Enable CET-compatibility
+     if (CLR_CMAKE_HOST_ARCH_AMD64)
+-        target_link_options(corerun PRIVATE "/CETCOMPAT")
++        if(MINGW)
++            target_link_options(corerun PRIVATE "LINKER:--Xlink=/CETCOMPAT")
++        else()
++            target_link_options(corerun PRIVATE "/CETCOMPAT")
++        endif()
+     endif()
+ else(CLR_CMAKE_HOST_WIN32)
+     target_link_libraries(corerun PRIVATE ${CMAKE_DL_LIBS})
+--- a/src/coreclr/hosts/corerun/corerun.hpp
++++ b/src/coreclr/hosts/corerun/corerun.hpp
+@@ -207,7 +207,7 @@
+     inline void* get_module_symbol(mod_t m, const char* sym)
+     {
+         assert(m != nullptr && sym != nullptr);
+-        return ::GetProcAddress((HMODULE)m, sym);
++        return reinterpret_cast<void*>(::GetProcAddress((HMODULE)m, sym));
+     }
+ 
+     inline string_utf8_t convert_to_utf8(const char_t* str)

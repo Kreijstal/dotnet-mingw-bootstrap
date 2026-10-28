@@ -1,0 +1,120 @@
+{
+  "consumer_source": "dotnet/roslyn",
+  "consumer_commit": "9934fb9e3527e1c0c51314e57d4aab30f97e8f9e",
+  "consumer_projects": [
+    "src/Workspaces/Core/Portable/Microsoft.CodeAnalysis.Workspaces.csproj",
+    "src/Workspaces/CSharp/Portable/Microsoft.CodeAnalysis.CSharp.Workspaces.csproj"
+  ],
+  "declared_versions": {
+    "System.Composition": "8.0.0",
+    "System.IO.Pipelines": "8.0.0",
+    "System.Threading.Channels": "8.0.0",
+    "Humanizer.Core": "2.14.1"
+  },
+  "packaged_layer_recipe": "mingw-w64-dotnet-workspaces-prerequisites",
+  "reason": "Workspaces is required by the outstanding analyzer/code-fix packages; this layer does not complete those direct requirements",
+  "source_build_optional_sqlite": "Workspaces upstream DotNetBuildFromSource=true excludes SQLite sources/package; source-build define DOTNET_BUILD_FROM_SOURCE is required",
+  "remaining": [
+    "VisualBasic compiler/workspaces needed by the full CodeAnalysis.Analyzers package",
+    "all remaining analyzer packages and their code fixes",
+    "bundled PowerShell modules",
+    "SqlClient and Windows.Compatibility",
+    "core runtime servicing and complete PowerShell integration"
+  ],
+  "published_workspaces_packages": [
+    {
+      "id": "Microsoft.CodeAnalysis.CSharp.Workspaces",
+      "version": "4.9.2",
+      "url": "https://api.nuget.org/v3-flatcontainer/microsoft.codeanalysis.csharp.workspaces/4.9.2/microsoft.codeanalysis.csharp.workspaces.4.9.2.nupkg",
+      "sha256": "219c7d9d26915c36c59390b79dc79bfb4ae1ea88c2fd0ae8395e553af9c4c718",
+      "dependencies_by_framework": {
+        "net6.0": {
+          "Microsoft.CodeAnalysis.Common": "[4.9.2, 4.9.2]",
+          "Microsoft.CodeAnalysis.CSharp": "[4.9.2, 4.9.2]",
+          "Microsoft.CodeAnalysis.Workspaces.Common": "[4.9.2, 4.9.2]",
+          "Humanizer.Core": "2.14.1"
+        },
+        "net7.0": {
+          "Microsoft.CodeAnalysis.Common": "[4.9.2, 4.9.2]",
+          "Microsoft.CodeAnalysis.CSharp": "[4.9.2, 4.9.2]",
+          "Microsoft.CodeAnalysis.Workspaces.Common": "[4.9.2, 4.9.2]",
+          "Humanizer.Core": "2.14.1"
+        },
+        ".NETStandard2.0": {
+          "Microsoft.CodeAnalysis.Common": "[4.9.2, 4.9.2]",
+          "Microsoft.CodeAnalysis.CSharp": "[4.9.2, 4.9.2]",
+          "Microsoft.CodeAnalysis.Workspaces.Common": "[4.9.2, 4.9.2]",
+          "Humanizer.Core": "2.14.1"
+        }
+      },
+      "usage": "dependency metadata only; not execution or build inputs"
+    },
+    {
+      "id": "Microsoft.CodeAnalysis.VisualBasic.Workspaces",
+      "version": "4.9.2",
+      "url": "https://api.nuget.org/v3-flatcontainer/microsoft.codeanalysis.visualbasic.workspaces/4.9.2/microsoft.codeanalysis.visualbasic.workspaces.4.9.2.nupkg",
+      "sha256": "50f1dd3af06fd64ab4643b5cd3d7c5619331143a3c4dd268f378c06431ee7414",
+      "dependencies_by_framework": {
+        "net6.0": {
+          "Microsoft.CodeAnalysis.Common": "[4.9.2, 4.9.2]",
+          "Microsoft.CodeAnalysis.VisualBasic": "[4.9.2, 4.9.2]",
+          "Microsoft.CodeAnalysis.Workspaces.Common": "[4.9.2, 4.9.2]"
+        },
+        "net7.0": {
+          "Microsoft.CodeAnalysis.Common": "[4.9.2, 4.9.2]",
+          "Microsoft.CodeAnalysis.VisualBasic": "[4.9.2, 4.9.2]",
+          "Microsoft.CodeAnalysis.Workspaces.Common": "[4.9.2, 4.9.2]"
+        },
+        ".NETStandard2.0": {
+          "Microsoft.CodeAnalysis.Common": "[4.9.2, 4.9.2]",
+          "Microsoft.CodeAnalysis.VisualBasic": "[4.9.2, 4.9.2]",
+          "Microsoft.CodeAnalysis.Workspaces.Common": "[4.9.2, 4.9.2]"
+        }
+      },
+      "usage": "dependency metadata only; not execution or build inputs"
+    },
+    {
+      "id": "Microsoft.CodeAnalysis.Workspaces.Common",
+      "version": "4.9.2",
+      "url": "https://api.nuget.org/v3-flatcontainer/microsoft.codeanalysis.workspaces.common/4.9.2/microsoft.codeanalysis.workspaces.common.4.9.2.nupkg",
+      "sha256": "aa9b87bb4701c731f931d35be6b66ec56b9bd5b459aa3c0c16ed265eb9a4125c",
+      "dependencies_by_framework": {
+        "net6.0": {
+          "Microsoft.CodeAnalysis.Common": "[4.9.2, 4.9.2]",
+          "Humanizer.Core": "2.14.1",
+          "System.Composition": "8.0.0",
+          "System.IO.Pipelines": "8.0.0",
+          "System.Threading.Channels": "8.0.0"
+        },
+        "net7.0": {
+          "Microsoft.CodeAnalysis.Common": "[4.9.2, 4.9.2]",
+          "Humanizer.Core": "2.14.1",
+          "System.Composition": "8.0.0",
+          "System.IO.Pipelines": "8.0.0",
+          "System.Threading.Channels": "8.0.0"
+        },
+        ".NETStandard2.0": {
+          "Microsoft.CodeAnalysis.Common": "[4.9.2, 4.9.2]",
+          "Humanizer.Core": "2.14.1",
+          "Microsoft.Bcl.AsyncInterfaces": "8.0.0",
+          "System.Composition": "8.0.0",
+          "System.IO.Pipelines": "8.0.0",
+          "System.Threading.Channels": "8.0.0"
+        }
+      },
+      "usage": "dependency metadata only; not execution or build inputs"
+    }
+  ],
+  "net8_runtime_provider": "System.Threading.Channels comes from the source-built net8.0 shared framework; core runtime servicing is still open.",
+  "completed_workspaces_recipe": "mingw-w64-dotnet-roslyn-workspaces",
+  "documentation_codefix_dependency_next": {
+    "id": "CommonMark.NET",
+    "version": "0.15.1",
+    "commit": "6f0ed9805065ee368c01fe931ca7d589e9341f11",
+    "source_url": "https://codeload.github.com/Knagis/CommonMark.NET/tar.gz/6f0ed9805065ee368c01fe931ca7d589e9341f11",
+    "source_sha256": "7fd82969785165a4ecaceaaad0d4121ee1506306977c95882c2c55dddcfec417",
+    "license": "BSD-3-Clause",
+    "needed_by": "DocumentationAnalyzers.CodeFixes",
+    "note": "NETCore conditional has different assembly-version handling than .NET Framework. Inspect published netstandard1.0 metadata before choosing identity. Source and archive cached here for the next dependency build."
+  }
+}

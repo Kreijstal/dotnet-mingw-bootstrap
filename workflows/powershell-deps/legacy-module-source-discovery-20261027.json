@@ -1,0 +1,45 @@
+{
+  "date": "2026-10-27",
+  "package_management": {
+    "source_repository": "https://github.com/OneGet/oneget",
+    "source_commit": "923260b2f2cbc5b66d90ef2e31f240b9d8579a74",
+    "source_archive": "/tmp/powershell-packagemanagement/oneget-923260b2f2cbc5b66d90ef2e31f240b9d8579a74.tar.gz",
+    "source_archive_sha256": "7dd69943db7a57314a9245181353c11083a8d3ab21a9e2191d801e2eb685a736",
+    "source_manifest_normalized_equal_published": true,
+    "published_package_sha256": "7e1f8a75b6bc8a83d8abff79f6690fc1dfbd534fd3e5733d97e19bcb5954c13e",
+    "core_published_dlls_for_metadata_only": [
+      "coreclr/netstandard2.0/Microsoft.PackageManagement.ArchiverProviders.dll",
+      "coreclr/netstandard2.0/Microsoft.PackageManagement.CoreProviders.dll",
+      "coreclr/netstandard2.0/Microsoft.PackageManagement.dll",
+      "coreclr/netstandard2.0/Microsoft.PackageManagement.MetaProvider.PowerShell.dll",
+      "coreclr/netstandard2.0/Microsoft.PackageManagement.NuGetProvider.dll",
+      "coreclr/netstandard2.0/Microsoft.PowerShell.PackageManagement.dll"
+    ],
+    "nuget_provider_submodule_repository": "https://github.com/OneGet/NuGetProvider",
+    "nuget_provider_submodule_commit": "b4a79a22f65c85a5de7aa3f23c0505fb38422e1d",
+    "nuget_provider_source_archive_sha256": "a744b5ab338cb71448eb06c665b7d6960f15ad1a3cd330e6bed937d836f0319f",
+    "source_selection": "Release-date commit that updates1.4.8.1; current2024HEAD contains WIP malformed projects and is not the release source.",
+    "status": "release source located; no source build/package yet",
+    "next": [
+      "inspect all six Core source projects, linked inputs, original CORECLR/COREv1 constants and resource generator",
+      "metadata-only vendor identities/API baseline, full source projects against source engine/feed",
+      "do not run raw upstream Test/run-tests.ps1: it writes HKLM strong-name verification skip entries; use owned.NET8 fixtures"
+    ]
+  },
+  "powershell_get": {
+    "source_repository": "https://github.com/PowerShell/PowerShellGetv2",
+    "source_commit": "22a87ee00bc461fe49068c9e8e1b079bfdc6c3f8",
+    "source_archive": "/tmp/powershell-powershellget/powershellget-22a87ee00bc461fe49068c9e8e1b079bfdc6c3f8.tar.gz",
+    "source_archive_sha256": "05cad5cbc038581655c707178859684e58af1f5b6a3a6a6008dca34ac358e83f",
+    "published_package_sha256": "6b8cebf2a464eaeb31b0a6d627355c30d9d1899dba0ce3bdd0d4e7afca148673",
+    "manifest_matches_published_except_leading_indentation": true,
+    "source_selection": "September2020 release merge with version2.2.5; tag2.2.5.1 is a later release and must not be relabelled.",
+    "package_management_minimum": "1.4.4",
+    "status": "release source located; no source build/package yet",
+    "next": [
+      "use original build script to concatenate all original functions into PSModule.psm1",
+      "compare complete generated script/function/data inventories with published source",
+      "isolate provider/repository/module installs in owned fixture paths before running upstream tests"
+    ]
+  }
+}

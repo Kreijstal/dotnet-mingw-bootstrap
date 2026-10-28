@@ -1,0 +1,167 @@
+Syndication 8 source package validation on win11, MSYSTEM=CLANG64
+Remote working root: /home/topkek/powershell-wcf.d3ETGX
+Source: dotnet/runtime v8.0.31; NuGet version 8.0.0; separate recipe preserves existing Syndication 10.
+
+In mingw-w64-dotnet-syndication8:
+$ PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm
+Result: exit 0
+==> Making package: mingw-w64-dotnet-syndication8 8.0.31-1 (26 Oct 2026 16:50:53)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found runtime-v8.0.31.tar.gz
+  -> Found prepare.py
+  -> Found libraries.json
+  -> Found Open.pubkey.hex
+  -> Found check.cs
+  -> Found check.sh
+  -> Found check-api.cs
+  -> Found check-api.sh
+  -> Found README.md
+==> Validating source files with sha256sums...
+    runtime-v8.0.31.tar.gz ... Passed
+    prepare.py ... Passed
+    libraries.json ... Passed
+    Open.pubkey.hex ... Passed
+    check.cs ... Passed
+    check.sh ... Passed
+    check-api.cs ... Passed
+    check-api.sh ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+==> Starting prepare()...
+==> Removing existing $pkgdir/ directory...
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-wcf.d3ETGX\mingw-w64-dotnet-syndication8\src\prepared\System.ServiceModel.Syndication\contract\Contract.csproj (in 54 ms).
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\mingw-w64-dotnet-syndication8\src\runtime-8.0.31\src\libraries\System.ServiceModel.Syndication\ref\System.ServiceModel.Syndication.netcoreapp.cs(42,24): warning CS0169: The field 'XmlUriData._dummy' is never used [E:\msys64\home\topkek\powershell-wcf.d3ETGX\mingw-w64-dotnet-syndication8\src\prepared\System.ServiceModel.Syndication\contract\Contract.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\mingw-w64-dotnet-syndication8\src\runtime-8.0.31\src\libraries\System.ServiceModel.Syndication\ref\System.ServiceModel.Syndication.netcoreapp.cs(34,24): warning CS0169: The field 'XmlDateTimeData._dummy' is never used [E:\msys64\home\topkek\powershell-wcf.d3ETGX\mingw-w64-dotnet-syndication8\src\prepared\System.ServiceModel.Syndication\contract\Contract.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\mingw-w64-dotnet-syndication8\src\runtime-8.0.31\src\libraries\System.ServiceModel.Syndication\ref\System.ServiceModel.Syndication.netcoreapp.cs(43,21): warning CS0169: The field 'XmlUriData._dummyPrimitive' is never used [E:\msys64\home\topkek\powershell-wcf.d3ETGX\mingw-w64-dotnet-syndication8\src\prepared\System.ServiceModel.Syndication\contract\Contract.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\mingw-w64-dotnet-syndication8\src\runtime-8.0.31\src\libraries\System.ServiceModel.Syndication\ref\System.ServiceModel.Syndication.netcoreapp.cs(35,21): warning CS0169: The field 'XmlDateTimeData._dummyPrimitive' is never used [E:\msys64\home\topkek\powershell-wcf.d3ETGX\mingw-w64-dotnet-syndication8\src\prepared\System.ServiceModel.Syndication\contract\Contract.csproj]
+  Contract -> E:\msys64\home\topkek\powershell-wcf.d3ETGX\mingw-w64-dotnet-syndication8\src\prepared\System.ServiceModel.Syndication\contract\bin\Release\net8.0\System.ServiceModel.Syndication.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\mingw-w64-dotnet-syndication8\src\runtime-8.0.31\src\libraries\System.ServiceModel.Syndication\ref\System.ServiceModel.Syndication.netcoreapp.cs(42,24): warning CS0169: The field 'XmlUriData._dummy' is never used [E:\msys64\home\topkek\powershell-wcf.d3ETGX\mingw-w64-dotnet-syndication8\src\prepared\System.ServiceModel.Syndication\contract\Contract.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\mingw-w64-dotnet-syndication8\src\runtime-8.0.31\src\libraries\System.ServiceModel.Syndication\ref\System.ServiceModel.Syndication.netcoreapp.cs(34,24): warning CS0169: The field 'XmlDateTimeData._dummy' is never used [E:\msys64\home\topkek\powershell-wcf.d3ETGX\mingw-w64-dotnet-syndication8\src\prepared\System.ServiceModel.Syndication\contract\Contract.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\mingw-w64-dotnet-syndication8\src\runtime-8.0.31\src\libraries\System.ServiceModel.Syndication\ref\System.ServiceModel.Syndication.netcoreapp.cs(43,21): warning CS0169: The field 'XmlUriData._dummyPrimitive' is never used [E:\msys64\home\topkek\powershell-wcf.d3ETGX\mingw-w64-dotnet-syndication8\src\prepared\System.ServiceModel.Syndication\contract\Contract.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\mingw-w64-dotnet-syndication8\src\runtime-8.0.31\src\libraries\System.ServiceModel.Syndication\ref\System.ServiceModel.Syndication.netcoreapp.cs(35,21): warning CS0169: The field 'XmlDateTimeData._dummyPrimitive' is never used [E:\msys64\home\topkek\powershell-wcf.d3ETGX\mingw-w64-dotnet-syndication8\src\prepared\System.ServiceModel.Syndication\contract\Contract.csproj]
+    4 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.50
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-wcf.d3ETGX\mingw-w64-dotnet-syndication8\src\prepared\System.ServiceModel.Syndication\Library.csproj (in 58 ms).
+  Library -> E:\msys64\home\topkek\powershell-wcf.d3ETGX\mingw-w64-dotnet-syndication8\src\prepared\System.ServiceModel.Syndication\bin\Release\net8.0\System.ServiceModel.Syndication.dll
+  The package System.ServiceModel.Syndication.8.0.0 is missing a readme. Go to https://aka.ms/nuget/authoring-best-practices/readme to learn why package readmes are important.
+  Successfully created package 'E:\msys64\home\topkek\powershell-wcf.d3ETGX\mingw-w64-dotnet-syndication8\src\feed\System.ServiceModel.Syndication.8.0.0.nupkg'.
+==> Starting check()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-wcf.d3ETGX\mingw-w64-dotnet-syndication8\src\check\check.csproj (in 170 ms).
+  check -> E:\msys64\home\topkek\powershell-wcf.d3ETGX\mingw-w64-dotnet-syndication8\src\check\bin\Release\net8.0\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.61
+PASS Syndication 8: Atom/RSS Unicode, dates, links, extensions, AtomPub, invalid XML; 1 resource sets/37 strings; identity/source/location
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-wcf.d3ETGX\mingw-w64-dotnet-syndication8\src\check-api\check-api.csproj (in 93 ms).
+  check-api -> E:\msys64\home\topkek\powershell-wcf.d3ETGX\mingw-w64-dotnet-syndication8\src\check-api\bin\Release\net8.0\check-api.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.10
+PASS: System.ServiceModel.Syndication implements all 639 upstream public/protected type/member signatures
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-syndication8"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-syndication8 8.0.31-1 (26 Oct 2026 16:51:27)
+
+$ /usr/bin/pacman -U --noconfirm mingw-w64-dotnet-syndication8/*.pkg.tar.zst
+Result: exit 0
+$ bash mingw-w64-dotnet-syndication8/check.sh syndication8-installed /clang64/share/doc/dotnet-syndication8/localization.json
+Result: exit 0, fresh cache and installed feed only
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-wcf.d3ETGX\syndication8-installed\check.csproj (in 218 ms).
+  check -> E:\msys64\home\topkek\powershell-wcf.d3ETGX\syndication8-installed\bin\Release\net8.0\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.04
+PASS Syndication 8: Atom/RSS Unicode, dates, links, extensions, AtomPub, invalid XML; 1 resource sets/37 strings; identity/source/location
+
+$ python3 tests/powershell-deps/audit-syndication8.py tests/powershell-deps/syndication8-artifact-20261026.json
+Result: exit 0; source checksums, licenses/notices, dependencies, exact payload and 37-string resource manifest pass.

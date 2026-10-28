@@ -1,0 +1,192 @@
+{
+  "supporting_source_nuget_owners": {
+    "humanizer.core.2.14.1.nupkg": {
+      "native_package": "mingw-w64-clang-x86_64-dotnet-humanizer 2.14.1-1",
+      "source_nuget_archive_sha256": "2300a683ce2d6f3517a4c303f5bda9c1f3d82148196484eb94645cdee8ad5ed1",
+      "license_files": {
+        "dotnet-humanizer/LICENSE": {
+          "sha256": "e24ec7f2eea5c5f4b3e2c08308109ba99b49b4b56ea7ff0e0a178f2bdd4bbce8",
+          "bytes": 1565,
+          "original_installed_path": "/clang64/share/licenses/dotnet-humanizer/LICENSE"
+        },
+        "dotnet-humanizer/LICENSE.Bytes": {
+          "sha256": "448b44bf6e128ee1537ecdf57f556473bb53892c594be393f92bd7a993ef764a",
+          "bytes": 1102,
+          "original_installed_path": "/clang64/share/licenses/dotnet-humanizer/LICENSE.Bytes"
+        },
+        "dotnet-humanizer/LICENSE.Inflections": {
+          "sha256": "5592fb5b203b5ffe9fc1f9b66ce5418198b89911b5a3952e32fd487874a40932",
+          "bytes": 1081,
+          "original_installed_path": "/clang64/share/licenses/dotnet-humanizer/LICENSE.Inflections"
+        }
+      }
+    },
+    "microsoft.codeanalysis.common.4.9.2.nupkg": {
+      "native_package": "mingw-w64-clang-x86_64-dotnet-codeanalysis-common 4.9.2-1",
+      "source_nuget_archive_sha256": "4332fa469e5d6ee74a295438ef21ad45c64d96a41fd81fab4a13748d050921bc",
+      "license_files": {
+        "dotnet-codeanalysis-common/LICENSE": {
+          "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+          "bytes": 1115,
+          "original_installed_path": "/clang64/share/licenses/dotnet-codeanalysis-common/LICENSE"
+        },
+        "dotnet-codeanalysis-common/THIRD-PARTY-NOTICES.txt": {
+          "sha256": "aa10edcdc488e201fdca979306ba0617de4c68c58dfa5916b25e588f5369fb82",
+          "bytes": 9732,
+          "original_installed_path": "/clang64/share/licenses/dotnet-codeanalysis-common/THIRD-PARTY-NOTICES.txt"
+        }
+      }
+    },
+    "microsoft.codeanalysis.csharp.4.9.2.nupkg": {
+      "native_package": "mingw-w64-clang-x86_64-dotnet-codeanalysis-csharp 4.9.2-1",
+      "source_nuget_archive_sha256": "d8f2a1dd14ff523a2b4183a43192ff187b62612c363d2519ef76bd40a6926197",
+      "license_files": {
+        "dotnet-codeanalysis-csharp/LICENSE": {
+          "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+          "bytes": 1115,
+          "original_installed_path": "/clang64/share/licenses/dotnet-codeanalysis-csharp/LICENSE"
+        },
+        "dotnet-codeanalysis-csharp/THIRD-PARTY-NOTICES.txt": {
+          "sha256": "aa10edcdc488e201fdca979306ba0617de4c68c58dfa5916b25e588f5369fb82",
+          "bytes": 9732,
+          "original_installed_path": "/clang64/share/licenses/dotnet-codeanalysis-csharp/THIRD-PARTY-NOTICES.txt"
+        }
+      }
+    },
+    "microsoft.codeanalysis.csharp.workspaces.4.9.2.nupkg": {
+      "native_package": "mingw-w64-clang-x86_64-dotnet-codeanalysis-csharp-workspaces 4.9.2-1",
+      "source_nuget_archive_sha256": "3246e5a57f3613f361345581f1b7f8ae7919620c7087292fda51c52864e87e34",
+      "license_files": {
+        "dotnet-codeanalysis-csharp-workspaces/LICENSE": {
+          "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+          "bytes": 1115,
+          "original_installed_path": "/clang64/share/licenses/dotnet-codeanalysis-csharp-workspaces/LICENSE"
+        },
+        "dotnet-codeanalysis-csharp-workspaces/THIRD-PARTY-NOTICES": {
+          "sha256": "aa10edcdc488e201fdca979306ba0617de4c68c58dfa5916b25e588f5369fb82",
+          "bytes": 9732,
+          "original_installed_path": "/clang64/share/licenses/dotnet-codeanalysis-csharp-workspaces/THIRD-PARTY-NOTICES"
+        }
+      }
+    },
+    "microsoft.codeanalysis.workspaces.common.4.9.2.nupkg": {
+      "native_package": "mingw-w64-clang-x86_64-dotnet-codeanalysis-workspaces-common 4.9.2-1",
+      "source_nuget_archive_sha256": "aef954426fc5eaeeb9decc1dd7d2b0c800f44592e9b9f48cdbb1cab0ccf0950c",
+      "license_files": {
+        "dotnet-codeanalysis-workspaces-common/LICENSE": {
+          "sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+          "bytes": 1115,
+          "original_installed_path": "/clang64/share/licenses/dotnet-codeanalysis-workspaces-common/LICENSE"
+        },
+        "dotnet-codeanalysis-workspaces-common/THIRD-PARTY-NOTICES": {
+          "sha256": "aa10edcdc488e201fdca979306ba0617de4c68c58dfa5916b25e588f5369fb82",
+          "bytes": 9732,
+          "original_installed_path": "/clang64/share/licenses/dotnet-codeanalysis-workspaces-common/THIRD-PARTY-NOTICES"
+        }
+      }
+    },
+    "system.composition.attributedmodel.8.0.0.nupkg": {
+      "native_package": "mingw-w64-clang-x86_64-dotnet-composition2-attributedmodel 8.0.31-1",
+      "source_nuget_archive_sha256": "91a13d77b6cc7c22109685823b2036172fe0258dc4104d6c8139b8a24935b3ac",
+      "license_files": {
+        "dotnet-composition2-attributedmodel/LICENSE": {
+          "sha256": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310",
+          "bytes": 1116,
+          "original_installed_path": "/clang64/share/licenses/dotnet-composition2-attributedmodel/LICENSE"
+        },
+        "dotnet-composition2-attributedmodel/THIRD-PARTY-NOTICES": {
+          "sha256": "97c1a7b3da6a4c6ad516448719f45114b41a4d4c5aa300a944476e2e4f5da438",
+          "bytes": 67638,
+          "original_installed_path": "/clang64/share/licenses/dotnet-composition2-attributedmodel/THIRD-PARTY-NOTICES"
+        }
+      }
+    },
+    "system.composition.convention.8.0.0.nupkg": {
+      "native_package": "mingw-w64-clang-x86_64-dotnet-composition2-convention 8.0.31-1",
+      "source_nuget_archive_sha256": "e5b03024dda6fd01c63e1d68d3459ce26cb8bfa3455b4f259255c98105c14360",
+      "license_files": {
+        "dotnet-composition2-convention/LICENSE": {
+          "sha256": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310",
+          "bytes": 1116,
+          "original_installed_path": "/clang64/share/licenses/dotnet-composition2-convention/LICENSE"
+        },
+        "dotnet-composition2-convention/THIRD-PARTY-NOTICES": {
+          "sha256": "97c1a7b3da6a4c6ad516448719f45114b41a4d4c5aa300a944476e2e4f5da438",
+          "bytes": 67638,
+          "original_installed_path": "/clang64/share/licenses/dotnet-composition2-convention/THIRD-PARTY-NOTICES"
+        }
+      }
+    },
+    "system.composition.hosting.8.0.0.nupkg": {
+      "native_package": "mingw-w64-clang-x86_64-dotnet-composition2-hosting 8.0.31-1",
+      "source_nuget_archive_sha256": "56be0697c5b59ba53f3ad0c78295ac7222505de8cdb2b59f53dc08eac5c4a31e",
+      "license_files": {
+        "dotnet-composition2-hosting/LICENSE": {
+          "sha256": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310",
+          "bytes": 1116,
+          "original_installed_path": "/clang64/share/licenses/dotnet-composition2-hosting/LICENSE"
+        },
+        "dotnet-composition2-hosting/THIRD-PARTY-NOTICES": {
+          "sha256": "97c1a7b3da6a4c6ad516448719f45114b41a4d4c5aa300a944476e2e4f5da438",
+          "bytes": 67638,
+          "original_installed_path": "/clang64/share/licenses/dotnet-composition2-hosting/THIRD-PARTY-NOTICES"
+        }
+      }
+    },
+    "system.composition.runtime.8.0.0.nupkg": {
+      "native_package": "mingw-w64-clang-x86_64-dotnet-composition2-runtime 8.0.31-1",
+      "source_nuget_archive_sha256": "e311c6cf7a3f4e1d289e09304c72a147a49dbe3f366b29d7b299b1f16e568d71",
+      "license_files": {
+        "dotnet-composition2-runtime/LICENSE": {
+          "sha256": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310",
+          "bytes": 1116,
+          "original_installed_path": "/clang64/share/licenses/dotnet-composition2-runtime/LICENSE"
+        },
+        "dotnet-composition2-runtime/THIRD-PARTY-NOTICES": {
+          "sha256": "97c1a7b3da6a4c6ad516448719f45114b41a4d4c5aa300a944476e2e4f5da438",
+          "bytes": 67638,
+          "original_installed_path": "/clang64/share/licenses/dotnet-composition2-runtime/THIRD-PARTY-NOTICES"
+        }
+      }
+    },
+    "system.composition.typedparts.8.0.0.nupkg": {
+      "native_package": "mingw-w64-clang-x86_64-dotnet-composition2-typedparts 8.0.31-1",
+      "source_nuget_archive_sha256": "bfdd9dbd9b48aa8e902d28babbe359d45638174cf0d8f179bcfaef2bc2b43b67",
+      "license_files": {
+        "dotnet-composition2-typedparts/LICENSE": {
+          "sha256": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310",
+          "bytes": 1116,
+          "original_installed_path": "/clang64/share/licenses/dotnet-composition2-typedparts/LICENSE"
+        },
+        "dotnet-composition2-typedparts/THIRD-PARTY-NOTICES": {
+          "sha256": "97c1a7b3da6a4c6ad516448719f45114b41a4d4c5aa300a944476e2e4f5da438",
+          "bytes": 67638,
+          "original_installed_path": "/clang64/share/licenses/dotnet-composition2-typedparts/THIRD-PARTY-NOTICES"
+        }
+      }
+    },
+    "system.io.pipelines.8.0.0.nupkg": {
+      "native_package": "mingw-w64-clang-x86_64-dotnet-io-pipelines 8.0.31-1",
+      "source_nuget_archive_sha256": "bbd4da9a390427c0e60519e6722e5e2c1227567ef6bbe163180303f142c11802",
+      "license_files": {
+        "dotnet-io-pipelines/LICENSE": {
+          "sha256": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310",
+          "bytes": 1116,
+          "original_installed_path": "/clang64/share/licenses/dotnet-io-pipelines/LICENSE"
+        },
+        "dotnet-io-pipelines/THIRD-PARTY-NOTICES": {
+          "sha256": "97c1a7b3da6a4c6ad516448719f45114b41a4d4c5aa300a944476e2e4f5da438",
+          "bytes": 67638,
+          "original_installed_path": "/clang64/share/licenses/dotnet-io-pipelines/THIRD-PARTY-NOTICES"
+        }
+      }
+    }
+  },
+  "runtime_source_licenses": {
+    "LICENSE.TXT": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310",
+    "THIRD-PARTY-NOTICES.TXT": "97c1a7b3da6a4c6ad516448719f45114b41a4d4c5aa300a944476e2e4f5da438"
+  },
+  "supporting_owner_count": 11,
+  "supporting_license_files": 23,
+  "installed_or_packaged": false
+}

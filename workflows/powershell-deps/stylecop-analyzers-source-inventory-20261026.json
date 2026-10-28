@@ -1,0 +1,66 @@
+{
+  "StyleCop.Analyzers.CodeGeneration": {
+    "source_files": 7,
+    "resources": 0,
+    "overlays": [
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeGeneration/SyntaxLightupGenerator.cs"
+    ]
+  },
+  "StyleCop.Analyzers": {
+    "source_files": 313,
+    "resources": 17,
+    "overlays": []
+  },
+  "StyleCop.Analyzers.CodeFixes": {
+    "source_files": 107,
+    "resources": 0,
+    "overlays": [
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/DocumentationRules/FileHeaderCodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/DocumentationRules/SA1626CodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/DocumentationRules/SA1642SA1643CodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/DocumentationRules/SA1651CodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/LayoutRules/SA1500CodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/LayoutRules/SA1501CodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/LayoutRules/SA1503CodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/LayoutRules/SA1506CodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/LayoutRules/SA1507CodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/LayoutRules/SA1509CodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/LayoutRules/SA1510CodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/LayoutRules/SA1511CodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/LayoutRules/SA1512CodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/LayoutRules/SA1513CodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/LayoutRules/SA1514CodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/LayoutRules/SA1515CodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/LayoutRules/SA1516CodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/LayoutRules/SA1517CodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/LayoutRules/SA1518CodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/MaintainabilityRules/SA1119CodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/MaintainabilityRules/SA1407SA1408FixAllProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/OrderingRules/ElementOrderCodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/OrderingRules/SA1206CodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/OrderingRules/UsingCodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/ReadabilityRules/IndentationCodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/ReadabilityRules/RemoveRegionFixAllProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/ReadabilityRules/SA1100CodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/ReadabilityRules/SA1101CodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/ReadabilityRules/SA1107FixAllProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/ReadabilityRules/SA1121CodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/ReadabilityRules/SA1122CodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/ReadabilityRules/SA1128CodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/ReadabilityRules/SA1129CodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/ReadabilityRules/SA1130CodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/ReadabilityRules/SA1131CodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/ReadabilityRules/SA1133CodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/ReadabilityRules/SA1134CodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/ReadabilityRules/SA1135CodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/ReadabilityRules/SA1142CodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/ReadabilityRules/SX1101CodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/SpacingRules/SA1004CodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/SpacingRules/SA1005CodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/SpacingRules/SA1025CodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/SpacingRules/SA1027CodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/SpacingRules/SA1028CodeFixProvider.cs",
+      "StyleCop.Analyzers/StyleCop.Analyzers.CodeFixes/SpacingRules/TokenSpacingCodeFixProvider.cs"
+    ]
+  }
+}

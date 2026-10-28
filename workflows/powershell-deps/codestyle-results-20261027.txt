@@ -1,0 +1,520 @@
+Complete source-built Roslyn CodeStyle4.9.2 packages and SDK integration,2026-10-27
+Host win11 / CLANG64; SDK8.0.131 label, actual source runtime8.0.0
+Remote root /home/topkek/cs.fp3yQJ
+Recipe mingw-w64-dotnet-codestyle
+Three packages: dotnet-codestyle-csharp, dotnet-codestyle-visualbasic,
+                dotnet-sdk-codestyle; all4.9.2-1
+Source commit9934fb9e3527e1c0c51314e57d4aab30f97e8f9e
+Archive SHA256e01ea67aaec6408de51a0a4c18a7e15b2a527ca7a853c9a0a7742cb5680aeb30
+
+All659 Core/254 CSharp/114 VB analyzer and213 Core/220 CSharp/101 VB fixer original
+inputs compile unchanged (1561 total), with the full original five-source config
+generator. Original main/shared project inventories, hashes, imports, source
+resources and XLF files are independently verified against the pinned archive.
+Six assembly/file identities4.9.10.12906/31bf are preserved with public signing;
+source commit information is explicit. Projects target source.NET8 and separately
+packaged source Roslyn4.9.2 compilers/workspaces. No vendor implementation executes
+or becomes a production reference, generator input or package payload.
+
+Independent metadata checks match100 public/protected API declarations,135
+analyzer classes,172 exported fixers,138 diagnostic-ID constant entries and all
+neutral resource strings. Every fixer activates and exposes its fixable IDs.
+All210 resource sets/5684 original/XLF strings pass. Every analyzer executes
+across137 declared language combinations. All146 selected upstream direct-literal
+Fact cases pass with diagnostic target presence/absence and normalized fixed text;
+actual actions execute from11 providers. The intentionally empty
+RemoveUnnecessaryImportsFixable helper descriptor is retained exactly.
+The adapter records unsupported options/helpers/XML/named/fix-all/multi-document
+inputs and does not replace full IDE/script/xUnit/compiler-diagnostic/key/iteration
+assertions. Its own AnalyzerConfigOptions provider implements Keys; omitting that
+newer public API caused a harness NamingStyle callback exception and was corrected.
+
+Both NuGet packages contain all original four assemblies/13 cultures, generated
+targets/five configs, original props/scripts/MIT license/notices and complete
+source provenance. Source attachments use compact mapped paths to avoid NU5123;
+every attached byte and original path is retained/verified. No private keys,
+vendor signatures, PDBs or compiler/workspace implementation binaries ship there.
+All112 NuGet DLL assets match84 independently runtime-tested main/satellite DLLs.
+Shared Core copies match across languages, and SDK copies match NuGet bytes.
+
+The original generator runs unmodified. All14 generated/source build assets
+have identical targets/props/rule IDs/severities. Two exact alternative descriptor
+title comments are allowed to vary: IDE0053 block/expression lambda bodies and
+IDE0073 missing/mismatched file headers. Multiple descriptors share these IDs;
+the last observed descriptor can differ with analyzer/reflection ordering. This
+changes comments only. The final clean build has eight such comment-line choices;
+no diagnostic configuration or production algorithm was patched to force titles.
+
+Clean makepkg/check, pacman installation, fresh installed-feed consumer checks,
+SDK integration and independent artifact audit all exit0. Actual CSharp/VB NuGet
+and SDK MSBuild select exactly four proper-language DLLs, reject IDE0044 missing
+readonly fields, and build their corrections through source csc49/vbc49. NuGet
+props disable duplicate implicit SDK CodeStyle; SDK installation omits those props
+and preserves EnforceCodeStyleInBuild=true. The original SDK compiler remains4.8.
+Final CodeStyle package/compiler/check builds finish with0 warnings/errors.
+The earlier generic runtime test consumer selected the original SDK compiler4.8
+and produced CS9057 warnings. The final harness explicitly selects source csc49,
+matching the already-correct targeted MSBuild samples and PowerShell source build.
+A full clean rebuild/check validates the final recipe with no warnings/errors.
+
+Original PowerShell7.4.20 now retains upstream EnforceCodeStyleInBuild=true using
+these installed source SDK analyzers and csc49. Original697 SMA/9 Eventing/35
+CimCmdlets inputs build with all four SDK CodeStyle DLLs selected per production
+project. Build/core+CimCmdlets consumer exit0 with0 warnings/errors. Actual native
+local queries/class metadata/GetOwner/caught CimException/CIM serialization,
+same-runspace source WMI/CIM agreement and GC pass on Windows build26200 with no
+Framework implementation. All27 application DLLs match rebuilt original projects
+or installed source NuGet payloads. See codestyle-powershell-{source-inventory,
+build-inputs,payload}-20261027.json. Earlier core evidence records the preceding
+build without CodeStyle and is superseded only for that analysis gap.
+
+The separate source SDK implicit.NET analyzers still lack implementations.
+Full pwsh/application/modules, remaining dependencies/native behavior/remote
+compatibility and runtime servicing remain open. These three packages are build
+tooling: counts remain44/53 direct IDs,29 transitive packages and75 dependency
+artifacts including both experimental MMI ports. Overall complete remains false.
+
+Exact successful commands and recorded logs follow; all exit0.
+
+$ PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm
+==> Making package: mingw-w64-dotnet-codestyle 4.9.2-1 (Tue Oct 27 02:05:05 2026)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found roslyn-4.9.2.tar.gz
+  -> Found prepare.py
+  -> Found build-libraries.sh
+  -> Found build.sh
+  -> Found pack.py
+  -> Found check.sh
+  -> Found check-api.sh
+  -> Found check-msbuild.sh
+  -> Found verify-build-assets.py
+  -> Found Check.cs
+  -> Found ExtractFixtures.cs
+  -> Found InspectApi.cs
+  -> Found InspectInventory.cs
+  -> Found InspectMetadata.cs
+  -> Found ExpectedAssemblies.json
+  -> Found ExpectedBuildAssets.json
+  -> Found UpstreamFixtures.json
+  -> Found published-metadata-provenance.json
+  -> Found README.md
+==> Validating source files with sha256sums...
+    roslyn-4.9.2.tar.gz ... Passed
+    prepare.py ... Passed
+    build-libraries.sh ... Passed
+    build.sh ... Passed
+    pack.py ... Passed
+    check.sh ... Passed
+    check-api.sh ... Passed
+    check-msbuild.sh ... Passed
+    verify-build-assets.py ... Passed
+    Check.cs ... Passed
+    ExtractFixtures.cs ... Passed
+    InspectApi.cs ... Passed
+    InspectInventory.cs ... Passed
+    InspectMetadata.cs ... Passed
+    ExpectedAssemblies.json ... Passed
+    ExpectedBuildAssets.json ... Passed
+    UpstreamFixtures.json ... Passed
+    published-metadata-provenance.json ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+  -> Extracting roslyn-4.9.2.tar.gz with bsdtar
+==> Starting prepare()...
+Prepared full CodeStyle sources: {'Microsoft.CodeAnalysis.CodeStyle': 659, 'Microsoft.CodeAnalysis.CSharp.CodeStyle': 254, 'Microsoft.CodeAnalysis.VisualBasic.CodeStyle': 114, 'Microsoft.CodeAnalysis.CodeStyle.Fixes': 213, 'Microsoft.CodeAnalysis.CSharp.CodeStyle.Fixes': 220, 'Microsoft.CodeAnalysis.VisualBasic.CodeStyle.Fixes': 101, 'CodeStyleConfigFileGenerator': 5}
+==> Removing existing $pkgdir/ directory...
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\cs.fp3yQJ\src\prepared\Microsoft.CodeAnalysis.CSharp.CodeStyle\Library.csproj (in 347 ms).
+  Restored E:\msys64\home\topkek\cs.fp3yQJ\src\prepared\Microsoft.CodeAnalysis.CodeStyle.Fixes\Library.csproj (in 347 ms).
+  Restored E:\msys64\home\topkek\cs.fp3yQJ\src\prepared\Microsoft.CodeAnalysis.CSharp.CodeStyle.Fixes\Library.csproj (in 347 ms).
+  Restored E:\msys64\home\topkek\cs.fp3yQJ\src\prepared\Microsoft.CodeAnalysis.CodeStyle\Library.csproj (in 347 ms).
+  Library -> E:\msys64\home\topkek\cs.fp3yQJ\src\prepared\Microsoft.CodeAnalysis.CodeStyle\bin\Release\net8.0\Microsoft.CodeAnalysis.CodeStyle.dll
+  Library -> E:\msys64\home\topkek\cs.fp3yQJ\src\prepared\Microsoft.CodeAnalysis.CodeStyle.Fixes\bin\Release\net8.0\Microsoft.CodeAnalysis.CodeStyle.Fixes.dll
+  Library -> E:\msys64\home\topkek\cs.fp3yQJ\src\prepared\Microsoft.CodeAnalysis.CSharp.CodeStyle\bin\Release\net8.0\Microsoft.CodeAnalysis.CSharp.CodeStyle.dll
+  Library -> E:\msys64\home\topkek\cs.fp3yQJ\src\prepared\Microsoft.CodeAnalysis.CSharp.CodeStyle.Fixes\bin\Release\net8.0\Microsoft.CodeAnalysis.CSharp.CodeStyle.Fixes.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:01:04.38
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\cs.fp3yQJ\src\prepared\Microsoft.CodeAnalysis.VisualBasic.CodeStyle\Library.vbproj (in 251 ms).
+  Restored E:\msys64\home\topkek\cs.fp3yQJ\src\prepared\Microsoft.CodeAnalysis.VisualBasic.CodeStyle.Fixes\Library.vbproj (in 252 ms).
+  2 of 4 projects are up-to-date for restore.
+  Library -> E:\msys64\home\topkek\cs.fp3yQJ\src\prepared\Microsoft.CodeAnalysis.CodeStyle\bin\Release\net8.0\Microsoft.CodeAnalysis.CodeStyle.dll
+  Library -> E:\msys64\home\topkek\cs.fp3yQJ\src\prepared\Microsoft.CodeAnalysis.CodeStyle.Fixes\bin\Release\net8.0\Microsoft.CodeAnalysis.CodeStyle.Fixes.dll
+  Library -> E:\msys64\home\topkek\cs.fp3yQJ\src\prepared\Microsoft.CodeAnalysis.VisualBasic.CodeStyle\bin\Release\net8.0\Microsoft.CodeAnalysis.VisualBasic.CodeStyle.dll
+  Library -> E:\msys64\home\topkek\cs.fp3yQJ\src\prepared\Microsoft.CodeAnalysis.VisualBasic.CodeStyle.Fixes\bin\Release\net8.0\Microsoft.CodeAnalysis.VisualBasic.CodeStyle.Fixes.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:29.35
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\cs.fp3yQJ\src\prepared\CodeStyleConfigFileGenerator\Library.csproj (in 118 ms).
+  Library -> E:\msys64\home\topkek\cs.fp3yQJ\src\prepared\CodeStyleConfigFileGenerator\bin\Release\net8.0\CodeStyleConfigFileGenerator.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.85
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\cs.fp3yQJ\src\prepared\extract\Tool.csproj (in 156 ms).
+  Tool -> E:\msys64\home\topkek\cs.fp3yQJ\src\prepared\extract\bin\Release\net8.0\Tool.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.86
+PASS all14 source/generated build assets; identical targets/props/rule IDs/severities and only 8 explicit alternative descriptor-title comment lines
+Staged original complete CSharp/VB analyzer packages and source/build provenance
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\cs.fp3yQJ\src\prepared\packages\CSharp\Package.csproj (in 64 ms).
+  Package -> E:\msys64\home\topkek\cs.fp3yQJ\src\prepared\packages\CSharp\bin\Release\net8.0\Package.dll
+  Successfully created package 'E:\msys64\home\topkek\cs.fp3yQJ\src\feed\Microsoft.CodeAnalysis.CSharp.CodeStyle.4.9.2.nupkg'.
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\cs.fp3yQJ\src\prepared\packages\VisualBasic\Package.csproj (in 62 ms).
+  Package -> E:\msys64\home\topkek\cs.fp3yQJ\src\prepared\packages\VisualBasic\bin\Release\net8.0\Package.dll
+  Successfully created package 'E:\msys64\home\topkek\cs.fp3yQJ\src\feed\Microsoft.CodeAnalysis.VisualBasic.CodeStyle.4.9.2.nupkg'.
+==> Starting check()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\cs.fp3yQJ\src\check\Check.csproj (in 2.73 sec).
+  Check -> E:\msys64\home\topkek\cs.fp3yQJ\src\check\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:07.65
+PASS all135 analyzers/172 fixers activated, original identities, live descriptors and 210 resource sets/5684 strings
+PASS every analyzer callback, 137 declared language combinations
+PASS all146 selected upstream cases with actual actions from 11 code-fix providers
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\cs.fp3yQJ\src\check\api\Api\Tool.csproj (in 296 ms).
+  Tool -> E:\msys64\home\topkek\cs.fp3yQJ\src\check\api\Api\bin\Release\net8.0\Tool.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.87
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\cs.fp3yQJ\src\check\api\Inventory\Tool.csproj (in 166 ms).
+  Tool -> E:\msys64\home\topkek\cs.fp3yQJ\src\check\api\Inventory\bin\Release\net8.0\Tool.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.26
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\cs.fp3yQJ\src\check\api\Metadata\Tool.csproj (in 125 ms).
+  Tool -> E:\msys64\home\topkek\cs.fp3yQJ\src\check\api\Metadata\bin\Release\net8.0\Tool.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.62
+PASS all6 original identities,100 public/protected API declarations,135 analyzer/172 fixer/138 ID constant entries and neutral resource metadata
+PASS all14 source/generated build assets; identical targets/props/rule IDs/severities and only 8 explicit alternative descriptor-title comment lines
+PASS CSharp nuget selects exactly4 source analyzer/fixer DLLs; IDE0044 negative rejected and readonly correction builds
+PASS VisualBasic nuget selects exactly4 source analyzer/fixer DLLs; IDE0044 negative rejected and readonly correction builds
+==> Starting package_mingw-w64-clang-x86_64-dotnet-codestyle-csharp()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-codestyle-csharp"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Starting package_mingw-w64-clang-x86_64-dotnet-codestyle-visualbasic()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-codestyle-visualbasic"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Starting package_mingw-w64-clang-x86_64-dotnet-sdk-codestyle()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-sdk-codestyle"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-codestyle 4.9.2-1 (Tue Oct 27 02:09:06 2026)
+
+exit0
+
+$ pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-codestyle-csharp-4.9.2-1-any.pkg.tar.zst mingw-w64-clang-x86_64-dotnet-codestyle-visualbasic-4.9.2-1-any.pkg.tar.zst mingw-w64-clang-x86_64-dotnet-sdk-codestyle-4.9.2-1-any.pkg.tar.zst
+warning: mingw-w64-clang-x86_64-dotnet-codestyle-csharp-4.9.2-1 is up to date -- reinstalling
+warning: mingw-w64-clang-x86_64-dotnet-codestyle-visualbasic-4.9.2-1 is up to date -- reinstalling
+warning: mingw-w64-clang-x86_64-dotnet-sdk-codestyle-4.9.2-1 is up to date -- reinstalling
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (3) mingw-w64-clang-x86_64-dotnet-codestyle-csharp-4.9.2-1  mingw-w64-clang-x86_64-dotnet-codestyle-visualbasic-4.9.2-1  mingw-w64-clang-x86_64-dotnet-sdk-codestyle-4.9.2-1
+
+Total Installed Size:  19.51 MiB
+Net Upgrade Size:       0.00 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+reinstalling mingw-w64-clang-x86_64-dotnet-codestyle-csharp...
+reinstalling mingw-w64-clang-x86_64-dotnet-codestyle-visualbasic...
+reinstalling mingw-w64-clang-x86_64-dotnet-sdk-codestyle...
+
+exit0
+
+$ bash check.sh installed-final
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\cs.fp3yQJ\installed-final\Check.csproj (in 2.33 sec).
+  Check -> E:\msys64\home\topkek\cs.fp3yQJ\installed-final\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:06.91
+PASS all135 analyzers/172 fixers activated, original identities, live descriptors and 210 resource sets/5684 strings
+PASS every analyzer callback, 137 declared language combinations
+PASS all146 selected upstream cases with actual actions from 11 code-fix providers
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\cs.fp3yQJ\installed-final\api\Api\Tool.csproj (in 274 ms).
+  Tool -> E:\msys64\home\topkek\cs.fp3yQJ\installed-final\api\Api\bin\Release\net8.0\Tool.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.07
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\cs.fp3yQJ\installed-final\api\Inventory\Tool.csproj (in 123 ms).
+  Tool -> E:\msys64\home\topkek\cs.fp3yQJ\installed-final\api\Inventory\bin\Release\net8.0\Tool.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.62
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\cs.fp3yQJ\installed-final\api\Metadata\Tool.csproj (in 123 ms).
+  Tool -> E:\msys64\home\topkek\cs.fp3yQJ\installed-final\api\Metadata\bin\Release\net8.0\Tool.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.74
+PASS all6 original identities,100 public/protected API declarations,135 analyzer/172 fixer/138 ID constant entries and neutral resource metadata
+PASS all14 source/generated build assets; identical targets/props/rule IDs/severities and only 8 explicit alternative descriptor-title comment lines
+PASS CSharp nuget selects exactly4 source analyzer/fixer DLLs; IDE0044 negative rejected and readonly correction builds
+PASS VisualBasic nuget selects exactly4 source analyzer/fixer DLLs; IDE0044 negative rejected and readonly correction builds
+
+exit0
+
+$ bash check-msbuild.sh installed-final sdk
+PASS CSharp sdk selects exactly4 source analyzer/fixer DLLs; IDE0044 negative rejected and readonly correction builds
+PASS VisualBasic sdk selects exactly4 source analyzer/fixer DLLs; IDE0044 negative rejected and readonly correction builds
+
+exit0
+
+PowerShell build root: /home/topkek/powershell-core.af76rh
+Updated the existing prototype build override to match prepare.py: retain EnforceCodeStyleInBuild=true.
+Restored original PowerShell EnforceCodeStyleInBuild=true with source SDK CodeStyle; implicit .NET analysis remains deferred
+
+$ bash build-core.sh .
+
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  PSVersionInfoGenerator -> E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\bin\Release\net8.0\SMA.Generator.dll
+  Microsoft.PowerShell.CoreCLR.Eventing -> E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\Microsoft.PowerShell.CoreCLR.Eventing\bin\Release\net8.0\Microsoft.PowerShell.CoreCLR.Eventing.dll
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  PSVersionInfoGenerator -> E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\bin\Release\net8.0\SMA.Generator.dll
+  Microsoft.PowerShell.CoreCLR.Eventing -> E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\Microsoft.PowerShell.CoreCLR.Eventing\bin\Release\net8.0\Microsoft.PowerShell.CoreCLR.Eventing.dll
+  System.Management.Automation -> E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\bin\Release\net8.0\System.Management.Automation.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:01:03.54
+
+exit0
+
+$ bash check-cim.sh . cim-codestyle-check
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-core.af76rh\cim-codestyle-check\Check.csproj (in 602 ms).
+  Restored E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj (in 1.26 sec).
+  Restored E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\System.Management.Automation.csproj (in 1.29 sec).
+  Restored E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\Microsoft.Management.Infrastructure.CimCmdlets\Microsoft.Management.Infrastructure.CimCmdlets.csproj (in 665 ms).
+  Restored E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\Microsoft.PowerShell.CoreCLR.Eventing\Microsoft.PowerShell.CoreCLR.Eventing.csproj (in 1.29 sec).
+  PSVersionInfoGenerator -> E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\bin\Release\net8.0\SMA.Generator.dll
+  Microsoft.PowerShell.CoreCLR.Eventing -> E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\Microsoft.PowerShell.CoreCLR.Eventing\bin\Release\net8.0\Microsoft.PowerShell.CoreCLR.Eventing.dll
+  System.Management.Automation -> E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\bin\Release\net8.0\System.Management.Automation.dll
+  Microsoft.Management.Infrastructure.CimCmdlets -> E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\Microsoft.Management.Infrastructure.CimCmdlets\bin\Release\net8.0\Microsoft.Management.Infrastructure.CimCmdlets.dll
+  Check -> E:\msys64\home\topkek\powershell-core.af76rh\cim-codestyle-check\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:01:08.37
+PASS invocation Import-Module 'E:\msys64\home\topkek\powershell-core.af76rh\cim-codestyle-check\bin\Release\net8.0\Microsoft.Management.Infrastructure.CimCmdlets.dll' -ErrorAction Stop
+PASS invocation Get-Command Get-CimInstance
+PASS invocation $script:OwnedOs = Get-CimInstance -Namespace root/cimv2 -ClassName Win32_OperatingSystem -ErrorAction Stop; $script:OwnedOs
+PASS invocation Get-CimClass -Namespace root/cimv2 -ClassName Win32_Process -ErrorAction Stop
+PASS invocation Get-CimInstance -Namespace root/cimv2 -ClassName Win32_Process -Filter 'ProcessId = 9752' -ErrorAction Stop
+PASS invocation $p=Get-CimInstance -ClassName Win32_Process -Filter 'ProcessId = 9752'; Invoke-CimMethod -InputObject $p -MethodName GetOwner -ErrorAction Stop
+PASS invocation try { Get-CimInstance -ClassName Missing_Source_Port_Class -ErrorAction Stop; 'missed' } catch { $_.Exception.GetType().FullName }
+PASS invocation $xml=[System.Management.Automation.PSSerializer]::Serialize($script:OwnedOs); $copy=[System.Management.Automation.PSSerializer]::Deserialize($xml); $copy.BuildNumber
+PASS invocation $s=[System.Management.ManagementObjectSearcher]::new('SELECT BuildNumber FROM Win32_OperatingSystem'); try { foreach($o in $s.Get()) { $o.BuildNumber } } finally { $s.Dispose() }
+PASS invocation $script:OwnedOs.BuildNumber
+PASS actual source PowerShell7.4.20/CimCmdlets with experimental MMI3: module import, local OS/process queries, class metadata, GetOwner, native errors, CIM serialization, shared WMI/CIM OS build 26200, GC and no Framework implementation
+
+exit0
+
+$ python3 audit-source.py .
+PASS exact original Windows source inventories/hashes, documented exclusions, fresh generators and retained explicit source analyzers: {'System.Management.Automation': (697, 77), 'Microsoft.PowerShell.CoreCLR.Eventing': (9, 3), 'PSVersionInfoGenerator': (1, 2), 'Microsoft.Management.Infrastructure.CimCmdlets': (35, 3), 'ResGen': (1, 2), 'TypeCatalogGen': (1, 2)}
+
+exit0
+
+$ python3 audit-payload.py . cim-codestyle-check
+PASS every one of 27 consumer DLLs matches rebuilt project bytes or an installed source-built NuGet payload
+
+exit0
+
+Local artifact audit:
+$ python3 tests/powershell-deps/audit-codestyle.py tests/powershell-deps/codestyle-artifacts-20261027.json
+PASS CodeStyle source/checksums/licenses, complete1561+5 original inputs,112 NuGet DLL assets match84 runtime-tested DLLs, exact shared copies, SDK payload and independent API/analyzer/fixer/resource/config baselines
+exit0

@@ -1,0 +1,56 @@
+{
+  "command": "/clang64/bin/python.exe audit-pe-versions.py src/prepared --stage native --output native-pe-versions.json",
+  "exit_code": 0,
+  "versioned_outputs": 10,
+  "upstream_unversioned_templates": 1,
+  "actual_file_version": "8.0.3126.42000",
+  "files": {
+    "m/corehost-8.0.31/corehost/dotnet.exe": {
+      "file_version": "8.0.3126.42000",
+      "sha256": "a27a780fedbe42705f3d1dbd40e40daed54af233858c96eae08de825ead66ebc"
+    },
+    "m/corehost-8.0.31/corehost/hostfxr.dll": {
+      "file_version": "8.0.3126.42000",
+      "sha256": "db341f50065716c9b904aca748b0eec2f7a29f968cabeb20c8436690c90d5890"
+    },
+    "m/corehost-8.0.31/corehost/hostpolicy.dll": {
+      "file_version": "8.0.3126.42000",
+      "sha256": "b28e6d165478ac3db6b9217118070953f2a130169eaeafbec26cebcc1b8c4f49"
+    },
+    "m/corehost-8.0.31/corehost/apphost.exe": {
+      "file_version": null,
+      "reason": "Original apphost standalone CMake sets SKIP_VERSIONING=1; SDK copies application resources",
+      "sha256": "9a1ec73c4dbee82f653b7fef91212c1dbfe9bf3701649f6dd327342667f44acb"
+    },
+    "m/corehost-8.0.31/corehost/comhost.dll": {
+      "file_version": "8.0.3126.42000",
+      "sha256": "568315c366d260ea29763641ca676826e5b1afb6d0db9c748edf8040cb360248"
+    },
+    "m/corehost-8.0.31/corehost/nethost.dll": {
+      "file_version": "8.0.3126.42000",
+      "sha256": "9b239f656da6f9e9e8fcdb0de2d2b13186e73a97827db5bfec8ffd3159ae81b7"
+    },
+    "m/coreclr-8.0.31/coreclr.dll": {
+      "file_version": "8.0.3126.42000",
+      "sha256": "073c76704c1b3260b13caf4540642f11665988160c0528b42868f1c4ad12d0fb"
+    },
+    "m/coreclr-8.0.31/clrjit.dll": {
+      "file_version": "8.0.3126.42000",
+      "sha256": "edb92b99262fa51ee2cbba9a7b0877e28568a97936e21b878e08f618b0b86a89"
+    },
+    "m/coreclr-8.0.31/mscorrc.dll": {
+      "file_version": "8.0.3126.42000",
+      "sha256": "5c888b2fbc106594c7d4eb0279ac34d7396554abad7d243da1003a82afe417c6"
+    },
+    "m/coreclr-8.0.31/clretwrc.dll": {
+      "file_version": "8.0.3126.42000",
+      "sha256": "b50f647caa09f6f31f465cdf36a1f553af59eb0da0012183624c9b4cea967394"
+    },
+    "m/netcoreapp-8.0.31-coreclr/lib/System.Private.CoreLib.dll": {
+      "file_version": "8.0.3126.42000",
+      "sha256": "f1840e6149bfac3a4c398f51028b56cafccf99eb50e5be05831b8eb45540444a"
+    }
+  },
+  "apphost_source_evidence": "runtime8.0.31 src/native/corehost/apphost/standalone/CMakeLists.txt explicitly sets SKIP_VERSIONING1",
+  "scope": "Fresh corrected clean package build native host/CoreCLR/CoreLib outputs; remaining framework/reference outputs and package completion unproven"
+}

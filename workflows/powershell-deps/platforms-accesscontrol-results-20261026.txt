@@ -1,0 +1,318 @@
+CLANG64 source-package and installed-feed validation, 2026-10-26
+Host: win11
+Build root: /home/topkek/powershell-remaining.PJFEM9
+All commands exit 0. Installed consumers use fresh caches and the installed feed only.
+
+$ cd mingw-w64-dotnet-security-accesscontrol6 && makepkg --cleanbuild --force --noconfirm
+Exit: 0
+
+==> Making package: mingw-w64-dotnet-security-accesscontrol6 6.0.1-1 (26 Oct 2026 18:49:18)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found runtime-189fbbd88d97dd6d65515ba2da05b62eab4e5039.tar.gz
+  -> Found prepare.py
+  -> Found libraries.json
+  -> Found Microsoft.pubkey.hex
+  -> Found Fixture.cs
+  -> Found Runner.cs
+  -> Found check.sh
+  -> Found check-api.cs
+  -> Found check-api.sh
+  -> Found README.md
+==> Validating source files with sha256sums...
+    runtime-189fbbd88d97dd6d65515ba2da05b62eab4e5039.tar.gz ... Passed
+    prepare.py ... Passed
+    libraries.json ... Passed
+    Microsoft.pubkey.hex ... Passed
+    Fixture.cs ... Passed
+    Runner.cs ... Passed
+    check.sh ... Passed
+    check-api.cs ... Passed
+    check-api.sh ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+==> Starting prepare()...
+==> Removing existing $pkgdir/ directory...
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-remaining.PJFEM9\mingw-w64-dotnet-security-accesscontrol6\src\prepared\System.Security.AccessControl\contract\Contract.csproj (in 52 ms).
+E:\msys64\home\topkek\powershell-remaining.PJFEM9\mingw-w64-dotnet-security-accesscontrol6\src\runtime-189fbbd88d97dd6d65515ba2da05b62eab4e5039\src\libraries\System.Security.AccessControl\ref\System.Security.AccessControl.cs(447,30): warning CS0672: Member 'PrivilegeNotHeldException.GetObjectData(SerializationInfo, StreamingContext)' overrides obsolete member 'Exception.GetObjectData(SerializationInfo, StreamingContext)'. Add the Obsolete attribute to 'PrivilegeNotHeldException.GetObjectData(SerializationInfo, StreamingContext)'. [E:\msys64\home\topkek\powershell-remaining.PJFEM9\mingw-w64-dotnet-security-accesscontrol6\src\prepared\System.Security.AccessControl\contract\Contract.csproj]
+  Contract -> E:\msys64\home\topkek\powershell-remaining.PJFEM9\mingw-w64-dotnet-security-accesscontrol6\src\prepared\System.Security.AccessControl\contract\bin\Release\net8.0\System.Security.AccessControl.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\powershell-remaining.PJFEM9\mingw-w64-dotnet-security-accesscontrol6\src\runtime-189fbbd88d97dd6d65515ba2da05b62eab4e5039\src\libraries\System.Security.AccessControl\ref\System.Security.AccessControl.cs(447,30): warning CS0672: Member 'PrivilegeNotHeldException.GetObjectData(SerializationInfo, StreamingContext)' overrides obsolete member 'Exception.GetObjectData(SerializationInfo, StreamingContext)'. Add the Obsolete attribute to 'PrivilegeNotHeldException.GetObjectData(SerializationInfo, StreamingContext)'. [E:\msys64\home\topkek\powershell-remaining.PJFEM9\mingw-w64-dotnet-security-accesscontrol6\src\prepared\System.Security.AccessControl\contract\Contract.csproj]
+    1 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.85
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-remaining.PJFEM9\mingw-w64-dotnet-security-accesscontrol6\src\prepared\System.Security.AccessControl\Library.csproj (in 59 ms).
+E:\msys64\home\topkek\powershell-remaining.PJFEM9\mingw-w64-dotnet-security-accesscontrol6\src\runtime-189fbbd88d97dd6d65515ba2da05b62eab4e5039\src\libraries\System.Security.AccessControl\src\System\Security\AccessControl\PrivilegeNotHeldException.cs(38,30): warning CS0672: Member 'PrivilegeNotHeldException.GetObjectData(SerializationInfo, StreamingContext)' overrides obsolete member 'Exception.GetObjectData(SerializationInfo, StreamingContext)'. Add the Obsolete attribute to 'PrivilegeNotHeldException.GetObjectData(SerializationInfo, StreamingContext)'. [E:\msys64\home\topkek\powershell-remaining.PJFEM9\mingw-w64-dotnet-security-accesscontrol6\src\prepared\System.Security.AccessControl\Library.csproj]
+  Library -> E:\msys64\home\topkek\powershell-remaining.PJFEM9\mingw-w64-dotnet-security-accesscontrol6\src\prepared\System.Security.AccessControl\bin\Release\net8.0-windows\System.Security.AccessControl.dll
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Sdks\NuGet.Build.Tasks.Pack\build\NuGet.Build.Tasks.Pack.targets(221,5): warning NU5131: References were found in the nuspec, but some reference assemblies were not found in both the nuspec and ref folder. Add the following reference assemblies: [E:\msys64\home\topkek\powershell-remaining.PJFEM9\mingw-w64-dotnet-security-accesscontrol6\src\prepared\System.Security.AccessControl\Library.csproj]
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Sdks\NuGet.Build.Tasks.Pack\build\NuGet.Build.Tasks.Pack.targets(221,5): warning NU5131: - Add System.Security.AccessControl.dll to the net8.0 reference group in the nuspec [E:\msys64\home\topkek\powershell-remaining.PJFEM9\mingw-w64-dotnet-security-accesscontrol6\src\prepared\System.Security.AccessControl\Library.csproj]
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Sdks\NuGet.Build.Tasks.Pack\build\NuGet.Build.Tasks.Pack.targets(221,5): warning NU5131:  [E:\msys64\home\topkek\powershell-remaining.PJFEM9\mingw-w64-dotnet-security-accesscontrol6\src\prepared\System.Security.AccessControl\Library.csproj]
+  The package System.Security.AccessControl.6.0.1 is missing a readme. Go to https://aka.ms/nuget/authoring-best-practices/readme to learn why package readmes are important.
+  Successfully created package 'E:\msys64\home\topkek\powershell-remaining.PJFEM9\mingw-w64-dotnet-security-accesscontrol6\src\feed\System.Security.AccessControl.6.0.1.nupkg'.
+==> Starting check()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-remaining.PJFEM9\mingw-w64-dotnet-security-accesscontrol6\src\check\fixture\Fixture.csproj (in 658 ms).
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Microsoft.Common.CurrentVersion.targets(2382,5): warning MSB3243: No way to resolve conflict between "System.Security.AccessControl, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" and "System.Security.AccessControl, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a". Choosing "System.Security.AccessControl, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" arbitrarily. [E:\msys64\home\topkek\powershell-remaining.PJFEM9\mingw-w64-dotnet-security-accesscontrol6\src\check\fixture\Fixture.csproj]
+  Consider app.config remapping of assembly "System.Security.AccessControl, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" from Version "6.0.0.0" [E:\msys64\home\topkek\powershell-remaining.PJFEM9\mingw-w64-dotnet-security-accesscontrol6\src\check\empty-packages\system.security.accesscontrol\6.0.1\ref\net8.0\System.Security.AccessControl.dll] to Version "8.0.0.0" [E:\msys64\clang64\lib\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.31\ref\net8.0\System.Security.AccessControl.dll] to solve conflict and get rid of warning.
+  Fixture -> E:\msys64\home\topkek\powershell-remaining.PJFEM9\mingw-w64-dotnet-security-accesscontrol6\src\check\fixture\bin\Release\net8.0\Fixture.dll
+
+Build succeeded.
+
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Microsoft.Common.CurrentVersion.targets(2382,5): warning MSB3243: No way to resolve conflict between "System.Security.AccessControl, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" and "System.Security.AccessControl, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a". Choosing "System.Security.AccessControl, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" arbitrarily. [E:\msys64\home\topkek\powershell-remaining.PJFEM9\mingw-w64-dotnet-security-accesscontrol6\src\check\fixture\Fixture.csproj]
+    1 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:08.09
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-remaining.PJFEM9\mingw-w64-dotnet-security-accesscontrol6\src\check\runner\Runner.csproj (in 158 ms).
+  Runner -> E:\msys64\home\topkek\powershell-remaining.PJFEM9\mingw-w64-dotnet-security-accesscontrol6\src\check\runner\bin\Release\net8.0\Runner.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.96
+PASS ACL6 source identity/location, 46 exported types and 47 resources
+PASS ACL6 native SDDL conversion, ACE/ACL binary round trips, canonicalization, audit rules and malformed inputs
+PASS ACL6 native GetSecurityInfo by Unicode filename/handle, owned-file DACL persistence and reopen
+PASS source ACL6 implementation executed in isolated context; .NET 8 inbox remains available to normal consumers
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-remaining.PJFEM9\mingw-w64-dotnet-security-accesscontrol6\src\check-api\check-api.csproj (in 145 ms).
+  check-api -> E:\msys64\home\topkek\powershell-remaining.PJFEM9\mingw-w64-dotnet-security-accesscontrol6\src\check-api\bin\Release\net8.0\check-api.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.24
+PASS: System.Security.AccessControl implements all 560 upstream public/protected type/member signatures
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-security-accesscontrol6"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-security-accesscontrol6 6.0.1-1 (26 Oct 2026 18:50:17)
+
+$ cd mingw-w64-dotnet-netcore-platforms && makepkg --cleanbuild --force --noconfirm
+Exit: 0
+
+==> Making package: mingw-w64-dotnet-netcore-platforms 1.1.2-1 (26 Oct 2026 18:50:00)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found corefx-718443a10dbd456b6c8f08ee594a92cfbf2ef8db.tar.gz
+  -> Found prepare.py
+  -> Found Check.cs
+  -> Found check.sh
+  -> Found README.md
+==> Validating source files with sha256sums...
+    corefx-718443a10dbd456b6c8f08ee594a92cfbf2ef8db.tar.gz ... Passed
+    prepare.py ... Passed
+    Check.cs ... Passed
+    check.sh ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+==> Starting prepare()...
+==> Removing existing $pkgdir/ directory...
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-remaining.PJFEM9\mingw-w64-dotnet-netcore-platforms\src\prepared\Graph.csproj (in 128 ms).
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Sdks\NuGet.Build.Tasks.Pack\build\NuGet.Build.Tasks.Pack.targets(221,5): warning NU5128: Some target frameworks declared in the dependencies group of the nuspec and the lib/ref folder do not have exact matches in the other location. Consult the list of actions below: [E:\msys64\home\topkek\powershell-remaining.PJFEM9\mingw-w64-dotnet-netcore-platforms\src\prepared\Graph.csproj]
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Sdks\NuGet.Build.Tasks.Pack\build\NuGet.Build.Tasks.Pack.targets(221,5): warning NU5128: - Add a dependency group for .NETStandard1.0 to the nuspec [E:\msys64\home\topkek\powershell-remaining.PJFEM9\mingw-w64-dotnet-netcore-platforms\src\prepared\Graph.csproj]
+  The package Microsoft.NETCore.Platforms.1.1.2 is missing a readme. Go to https://aka.ms/nuget/authoring-best-practices/readme to learn why package readmes are important.
+  Successfully created package 'E:\msys64\home\topkek\powershell-remaining.PJFEM9\mingw-w64-dotnet-netcore-platforms\src\feed\Microsoft.NETCore.Platforms.1.1.2.nupkg'.
+==> Starting check()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-remaining.PJFEM9\mingw-w64-dotnet-netcore-platforms\src\check\Check.csproj (in 366 ms).
+  Check -> E:\msys64\home\topkek\powershell-remaining.PJFEM9\mingw-w64-dotnet-netcore-platforms\src\check\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:06.31
+PASS exact source runtime graph hash, 165 RIDs, import closure/cycle checks and NuGet fallback expansion for every RID
+PASS Windows 10/8.1/8/7, Ubuntu/Mint, RHEL and macOS fallback chains
+NuGet model: E:\msys64\home\topkek\powershell-remaining.PJFEM9\mingw-w64-dotnet-netcore-platforms\src\check\bin\Release\net8.0\NuGet.Packaging.dll
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-netcore-platforms"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-netcore-platforms 1.1.2-1 (26 Oct 2026 18:50:30)
+
+$ bash mingw-w64-dotnet-security-accesscontrol6/check.sh acl6-installed /clang64/share/doc/dotnet-security-accesscontrol6/localization.json
+Exit: 0
+
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-remaining.PJFEM9\acl6-installed\fixture\Fixture.csproj (in 182 ms).
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Microsoft.Common.CurrentVersion.targets(2382,5): warning MSB3243: No way to resolve conflict between "System.Security.AccessControl, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" and "System.Security.AccessControl, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a". Choosing "System.Security.AccessControl, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" arbitrarily. [E:\msys64\home\topkek\powershell-remaining.PJFEM9\acl6-installed\fixture\Fixture.csproj]
+  Consider app.config remapping of assembly "System.Security.AccessControl, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" from Version "6.0.0.0" [E:\msys64\home\topkek\powershell-remaining.PJFEM9\acl6-installed\empty-packages\system.security.accesscontrol\6.0.1\ref\net8.0\System.Security.AccessControl.dll] to Version "8.0.0.0" [E:\msys64\clang64\lib\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.31\ref\net8.0\System.Security.AccessControl.dll] to solve conflict and get rid of warning.
+  Fixture -> E:\msys64\home\topkek\powershell-remaining.PJFEM9\acl6-installed\fixture\bin\Release\net8.0\Fixture.dll
+
+Build succeeded.
+
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Microsoft.Common.CurrentVersion.targets(2382,5): warning MSB3243: No way to resolve conflict between "System.Security.AccessControl, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" and "System.Security.AccessControl, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a". Choosing "System.Security.AccessControl, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" arbitrarily. [E:\msys64\home\topkek\powershell-remaining.PJFEM9\acl6-installed\fixture\Fixture.csproj]
+    1 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.51
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-remaining.PJFEM9\acl6-installed\runner\Runner.csproj (in 71 ms).
+  Runner -> E:\msys64\home\topkek\powershell-remaining.PJFEM9\acl6-installed\runner\bin\Release\net8.0\Runner.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.90
+PASS ACL6 source identity/location, 46 exported types and 47 resources
+PASS ACL6 native SDDL conversion, ACE/ACL binary round trips, canonicalization, audit rules and malformed inputs
+PASS ACL6 native GetSecurityInfo by Unicode filename/handle, owned-file DACL persistence and reopen
+PASS source ACL6 implementation executed in isolated context; .NET 8 inbox remains available to normal consumers
+
+$ bash mingw-w64-dotnet-netcore-platforms/check.sh platforms-installed
+Exit: 0
+
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-remaining.PJFEM9\platforms-installed\Check.csproj (in 367 ms).
+  Check -> E:\msys64\home\topkek\powershell-remaining.PJFEM9\platforms-installed\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.24
+PASS exact source runtime graph hash, 165 RIDs, import closure/cycle checks and NuGet fallback expansion for every RID
+PASS Windows 10/8.1/8/7, Ubuntu/Mint, RHEL and macOS fallback chains
+NuGet model: E:\msys64\home\topkek\powershell-remaining.PJFEM9\platforms-installed\bin\Release\net8.0\NuGet.Packaging.dll
+
+$ python3 tests/powershell-deps/audit-platforms-accesscontrol.py
+Exit: 0
+Microsoft.NETCore.Platforms: exact source checksums, package identity/dependencies, licenses and payload PASS
+System.Security.AccessControl: exact source checksums, package identity/dependencies, licenses and payload PASS

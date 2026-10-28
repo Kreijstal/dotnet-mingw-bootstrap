@@ -1,0 +1,24 @@
+{
+  "node_id": "TA_kwDOAvT7bdoAKDBkOWNmODEyZTU4OTA1ZjMwN2ZjNzNiNTFiMTE1MjM5NGY3ZjgzNWM",
+  "sha": "0d9cf812e58905f307fc73b51b1152394f7f835c",
+  "url": "https://api.github.com/repos/PowerShell/PowerShell/git/tags/0d9cf812e58905f307fc73b51b1152394f7f835c",
+  "tagger": {
+    "name": "Dongbo Wang",
+    "email": "dongbow@microsoft.com",
+    "date": "2026-09-08T20:19:18Z"
+  },
+  "object": {
+    "sha": "013edf910bbe781f503c27370941ce54d02d3f33",
+    "type": "commit",
+    "url": "https://api.github.com/repos/PowerShell/PowerShell/git/commits/013edf910bbe781f503c27370941ce54d02d3f33"
+  },
+  "tag": "v7.4.20",
+  "message": "https://github.com/PowerShell/PowerShell/blob/master/CHANGELOG/7.4.md#v7420\n",
+  "verification": {
+    "verified": false,
+    "reason": "unsigned",
+    "signature": null,
+    "payload": null,
+    "verified_at": null
+  }
+}

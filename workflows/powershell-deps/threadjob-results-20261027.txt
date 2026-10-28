@@ -1,0 +1,394 @@
+ThreadJob source package and module-host child discovery, 2026-10-27
+Host: win11, Windows11 build26200 / MSYS2 CLANG64
+ThreadJob formal root: /home/topkek/threadjob-package.Xa8epS/mingw-w64-powershell-threadjob
+Prototype root: /home/topkek/threadjob-source.pIQ87v
+Host root: /home/topkek/module-host-package.FgiIz5/mingw-w64-powershell-module-test-host
+
+Final result:
+- powershell-module-test-host7.4.20-2 packaged/installed;5 original manifest/type
+  files copied into four normal built-in module directories. No PowerShell C#
+  implementation or DLL changed. Source/payload audit and relocated/fresh installed
+  checks passed, including four-module child autoload and live local CIM query.
+- ThreadJob2.0.3-1 clean source package/build/check/install/fresh installed check
+  passed. All3 original C# inputs and original resource retained, with one exact
+  debugger-overload adapter. Source target.NET8/sourceSMA7.4.20 replaces the old
+  compile references. Original manifest/LICENSE are byte-exact.
+- All55 public/protected API declarations and original frozen unsigned identity
+  Microsoft.PowerShell.ThreadJob2.0.1.0/file-info2.0.1 match published metadata.
+- One source DLL in root PSModule NuGet layout; installed loose DLL/manifest match.
+- All30 original non-policy tests pass in both formal build and fresh installed
+  checks (0 failed/skipped/pending). Two fresh-process launchers use the source
+  test host with explicit module import; their script bodies remain unchanged.
+- Focused debugger fixture forwards a real child command breakpoint through the
+  engine's one-argument method/current virtual overload; hit/action exactly once.
+- Original suite's unsupported Get-Job -Filter case emits an expected source job
+  adapter warning, printed by the owned host. Production/metadata builds report
+  zero compiler warnings and errors.
+- Separate7 constrained-language tests not run: upstream mutates machine
+  __PSLockdownPolicy. Production policy code unchanged; machine/trusted-file
+  enforcement coverage and full shipping pwsh integration remain open.
+
+Published ThreadJob DLL was inspected as metadata only, not executed, referenced
+by builds or staged. Source revision is supported by release history, normalized
+manifest/API comparison, not a claim of byte-identical vendor reproduction.
+Actual.NET runtime8.0.0; SDK8.0.131 label is not a later servicing-runtime build.
+
+Initial failures retained:
+1. Original one-argument Debugger.SetBreakpoints override failedCS0506 with current
+   SMA. Adapted to current virtual two-argument overload, preserving forwarding.
+2. First runtime job failed because child CreateDefault2 could not discover stock
+   Management/Utility modules: manifests existed only in the host root. Normal
+   Modules/<name> manifest copies fixed this; original manifest bytes retained.
+3. Initial debugger fixture assumed its Action scriptblock's global variables
+   belonged to the child. The real breakpoint hit/action occurred in the creator
+   scriptblock session state (probe HitCount1,parentHits1). Replaced fixture-only
+   state assertion with an owned concurrent queue/closure; no production change.
+
+Exact commands (all final exits0):
+From host recipe root, MSYSTEM=CLANG64:
+/usr/bin/python3 src/stage-runtime.py src/prepared/PowerShell-7.4.20 src/host/bin/Release/net8.0 /clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0
+bash src/check.sh src/check-autoload-2 src/host/bin/Release/net8.0
+/usr/bin/python3 src/audit-payload.py src/prepared src/host/bin/Release/net8.0 src/gherkin/bin/Release/net8.0/Gherkin.dll
+PATH=/usr/bin:/clang64/bin:$PATH makepkg --repackage --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-powershell-module-test-host-7.4.20-2-any.pkg.tar.zst
+bash src/check.sh /home/topkek/module-host-installed-autoload-check
+
+From ThreadJob formal recipe root, MSYSTEM=CLANG64:
+PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm
+pacman -U --noconfirm mingw-w64-clang-x86_64-powershell-threadjob-2.0.3-1-any.pkg.tar.zst
+bash check.sh /home/topkek/threadjob-installed-check-20261027 src/PSThreadJob-99bfe5adc30ed066973114ea18d7c5091197ee14
+
+From local repository root:
+python3 tests/powershell-deps/audit-module-packages.py
+python3 tests/powershell-deps/audit-threadjob.py
+
+
+LOG host/check-autoload-2.log
+PASS child runspace autoloads all four original source modules
+PASS source PowerShell engine, original Utility/Management/Security/CIM cmdlet modules and Add-Type compiler
+PASS original source Pester4 assertions, source Gherkin parser and original Add-Type
+PASS relocated module host: original engine/cmdlets/compiler, source Pester/Gherkin and propagated terminating script failure
+
+
+LOG host/install-2.log
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-powershell-module-test-host-7.4.20-2
+
+Total Installed Size:  47.07 MiB
+Net Upgrade Size:       0.01 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+upgrading mingw-w64-clang-x86_64-powershell-module-test-host...
+
+
+LOG host/installed-autoload-check.log
+PASS child runspace autoloads all four original source modules
+PASS source PowerShell engine, original Utility/Management/Security/CIM cmdlet modules and Add-Type compiler
+PASS original source Pester4 assertions, source Gherkin parser and original Add-Type
+PASS relocated module host: original engine/cmdlets/compiler, source Pester/Gherkin and propagated terminating script failure
+
+
+LOG host/repackage-2.log
+==> Making package: mingw-w64-powershell-module-test-host 7.4.20-2 (27 Oct 2026 05:12:55)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Removing existing $pkgdir/ directory...
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-powershell-module-test-host"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-powershell-module-test-host 7.4.20-2 (27 Oct 2026 05:13:07)
+
+
+LOG prototype/debugger-1.log
+System.Management.Automation.RuntimeException: breakpoint forwarding failed: owned debug body 0
+ ---> System.Management.Automation.RuntimeException: breakpoint forwarding failed: owned debug body 0
+   --- End of inner exception stack trace ---
+   at System.Management.Automation.Runspaces.PipelineBase.Invoke(IEnumerable input)
+   at System.Management.Automation.Runspaces.Pipeline.Invoke()
+   at System.Management.Automation.PowerShell.Worker.ConstructPipelineAndDoWork(Runspace rs, Boolean performSyncInvoke)
+   at System.Management.Automation.PowerShell.Worker.CreateRunspaceIfNeededAndDoWork(Runspace rsToUse, Boolean isSync)
+   at System.Management.Automation.PowerShell.CoreInvokeHelper[TInput,TOutput](PSDataCollection`1 input, PSDataCollection`1 output, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.CoreInvoke[TInput,TOutput](PSDataCollection`1 input, PSDataCollection`1 output, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.CoreInvoke[TOutput](IEnumerable input, PSDataCollection`1 output, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.Invoke(IEnumerable input, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.Invoke()
+   at ModuleHost.Main(String[] args)
+
+
+LOG prototype/debugger-2.log
+System.Management.Automation.RuntimeException: breakpoint forwarding failed: owned debug body 0
+ ---> System.Management.Automation.RuntimeException: breakpoint forwarding failed: owned debug body 0
+   --- End of inner exception stack trace ---
+   at System.Management.Automation.Runspaces.PipelineBase.Invoke(IEnumerable input)
+   at System.Management.Automation.Runspaces.Pipeline.Invoke()
+   at System.Management.Automation.PowerShell.Worker.ConstructPipelineAndDoWork(Runspace rs, Boolean performSyncInvoke)
+   at System.Management.Automation.PowerShell.Worker.CreateRunspaceIfNeededAndDoWork(Runspace rsToUse, Boolean isSync)
+   at System.Management.Automation.PowerShell.CoreInvokeHelper[TInput,TOutput](PSDataCollection`1 input, PSDataCollection`1 output, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.CoreInvoke[TInput,TOutput](PSDataCollection`1 input, PSDataCollection`1 output, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.CoreInvoke[TOutput](IEnumerable input, PSDataCollection`1 output, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.Invoke(IEnumerable input, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.Invoke()
+   at ModuleHost.Main(String[] args)
+
+
+LOG prototype/debugger-3.log
+PASS debugger overload adapter forwards a real child command breakpoint and invokes its action exactly once
+
+
+LOG prototype/debugger-probe.log
+System.Management.Automation.RuntimeException: breakpoint forwarding failed: owned debug body 0; hits=1; parentHits=1; debugMode=LocalScript
+ ---> System.Management.Automation.RuntimeException: breakpoint forwarding failed: owned debug body 0; hits=1; parentHits=1; debugMode=LocalScript
+   --- End of inner exception stack trace ---
+   at System.Management.Automation.Runspaces.PipelineBase.Invoke(IEnumerable input)
+   at System.Management.Automation.Runspaces.Pipeline.Invoke()
+   at System.Management.Automation.PowerShell.Worker.ConstructPipelineAndDoWork(Runspace rs, Boolean performSyncInvoke)
+   at System.Management.Automation.PowerShell.Worker.CreateRunspaceIfNeededAndDoWork(Runspace rsToUse, Boolean isSync)
+   at System.Management.Automation.PowerShell.CoreInvokeHelper[TInput,TOutput](PSDataCollection`1 input, PSDataCollection`1 output, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.CoreInvoke[TInput,TOutput](PSDataCollection`1 input, PSDataCollection`1 output, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.CoreInvoke[TOutput](IEnumerable input, PSDataCollection`1 output, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.Invoke(IEnumerable input, PSInvocationSettings settings)
+   at System.Management.Automation.PowerShell.Invoke()
+   at ModuleHost.Main(String[] args)
+
+
+LOG prototype/discovery.log
+PSModulePath=C:\Users\topkek\Documents\PowerShell\Modules;C:\Program Files\PowerShell\Modules;e:\msys64\clang64\lib\dotnet\tools\powershell-module-test-host\Modules;C:\Program Files\WindowsPowerShell\Modules;C:\WINDOWS\system32\WindowsPowerShell\v1.0\Modules
+CHILD ERROR The 'Get-Location' command was found in the module 'Microsoft.PowerShell.Management', but the module could not be loaded due to the following error: [Cannot find the built-in module 'Microsoft.PowerShell.Management' that is compatible with the 'Core' edition. Please make sure the PowerShell built-in modules are available. They usually come with the PowerShell package under the $PSHOME module path, and are required for PowerShell to function properly.]
+For more information, run 'Import-Module Microsoft.PowerShell.Management'.
+CHILD ERROR The 'Write-Output' command was found in the module 'Microsoft.PowerShell.Utility', but the module could not be loaded due to the following error: [Cannot find the built-in module 'Microsoft.PowerShell.Utility' that is compatible with the 'Core' edition. Please make sure the PowerShell built-in modules are available. They usually come with the PowerShell package under the $PSHOME module path, and are required for PowerShell to function properly.]
+For more information, run 'Import-Module Microsoft.PowerShell.Utility'.
+
+
+LOG install.log
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-powershell-threadjob-2.0.3-1
+
+Total Installed Size:  0.06 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+installing mingw-w64-clang-x86_64-powershell-threadjob...
+
+
+LOG installed-check.log
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\threadjob-installed-check-20261027\Restore.csproj (in 197 ms).
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\threadjob-installed-check-20261027\metadata\Api\Inspect.csproj (in 65 ms).
+  Inspect -> E:\msys64\home\topkek\threadjob-installed-check-20261027\metadata\Api\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.72
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\threadjob-installed-check-20261027\metadata\Identity\Inspect.csproj (in 68 ms).
+  Inspect -> E:\msys64\home\topkek\threadjob-installed-check-20261027\metadata\Identity\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.50
+PASS restored installed NuGet binary/manifest equal installed loose module bytes
+PASS complete original source inventory/patch provenance, sole binary, license, frozen identity and all55 published API declarations
+PASS source ThreadJob import, identity, stock command discovery, execution, wait/receive and removal
+PASS debugger overload adapter forwards a real child command breakpoint and invokes its action exactly once
+Staged all30 original ThreadJob cases; adapted only two child-process launchers
+PASS all30 original ThreadJob cases, including fresh-process runspace cleanup
+WARNING A ThreadJobSourceAdapter job source adapter threw an exception with the following message: Specified method is not supported.
+PASS source-only ThreadJob NuGet restore, metadata/source gates, debugger and complete non-policy upstream suite
+
+
+LOG makepkg.log
+==> Making package: mingw-w64-powershell-threadjob 2.0.3-1 (27 Oct 2026 05:18:14)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found threadjob-2.0.3.tar.gz
+  -> Found prepare.py
+  -> Found build.sh
+  -> Found pack.py
+  -> Found check.sh
+  -> Found inspect.sh
+  -> Found InspectApi.cs
+  -> Found InspectIdentity.cs
+  -> Found verify-restored.py
+  -> Found prepare-tests.py
+  -> Found RunUpstream.ps1
+  -> Found Smoke.ps1
+  -> Found DebuggerSmoke.ps1
+  -> Found 0001-use-current-debugger-setbreakpoints-overload.patch
+  -> Found published-provenance.json
+  -> Found README.md
+==> Validating source files with sha256sums...
+    threadjob-2.0.3.tar.gz ... Passed
+    prepare.py ... Passed
+    build.sh ... Passed
+    pack.py ... Passed
+    check.sh ... Passed
+    inspect.sh ... Passed
+    InspectApi.cs ... Passed
+    InspectIdentity.cs ... Passed
+    verify-restored.py ... Passed
+    prepare-tests.py ... Passed
+    RunUpstream.ps1 ... Passed
+    Smoke.ps1 ... Passed
+    DebuggerSmoke.ps1 ... Passed
+    0001-use-current-debugger-setbreakpoints-overload.patch ... Passed
+    published-provenance.json ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+  -> Extracting threadjob-2.0.3.tar.gz with bsdtar
+==> Starting prepare()...
+patching file PSThreadJob.cs
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\threadjob-package.Xa8epS\mingw-w64-powershell-threadjob\src\prepared\ThreadJob.csproj (in 62 ms).
+  ThreadJob -> E:\msys64\home\topkek\threadjob-package.Xa8epS\mingw-w64-powershell-threadjob\src\prepared\bin\Release\net8.0\Microsoft.PowerShell.ThreadJob.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.22
+Packed source ThreadJob2.0.3: sole owned binary, original manifest and license
+==> Starting check()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\threadjob-package.Xa8epS\mingw-w64-powershell-threadjob\src\check\Restore.csproj (in 206 ms).
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\threadjob-package.Xa8epS\mingw-w64-powershell-threadjob\src\check\metadata\Api\Inspect.csproj (in 62 ms).
+  Inspect -> E:\msys64\home\topkek\threadjob-package.Xa8epS\mingw-w64-powershell-threadjob\src\check\metadata\Api\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.67
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\threadjob-package.Xa8epS\mingw-w64-powershell-threadjob\src\check\metadata\Identity\Inspect.csproj (in 69 ms).
+  Inspect -> E:\msys64\home\topkek\threadjob-package.Xa8epS\mingw-w64-powershell-threadjob\src\check\metadata\Identity\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.73
+PASS complete original source inventory/patch provenance, sole binary, license, frozen identity and all55 published API declarations
+PASS source ThreadJob import, identity, stock command discovery, execution, wait/receive and removal
+PASS debugger overload adapter forwards a real child command breakpoint and invokes its action exactly once
+Staged all30 original ThreadJob cases; adapted only two child-process launchers
+PASS all30 original ThreadJob cases, including fresh-process runspace cleanup
+WARNING A ThreadJobSourceAdapter job source adapter threw an exception with the following message: Specified method is not supported.
+PASS source-only ThreadJob NuGet restore, metadata/source gates, debugger and complete non-policy upstream suite
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-powershell-threadjob"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-powershell-threadjob 2.0.3-1 (27 Oct 2026 05:19:01)

@@ -1,0 +1,440 @@
+Cryptography/diagnostics/encoding package verification, 2026-10-26
+Host win11 / MSYS2 CLANG64; source-built SDK8.0.131 and runtime8.0.0; corrected targeting pack8.0.131-2.
+Sources dotnet/runtime v8.0.31, SHA256 b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070.
+The full PowerShell dependency goal remains incomplete.
+
+Clean package build and all native/API gates
+$ cd /home/topkek/powershell-crypto.hYsmex/mingw-w64-dotnet-crypto
+PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm
+Result: exit 0
+
+==> Making package: mingw-w64-dotnet-crypto 8.0.31-1 (26 Oct 2026 14:56:20)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found runtime-v8.0.31.tar.gz
+  -> Found prepare.py
+  -> Found libraries.json
+  -> Found Microsoft.pubkey.hex
+  -> Found Open.pubkey.hex
+  -> Found check.cs
+  -> Found check.sh
+  -> Found check-api.cs
+  -> Found check-api.sh
+  -> Found README.md
+==> Validating source files with sha256sums...
+    runtime-v8.0.31.tar.gz ... Passed
+    prepare.py ... Passed
+    libraries.json ... Passed
+    Microsoft.pubkey.hex ... Passed
+    Open.pubkey.hex ... Passed
+    check.cs ... Passed
+    check.sh ... Passed
+    check-api.cs ... Passed
+    check-api.sh ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+==> Starting prepare()...
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Formats.Asn1\contract\Contract.csproj (in 63 ms).
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Formats.Asn1\ref\System.Formats.Asn1.cs(180,21): warning CS3021: 'AsnWriter.WriteInteger(ulong, Asn1Tag?)' does not need a CLSCompliant attribute because the assembly does not have a CLSCompliant attribute [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Formats.Asn1\contract\Contract.csproj]
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Formats.Asn1\ref\System.Formats.Asn1.cs(139,21): warning CS3021: 'AsnReader.TryReadUInt32(out uint, Asn1Tag?)' does not need a CLSCompliant attribute because the assembly does not have a CLSCompliant attribute [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Formats.Asn1\contract\Contract.csproj]
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Formats.Asn1\ref\System.Formats.Asn1.cs(141,21): warning CS3021: 'AsnReader.TryReadUInt64(out ulong, Asn1Tag?)' does not need a CLSCompliant attribute because the assembly does not have a CLSCompliant attribute [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Formats.Asn1\contract\Contract.csproj]
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Formats.Asn1\ref\System.Formats.Asn1.cs(88,28): warning CS3021: 'AsnDecoder.TryReadUInt32(ReadOnlySpan<byte>, AsnEncodingRules, out uint, out int, Asn1Tag?)' does not need a CLSCompliant attribute because the assembly does not have a CLSCompliant attribute [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Formats.Asn1\contract\Contract.csproj]
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Formats.Asn1\ref\System.Formats.Asn1.cs(90,28): warning CS3021: 'AsnDecoder.TryReadUInt64(ReadOnlySpan<byte>, AsnEncodingRules, out ulong, out int, Asn1Tag?)' does not need a CLSCompliant attribute because the assembly does not have a CLSCompliant attribute [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Formats.Asn1\contract\Contract.csproj]
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Formats.Asn1\ref\System.Formats.Asn1.cs(193,37): warning CS0169: The field 'AsnWriter.Scope._dummy' is never used [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Formats.Asn1\contract\Contract.csproj]
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Formats.Asn1\ref\System.Formats.Asn1.cs(11,30): warning CS0169: The field 'Asn1Tag._dummyPrimitive' is never used [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Formats.Asn1\contract\Contract.csproj]
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Formats.Asn1\ref\System.Formats.Asn1.cs(145,21): warning CS0169: The field 'AsnReaderOptions._dummyPrimitive' is never used [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Formats.Asn1\contract\Contract.csproj]
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Formats.Asn1\ref\System.Formats.Asn1.cs(194,34): warning CS0169: The field 'AsnWriter.Scope._dummyPrimitive' is never used [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Formats.Asn1\contract\Contract.csproj]
+  Contract -> E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Formats.Asn1\contract\bin\Release\net8.0\System.Formats.Asn1.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Formats.Asn1\ref\System.Formats.Asn1.cs(180,21): warning CS3021: 'AsnWriter.WriteInteger(ulong, Asn1Tag?)' does not need a CLSCompliant attribute because the assembly does not have a CLSCompliant attribute [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Formats.Asn1\contract\Contract.csproj]
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Formats.Asn1\ref\System.Formats.Asn1.cs(139,21): warning CS3021: 'AsnReader.TryReadUInt32(out uint, Asn1Tag?)' does not need a CLSCompliant attribute because the assembly does not have a CLSCompliant attribute [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Formats.Asn1\contract\Contract.csproj]
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Formats.Asn1\ref\System.Formats.Asn1.cs(141,21): warning CS3021: 'AsnReader.TryReadUInt64(out ulong, Asn1Tag?)' does not need a CLSCompliant attribute because the assembly does not have a CLSCompliant attribute [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Formats.Asn1\contract\Contract.csproj]
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Formats.Asn1\ref\System.Formats.Asn1.cs(88,28): warning CS3021: 'AsnDecoder.TryReadUInt32(ReadOnlySpan<byte>, AsnEncodingRules, out uint, out int, Asn1Tag?)' does not need a CLSCompliant attribute because the assembly does not have a CLSCompliant attribute [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Formats.Asn1\contract\Contract.csproj]
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Formats.Asn1\ref\System.Formats.Asn1.cs(90,28): warning CS3021: 'AsnDecoder.TryReadUInt64(ReadOnlySpan<byte>, AsnEncodingRules, out ulong, out int, Asn1Tag?)' does not need a CLSCompliant attribute because the assembly does not have a CLSCompliant attribute [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Formats.Asn1\contract\Contract.csproj]
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Formats.Asn1\ref\System.Formats.Asn1.cs(193,37): warning CS0169: The field 'AsnWriter.Scope._dummy' is never used [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Formats.Asn1\contract\Contract.csproj]
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Formats.Asn1\ref\System.Formats.Asn1.cs(11,30): warning CS0169: The field 'Asn1Tag._dummyPrimitive' is never used [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Formats.Asn1\contract\Contract.csproj]
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Formats.Asn1\ref\System.Formats.Asn1.cs(145,21): warning CS0169: The field 'AsnReaderOptions._dummyPrimitive' is never used [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Formats.Asn1\contract\Contract.csproj]
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Formats.Asn1\ref\System.Formats.Asn1.cs(194,34): warning CS0169: The field 'AsnWriter.Scope._dummyPrimitive' is never used [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Formats.Asn1\contract\Contract.csproj]
+    9 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.00
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Formats.Asn1\Library.csproj (in 60 ms).
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Formats.Asn1\src\System\Formats\Asn1\AsnWriter.Integer.cs(42,21): warning CS3021: 'AsnWriter.WriteInteger(ulong, Asn1Tag?)' does not need a CLSCompliant attribute because the assembly does not have a CLSCompliant attribute [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Formats.Asn1\Library.csproj]
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Formats.Asn1\src\System\Formats\Asn1\AsnDecoder.Integer.cs(663,21): warning CS3021: 'AsnReader.TryReadUInt32(out uint, Asn1Tag?)' does not need a CLSCompliant attribute because the assembly does not have a CLSCompliant attribute [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Formats.Asn1\Library.csproj]
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Formats.Asn1\src\System\Formats\Asn1\AsnDecoder.Integer.cs(742,21): warning CS3021: 'AsnReader.TryReadUInt64(out ulong, Asn1Tag?)' does not need a CLSCompliant attribute because the assembly does not have a CLSCompliant attribute [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Formats.Asn1\Library.csproj]
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Formats.Asn1\src\System\Formats\Asn1\AsnDecoder.Integer.cs(244,28): warning CS3021: 'AsnDecoder.TryReadUInt32(ReadOnlySpan<byte>, AsnEncodingRules, out uint, out int, Asn1Tag?)' does not need a CLSCompliant attribute because the assembly does not have a CLSCompliant attribute [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Formats.Asn1\Library.csproj]
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Formats.Asn1\src\System\Formats\Asn1\AsnDecoder.Integer.cs(370,28): warning CS3021: 'AsnDecoder.TryReadUInt64(ReadOnlySpan<byte>, AsnEncodingRules, out ulong, out int, Asn1Tag?)' does not need a CLSCompliant attribute because the assembly does not have a CLSCompliant attribute [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Formats.Asn1\Library.csproj]
+  Library -> E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Formats.Asn1\bin\Release\net8.0\System.Formats.Asn1.dll
+  The package System.Formats.Asn1.8.0.2 is missing a readme. Go to https://aka.ms/nuget/authoring-best-practices/readme to learn why package readmes are important.
+  Successfully created package 'E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\feed\System.Formats.Asn1.8.0.2.nupkg'.
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Security.Cryptography.Pkcs\contract\Contract.csproj (in 162 ms).
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Security.Cryptography.Pkcs\ref\System.Security.Cryptography.Pkcs.cs(333,24): warning CS0169: The field 'X509IssuerSerial._dummy' is never used [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Security.Cryptography.Pkcs\contract\Contract.csproj]
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Security.Cryptography.Pkcs\ref\System.Security.Cryptography.Pkcs.cs(334,21): warning CS0169: The field 'X509IssuerSerial._dummyPrimitive' is never used [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Security.Cryptography.Pkcs\contract\Contract.csproj]
+  Contract -> E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Security.Cryptography.Pkcs\contract\bin\Release\net8.0\System.Security.Cryptography.Pkcs.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Security.Cryptography.Pkcs\ref\System.Security.Cryptography.Pkcs.cs(333,24): warning CS0169: The field 'X509IssuerSerial._dummy' is never used [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Security.Cryptography.Pkcs\contract\Contract.csproj]
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Security.Cryptography.Pkcs\ref\System.Security.Cryptography.Pkcs.cs(334,21): warning CS0169: The field 'X509IssuerSerial._dummyPrimitive' is never used [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Security.Cryptography.Pkcs\contract\Contract.csproj]
+    2 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.40
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Security.Cryptography.Pkcs\Library.csproj (in 156 ms).
+  FC: cannot open ../../RUNTIME-8.0.31/SRC/LIBRARIES/SYSTEM.SECURITY.CRYPTOGRAPHY.PKCS/SRC/SYSTEM/SECURITY/CRYPTOGRAPHY/PKCS/ASN1/KEYAGREERECIPIENTIDENTIFIERASN.XML.CS - No such file or folder
+  
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\Common\src\System\Security\Cryptography\Asn1\AsnXml.targets(42,5): warning : AsnXml regenerated files, be sure to check them in: ../../runtime-8.0.31/src/libraries/System.Security.Cryptography.Pkcs/src/System/Security/Cryptography/Pkcs/Asn1/KeyAgreeRecipientIdentifierAsn.xml.cs [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Security.Cryptography.Pkcs\Library.csproj]
+  FC: cannot open ../../RUNTIME-8.0.31/SRC/LIBRARIES/SYSTEM.SECURITY.CRYPTOGRAPHY.PKCS/SRC/SYSTEM/SECURITY/CRYPTOGRAPHY/PKCS/ASN1/KEYAGREERECIPIENTINFOASN.XML.CS - No such file or folder
+  
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\Common\src\System\Security\Cryptography\Asn1\AsnXml.targets(42,5): warning : AsnXml regenerated files, be sure to check them in: ../../runtime-8.0.31/src/libraries/System.Security.Cryptography.Pkcs/src/System/Security/Cryptography/Pkcs/Asn1/KeyAgreeRecipientInfoAsn.xml.cs [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Security.Cryptography.Pkcs\Library.csproj]
+  FC: cannot open ../../RUNTIME-8.0.31/SRC/LIBRARIES/SYSTEM.SECURITY.CRYPTOGRAPHY.PKCS/SRC/SYSTEM/SECURITY/CRYPTOGRAPHY/PKCS/ASN1/KEYTRANSRECIPIENTINFOASN.XML.CS - No such file or folder
+  
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\Common\src\System\Security\Cryptography\Asn1\AsnXml.targets(42,5): warning : AsnXml regenerated files, be sure to check them in: ../../runtime-8.0.31/src/libraries/System.Security.Cryptography.Pkcs/src/System/Security/Cryptography/Pkcs/Asn1/KeyTransRecipientInfoAsn.xml.cs [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Security.Cryptography.Pkcs\Library.csproj]
+  FC: cannot open ../../RUNTIME-8.0.31/SRC/LIBRARIES/SYSTEM.SECURITY.CRYPTOGRAPHY.PKCS/SRC/SYSTEM/SECURITY/CRYPTOGRAPHY/PKCS/ASN1/ORIGINATORIDENTIFIERORKEYASN.XML.CS - No such file or folder
+  
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\Common\src\System\Security\Cryptography\Asn1\AsnXml.targets(42,5): warning : AsnXml regenerated files, be sure to check them in: ../../runtime-8.0.31/src/libraries/System.Security.Cryptography.Pkcs/src/System/Security/Cryptography/Pkcs/Asn1/OriginatorIdentifierOrKeyAsn.xml.cs [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Security.Cryptography.Pkcs\Library.csproj]
+  FC: cannot open ../../RUNTIME-8.0.31/SRC/LIBRARIES/SYSTEM.SECURITY.CRYPTOGRAPHY.PKCS/SRC/SYSTEM/SECURITY/CRYPTOGRAPHY/PKCS/ASN1/RECIPIENTENCRYPTEDKEYASN.XML.CS - No such file or folder
+  
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\Common\src\System\Security\Cryptography\Asn1\AsnXml.targets(42,5): warning : AsnXml regenerated files, be sure to check them in: ../../runtime-8.0.31/src/libraries/System.Security.Cryptography.Pkcs/src/System/Security/Cryptography/Pkcs/Asn1/RecipientEncryptedKeyAsn.xml.cs [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Security.Cryptography.Pkcs\Library.csproj]
+  FC: cannot open ../../RUNTIME-8.0.31/SRC/LIBRARIES/SYSTEM.SECURITY.CRYPTOGRAPHY.PKCS/SRC/SYSTEM/SECURITY/CRYPTOGRAPHY/PKCS/ASN1/ENCAPSULATEDCONTENTINFOASN.XML.CS - No such file or folder
+  
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\Common\src\System\Security\Cryptography\Asn1\AsnXml.targets(42,5): warning : AsnXml regenerated files, be sure to check them in: ../../runtime-8.0.31/src/libraries/System.Security.Cryptography.Pkcs/src/System/Security/Cryptography/Pkcs/Asn1/EncapsulatedContentInfoAsn.xml.cs [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Security.Cryptography.Pkcs\Library.csproj]
+  FC: cannot open ../../RUNTIME-8.0.31/SRC/LIBRARIES/SYSTEM.SECURITY.CRYPTOGRAPHY.PKCS/SRC/SYSTEM/SECURITY/CRYPTOGRAPHY/PKCS/ASN1/ISSUERANDSERIALNUMBERASN.XML.CS - No such file or folder
+  
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\Common\src\System\Security\Cryptography\Asn1\AsnXml.targets(42,5): warning : AsnXml regenerated files, be sure to check them in: ../../runtime-8.0.31/src/libraries/System.Security.Cryptography.Pkcs/src/System/Security/Cryptography/Pkcs/Asn1/IssuerAndSerialNumberAsn.xml.cs [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Security.Cryptography.Pkcs\Library.csproj]
+  FC: cannot open ../../RUNTIME-8.0.31/SRC/LIBRARIES/SYSTEM.SECURITY.CRYPTOGRAPHY.PKCS/SRC/SYSTEM/SECURITY/CRYPTOGRAPHY/PKCS/ASN1/SIGNINGCERTIFICATEV2ASN.XML.CS - No such file or folder
+  
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\Common\src\System\Security\Cryptography\Asn1\AsnXml.targets(42,5): warning : AsnXml regenerated files, be sure to check them in: ../../runtime-8.0.31/src/libraries/System.Security.Cryptography.Pkcs/src/System/Security/Cryptography/Pkcs/Asn1/SigningCertificateV2Asn.xml.cs [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Security.Cryptography.Pkcs\Library.csproj]
+  Library -> E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Security.Cryptography.Pkcs\bin\Release\net8.0-windows\System.Security.Cryptography.Pkcs.dll
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Sdks\NuGet.Build.Tasks.Pack\build\NuGet.Build.Tasks.Pack.targets(221,5): warning NU5131: References were found in the nuspec, but some reference assemblies were not found in both the nuspec and ref folder. Add the following reference assemblies: [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Security.Cryptography.Pkcs\Library.csproj]
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Sdks\NuGet.Build.Tasks.Pack\build\NuGet.Build.Tasks.Pack.targets(221,5): warning NU5131: - Add System.Security.Cryptography.Pkcs.dll to the net8.0 reference group in the nuspec [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Security.Cryptography.Pkcs\Library.csproj]
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Sdks\NuGet.Build.Tasks.Pack\build\NuGet.Build.Tasks.Pack.targets(221,5): warning NU5131:  [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Security.Cryptography.Pkcs\Library.csproj]
+  The package System.Security.Cryptography.Pkcs.8.0.1 is missing a readme. Go to https://aka.ms/nuget/authoring-best-practices/readme to learn why package readmes are important.
+  Successfully created package 'E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\feed\System.Security.Cryptography.Pkcs.8.0.1.nupkg'.
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Security.Cryptography.Xml\contract\Contract.csproj (in 195 ms).
+  Contract -> E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Security.Cryptography.Xml\contract\bin\Release\net8.0\System.Security.Cryptography.Xml.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.87
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Security.Cryptography.Xml\Library.csproj (in 123 ms).
+  Library -> E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Security.Cryptography.Xml\bin\Release\net8.0\System.Security.Cryptography.Xml.dll
+  The package System.Security.Cryptography.Xml.8.0.4 is missing a readme. Go to https://aka.ms/nuget/authoring-best-practices/readme to learn why package readmes are important.
+  Successfully created package 'E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\feed\System.Security.Cryptography.Xml.8.0.4.nupkg'.
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Diagnostics.DiagnosticSource\contract\Contract.csproj (in 57 ms).
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Diagnostics.DiagnosticSource\ref\System.Diagnostics.DiagnosticSourceActivity.cs(135,33): warning CS0169: The field 'ActivitySpanId._dummy' is never used [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Diagnostics.DiagnosticSource\contract\Contract.csproj]
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Diagnostics.DiagnosticSource\ref\System.Diagnostics.DiagnosticSourceActivity.cs(174,33): warning CS0169: The field 'ActivityTraceId._dummy' is never used [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Diagnostics.DiagnosticSource\contract\Contract.csproj]
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Diagnostics.DiagnosticSource\ref\System.Diagnostics.DiagnosticSourceActivity.cs(136,30): warning CS0169: The field 'ActivitySpanId._dummyPrimitive' is never used [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Diagnostics.DiagnosticSource\contract\Contract.csproj]
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Diagnostics.DiagnosticSource\ref\System.Diagnostics.DiagnosticSourceActivity.cs(175,30): warning CS0169: The field 'ActivityTraceId._dummyPrimitive' is never used [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Diagnostics.DiagnosticSource\contract\Contract.csproj]
+  Contract -> E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Diagnostics.DiagnosticSource\contract\bin\Release\net8.0\System.Diagnostics.DiagnosticSource.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Diagnostics.DiagnosticSource\ref\System.Diagnostics.DiagnosticSourceActivity.cs(135,33): warning CS0169: The field 'ActivitySpanId._dummy' is never used [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Diagnostics.DiagnosticSource\contract\Contract.csproj]
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Diagnostics.DiagnosticSource\ref\System.Diagnostics.DiagnosticSourceActivity.cs(174,33): warning CS0169: The field 'ActivityTraceId._dummy' is never used [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Diagnostics.DiagnosticSource\contract\Contract.csproj]
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Diagnostics.DiagnosticSource\ref\System.Diagnostics.DiagnosticSourceActivity.cs(136,30): warning CS0169: The field 'ActivitySpanId._dummyPrimitive' is never used [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Diagnostics.DiagnosticSource\contract\Contract.csproj]
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Diagnostics.DiagnosticSource\ref\System.Diagnostics.DiagnosticSourceActivity.cs(175,30): warning CS0169: The field 'ActivityTraceId._dummyPrimitive' is never used [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Diagnostics.DiagnosticSource\contract\Contract.csproj]
+    4 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.70
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Diagnostics.DiagnosticSource\Library.csproj (in 57 ms).
+  Library -> E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Diagnostics.DiagnosticSource\bin\Release\net8.0\System.Diagnostics.DiagnosticSource.dll
+  The package System.Diagnostics.DiagnosticSource.8.0.1 is missing a readme. Go to https://aka.ms/nuget/authoring-best-practices/readme to learn why package readmes are important.
+  Successfully created package 'E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\feed\System.Diagnostics.DiagnosticSource.8.0.1.nupkg'.
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Text.Encodings.Web\contract\Contract.csproj (in 58 ms).
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Text.Encodings.Web\ref\System.Text.Encodings.Web.cs(37,36): warning CS3021: 'TextEncoder.FindFirstCharacterToEncode(char*, int)' does not need a CLSCompliant attribute because the assembly does not have a CLSCompliant attribute [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Text.Encodings.Web\contract\Contract.csproj]
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Text.Encodings.Web\ref\System.Text.Encodings.Web.cs(42,37): warning CS3021: 'TextEncoder.TryEncodeUnicodeScalar(int, char*, int, out int)' does not need a CLSCompliant attribute because the assembly does not have a CLSCompliant attribute [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Text.Encodings.Web\contract\Contract.csproj]
+  Contract -> E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Text.Encodings.Web\contract\bin\Release\net8.0\System.Text.Encodings.Web.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Text.Encodings.Web\ref\System.Text.Encodings.Web.cs(37,36): warning CS3021: 'TextEncoder.FindFirstCharacterToEncode(char*, int)' does not need a CLSCompliant attribute because the assembly does not have a CLSCompliant attribute [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Text.Encodings.Web\contract\Contract.csproj]
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Text.Encodings.Web\ref\System.Text.Encodings.Web.cs(42,37): warning CS3021: 'TextEncoder.TryEncodeUnicodeScalar(int, char*, int, out int)' does not need a CLSCompliant attribute because the assembly does not have a CLSCompliant attribute [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Text.Encodings.Web\contract\Contract.csproj]
+    2 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.40
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Text.Encodings.Web\Library.csproj (in 56 ms).
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Text.Encodings.Web\src\System\Text\Encodings\Web\TextEncoder.cs(39,37): warning CS3021: 'TextEncoder.TryEncodeUnicodeScalar(int, char*, int, out int)' does not need a CLSCompliant attribute because the assembly does not have a CLSCompliant attribute [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Text.Encodings.Web\Library.csproj]
+E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\runtime-8.0.31\src\libraries\System.Text.Encodings.Web\src\System\Text\Encodings\Web\TextEncoder.cs(106,36): warning CS3021: 'TextEncoder.FindFirstCharacterToEncode(char*, int)' does not need a CLSCompliant attribute because the assembly does not have a CLSCompliant attribute [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Text.Encodings.Web\Library.csproj]
+  Library -> E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Text.Encodings.Web\bin\Release\net8.0\System.Text.Encodings.Web.dll
+  The package System.Text.Encodings.Web.8.0.0 is missing a readme. Go to https://aka.ms/nuget/authoring-best-practices/readme to learn why package readmes are important.
+  Successfully created package 'E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\feed\System.Text.Encodings.Web.8.0.0.nupkg'.
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Text.Encoding.CodePages\contract\Contract.csproj (in 64 ms).
+  Contract -> E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Text.Encoding.CodePages\contract\bin\Release\net8.0\System.Text.Encoding.CodePages.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.74
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Text.Encoding.CodePages\Library.csproj (in 59 ms).
+  Library -> E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Text.Encoding.CodePages\bin\Release\net8.0-windows\System.Text.Encoding.CodePages.dll
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Sdks\NuGet.Build.Tasks.Pack\build\NuGet.Build.Tasks.Pack.targets(221,5): warning NU5131: References were found in the nuspec, but some reference assemblies were not found in both the nuspec and ref folder. Add the following reference assemblies: [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Text.Encoding.CodePages\Library.csproj]
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Sdks\NuGet.Build.Tasks.Pack\build\NuGet.Build.Tasks.Pack.targets(221,5): warning NU5131: - Add System.Text.Encoding.CodePages.dll to the net8.0 reference group in the nuspec [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Text.Encoding.CodePages\Library.csproj]
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Sdks\NuGet.Build.Tasks.Pack\build\NuGet.Build.Tasks.Pack.targets(221,5): warning NU5131:  [E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\prepared\System.Text.Encoding.CodePages\Library.csproj]
+  The package System.Text.Encoding.CodePages.8.0.0 is missing a readme. Go to https://aka.ms/nuget/authoring-best-practices/readme to learn why package readmes are important.
+  Successfully created package 'E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\feed\System.Text.Encoding.CodePages.8.0.0.nupkg'.
+==> Starting check()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\check\check.csproj (in 229 ms).
+  check -> E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\check\bin\Release\net8.0\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.32
+IDENTITY: System.Formats.Asn1, Version=8.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51; types=33; forwards=0; file=E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\check\bin\Release\net8.0\System.Formats.Asn1.dll
+IDENTITY: System.Security.Cryptography.Pkcs, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a; types=243; forwards=0; file=E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\check\bin\Release\net8.0\runtimes\win\lib\net8.0\System.Security.Cryptography.Pkcs.dll
+IDENTITY: System.Security.Cryptography.Xml, Version=8.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51; types=95; forwards=0; file=E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\check\bin\Release\net8.0\System.Security.Cryptography.Xml.dll
+IDENTITY: System.Diagnostics.DiagnosticSource, Version=8.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51; types=152; forwards=1; file=E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\check\bin\Release\net8.0\System.Diagnostics.DiagnosticSource.dll
+IDENTITY: System.Text.Encodings.Web, Version=8.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51; types=39; forwards=0; file=E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\check\bin\Release\net8.0\System.Text.Encodings.Web.dll
+IDENTITY: System.Text.Encoding.CodePages, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a; types=50; forwards=0; file=E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\check\bin\Release\net8.0\runtimes\win\lib\net8.0\System.Text.Encoding.CodePages.dll
+PASS: BER/CER/DER large/constructed data, integers, OIDs, Unicode, bits/time and malformed input
+PASS: native CMS attached/detached signatures, tampering, AES envelopes/wrong keys and PKCS12 password/MAC/key bags
+PASS: XML RSA/SHA256 signatures, wrong-key/tamper rejection, AES encryption and RSA key wrapping
+PASS: DiagnosticListener subscription, Activity sampling/parenting/tags/events/lifecycle and Meter counter
+PASS: HTML/JavaScript/URL escaping, Windows1252/Shift-JIS exact mappings and invalid input fallbacks
+NATIVE: C:\WINDOWS\SYSTEM32\BCrypt.dll
+NATIVE: C:\WINDOWS\System32\crypt32.dll
+NATIVE: C:\WINDOWS\SYSTEM32\ncrypt.dll
+PASS: six source-built crypto/diagnostics/encoding packages, loaded from the consumer output
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\check-api\check-api.csproj (in 84 ms).
+  check-api -> E:\msys64\home\topkek\powershell-crypto.hYsmex\mingw-w64-dotnet-crypto\src\check-api\bin\Release\net8.0\check-api.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.71
+PASS: System.Formats.Asn1 implements all 227 upstream public/protected type/member signatures
+PASS: System.Security.Cryptography.Pkcs implements all 426 upstream public/protected type/member signatures
+PASS: System.Security.Cryptography.Xml implements all 513 upstream public/protected type/member signatures
+PASS: System.Diagnostics.DiagnosticSource implements all 483 upstream public/protected type/member signatures
+PASS: System.Text.Encodings.Web implements all 212 upstream public/protected type/member signatures
+PASS: System.Text.Encoding.CodePages implements all 5 upstream public/protected type/member signatures
+==> Starting package_mingw-w64-clang-x86_64-dotnet-formats-asn1()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-formats-asn1"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Starting package_mingw-w64-clang-x86_64-dotnet-cryptography-pkcs()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-cryptography-pkcs"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Starting package_mingw-w64-clang-x86_64-dotnet-cryptography-xml()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-cryptography-xml"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Starting package_mingw-w64-clang-x86_64-dotnet-diagnosticsource()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-diagnosticsource"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Starting package_mingw-w64-clang-x86_64-dotnet-encodings-web()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-encodings-web"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Starting package_mingw-w64-clang-x86_64-dotnet-encoding-codepages()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-encoding-codepages"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-crypto 8.0.31-1 (26 Oct 2026 14:58:09)
+
+
+Installed-feed-only consumer with empty cache
+$ cd /home/topkek/powershell-crypto.hYsmex/mingw-w64-dotnet-crypto
+pacman -U --noconfirm *.pkg.tar.zst
+bash check.sh /home/topkek/powershell-crypto.hYsmex/installed-check
+Result: exit 0
+
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (6) mingw-w64-clang-x86_64-dotnet-cryptography-pkcs-8.0.31-1  mingw-w64-clang-x86_64-dotnet-cryptography-xml-8.0.31-1  mingw-w64-clang-x86_64-dotnet-diagnosticsource-8.0.31-1  mingw-w64-clang-x86_64-dotnet-encoding-codepages-8.0.31-1  mingw-w64-clang-x86_64-dotnet-encodings-web-8.0.31-1  mingw-w64-clang-x86_64-dotnet-formats-asn1-8.0.31-1
+
+Total Installed Size:  1.24 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+installing mingw-w64-clang-x86_64-dotnet-formats-asn1...
+installing mingw-w64-clang-x86_64-dotnet-cryptography-pkcs...
+installing mingw-w64-clang-x86_64-dotnet-cryptography-xml...
+installing mingw-w64-clang-x86_64-dotnet-diagnosticsource...
+installing mingw-w64-clang-x86_64-dotnet-encoding-codepages...
+installing mingw-w64-clang-x86_64-dotnet-encodings-web...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-crypto.hYsmex\installed-check\check.csproj (in 247 ms).
+  check -> E:\msys64\home\topkek\powershell-crypto.hYsmex\installed-check\bin\Release\net8.0\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.48
+IDENTITY: System.Formats.Asn1, Version=8.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51; types=33; forwards=0; file=E:\msys64\home\topkek\powershell-crypto.hYsmex\installed-check\bin\Release\net8.0\System.Formats.Asn1.dll
+IDENTITY: System.Security.Cryptography.Pkcs, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a; types=243; forwards=0; file=E:\msys64\home\topkek\powershell-crypto.hYsmex\installed-check\bin\Release\net8.0\runtimes\win\lib\net8.0\System.Security.Cryptography.Pkcs.dll
+IDENTITY: System.Security.Cryptography.Xml, Version=8.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51; types=95; forwards=0; file=E:\msys64\home\topkek\powershell-crypto.hYsmex\installed-check\bin\Release\net8.0\System.Security.Cryptography.Xml.dll
+IDENTITY: System.Diagnostics.DiagnosticSource, Version=8.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51; types=152; forwards=1; file=E:\msys64\home\topkek\powershell-crypto.hYsmex\installed-check\bin\Release\net8.0\System.Diagnostics.DiagnosticSource.dll
+IDENTITY: System.Text.Encodings.Web, Version=8.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51; types=39; forwards=0; file=E:\msys64\home\topkek\powershell-crypto.hYsmex\installed-check\bin\Release\net8.0\System.Text.Encodings.Web.dll
+IDENTITY: System.Text.Encoding.CodePages, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a; types=50; forwards=0; file=E:\msys64\home\topkek\powershell-crypto.hYsmex\installed-check\bin\Release\net8.0\runtimes\win\lib\net8.0\System.Text.Encoding.CodePages.dll
+PASS: BER/CER/DER large/constructed data, integers, OIDs, Unicode, bits/time and malformed input
+PASS: native CMS attached/detached signatures, tampering, AES envelopes/wrong keys and PKCS12 password/MAC/key bags
+PASS: XML RSA/SHA256 signatures, wrong-key/tamper rejection, AES encryption and RSA key wrapping
+PASS: DiagnosticListener subscription, Activity sampling/parenting/tags/events/lifecycle and Meter counter
+PASS: HTML/JavaScript/URL escaping, Windows1252/Shift-JIS exact mappings and invalid input fallbacks
+NATIVE: C:\WINDOWS\SYSTEM32\BCrypt.dll
+NATIVE: C:\WINDOWS\System32\crypt32.dll
+NATIVE: C:\WINDOWS\SYSTEM32\ncrypt.dll
+PASS: six source-built crypto/diagnostics/encoding packages, loaded from the consumer output
+
+
+Artifact audit: python3 tests/powershell-deps/audit-crypto.py
+Result: exit 0 for all six split packages.

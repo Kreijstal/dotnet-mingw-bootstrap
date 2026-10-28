@@ -1,0 +1,41 @@
+{
+  "recipe": "mingw-w64-dotnet-roslyn-visualbasic",
+  "artifact": "mingw-w64-clang-x86_64-dotnet-codeanalysis-visualbasic-4.9.2-1-any.pkg.tar.zst",
+  "sha256": "8edf7725773ec768a8b5df0aa0813e6433d89d7d51808ed5953b8bfc6206c040",
+  "nuget_id": "Microsoft.CodeAnalysis.VisualBasic",
+  "nuget_version": "4.9.2",
+  "nuget_dependencies": {
+    "Microsoft.CodeAnalysis.Common": "[4.9.2]"
+  },
+  "source_commit": "9934fb9e3527e1c0c51314e57d4aab30f97e8f9e",
+  "source_sha256": "e01ea67aaec6408de51a0a4c18a7e15b2a527ca7a853c9a0a7742cb5680aeb30",
+  "managed_payload_sha256": {
+    "lib/net8.0/Microsoft.CodeAnalysis.VisualBasic.dll": "28456e30e1344d917ae795012b1a2f363aae73ca463eeea2c57da0864a411f13",
+    "lib/net8.0/cs/Microsoft.CodeAnalysis.VisualBasic.resources.dll": "97967cef1b2582a59686a7211d075ecfe823d0bb2e8d281b441c21bd1233be91",
+    "lib/net8.0/de/Microsoft.CodeAnalysis.VisualBasic.resources.dll": "113e7c4e6f4c49c0adc06675b2c1d77223ebab62f7560335bf6a3f71cb25f441",
+    "lib/net8.0/es/Microsoft.CodeAnalysis.VisualBasic.resources.dll": "da2e4cf193a972a85a50d2068e4e92cb48178607fe787889ae19d7b54192cafe",
+    "lib/net8.0/fr/Microsoft.CodeAnalysis.VisualBasic.resources.dll": "2408576de27c7d0895f1e81330f1b356d5701adc4ce1b38b1761d48ab0a9248f",
+    "lib/net8.0/it/Microsoft.CodeAnalysis.VisualBasic.resources.dll": "f6ecd623f5624b19c892857d02ad5ec5b098fc7c961d1bd60d7c2cdedd3e9b43",
+    "lib/net8.0/ja/Microsoft.CodeAnalysis.VisualBasic.resources.dll": "0629bc82c4079469839ca35fe2495d3820180b8898773f96447816d43d05192b",
+    "lib/net8.0/ko/Microsoft.CodeAnalysis.VisualBasic.resources.dll": "161cfdd4bab8d4286f6c194783a190639bf3823ab41db75c5e9f13ca3c27da1f",
+    "lib/net8.0/pl/Microsoft.CodeAnalysis.VisualBasic.resources.dll": "2102825a971a6ac339aa9f00e16b34f815f0c25a39ad497692cdc06d6ba37e53",
+    "lib/net8.0/pt-BR/Microsoft.CodeAnalysis.VisualBasic.resources.dll": "818065b82fa94d4acaaba2a4d5357a959f09f3bd651dade76647484858d96d72",
+    "lib/net8.0/ru/Microsoft.CodeAnalysis.VisualBasic.resources.dll": "16dee5c7fb205e94d911494c1350aca0ca1681a385eb96bd0e7ed57fac48185c",
+    "lib/net8.0/tr/Microsoft.CodeAnalysis.VisualBasic.resources.dll": "26548bcbda9eff53c8c324ced84403e2ce1bba0667e982e2dd8a0d699da807eb",
+    "lib/net8.0/zh-Hans/Microsoft.CodeAnalysis.VisualBasic.resources.dll": "87e7e1b5580840e6243ecf63862abeff11dbcbadef6a143823033087d7c82ff8",
+    "lib/net8.0/zh-Hant/Microsoft.CodeAnalysis.VisualBasic.resources.dll": "15ccef1b0488215d66227ffc214969e3e6a61f16f55c18a1ce3192bea7d4747c"
+  },
+  "api_declarations": 6176,
+  "source_files": 905,
+  "generated_source_files": 5,
+  "generator_source_files": [
+    17,
+    1,
+    3
+  ],
+  "resource_sets": 14,
+  "resource_strings": 25130,
+  "embedded_sources": 4,
+  "assembly_version": "4.9.0.0",
+  "public_key_token": "31bf3856ad364e35"
+}

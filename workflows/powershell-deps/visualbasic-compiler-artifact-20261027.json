@@ -1,0 +1,57 @@
+{
+  "recipe": "mingw-w64-dotnet-visualbasic-compiler",
+  "artifact": "mingw-w64-clang-x86_64-dotnet-visualbasic-compiler-4.9.2-1-any.pkg.tar.zst",
+  "sha256": "e182cecbfc040ea1999128b4544520e35895234cf7c595eb9cccabe8816a95b5",
+  "source_commit": "9934fb9e3527e1c0c51314e57d4aab30f97e8f9e",
+  "source_sha256": "e01ea67aaec6408de51a0a4c18a7e15b2a527ca7a853c9a0a7742cb5680aeb30",
+  "compiler": "VisualBasic vbc4.9.2 net8.0",
+  "compiler_sha256": "bb279246fd11214fe9f13ca0f6e3d20fbb3f9a649420d984a17691f46782d23c",
+  "razor_helper_sha256": "1a11576b0216effbbcb624584255502891f180d14ccab7a89416ac17caf37276",
+  "source_counts": {
+    "Microsoft.CodeAnalysis.ExternalAccess.RazorCompiler": 2,
+    "vbc": 11
+  },
+  "dependencies": [
+    {
+      "package": "Microsoft.CodeAnalysis.Common",
+      "version": "4.9.2",
+      "managed_sha256": "86f73945cc6a05ed0fd19eb7113275e3ab466529abdf44fdf0eba8d72f8d71fd",
+      "satellite_cultures": [
+        "cs",
+        "de",
+        "es",
+        "fr",
+        "it",
+        "ja",
+        "ko",
+        "pl",
+        "pt-BR",
+        "ru",
+        "tr",
+        "zh-Hans",
+        "zh-Hant"
+      ]
+    },
+    {
+      "package": "Microsoft.CodeAnalysis.VisualBasic",
+      "version": "4.9.2",
+      "managed_sha256": "28456e30e1344d917ae795012b1a2f363aae73ca463eeea2c57da0864a411f13",
+      "satellite_cultures": [
+        "cs",
+        "de",
+        "es",
+        "fr",
+        "it",
+        "ja",
+        "ko",
+        "pl",
+        "pt-BR",
+        "ru",
+        "tr",
+        "zh-Hans",
+        "zh-Hant"
+      ]
+    }
+  ],
+  "scope": "standalone Visual Basic command-line host; existing SDK unchanged, VBCSCompiler/full Toolset/IDE not included"
+}

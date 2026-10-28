@@ -1,0 +1,230 @@
+CommonMark.NET 0.15.1 source package, 2026-10-26
+Host: win11, MSYS2 CLANG64
+Remote root: /home/topkek/powershell-commonmark.iaeqGd
+SDK package 8.0.131; running core runtime remains 8.0.0.
+
+Source commit 6f0ed9805065ee368c01fe931ca7d589e9341f11, exact upstream v0.15.1.
+The published netstandard1.0 identity is CommonMark 0.1.0.0/001ef8810438905d.
+All 43 upstream project Compile items and original assembly attributes are kept;
+the embedded source nuspec still returns package Version 0.15.1. The source file
+named public.snk is actually a CAPI private-key blob: only its public exponent/
+modulus are derived for PublicSign. No private signing key is packaged.
+
+The source-built net8.0 library passes all 622 unmodified upstream CommonMark
+0.26 specification cases through both upstream HTML formatter paths and the
+upstream helper's source-position invariant. No MSTest binary is used; an owned
+source host supplies only attributes/equality/failure assertions. Fixtures retain
+John MacFarlane/CommonMark 0.26 attribution and CC-BY-SA-4.0 license; library/helper
+code retains BSD-3-Clause. Fixtures are installed as check data, not embedded in
+the implementation library. Public metadata comparison matches all 200 entries
+and exact identity with no exceptions. Published binaries are metadata-only.
+
+Additional owned checks cover source location/identity/types, nuspec version,
+Unicode/AST source positions and inline nodes, cloned settings/soft breaks, a
+URI resolver, streaming, concurrent conversion and null-reader/string contracts.
+HTML assertions normalize only Windows carriage returns. Installed checks use
+new output/cache and only the installed source-built feed. Consumer implementation
+hash matches the audited package.
+
+This adds a transitive prerequisite for DocumentationAnalyzers code fixes.
+It does not complete that analyzer package or full PowerShell integration.
+
+Directory: /home/topkek/powershell-commonmark.iaeqGd/mingw-w64-dotnet-commonmark
+$ PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm
+==> Making package: mingw-w64-dotnet-commonmark 0.15.1-1 (26 Oct 2026 21:38:34)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found commonmark-0.15.1.tar.gz
+  -> Found prepare.py
+  -> Found build.sh
+  -> Found Check.cs
+  -> Found TestHost.cs
+  -> Found check.sh
+  -> Found InspectApi.cs
+  -> Found ExpectedApi.json
+  -> Found published-metadata-provenance.json
+  -> Found check-api.sh
+  -> Found README.md
+  -> Found LICENSE.CommonMarkSpec
+==> Validating source files with sha256sums...
+    commonmark-0.15.1.tar.gz ... Passed
+    prepare.py ... Passed
+    build.sh ... Passed
+    Check.cs ... Passed
+    TestHost.cs ... Passed
+    check.sh ... Passed
+    InspectApi.cs ... Passed
+    ExpectedApi.json ... Passed
+    published-metadata-provenance.json ... Passed
+    check-api.sh ... Passed
+    README.md ... Passed
+    LICENSE.CommonMarkSpec ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+  -> Extracting commonmark-0.15.1.tar.gz with bsdtar
+==> Starting prepare()...
+==> Removing existing $pkgdir/ directory...
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-commonmark.iaeqGd\mingw-w64-dotnet-commonmark\src\prepared\Library.csproj (in 89 ms).
+  Library -> E:\msys64\home\topkek\powershell-commonmark.iaeqGd\mingw-w64-dotnet-commonmark\src\prepared\bin\Release\net8.0\CommonMark.dll
+  Successfully created package 'E:\msys64\home\topkek\powershell-commonmark.iaeqGd\mingw-w64-dotnet-commonmark\src\feed\CommonMark.NET.0.15.1.nupkg'.
+==> Starting check()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-commonmark.iaeqGd\mingw-w64-dotnet-commonmark\src\check\Check.csproj (in 178 ms).
+  Check -> E:\msys64\home\topkek\powershell-commonmark.iaeqGd\mingw-w64-dotnet-commonmark\src\check\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.04
+PASS all 622 upstream CommonMark 0.26 specification cases, both HTML formatter paths and upstream source-position invariant
+PASS source identity/types, source nuspec version, AST/Unicode positions, cloned settings, URI resolver, streaming, concurrency and validation
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-commonmark.iaeqGd\mingw-w64-dotnet-commonmark\src\check-api\Inspect.csproj (in 280 ms).
+  Inspect -> E:\msys64\home\topkek\powershell-commonmark.iaeqGd\mingw-w64-dotnet-commonmark\src\check-api\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.67
+PASS all 200 published CommonMark.NET public/protected declarations and exact assembly identity
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-commonmark"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-commonmark 0.15.1-1 (26 Oct 2026 21:39:01)
+Result: exit 0
+
+Fresh installed-feed checks:
+$ pacman -U --noconfirm mingw-w64-dotnet-commonmark/mingw-w64-clang-x86_64-dotnet-commonmark-0.15.1-1-any.pkg.tar.zst
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-dotnet-commonmark-0.15.1-1
+
+Total Installed Size:  0.67 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+installing mingw-w64-clang-x86_64-dotnet-commonmark...
+Result: exit 0
+$ bash mingw-w64-dotnet-commonmark/check.sh installed-consumer
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-commonmark.iaeqGd\installed-consumer\Check.csproj (in 778 ms).
+  Check -> E:\msys64\home\topkek\powershell-commonmark.iaeqGd\installed-consumer\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:13.14
+PASS all 622 upstream CommonMark 0.26 specification cases, both HTML formatter paths and upstream source-position invariant
+PASS source identity/types, source nuspec version, AST/Unicode positions, cloned settings, URI resolver, streaming, concurrency and validation
+Result: exit 0
+$ bash mingw-w64-dotnet-commonmark/check-api.sh installed-consumer installed-api
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-commonmark.iaeqGd\installed-api\Inspect.csproj (in 901 ms).
+  Inspect -> E:\msys64\home\topkek\powershell-commonmark.iaeqGd\installed-api\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:09.88
+PASS all 200 published CommonMark.NET public/protected declarations and exact assembly identity
+Result: exit 0
+
+$ sha256sum installed-consumer/bin/Release/net8.0/CommonMark.dll
+e4bebe583ade128271a16bf7dfd6bfc66642b185b45b460c43d1688b20f53d84 *installed-consumer/bin/Release/net8.0/CommonMark.dll
+PASS consumer implementation matches audited package
+
+$ python3 tests/powershell-deps/audit-commonmark.py
+CommonMark.NET: source/checksums/licenses, exact sole managed payload/dependencies, 200-entry identity/API baseline, all 43 sources and 622 attributed upstream spec cases PASS
+Result: exit 0

@@ -1,0 +1,105 @@
+[
+  {
+    "recipe": "mingw-w64-dotnet-workspaces-prerequisites",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-composition2-attributedmodel-8.0.31-1-any.pkg.tar.zst",
+    "sha256": "8f2c1191d01e77739adcb3d37724d901a3e33d71a8308cca56be311942b0ff34",
+    "nuget_id": "System.Composition.AttributedModel",
+    "nuget_version": "8.0.0",
+    "source_tag": "runtime v8.0.31",
+    "source_sha256": "b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070",
+    "dependencies": {},
+    "managed_sha256": "92e1d1bb0497a36650acabee8845f01638fc362243ea6e4ba2a91e52dda2517d",
+    "identity": "System.Composition.AttributedModel, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a",
+    "published_api_declarations": 47
+  },
+  {
+    "recipe": "mingw-w64-dotnet-workspaces-prerequisites",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-composition2-runtime-8.0.31-1-any.pkg.tar.zst",
+    "sha256": "d504d0b4ff6b24cc08c95153ab82a08a3a0b2d6991be904678086fca1cf36d6b",
+    "nuget_id": "System.Composition.Runtime",
+    "nuget_version": "8.0.0",
+    "source_tag": "runtime v8.0.31",
+    "source_sha256": "b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070",
+    "dependencies": {},
+    "managed_sha256": "a54ca2e5fee00ef27ecb5c8757a7f941a00e78054fe32d01f0309445044c2f24",
+    "identity": "System.Composition.Runtime, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a",
+    "published_api_declarations": 43
+  },
+  {
+    "recipe": "mingw-w64-dotnet-workspaces-prerequisites",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-composition2-hosting-8.0.31-1-any.pkg.tar.zst",
+    "sha256": "77e5b75d1b39ddf1a53f7ef30b561d12fa6c04dc7dde85057ade8525919cca7f",
+    "nuget_id": "System.Composition.Hosting",
+    "nuget_version": "8.0.0",
+    "source_tag": "runtime v8.0.31",
+    "source_sha256": "b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070",
+    "dependencies": {
+      "System.Composition.Runtime": "8.0.0"
+    },
+    "managed_sha256": "1be8d40f868b736442d791d684b6f57b9317a6a532c07c5e9fc420016389693c",
+    "identity": "System.Composition.Hosting, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a",
+    "published_api_declarations": 60
+  },
+  {
+    "recipe": "mingw-w64-dotnet-workspaces-prerequisites",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-composition2-convention-8.0.31-1-any.pkg.tar.zst",
+    "sha256": "6e9feea532ad54b80c4145bb996f4cf8a282342eced95ea2cf6ee979e3194540",
+    "nuget_id": "System.Composition.Convention",
+    "nuget_version": "8.0.0",
+    "source_tag": "runtime v8.0.31",
+    "source_sha256": "b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070",
+    "dependencies": {
+      "System.Composition.AttributedModel": "8.0.0"
+    },
+    "managed_sha256": "3592b8fca62f0f978ed2ab71a427915ff474a3461cf9bd75152ed7aad711e1ac",
+    "identity": "System.Composition.Convention, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a",
+    "published_api_declarations": 62
+  },
+  {
+    "recipe": "mingw-w64-dotnet-workspaces-prerequisites",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-composition2-typedparts-8.0.31-1-any.pkg.tar.zst",
+    "sha256": "7c3cc0cddff2fe061c47ca5b632ecd5b141ea6bd29cbf1bd32fa79d71eefe636",
+    "nuget_id": "System.Composition.TypedParts",
+    "nuget_version": "8.0.0",
+    "source_tag": "runtime v8.0.31",
+    "source_sha256": "b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070",
+    "dependencies": {
+      "System.Composition.AttributedModel": "8.0.0",
+      "System.Composition.Hosting": "8.0.0",
+      "System.Composition.Runtime": "8.0.0"
+    },
+    "managed_sha256": "38dceae31016ea19b9bd3f964f4f95d260933827f02ddec33607c414527469aa",
+    "identity": "System.Composition.TypedParts, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a",
+    "published_api_declarations": 23
+  },
+  {
+    "recipe": "mingw-w64-dotnet-workspaces-prerequisites",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-io-pipelines-8.0.31-1-any.pkg.tar.zst",
+    "sha256": "a6ac0300653272d1e4623b393a8afadb8794e3f8294e5170b4c236ebc801170e",
+    "nuget_id": "System.IO.Pipelines",
+    "nuget_version": "8.0.0",
+    "source_tag": "runtime v8.0.31",
+    "source_sha256": "b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070",
+    "dependencies": {},
+    "managed_sha256": "e6256704bdb9632ab84d3441396970aaf35927eef39bc6ed2c0163fceebca234",
+    "identity": "System.IO.Pipelines, Version=8.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51",
+    "published_api_declarations": 82
+  },
+  {
+    "recipe": "mingw-w64-dotnet-workspaces-prerequisites",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-composition2-8.0.31-1-any.pkg.tar.zst",
+    "sha256": "e9fad3c5d6243000b7c43573b0ba511bfb958e3d5d24be7c30f9296e20b1c205",
+    "nuget_id": "System.Composition",
+    "nuget_version": "8.0.0",
+    "source_tag": "runtime v8.0.31",
+    "source_sha256": "b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070",
+    "dependencies": {
+      "System.Composition.AttributedModel": "8.0.0",
+      "System.Composition.Runtime": "8.0.0",
+      "System.Composition.Hosting": "8.0.0",
+      "System.Composition.Convention": "8.0.0",
+      "System.Composition.TypedParts": "8.0.0"
+    },
+    "managed_sha256": null
+  }
+]

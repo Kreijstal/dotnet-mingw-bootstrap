@@ -1,0 +1,14 @@
+{
+  "recipe": "mingw-w64-dotnet-mmi",
+  "artifact": "mingw-w64-clang-x86_64-dotnet-mmi-2.0.0.preview1-4-any.pkg.tar.zst",
+  "sha256": "96917cfc9b49ffb808b5a6afb07a9c79a645487962161306281617f2a0edadaa",
+  "nuget_id": "Microsoft.Management.Infrastructure",
+  "nuget_version": "2.0.0-preview.1",
+  "package_release": 4,
+  "assembly_version": "2.0.0.0",
+  "public_key_token": "31bf3856ad364e35",
+  "source_commit": "cf32fc695b32c2eae848b693395c09222fe1d2ae",
+  "source_sha256": "acef7ee0e811d3b3c6c0885d34cd4e0f8d28dc4518c1d5550044be1522cdf357",
+  "managed_dll_sha256": "64a654100e2573179bc4f30c7982a34938af6a35c02758d19c5a581a180858cf",
+  "powershell_mmi_3_compatibility": "incomplete"
+}

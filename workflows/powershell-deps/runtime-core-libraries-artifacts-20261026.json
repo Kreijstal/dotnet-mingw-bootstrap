@@ -1,0 +1,34 @@
+[
+  {
+    "recipe": "mingw-w64-dotnet-asyncinterfaces8",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-asyncinterfaces8-8.0.0-1-any.pkg.tar.zst",
+    "sha256": "a89c37095bd64adcee8ef55bb84a2663597f219ab11ad4ed061dc690318a60a6",
+    "nuget_id": "Microsoft.Bcl.AsyncInterfaces",
+    "nuget_version": "8.0.0",
+    "dependencies": {},
+    "managed_dll_sha256": "4577de23c660dd594cc5e044587fbf1f17063bc208808504b8fc804a9d79776a",
+    "source_sha256": "b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070"
+  },
+  {
+    "recipe": "mingw-w64-dotnet-newtonsoft-json",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-newtonsoft-json-13.0.4-1-any.pkg.tar.zst",
+    "sha256": "c9c00918bb464adc34430eb83f69cc68c85a198a460cf1704c0216069b7fc9ea",
+    "nuget_id": "Newtonsoft.Json",
+    "nuget_version": "13.0.4",
+    "dependencies": {},
+    "managed_dll_sha256": "dbd632f1e37926c74e8b40d4672af029a85fcd878d4a7c95e6c401516f14a1e7",
+    "source_sha256": "83173a8606786e1e546d2502dbd37b33ed8078a4dee5eed49e905770d1b15e56"
+  },
+  {
+    "recipe": "mingw-w64-dotnet-applicationinsights",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-applicationinsights-2.23.0-1-any.pkg.tar.zst",
+    "sha256": "e7b35e83c880419eb90ef65741809a9408b2d8c065cbe998a6305d12afa82b9a",
+    "nuget_id": "Microsoft.ApplicationInsights",
+    "nuget_version": "2.23.0",
+    "dependencies": {
+      "System.Diagnostics.DiagnosticSource": "[8.0.1]"
+    },
+    "managed_dll_sha256": "f6c5b15a4ffe6202fc4a40775545591918b60683b6db7f059ba0127c63c18a0f",
+    "source_sha256": "d4db350c94a29d41ac58a62f53d86fc6124a458904ccf6f607c1eca2f8d023a0"
+  }
+]

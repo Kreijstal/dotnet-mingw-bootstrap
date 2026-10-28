@@ -1,0 +1,86 @@
+Actual source targeting-pack staging and ordinary SDK selection,2026-10-27 UTC
+Previous goal turn: progress (full signed source generator builds/audits/SDK tests).
+Current turn: progress (staged source pack/dependency ownership and normal SDK selection).
+
+Staged pack:/home/topkek/runtime-servicing.8KDIjx/targeting-pack2
+Private source SDK:/home/topkek/runtime-servicing.8KDIjx/sdk-check1/sdk-root
+No installed SDK/runtime files changed. Full dependency goal stays active.
+
+595 DLL assets:163 audited source reference assemblies,99 audited signed generator/
+original neutral/XLF satellite DLLs and333 supporting source package DLL assets.
+Each support DLL is matched by SHA256 to an installed source-built feed archive;
+the restored package archive itself must also match that feed's bytes exactly.
+There are11 supporting NuGet owners, listed in the accompanying JSON record.
+
+The initial staging prototype created an empty PackageOverrides.txt. Before packaging,
+inspection of original installer sources identified the real upstream file. The
+corrected stage preserves that entire pinned file byte-for-byte. The second SDK
+check also removes explicit CscToolPath/CscToolExe options and validates automatic
+selection of source csc49.cmd from the existing source SDK import provider.
+
+Exact commands (MSYSTEM=CLANG64 bash -lc, from /home/topkek/runtime-servicing.8KDIjx):
+/usr/bin/python3 harness/stage-targeting-pack.py /home/topkek/runtime8pkg2.ym1eaB/src/prepared prepared targeting-pack2
+bash harness/check-targeting-pack.sh targeting-pack2 sdk-check1/sdk-root targeting-pack-check2
+Both exit0. Build:0 warnings/errors. Actual compiler refs include all163 staged
+source references. All six rebuilt source analyzer assemblies are selected by
+FrameworkList metadata with matching payload hashes, with no Analyzer injection
+and no compiler command-line override. The program executes native LibraryImport,
+generated COM vtable/free, Unicode Regex and reflection-disabled JSON on the
+private8.0.31 runtime. This SDK still uses the isolated prior runtime layout with
+the serviced JSON replacement; checks on the complete newly normalized runtime
+from the clean native package build remain required.
+
+Incomplete scope: full private/native platform-manifest and other original pack
+asset completeness audit, source dependency license closure, actual package
+recipe/ownership-compatible installation and installed SDK checks. Historical
+Roslyn/netstandard and browser/WASM runtime behavior are not established. Do not
+count this staged pack as a completed dependency package.
+
+The native runtime clean package job remains live in /home/topkek/runtime8pkg2.ym1eaB,
+exec session49034. At16:02:02UTC, makepkg PID1642720 and libraries helper PID1676519
+were confirmed live. Library compilation reached Reflection.Emit; failed.txt empty.
+
+
+Source pack staging
+PASS staged163 source references,99 audited generator outputs and byte-verified source package dependency closure: 595 DLL assets; normal SDK selection and packaging checks remain required
+
+
+Normal default-compiler/framework-pack SDK build and execution
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\runtime-servicing.8KDIjx\targeting-pack-check2\consumer\Check.csproj (in 512 ms).
+  Check -> E:\msys64\home\topkek\runtime-servicing.8KDIjx\targeting-pack-check2\consumer\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:17.65
+SDK CONSUMER RUNTIME 8.0.31
+SDK CONSUMER CORELIB E:\msys64\home\topkek\runtime-servicing.8KDIjx\sdk-check1\sdk-root\shared\Microsoft.NETCore.App\8.0.31\System.Private.CoreLib.dll
+SDK CONSUMER JSON 8.0.3126.42000
+PASS source SDK compiler and original LibraryImport/COM/Regex/JSON generators execute on serviced runtime
+PASS SDK selects all163 actual serviced source refs and six rebuilt signed analyzers via normal targeting-pack metadata; no Analyzer injection
+
+
+Source support license collection (subsequent verified completion):
+$ /usr/bin/python3 harness/collect-targeting-licenses.py /home/topkek/runtime8pkg2.ym1eaB/src/prepared targeting-pack2 targeting-licenses1
+Exit0: all11 source NuGet archives byte-match their installed native-package
+owners; collected23 complete supporting license/notice files and the original
+runtime LICENSE.TXT/THIRD-PARTY-NOTICES.TXT. Per-file hashes, original paths and
+native package versions: targeting-license-owners-20261027.json. This completes
+the supporting-source license collection; native packaging, complete platform
+manifest and pack asset audit remain open.

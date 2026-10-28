@@ -1,0 +1,29 @@
+[
+  {
+    "recipe": "mingw-w64-dotnet-netcore-platforms",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-netcore-platforms-1.1.2-1-any.pkg.tar.zst",
+    "sha256": "9e068ece54ee90a2a6b6564af143a52cde2bd6bea6e6c80b6d58a1bfadb8fe7d",
+    "nuget_id": "Microsoft.NETCore.Platforms",
+    "nuget_version": "1.1.2",
+    "source_sha256": "e3e01f8387664b93e10a2abdafaacc0ed8deb11e35db94e359f4d7a3f7a57630",
+    "checks": {
+      "runtime_ids": 165,
+      "runtime_json_sha256": "2738181f98f68ee46bb401ff9ded2f7eec03e1d517004337607dcbdfdb1b99f1"
+    }
+  },
+  {
+    "recipe": "mingw-w64-dotnet-security-accesscontrol6",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-security-accesscontrol6-6.0.1-1-any.pkg.tar.zst",
+    "sha256": "f3ae49939f4a38c41d18d7eb91b3d887c5e0f2dc13010605560b35634c3de8e5",
+    "nuget_id": "System.Security.AccessControl",
+    "nuget_version": "6.0.1",
+    "source_sha256": "edc08a6ea7adb9d231fb4e9f8279d99f3cec37a4bf5f254f038cdf9d5669525e",
+    "checks": {
+      "managed_dlls": {
+        "ref/net8.0/System.Security.AccessControl.dll": "7d114abd85b86bbbdd33db0f7020db503fdcfb00e2bdca8441f8fda07425291d",
+        "runtimes/win/lib/net8.0/System.Security.AccessControl.dll": "6cc558c4b0875220ca2cbd36aa03ba9d54e5d5a5e4b440d63cf7c4549650b635"
+      },
+      "neutral_resources": 47
+    }
+  }
+]

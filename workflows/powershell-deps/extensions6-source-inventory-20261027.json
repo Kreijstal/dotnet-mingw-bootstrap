@@ -1,0 +1,249 @@
+{
+  "Microsoft.Extensions.Primitives": {
+    "original_project": "src/libraries/Microsoft.Extensions.Primitives/src/Microsoft.Extensions.Primitives.csproj",
+    "original_project_sha256": "9528c5feaf11a09c9f2c08b75a150cf6f379311c1bc4227f25c2c54019d9db15",
+    "original_cs": {
+      "src/libraries/Microsoft.Extensions.Primitives/src/CancellationChangeToken.cs": "6a4e09e53b89963b6b4814f1754e8ccebcf3c3813aec78b5548786611257be94",
+      "src/libraries/Microsoft.Extensions.Primitives/src/ChangeToken.cs": "1d30d614688393c812b47a4004b130b26474c3b1a5f5daf5b229e2e68b19ad0c",
+      "src/libraries/Microsoft.Extensions.Primitives/src/CompositeChangeToken.cs": "639a69205ca532a83311235b59bed99cf01d7e09ec86a65d784db75da4f60e89",
+      "src/libraries/Microsoft.Extensions.Primitives/src/Extensions.cs": "3133d9a6072f21987d0ebb4da0909c5297fff122d9904ac6c504c412b707e7b7",
+      "src/libraries/Microsoft.Extensions.Primitives/src/IChangeToken.cs": "dda46aaff7876cdfe71de549def2b66511ea86113c636c864b59cc567ea83da7",
+      "src/libraries/Microsoft.Extensions.Primitives/src/StringSegment.cs": "055d5c3dd852ddfe5ac2878ee5191e0fcf18ab77129a2b2ef75dbfb5cc0fa516",
+      "src/libraries/Microsoft.Extensions.Primitives/src/StringSegmentComparer.cs": "9b773fe7af02fc3f616787fbb84ae43f1766560926f715c812fe8d7fd0b75163",
+      "src/libraries/Microsoft.Extensions.Primitives/src/StringTokenizer.cs": "14d593a30480356ddd0256791c4ae211b83d2a9ae8c1eb47c61a9d1f0e538657",
+      "src/libraries/Microsoft.Extensions.Primitives/src/StringValues.cs": "3e123808c0dcd6bf62cb1077f4a4862e46af7ac2a9a36d0adaa8013f3521f7b1",
+      "src/libraries/Microsoft.Extensions.Primitives/src/ThrowHelper.cs": "a141841b4cf0da9f1b74a7091523c9f0f5e957c91f655b2f7cd79fc4d3fd35dc"
+    },
+    "shared_cs": {
+      "src/libraries/Common/src/System/SR.cs": "29285f176c393fb9a5c9a2a017c612db6b84b7e72cf8bdd0c53817ae33e5f47e",
+      "src/libraries/System.Private.CoreLib/src/System/Numerics/Hashing/HashHelpers.cs": "3e2fffa71181679f6142fc0573805b0d2aaae1777af1c8ca37bf07bdef854f70"
+    },
+    "original_resources": {
+      "src/libraries/Microsoft.Extensions.Primitives/src/Resources/Strings.resx": "0a8f59fc4728e4be39394d9aac6120e0f2297014cc3b676b86e3b5bb153ba04d"
+    },
+    "expected_resource_sets": {
+      "FxResources.Microsoft.Extensions.Primitives.SR.resources": {
+        "Argument_InvalidOffsetLength": "Offset and length are out of bounds for the string or length is greater than the number of characters from index to the end of the string.",
+        "Argument_InvalidOffsetLengthStringSegment": "Offset and length are out of bounds for this StringSegment or length is greater than the number of characters to the end of this StringSegment.",
+        "Capacity_CannotChangeAfterWriteStarted": "Cannot change capacity after write started.",
+        "Capacity_NotEnough": "Not enough capacity to write '{0}' characters, only '{1}' left.",
+        "Capacity_NotUsedEntirely": "Entire reserved capacity was not used. Capacity: '{0}', written '{1}'."
+      },
+      "Microsoft.Extensions.Primitives.Resources.Strings.resources": {
+        "Argument_InvalidOffsetLength": "Offset and length are out of bounds for the string or length is greater than the number of characters from index to the end of the string.",
+        "Argument_InvalidOffsetLengthStringSegment": "Offset and length are out of bounds for this StringSegment or length is greater than the number of characters to the end of this StringSegment.",
+        "Capacity_CannotChangeAfterWriteStarted": "Cannot change capacity after write started.",
+        "Capacity_NotEnough": "Not enough capacity to write '{0}' characters, only '{1}' left.",
+        "Capacity_NotUsedEntirely": "Entire reserved capacity was not used. Capacity: '{0}', written '{1}'."
+      }
+    },
+    "framework_provided_references": [
+      "$(LibrariesProjectRoot)System.Runtime.CompilerServices.Unsafe\\src\\System.Runtime.CompilerServices.Unsafe.ilproj"
+    ],
+    "production_cs_changes": [],
+    "generated_sr_sha256": "0833fcfb8ea7236d550e432e7ffe96e4ec9ffc810c55c6eb820cc31ab8422b87",
+    "published_provenance": {
+      "published_package_sha256": "020bf2b2cce9435d40893049164bd2cbc267c085938f5e4f7de93b4fb4e151ce",
+      "published_asset": "lib/net6.0/Microsoft.Extensions.Primitives.dll",
+      "published_dll_sha256": "8ce9a85927ec7507b11ffe90080e7a811d51304a9e8b1da20c350159ba403902",
+      "source_commit": "4822e3c3aa77eb82b2fb33c9321f923cf11ddde6"
+    },
+    "actual_original_compile_items": [
+      "src/libraries/Common/src/System/SR.cs",
+      "src/libraries/Microsoft.Extensions.Primitives/src/CancellationChangeToken.cs",
+      "src/libraries/Microsoft.Extensions.Primitives/src/ChangeToken.cs",
+      "src/libraries/Microsoft.Extensions.Primitives/src/CompositeChangeToken.cs",
+      "src/libraries/Microsoft.Extensions.Primitives/src/Extensions.cs",
+      "src/libraries/Microsoft.Extensions.Primitives/src/IChangeToken.cs",
+      "src/libraries/Microsoft.Extensions.Primitives/src/StringSegment.cs",
+      "src/libraries/Microsoft.Extensions.Primitives/src/StringSegmentComparer.cs",
+      "src/libraries/Microsoft.Extensions.Primitives/src/StringTokenizer.cs",
+      "src/libraries/Microsoft.Extensions.Primitives/src/StringValues.cs",
+      "src/libraries/Microsoft.Extensions.Primitives/src/ThrowHelper.cs",
+      "src/libraries/System.Private.CoreLib/src/System/Numerics/Hashing/HashHelpers.cs"
+    ],
+    "actual_generated_compile_items": [
+      "SR.Generated.cs",
+      "obj/Release/net8.0/.NETCoreApp,Version=v8.0.AssemblyAttributes.cs",
+      "obj/Release/net8.0/Library.AssemblyInfo.cs"
+    ],
+    "implementation_sha256": "4f3576424629d209be7b43ac729db0c05dffc668fa791ff99ad4e50f2d112759",
+    "reference_sha256": "63fb1b3f71b60344a5580d6af01a49cc825070ab0c3acee085040bcf03a673d3"
+  },
+  "Microsoft.Extensions.FileProviders.Abstractions": {
+    "original_project": "src/libraries/Microsoft.Extensions.FileProviders.Abstractions/src/Microsoft.Extensions.FileProviders.Abstractions.csproj",
+    "original_project_sha256": "936771d77ef086cf14a7d302bfdea3eb52f610eb9c143efbe9f7834a5053636b",
+    "original_cs": {
+      "src/libraries/Microsoft.Extensions.FileProviders.Abstractions/src/IDirectoryContents.cs": "32a862d10787f0a8da170317bce776cef72be39459d1c45343aaeb1c19d6494d",
+      "src/libraries/Microsoft.Extensions.FileProviders.Abstractions/src/IFileInfo.cs": "19a098048b23816cdc3a9c19177a6c649d9b56576cdca73ce56185419273abc5",
+      "src/libraries/Microsoft.Extensions.FileProviders.Abstractions/src/IFileProvider.cs": "46807ac48de69673faf222ff36d52e17b176b36a9179bac64fd3aec8e5d6856d",
+      "src/libraries/Microsoft.Extensions.FileProviders.Abstractions/src/NotFoundDirectoryContents.cs": "6d7590775565ce396decd8617d35df07fddea423d1ebea854c40bcffda44be2b",
+      "src/libraries/Microsoft.Extensions.FileProviders.Abstractions/src/NotFoundFileInfo.cs": "ca4b20d6d90f71b2595ba98929a77729800032d508e1e9375a9dad228289fae2",
+      "src/libraries/Microsoft.Extensions.FileProviders.Abstractions/src/NullChangeToken.cs": "9078e50798575a5f0eabe2d5c3a704aa010dd08e0717cac09b1a9cc8f4dc029b",
+      "src/libraries/Microsoft.Extensions.FileProviders.Abstractions/src/NullFileProvider.cs": "b16f8747094fa068a2cb1a9692c3fd165b421e8e6e5c8776ba8c36b84445a41f"
+    },
+    "shared_cs": {
+      "src/libraries/Common/src/System/SR.cs": "29285f176c393fb9a5c9a2a017c612db6b84b7e72cf8bdd0c53817ae33e5f47e",
+      "src/libraries/Common/src/Extensions/EmptyDisposable.cs": "5288f185124e7f812656bb15bcbf8a5549b1a4fdf0d64471b343366246b710ff"
+    },
+    "original_resources": {
+      "src/libraries/Microsoft.Extensions.FileProviders.Abstractions/src/Resources/Strings.resx": "d7af735f26b215311d2a4ad885b57adcdaf4df5ba575d83bc520ef0e2e756678"
+    },
+    "expected_resource_sets": {
+      "FxResources.Microsoft.Extensions.FileProviders.Abstractions.SR.resources": {
+        "FileNotExists": "The file {0} does not exist."
+      },
+      "Microsoft.Extensions.FileProviders.Resources.Strings.resources": {
+        "FileNotExists": "The file {0} does not exist."
+      }
+    },
+    "framework_provided_references": [
+      "System.Runtime",
+      "System.Linq",
+      "System.Linq.Expressions"
+    ],
+    "production_cs_changes": [],
+    "generated_sr_sha256": "08abd0511c9b84b23c9b168c94dc83c8fec0240fb709f74758259813e3f77ed5",
+    "published_provenance": {
+      "published_package_sha256": "b818d68c72845e367d7c37c5c4c8cea2ede585f4cd86cd723be7b77e95ab78b9",
+      "published_asset": "lib/net6.0/Microsoft.Extensions.FileProviders.Abstractions.dll",
+      "published_dll_sha256": "ecfcef11c42fa4ad5cf2d4d7f553c8f0017e5eb7a4a9b032b4d0505c98ef4ef4",
+      "source_commit": "4822e3c3aa77eb82b2fb33c9321f923cf11ddde6"
+    },
+    "actual_original_compile_items": [
+      "src/libraries/Common/src/Extensions/EmptyDisposable.cs",
+      "src/libraries/Common/src/System/SR.cs",
+      "src/libraries/Microsoft.Extensions.FileProviders.Abstractions/src/IDirectoryContents.cs",
+      "src/libraries/Microsoft.Extensions.FileProviders.Abstractions/src/IFileInfo.cs",
+      "src/libraries/Microsoft.Extensions.FileProviders.Abstractions/src/IFileProvider.cs",
+      "src/libraries/Microsoft.Extensions.FileProviders.Abstractions/src/NotFoundDirectoryContents.cs",
+      "src/libraries/Microsoft.Extensions.FileProviders.Abstractions/src/NotFoundFileInfo.cs",
+      "src/libraries/Microsoft.Extensions.FileProviders.Abstractions/src/NullChangeToken.cs",
+      "src/libraries/Microsoft.Extensions.FileProviders.Abstractions/src/NullFileProvider.cs"
+    ],
+    "actual_generated_compile_items": [
+      "SR.Generated.cs",
+      "obj/Release/net8.0/.NETCoreApp,Version=v8.0.AssemblyAttributes.cs",
+      "obj/Release/net8.0/Library.AssemblyInfo.cs"
+    ],
+    "implementation_sha256": "0ea6931be619ef09b0ead37fce88965e22b0fd9e7403e69a1329d6d3ec939d55",
+    "reference_sha256": "cde8d3e21b964f99fa9f77d100771c41ef6cc4113eb5851a407d7b872954754b"
+  },
+  "Microsoft.Extensions.FileSystemGlobbing": {
+    "original_project": "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Microsoft.Extensions.FileSystemGlobbing.csproj",
+    "original_project_sha256": "8451720cc1d27f7322281f5f85aabad46db858a77f96d2e636f5cc61c7bca828",
+    "original_cs": {
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Abstractions/DirectoryInfoBase.cs": "3db95fcfcde2ee3e34b188a9b13458662960baf59526fc3900f07da61a4d0711",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Abstractions/DirectoryInfoWrapper.cs": "3b8707299600135bc0021b623fa6d5d685eafe64befe0dd2b81ccd55512c1678",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Abstractions/FileInfoBase.cs": "1a2624942f548148ad36c73d86a2f7959245bf2d38645b23cc159b440b85afd5",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Abstractions/FileInfoWrapper.cs": "1f1f5f0994978e082e5b8ae60c6296038cdb76ec79045686b29d0bc6ad5a3c53",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Abstractions/FileSystemInfoBase.cs": "98e3aaeaaa2ab12951edd7207552f52ba3f2baca2d5ac741834a9c864d2edd85",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/FilePatternMatch.cs": "282084d4a6460e6415c9c7106fb9531142d5a3b5acd8af6b3f6f4ca388018925",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/InMemoryDirectoryInfo.cs": "765280b727e2c7f1b34e2a1213baac38ec922e66f38fe6d85f356c1a3e5950ce",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/ILinearPattern.cs": "39c54a51c1eba19369c9bf21ee549b70700ebd396d01e6f2103f90e4473c53a4",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/IPathSegment.cs": "460d3599eefeb2cd2db02158af7e00adad629ce26388610f76b38160096d81f3",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/IPattern.cs": "77f4f46ad804653fed207d78d465bad076bc7867fae9199fc815237936035c86",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/IPatternContext.cs": "9ef02e6ea1c554452b5f34cca0572b16e0284f2040fed2a9d1eef6006072d1ef",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/IRaggedPattern.cs": "3c3f7c529ed672cedc19bc908ca451970400076b238a19469376811f3ccc710c",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/InMemoryFileInfo.cs": "044e4160b6433e3b989c3c132452025cce6a563b467698f81db620f82a635d3f",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/MatcherContext.cs": "906853e4dadddff13d46a138a19a67189ffd6c16f9941c710bbf22e4eeaf47e0",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/PathSegments/CurrentPathSegment.cs": "ac25a75b9eade1c9d6b8db4f471720816c4b080904826dc1e5c99acb67892a44",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/PathSegments/LiteralPathSegment.cs": "ee85d1d5fd6e09e5de001e8106927792aec49eee1a1d1a03e5e3d79eda05ecba",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/PathSegments/ParentPathSegment.cs": "a67faadc4b79764d5850ee80aa3ea37a6ab077a3e2ad26287bbb8326be9f747b",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/PathSegments/RecursiveWildcardSegment.cs": "f584ae175a8f76e43419fa1187b0ed2b7657c85f7941c8607210a2c699fd181b",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/PathSegments/WildcardPathSegment.cs": "6a54ef3de95ce4d9194bbe9949e69da2301d72b8bd399b03c9abc02f462060f5",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/PatternContexts/PatternContext.cs": "a27b968e6f89aaf92be4e3ba4f025b95d0a08a1d300a3bfb7b783d43f232a45a",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/PatternContexts/PatternContextLinear.cs": "4f2a2497c35e46cea7de0c96b91e7a3e9c6c3f654a03b122bf2276ba95e6ab07",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/PatternContexts/PatternContextLinearExclude.cs": "a9e82639374e6b8b50c15e2594a14cca916a08405fe877f1fe51b995e1bce1e7",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/PatternContexts/PatternContextLinearInclude.cs": "a7286ce6412edd0cc30cc5129880dc718b8e7a47d059b23cfe4e94f8915d8180",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/PatternContexts/PatternContextRagged.cs": "72a3d8f2fc9a387440593ebeffa3c6527eaf81831d09a33573d0a902c14bb775",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/PatternContexts/PatternContextRaggedExclude.cs": "ef3a9c05a9579179e62bed0e926afbadae9a3e3209411773a8c75b505ed1a8be",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/PatternContexts/PatternContextRaggedInclude.cs": "07ad8e0cc57ad7b4efec2724acee1537c319ce0d019af26037d66b7d5385864c",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/PatternTestResult.cs": "24a97aa72a14e75e57f387c1a2770a0d7904c65d3c83be271e3400a149a32f1e",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/Patterns/PatternBuilder.cs": "c182ca241ddd967d4bc1e99819d1d9185a7a7b3d5beda24608ad7544a9ed79d3",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Matcher.cs": "b4b81ff10b16b7dc613feb8a311f45a0e0764bae95899977463652b09e140cb0",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/MatcherExtensions.cs": "9e5127197a44abec583e4c533748862c386459c4f6afa1198f13d04215ed7632",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/PatternMatchingResult.cs": "12707abff285cff3dc144f9a0065a7bb22b1c633cb2d0cd5996d301c751970eb",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Properties/InternalsVisibleTo.cs": "e29a5f4dc55f6f6c63430c3822b91d1dfba56d12a3142c8b6bfa2e4536f55889",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Util/StringComparisonHelper.cs": "8f3d632d6e7b08502f3dcfb56bc525caedb9b5c6e89edecd74f2aa328c4c591f"
+    },
+    "shared_cs": {
+      "src/libraries/Common/src/System/SR.cs": "29285f176c393fb9a5c9a2a017c612db6b84b7e72cf8bdd0c53817ae33e5f47e",
+      "src/libraries/System.Private.CoreLib/src/System/Numerics/Hashing/HashHelpers.cs": "3e2fffa71181679f6142fc0573805b0d2aaae1777af1c8ca37bf07bdef854f70"
+    },
+    "original_resources": {
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Resources/Strings.resx": "ffc50fef435b3d9ec0173989d970e3f213f86a390055c698e528fb1d8ec691a8"
+    },
+    "expected_resource_sets": {
+      "FxResources.Microsoft.Extensions.FileSystemGlobbing.SR.resources": {
+        "CannotDeclarePathSegment": "Cannot declare path segment before entering a directory.",
+        "CannotTestDirectory": "Cannot test directory before entering a directory.",
+        "CannotTestFile": "Cannot test file before entering a directory.",
+        "UnexpectedStringComparisonType": "Unexpected StringComparison type: {0}"
+      },
+      "Microsoft.Extensions.FileSystemGlobbing.Resources.Strings.resources": {
+        "CannotDeclarePathSegment": "Cannot declare path segment before entering a directory.",
+        "CannotTestDirectory": "Cannot test directory before entering a directory.",
+        "CannotTestFile": "Cannot test file before entering a directory.",
+        "UnexpectedStringComparisonType": "Unexpected StringComparison type: {0}"
+      }
+    },
+    "framework_provided_references": [
+      "System.Collections",
+      "System.Linq",
+      "System.Runtime"
+    ],
+    "production_cs_changes": [],
+    "generated_sr_sha256": "b46b5bfaeb56b251affa51cb279d2af8dea8eb6b1ba99b505a4e7653456e233c",
+    "published_provenance": {
+      "published_package_sha256": "4405878e491fbc6a63738f50d2425b6725e053a504abf109d23e79eec8f6fe25",
+      "published_asset": "lib/net6.0/Microsoft.Extensions.FileSystemGlobbing.dll",
+      "published_dll_sha256": "be2897386d1fc215a86d3d1343564e262641751bd846559b0ed8f3fba77cb102",
+      "source_commit": "4822e3c3aa77eb82b2fb33c9321f923cf11ddde6"
+    },
+    "actual_original_compile_items": [
+      "src/libraries/Common/src/System/SR.cs",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Abstractions/DirectoryInfoBase.cs",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Abstractions/DirectoryInfoWrapper.cs",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Abstractions/FileInfoBase.cs",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Abstractions/FileInfoWrapper.cs",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Abstractions/FileSystemInfoBase.cs",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/FilePatternMatch.cs",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/InMemoryDirectoryInfo.cs",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/ILinearPattern.cs",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/IPathSegment.cs",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/IPattern.cs",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/IPatternContext.cs",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/IRaggedPattern.cs",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/InMemoryFileInfo.cs",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/MatcherContext.cs",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/PathSegments/CurrentPathSegment.cs",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/PathSegments/LiteralPathSegment.cs",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/PathSegments/ParentPathSegment.cs",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/PathSegments/RecursiveWildcardSegment.cs",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/PathSegments/WildcardPathSegment.cs",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/PatternContexts/PatternContext.cs",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/PatternContexts/PatternContextLinear.cs",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/PatternContexts/PatternContextLinearExclude.cs",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/PatternContexts/PatternContextLinearInclude.cs",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/PatternContexts/PatternContextRagged.cs",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/PatternContexts/PatternContextRaggedExclude.cs",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/PatternContexts/PatternContextRaggedInclude.cs",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/PatternTestResult.cs",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Internal/Patterns/PatternBuilder.cs",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Matcher.cs",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/MatcherExtensions.cs",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/PatternMatchingResult.cs",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Properties/InternalsVisibleTo.cs",
+      "src/libraries/Microsoft.Extensions.FileSystemGlobbing/src/Util/StringComparisonHelper.cs",
+      "src/libraries/System.Private.CoreLib/src/System/Numerics/Hashing/HashHelpers.cs"
+    ],
+    "actual_generated_compile_items": [
+      "SR.Generated.cs",
+      "obj/Release/net8.0/.NETCoreApp,Version=v8.0.AssemblyAttributes.cs",
+      "obj/Release/net8.0/Library.AssemblyInfo.cs"
+    ],
+    "implementation_sha256": "5b7cf65d95b830bc606715cc41c6d0062f2845bfc10438b19049236646aa9953",
+    "reference_sha256": "5722295a1966d72f1de88b4d168138e19a8d8357b6ab7628b49be3d63fccf4a7"
+  }
+}

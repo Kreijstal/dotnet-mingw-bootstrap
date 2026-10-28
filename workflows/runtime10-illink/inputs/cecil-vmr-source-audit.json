@@ -1,0 +1,796 @@
+{
+  "vmr_commit": "12f41dd0da1a94621e039e27aef264179c1104b5",
+  "cecil_source_commit": "27abc57253a0d3010418e877fdfb35f9fa6806b9",
+  "cecil_vmr_subtree": "3754bcf31055bfcb5b6299305ba1e3d9c16dc3b2",
+  "verified_original_inputs": {
+    "Directory.Build.props": {
+      "git_blob_sha1": "1b719dd173a29e6199efaa2c5e32cb1e7f2be63e",
+      "sha256": "64b28671fbe6e3986c40da7e1bdfafc2fc3e8a0c5c713735d873113b9410afed"
+    },
+    "Mono/Disposable.cs": {
+      "git_blob_sha1": "dc2b1a3d100eee16f778a320ed05e5680261bf50",
+      "sha256": "3a44c0cfa65f46cda60cb5c0989b7099bc9ac053d84e1043d58047e5b0296130"
+    },
+    "Mono/Empty.cs": {
+      "git_blob_sha1": "de28e6561462ca2eb78b25294e58f4e3ca3eb20c",
+      "sha256": "b32e7ee9208a7d8d3373cd5c105b8fd8cc8b85d5c16f080deb1007a6323e62aa"
+    },
+    "Mono/MergeSort.cs": {
+      "git_blob_sha1": "5d856eaf0941da1ca97023524869b4da7697f3f7",
+      "sha256": "4551967be89f6e37641e9362e78b0ebd70d8980b7df0b70cb00e45a89dc04e0c"
+    },
+    "Mono.Cecil/ArrayType.cs": {
+      "git_blob_sha1": "7413b1cba14b6e7744be1b23d493aeb986142562",
+      "sha256": "b00718033f5f0527d45e6cc13ab70fb8a85ccb9f95e7c89b52073130bb541de1"
+    },
+    "Mono.Cecil/AssemblyDefinition.cs": {
+      "git_blob_sha1": "93c9c9bd51e180f4fd9bc65f4b64d00276382bf9",
+      "sha256": "5b5c852333c505b236e95b17c45535b9149c49b69f9ad12e7046e44f5feb31a3"
+    },
+    "Mono.Cecil/AssemblyFlags.cs": {
+      "git_blob_sha1": "6ca5bc274c3868346fa1b4f424ff843758c807b9",
+      "sha256": "cf2b4615b03c71f85adae844c00a3e82f8de49aa36c7f8280587b4fddd05cac9"
+    },
+    "Mono.Cecil/AssemblyHashAlgorithm.cs": {
+      "git_blob_sha1": "6684c2ceb86c2c9b4a65866bc19ce1c270274400",
+      "sha256": "0eb31f77939c21ed587b800394824f2cdb6725a30a104a60d98195a1388de6e5"
+    },
+    "Mono.Cecil/AssemblyInfo.cs": {
+      "git_blob_sha1": "b5455d1b86234335cec641fc17b02d6ca86b6520",
+      "sha256": "4958e1d77c9e0519c1b4425c0c585b9d2b7f3b5f449be36775d94848a893c4bb"
+    },
+    "Mono.Cecil/AssemblyLinkedResource.cs": {
+      "git_blob_sha1": "f4896bd245b5ac0a9639a0f11a60607deb8c9e54",
+      "sha256": "f93dec6987eadfc2fa53e15f1ddfc6a31e7c07251cae48b76eeab0a066e355a3"
+    },
+    "Mono.Cecil/AssemblyNameDefinition.cs": {
+      "git_blob_sha1": "2511d7934402db2bae1e39d5b889185d081dec92",
+      "sha256": "a52f8140daf9c042306f63c8e0991df7567265606e8133faf1bf198764fc8df4"
+    },
+    "Mono.Cecil/AssemblyNameReference.cs": {
+      "git_blob_sha1": "168ad14dae53fd3c6aee11a04037416dbd210a68",
+      "sha256": "91f7a53118ee40b839180f2aa2826ed423fe2eec0284863302c1f2e0f2d3e4e7"
+    },
+    "Mono.Cecil/AssemblyReader.cs": {
+      "git_blob_sha1": "a342286029a21afc8ab4521eedc7106bfa7118cc",
+      "sha256": "424f753e3cdeb707362acbcd07a7a60990a410a62d11c21c0de73ffa2d208cb3"
+    },
+    "Mono.Cecil/AssemblyWriter.cs": {
+      "git_blob_sha1": "021693e072b036dab4b03a6bcefc18c79a391589",
+      "sha256": "1cd05cd9c838c8059e9b19a62cdb2a0091b7bfe2cb3fe525f65463223db8e037"
+    },
+    "Mono.Cecil/BaseAssemblyResolver.cs": {
+      "git_blob_sha1": "fd9e5c9680253927b06790568b9e2793bd8cdc59",
+      "sha256": "9af525da99dc879c3dd834f3f12b9e0869a9b4f3f42d9bbd3872336745734ef2"
+    },
+    "Mono.Cecil/CallSite.cs": {
+      "git_blob_sha1": "ebb108f298fb2f5365b0fc1bb37b5eeba80087e7",
+      "sha256": "4435d15772303c70566fe0b8ff4bc45287195771cab4e7bd16cde1444ca77bad"
+    },
+    "Mono.Cecil/Consts.cs": {
+      "git_blob_sha1": "3b80461c50a9cc06f9b67566562a11c91b989606",
+      "sha256": "ea6270097e82119c7cf3f030189a03a936ebc3c51468aad8a26c68f48c4cdefd"
+    },
+    "Mono.Cecil/CustomAttribute.cs": {
+      "git_blob_sha1": "c9cad8e5d259851e32ad06f518bbcb7eb6f8c69a",
+      "sha256": "3cb8fd44a6e29c1198bead3f4ef4dd46a6c3085208b43c5529befb4d95b22561"
+    },
+    "Mono.Cecil/DefaultAssemblyResolver.cs": {
+      "git_blob_sha1": "755071ea4c6bfa8392fb7f9cad64d219767fdec2",
+      "sha256": "2746d7d8605068e5792379885cc9e9ca64958e8c5bd0afa749d5b6f55b074815"
+    },
+    "Mono.Cecil/EmbeddedResource.cs": {
+      "git_blob_sha1": "6b5f86a12ea957753071a7c7fd9df3aa40761375",
+      "sha256": "02490745bf5309a61c76fcf4296922b9406a1b4014d5732a79f7ed54419753e9"
+    },
+    "Mono.Cecil/EventAttributes.cs": {
+      "git_blob_sha1": "9f823fd1e6dbced8bd900a34dd39a902041709e1",
+      "sha256": "8eb4168a2e8c577c30250db74ecb863bc949d4808e261c0f48b03efe02dc665d"
+    },
+    "Mono.Cecil/EventDefinition.cs": {
+      "git_blob_sha1": "457ff4c7f67378ab37ec218bcb47cd2d24963cdd",
+      "sha256": "fcaa92fcd0b324f394637856b5e2e1480d43ed03ebb3798f8f48cba0cc746b60"
+    },
+    "Mono.Cecil/EventReference.cs": {
+      "git_blob_sha1": "d4df72b4d240a282c9d7a152368635dbf1ec59cc",
+      "sha256": "32db5dd5cc43fd4320e000f6cbb1e12f5c5789670427bb3e4297b1e260b5d41b"
+    },
+    "Mono.Cecil/ExportedType.cs": {
+      "git_blob_sha1": "8238a0c6d9fffd499d82d323a63a9683c9d85ec4",
+      "sha256": "13d94047d8bde68e13549e1e778f4ba831d3d0ba1c597fd4f1a6d377ef94de4b"
+    },
+    "Mono.Cecil/FieldAttributes.cs": {
+      "git_blob_sha1": "7d5bb544a33603a9034d3ac0590b9ec224569718",
+      "sha256": "d27c6d9f91d78459412cc1d68acd7785dc49fe8793f052096ba744edc719669d"
+    },
+    "Mono.Cecil/FieldDefinition.cs": {
+      "git_blob_sha1": "7ce8d27b518ec1585ca2cb3fccf42ffbcd7b0d0f",
+      "sha256": "a40c0b95a5105f56955c8e40464156fa12847e51a6e3dba209cc14d1ba459258"
+    },
+    "Mono.Cecil/FieldReference.cs": {
+      "git_blob_sha1": "944c22595c88c6bec3e4dc833c3b7438132d3a5f",
+      "sha256": "c2f8008430a10442a843105a360e481cd2846a63a25f92b21639c807a14b6859"
+    },
+    "Mono.Cecil/FileAttributes.cs": {
+      "git_blob_sha1": "171f174b0bad663dac8443522a1d0fbeb197487b",
+      "sha256": "875ff3d7a6072f07fdf17254678edc9d7552a847783df37b897e099b39ba738a"
+    },
+    "Mono.Cecil/FunctionPointerType.cs": {
+      "git_blob_sha1": "0602fcbe8adfd1b017b84cbf215a4b33de5493a3",
+      "sha256": "0f1c021466592acecd88d849fa3bd504e50b56369e3d5328e729599a6e3fdd22"
+    },
+    "Mono.Cecil/GenericInstanceMethod.cs": {
+      "git_blob_sha1": "e3ff7db8ebffb6f6c46ec417f869a3d79fd1e9c0",
+      "sha256": "9b4dac86420b3d937dea231b9095bff63117f18af397ecf075a5baefda446cfa"
+    },
+    "Mono.Cecil/GenericInstanceType.cs": {
+      "git_blob_sha1": "745acd866209caa17f5e739b80e3f34df4edff72",
+      "sha256": "bd7b29c1ec7a4ac7eadfaf6e3f9326568a73b25a539aed133293e4aadf889c9a"
+    },
+    "Mono.Cecil/GenericParameter.cs": {
+      "git_blob_sha1": "de746449ba65d04445aec392e4c9af35ce492e4b",
+      "sha256": "d01e9ca13cbe1cda0a879dcd3ed47a48a9c61fa19dc7ac955de980cea5ea5f26"
+    },
+    "Mono.Cecil/GenericParameterAttributes.cs": {
+      "git_blob_sha1": "51f094f47cec05478cf25b20cec550da614d5c25",
+      "sha256": "6c7a4aff97490e7de5c3ec8349f6154443d8c0f2aca98d71b0cac2e0383a069d"
+    },
+    "Mono.Cecil/GenericParameterResolver.cs": {
+      "git_blob_sha1": "86525c59e04daf0ccb6d05d637833d1c5b6134a3",
+      "sha256": "1f0baf35cd37679bc163a917b3257244ddbc1eb9cc0ea83d7f8e86c9f06f932b"
+    },
+    "Mono.Cecil/IConstantProvider.cs": {
+      "git_blob_sha1": "178b66511bfec1ebb56d4444eecff81d6a4368d9",
+      "sha256": "263d740e9311a61d68a0fe1f85beb4da956e2a337c4673430a0aba070bf0eafc"
+    },
+    "Mono.Cecil/ICustomAttributeProvider.cs": {
+      "git_blob_sha1": "8942530988b5c27b2874a16e6a9de48ad3372860",
+      "sha256": "92db0f094cc6e084af6ccd69b150d851bfc6e18103bd3ff17a2ed72bc2fe9b56"
+    },
+    "Mono.Cecil/IGenericInstance.cs": {
+      "git_blob_sha1": "e98d8189b013f8ba86bccb3eb4b76f3871306511",
+      "sha256": "2ac9028599faa4139e56fc9ccc5e1ff86b226f43baaeb7d5da220aee2ef77b50"
+    },
+    "Mono.Cecil/IGenericParameterProvider.cs": {
+      "git_blob_sha1": "b79169ed9b1c03313cf017ad234bc5bf93b530e5",
+      "sha256": "f96605b33bc9916aa0a1fe8aecf3bd090b3dc7f1d848fc03c3ee9ccd686d2ca3"
+    },
+    "Mono.Cecil/IMarshalInfoProvider.cs": {
+      "git_blob_sha1": "a1b9e883446debc01269e66c7d2651f03d9288c5",
+      "sha256": "ba8680238949154752b145d57726b3574d6d6252db724593bd883129b7595fe4"
+    },
+    "Mono.Cecil/IMemberDefinition.cs": {
+      "git_blob_sha1": "ad747002b99f21ae413770990be9cc7bc3a5f882",
+      "sha256": "cb52668c40be978b69136fcfd052434d663c9c7f12f175f718e70e8131ae08bf"
+    },
+    "Mono.Cecil/IMetadataScope.cs": {
+      "git_blob_sha1": "2e56e758c80142c5617d8e44a7f318c2152cf84f",
+      "sha256": "1f0fff62a5955575f5197d62d03b64fac40daaf53e8c34939886ac814f020981"
+    },
+    "Mono.Cecil/IMetadataTokenProvider.cs": {
+      "git_blob_sha1": "dcd678b03f7b9fc701b9e964e3624897e9ecc4d6",
+      "sha256": "36b66ee4334db0625004a15bbc66dea6fb705ac1271405690b0e54624a38f1f2"
+    },
+    "Mono.Cecil/IMethodSignature.cs": {
+      "git_blob_sha1": "4d7766e4562f4266452e7601f2e628a4590a3eb6",
+      "sha256": "5ea746d8841fe0e70929bf903fbd400e88524ccd066c9196fb17d26a92a9ef64"
+    },
+    "Mono.Cecil/Import.cs": {
+      "git_blob_sha1": "6948359e9ba457ec765088e5aa65f8ccb190e850",
+      "sha256": "802ad0432d8fd0f1eca8380172184bb224a2faa97f4e48f605be66ada2f209b7"
+    },
+    "Mono.Cecil/LinkedResource.cs": {
+      "git_blob_sha1": "e53430eca4b9350d7ece90c63ac61fa445213172",
+      "sha256": "f467a311f3c6e472903912de777fddce26c6aeb62d2673d9593f45995469559d"
+    },
+    "Mono.Cecil/ManifestResourceAttributes.cs": {
+      "git_blob_sha1": "03ccb6b4c993081eb0557b5e0d632514c43898d8",
+      "sha256": "1d9abec64ce805dcbae6a1a5df30671d29bdd44e1e7c606eb89eb4c614026634"
+    },
+    "Mono.Cecil/MarshalInfo.cs": {
+      "git_blob_sha1": "47d935e2cc282fafb0fffdb932769146c8c90313",
+      "sha256": "478d06f6b88ef8b217c0ad366273f5c0ad96e5c40cad1c4e3fa0990794be715a"
+    },
+    "Mono.Cecil/MemberDefinitionCollection.cs": {
+      "git_blob_sha1": "3872b2a97439b7a8d2b066ca7a9d33be6834f7fa",
+      "sha256": "3ecfc25e03265d7a68165fceb32a90877dbf219d6523a3f9beedb4d240eb290c"
+    },
+    "Mono.Cecil/MemberReference.cs": {
+      "git_blob_sha1": "8276a66f12a90c439d03422692f3d8f2d9afdcd3",
+      "sha256": "6361c04c13c2eef62ea1e9e2b2271e403675a5d0945d77d42fdfe1964c4635ed"
+    },
+    "Mono.Cecil/MetadataResolver.cs": {
+      "git_blob_sha1": "29b7862937a57a2e158d760f68dbfe982df01d77",
+      "sha256": "13ea880354bcaaba159622b82d3b6ddc889118eaecc231a63ad8cb6a1509da7d"
+    },
+    "Mono.Cecil/MetadataSystem.cs": {
+      "git_blob_sha1": "a8777716df04d76614c72fa9afb8bedf5611b4fa",
+      "sha256": "99826ed7a711fa12fe1267d40357d31f312bfda496fe564e8d7bb9fb259ee953"
+    },
+    "Mono.Cecil/MethodAttributes.cs": {
+      "git_blob_sha1": "1bd7d1288d61fb8b1cdbc31a6c113e7838fb8b29",
+      "sha256": "38e8304bdb0964912157560c7a4be57248ea00fafa6edc97c024c2423fd74f29"
+    },
+    "Mono.Cecil/MethodCallingConvention.cs": {
+      "git_blob_sha1": "80f3e97731ae9d80aa420aaaae09df54ff364c72",
+      "sha256": "7d21807c4fa04ae57589207838a019b7ebbf3d655bbbea1c889be565a9a5f536"
+    },
+    "Mono.Cecil/MethodDefinition.cs": {
+      "git_blob_sha1": "b4e43766bfda2fcf31e285a1dded598255c5af45",
+      "sha256": "a2e0ee37c99a389a887aa0e4c6537012972cbfea2f136ae4312315a92c1d6f40"
+    },
+    "Mono.Cecil/MethodImplAttributes.cs": {
+      "git_blob_sha1": "23e857bc241697db033466ae4fb2ae053a8144af",
+      "sha256": "48a0bbcebe0f60af0ab036ebd61d77ab52c19fc9f9399603a229377a7f915ee5"
+    },
+    "Mono.Cecil/MethodReference.cs": {
+      "git_blob_sha1": "cc43915433d6796dce19fb2732f38fd65e5a585c",
+      "sha256": "8613d247ddc0a7767cd5673e96fcbda3486e635df4982fa002be6f5cd7d0d7d8"
+    },
+    "Mono.Cecil/MethodReferenceComparer.cs": {
+      "git_blob_sha1": "3bf2c6eca8c0dc5ba01ef18f021271f93fe7903c",
+      "sha256": "c564b5fce5fa1344d1fc52403fa68bcd7d037b2b543dbf5e312083baf3adc233"
+    },
+    "Mono.Cecil/MethodReturnType.cs": {
+      "git_blob_sha1": "71a78de1b0e2a8ed6713fc4602f838f25f1445ee",
+      "sha256": "29f226397895f58890f65cd6764d34e943a6549be8bdbb4f4f0e50ac88a0a968"
+    },
+    "Mono.Cecil/MethodSemanticsAttributes.cs": {
+      "git_blob_sha1": "274dfd044982ee0fb67cf3fbb88a579c4a288216",
+      "sha256": "57e6e86e47098623da0c67319ba03156724d8f5715dcff80e87bdc989ba87ccc"
+    },
+    "Mono.Cecil/MethodSpecification.cs": {
+      "git_blob_sha1": "040be6ed58a83af94cb32c3f9de68d0618237fcf",
+      "sha256": "a98e47548ffa1d53bea1c5e53b4427e95fd363403fabfe6bb4f1f305444223d8"
+    },
+    "Mono.Cecil/Modifiers.cs": {
+      "git_blob_sha1": "9c50f0e4e9a5e016950b3fdbefbeaab3ff8d037c",
+      "sha256": "4382547ec4140c07ef16c7de13bd1766a108d8cda48f89376e8dd83b012699f8"
+    },
+    "Mono.Cecil/ModuleDefinition.cs": {
+      "git_blob_sha1": "2bf7701263cde56bedfe3770ecdc87f61b624f50",
+      "sha256": "ec597410ab01cc4c8818fee1f5d381ed1cbbe6638ff4f975377f39d43efc56b9"
+    },
+    "Mono.Cecil/ModuleKind.cs": {
+      "git_blob_sha1": "2cd084db5ad5a8029990a550befdeb14d2f77f0f",
+      "sha256": "b8396351976930c2de81f2170226ff2ff4c5966d602bddf31746c81965614574"
+    },
+    "Mono.Cecil/ModuleReference.cs": {
+      "git_blob_sha1": "43c618f4c134ce8a493de9b589aed69502bde448",
+      "sha256": "05adda517c8b080170b29befc36eb1dadb90d87868a7a564e54c7306edefcf2d"
+    },
+    "Mono.Cecil/NativeType.cs": {
+      "git_blob_sha1": "02174db6ff14ba3a7412775dcc4a90cfdbe9ee09",
+      "sha256": "1eb357d50622cc7000e27d7135c6a04a9370dff82b0e882145b32ee5b7e742c1"
+    },
+    "Mono.Cecil/PInvokeAttributes.cs": {
+      "git_blob_sha1": "11e96d20d4630ee5669bb0b302aa241fb2b853ed",
+      "sha256": "31ce26a33949b8e4b887cc9b4f9a5ffd8d66e81c5a3ebb12e8f5666a355969cb"
+    },
+    "Mono.Cecil/PInvokeInfo.cs": {
+      "git_blob_sha1": "8efc0108196cd35adb06d4dd72e9956dbdcc0e57",
+      "sha256": "be2a5ac057330befc851a7fc93b18161695700c41a25d3641368afb39dc3a355"
+    },
+    "Mono.Cecil/ParameterAttributes.cs": {
+      "git_blob_sha1": "9a0e35e07e26caaa6bfaafe1bc2378a624f568ca",
+      "sha256": "f0a7c073fb74e6eba89af05ead44c1886e14bab5be4fc85a173d70871700da53"
+    },
+    "Mono.Cecil/ParameterDefinition.cs": {
+      "git_blob_sha1": "59bafe2c8f80ff78ce3037c0437205deb6713141",
+      "sha256": "750cdfc33f7702216c73dc89b5331a6e42cddee967eb2e4f9884de46879595c2"
+    },
+    "Mono.Cecil/ParameterDefinitionCollection.cs": {
+      "git_blob_sha1": "1a9764c50e58b0835c764bb1b4f8f6b780bb5ce7",
+      "sha256": "ca251de634457c4cb7269695fd3f664f14210184a5a6f5c01e08675305abaa5e"
+    },
+    "Mono.Cecil/ParameterReference.cs": {
+      "git_blob_sha1": "4670a562bedc50159bb54d64dcc89c41ea689d62",
+      "sha256": "4912cad92e69d5e53ef48266956938d7380025f8a7e41637e9e3629a8a83a918"
+    },
+    "Mono.Cecil/PinnedType.cs": {
+      "git_blob_sha1": "fa89af514b963db5486c36199710039c7b3d4b06",
+      "sha256": "78ef1bdf33805dd99d8de49e1e40f14dd97d5a8f19c8e180107144da3e1f0f59"
+    },
+    "Mono.Cecil/PointerType.cs": {
+      "git_blob_sha1": "4b21164a322402d583cf5fa645a6fc37b96aeeb6",
+      "sha256": "ccaf7b624a25f3dce6dce6288c4413a1ba2bdc29f53d690bfda90da3739c2160"
+    },
+    "Mono.Cecil/PropertyAttributes.cs": {
+      "git_blob_sha1": "4d1ce8c8b3753c056a6b7643f51a710601397847",
+      "sha256": "9348aedd99d38eb12259b03eb418527f228b95d919caddab80e116fc57359541"
+    },
+    "Mono.Cecil/PropertyDefinition.cs": {
+      "git_blob_sha1": "06b7bfdf7c311546e1c2b0a855b6eaa2e8c7554f",
+      "sha256": "46ca00b1e33349ce0505597dbaf023d7f4dff382461261f003c47cdddd1ce028"
+    },
+    "Mono.Cecil/PropertyReference.cs": {
+      "git_blob_sha1": "2434d0f8cad0f758eb9e33d469762dd18c353f51",
+      "sha256": "1ffeffc9a38bca25c2e8180ecfb54f903ba0e0a1242a19c8dc7c889e8766c4f0"
+    },
+    "Mono.Cecil/ReferenceType.cs": {
+      "git_blob_sha1": "67686fbffdf1afa53df1ff47f78020ac5671185d",
+      "sha256": "9892a77098b41db1970c8bb3497e8013132317e3f219410c31bf7d8bb9a26143"
+    },
+    "Mono.Cecil/Resource.cs": {
+      "git_blob_sha1": "cee75f9e49f6d12d98cdd6bd6497cf0bd5bdc32d",
+      "sha256": "73c8b2930395a81d0da3053493d3f08d320d8ff4aa8232d4a49261f6a9fb92fe"
+    },
+    "Mono.Cecil/SecurityDeclaration.cs": {
+      "git_blob_sha1": "99a66ee1034624f0a459dfd99f9d090ec315e0ee",
+      "sha256": "1f58d934b7e597c910db95dbf38d4e70ac07b5525e9e737f7d2d3c5c22ec3b57"
+    },
+    "Mono.Cecil/SentinelType.cs": {
+      "git_blob_sha1": "b603cc3c0b53dabdf7991482d7796dcda0a8a480",
+      "sha256": "05b09439dcc0adc0584a61efc70a087e55c6beb708d35609469d6606fc231af3"
+    },
+    "Mono.Cecil/TargetRuntime.cs": {
+      "git_blob_sha1": "c1cd0269f76f60d5bcb314bca1718f5c8034eac8",
+      "sha256": "ef9f5a97b0b3274023e1e589316ad2e7ea3bd46aa8860701e94f6fd36d3d985f"
+    },
+    "Mono.Cecil/Treatments.cs": {
+      "git_blob_sha1": "21c17684290e121cd1a546c0bf294b864979fa1f",
+      "sha256": "5439027b37ca6356239f2b88016f4d7546296ba0731c21a24c9b9b0103fa8782"
+    },
+    "Mono.Cecil/TypeAttributes.cs": {
+      "git_blob_sha1": "92a71aca4fe130447bfdf788cf823af5a5d5f870",
+      "sha256": "86afefbc5f7c905553c4b610b7f0b96948f1ba99953cd0312bc0587665dcf190"
+    },
+    "Mono.Cecil/TypeComparisonMode.cs": {
+      "git_blob_sha1": "f69d98a99d5b500ebd936d1cbb2832c30254ce6e",
+      "sha256": "971216bdcb22d45dcfe3962eab8ffa550b3acf5a49ef2d3c53fce1b47e21f817"
+    },
+    "Mono.Cecil/TypeDefinition.cs": {
+      "git_blob_sha1": "92d6ab2993ac3fc5cd3f35d2b5dd5fcb3c36f51d",
+      "sha256": "dff3d6867bc292334f544fd58ebff65028391b109f6c9ca95c2a01c229debc71"
+    },
+    "Mono.Cecil/TypeDefinitionCollection.cs": {
+      "git_blob_sha1": "95e39b9a6ed53616a6ac8022afaba39d9996bde3",
+      "sha256": "488609cae878be188b2c7bfbb65ac942c9cddaf19130482f6c5bc8ebecebcd03"
+    },
+    "Mono.Cecil/TypeParser.cs": {
+      "git_blob_sha1": "a4ebd6954c16b2bc71af22012fdc798b6a695c1a",
+      "sha256": "af8978b7b168c1b0654dcb7352d1d981f22bc58f7776a7e5cbb52a530c16b23c"
+    },
+    "Mono.Cecil/TypeReference.cs": {
+      "git_blob_sha1": "701f83b8fcff2e9ab935fa85ec2cf12c1a02fca6",
+      "sha256": "14d26ee58b202c1c4a30dbbb8e4e4b6332f3af25aeed51837d4e1ab3a10188a8"
+    },
+    "Mono.Cecil/TypeReferenceEqualityComparer.cs": {
+      "git_blob_sha1": "29c2ee2e95a5780b997aa2ce2fceb7545324e9b1",
+      "sha256": "9b9ecb080678140904281461f847978094ad595a46f5da5c544928c2ebe9a9d2"
+    },
+    "Mono.Cecil/TypeResolver.cs": {
+      "git_blob_sha1": "95b0f3a7128d6bb0ee291c973d58a356d265f123",
+      "sha256": "6817a6699f65c6ba2f2a63aefcbb9ad443310ccb62c29bbc0669a42b7e8983c6"
+    },
+    "Mono.Cecil/TypeSpecification.cs": {
+      "git_blob_sha1": "16e0cab8138aa80e7c99acce1886fa34c0ec4fc7",
+      "sha256": "f5480f49577ba739b84f5ddc8a068de887c127d6720c5b3bbbab83bfce343f72"
+    },
+    "Mono.Cecil/TypeSystem.cs": {
+      "git_blob_sha1": "e16ec6f3b647941766cffe73c4cad8ce0b556cda",
+      "sha256": "2908ae0d74900666a1870fe30453e5578c6e1dd9c60a2e794ab235c00084d2d6"
+    },
+    "Mono.Cecil/VariantType.cs": {
+      "git_blob_sha1": "c5e222df45ab38e3ad81b8672c01e8832ad1a9e5",
+      "sha256": "83eb82384b12f116d446164d56dffeba8bb15e6d79f43db42c623b74d7b02114"
+    },
+    "Mono.Cecil/WindowsRuntimeProjections.cs": {
+      "git_blob_sha1": "b96a891b2d4c0f45ca595be540d7b5f106a6d2c8",
+      "sha256": "d274449347ac1b456d19406b789eb0c99c514cc027707609da83843d549d8368"
+    },
+    "Mono.Cecil.Cil/Code.cs": {
+      "git_blob_sha1": "cd929fcc34cf4dcab9a3adc92f7fe1ab099e992c",
+      "sha256": "4f0086f9f803c2bef8bfa7d59af0264b47f487036f5acf0f0473387a66061d34"
+    },
+    "Mono.Cecil.Cil/CodeReader.cs": {
+      "git_blob_sha1": "89515d6882608df2b7e1224467a2b214dc31b99b",
+      "sha256": "27d9e8d9c7625fab0a75ea7e825d9beb0e2a02501772d19fbab12be2a10dd223"
+    },
+    "Mono.Cecil.Cil/CodeWriter.cs": {
+      "git_blob_sha1": "0ec4cc6e2fe0ba1cbf8732aeb70fc9dd6cbb3478",
+      "sha256": "f72225dd684d92fd493169a8d22991bd879888495a6409bc4facff3da70e0627"
+    },
+    "Mono.Cecil.Cil/Document.cs": {
+      "git_blob_sha1": "03d3ec301d2ba357802e75b9c2b56df2971df06f",
+      "sha256": "ac2dc6d5f0be37346865053f6468a87b6002e143bbf132b3492b4365fd9a2949"
+    },
+    "Mono.Cecil.Cil/ExceptionHandler.cs": {
+      "git_blob_sha1": "6bdb1aa32758e3a7db7c3239160fc7c92608e06c",
+      "sha256": "416361e8d1454c865fe3259d9378fb03bc52a86f10fee0a2341537fb7fa80d51"
+    },
+    "Mono.Cecil.Cil/ILProcessor.cs": {
+      "git_blob_sha1": "86e6ed754e8360e021f594acb5f37b1062fd796d",
+      "sha256": "9387ac5b9a052b399ea378e5684706a8fac376fd3ff3e3d5a8f272c58a0cd875"
+    },
+    "Mono.Cecil.Cil/Instruction.cs": {
+      "git_blob_sha1": "4b5eea9eae855438eb4519961e6a5431a606a6e4",
+      "sha256": "1bea81d0e976c7c8cfa39b7ae98af3f7ad304c50b8692a5b4a7e304b00b42333"
+    },
+    "Mono.Cecil.Cil/MethodBody.cs": {
+      "git_blob_sha1": "89bfc905c13ab8a171d18208c74881a03aa0e46a",
+      "sha256": "f023358a1c6115b4192c8f1686b8bcfe3329bdb289ad58488dddd20f01200259"
+    },
+    "Mono.Cecil.Cil/OpCode.cs": {
+      "git_blob_sha1": "81ab0e12ac8af7f9e3b20587ad84a28dcd92a4b6",
+      "sha256": "1cb299ccc9224b1b2e7553bfa21d48016f0ab4045883196de338faac8938182f"
+    },
+    "Mono.Cecil.Cil/OpCodes.cs": {
+      "git_blob_sha1": "ba0468d3052d75ffde35df1d6cfc428da1be4e5f",
+      "sha256": "445b74fed79c58f39ec35bce58761559e737922b72f9476b66833e7128e9e72f"
+    },
+    "Mono.Cecil.Cil/PortablePdb.cs": {
+      "git_blob_sha1": "9fc7ce2c29a0b952a75d83e7d33df79641285c9b",
+      "sha256": "bdac2a401408f8178014d96c304f66dd5b5792adfb108af81c466afc844d12af"
+    },
+    "Mono.Cecil.Cil/SequencePoint.cs": {
+      "git_blob_sha1": "725d307ae90be139b6850f9ea1027a844a4548a9",
+      "sha256": "421f59f6fd2c506cbe6dccb7821b887c0e17428643ed34b000baa5bf9e70a1b9"
+    },
+    "Mono.Cecil.Cil/Symbols.cs": {
+      "git_blob_sha1": "294eb16db687e47508edd71994eed1951c090d62",
+      "sha256": "3868350b2c6f090acd352a0c42d15af56a9332090f313b393ba20289f5819621"
+    },
+    "Mono.Cecil.Cil/VariableDefinition.cs": {
+      "git_blob_sha1": "bd1328464a633435ef6092df1f8a9ac069de20a1",
+      "sha256": "9d9378ec04c75a2d3ac990d554472a19998aab93e51d82cceb7d3f9108e11d14"
+    },
+    "Mono.Cecil.Cil/VariableReference.cs": {
+      "git_blob_sha1": "fb12e8c14da73e77a39a88e77ec8de14a35f7154",
+      "sha256": "9bd1ddf3cc26bf1d0fc4b59807bd4a47f41889d4f66afcfc50e951e41bb200c8"
+    },
+    "Mono.Cecil.Metadata/BlobHeap.cs": {
+      "git_blob_sha1": "574a130c985b1c7d758ee6a9d965687482737ea9",
+      "sha256": "96a15002336c9c6ab5d3f7719e1db45f6f1637d99eeacc390c1d5483e334c1b9"
+    },
+    "Mono.Cecil.Metadata/Buffers.cs": {
+      "git_blob_sha1": "b32dd43ef6ac9ae5818ce769c664bf40dca5a8b6",
+      "sha256": "3cf333beb70061bcf3131612a1caec31ac0cf0c158f1a74213266d0b982ecfaa"
+    },
+    "Mono.Cecil.Metadata/CodedIndex.cs": {
+      "git_blob_sha1": "2026a8a7db9a7a4fc32301b8e2d3c141dfb6a9e7",
+      "sha256": "5e964a6fad4bb439d42cfa2edadac7cb1de2a03d138c163831e653039e0adeb1"
+    },
+    "Mono.Cecil.Metadata/ElementType.cs": {
+      "git_blob_sha1": "2190160a6dd907cf5c30e21b0bf19d9c306fcaf0",
+      "sha256": "f55a90aa406f2cdce33cab3bd5faf5148531d8d8133b9e65c3750bc37434f6d0"
+    },
+    "Mono.Cecil.Metadata/GuidHeap.cs": {
+      "git_blob_sha1": "76ec9d1d1182de74bdc81ff19d24fc192da44f80",
+      "sha256": "0f27d05348623a2996ed4532dd9abb7209e2afc60c5fba6a7eb155f71d39e9a3"
+    },
+    "Mono.Cecil.Metadata/Heap.cs": {
+      "git_blob_sha1": "6874d7963ebef9ed0963aca4bb54124f559720f9",
+      "sha256": "c316a14bcaf6b5dc8969321bedca338f29bf001775b259f354a5e5bad9f2c04c"
+    },
+    "Mono.Cecil.Metadata/MetadataToken.cs": {
+      "git_blob_sha1": "a8b712e7ffcc6be617c6e806199d1bc322206575",
+      "sha256": "ecae58a23d23f952940158fd4718208003a6f2718d1f9792e341a8d022d236f8"
+    },
+    "Mono.Cecil.Metadata/PdbHeap.cs": {
+      "git_blob_sha1": "39e275ad90a930b3b25f0b56dfa0436b9cf928a6",
+      "sha256": "2790b28b790a7c7242bc85d3e715616523655f8f743e8fabe7a6b79df7e046d8"
+    },
+    "Mono.Cecil.Metadata/Row.cs": {
+      "git_blob_sha1": "0c05ebade6c6e44956fcc968e61e6d58238979ef",
+      "sha256": "090012e69e542e9f7d00e692a4f580a9de09d7eba017b583b60550966a5675ff"
+    },
+    "Mono.Cecil.Metadata/StringHeap.cs": {
+      "git_blob_sha1": "4bde70e2337577505839b57aca3a43eb3cff40ee",
+      "sha256": "8e6b4bf8da955b17c59f9739ed23d053284a781d19de80869be79fb5c4323047"
+    },
+    "Mono.Cecil.Metadata/TableHeap.cs": {
+      "git_blob_sha1": "dee655a34383130f59d4c5a2704acf8d818a17e9",
+      "sha256": "cf5e1b9b2d764028ebf5c3c1a3c56473b2ba47b3af13fed132e97829f4efc7fc"
+    },
+    "Mono.Cecil.Metadata/TokenType.cs": {
+      "git_blob_sha1": "547f6c6472d37a8a4c180ceaee67678e3e2f3546",
+      "sha256": "d4eb0fd08c32fddefb89e77c26b828885f97b45b27613ccb4c453d96254a449f"
+    },
+    "Mono.Cecil.Metadata/UserStringHeap.cs": {
+      "git_blob_sha1": "7b1b42ffa06a60c322f0ab8438dd513192fa03b5",
+      "sha256": "7314ad89bfec1bf9fea754d858d7835a531148481405599d26a2f19c9ea2b462"
+    },
+    "Mono.Cecil.Metadata/Utilities.cs": {
+      "git_blob_sha1": "e2998725172fa110cde0d2057e8c8de09137c906",
+      "sha256": "626d216c82ecb993baf3e1f640a3979cb6635fa34e7d983a40848abef95f23b5"
+    },
+    "Mono.Cecil.PE/BinaryStreamReader.cs": {
+      "git_blob_sha1": "812adbc58f69866aa1c28a695f764a5b007f78e0",
+      "sha256": "d3e97b76e3702306512d4132f7ebe61bcc604f39c683f44eebd3f6c1e94500b5"
+    },
+    "Mono.Cecil.PE/BinaryStreamWriter.cs": {
+      "git_blob_sha1": "9c85a425b34d58fc35fb3e6f1f8c711b338f9124",
+      "sha256": "d28f2a1759a7ce3d95304dfd6f2802c57079d2f9a58636746dac23076c22a2c6"
+    },
+    "Mono.Cecil.PE/ByteBuffer.cs": {
+      "git_blob_sha1": "9a6567ce15ca6fb94b33f6edb684abae4d545866",
+      "sha256": "c032eae31ff9114456ec3ec093d650542efbe0b7cf8cf68a85744cfd2618f5df"
+    },
+    "Mono.Cecil.PE/ByteBufferEqualityComparer.cs": {
+      "git_blob_sha1": "8b7cb238e0c615c4bd8b18b7da011a578a08b8c7",
+      "sha256": "fb931cc04b83903d365c435283aec39324d1cdc879a49af25dc91193073e4a10"
+    },
+    "Mono.Cecil.PE/DataDirectory.cs": {
+      "git_blob_sha1": "4922dd2f465c68183014cd53fecafe2c8e507664",
+      "sha256": "5cbe5ba33db91e3e59323e369cdb62d9c3ea4fc5519d6e6bc2cebeec7f8072b9"
+    },
+    "Mono.Cecil.PE/Image.cs": {
+      "git_blob_sha1": "97e69c0101b71f61ef04889ccda2a61691e641ed",
+      "sha256": "9935686df4b6b09af188a17a2f61379e72a614d0c4c8b995ff18f81c46f65c6e"
+    },
+    "Mono.Cecil.PE/ImageReader.cs": {
+      "git_blob_sha1": "a34e64d36030ba8cec7554a033d85eefab9c56b8",
+      "sha256": "1134a21eae2b52f2b7e569a994a1101e19184179bd0da56f441b81ce55e772fd"
+    },
+    "Mono.Cecil.PE/ImageWriter.cs": {
+      "git_blob_sha1": "3d8d8898a9404cc9578084b387dca167e632e211",
+      "sha256": "d501341c07d5e8d5586b2c0e58671b6dc2f3b4d16fb28687750b3cce3b72631e"
+    },
+    "Mono.Cecil.PE/Section.cs": {
+      "git_blob_sha1": "49d8e90011d1ada467c31a009b7c1bb124fccaa4",
+      "sha256": "32497388a55336474d3d1791e2d1ba44457f17192b4abc770d83a5e97ac970d8"
+    },
+    "Mono.Cecil.PE/TextMap.cs": {
+      "git_blob_sha1": "548e471a73d4950aba208f04012a0c70381c0eab",
+      "sha256": "2654ec3984be7ec49c2d7ca81044f14a427fe3853dddd0d021b049dfe43a93cd"
+    },
+    "Mono.Cecil.csproj": {
+      "git_blob_sha1": "69419258faa7d2b902c509eb402ac6b4e3c2f4f3",
+      "sha256": "d3f61d60a99a1c48d2fbc23aad7170182ab4ece50b3b0dc6707993ffcbe4ca02"
+    },
+    "Mono.Collections.Generic/Collection.cs": {
+      "git_blob_sha1": "86c14298de3d71282915e73ad0b7b9cbdf9b76e4",
+      "sha256": "3cb7648361e2a8f555c9ec03079c6dfe3a4fecf3c4b75dc4edcba5d4c32e68b1"
+    },
+    "Mono.Collections.Generic/ReadOnlyCollection.cs": {
+      "git_blob_sha1": "0ff23202081e24d18886ce13e547e62c763beb35",
+      "sha256": "58b99fb9d78f46a0cd12f44fe0b80145eb882a59e6b276dccb449e559417b89e"
+    },
+    "Mono.Security.Cryptography/CryptoConvert.cs": {
+      "git_blob_sha1": "cd68f99e2d594a87908f690bf33a48d8101caf14",
+      "sha256": "a9a583e33c312bbef48b17dd1149d9fcb3ef3ca4a41404b2ec3569fccf4ebe28"
+    },
+    "Mono.Security.Cryptography/CryptoService.cs": {
+      "git_blob_sha1": "1da81b1e14ffe21c503eca5f040bae1ac56f1a4c",
+      "sha256": "87b5de9d4c2ebaa79ca4c6164dc041df47bc3a87ffba254ca0346f1573768228"
+    },
+    "ProjectInfo.cs": {
+      "git_blob_sha1": "c7ffe5f0413d7f054918c60bee78f6bd8a7299f4",
+      "sha256": "f990d54ef0ae7baa71da0e9b4a54b3456c6814ef76622aac22f5bed320a4aed7"
+    },
+    "cecil.snk": {
+      "git_blob_sha1": "c0380d194f28fc76a32d609b60da01d7f75657ff",
+      "sha256": "c8bee587cec8eef6fd3e5510b44f05f24132802c57aa068d3e55434b027af374"
+    },
+    "rocks/Mono.Cecil.Rocks/AssemblyInfo.cs": {
+      "git_blob_sha1": "489ddee631a1d38c79e3ef8a63a46cc44041b9c2",
+      "sha256": "09c82dd83ebf6893e9bbc6a361e2c361211d8e85474a598241867449753139e3"
+    },
+    "rocks/Mono.Cecil.Rocks/DocCommentId.cs": {
+      "git_blob_sha1": "8af12dd4c7ae89859f27ff2e1038df9e543a5ef0",
+      "sha256": "9b8527e78c04365631e773a4ab396436e0c1e9ab54cac3f4837a89d5d8720478"
+    },
+    "rocks/Mono.Cecil.Rocks/Functional.cs": {
+      "git_blob_sha1": "bff52e4a2906f4e5fd3439f38e0be4cc9530f9cd",
+      "sha256": "609d3de36ce3ea27939927ea21cc28c349101b2482974e4984cce06dd4bd7693"
+    },
+    "rocks/Mono.Cecil.Rocks/ILParser.cs": {
+      "git_blob_sha1": "e05068ff3cfa799e52bcbc9c650a7388fbb8a3e9",
+      "sha256": "04389d30fbde4cb1a5044ccb1a8fb7ed224dc12699370c52df7cf308c0e83d4c"
+    },
+    "rocks/Mono.Cecil.Rocks/MethodBodyRocks.cs": {
+      "git_blob_sha1": "c627d2f3e93d1c07e2cc63f5336172a3c7422650",
+      "sha256": "1c50ac99a9b9e35c5ee27f22202540c85f2ddc84d6271fc74aede1366952200a"
+    },
+    "rocks/Mono.Cecil.Rocks/MethodDefinitionRocks.cs": {
+      "git_blob_sha1": "3ef20a1003d3c97b914efccb496e7c82f9008d6c",
+      "sha256": "6b566d71aa9575c5953a6066ea32748750853dbd947555195244e2010627c78e"
+    },
+    "rocks/Mono.Cecil.Rocks/ModuleDefinitionRocks.cs": {
+      "git_blob_sha1": "756d31f06a21be2fd7e88a0e3e6009e4dd73d038",
+      "sha256": "00828f0b652f1a48f8e05c94d45ab6c398f472e22caff38fbaf9160893b7b1c2"
+    },
+    "rocks/Mono.Cecil.Rocks/ParameterReferenceRocks.cs": {
+      "git_blob_sha1": "554bdb9099de7dc2e29ad8ed52eba2a9416e1921",
+      "sha256": "fa8bc5ea589f9f752bf466b15b66113dee312af2cc0ea89b60463fbc961ad573"
+    },
+    "rocks/Mono.Cecil.Rocks/SecurityDeclarationRocks.cs": {
+      "git_blob_sha1": "20808fe7156969da14f28451a4c4b0ee284c45ad",
+      "sha256": "597bdc276cff28354d774920249425e4fe2672ae024483f207ace3ee83175075"
+    },
+    "rocks/Mono.Cecil.Rocks/TypeDefinitionRocks.cs": {
+      "git_blob_sha1": "baa88e034136060322745c8e0dfb4a64b43581ab",
+      "sha256": "46463525f410ffba1a27581241d2287884189ab0ec92e06503cf5007f72d9820"
+    },
+    "rocks/Mono.Cecil.Rocks/TypeReferenceRocks.cs": {
+      "git_blob_sha1": "1e60951dd99f31b97fa119cc27338979346de139",
+      "sha256": "9036c82172a69ea100947207b81f91d5162ea8c624ff3accb8ea9a278252c70e"
+    },
+    "rocks/Mono.Cecil.Rocks.csproj": {
+      "git_blob_sha1": "c6d9e87ab00b3824a7db77e951163ed789fc2b17",
+      "sha256": "a980db6c4084ee382172dd9ac415fdd77fdd78ba6b3eb6d7f8b2af55d842adc7"
+    },
+    "symbols/mdb/Mono.Cecil.Mdb/AssemblyInfo.cs": {
+      "git_blob_sha1": "12f9bb634666a7e41f402153f415fd27e4e71ada",
+      "sha256": "3bde9a9964c42d45292881687a5a89feca351d6d031295fe22f7b59371c1fd44"
+    },
+    "symbols/mdb/Mono.Cecil.Mdb/MdbReader.cs": {
+      "git_blob_sha1": "f19212f606898266ea8f54f71b2abece4f328b0c",
+      "sha256": "3a0a12354f7223ea7a9c01a31b74996b923f18bc959c9d56e1324b56c4f2ae32"
+    },
+    "symbols/mdb/Mono.Cecil.Mdb/MdbWriter.cs": {
+      "git_blob_sha1": "81a0d539d7d15f4b40e10b1dd1bc0a811dea8a35",
+      "sha256": "658993d40fdfcec180274430de3decee4293cb52ae73d290dc375e69fd7b7663"
+    },
+    "symbols/mdb/Mono.Cecil.Mdb.csproj": {
+      "git_blob_sha1": "5977a443ebe640926097126146010f1d232ef9c8",
+      "sha256": "2ef9185f03fafd42b2d09af3bd02356b64d62176968c4e86b410bb36e212f779"
+    },
+    "symbols/mdb/Mono.CompilerServices.SymbolWriter/MonoSymbolFile.cs": {
+      "git_blob_sha1": "2b6c3a6a102ecfdd83125e4a39f022653629994e",
+      "sha256": "7256c989d0e212391171c8c5e7a8875ce5bd378810630108e4366919c3422228"
+    },
+    "symbols/mdb/Mono.CompilerServices.SymbolWriter/MonoSymbolTable.cs": {
+      "git_blob_sha1": "e151c756dc24f0c352d76449a7434839835ae98c",
+      "sha256": "fd175d594745997d58bf1cbf01d1c94e92dbb70408fe859342573f24ae6fbfc1"
+    },
+    "symbols/mdb/Mono.CompilerServices.SymbolWriter/MonoSymbolWriter.cs": {
+      "git_blob_sha1": "19e14c2f6e030c49c3730ad31ba45239f344552c",
+      "sha256": "ace8d598f4bf1335e86ad684dfffd13e19d9ebf5ba66bc567f90ccfee6100ba7"
+    },
+    "symbols/mdb/Mono.CompilerServices.SymbolWriter/SourceMethodBuilder.cs": {
+      "git_blob_sha1": "094425cfe403e573ecba38dbe298c9dd52abe158",
+      "sha256": "2f01a00a7db628e163cd97f029e5df57ba0258b8d52e8a865c7fc5c45cec797c"
+    },
+    "symbols/mdb/Mono.CompilerServices.SymbolWriter/SymbolWriterImpl.cs": {
+      "git_blob_sha1": "96e5fe191b7bb179b245b2f8d65b965fd33f4a01",
+      "sha256": "38e78002e4ae911526399105d70673b8bd2c8cd02eb1c20046abfda66a3fc305"
+    },
+    "symbols/pdb/Microsoft.Cci.Pdb/BitAccess.cs": {
+      "git_blob_sha1": "fce6373a399a3d6ab0e292b3e4024296dd63bcbe",
+      "sha256": "db54cfa301ee9b43324385dfb77c9811b6f01c3e58fc36a96a62e3f082228659"
+    },
+    "symbols/pdb/Microsoft.Cci.Pdb/BitSet.cs": {
+      "git_blob_sha1": "2a6dff258843df1b574e316ee608074ba826e2d4",
+      "sha256": "6cb17e6439034cff0a4988c859f447a1bb917f4ed064158569ffe970da380b5f"
+    },
+    "symbols/pdb/Microsoft.Cci.Pdb/CvInfo.cs": {
+      "git_blob_sha1": "153201cb896e5bbf392246b389d12bec400808f2",
+      "sha256": "06b50d3739b1f4addd2704f0f46fded792a467b86c74018a85357758e3ad00b2"
+    },
+    "symbols/pdb/Microsoft.Cci.Pdb/DataStream.cs": {
+      "git_blob_sha1": "8f7ab4b09e50f07dbf7a89cbd5e818323461eee4",
+      "sha256": "099864cff20a6754367fcff3b233f14cf69c7681207fc22db0594fae61cbe522"
+    },
+    "symbols/pdb/Microsoft.Cci.Pdb/DbiDbgHdr.cs": {
+      "git_blob_sha1": "354925d34f62d2fc4e79d69a2ac3b707cdf58453",
+      "sha256": "026f1f4555f9a93750604f12f03dc109583ce8f0c103839adf0dec9db91c9fc7"
+    },
+    "symbols/pdb/Microsoft.Cci.Pdb/DbiHeader.cs": {
+      "git_blob_sha1": "a245104b6b2d28ef6c13253cdf4e22c07eea15dd",
+      "sha256": "6cf6bfd42d8a4ff4bafe7c28cc9dc904e725d3913b620fcfaf165c74cd0d8774"
+    },
+    "symbols/pdb/Microsoft.Cci.Pdb/DbiModuleInfo.cs": {
+      "git_blob_sha1": "161762163765c7ab60854886eedaac6db733cee0",
+      "sha256": "7bcfef478ba29e556fcee1e3bc22a365c95ada1945d2ad70f04d688039a32d78"
+    },
+    "symbols/pdb/Microsoft.Cci.Pdb/DbiSecCon.cs": {
+      "git_blob_sha1": "7730296d52577b28c8db345d8fcc124cce24f590",
+      "sha256": "e40a763e31afa613afad22d546cad492a7d3f906c99f0d91b48e9f01da686ba3"
+    },
+    "symbols/pdb/Microsoft.Cci.Pdb/IntHashTable.cs": {
+      "git_blob_sha1": "749f8f7e40d61aca3d8b6dfbadc2511561675d5a",
+      "sha256": "fab696be4781ee28de371c8142b1119f917979fd60b8b688e6f79898d979f0c3"
+    },
+    "symbols/pdb/Microsoft.Cci.Pdb/Interfaces.cs": {
+      "git_blob_sha1": "acc7f26f99ca9b2d931b964804e69d76abf8ef16",
+      "sha256": "a51dbec14e2ba579200faa15672a68b65992e94d25b5ac508c41a31ac758fe04"
+    },
+    "symbols/pdb/Microsoft.Cci.Pdb/MsfDirectory.cs": {
+      "git_blob_sha1": "875c97e0e03d018a3e207b61df088a8ae6b1e607",
+      "sha256": "b8de6f0e9045797575ed4906258b2959e13fc15145a787d2f343cc4d5ac3ece9"
+    },
+    "symbols/pdb/Microsoft.Cci.Pdb/PdbConstant.cs": {
+      "git_blob_sha1": "833d8498541fd3c10bfe1a2908985b40763391ec",
+      "sha256": "3d215e4782d0dbefe9160158aaf8c5a09a97ff307b12c2fc9c3294bc260c2c07"
+    },
+    "symbols/pdb/Microsoft.Cci.Pdb/PdbDebugException.cs": {
+      "git_blob_sha1": "43ada457906adbecd1ea991254312fa45b082862",
+      "sha256": "c5ce78a89b52afaf3c7513a63de9ff030db95969fbd521680693d97c7d08c21a"
+    },
+    "symbols/pdb/Microsoft.Cci.Pdb/PdbException.cs": {
+      "git_blob_sha1": "83c611d8cc082dcafdcec18dd75d403f9fad9062",
+      "sha256": "fe5c8826bd9ff62d36bf677d8fe52e18a0ab061785ba5ce467f42148b2328394"
+    },
+    "symbols/pdb/Microsoft.Cci.Pdb/PdbFile.cs": {
+      "git_blob_sha1": "6c18b8829388beb7480126cfa36dfbaa775546d6",
+      "sha256": "f0926da35e5cc77473de4977a9ef3f7e09953fb582cccf4fcfabe2fb4c2c51cd"
+    },
+    "symbols/pdb/Microsoft.Cci.Pdb/PdbFileHeader.cs": {
+      "git_blob_sha1": "8204123f72bcf5c99418b0750a1bbcd8f156ce29",
+      "sha256": "193b1279079a22cc73c3c02310f50eb2eff2057cdd1d15678552bf5d239f45ec"
+    },
+    "symbols/pdb/Microsoft.Cci.Pdb/PdbFunction.cs": {
+      "git_blob_sha1": "affc5ea747fc20ca59f8498298ed69b7e190a0f8",
+      "sha256": "ad6f90c36b52cab3c37d6224d6c88abfe2248238fd161759fe84eaaacc6941df"
+    },
+    "symbols/pdb/Microsoft.Cci.Pdb/PdbInfo.cs": {
+      "git_blob_sha1": "5a4e32b704a3b6efe6566f1648f22b72651c61c9",
+      "sha256": "f763ebfd94b45d7acafbf675d85261115770ac12f8bf519e749739e3aaafe34f"
+    },
+    "symbols/pdb/Microsoft.Cci.Pdb/PdbLine.cs": {
+      "git_blob_sha1": "5e736776894b2b0b63560257a6c3178b00c0a10a",
+      "sha256": "1896c43671c0e2bfa271111b9d0a63f6ed3b73c2a0522c9b4562568d63e12e24"
+    },
+    "symbols/pdb/Microsoft.Cci.Pdb/PdbLines.cs": {
+      "git_blob_sha1": "18d8974c6e62f9091f99337ceb99928983357143",
+      "sha256": "e4625fca4f86556210b2557b83a0b5d6ce4fb72ff7ad3bf4a8a20bbab41e8313"
+    },
+    "symbols/pdb/Microsoft.Cci.Pdb/PdbReader.cs": {
+      "git_blob_sha1": "28d02c10009018236bbcad5498dd81177a05429e",
+      "sha256": "6ec81bab56079d6e4315b4ed53a79f2329a7cfe3f5c2f79c822b4649a7365806"
+    },
+    "symbols/pdb/Microsoft.Cci.Pdb/PdbScope.cs": {
+      "git_blob_sha1": "9dad77b9a1fadc1e0b898d504c079b77886fd2c9",
+      "sha256": "4477c9d5950b0c75ccabfaa03c13a0d2499af63b46f4363317c972c23423ad00"
+    },
+    "symbols/pdb/Microsoft.Cci.Pdb/PdbSlot.cs": {
+      "git_blob_sha1": "b9b8ef707c102cb7c43511857e5be157176c186a",
+      "sha256": "39df326167bc7e244fd847666f31bc81799032eb9880c416964d81d656bc5c85"
+    },
+    "symbols/pdb/Microsoft.Cci.Pdb/PdbSource.cs": {
+      "git_blob_sha1": "6310b73ff1a66bca83eb4fbf5e55acbfffe0a029",
+      "sha256": "891f54e44a653124c573a946731628f144d0ef598d4bb52e4caef2312a2f464e"
+    },
+    "symbols/pdb/Microsoft.Cci.Pdb/PdbTokenLine.cs": {
+      "git_blob_sha1": "d59c9c8d091d56af55f8af472064cff26f9a6bba",
+      "sha256": "cf082d03a8631e3a882ac13e0345a4b4bd266324ffbbf34e264bc5d46d79a947"
+    },
+    "symbols/pdb/Microsoft.Cci.Pdb/SourceLocationProvider.cs": {
+      "git_blob_sha1": "74d0e63b2118f234ed99c981b54dbb0c1b8beb80",
+      "sha256": "fc0708c1fd0b699e3be15e5ec1a6f78c2f261e2165015716f21520a380ea8335"
+    },
+    "symbols/pdb/Mono.Cecil.Pdb/AssemblyInfo.cs": {
+      "git_blob_sha1": "c4b4e2e9e08af6b61924b16888aa379eaf3385bd",
+      "sha256": "62e0f0d450a2526ad4e34364f6c407071d95666efb5143885cebae2e1abe3946"
+    },
+    "symbols/pdb/Mono.Cecil.Pdb/ISymUnmanagedDocumentWriter.cs": {
+      "git_blob_sha1": "2e8589e73f5a852a4fae5b550c53c78bd80d61b3",
+      "sha256": "d905bf64ff6aa0116fd7ea5482003a51d1ce25a9523dc2d0a7a8a427b69a8b4a"
+    },
+    "symbols/pdb/Mono.Cecil.Pdb/ISymUnmanagedWriter2.cs": {
+      "git_blob_sha1": "c55c2b11124c31e3f9221a359a6351abf52be8a9",
+      "sha256": "25c04b310fccbcc7e120c3ca9287bcbe64c703d144398d0480a913703a3df022"
+    },
+    "symbols/pdb/Mono.Cecil.Pdb/ModuleMetadata.cs": {
+      "git_blob_sha1": "0bc32dca5034f92389b6ba67d55d2a54cafb91af",
+      "sha256": "28cf542072dc30d7b915f907ac4caa42f678bb69453a134f7e63cb709cdf5906"
+    },
+    "symbols/pdb/Mono.Cecil.Pdb/NativePdbReader.cs": {
+      "git_blob_sha1": "400fb0b480145db4f8df4b04d30e46d948c8f5e3",
+      "sha256": "036bbea1c286e56113aa399e9f494df09dd9c53606c9339a1c197c7f2412b6a6"
+    },
+    "symbols/pdb/Mono.Cecil.Pdb/NativePdbWriter.cs": {
+      "git_blob_sha1": "2e51c70a1b52613d444cac1ea6d4caac3ecf79a4",
+      "sha256": "6e0e72a65ffae3890ebc1befb73dfa2dd96d782262a936e5ee4aec09f6d2be24"
+    },
+    "symbols/pdb/Mono.Cecil.Pdb/PdbHelper.cs": {
+      "git_blob_sha1": "2b513cd11cdec23453df2e3dabb844ccf900d7de",
+      "sha256": "64ae9d85cedcd8f409956b6518be3c5927f0a9a2c02a9ff1b2c3174ec653e498"
+    },
+    "symbols/pdb/Mono.Cecil.Pdb/SymDocumentWriter.cs": {
+      "git_blob_sha1": "3112c80a3d58720afe4c2649b30fbebb3ccd146b",
+      "sha256": "751189946b78f8b15e6b728ec024c368b97d9a7ec777b0ad8e0104f8082792fe"
+    },
+    "symbols/pdb/Mono.Cecil.Pdb/SymWriter.cs": {
+      "git_blob_sha1": "78e8a1e0be364a2723ba218cd70985ed65f6e464",
+      "sha256": "33c39634ccc112e2936d0036d282a22567c976ee45e3af2933571897b569438a"
+    },
+    "symbols/pdb/Mono.Cecil.Pdb.csproj": {
+      "git_blob_sha1": "7cebe917ce6b944bbbc303ea40ea3acfd79b3cb9",
+      "sha256": "3f676ec2dac61c3d6fbe11f335f7136ca0341836f2d9fc7f83bad37044e572fd"
+    }
+  },
+  "all_selected_production_inputs_match_vmr": true
+}

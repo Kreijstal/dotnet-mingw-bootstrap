@@ -1,0 +1,132 @@
+Installed source-built CIM/MMI and WMI retest, 2026-10-26
+Host: win11, CLANG64
+Root: /home/topkek/cim-wmi-retest.LW80fn
+Fresh output/cache per test; installed library-packs feed only.
+MMI remains experimental 2.0; required 3.0 and remote behavior remain open.
+
+$ bash tests/mmi-cim-wmi/check-installed.sh mmi-installed
+Result: exit 0
+
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\cim-wmi-retest.LW80fn\mmi-installed\check.csproj (in 170 ms).
+  check -> E:\msys64\home\topkek\cim-wmi-retest.LW80fn\mmi-installed\bin\Release\net8.0\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.63
+Runtime: .NET 8.0.0
+MMI: Microsoft.Management.Infrastructure, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+CIM OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+CIM process: dotnet.exe; PID matches current source-built runtime
+CIM invalid class: correctly returned InvalidClass
+CIM OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+CIM process: dotnet.exe; PID matches current source-built runtime
+CIM invalid class: correctly returned InvalidClass
+Native dependency: C:\WINDOWS\SYSTEM32\mi.dll
+PASS: source-built MMI local DCOM/default queries, errors, disposal and reopen
+Runtime: .NET 8.0.0
+MMI: Microsoft.Management.Infrastructure, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+PASS: native operation/session timeouts, microseconds, infinity, negatives and timed query
+PASS: native MI_XML instance/class round-trips, offsets, Unicode, arrays, intervals, capacity, cached classes, errors and disposal
+PASS: native asynchronous instances/classes/methods/errors, observer exceptions, compacting GC, independent result lifetime, unsubscribe, CancellationToken, callback-root cleanup and session close
+Native dependency: C:\WINDOWS\SYSTEM32\mi.dll
+PASS: MMI timeout and serialization port checks
+Runtime: .NET 8.0.0
+MMI: Microsoft.Management.Infrastructure, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+CAPABILITY operation timeout: PASS
+CAPABILITY class metadata: PASS
+CAPABILITY instance serialization: PASS
+CAPABILITY asynchronous query: PASS
+
+$ bash tests/mmi-cim-wmi/check-wmi.sh wmi-installed
+Result: exit 0
+
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\cim-wmi-retest.LW80fn\wmi-installed\check.csproj (in 176 ms).
+  check -> E:\msys64\home\topkek\cim-wmi-retest.LW80fn\wmi-installed\bin\Release\net8.0\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.94
+Runtime: .NET 8.0.0
+WMI: System.Management, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS WMI identity/source/location, exported types and 79 resource strings
+WMI OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+WMI process: dotnet.exe; PID matches current source-built runtime
+WMI invalid class: correctly returned InvalidClass
+WMI OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+WMI process: dotnet.exe; PID matches current source-built runtime
+WMI invalid class: correctly returned InvalidClass
+PASS WMI metadata/types/origins, qualifier and method enumeration, clone/compare/MOF, in-memory class/property/method/qualifier edits; no repository writes
+PASS WMI native GetOwner method invocation and independent enumerator clones
+PASS WMI native asynchronous sink delivery/completion and compacting GC
+PASS WMI native process event callback, owned child PID and subscription cancellation
+PASS WMI EnablePrivileges query and restored thread identity
+Source-built WMI backend: E:\msys64\home\topkek\cim-wmi-retest.LW80fn\wmi-installed\bin\Release\net8.0\runtimes\win-x64\native\msys-wmi-native.dll
+PASS native WMI ABI/null-pointer validation and temporary privilege token setup/reset
+PASS: source-built System.Management local WMI queries, errors, disposal and reopen
+
+$ bash tests/mmi-cim-wmi/check-combined-source.sh combined-installed
+Result: exit 0
+
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\cim-wmi-retest.LW80fn\combined-installed\check.csproj (in 260 ms).
+  check -> E:\msys64\home\topkek\cim-wmi-retest.LW80fn\combined-installed\bin\Release\net8.0\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.63
+Runtime: .NET 8.0.0
+MMI: Microsoft.Management.Infrastructure, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+WMI: System.Management, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+Native dependency: C:\WINDOWS\SYSTEM32\mi.dll
+PASS installed source-built CIM/MMI and WMI share one process, agree on OS build 26200, survive GC and load no Framework implementations
+MMI required 3.0 compatibility remains unverified; this integration uses the experimental 2.0 port.

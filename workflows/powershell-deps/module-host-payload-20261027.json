@@ -1,0 +1,1751 @@
+{
+  "Humanizer.dll": {
+    "sha256": "71fdc20a5e43dcd1f4d8bf9593961c567eb576e11753dcafaf0cd1d7fd0fd06b",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/Humanizer.dll"
+      }
+    ]
+  },
+  "Json.More.dll": {
+    "sha256": "3c088bd02c1a51fab9e32dc80bdf34ac23b1fd6470178dac0f37cda0eb84a0be",
+    "installed_source_packages": [
+      {
+        "package": "json.more.net.2.0.2.nupkg",
+        "asset": "lib/net8.0/Json.More.dll"
+      }
+    ]
+  },
+  "JsonPointer.Net.dll": {
+    "sha256": "a5682af03250268ce6edd152ce9e0806f1fb2ebc3b3751cc5e861199b0ec066e",
+    "installed_source_packages": [
+      {
+        "package": "jsonpointer.net.5.0.2.nupkg",
+        "asset": "lib/net8.0/JsonPointer.Net.dll"
+      }
+    ]
+  },
+  "JsonSchema.Net.dll": {
+    "sha256": "f6b3bd118a75583b9bcbee93c7a179aa868989e8812b3d37d8b97cb9973bb9ac",
+    "installed_source_packages": [
+      {
+        "package": "jsonschema.net.7.0.4.nupkg",
+        "asset": "lib/net8.0/JsonSchema.Net.dll"
+      }
+    ]
+  },
+  "Markdig.Signed.dll": {
+    "sha256": "f6636f40dd62c5623b63fe304141358d3336e2294b87c0ef3fcd923243dc78b3",
+    "installed_source_packages": [
+      {
+        "package": "markdig.signed.0.33.0.nupkg",
+        "asset": "lib/net8.0/Markdig.Signed.dll"
+      }
+    ]
+  },
+  "Microsoft.ApplicationInsights.dll": {
+    "sha256": "f6c5b15a4ffe6202fc4a40775545591918b60683b6db7f059ba0127c63c18a0f",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.applicationinsights.2.23.0.nupkg",
+        "asset": "lib/net8.0/Microsoft.ApplicationInsights.dll"
+      }
+    ]
+  },
+  "Microsoft.CodeAnalysis.CSharp.dll": {
+    "sha256": "9730bd25d683400557a746639c973f1fbeaf21f4c16a8d5c720a9f24214dd6b4",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.codeanalysis.csharp.4.9.2.nupkg",
+        "asset": "lib/net8.0/Microsoft.CodeAnalysis.CSharp.dll"
+      }
+    ]
+  },
+  "Microsoft.CodeAnalysis.dll": {
+    "sha256": "86f73945cc6a05ed0fd19eb7113275e3ab466529abdf44fdf0eba8d72f8d71fd",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.codeanalysis.common.4.9.2.nupkg",
+        "asset": "lib/net8.0/Microsoft.CodeAnalysis.dll"
+      }
+    ]
+  },
+  "Microsoft.Management.Infrastructure.CimCmdlets.dll": {
+    "sha256": "6e43be77823400be847a88403fc9e25fc8655cb0bc1f93998f6d7e3d885ba603",
+    "original_project": "src/Microsoft.Management.Infrastructure.CimCmdlets/bin/Release/net8.0/Microsoft.Management.Infrastructure.CimCmdlets.dll"
+  },
+  "Microsoft.Management.Infrastructure.dll": {
+    "sha256": "e242ddea0145b6f2ed519ce787228eab26ad08348be678975a5359fc1fc5517a",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.management.infrastructure.3.0.0.nupkg",
+        "asset": "lib/net8.0/Microsoft.Management.Infrastructure.dll"
+      }
+    ]
+  },
+  "Microsoft.PowerShell.Commands.Diagnostics.dll": {
+    "sha256": "fe8f261927f7fe30e6d1b9a2e09349aa563a58b939271717fe79db3fb862c40a",
+    "original_project": "src/Microsoft.PowerShell.Commands.Diagnostics/bin/Release/net8.0/Microsoft.PowerShell.Commands.Diagnostics.dll"
+  },
+  "Microsoft.PowerShell.Commands.Management.dll": {
+    "sha256": "6395f5e0b4d657a10d8d6b05122906e36bdec2b6adc682782e2f05b4efed01a2",
+    "original_project": "src/Microsoft.PowerShell.Commands.Management/bin/Release/net8.0/Microsoft.PowerShell.Commands.Management.dll"
+  },
+  "Microsoft.PowerShell.Commands.Utility.dll": {
+    "sha256": "5022e17a465c969ed877ae460ea4ade2d5063db17260570af5b2d7d6c6c083b2",
+    "original_project": "src/Microsoft.PowerShell.Commands.Utility/bin/Release/net8.0/Microsoft.PowerShell.Commands.Utility.dll"
+  },
+  "Microsoft.PowerShell.ConsoleHost.dll": {
+    "sha256": "47ee6d625b5aacfb33be6937e7c42294e31af5dd90da2c66805f695414c4aa76",
+    "original_project": "src/Microsoft.PowerShell.ConsoleHost/bin/Release/net8.0/Microsoft.PowerShell.ConsoleHost.dll"
+  },
+  "Microsoft.PowerShell.CoreCLR.Eventing.dll": {
+    "sha256": "12e245ea0b5a01c6ae853d073f2a937a82c4ccc1b5c90f9e2e9a35481ec2638f",
+    "original_project": "src/Microsoft.PowerShell.CoreCLR.Eventing/bin/Release/net8.0/Microsoft.PowerShell.CoreCLR.Eventing.dll"
+  },
+  "Microsoft.PowerShell.MarkdownRender.dll": {
+    "sha256": "17f177b498e345fbb25663f0be5a169921629c75e1e750f618775bded268191f",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.powershell.markdownrender.7.2.1.nupkg",
+        "asset": "lib/net8.0/Microsoft.PowerShell.MarkdownRender.dll"
+      }
+    ]
+  },
+  "Microsoft.PowerShell.Security.dll": {
+    "sha256": "56c411487faf567b6d8e190e74110378d03400e4269e7e3974947211b45aede4",
+    "original_project": "src/Microsoft.PowerShell.Security/bin/Release/net8.0/Microsoft.PowerShell.Security.dll"
+  },
+  "Microsoft.WSMan.Management.dll": {
+    "sha256": "9838e7c77ba46009d563ee90c581b75cb61f5bda0cd388c18de6d8c69fa3132f",
+    "original_project": "src/Microsoft.WSMan.Management/bin/Release/net8.0/Microsoft.WSMan.Management.dll"
+  },
+  "Microsoft.WSMan.Runtime.dll": {
+    "sha256": "ef3894e030f6bfca4805a02e0e1c59dba74f89b3ca260b36294068647aed42f6",
+    "original_project": "src/Microsoft.WSMan.Runtime/bin/Release/net8.0/Microsoft.WSMan.Runtime.dll"
+  },
+  "Modules/Pester/lib/Gherkin/core/Gherkin.dll": {
+    "sha256": "25666c53540f48b0a42a923270fcfe3eef2c3dce8160c9bd3c592db44947f52e",
+    "source_gherkin": true
+  },
+  "Newtonsoft.Json.dll": {
+    "sha256": "dbd632f1e37926c74e8b40d4672af029a85fcd878d4a7c95e6c401516f14a1e7",
+    "installed_source_packages": [
+      {
+        "package": "newtonsoft.json.13.0.4.nupkg",
+        "asset": "lib/net8.0/Newtonsoft.Json.dll"
+      }
+    ]
+  },
+  "SourcePowerShell.ModuleHost.dll": {
+    "sha256": "4a5959f05b666ffafdd9d92a622f7b1fedd93e7d8765b8ac8cc5dbcb1baedeb5",
+    "owned_host": true
+  },
+  "System.CodeDom.dll": {
+    "sha256": "6487c814ff3223e622bcaccc7ac2c0c48b0c9b2b56bab74d246cb46d411d3ba6",
+    "installed_source_packages": [
+      {
+        "package": "system.codedom.8.0.0.nupkg",
+        "asset": "lib/net8.0/System.CodeDom.dll"
+      }
+    ]
+  },
+  "System.Configuration.ConfigurationManager.dll": {
+    "sha256": "a58da7ee9f4055a91f0fae21f26bc8fc11ec78bcfd4b1e6145f997559038f07e",
+    "installed_source_packages": [
+      {
+        "package": "system.configuration.configurationmanager.8.0.1.nupkg",
+        "asset": "lib/net8.0/System.Configuration.ConfigurationManager.dll"
+      }
+    ]
+  },
+  "System.Diagnostics.DiagnosticSource.dll": {
+    "sha256": "9b6827ee74420aaf7428dcf8053d9549feda0f48fa3aa4cb00b68f395f7a252a",
+    "installed_source_packages": [
+      {
+        "package": "system.diagnostics.diagnosticsource.8.0.1.nupkg",
+        "asset": "lib/net8.0/System.Diagnostics.DiagnosticSource.dll"
+      }
+    ]
+  },
+  "System.Formats.Asn1.dll": {
+    "sha256": "482383202bb846a7150a53976414e3e93bcd496315b0a040912e85175a806e5f",
+    "installed_source_packages": [
+      {
+        "package": "system.formats.asn1.8.0.2.nupkg",
+        "asset": "lib/net8.0/System.Formats.Asn1.dll"
+      }
+    ]
+  },
+  "System.Management.Automation.dll": {
+    "sha256": "bee14d524697b793d653043c0e2cf634c979881a5a3d41573b570b1910a33e5c",
+    "original_project": "src/System.Management.Automation/bin/Release/net8.0/System.Management.Automation.dll"
+  },
+  "System.Security.Cryptography.ProtectedData.dll": {
+    "sha256": "896271c7f4ebe0c9a65d8af51e6624828f9eda18f7bbfc847a5f10ed44b56a17",
+    "installed_source_packages": [
+      {
+        "package": "system.security.cryptography.protecteddata.8.0.0.nupkg",
+        "asset": "lib/net8.0/System.Security.Cryptography.ProtectedData.dll"
+      }
+    ]
+  },
+  "System.Security.Permissions.dll": {
+    "sha256": "5374d24f1ac7c1d737cf39b675a08ed56d6bcfb74fee14b9d296708d81fbb98a",
+    "installed_source_packages": [
+      {
+        "package": "system.security.permissions.8.0.0.nupkg",
+        "asset": "lib/net8.0/System.Security.Permissions.dll"
+      }
+    ]
+  },
+  "af/Humanizer.resources.dll": {
+    "sha256": "2d74276ad465887ec1a7b67b095c3674d56d8717790e83922e2a6274f320f36d",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/af/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "ar/Humanizer.resources.dll": {
+    "sha256": "8f8f6908dc2e03c2984155014cddfdf353aeccbcca98eaafbbc95416b874a800",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/ar/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "az/Humanizer.resources.dll": {
+    "sha256": "8456125d76c91ad9cbc9c8a4b5609334b0d93bec6601a1409541e679946efcc0",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/az/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "bg/Humanizer.resources.dll": {
+    "sha256": "e1a37166354a3b01bb5eaf53daf19919f9cd58103c3d969075d422a100020c14",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/bg/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "bn-BD/Humanizer.resources.dll": {
+    "sha256": "c32a556ae4e2c5313494bda811afb8009f1b51a1f93ae768efb74144a5a9c8e6",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/bn-BD/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "cs/Humanizer.resources.dll": {
+    "sha256": "3e2d5808e3d7c7a99b602e7e2ecba8a087fbbd1e22293535f4943adb96ccd36b",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/cs/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "cs/Microsoft.CodeAnalysis.CSharp.resources.dll": {
+    "sha256": "19cc434b7df8ae8d48ba04d87c9e4ee62c4109b511c9243f5cf300b78da3b674",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.codeanalysis.csharp.4.9.2.nupkg",
+        "asset": "lib/net8.0/cs/Microsoft.CodeAnalysis.CSharp.resources.dll"
+      }
+    ]
+  },
+  "cs/Microsoft.CodeAnalysis.resources.dll": {
+    "sha256": "884511e7a5d18a751b4364b4ae5c716f61428971ba32f9a6921339b25cecf096",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.codeanalysis.common.4.9.2.nupkg",
+        "asset": "lib/net8.0/cs/Microsoft.CodeAnalysis.resources.dll"
+      }
+    ]
+  },
+  "da/Humanizer.resources.dll": {
+    "sha256": "b868802340d24ba5fa3bf9aefc1e85292fd09730e471385b6cd27ed57bfd8ab4",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/da/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "de/Humanizer.resources.dll": {
+    "sha256": "39ca69ea820b04cc671691210a8bdacc9815decb80e5aef7e1f0449725426428",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/de/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "de/Microsoft.CodeAnalysis.CSharp.resources.dll": {
+    "sha256": "5279111ac5412f216638772107eddaef32e38d0795c0c2e05c2286bec2a8e52a",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.codeanalysis.csharp.4.9.2.nupkg",
+        "asset": "lib/net8.0/de/Microsoft.CodeAnalysis.CSharp.resources.dll"
+      }
+    ]
+  },
+  "de/Microsoft.CodeAnalysis.resources.dll": {
+    "sha256": "d85984ea0b8f753137bea7bc063312d5ef326feafbd596a21465c9ed40e81630",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.codeanalysis.common.4.9.2.nupkg",
+        "asset": "lib/net8.0/de/Microsoft.CodeAnalysis.resources.dll"
+      }
+    ]
+  },
+  "el/Humanizer.resources.dll": {
+    "sha256": "e56abfdf7b911bd7f09ca67e6ef514258f3dd26835dda9f4990e4ad65256f5c0",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/el/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "es/Humanizer.resources.dll": {
+    "sha256": "a424486ca1daa8825b475379ef8ec1e82dc2a014b657fe26f68a9e2dd69a90f4",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/es/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "es/JsonSchema.Net.resources.dll": {
+    "sha256": "58879d8b1ca200c7b110c076299881ed520b8ad5af84113c4335f05eeb8ee926",
+    "installed_source_packages": [
+      {
+        "package": "jsonschema.net.7.0.4.nupkg",
+        "asset": "lib/net8.0/es/JsonSchema.Net.resources.dll"
+      }
+    ]
+  },
+  "es/Microsoft.CodeAnalysis.CSharp.resources.dll": {
+    "sha256": "8cb63d6ce60bca179ccb10cfbec7cb1fbc61d1ef232449869da6e4c5a363b84e",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.codeanalysis.csharp.4.9.2.nupkg",
+        "asset": "lib/net8.0/es/Microsoft.CodeAnalysis.CSharp.resources.dll"
+      }
+    ]
+  },
+  "es/Microsoft.CodeAnalysis.resources.dll": {
+    "sha256": "68d5bd1194f0cb14f7f76b35f4732c04ea6da36c7821f85f6f424b3e5de8dc2c",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.codeanalysis.common.4.9.2.nupkg",
+        "asset": "lib/net8.0/es/Microsoft.CodeAnalysis.resources.dll"
+      }
+    ]
+  },
+  "fa/Humanizer.resources.dll": {
+    "sha256": "6dbcc98c65879e5aaa372bc1ffdda198a041a8a0999d9c9a78b00e0db8c02bbd",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/fa/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "fi-FI/Humanizer.resources.dll": {
+    "sha256": "6a714740919e42132c99a8882ef6d92ecc640b195193e0b7d66f37deddb5a84f",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/fi-FI/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "fr/Humanizer.resources.dll": {
+    "sha256": "ce41e95119e76c1a694c0b9b3695c8f05034a7bb0a6ac1307fb3bdc288e99684",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/fr/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "fr/Microsoft.CodeAnalysis.CSharp.resources.dll": {
+    "sha256": "34af1e733077a5825a6de1bb00ca9118e0469cfbee1069c32474227700dfdbbd",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.codeanalysis.csharp.4.9.2.nupkg",
+        "asset": "lib/net8.0/fr/Microsoft.CodeAnalysis.CSharp.resources.dll"
+      }
+    ]
+  },
+  "fr/Microsoft.CodeAnalysis.resources.dll": {
+    "sha256": "e0d3420e887f2fb86ae291324952e2a3bd6ccfcecf7aa869a2ee9963204a66d7",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.codeanalysis.common.4.9.2.nupkg",
+        "asset": "lib/net8.0/fr/Microsoft.CodeAnalysis.resources.dll"
+      }
+    ]
+  },
+  "fr-BE/Humanizer.resources.dll": {
+    "sha256": "29f8e5eede4308df21a040dc629b54466d07bf384c20013cdf3af21cfd9845bb",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/fr-BE/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "getfilesiginforedistwrapper.dll": {
+    "sha256": "d543c3abaab14ec7836fa7095a05ee9373a28c8f3f11a4b399aac7ad9ba21972",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.security.extensions.1.4.0.nupkg",
+        "asset": "lib/net8.0/getfilesiginforedistwrapper.dll"
+      }
+    ]
+  },
+  "he/Humanizer.resources.dll": {
+    "sha256": "2d5762aa4c3e61fd9a276c9124ce54eb303379117b95f3f4f40e34e47bb704ab",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/he/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "hr/Humanizer.resources.dll": {
+    "sha256": "abde02d62fd5935d69d4d1469798b09a111d9f990e0a7ca441d41890a4ccb3a5",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/hr/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "hu/Humanizer.resources.dll": {
+    "sha256": "5fce1530b2651b3d8281c50826df8431d5f21914c8f7b218bbea6d15846752a5",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/hu/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "hy/Humanizer.resources.dll": {
+    "sha256": "0a9f97607a6fc0f78b731bf281ede66d1a9f142f1f997e258b1f363119c1bfee",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/hy/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "id/Humanizer.resources.dll": {
+    "sha256": "d1e9bf5de72773373aaec7ff840aa176406dcc230902af6a1c3e8b34f0420630",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/id/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "is/Humanizer.resources.dll": {
+    "sha256": "19bfdc570884d5b6c2e1b9d100eec16b2232e27396b548d2483ab038b3903af2",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/is/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "it/Humanizer.resources.dll": {
+    "sha256": "e031c29de874a83110d03637c85e758f5700772f9f63e96e32471e6a3b26b16c",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/it/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "it/JsonSchema.Net.resources.dll": {
+    "sha256": "df704be672b34f545b690476d86266978c33b19676e28984b3628c8dce84010f",
+    "installed_source_packages": [
+      {
+        "package": "jsonschema.net.7.0.4.nupkg",
+        "asset": "lib/net8.0/it/JsonSchema.Net.resources.dll"
+      }
+    ]
+  },
+  "it/Microsoft.CodeAnalysis.CSharp.resources.dll": {
+    "sha256": "a7cbad7dcb0d9c2ebbdffc1c2697361df092cb589cadc886a38128b3a24b7793",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.codeanalysis.csharp.4.9.2.nupkg",
+        "asset": "lib/net8.0/it/Microsoft.CodeAnalysis.CSharp.resources.dll"
+      }
+    ]
+  },
+  "it/Microsoft.CodeAnalysis.resources.dll": {
+    "sha256": "fe9623b1cb58d09a38ff6b2781dbff39a44843f73ed36862596619c8138c4ff8",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.codeanalysis.common.4.9.2.nupkg",
+        "asset": "lib/net8.0/it/Microsoft.CodeAnalysis.resources.dll"
+      }
+    ]
+  },
+  "ja/Humanizer.resources.dll": {
+    "sha256": "ea448c5a09b942d192994575df385b35a8694d8edb5406ec4892a38f44bd423b",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/ja/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "ja/Microsoft.CodeAnalysis.CSharp.resources.dll": {
+    "sha256": "2faa264fc4d9b1a099023684000c5865c7e1f408ac0f28d68897d3aed898a19c",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.codeanalysis.csharp.4.9.2.nupkg",
+        "asset": "lib/net8.0/ja/Microsoft.CodeAnalysis.CSharp.resources.dll"
+      }
+    ]
+  },
+  "ja/Microsoft.CodeAnalysis.resources.dll": {
+    "sha256": "41df7b651867e32ed9418a29ac790734d70b734bb46b1b27a0559c8456f317ea",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.codeanalysis.common.4.9.2.nupkg",
+        "asset": "lib/net8.0/ja/Microsoft.CodeAnalysis.resources.dll"
+      }
+    ]
+  },
+  "ko/Microsoft.CodeAnalysis.CSharp.resources.dll": {
+    "sha256": "06deb1c97c039d6f5d7d8670b9f8ff3fe9f90a5fcc6c976593b1b1f999d18089",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.codeanalysis.csharp.4.9.2.nupkg",
+        "asset": "lib/net8.0/ko/Microsoft.CodeAnalysis.CSharp.resources.dll"
+      }
+    ]
+  },
+  "ko/Microsoft.CodeAnalysis.resources.dll": {
+    "sha256": "727f60b461e5ab54340d08915018e9666bbd70d8e11b3328197a95af3b5f598e",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.codeanalysis.common.4.9.2.nupkg",
+        "asset": "lib/net8.0/ko/Microsoft.CodeAnalysis.resources.dll"
+      }
+    ]
+  },
+  "ko-KR/Humanizer.resources.dll": {
+    "sha256": "5d5f1470a05589cdcbe4321389c9c4e589750af52c9bc86eb465db908b00ba1f",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/ko-KR/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "ku/Humanizer.resources.dll": {
+    "sha256": "80fef9fd7da3b7c6a184395584137785d8e601c28500e99d8f345392a3e975b8",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/ku/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "lv/Humanizer.resources.dll": {
+    "sha256": "70210d702983a102a42be8faff33beb0de569e65637d22655ae7a0cbf6dc29c5",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/lv/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "ms-MY/Humanizer.resources.dll": {
+    "sha256": "c90c6c970e763f7b3ea719b11e8c1c90ca0ce16592c5a792814ef715f3b2a138",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/ms-MY/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "mt/Humanizer.resources.dll": {
+    "sha256": "c4484a9ab0bfd5348628bcc986a17c639c0512dc0a9e3938b5bf6c35c40cb8b9",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/mt/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "nb/Humanizer.resources.dll": {
+    "sha256": "e6aad427b9f8eea10bb431fc0632019c6784a025e7eb7fa1808b29ed2b58fb1e",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/nb/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "nb-NO/Humanizer.resources.dll": {
+    "sha256": "2f6a70cf4962f48a8808c3e506fdee578ec310718e750f48f53ecb178d19bfdc",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/nb-NO/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "nb-NO/JsonSchema.Net.resources.dll": {
+    "sha256": "4181d17c2a18d6372a5ad3cb9b77fc8271df36a64f3ec43a4ab11906c6cf94b9",
+    "installed_source_packages": [
+      {
+        "package": "jsonschema.net.7.0.4.nupkg",
+        "asset": "lib/net8.0/nb-NO/JsonSchema.Net.resources.dll"
+      }
+    ]
+  },
+  "nl/Humanizer.resources.dll": {
+    "sha256": "400fecb6c7f49fdb5ae7e89b5084f9b1dd2693d6b9cef22d7fec515ce78665a7",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/nl/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "pl/Humanizer.resources.dll": {
+    "sha256": "18cd903e02896a8a1ee5c8dc8edf7c4adf7a35b5a09052abf346c3321f03b7a2",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/pl/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "pl/Microsoft.CodeAnalysis.CSharp.resources.dll": {
+    "sha256": "f22669461fb48bf50b4555393b53d18f6a83b2a7f2556c7dd3c6a4bde7785242",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.codeanalysis.csharp.4.9.2.nupkg",
+        "asset": "lib/net8.0/pl/Microsoft.CodeAnalysis.CSharp.resources.dll"
+      }
+    ]
+  },
+  "pl/Microsoft.CodeAnalysis.resources.dll": {
+    "sha256": "2ddcd56ff22bb60f2e984ca0d29eac6bd36faa094a7471d9102e6d4d3ea57ad0",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.codeanalysis.common.4.9.2.nupkg",
+        "asset": "lib/net8.0/pl/Microsoft.CodeAnalysis.resources.dll"
+      }
+    ]
+  },
+  "pl-PL/JsonSchema.Net.resources.dll": {
+    "sha256": "20d4aeb51dd9ccd296c418ce8ed7bd67328a78728a0f9b6e4bbb8f724f533a96",
+    "installed_source_packages": [
+      {
+        "package": "jsonschema.net.7.0.4.nupkg",
+        "asset": "lib/net8.0/pl-PL/JsonSchema.Net.resources.dll"
+      }
+    ]
+  },
+  "pt/Humanizer.resources.dll": {
+    "sha256": "2338d79fef326fab6e92c13de8cf2c705041c7f57ed1629c7e0c75b79f09ecb5",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/pt/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "pt-BR/Microsoft.CodeAnalysis.CSharp.resources.dll": {
+    "sha256": "7a969f7fb0f575b3d246c80275479b8d9428264b84555df8dafc476d4e7e5133",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.codeanalysis.csharp.4.9.2.nupkg",
+        "asset": "lib/net8.0/pt-BR/Microsoft.CodeAnalysis.CSharp.resources.dll"
+      }
+    ]
+  },
+  "pt-BR/Microsoft.CodeAnalysis.resources.dll": {
+    "sha256": "d3f3a088a095e98d165da756b69a8013a911f7fdb7b65e50d660c23be87f5bae",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.codeanalysis.common.4.9.2.nupkg",
+        "asset": "lib/net8.0/pt-BR/Microsoft.CodeAnalysis.resources.dll"
+      }
+    ]
+  },
+  "pwsh.dll": {
+    "sha256": "5edf53f6e1cb234aed1bbd2859da6272969acd4861dd1fa142a58af1d887cee2",
+    "original_console_entry_source": "src/powershell/Program.cs",
+    "source_sha256": "d1d43b422b1d19c993622abba1ae0886d0fd02f1d1c34dd41c136ce1c37eff20"
+  },
+  "ref/Microsoft.CSharp.dll": {
+    "sha256": "b1f380ba9a70f0387b428c98a8739eec8a83cfe37b619d2c06be1535c64e79de",
+    "source_reference_metadata": true
+  },
+  "ref/Microsoft.VisualBasic.Core.dll": {
+    "sha256": "bac073af69e012883a856f1f02e927eb14153ec5a45f9a014e51a3e8083630ef",
+    "source_reference_metadata": true
+  },
+  "ref/Microsoft.VisualBasic.dll": {
+    "sha256": "e9fed52918dd5968e18f3fbf914e8bd4de742d230042069b11a512a71cb40e2d",
+    "source_reference_metadata": true
+  },
+  "ref/Microsoft.Win32.Primitives.dll": {
+    "sha256": "3b306632d45597da56e29d1e95adda7426d9d72f6918404acb8f7136a771a60f",
+    "source_reference_metadata": true
+  },
+  "ref/Microsoft.Win32.Registry.dll": {
+    "sha256": "460c453c2de3cc039cbbe800596c7032f30b879f62a49e706e801c7712cbd82f",
+    "source_reference_metadata": true
+  },
+  "ref/System.AppContext.dll": {
+    "sha256": "1ab9a9093d1c58eb20a0746e70605f05ba729a94d433353f9adcc46d771230a3",
+    "source_reference_metadata": true
+  },
+  "ref/System.Buffers.dll": {
+    "sha256": "71d40b9b87867d1093314695445297967c0eddc9d5964a06bbeb28964ebc3ba5",
+    "source_reference_metadata": true
+  },
+  "ref/System.Collections.Concurrent.dll": {
+    "sha256": "e5b29a67f6efc7d40d2ee0f8c80beafbfe71e15cfa4c20277eb9c5c96e300f52",
+    "source_reference_metadata": true
+  },
+  "ref/System.Collections.Immutable.dll": {
+    "sha256": "2d29dbf75111c93522c5c2319e8bb57efdfb605b476aba6f1fa532b1e28c56d4",
+    "source_reference_metadata": true
+  },
+  "ref/System.Collections.NonGeneric.dll": {
+    "sha256": "f04f0d812a152b3b961dbd6c284dcdb8fb054934bf636363ddf062bc1ab2306d",
+    "source_reference_metadata": true
+  },
+  "ref/System.Collections.Specialized.dll": {
+    "sha256": "2e13f9918e6a07ab41abb8441daef4910df90849220c4cf78aeb767190f3a682",
+    "source_reference_metadata": true
+  },
+  "ref/System.Collections.dll": {
+    "sha256": "f05821d8a1b88143d21121c089c2f5545720dc378344569c7c79d96578ad7284",
+    "source_reference_metadata": true
+  },
+  "ref/System.ComponentModel.Annotations.dll": {
+    "sha256": "7240e53b661c14b3e1f346cfc525e1410af48ac052362a6b11c08c7977027974",
+    "source_reference_metadata": true
+  },
+  "ref/System.ComponentModel.DataAnnotations.dll": {
+    "sha256": "8535683ddd0f45fa43f25edfee1fe8eec646d0e69fdd3adab3bec23b0b964fa3",
+    "source_reference_metadata": true
+  },
+  "ref/System.ComponentModel.EventBasedAsync.dll": {
+    "sha256": "b23c3333f0577213dcdaedc6691390cdcc23a5224d19df9cbc8f54182d617aaa",
+    "source_reference_metadata": true
+  },
+  "ref/System.ComponentModel.Primitives.dll": {
+    "sha256": "0b220d7a6cfbe521c0ee8473d9670f5ffedf5822335cc297f0b6a8ebcb701e42",
+    "source_reference_metadata": true
+  },
+  "ref/System.ComponentModel.TypeConverter.dll": {
+    "sha256": "bf4c6653e28e1a2a87383175968558dc25d06e5458b2786363b716e2a6d52c74",
+    "source_reference_metadata": true
+  },
+  "ref/System.ComponentModel.dll": {
+    "sha256": "9bd0914ff21ee70bc12cbc266cde94d5f6fb21c0dc6ab0c29e6efa13d23f05c3",
+    "source_reference_metadata": true
+  },
+  "ref/System.Configuration.dll": {
+    "sha256": "2bf45cde00a3f53cb5ad39c07e06333c868b37dd26654890b489ae9348c439db",
+    "source_reference_metadata": true
+  },
+  "ref/System.Console.dll": {
+    "sha256": "cdb2d7331c140dd3d3d545def374d71fd40346ba234e1ca644cd13be2e40d1db",
+    "source_reference_metadata": true
+  },
+  "ref/System.Core.dll": {
+    "sha256": "a004a7d0d70b43e2734a2928c18d99c4bc08c010f414c6a7b5e5f0001c7a79cf",
+    "source_reference_metadata": true
+  },
+  "ref/System.Data.Common.dll": {
+    "sha256": "0990ae28916158c388c0c6c60ce51acf2867cd135bed748a657701ebac0e7cdb",
+    "source_reference_metadata": true
+  },
+  "ref/System.Data.DataSetExtensions.dll": {
+    "sha256": "1a8de6461df97a38f86a37d2cebc5a8cf094135889e57bdbd459df852f4faaaf",
+    "source_reference_metadata": true
+  },
+  "ref/System.Data.dll": {
+    "sha256": "d49cf0743d0b80dc07f949f902cd38d08fc68f2da2abbc95fc2b3bf579029dd6",
+    "source_reference_metadata": true
+  },
+  "ref/System.Diagnostics.Contracts.dll": {
+    "sha256": "d9cdfc31571a2c910c5d1fc0abcff7fa9ae1a023d6f2f59d0b11cf2b3d9628f8",
+    "source_reference_metadata": true
+  },
+  "ref/System.Diagnostics.Debug.dll": {
+    "sha256": "8662695176c67864e111fceff1e07ef5038ecb86d65a3a374d803e50debf6318",
+    "source_reference_metadata": true
+  },
+  "ref/System.Diagnostics.DiagnosticSource.dll": {
+    "sha256": "d874d13f012b4a54e40aacfc7cd51761f14fd6054fd36fe51c0313ad5206635c",
+    "source_reference_metadata": true
+  },
+  "ref/System.Diagnostics.FileVersionInfo.dll": {
+    "sha256": "b9525dcc4bfa96980516d7e380254b4d54b4600b3d6dbbb25083d88c10093c17",
+    "source_reference_metadata": true
+  },
+  "ref/System.Diagnostics.Process.dll": {
+    "sha256": "85d894d3c314ed52842fa78f7204a2ae65c22e412689115db8dc3ee3f9230b4e",
+    "source_reference_metadata": true
+  },
+  "ref/System.Diagnostics.StackTrace.dll": {
+    "sha256": "c3617afb07573417ae6a22cbd39b571c3c4f7de7bda0295515133fb3dd31f1ff",
+    "source_reference_metadata": true
+  },
+  "ref/System.Diagnostics.TextWriterTraceListener.dll": {
+    "sha256": "89304212364fbc7f66a3feb8f11ab4e687114808ee34c9ad8573f8f564a6236f",
+    "source_reference_metadata": true
+  },
+  "ref/System.Diagnostics.Tools.dll": {
+    "sha256": "16e812fd127539662deb506b5ec07fa8bd29fa6865d34ae702bc2028c48875b8",
+    "source_reference_metadata": true
+  },
+  "ref/System.Diagnostics.TraceSource.dll": {
+    "sha256": "a5ca3640a334bb40a1fe10643964a3fc1528e944d8878cef358966f8315c7684",
+    "source_reference_metadata": true
+  },
+  "ref/System.Diagnostics.Tracing.dll": {
+    "sha256": "af8f8e203007a4181ae0793deae416444e8fb5a10c2ebd5a49fd534524145fea",
+    "source_reference_metadata": true
+  },
+  "ref/System.Drawing.Primitives.dll": {
+    "sha256": "34b92dd3d5369028a4956a2eae620d3f00a4a1ca3d8bb6760d79c368465f463c",
+    "source_reference_metadata": true
+  },
+  "ref/System.Drawing.dll": {
+    "sha256": "2a079f78f1259dea6266bd7bf80b37b5830c2b31bc6a29ff0b0cad702241c321",
+    "source_reference_metadata": true
+  },
+  "ref/System.Dynamic.Runtime.dll": {
+    "sha256": "b15ce2918e5d20357d98aadfe75555914959354a9f2438b94a2c8ae6259c3f48",
+    "source_reference_metadata": true
+  },
+  "ref/System.Formats.Asn1.dll": {
+    "sha256": "0436598fe11726ad9a5b1ba92ca4d5631dd7e2b9164b891b90e8868e3d35b004",
+    "source_reference_metadata": true
+  },
+  "ref/System.Formats.Tar.dll": {
+    "sha256": "51413faadbccb58cd44b1d4a87e824ba914f5908abfcbc36823983deaeadf9ad",
+    "source_reference_metadata": true
+  },
+  "ref/System.Globalization.Calendars.dll": {
+    "sha256": "27e2957a930999925197e99f1aa153157adfdada790bebb0bd522cfd32b55eb6",
+    "source_reference_metadata": true
+  },
+  "ref/System.Globalization.Extensions.dll": {
+    "sha256": "c01b32a78b69f3bfe39fbb7370838d3e3a3883ded045c32542c5c06d313d4a1b",
+    "source_reference_metadata": true
+  },
+  "ref/System.Globalization.dll": {
+    "sha256": "3061d8a93a11ae0b257b80060978efcc609712bd87cb6daccd7d56aaa578df6b",
+    "source_reference_metadata": true
+  },
+  "ref/System.IO.Compression.Brotli.dll": {
+    "sha256": "3ac3cc38596d43eea3b58ddffda519b8b18c1a1c00c4da31becc5f005860e7f0",
+    "source_reference_metadata": true
+  },
+  "ref/System.IO.Compression.FileSystem.dll": {
+    "sha256": "c184dfc4851c23941fdb3491192b75c3ac84892993e4868f3f0cdc7a77c2388a",
+    "source_reference_metadata": true
+  },
+  "ref/System.IO.Compression.ZipFile.dll": {
+    "sha256": "6ab15b47f063b4fa965bb1cec2fba057b56ff98ae8079a4704ab21bab22b7cad",
+    "source_reference_metadata": true
+  },
+  "ref/System.IO.Compression.dll": {
+    "sha256": "8c5fca6cfd24fc3bc66721d8546c2a06f7b340fdf021271975e0cbc4434fcc5c",
+    "source_reference_metadata": true
+  },
+  "ref/System.IO.FileSystem.AccessControl.dll": {
+    "sha256": "edd4870d0b1194c8c53d72e70429694c366e9cdcec09d9a42894ac85d1af93d2",
+    "source_reference_metadata": true
+  },
+  "ref/System.IO.FileSystem.DriveInfo.dll": {
+    "sha256": "17f61f98a38c332299de3627583b056d2a02dfb29f3550289c60b23a093b4acb",
+    "source_reference_metadata": true
+  },
+  "ref/System.IO.FileSystem.Primitives.dll": {
+    "sha256": "6077b2938e4cf1ad23dedd9af946ffd53ef441cb78b2d1a1c14811704b27ac13",
+    "source_reference_metadata": true
+  },
+  "ref/System.IO.FileSystem.Watcher.dll": {
+    "sha256": "f519d91540e37bc7bb20f838a924202e8758c7367a869a3195b3e140ff3cc5e2",
+    "source_reference_metadata": true
+  },
+  "ref/System.IO.FileSystem.dll": {
+    "sha256": "4a1b32ad265c01110ae6a1a479dd22fd507113e17107ecb55facf63c0a3b6f96",
+    "source_reference_metadata": true
+  },
+  "ref/System.IO.IsolatedStorage.dll": {
+    "sha256": "7624b493014e0777baa3b3e851f22f9c73045a019e4bb6294bed7b2f858d55cb",
+    "source_reference_metadata": true
+  },
+  "ref/System.IO.MemoryMappedFiles.dll": {
+    "sha256": "a18063fa650cedf1ff9b7b1ca0500452e452f453138789f4af3ed30e0b9f565c",
+    "source_reference_metadata": true
+  },
+  "ref/System.IO.Pipes.AccessControl.dll": {
+    "sha256": "2a811f57c506c6e31579b21d6c19bc9cd401cd7a793402b0cc049ec0cd27f48e",
+    "source_reference_metadata": true
+  },
+  "ref/System.IO.Pipes.dll": {
+    "sha256": "12747ef8d5854e887e1865be9872f4e96fd59e29a9083f3b73571bbef49c0681",
+    "source_reference_metadata": true
+  },
+  "ref/System.IO.UnmanagedMemoryStream.dll": {
+    "sha256": "e6ef700ed25fec81613dc40e7570b4419867db56bd7faa578771defbcf656405",
+    "source_reference_metadata": true
+  },
+  "ref/System.IO.dll": {
+    "sha256": "ba077cb648b6c902a3de1e6db3208488e38cb1c9807a59f2107bf65f7f089909",
+    "source_reference_metadata": true
+  },
+  "ref/System.Linq.Expressions.dll": {
+    "sha256": "332b7bc4f90f43b6e0a0edab4620c360d544a3db8ece37ebc8da0849fe5fd3b0",
+    "source_reference_metadata": true
+  },
+  "ref/System.Linq.Parallel.dll": {
+    "sha256": "ee3684388b71bdc175c8060c7d25d391c9fb2dd574f37b94e962b20d1877ed90",
+    "source_reference_metadata": true
+  },
+  "ref/System.Linq.Queryable.dll": {
+    "sha256": "4dfdb917deac363157f68efdb124e98bdf5dfdcbf7abe58df591b5c9b8775ba7",
+    "source_reference_metadata": true
+  },
+  "ref/System.Linq.dll": {
+    "sha256": "1150ffe1403ee8cf3822be68c2fa5b24ac21ced9da17045382736b091f3cf204",
+    "source_reference_metadata": true
+  },
+  "ref/System.Memory.dll": {
+    "sha256": "cf9f9bc1540981ffea7cc3bce06edbe212adcafdde1505756909e1cb0e0f65f1",
+    "source_reference_metadata": true
+  },
+  "ref/System.Net.Http.Json.dll": {
+    "sha256": "bfd17ac6e6e3c2c469773a1a5ef99296e84b4aabbd3e369ca83dabe232f92f31",
+    "source_reference_metadata": true
+  },
+  "ref/System.Net.Http.dll": {
+    "sha256": "9c1875093f195c65c8a916719a1f1b7a277e1ed307715b8ed4764956304a60ed",
+    "source_reference_metadata": true
+  },
+  "ref/System.Net.HttpListener.dll": {
+    "sha256": "0b8919b920d7044b7ad38ae553ddf7cb81ea98f97d20bad44773a75ca32c0a09",
+    "source_reference_metadata": true
+  },
+  "ref/System.Net.Mail.dll": {
+    "sha256": "f5338f47844614593918354a58f49a717dc04bdfb61d93a4fcd1f437eb77d220",
+    "source_reference_metadata": true
+  },
+  "ref/System.Net.NameResolution.dll": {
+    "sha256": "e4c1dff7c69fbfacb916d2137f70fe185436736eedf1b18017739fd0f6b01bad",
+    "source_reference_metadata": true
+  },
+  "ref/System.Net.NetworkInformation.dll": {
+    "sha256": "d0543af9747967dad6df764fb07f37ef36f61ac43ea0bad158a62409f500ae9b",
+    "source_reference_metadata": true
+  },
+  "ref/System.Net.Ping.dll": {
+    "sha256": "b4c1c5cdb217e9028df7feaabb8a57cdd1129cd72684161505fbc93a7ecee483",
+    "source_reference_metadata": true
+  },
+  "ref/System.Net.Primitives.dll": {
+    "sha256": "681d30fcfa82eb9e0456142d3d21b676d5e156994d3f8a1a7c55ff7269d81cb4",
+    "source_reference_metadata": true
+  },
+  "ref/System.Net.Quic.dll": {
+    "sha256": "8457994e78a4a583596409752e3af1a6aaa345bc3bf8b3c1bca78e2e1c1b7afb",
+    "source_reference_metadata": true
+  },
+  "ref/System.Net.Requests.dll": {
+    "sha256": "fca7c7269fca979b8b7f350980b4ab6aa5747e40ac9c16d330982a6f7327ccc9",
+    "source_reference_metadata": true
+  },
+  "ref/System.Net.Security.dll": {
+    "sha256": "8eddda2d61ee70d8ab71f191f15625a8be7e11d1c2c13794094cdc3a7fab0b99",
+    "source_reference_metadata": true
+  },
+  "ref/System.Net.ServicePoint.dll": {
+    "sha256": "924786ddf7c4c4da862f6ff782c6919397791af8af2bb9be389099d4bf5f22eb",
+    "source_reference_metadata": true
+  },
+  "ref/System.Net.Sockets.dll": {
+    "sha256": "a8cefaa955ca1a5b2c3dc36b5c411a17566b8dcee4d3d08966a7d6a305e8618e",
+    "source_reference_metadata": true
+  },
+  "ref/System.Net.WebClient.dll": {
+    "sha256": "2e220231404c15304d4bfae80c1b10961547fb2c5f5cd6497999336abffd6752",
+    "source_reference_metadata": true
+  },
+  "ref/System.Net.WebHeaderCollection.dll": {
+    "sha256": "d798b378799ac1328d9d43b887e45717bd10bcf01c5ffa8587f483922c2652da",
+    "source_reference_metadata": true
+  },
+  "ref/System.Net.WebProxy.dll": {
+    "sha256": "04de90407fb5bce69b4408a90dd3773bfd1739050718650f4696b7c2a2f4a88c",
+    "source_reference_metadata": true
+  },
+  "ref/System.Net.WebSockets.Client.dll": {
+    "sha256": "d0efe91993b97eba9f1f13b4744e02006b50c6fc0aed931d79551bf17e01291b",
+    "source_reference_metadata": true
+  },
+  "ref/System.Net.WebSockets.dll": {
+    "sha256": "c96355ee531bef125075c1e9b29797942df882e0b103e8ead65799950630cfe2",
+    "source_reference_metadata": true
+  },
+  "ref/System.Net.dll": {
+    "sha256": "6b805c17237e5ca2cea2a521eb973eba2809d3311c1835951d217fa0325e2d1b",
+    "source_reference_metadata": true
+  },
+  "ref/System.Numerics.Vectors.dll": {
+    "sha256": "d61e917dddc1e7252d7d4aaaf8705ed2e2997614d82dadded3c60d6abe089492",
+    "source_reference_metadata": true
+  },
+  "ref/System.Numerics.dll": {
+    "sha256": "87142ef352fa639e7b4102df97fb24655ad7d526aad696e079873235443a46ce",
+    "source_reference_metadata": true
+  },
+  "ref/System.ObjectModel.dll": {
+    "sha256": "035b890b6f6e3c68e7a01ee67a153ac5c8f178eaff26373590c169c96f7b1d90",
+    "source_reference_metadata": true
+  },
+  "ref/System.Reflection.DispatchProxy.dll": {
+    "sha256": "34801a34e80b43bd96107eb4f13ac5c8e79c3cd536b9f2e959a5d0b0e0b1ba96",
+    "source_reference_metadata": true
+  },
+  "ref/System.Reflection.Emit.ILGeneration.dll": {
+    "sha256": "e75cfb178d06f9dac53c3a74affbeccf33f9277dddb96235ec1b1d788c770cb0",
+    "source_reference_metadata": true
+  },
+  "ref/System.Reflection.Emit.Lightweight.dll": {
+    "sha256": "d6a78c8b07f0993a6604b62a85e1c52e21b3e41f33e0c8fb5ab384ee2a76a247",
+    "source_reference_metadata": true
+  },
+  "ref/System.Reflection.Emit.dll": {
+    "sha256": "a99909b818acbd810e64d5f2e032432195f454af29e22ed41411fc357f31b83a",
+    "source_reference_metadata": true
+  },
+  "ref/System.Reflection.Extensions.dll": {
+    "sha256": "8130b36ddf492d24e3ead43c136d12b3a89614bec6d4abf36054609916e7f7bb",
+    "source_reference_metadata": true
+  },
+  "ref/System.Reflection.Metadata.dll": {
+    "sha256": "9ff6df61fa1f682f94f006b2dd7710f02e12f0c566f64784471b27588d5d78ba",
+    "source_reference_metadata": true
+  },
+  "ref/System.Reflection.Primitives.dll": {
+    "sha256": "725ac5590ac473143dbb5222a6fd07da509528a34407755a2716a99d26b9bd42",
+    "source_reference_metadata": true
+  },
+  "ref/System.Reflection.TypeExtensions.dll": {
+    "sha256": "a29bed4100a345a4e40a6a9654c5eda631f7bc56bf32a35f2366580712d52922",
+    "source_reference_metadata": true
+  },
+  "ref/System.Reflection.dll": {
+    "sha256": "7a6215aa4383c98c6bc18b3f915d02e2af6e5f6299aeda2b1401257ed11f8846",
+    "source_reference_metadata": true
+  },
+  "ref/System.Resources.Reader.dll": {
+    "sha256": "5c61c54086da9c3af8296c03daf087980861cc5e764586f89fcfef16017bdad5",
+    "source_reference_metadata": true
+  },
+  "ref/System.Resources.ResourceManager.dll": {
+    "sha256": "93fc2c022165a4b11ce15ef4e0ee115015ca1f673b71437dbff35c0c1f4d1ce7",
+    "source_reference_metadata": true
+  },
+  "ref/System.Resources.Writer.dll": {
+    "sha256": "248ead9728f85d185adf2ff504e739bd66dd120c2e6edadf5fed27e187990ea9",
+    "source_reference_metadata": true
+  },
+  "ref/System.Runtime.CompilerServices.Unsafe.dll": {
+    "sha256": "25a9adac72993bc4f7498dc4a52b02a27f1d5606eac070b762e102c1bf6ed7d3",
+    "source_reference_metadata": true
+  },
+  "ref/System.Runtime.CompilerServices.VisualC.dll": {
+    "sha256": "9d1e52409ac0f74eef1f5e27bfb4f9607447c3481c96e93b0a1f8c9c9532d7da",
+    "source_reference_metadata": true
+  },
+  "ref/System.Runtime.Extensions.dll": {
+    "sha256": "469f5d3feff183c5713790fa1741a82c94e7676e89a8f33cb50b8b3b3d18faf1",
+    "source_reference_metadata": true
+  },
+  "ref/System.Runtime.Handles.dll": {
+    "sha256": "fe2d009ab4a931540f63ace2d5a6ab0a53142dd49067e84eaa023bde62c1b892",
+    "source_reference_metadata": true
+  },
+  "ref/System.Runtime.InteropServices.JavaScript.dll": {
+    "sha256": "324f8c06a20c595c618e087a1be6c3013ec92816c782d9e07b6990135b4a0637",
+    "source_reference_metadata": true
+  },
+  "ref/System.Runtime.InteropServices.RuntimeInformation.dll": {
+    "sha256": "d60443cdd89d467ac5e925084dc59b175eae9fac02b6209802a5180c9b4d978b",
+    "source_reference_metadata": true
+  },
+  "ref/System.Runtime.InteropServices.dll": {
+    "sha256": "5e4a7d7f6b326080a359d3eba815986f7233b1ac06af1364eba22a844de49f9d",
+    "source_reference_metadata": true
+  },
+  "ref/System.Runtime.Intrinsics.dll": {
+    "sha256": "3d2c24c9ab678847af00ac47dc0ba0d589f30f6dae31cf7019ad1823dfd34545",
+    "source_reference_metadata": true
+  },
+  "ref/System.Runtime.Loader.dll": {
+    "sha256": "21aad2420ac21b50381fc7ee4f2c55f5c0b27b4b6956c201e7a9b5d312364670",
+    "source_reference_metadata": true
+  },
+  "ref/System.Runtime.Numerics.dll": {
+    "sha256": "285a350482ab085bb0d131dd37f49d820604ae6f3d67910c5d7296d33f386b87",
+    "source_reference_metadata": true
+  },
+  "ref/System.Runtime.Serialization.Formatters.dll": {
+    "sha256": "6dd201dc4b521d3936047f64d1511c06fb29864b0db14bc82eb9891d541d3c43",
+    "source_reference_metadata": true
+  },
+  "ref/System.Runtime.Serialization.Json.dll": {
+    "sha256": "077d4750214f6c85304548c627f98b378bc3233709357ef16f0c4a0bf71d7361",
+    "source_reference_metadata": true
+  },
+  "ref/System.Runtime.Serialization.Primitives.dll": {
+    "sha256": "fe073bb797cfb78ed33d16f4da2d102cf3b45cd075d40bf49d9bfc34fa2bd319",
+    "source_reference_metadata": true
+  },
+  "ref/System.Runtime.Serialization.Xml.dll": {
+    "sha256": "69bec3b7894b5f91b0ef8699604291d3721af5b327e6b88a6865573059b1e072",
+    "source_reference_metadata": true
+  },
+  "ref/System.Runtime.Serialization.dll": {
+    "sha256": "15e04ac515f46667f95ba11ccb7d04eb3b85e49e001127f84b07e090cbcca918",
+    "source_reference_metadata": true
+  },
+  "ref/System.Runtime.dll": {
+    "sha256": "e8d328a38aba70702341d92a12cba1658e798a5b697a08c43d8403f6d5d2b9d4",
+    "source_reference_metadata": true
+  },
+  "ref/System.Security.AccessControl.dll": {
+    "sha256": "e488aa1fc439c4aa0770300b7a95094ea06c626eb19e73237c0b78066d34ce09",
+    "source_reference_metadata": true
+  },
+  "ref/System.Security.Claims.dll": {
+    "sha256": "41851b5e64222c72465bcf4305c1a335d2726eb2834b8167742c4f9cb4617a97",
+    "source_reference_metadata": true
+  },
+  "ref/System.Security.Cryptography.Algorithms.dll": {
+    "sha256": "76f6fabcb25a2ca962147823e5d92c9f73f072c5e151b0a926c2e1b26fe6366d",
+    "source_reference_metadata": true
+  },
+  "ref/System.Security.Cryptography.Cng.dll": {
+    "sha256": "3abd455b897b7c90c85c94e8b01865d8b9ab289b3cb8f20264a660c2907560f2",
+    "source_reference_metadata": true
+  },
+  "ref/System.Security.Cryptography.Csp.dll": {
+    "sha256": "a9300892eca2a60baca009b4249437b1eb158266c733849838d1d315696c5b1e",
+    "source_reference_metadata": true
+  },
+  "ref/System.Security.Cryptography.Encoding.dll": {
+    "sha256": "04b5ea1b1df9c66c8fa189f5c3601d9f51ac927bf4e5078cf5c35510b5ef187f",
+    "source_reference_metadata": true
+  },
+  "ref/System.Security.Cryptography.OpenSsl.dll": {
+    "sha256": "c3fb927486fb4437b230100e65120a8ca75a0760f50f9dcfed2406aade846f6e",
+    "source_reference_metadata": true
+  },
+  "ref/System.Security.Cryptography.Primitives.dll": {
+    "sha256": "56505263b4fba5303b48cd082bf7369678151314c95a02a3e6f18a8fb141aee3",
+    "source_reference_metadata": true
+  },
+  "ref/System.Security.Cryptography.X509Certificates.dll": {
+    "sha256": "e206120ee64aad39aabc2c401e8bdae93f308f6bb431cd88d6f931867ec63bdc",
+    "source_reference_metadata": true
+  },
+  "ref/System.Security.Cryptography.dll": {
+    "sha256": "3d7d38b2aee12dea5e0c842c69893426dde181d03a07e02ff307ea6a262f8e23",
+    "source_reference_metadata": true
+  },
+  "ref/System.Security.Principal.Windows.dll": {
+    "sha256": "935f00901ecaad701afc545a68144e5a62298ad6465709a6eb9864e0289b53cb",
+    "source_reference_metadata": true
+  },
+  "ref/System.Security.Principal.dll": {
+    "sha256": "5c9210b383a227e0348f6961e363df5b0760b57b0f4fe068549ed51f3be4c719",
+    "source_reference_metadata": true
+  },
+  "ref/System.Security.SecureString.dll": {
+    "sha256": "48c7a674f9959f57bdd3ccd91373ee70c52838dfe2f5e260361aa577804e1cb8",
+    "source_reference_metadata": true
+  },
+  "ref/System.Security.dll": {
+    "sha256": "d1ce5af9d4392b79c5e6af45aaa96f6faabb9e9e32023d532a07b5f0b8d1276e",
+    "source_reference_metadata": true
+  },
+  "ref/System.ServiceModel.Web.dll": {
+    "sha256": "e13c3d826323b2c2acb9351cfc0e26f7f8c039bb76e4b1fc8dfca31cd63453db",
+    "source_reference_metadata": true
+  },
+  "ref/System.ServiceProcess.dll": {
+    "sha256": "930d40791c0d1baf4e771d16d92e96a73c44059e6231203ba04a1803915fae14",
+    "source_reference_metadata": true
+  },
+  "ref/System.Text.Encoding.CodePages.dll": {
+    "sha256": "98421f91a9c0723ba0bde0807a5fa0af9191735e5525a73c8ebc45e2544d8938",
+    "source_reference_metadata": true
+  },
+  "ref/System.Text.Encoding.Extensions.dll": {
+    "sha256": "acf520a545de13719d9b99a3394f5d8081ce279081a646bfcbda9107ea2f8481",
+    "source_reference_metadata": true
+  },
+  "ref/System.Text.Encoding.dll": {
+    "sha256": "38e580a377a8bcdc114e706f44facd0f39002e24feba88116589c2e6a29ee814",
+    "source_reference_metadata": true
+  },
+  "ref/System.Text.Encodings.Web.dll": {
+    "sha256": "f812ed59adadd8da8bfe81e84e634e4f600cb08b1d7a17b6009d12cfad24e95a",
+    "source_reference_metadata": true
+  },
+  "ref/System.Text.Json.dll": {
+    "sha256": "2677528ac2315ea7f73cce3c5119acc42677529509bd0e311917cab9620270ef",
+    "source_reference_metadata": true
+  },
+  "ref/System.Text.RegularExpressions.dll": {
+    "sha256": "97b3952d29cbd5a1f8dbf33772e75eda8967143daed453d1870987fcef788d34",
+    "source_reference_metadata": true
+  },
+  "ref/System.Threading.Channels.dll": {
+    "sha256": "29cec8efceee86130d989e4727ea49a83e4a1c1aef4b6d81c858e8e8a87534bd",
+    "source_reference_metadata": true
+  },
+  "ref/System.Threading.Overlapped.dll": {
+    "sha256": "35630956f00273de0b7b03547e94d571299154583a77514694dd03e4a034d87d",
+    "source_reference_metadata": true
+  },
+  "ref/System.Threading.Tasks.Dataflow.dll": {
+    "sha256": "528db41adebb0143b358c78176e8241f0aadebcc33af16d9b2b5a05dcc8f8821",
+    "source_reference_metadata": true
+  },
+  "ref/System.Threading.Tasks.Extensions.dll": {
+    "sha256": "46de6e064e85b79cc17ef383ede86561b6fc4855f6b213a278792c8c3a4f1ac0",
+    "source_reference_metadata": true
+  },
+  "ref/System.Threading.Tasks.Parallel.dll": {
+    "sha256": "48999c45cfdf2e68673b5afefd9fb550420b44fe548c63aac58899e8c80fbf81",
+    "source_reference_metadata": true
+  },
+  "ref/System.Threading.Tasks.dll": {
+    "sha256": "f58bc06ff2ef181cb086bdc3ab7fba7b7fd1b5040c043ffe9cbc54023c3913a2",
+    "source_reference_metadata": true
+  },
+  "ref/System.Threading.Thread.dll": {
+    "sha256": "1550e64481e5a57bea38302b24236996971550f54e13945d01ce17f9a7d4f345",
+    "source_reference_metadata": true
+  },
+  "ref/System.Threading.ThreadPool.dll": {
+    "sha256": "a6d21b429e3ec9f436c19b41651d7504760dfcb62446b900092e49845883e797",
+    "source_reference_metadata": true
+  },
+  "ref/System.Threading.Timer.dll": {
+    "sha256": "20b9c8e879dbf55eb546a73121dd44eba5e866002d9320a04b1376641dc563b8",
+    "source_reference_metadata": true
+  },
+  "ref/System.Threading.dll": {
+    "sha256": "b7a6bb8967c214ff6f5ee892a7d26f0b83ffd0ee6760987c2e376298a7b30853",
+    "source_reference_metadata": true
+  },
+  "ref/System.Transactions.Local.dll": {
+    "sha256": "e2cf9a86727a9f1cc32164a722e49fa78a2b60c7a3ec0b9aa627cfa4d8fd21a2",
+    "source_reference_metadata": true
+  },
+  "ref/System.Transactions.dll": {
+    "sha256": "ffaca21fb0f6821b16bad18b306958c8f6974336fe1357f16ec8b69bcb1bb268",
+    "source_reference_metadata": true
+  },
+  "ref/System.ValueTuple.dll": {
+    "sha256": "c92c2fdc727b320a61d1d2bef62ce784bce5092838939bc0b060f255ac012e22",
+    "source_reference_metadata": true
+  },
+  "ref/System.Web.HttpUtility.dll": {
+    "sha256": "834fa11da68b6b6a87a57fea5ea4a880ea809c772810fdbb83279e30e0fb9378",
+    "source_reference_metadata": true
+  },
+  "ref/System.Web.dll": {
+    "sha256": "9057a6b387c3a61b4bf70fbb5426663ce12190b6d44483862868c73ae5cb9754",
+    "source_reference_metadata": true
+  },
+  "ref/System.Windows.dll": {
+    "sha256": "d3200c254470f07e0c24a9acf193a83b601e9c40e84f669a5b7c4c41eecd3be9",
+    "source_reference_metadata": true
+  },
+  "ref/System.Xml.Linq.dll": {
+    "sha256": "e9ea42c76c44b20066e4b0c6663373a648772325430c51e1ea138a57c50869cf",
+    "source_reference_metadata": true
+  },
+  "ref/System.Xml.ReaderWriter.dll": {
+    "sha256": "e3a54d355645699080684db7197bb42de472410f3940c42cb71a2b299d23072a",
+    "source_reference_metadata": true
+  },
+  "ref/System.Xml.Serialization.dll": {
+    "sha256": "216aaefdd6c9d8aeb10581eb9d6630989e549aa4578a29520d20ecfec3bc4f60",
+    "source_reference_metadata": true
+  },
+  "ref/System.Xml.XDocument.dll": {
+    "sha256": "b6ab03366c8115c34adc3b758407c2a8edeb3f7ff021c5d23114eab52b10060f",
+    "source_reference_metadata": true
+  },
+  "ref/System.Xml.XPath.XDocument.dll": {
+    "sha256": "067eca56a8581b2fcb7499cb683b7894632ad2e4d39193f1603a37ccbcd65f2e",
+    "source_reference_metadata": true
+  },
+  "ref/System.Xml.XPath.dll": {
+    "sha256": "5aa0977fac57eb60e8006e8162d3c48ec150ed721925fb1c325a6cfbefe37dfd",
+    "source_reference_metadata": true
+  },
+  "ref/System.Xml.XmlDocument.dll": {
+    "sha256": "ae666f5a7dae8c62561de3f69d231bb705b07ba49401e6139c76a50d5d99dd8e",
+    "source_reference_metadata": true
+  },
+  "ref/System.Xml.XmlSerializer.dll": {
+    "sha256": "b6b8927f871cbec55e4a2ff8b1056ad123a4476389382bd461a94548f9a3708c",
+    "source_reference_metadata": true
+  },
+  "ref/System.Xml.dll": {
+    "sha256": "ef07e6ff6aba0f2b7249515ab35e576220c14971c9b781a469346ad91f447e94",
+    "source_reference_metadata": true
+  },
+  "ref/System.dll": {
+    "sha256": "f22ac16ce9242c3b55c2478576cba3cd1d89c0b2e4c62441ff5821e191f725d2",
+    "source_reference_metadata": true
+  },
+  "ref/WindowsBase.dll": {
+    "sha256": "acc6674f30d3879fbd792d6230e0b3abeef5df372df43fa251f3ceb8ed61a481",
+    "source_reference_metadata": true
+  },
+  "ref/mscorlib.dll": {
+    "sha256": "14292820394f56ab378ae20b6788589364511aab69956a2e9c6ff78da9845db9",
+    "source_reference_metadata": true
+  },
+  "ref/netstandard.dll": {
+    "sha256": "61ca45c381d6a99276f85686dcb77fcd960dbb98dd0ed8460fc890a25edc19ea",
+    "source_reference_metadata": true
+  },
+  "ro/Humanizer.resources.dll": {
+    "sha256": "c308080261e22e95d1e8c9abd167183a529c7d5eb1ef8254e66d5d978f07d771",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/ro/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "ru/Humanizer.resources.dll": {
+    "sha256": "7dece5679c26bf3df7647008f2b21f13396a9d365f058a5c0d08b3fd99de64e1",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/ru/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "ru/JsonSchema.Net.resources.dll": {
+    "sha256": "8135855435cc7f914c4412333b1134cee32f1acfa6a69a7c600f18dee4c9f328",
+    "installed_source_packages": [
+      {
+        "package": "jsonschema.net.7.0.4.nupkg",
+        "asset": "lib/net8.0/ru/JsonSchema.Net.resources.dll"
+      }
+    ]
+  },
+  "ru/Microsoft.CodeAnalysis.CSharp.resources.dll": {
+    "sha256": "cd63dba7a7f9749044890bce6dbf62ea3f08b9aa3b6a252e86c76dfa1aecf82b",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.codeanalysis.csharp.4.9.2.nupkg",
+        "asset": "lib/net8.0/ru/Microsoft.CodeAnalysis.CSharp.resources.dll"
+      }
+    ]
+  },
+  "ru/Microsoft.CodeAnalysis.resources.dll": {
+    "sha256": "723e42f4dded48bacb51a082a219356cff80dce551924586f2d7296fffb56b77",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.codeanalysis.common.4.9.2.nupkg",
+        "asset": "lib/net8.0/ru/Microsoft.CodeAnalysis.resources.dll"
+      }
+    ]
+  },
+  "runtimes/win/lib/net8.0/Microsoft.Win32.Registry.AccessControl.dll": {
+    "sha256": "cc58963cda11bcdeafc93c808175fcfed98f48446371a69fd9bacd2a93d15ddc",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.win32.registry.accesscontrol.8.0.0.nupkg",
+        "asset": "runtimes/win/lib/net8.0/Microsoft.Win32.Registry.AccessControl.dll"
+      }
+    ]
+  },
+  "runtimes/win/lib/net8.0/Microsoft.Win32.SystemEvents.dll": {
+    "sha256": "ff1e2c4d2eec0e76aa51eddf4e0ce3ef405132afddd2d79d90164191f1d562a5",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.win32.systemevents.8.0.0.nupkg",
+        "asset": "runtimes/win/lib/net8.0/Microsoft.Win32.SystemEvents.dll"
+      }
+    ]
+  },
+  "runtimes/win/lib/net8.0/System.Diagnostics.EventLog.Messages.dll": {
+    "sha256": "6ea28fb88f8d22e6b90c55cf168ab9068331ca2a5fca97e30cf1a65fd987893c",
+    "installed_source_packages": [
+      {
+        "package": "system.diagnostics.eventlog.8.0.2.nupkg",
+        "asset": "runtimes/win/lib/net8.0/System.Diagnostics.EventLog.Messages.dll"
+      }
+    ]
+  },
+  "runtimes/win/lib/net8.0/System.Diagnostics.EventLog.dll": {
+    "sha256": "a7fbe8208efe3706e76cae929cf32521d0aa35e5b607bae203daf5866410a4fa",
+    "installed_source_packages": [
+      {
+        "package": "system.diagnostics.eventlog.8.0.2.nupkg",
+        "asset": "runtimes/win/lib/net8.0/System.Diagnostics.EventLog.dll"
+      }
+    ]
+  },
+  "runtimes/win/lib/net8.0/System.Diagnostics.PerformanceCounter.dll": {
+    "sha256": "84d37a483581bdaa5ab28dd81eb5ba9e965b88367933cff534872f8e73fd953e",
+    "installed_source_packages": [
+      {
+        "package": "system.diagnostics.performancecounter.8.0.1.nupkg",
+        "asset": "runtimes/win/lib/net8.0/System.Diagnostics.PerformanceCounter.dll"
+      }
+    ]
+  },
+  "runtimes/win/lib/net8.0/System.DirectoryServices.dll": {
+    "sha256": "c8a3ad011673cfbf8219c7fca9af2a55d12d13db6a64c1bfcbcab0ac150d852a",
+    "installed_source_packages": [
+      {
+        "package": "system.directoryservices.8.0.0.nupkg",
+        "asset": "runtimes/win/lib/net8.0/System.DirectoryServices.dll"
+      }
+    ]
+  },
+  "runtimes/win/lib/net8.0/System.Drawing.Common.dll": {
+    "sha256": "3e8ed39e2772a9cf04a220a1c0ef89846fd2e376300f173d4f3facea2067faae",
+    "installed_source_packages": [
+      {
+        "package": "system.drawing.common.8.0.31.nupkg",
+        "asset": "runtimes/win/lib/net8.0/System.Drawing.Common.dll"
+      }
+    ]
+  },
+  "runtimes/win/lib/net8.0/System.Management.dll": {
+    "sha256": "7531483fb3aecfbc82bb66b97456e0e3fa2e0d0e38c914dd506bcf10f7c1adcc",
+    "installed_source_packages": [
+      {
+        "package": "system.management.8.0.0.nupkg",
+        "asset": "runtimes/win/lib/net8.0/System.Management.dll"
+      }
+    ]
+  },
+  "runtimes/win/lib/net8.0/System.Security.Cryptography.Pkcs.dll": {
+    "sha256": "2f3d9ff004d688a237c2c19f81e57bbce273b76538377c8221435a7d50fe8e6d",
+    "installed_source_packages": [
+      {
+        "package": "system.security.cryptography.pkcs.8.0.1.nupkg",
+        "asset": "runtimes/win/lib/net8.0/System.Security.Cryptography.Pkcs.dll"
+      }
+    ]
+  },
+  "runtimes/win/lib/net8.0/System.ServiceProcess.ServiceController.dll": {
+    "sha256": "c8dbd4a4e78aac725bb8d36c80424aa06a2a072a2df8041acf20ea4d7619a4b6",
+    "installed_source_packages": [
+      {
+        "package": "system.serviceprocess.servicecontroller.8.0.1.nupkg",
+        "asset": "runtimes/win/lib/net8.0/System.ServiceProcess.ServiceController.dll"
+      }
+    ]
+  },
+  "runtimes/win/lib/net8.0/System.Text.Encoding.CodePages.dll": {
+    "sha256": "c9fe5309447b0ca12f88e37bd88dbccbcc11c31af13dc7e687208170375a685a",
+    "installed_source_packages": [
+      {
+        "package": "system.text.encoding.codepages.8.0.0.nupkg",
+        "asset": "runtimes/win/lib/net8.0/System.Text.Encoding.CodePages.dll"
+      }
+    ]
+  },
+  "runtimes/win/lib/net8.0/System.Threading.AccessControl.dll": {
+    "sha256": "1fa559dacc9723bc2dedeccea53b4ae856c4b744a47c3ad9b899a1fb19bcd043",
+    "installed_source_packages": [
+      {
+        "package": "system.threading.accesscontrol.8.0.0.nupkg",
+        "asset": "runtimes/win/lib/net8.0/System.Threading.AccessControl.dll"
+      }
+    ]
+  },
+  "runtimes/win/lib/net8.0/System.Windows.Extensions.dll": {
+    "sha256": "0062362613b192e2634df665857d90b850942aa1e6083a637b89670ceab9fe31",
+    "installed_source_packages": [
+      {
+        "package": "system.windows.extensions.8.0.0.nupkg",
+        "asset": "runtimes/win/lib/net8.0/System.Windows.Extensions.dll"
+      }
+    ]
+  },
+  "runtimes/win-x64/native/PowerShell.Core.Instrumentation.dll": {
+    "sha256": "0401747f0de862d038dae6efacc457bfd9657ac2982f104a05aa6630ba31ce59",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.powershell.native.700.0.0.nupkg",
+        "asset": "runtimes/win-x64/native/PowerShell.Core.Instrumentation.dll"
+      }
+    ]
+  },
+  "runtimes/win-x64/native/msys-file-signature.dll": {
+    "sha256": "672545cd9f7f702795a1d4718bcb4467eb3a90934b959fe2d4a40e94e2b9f57e",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.security.extensions.1.4.0.nupkg",
+        "asset": "runtimes/win-x64/native/msys-file-signature.dll"
+      }
+    ]
+  },
+  "runtimes/win-x64/native/msys-wmi-native.dll": {
+    "sha256": "a989bf39406be3e1234b5ea4f4f207f10d8e893861a3ce847d2b4dd65310edbe",
+    "installed_source_packages": [
+      {
+        "package": "system.management.8.0.0.nupkg",
+        "asset": "runtimes/win-x64/native/msys-wmi-native.dll"
+      }
+    ]
+  },
+  "runtimes/win-x64/native/pwrshplugin.dll": {
+    "sha256": "2638347d422c39aa9b68868a57d92e537b5f01b81d2466a16dc9a38dc45c1168",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.powershell.native.700.0.0.nupkg",
+        "asset": "runtimes/win-x64/native/pwrshplugin.dll"
+      }
+    ]
+  },
+  "sk/Humanizer.resources.dll": {
+    "sha256": "cac230fb2207389529febe9bf3ef2dd94eecf521e61dc05efab9ac2fd9d8b52b",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/sk/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "sl/Humanizer.resources.dll": {
+    "sha256": "25203884eca6ac936d00e38d6c75413e6846e6516e0968f3054c87e5bf4bb96f",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/sl/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "sr/Humanizer.resources.dll": {
+    "sha256": "bc055362d36609d7edd97ae3ee7893e651a86f4b9cfce147e7f919f44a15fa2b",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/sr/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "sr-Latn/Humanizer.resources.dll": {
+    "sha256": "8772d45f0afc1f311b8d72e0d1836f76d7156294c071fdd244a94d264e6a4eb3",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/sr-Latn/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "sv/Humanizer.resources.dll": {
+    "sha256": "6c0125075e7e96160ce87b6c6fec78123a023f362e6ccb67787bf49c0608e749",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/sv/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "sv-SE/JsonSchema.Net.resources.dll": {
+    "sha256": "9d7b09d109aa417b126702e7a2d4cfe09755da21e759442e01e7fcf21b3d4ca0",
+    "installed_source_packages": [
+      {
+        "package": "jsonschema.net.7.0.4.nupkg",
+        "asset": "lib/net8.0/sv-SE/JsonSchema.Net.resources.dll"
+      }
+    ]
+  },
+  "th-TH/Humanizer.resources.dll": {
+    "sha256": "e313b02f075d11353b67c59e543d8a188a432d2a84be34a32ba07a1d95289cbc",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/th-TH/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "tr/Humanizer.resources.dll": {
+    "sha256": "ca02efbda2add14d36623bf34091e078fef58d48fd6c35163de1f739d702a3db",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/tr/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "tr/Microsoft.CodeAnalysis.CSharp.resources.dll": {
+    "sha256": "3a35befda331d9014dbe114e688537b9ca9547969fd6566ae4a72cd435271ccb",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.codeanalysis.csharp.4.9.2.nupkg",
+        "asset": "lib/net8.0/tr/Microsoft.CodeAnalysis.CSharp.resources.dll"
+      }
+    ]
+  },
+  "tr/Microsoft.CodeAnalysis.resources.dll": {
+    "sha256": "df534fe7b0cd596935b150b4bf5937f36d2f550f361192cbabd9f6bc419a13c3",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.codeanalysis.common.4.9.2.nupkg",
+        "asset": "lib/net8.0/tr/Microsoft.CodeAnalysis.resources.dll"
+      }
+    ]
+  },
+  "tr-TR/JsonSchema.Net.resources.dll": {
+    "sha256": "8e1dd6d98c45ce84c3b82fa91e92f125d1a8d7abd766474b7a0f14c065b76140",
+    "installed_source_packages": [
+      {
+        "package": "jsonschema.net.7.0.4.nupkg",
+        "asset": "lib/net8.0/tr-TR/JsonSchema.Net.resources.dll"
+      }
+    ]
+  },
+  "uk/Humanizer.resources.dll": {
+    "sha256": "d2b5b4c45ab65a470e0f65cfb5a493192bbad7a3731b922a8e4dde41956bdd0c",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/uk/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "uz-Cyrl-UZ/Humanizer.resources.dll": {
+    "sha256": "f439080f283f9db69e6fdac4ad144fa553fd36141bde1953e7f7880f847c6e4a",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/uz-Cyrl-UZ/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "uz-Latn-UZ/Humanizer.resources.dll": {
+    "sha256": "4ec4f3aa78a76bd76ff2841a3e6ae669c47b6286f57830c69802e2d217e55492",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/uz-Latn-UZ/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "vi/Humanizer.resources.dll": {
+    "sha256": "b9d6799606fe8584b23ca0fb786fbe200546e232d53a8a59f4bffc3bae5df23c",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/vi/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "zh-CN/Humanizer.resources.dll": {
+    "sha256": "fb1dc50cdbdc9a65cb670b5603c9229c4e55e71eab6e31b58d521b7341a0018f",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/zh-CN/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "zh-Hans/Humanizer.resources.dll": {
+    "sha256": "8f9d14383f7fb0a986710cda32fe83c91b6b0472ee1fd877c97c4d06526753e0",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/zh-Hans/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "zh-Hans/Microsoft.CodeAnalysis.CSharp.resources.dll": {
+    "sha256": "8be73b4cec3aebb62c2a4354e2ed36fc5dfee0b47a1a4cb03d91ace74e5c3a01",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.codeanalysis.csharp.4.9.2.nupkg",
+        "asset": "lib/net8.0/zh-Hans/Microsoft.CodeAnalysis.CSharp.resources.dll"
+      }
+    ]
+  },
+  "zh-Hans/Microsoft.CodeAnalysis.resources.dll": {
+    "sha256": "108d268eeaf9adb939d4b894b9a99566b320d135a066c9542aa2559138c7f479",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.codeanalysis.common.4.9.2.nupkg",
+        "asset": "lib/net8.0/zh-Hans/Microsoft.CodeAnalysis.resources.dll"
+      }
+    ]
+  },
+  "zh-Hant/Humanizer.resources.dll": {
+    "sha256": "c4b6af0fecd16b352ef8c1348f0db4b4d6aee523734f057bebd63338e0972984",
+    "installed_source_packages": [
+      {
+        "package": "humanizer.core.2.14.1.nupkg",
+        "asset": "lib/net8.0/zh-Hant/Humanizer.resources.dll"
+      }
+    ]
+  },
+  "zh-Hant/Microsoft.CodeAnalysis.CSharp.resources.dll": {
+    "sha256": "38acf5f457260e19165933af1011632b4fb39fafd7ccc991f2236a09789e76cb",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.codeanalysis.csharp.4.9.2.nupkg",
+        "asset": "lib/net8.0/zh-Hant/Microsoft.CodeAnalysis.CSharp.resources.dll"
+      }
+    ]
+  },
+  "zh-Hant/Microsoft.CodeAnalysis.resources.dll": {
+    "sha256": "385232418544cc696971c0f1d46fbd0c1da49d8a4c282a6a646dfa406cd2ef04",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.codeanalysis.common.4.9.2.nupkg",
+        "asset": "lib/net8.0/zh-Hant/Microsoft.CodeAnalysis.resources.dll"
+      }
+    ]
+  }
+}

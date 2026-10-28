@@ -1,0 +1,93 @@
+From 45f8109b41f92c6bff66a1417865599b64cdd96e Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Fri, 9 Oct 2026 17:26:09 +0200
+Subject: [PATCH 16/16] native: minipal, EventPipe and ICU shim fixes for
+ CoreCLR with MinGW
+
+- cpufeatures.c: _xgetbv needs the xsave target attribute with clang.
+- ds-ipc-pal-namedpipe.c: declare the locals before the error gotos
+  (compiled as C++ in CoreCLR).
+- pal_icushim_internal.h: U_FALLTHROUGH for ICU's headers in C (their
+  __has_cpp_attribute(clang::fallthrough) test is not valid C17).
+---
+ src/native/eventpipe/ds-ipc-pal-namedpipe.c               | 7 +++++--
+ .../System.Globalization.Native/pal_icushim_internal.h    | 5 +++++
+ src/native/minipal/cpufeatures.c                          | 8 ++++++++
+ 3 files changed, 18 insertions(+), 2 deletions(-)
+
+diff --git a/src/native/eventpipe/ds-ipc-pal-namedpipe.c b/src/native/eventpipe/ds-ipc-pal-namedpipe.c
+index 01a12275a..16a69fda0 100644
+--- a/src/native/eventpipe/ds-ipc-pal-namedpipe.c
++++ b/src/native/eventpipe/ds-ipc-pal-namedpipe.c
+@@ -183,6 +183,9 @@ ds_ipc_poll (
+ 	EP_ASSERT (poll_handles_data != NULL);
+ 
+ 	int32_t result = 1;
++	// declared up front: the error gotos below may not jump past an initialization (C++)
++	DWORD index;
++	DWORD wait;
+ 	EP_ASSERT (poll_handles_data_len <= MAXIMUM_WAIT_OBJECTS);
+ 
+ 	HANDLE handles [MAXIMUM_WAIT_OBJECTS];
+@@ -235,7 +238,7 @@ ds_ipc_poll (
+ 	}
+ 
+ 	// call wait for multiple obj
+-	DWORD wait = WAIT_FAILED;
++	wait = WAIT_FAILED;
+ 	DS_ENTER_BLOCKING_PAL_SECTION;
+ 	wait = WaitForMultipleObjects (
+ 		(DWORD)poll_handles_data_len,      // count
+@@ -259,7 +262,7 @@ ds_ipc_poll (
+ 	}
+ 
+ 	// determine which of the streams signaled
+-	DWORD index = wait - WAIT_OBJECT_0;
++	index = wait - WAIT_OBJECT_0;
+ 	// error check the index
+ 	if (index < 0 || index > (poll_handles_data_len - 1)) {
+ 		// check if we abandoned something
+diff --git a/src/native/libs/System.Globalization.Native/pal_icushim_internal.h b/src/native/libs/System.Globalization.Native/pal_icushim_internal.h
+index c7386041a..58251bfbd 100644
+--- a/src/native/libs/System.Globalization.Native/pal_icushim_internal.h
++++ b/src/native/libs/System.Globalization.Native/pal_icushim_internal.h
+@@ -53,6 +53,11 @@
+ #define U_SHOW_CPLUSPLUS_API 0
+ // icu.h leaves out deprecated API too (see UIDNA_ALLOW_UNASSIGNED in pal_idna.c)
+ #define U_HIDE_DEPRECATED_API 1
++// ICU's own detection of the fallthrough attribute uses __has_cpp_attribute(clang::fallthrough),
++// which is not valid C before C23 (the Mono build passes -fms-extensions to C, CoreCLR does not)
++#if !defined(__cplusplus) && !defined(U_FALLTHROUGH)
++#define U_FALLTHROUGH __attribute__((fallthrough))
++#endif
+ #include <unicode/ucurr.h>
+ #include <unicode/ucal.h>
+ #include <unicode/uchar.h>
+diff --git a/src/native/minipal/cpufeatures.c b/src/native/minipal/cpufeatures.c
+index be0aabe08..2907e4ef0 100644
+--- a/src/native/minipal/cpufeatures.c
++++ b/src/native/minipal/cpufeatures.c
+@@ -100,12 +100,20 @@ static bool IsAvx512Enabled()
+ 
+ #if defined(HOST_WINDOWS)
+ #if defined(HOST_X86) || defined(HOST_AMD64)
++#if defined(__GNUC__)
++// clang/gcc (MinGW): _xgetbv needs the xsave target feature; it is only
++// called after CPUID reported OSXSAVE.
++__attribute__((target("xsave")))
++#endif
+ static uint32_t xmmYmmStateSupport()
+ {
+     // check OS has enabled both XMM and YMM state support
+     return ((_xgetbv(0) & 0x06) == 0x06) ? 1 : 0;
+ }
+ 
++#if defined(__GNUC__)
++__attribute__((target("xsave")))
++#endif
+ static uint32_t avx512StateSupport()
+ {
+     // check OS has enabled XMM, YMM and ZMM state support
+-- 
+2.55.0
+

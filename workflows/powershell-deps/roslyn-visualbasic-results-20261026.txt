@@ -1,0 +1,290 @@
+Roslyn Visual Basic 4.9.2 source package and installed integration, 2026-10-26
+Host: win11 / MSYS2 CLANG64; source SDK 8.0.131, actual runtime 8.0.0
+Remote root: /home/topkek/powershell-vb.QeMC1z
+Recipe: mingw-w64-dotnet-roslyn-visualbasic
+Package: mingw-w64-clang-x86_64-dotnet-codeanalysis-visualbasic 4.9.2-1
+
+Original Roslyn source commit 9934fb9e3527e1c0c51314e57d4aab30f97e8f9e,
+archive SHA256 e01ea67aaec6408de51a0a4c18a7e15b2a527ca7a853c9a0a7742cb5680aeb30.
+All 905 original non-generated compiler inputs and five regenerated VB files
+build. Three original generators (17 VB, one VB and three C# source files)
+reproduce five generated files and the grammar after text/line-ending comparison.
+The original SDK workaround removes normal VB runtime references; no production
+compiler source is patched. Unchecked implementation arithmetic is required by
+internal bitmask/CRC constants. Six upstream ByRef/inference warnings remain.
+
+All 6176 public/protected API declarations and original assembly identity match
+independent published metadata. The 1795 neutral resource values and all four
+embedded template byte streams match; Windows CRLF is derived from source.
+All 14 source resource sets / 25130 strings and 13 satellites pass. Published
+DLLs are inspected as metadata/resource bytes only, never executed, compiled
+against for production or packaged. Actual source-built compilation emits and
+executes VB IL, portable PDBs, async/await, query/XML syntax, analyzer callbacks,
+source generators, checked/unchecked arithmetic and embedded VB runtime support.
+
+Clean makepkg build/check, fresh installed-feed behavioral/API/resource checks,
+and artifact audit pass. All fourteen restored consumer compiler/satellite DLLs
+match the exact installed/audited source NuGet bytes. Every restore uses an empty
+cache. No implementation binary is fetched from NuGet.
+
+This packages the VB compiler library, not vbc/VBCSCompiler, Workspaces or IDE.
+Full PowerShell integration, remaining analyzers and runtime servicing remain.
+The 8.0.131 package label does not prove later runtime servicing fixes.
+
+Exact commands (all exit 0):
+
+$ PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm
+==> Making package: mingw-w64-clang-x86_64-dotnet-codeanalysis-visualbasic 4.9.2-1 (26 Oct 2026 23:53:14)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found roslyn-4.9.2.tar.gz
+  -> Found prepare.py
+  -> Found build.sh
+  -> Found Check.cs
+  -> Found check.sh
+  -> Found check-api.sh
+  -> Found InspectApi.cs
+  -> Found InspectMetadata.cs
+  -> Found ExpectedApi.json
+  -> Found ExpectedMetadata.json
+  -> Found published-metadata-provenance.json
+  -> Found README.md
+==> Validating source files with sha256sums...
+    roslyn-4.9.2.tar.gz ... Passed
+    prepare.py ... Passed
+    build.sh ... Passed
+    Check.cs ... Passed
+    check.sh ... Passed
+    check-api.sh ... Passed
+    InspectApi.cs ... Passed
+    InspectMetadata.cs ... Passed
+    ExpectedApi.json ... Passed
+    ExpectedMetadata.json ... Passed
+    published-metadata-provenance.json ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+  -> Extracting roslyn-4.9.2.tar.gz with bsdtar
+==> Starting prepare()...
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-vb.QeMC1z\recipe\src\prepared\VBSyntaxGenerator\Library.vbproj (in 77 ms).
+  Library -> E:\msys64\home\topkek\powershell-vb.QeMC1z\recipe\src\prepared\VBSyntaxGenerator\bin\Release\net8.0\VBSyntaxGenerator.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:01.98
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-vb.QeMC1z\recipe\src\prepared\VBErrorFactsGenerator\Library.vbproj (in 58 ms).
+  Library -> E:\msys64\home\topkek\powershell-vb.QeMC1z\recipe\src\prepared\VBErrorFactsGenerator\bin\Release\net8.0\VBErrorFactsGenerator.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:01.63
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-vb.QeMC1z\recipe\src\prepared\BoundTreeGenerator\Library.csproj (in 56 ms).
+  Library -> E:\msys64\home\topkek\powershell-vb.QeMC1z\recipe\src\prepared\BoundTreeGenerator\bin\Release\net8.0\BoundTreeGenerator.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.16
+PASS all five original VB generated sources and grammar match the pinned source baseline
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-vb.QeMC1z\recipe\src\prepared\Microsoft.CodeAnalysis.VisualBasic\Library.vbproj (in 194 ms).
+E:\msys64\home\topkek\powershell-vb.QeMC1z\recipe\src\roslyn-9934fb9e3527e1c0c51314e57d4aab30f97e8f9e\src\Compilers\VisualBasic\Portable\Symbols\SynthesizedSymbols\SynthesizedMethodBase.vb(183,49): warning BC41999: Implicit conversion from 'Object' to 'ParameterSymbol' in copying the value of 'ByRef' parameter 'location1' back to the matching argument. [E:\msys64\home\topkek\powershell-vb.QeMC1z\recipe\src\prepared\Microsoft.CodeAnalysis.VisualBasic\Library.vbproj]
+E:\msys64\home\topkek\powershell-vb.QeMC1z\recipe\src\roslyn-9934fb9e3527e1c0c51314e57d4aab30f97e8f9e\src\Compilers\VisualBasic\Portable\Symbols\Source\SourceLambdaSymbol.vb(60,83): warning BC41999: Implicit conversion from 'Object' to 'NamedTypeSymbol' in copying the value of 'ByRef' parameter 'location1' back to the matching argument. [E:\msys64\home\topkek\powershell-vb.QeMC1z\recipe\src\prepared\Microsoft.CodeAnalysis.VisualBasic\Library.vbproj]
+E:\msys64\home\topkek\powershell-vb.QeMC1z\recipe\src\roslyn-9934fb9e3527e1c0c51314e57d4aab30f97e8f9e\src\Compilers\VisualBasic\Portable\Symbols\Source\SourceLambdaSymbol.vb(60,55): warning BC42016: Implicit conversion from 'Object' to 'NamedTypeSymbol'. [E:\msys64\home\topkek\powershell-vb.QeMC1z\recipe\src\prepared\Microsoft.CodeAnalysis.VisualBasic\Library.vbproj]
+E:\msys64\home\topkek\powershell-vb.QeMC1z\recipe\src\roslyn-9934fb9e3527e1c0c51314e57d4aab30f97e8f9e\src\Compilers\VisualBasic\Portable\Symbols\Source\SourceMethodSymbol.vb(1303,49): warning BC41999: Implicit conversion from 'Object' to 'ParameterSymbol' in copying the value of 'ByRef' parameter 'location1' back to the matching argument. [E:\msys64\home\topkek\powershell-vb.QeMC1z\recipe\src\prepared\Microsoft.CodeAnalysis.VisualBasic\Library.vbproj]
+E:\msys64\home\topkek\powershell-vb.QeMC1z\recipe\src\roslyn-9934fb9e3527e1c0c51314e57d4aab30f97e8f9e\src\Compilers\VisualBasic\Portable\Compilation\VisualBasicCompilation.vb(256,57): warning BC41999: Implicit conversion from 'Object' to 'SyntaxTree' in copying the value of 'ByRef' parameter 'location1' back to the matching argument. [E:\msys64\home\topkek\powershell-vb.QeMC1z\recipe\src\prepared\Microsoft.CodeAnalysis.VisualBasic\Library.vbproj]
+E:\msys64\home\topkek\powershell-vb.QeMC1z\recipe\src\roslyn-9934fb9e3527e1c0c51314e57d4aab30f97e8f9e\src\Compilers\VisualBasic\Portable\Compilation\VisualBasicCompilation.vb(275,60): warning BC41999: Implicit conversion from 'Object' to 'SyntaxTree' in copying the value of 'ByRef' parameter 'location1' back to the matching argument. [E:\msys64\home\topkek\powershell-vb.QeMC1z\recipe\src\prepared\Microsoft.CodeAnalysis.VisualBasic\Library.vbproj]
+  Library -> E:\msys64\home\topkek\powershell-vb.QeMC1z\recipe\src\prepared\Microsoft.CodeAnalysis.VisualBasic\bin\Release\net8.0\Microsoft.CodeAnalysis.VisualBasic.dll
+  Successfully created package 'E:\msys64\home\topkek\powershell-vb.QeMC1z\recipe\src\feed\Microsoft.CodeAnalysis.VisualBasic.4.9.2.nupkg'.
+==> Starting check()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-vb.QeMC1z\recipe\src\check\Check.csproj (in 246 ms).
+  Check -> E:\msys64\home\topkek\powershell-vb.QeMC1z\recipe\src\check\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.86
+PASS source compiler identity, 14 resource sets/25130 strings and thirteen satellite assemblies
+PASS VB syntax/semantics, generics, query/XML literals, anonymous types, iterator, async/await, analyzer callbacks, portable PDB and executed IL
+PASS checked/unchecked emitted arithmetic, errors and localized diagnostics, source generation, embedded VB runtime templates, cancellation and no Framework implementation
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-vb.QeMC1z\recipe\src\check-api\api\Tool.csproj (in 237 ms).
+  Tool -> E:\msys64\home\topkek\powershell-vb.QeMC1z\recipe\src\check-api\api\bin\Release\net8.0\Tool.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.00
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-vb.QeMC1z\recipe\src\check-api\metadata\Tool.csproj (in 147 ms).
+  Tool -> E:\msys64\home\topkek\powershell-vb.QeMC1z\recipe\src\check-api\metadata\bin\Release\net8.0\Tool.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.84
+PASS all 6176 published API declarations, original identity, 1795 neutral strings and byte-identical four embedded source templates; no normal VB runtime assembly reference
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-codeanalysis-visualbasic"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-clang-x86_64-dotnet-codeanalysis-visualbasic 4.9.2-1 (26 Oct 2026 23:54:54)
+
+$ pacman -U --noconfirm recipe/mingw-w64-clang-x86_64-dotnet-codeanalysis-visualbasic-4.9.2-1-any.pkg.tar.zst
+$ bash recipe/check.sh installed-check /clang64/share/doc/dotnet-codeanalysis-visualbasic/localization.json
+$ bash recipe/check-api.sh installed-check installed-api
+$ pacman -Q mingw-w64-clang-x86_64-dotnet-codeanalysis-visualbasic
+$ python3 installed-payload byte comparison (14 DLLs)
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-dotnet-codeanalysis-visualbasic-4.9.2-1
+
+Total Installed Size:  7.45 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+installing mingw-w64-clang-x86_64-dotnet-codeanalysis-visualbasic...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-vb.QeMC1z\installed-check\Check.csproj (in 317 ms).
+  Check -> E:\msys64\home\topkek\powershell-vb.QeMC1z\installed-check\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.03
+PASS source compiler identity, 14 resource sets/25130 strings and thirteen satellite assemblies
+PASS VB syntax/semantics, generics, query/XML literals, anonymous types, iterator, async/await, analyzer callbacks, portable PDB and executed IL
+PASS checked/unchecked emitted arithmetic, errors and localized diagnostics, source generation, embedded VB runtime templates, cancellation and no Framework implementation
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-vb.QeMC1z\installed-api\api\Tool.csproj (in 302 ms).
+  Tool -> E:\msys64\home\topkek\powershell-vb.QeMC1z\installed-api\api\bin\Release\net8.0\Tool.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.51
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-vb.QeMC1z\installed-api\metadata\Tool.csproj (in 133 ms).
+  Tool -> E:\msys64\home\topkek\powershell-vb.QeMC1z\installed-api\metadata\bin\Release\net8.0\Tool.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.36
+PASS all 6176 published API declarations, original identity, 1795 neutral strings and byte-identical four embedded source templates; no normal VB runtime assembly reference
+mingw-w64-clang-x86_64-dotnet-codeanalysis-visualbasic 4.9.2-1
+PASS all fourteen installed compiler/satellite DLLs match the consumer bytes exactly
+
+$ python3 tests/powershell-deps/audit-roslyn-visualbasic.py
+Roslyn VB: pinned source/checksums/licenses, exact dependency and fourteen DLL payloads, 6176 API baseline, 905+5 compiler inputs, all generators, 14/25130 resources and four embedded source baselines PASS

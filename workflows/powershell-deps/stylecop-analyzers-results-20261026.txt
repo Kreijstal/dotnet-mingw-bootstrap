@@ -1,0 +1,604 @@
+StyleCop.Analyzers source packages and installed integration, 2026-10-26
+Host: win11 / MSYS2 CLANG64; source SDK8.0.131 / installed source csc49 4.9.2
+Remote root: /home/topkek/sca.eiNn7K
+Recipe: mingw-w64-dotnet-stylecop-analyzers
+
+Completed dependency packages:
+- StyleCop.Analyzers 1.2.0-beta.556, dependency-only package
+- StyleCop.Analyzers.Unstable 1.2.0.556, full analyzer/code-fix implementation
+Pacman versions: 1.2.0.beta556-1, both split packages.
+
+All original 2811 Git source files and the original signed commit are checked
+before prepare(): commit 73a46ae2e65e7870fefe35e2c4c12bb7152f4ec5,
+tree c825926498b59694e7f559cd6d55377bbac57283. VCS cache was reconstructed
+from individually verified official source blobs and exact tree/commit objects;
+git fsck --strict passed. --holdver uses this verified cache without an update;
+it does not skip the complete source-tree gate.
+
+Full sources: 7 generator / 313 analyzer / 107 code-fix files, no implementation
+removed. Retarget .NET8 / Roslyn4.9.2, preserve original 57 syntax wrappers,
+qualify original helpers against newer Roslyn name collisions. SA1134 now skips
+syntax-invalid attribute lists in both incremental and Fix All paths, preserving
+the original malformed-syntax regression expectation under newer parser recovery.
+Both generators reproduce all 183 source output names; 179 match C# tokens and
+four have six explicit extension-to-real-property adaptations. Whitespace trivia
+may differ. All 182 analyzer / 89 exported code-fix / 178 DiagnosticId constant
+inventories match independently inspected published PE metadata. Runtime checks
+197 descriptors, 17 resource sets / 857 strings and seven satellite cultures.
+
+All 2880 extracted upstream vectors and 16 owned structural probes pass.
+Upstream cases cover 152 analyzer classes directly and 147 with positive results;
+the separate C#12 probe runs all 182 classes without exceptions. Actual passing
+actions cover every one of the 89 exported fixers, plus one internal ordering
+provider. Owned probes include file rename/split, added settings files, encoding,
+semantic/reference-aware renames and real document Fix All. Original malformed
+SA1134 case and all 12 other extracted SA1134 cases pass after the production fix.
+
+The adapter is not the original xUnit suite. Its 999 explicit exclusion records
+cover unsupported control flow/member data/custom and combined synthetic test
+harnesses. Compiler diagnostic assertions are excluded because the parser/test
+baseline differs from Roslyn4.9.2; exact StyleCop diagnostics (including hidden
+ones) and fixed text are checked. Original input CR-only/CRLF/LF is retained for
+analysis, while CR characters are normalized only for final output comparisons.
+Full original framework-suite coverage and full PowerShell integration remain.
+
+Clean makepkg build/check passed. A final license-only repack adds the complete
+standard Apache2.0 text alongside the unchanged original MIT license/notices.
+All final source inputs were reverified; NuGet packing and pacman repack passed.
+The changed check-data paths avoid NuGet long-path warnings. The source library
+build has nine upstream nullable warnings under newer annotations.
+
+Fresh installed checks restore with empty caches and ONLY the installed source
+feed. No vendor implementation is used in compiling, execution or packaging.
+The real MSBuild sample references ONLY the meta-package: incorrect comma
+spacing fails with SA1001, then corrected source builds through installed csc49.
+All nine restored consumer DLLs match the installed/audited NuGet bytes exactly.
+The normal SDK compiler is untouched. Published assemblies were inspected as
+metadata only for the independent baseline. Private signing keys/PDBs/vendor
+signatures and compiler/generator binaries are not bundled.
+
+Exact final commands and outputs (all commands exit 0):
+
+$ PATH=/usr/bin:/clang64/bin:$PATH makepkg --holdver --cleanbuild --force --noconfirm
+==> Making package: mingw-w64-dotnet-stylecop-analyzers 1.2.0.beta556-1 (26 Oct 2026 23:21:18)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found prepare.py
+  -> Found verify-source.py
+  -> Found source-inputs.json
+  -> Found upstream-commit.txt
+  -> Found build-libraries.sh
+  -> Found build.sh
+  -> Found pack.py
+  -> Found CheckPrototype.cs
+  -> Found CheckGenerated.cs
+  -> Found CheckFixtures.cs
+  -> Found CheckSpecialFixes.cs
+  -> Found ExtractFixtures.cs
+  -> Found InspectInventory.cs
+  -> Found check.sh
+  -> Found ExpectedInventory.json
+  -> Found UpstreamFixtures.json
+  -> Found published-metadata-provenance.json
+  -> Found README.md
+==> Validating source files with sha256sums...
+    stylecop ... Skipped
+    prepare.py ... Passed
+    verify-source.py ... Passed
+    source-inputs.json ... Passed
+    upstream-commit.txt ... Passed
+    build-libraries.sh ... Passed
+    build.sh ... Passed
+    pack.py ... Passed
+    CheckPrototype.cs ... Passed
+    CheckGenerated.cs ... Passed
+    CheckFixtures.cs ... Passed
+    CheckSpecialFixes.cs ... Passed
+    ExtractFixtures.cs ... Passed
+    InspectInventory.cs ... Passed
+    check.sh ... Passed
+    ExpectedInventory.json ... Passed
+    UpstreamFixtures.json ... Passed
+    published-metadata-provenance.json ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+  -> Creating working copy of stylecop git repo...
+Cloning into 'stylecop'...
+Updating files:  34% (981/2811)
+Updating files:  35% (984/2811)
+Updating files:  36% (1012/2811)
+Updating files:  37% (1041/2811)
+Updating files:  38% (1069/2811)
+Updating files:  39% (1097/2811)
+Updating files:  40% (1125/2811)
+Updating files:  41% (1153/2811)
+Updating files:  42% (1181/2811)
+Updating files:  43% (1209/2811)
+Updating files:  44% (1237/2811)
+Updating files:  45% (1265/2811)
+Updating files:  46% (1294/2811)
+Updating files:  47% (1322/2811)
+Updating files:  48% (1350/2811)
+Updating files:  49% (1378/2811)
+Updating files:  50% (1406/2811)
+Updating files:  51% (1434/2811)
+Updating files:  52% (1462/2811)
+Updating files:  53% (1490/2811)
+Updating files:  54% (1518/2811)
+Updating files:  55% (1547/2811)
+Updating files:  56% (1575/2811)
+Updating files:  57% (1603/2811)
+Updating files:  58% (1631/2811)
+Updating files:  59% (1659/2811)
+Updating files:  60% (1687/2811)
+Updating files:  61% (1715/2811)
+Updating files:  62% (1743/2811)
+Updating files:  63% (1771/2811)
+Updating files:  64% (1800/2811)
+Updating files:  65% (1828/2811)
+Updating files:  66% (1856/2811)
+Updating files:  67% (1884/2811)
+Updating files:  67% (1906/2811)
+Updating files:  68% (1912/2811)
+Updating files:  69% (1940/2811)
+Updating files:  70% (1968/2811)
+Updating files:  71% (1996/2811)
+Updating files:  72% (2024/2811)
+Updating files:  73% (2053/2811)
+Updating files:  74% (2081/2811)
+Updating files:  75% (2109/2811)
+Updating files:  76% (2137/2811)
+Updating files:  77% (2165/2811)
+Updating files:  78% (2193/2811)
+Updating files:  79% (2221/2811)
+Updating files:  80% (2249/2811)
+Updating files:  81% (2277/2811)
+Updating files:  82% (2306/2811)
+Updating files:  83% (2334/2811)
+Updating files:  84% (2362/2811)
+Updating files:  85% (2390/2811)
+Updating files:  86% (2418/2811)
+Updating files:  87% (2446/2811)
+Updating files:  88% (2474/2811)
+Updating files:  89% (2502/2811)
+Updating files:  90% (2530/2811)
+Updating files:  91% (2559/2811)
+Updating files:  92% (2587/2811)
+Updating files:  93% (2615/2811)
+Updating files:  94% (2643/2811)
+Updating files:  94% (2653/2811)
+Updating files:  95% (2671/2811)
+Updating files:  96% (2699/2811)
+Updating files:  97% (2727/2811)
+Updating files:  98% (2755/2811)
+Updating files:  99% (2783/2811)
+Updating files: 100% (2811/2811)
+Updating files: 100% (2811/2811), done.
+Switched to a new branch 'makepkg'
+==> Starting prepare()...
+PASS all 2811 source files, exact Git tree c825926498b59694e7f559cd6d55377bbac57283 and original signed commit 73a46ae2e65e7870fefe35e2c4c12bb7152f4ec5
+Public key token: cfeb5dbada5e1c25
+==> Removing existing $pkgdir/ directory...
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\sca.eiNn7K\recipe\src\prepared\StyleCop.Analyzers\Library.csproj (in 434 ms).
+  Restored E:\msys64\home\topkek\sca.eiNn7K\recipe\src\prepared\StyleCop.Analyzers.CodeGeneration\Library.csproj (in 434 ms).
+  Restored E:\msys64\home\topkek\sca.eiNn7K\recipe\src\prepared\StyleCop.Analyzers.CodeFixes\Library.csproj (in 434 ms).
+E:\msys64\home\topkek\sca.eiNn7K\recipe\src\prepared\StyleCop.Analyzers.CodeGeneration\SyntaxLightupGenerator.cs(1592,63): warning CS8607: A possible null value may not be used for a type marked with [NotNull] or [DisallowNull] [E:\msys64\home\topkek\sca.eiNn7K\recipe\src\prepared\StyleCop.Analyzers.CodeGeneration\Library.csproj]
+E:\msys64\home\topkek\sca.eiNn7K\recipe\src\prepared\StyleCop.Analyzers.CodeGeneration\SyntaxLightupGenerator.cs(1542,68): warning CS8607: A possible null value may not be used for a type marked with [NotNull] or [DisallowNull] [E:\msys64\home\topkek\sca.eiNn7K\recipe\src\prepared\StyleCop.Analyzers.CodeGeneration\Library.csproj]
+  Library -> E:\msys64\home\topkek\sca.eiNn7K\recipe\src\prepared\StyleCop.Analyzers.CodeGeneration\bin\Release\net8.0\StyleCop.Analyzers.CodeGeneration.dll
+E:\msys64\home\topkek\sca.eiNn7K\recipe\src\stylecop\StyleCop.Analyzers\StyleCop.Analyzers\DocumentationRules\SA1648InheritDocMustBeUsedWithInheritingClass.cs(96,60): warning CS8604: Possible null reference argument for parameter 'text' in 'XElement XElement.Parse(string text, LoadOptions options)'. [E:\msys64\home\topkek\sca.eiNn7K\recipe\src\prepared\StyleCop.Analyzers\Library.csproj]
+E:\msys64\home\topkek\sca.eiNn7K\recipe\src\stylecop\StyleCop.Analyzers\StyleCop.Analyzers\DocumentationRules\SA1648InheritDocMustBeUsedWithInheritingClass.cs(149,38): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\sca.eiNn7K\recipe\src\prepared\StyleCop.Analyzers\Library.csproj]
+E:\msys64\home\topkek\sca.eiNn7K\recipe\src\stylecop\StyleCop.Analyzers\StyleCop.Analyzers\DocumentationRules\SA1648InheritDocMustBeUsedWithInheritingClass.cs(155,49): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\sca.eiNn7K\recipe\src\prepared\StyleCop.Analyzers\Library.csproj]
+E:\msys64\home\topkek\sca.eiNn7K\recipe\src\stylecop\StyleCop.Analyzers\StyleCop.Analyzers\DocumentationRules\SA1648InheritDocMustBeUsedWithInheritingClass.cs(157,46): warning CS8602: Dereference of a possibly null reference. [E:\msys64\home\topkek\sca.eiNn7K\recipe\src\prepared\StyleCop.Analyzers\Library.csproj]
+E:\msys64\home\topkek\sca.eiNn7K\recipe\src\stylecop\StyleCop.Analyzers\StyleCop.Analyzers\DocumentationRules\SA1648InheritDocMustBeUsedWithInheritingClass.cs(170,38): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\sca.eiNn7K\recipe\src\prepared\StyleCop.Analyzers\Library.csproj]
+E:\msys64\home\topkek\sca.eiNn7K\recipe\src\stylecop\StyleCop.Analyzers\StyleCop.Analyzers\DocumentationRules\SA1648InheritDocMustBeUsedWithInheritingClass.cs(182,60): warning CS8604: Possible null reference argument for parameter 'text' in 'XElement XElement.Parse(string text, LoadOptions options)'. [E:\msys64\home\topkek\sca.eiNn7K\recipe\src\prepared\StyleCop.Analyzers\Library.csproj]
+E:\msys64\home\topkek\sca.eiNn7K\recipe\src\stylecop\StyleCop.Analyzers\StyleCop.Analyzers\Helpers\SyntaxNodeExtensions.cs(55,41): warning CS8604: Possible null reference argument for parameter 'symbol' in 'bool TakesExpressionTree(ISymbol symbol, INamedTypeSymbol expressionType)'. [E:\msys64\home\topkek\sca.eiNn7K\recipe\src\prepared\StyleCop.Analyzers\Library.csproj]
+  Library -> E:\msys64\home\topkek\sca.eiNn7K\recipe\src\prepared\StyleCop.Analyzers\bin\Release\net8.0\StyleCop.Analyzers.dll
+  Library -> E:\msys64\home\topkek\sca.eiNn7K\recipe\src\prepared\StyleCop.Analyzers.CodeFixes\bin\Release\net8.0\StyleCop.Analyzers.CodeFixes.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\sca.eiNn7K\recipe\src\prepared\StyleCop.Analyzers.CodeGeneration\SyntaxLightupGenerator.cs(1592,63): warning CS8607: A possible null value may not be used for a type marked with [NotNull] or [DisallowNull] [E:\msys64\home\topkek\sca.eiNn7K\recipe\src\prepared\StyleCop.Analyzers.CodeGeneration\Library.csproj]
+E:\msys64\home\topkek\sca.eiNn7K\recipe\src\prepared\StyleCop.Analyzers.CodeGeneration\SyntaxLightupGenerator.cs(1542,68): warning CS8607: A possible null value may not be used for a type marked with [NotNull] or [DisallowNull] [E:\msys64\home\topkek\sca.eiNn7K\recipe\src\prepared\StyleCop.Analyzers.CodeGeneration\Library.csproj]
+E:\msys64\home\topkek\sca.eiNn7K\recipe\src\stylecop\StyleCop.Analyzers\StyleCop.Analyzers\DocumentationRules\SA1648InheritDocMustBeUsedWithInheritingClass.cs(96,60): warning CS8604: Possible null reference argument for parameter 'text' in 'XElement XElement.Parse(string text, LoadOptions options)'. [E:\msys64\home\topkek\sca.eiNn7K\recipe\src\prepared\StyleCop.Analyzers\Library.csproj]
+E:\msys64\home\topkek\sca.eiNn7K\recipe\src\stylecop\StyleCop.Analyzers\StyleCop.Analyzers\DocumentationRules\SA1648InheritDocMustBeUsedWithInheritingClass.cs(149,38): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\sca.eiNn7K\recipe\src\prepared\StyleCop.Analyzers\Library.csproj]
+E:\msys64\home\topkek\sca.eiNn7K\recipe\src\stylecop\StyleCop.Analyzers\StyleCop.Analyzers\DocumentationRules\SA1648InheritDocMustBeUsedWithInheritingClass.cs(155,49): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\sca.eiNn7K\recipe\src\prepared\StyleCop.Analyzers\Library.csproj]
+E:\msys64\home\topkek\sca.eiNn7K\recipe\src\stylecop\StyleCop.Analyzers\StyleCop.Analyzers\DocumentationRules\SA1648InheritDocMustBeUsedWithInheritingClass.cs(157,46): warning CS8602: Dereference of a possibly null reference. [E:\msys64\home\topkek\sca.eiNn7K\recipe\src\prepared\StyleCop.Analyzers\Library.csproj]
+E:\msys64\home\topkek\sca.eiNn7K\recipe\src\stylecop\StyleCop.Analyzers\StyleCop.Analyzers\DocumentationRules\SA1648InheritDocMustBeUsedWithInheritingClass.cs(170,38): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\sca.eiNn7K\recipe\src\prepared\StyleCop.Analyzers\Library.csproj]
+E:\msys64\home\topkek\sca.eiNn7K\recipe\src\stylecop\StyleCop.Analyzers\StyleCop.Analyzers\DocumentationRules\SA1648InheritDocMustBeUsedWithInheritingClass.cs(182,60): warning CS8604: Possible null reference argument for parameter 'text' in 'XElement XElement.Parse(string text, LoadOptions options)'. [E:\msys64\home\topkek\sca.eiNn7K\recipe\src\prepared\StyleCop.Analyzers\Library.csproj]
+E:\msys64\home\topkek\sca.eiNn7K\recipe\src\stylecop\StyleCop.Analyzers\StyleCop.Analyzers\Helpers\SyntaxNodeExtensions.cs(55,41): warning CS8604: Possible null reference argument for parameter 'symbol' in 'bool TakesExpressionTree(ISymbol symbol, INamedTypeSymbol expressionType)'. [E:\msys64\home\topkek\sca.eiNn7K\recipe\src\prepared\StyleCop.Analyzers\Library.csproj]
+    9 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:26.58
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\sca.eiNn7K\recipe\src\prepared\extractor\Tool.csproj (in 178 ms).
+  Tool -> E:\msys64\home\topkek\sca.eiNn7K\recipe\src\prepared\extractor\bin\Release\net8.0\Tool.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.88
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\sca.eiNn7K\recipe\src\prepared\packages\implementation\Package.csproj (in 125 ms).
+  Package -> E:\msys64\home\topkek\sca.eiNn7K\recipe\src\prepared\packages\implementation\bin\Release\net8.0\Package.dll
+  Successfully created package 'E:\msys64\home\topkek\sca.eiNn7K\recipe\src\feed\StyleCop.Analyzers.Unstable.1.2.0.556.nupkg'.
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\sca.eiNn7K\recipe\src\prepared\packages\meta\Package.csproj (in 78 ms).
+  Package -> E:\msys64\home\topkek\sca.eiNn7K\recipe\src\prepared\packages\meta\bin\Release\net8.0\Package.dll
+  Successfully created package 'E:\msys64\home\topkek\sca.eiNn7K\recipe\src\feed\StyleCop.Analyzers.1.2.0-beta.556.nupkg'.
+==> Starting check()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\sca.eiNn7K\recipe\src\check\Check.csproj (in 1.49 sec).
+  Check -> E:\msys64\home\topkek\sca.eiNn7K\recipe\src\check\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:13.68
+PASS both upstream generators regenerate all 183 pinned output files: 179 token-identical, four wrappers with six explicit newer-Roslyn property accesses; formatting trivia may differ
+PASS source assembly identities, 182 analyzer/89 fixer classes, 197 live descriptors and 17 resource sets/857 strings
+PASS all analyzers execute on C# 12 records/file-scoped namespace/init/tuples without exceptions; 15 diagnostic IDs observed
+PASS real code-fix action, exact output and clean reanalysis: SA1001
+PASS real code-fix action, exact output and clean reanalysis: SA1142
+PASS source identities/resources/all-analyzer probe and representative fixes; broader fixture/asset checks run separately
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\sca.eiNn7K\recipe\src\check\fixtures\Check.csproj (in 201 ms).
+E:\msys64\home\topkek\sca.eiNn7K\recipe\src\check\fixtures\Program.cs(93,5): warning CS0618: 'Workspace.Options.set' is obsolete: 'Workspace options should be set by invoking 'workspace.TryApplyChanges(workspace.CurrentSolution.WithOptions(newOptionSet))'' [E:\msys64\home\topkek\sca.eiNn7K\recipe\src\check\fixtures\Check.csproj]
+  Check -> E:\msys64\home\topkek\sca.eiNn7K\recipe\src\check\fixtures\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\sca.eiNn7K\recipe\src\check\fixtures\Program.cs(93,5): warning CS0618: 'Workspace.Options.set' is obsolete: 'Workspace options should be set by invoking 'workspace.TryApplyChanges(workspace.CurrentSolution.WithOptions(newOptionSet))'' [E:\msys64\home\topkek\sca.eiNn7K\recipe\src\check\fixtures\Check.csproj]
+    1 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.45
+PROGRESS checked=100 passed=100 failed=0 analyzers=25 positive=19 fixes=13
+PROGRESS checked=200 passed=200 failed=0 analyzers=45 positive=37 fixes=20
+PROGRESS checked=300 passed=300 failed=0 analyzers=50 positive=42 fixes=25
+PROGRESS checked=400 passed=400 failed=0 analyzers=60 positive=53 fixes=28
+PROGRESS checked=500 passed=500 failed=0 analyzers=69 positive=59 fixes=30
+PROGRESS checked=600 passed=600 failed=0 analyzers=72 positive=63 fixes=30
+PROGRESS checked=700 passed=700 failed=0 analyzers=84 positive=72 fixes=32
+PROGRESS checked=800 passed=800 failed=0 analyzers=85 positive=73 fixes=32
+PROGRESS checked=900 passed=900 failed=0 analyzers=92 positive=80 fixes=35
+PROGRESS checked=1000 passed=1000 failed=0 analyzers=95 positive=84 fixes=39
+PROGRESS checked=1100 passed=1100 failed=0 analyzers=100 positive=89 fixes=44
+PROGRESS checked=1200 passed=1200 failed=0 analyzers=104 positive=95 fixes=48
+PROGRESS checked=1300 passed=1300 failed=0 analyzers=108 positive=99 fixes=49
+PROGRESS checked=1400 passed=1400 failed=0 analyzers=110 positive=102 fixes=51
+PROGRESS checked=1500 passed=1500 failed=0 analyzers=114 positive=106 fixes=51
+PROGRESS checked=1600 passed=1600 failed=0 analyzers=119 positive=111 fixes=54
+PROGRESS checked=1700 passed=1700 failed=0 analyzers=121 positive=113 fixes=55
+PROGRESS checked=1800 passed=1800 failed=0 analyzers=129 positive=121 fixes=57
+PROGRESS checked=1900 passed=1900 failed=0 analyzers=132 positive=125 fixes=62
+PROGRESS checked=2000 passed=2000 failed=0 analyzers=132 positive=125 fixes=62
+PROGRESS checked=2100 passed=2100 failed=0 analyzers=132 positive=125 fixes=62
+PROGRESS checked=2200 passed=2200 failed=0 analyzers=133 positive=127 fixes=63
+PROGRESS checked=2300 passed=2300 failed=0 analyzers=135 positive=129 fixes=64
+PROGRESS checked=2400 passed=2400 failed=0 analyzers=136 positive=130 fixes=65
+PROGRESS checked=2500 passed=2500 failed=0 analyzers=140 positive=135 fixes=70
+PROGRESS checked=2600 passed=2600 failed=0 analyzers=140 positive=135 fixes=70
+PROGRESS checked=2700 passed=2700 failed=0 analyzers=145 positive=140 fixes=73
+PROGRESS checked=2800 passed=2800 failed=0 analyzers=146 positive=141 fixes=73
+PASS owned:SA1600CodeFixProvider
+PASS owned:InheritdocCodeFixProvider
+PASS owned:SA1615SA1616CodeFixProvider
+PASS owned:SA1649CodeFixProvider
+PASS owned:SA1518CodeFixProvider
+PASS owned:SA1400CodeFixProvider
+PASS owned:SA1402CodeFixProvider
+PASS owned:SA1404CodeFixProvider
+PASS owned:SA1412CodeFixProvider
+PASS owned:SA1308CodeFixProvider
+PASS owned:SA1316CodeFixProvider
+PASS owned:SX1309CodeFixProvider
+PASS owned:SettingsFileCodeFixProvider
+PASS owned:SA1018CodeFixProvider
+PASS owned:SA1028CodeFixProvider
+PASS owned:SA1507CodeFixProvider:FixAll
+RESULT checked=2880 passed=2880 failed=0 analyzers=152 positive=147 fixes=90
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\sca.eiNn7K\recipe\src\check\inventory\Tool.csproj (in 68 ms).
+  Tool -> E:\msys64\home\topkek\sca.eiNn7K\recipe\src\check\inventory\bin\Release\net8.0\Tool.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.95
+PASS exact independent published metadata inventories and every selected upstream fixture
+E:\msys64\home\topkek\sca.eiNn7K\recipe\src\check\sample\Sample.cs(1,24): error SA1001: Commas should be followed by whitespace (https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1001.md) [E:\msys64\home\topkek\sca.eiNn7K\recipe\src\check\sample\Sample.csproj]
+E:\msys64\home\topkek\sca.eiNn7K\recipe\src\check\sample\Sample.cs(1,24): error SA1001: Commas should be followed by whitespace (https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1001.md) [E:\msys64\home\topkek\sca.eiNn7K\recipe\src\check\sample\Sample.csproj]
+PASS real MSBuild meta/implementation analyzer assets: expected SA1001 error, then corrected build
+==> Starting package_mingw-w64-clang-x86_64-dotnet-stylecop-analyzers()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-stylecop-analyzers"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Starting package_mingw-w64-clang-x86_64-dotnet-stylecop-analyzers-unstable()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-stylecop-analyzers-unstable"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-stylecop-analyzers 1.2.0.beta556-1 (26 Oct 2026 23:24:04)
+
+RESULT: exit 0
+
+$ MSYSTEM=CLANG64 bash -lc "bash /home/topkek/sca.eiNn7K/repackage-license.sh"
+==> Making package: mingw-w64-dotnet-stylecop-analyzers 1.2.0.beta556-1 (26 Oct 2026 23:25:34)
+==> Retrieving sources...
+  -> Found prepare.py
+  -> Found verify-source.py
+  -> Found source-inputs.json
+  -> Found upstream-commit.txt
+  -> Found build-libraries.sh
+  -> Found build.sh
+  -> Found pack.py
+  -> Found CheckPrototype.cs
+  -> Found CheckGenerated.cs
+  -> Found CheckFixtures.cs
+  -> Found CheckSpecialFixes.cs
+  -> Found ExtractFixtures.cs
+  -> Found InspectInventory.cs
+  -> Found check.sh
+  -> Found ExpectedInventory.json
+  -> Found UpstreamFixtures.json
+  -> Found published-metadata-provenance.json
+  -> Found README.md
+  -> Found Apache-2.0.txt
+==> Validating source files with sha256sums...
+    stylecop ... Skipped
+    prepare.py ... Passed
+    verify-source.py ... Passed
+    source-inputs.json ... Passed
+    upstream-commit.txt ... Passed
+    build-libraries.sh ... Passed
+    build.sh ... Passed
+    pack.py ... Passed
+    CheckPrototype.cs ... Passed
+    CheckGenerated.cs ... Passed
+    CheckFixtures.cs ... Passed
+    CheckSpecialFixes.cs ... Passed
+    ExtractFixtures.cs ... Passed
+    InspectInventory.cs ... Passed
+    check.sh ... Passed
+    ExpectedInventory.json ... Passed
+    UpstreamFixtures.json ... Passed
+    published-metadata-provenance.json ... Passed
+    README.md ... Passed
+    Apache-2.0.txt ... Passed
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\sca.eiNn7K\recipe\src\prepared\packages\implementation\Package.csproj (in 92 ms).
+  Package -> E:\msys64\home\topkek\sca.eiNn7K\recipe\src\prepared\packages\implementation\bin\Release\net8.0\Package.dll
+  Successfully created package 'E:\msys64\home\topkek\sca.eiNn7K\recipe\src\feed\StyleCop.Analyzers.Unstable.1.2.0.556.nupkg'.
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\sca.eiNn7K\recipe\src\prepared\packages\meta\Package.csproj (in 76 ms).
+  Package -> E:\msys64\home\topkek\sca.eiNn7K\recipe\src\prepared\packages\meta\bin\Release\net8.0\Package.dll
+  Successfully created package 'E:\msys64\home\topkek\sca.eiNn7K\recipe\src\feed\StyleCop.Analyzers.1.2.0-beta.556.nupkg'.
+==> Making package: mingw-w64-dotnet-stylecop-analyzers 1.2.0.beta556-1 (26 Oct 2026 23:25:57)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Removing existing $pkgdir/ directory...
+==> Starting package_mingw-w64-clang-x86_64-dotnet-stylecop-analyzers()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-stylecop-analyzers"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Starting package_mingw-w64-clang-x86_64-dotnet-stylecop-analyzers-unstable()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-stylecop-analyzers-unstable"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-stylecop-analyzers 1.2.0.beta556-1 (26 Oct 2026 23:26:12)
+
+RESULT: exit 0
+
+$ MSYSTEM=CLANG64 bash -lc "bash /home/topkek/sca.eiNn7K/install-check.sh"
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (2) mingw-w64-clang-x86_64-dotnet-stylecop-analyzers-1.2.0.beta556-1  mingw-w64-clang-x86_64-dotnet-stylecop-analyzers-unstable-1.2.0.beta556-1
+
+Total Installed Size:  6.32 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+installing mingw-w64-clang-x86_64-dotnet-stylecop-analyzers-unstable...
+installing mingw-w64-clang-x86_64-dotnet-stylecop-analyzers...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\sca.eiNn7K\installed-check\Check.csproj (in 1.26 sec).
+  Check -> E:\msys64\home\topkek\sca.eiNn7K\installed-check\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:13.10
+PASS both upstream generators regenerate all 183 pinned output files: 179 token-identical, four wrappers with six explicit newer-Roslyn property accesses; formatting trivia may differ
+PASS source assembly identities, 182 analyzer/89 fixer classes, 197 live descriptors and 17 resource sets/857 strings
+PASS all analyzers execute on C# 12 records/file-scoped namespace/init/tuples without exceptions; 15 diagnostic IDs observed
+PASS real code-fix action, exact output and clean reanalysis: SA1001
+PASS real code-fix action, exact output and clean reanalysis: SA1142
+PASS source identities/resources/all-analyzer probe and representative fixes; broader fixture/asset checks run separately
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\sca.eiNn7K\installed-check\fixtures\Check.csproj (in 158 ms).
+E:\msys64\home\topkek\sca.eiNn7K\installed-check\fixtures\Program.cs(93,5): warning CS0618: 'Workspace.Options.set' is obsolete: 'Workspace options should be set by invoking 'workspace.TryApplyChanges(workspace.CurrentSolution.WithOptions(newOptionSet))'' [E:\msys64\home\topkek\sca.eiNn7K\installed-check\fixtures\Check.csproj]
+  Check -> E:\msys64\home\topkek\sca.eiNn7K\installed-check\fixtures\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\sca.eiNn7K\installed-check\fixtures\Program.cs(93,5): warning CS0618: 'Workspace.Options.set' is obsolete: 'Workspace options should be set by invoking 'workspace.TryApplyChanges(workspace.CurrentSolution.WithOptions(newOptionSet))'' [E:\msys64\home\topkek\sca.eiNn7K\installed-check\fixtures\Check.csproj]
+    1 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.70
+PROGRESS checked=100 passed=100 failed=0 analyzers=25 positive=19 fixes=13
+PROGRESS checked=200 passed=200 failed=0 analyzers=45 positive=37 fixes=20
+PROGRESS checked=300 passed=300 failed=0 analyzers=50 positive=42 fixes=25
+PROGRESS checked=400 passed=400 failed=0 analyzers=60 positive=53 fixes=28
+PROGRESS checked=500 passed=500 failed=0 analyzers=69 positive=59 fixes=30
+PROGRESS checked=600 passed=600 failed=0 analyzers=72 positive=63 fixes=30
+PROGRESS checked=700 passed=700 failed=0 analyzers=84 positive=72 fixes=32
+PROGRESS checked=800 passed=800 failed=0 analyzers=85 positive=73 fixes=32
+PROGRESS checked=900 passed=900 failed=0 analyzers=92 positive=80 fixes=35
+PROGRESS checked=1000 passed=1000 failed=0 analyzers=95 positive=84 fixes=39
+PROGRESS checked=1100 passed=1100 failed=0 analyzers=100 positive=89 fixes=44
+PROGRESS checked=1200 passed=1200 failed=0 analyzers=104 positive=95 fixes=48
+PROGRESS checked=1300 passed=1300 failed=0 analyzers=108 positive=99 fixes=49
+PROGRESS checked=1400 passed=1400 failed=0 analyzers=110 positive=102 fixes=51
+PROGRESS checked=1500 passed=1500 failed=0 analyzers=114 positive=106 fixes=51
+PROGRESS checked=1600 passed=1600 failed=0 analyzers=119 positive=111 fixes=54
+PROGRESS checked=1700 passed=1700 failed=0 analyzers=121 positive=113 fixes=55
+PROGRESS checked=1800 passed=1800 failed=0 analyzers=129 positive=121 fixes=57
+PROGRESS checked=1900 passed=1900 failed=0 analyzers=132 positive=125 fixes=62
+PROGRESS checked=2000 passed=2000 failed=0 analyzers=132 positive=125 fixes=62
+PROGRESS checked=2100 passed=2100 failed=0 analyzers=132 positive=125 fixes=62
+PROGRESS checked=2200 passed=2200 failed=0 analyzers=133 positive=127 fixes=63
+PROGRESS checked=2300 passed=2300 failed=0 analyzers=135 positive=129 fixes=64
+PROGRESS checked=2400 passed=2400 failed=0 analyzers=136 positive=130 fixes=65
+PROGRESS checked=2500 passed=2500 failed=0 analyzers=140 positive=135 fixes=70
+PROGRESS checked=2600 passed=2600 failed=0 analyzers=140 positive=135 fixes=70
+PROGRESS checked=2700 passed=2700 failed=0 analyzers=145 positive=140 fixes=73
+PROGRESS checked=2800 passed=2800 failed=0 analyzers=146 positive=141 fixes=73
+PASS owned:SA1600CodeFixProvider
+PASS owned:InheritdocCodeFixProvider
+PASS owned:SA1615SA1616CodeFixProvider
+PASS owned:SA1649CodeFixProvider
+PASS owned:SA1518CodeFixProvider
+PASS owned:SA1400CodeFixProvider
+PASS owned:SA1402CodeFixProvider
+PASS owned:SA1404CodeFixProvider
+PASS owned:SA1412CodeFixProvider
+PASS owned:SA1308CodeFixProvider
+PASS owned:SA1316CodeFixProvider
+PASS owned:SX1309CodeFixProvider
+PASS owned:SettingsFileCodeFixProvider
+PASS owned:SA1018CodeFixProvider
+PASS owned:SA1028CodeFixProvider
+PASS owned:SA1507CodeFixProvider:FixAll
+RESULT checked=2880 passed=2880 failed=0 analyzers=152 positive=147 fixes=90
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\sca.eiNn7K\installed-check\inventory\Tool.csproj (in 58 ms).
+  Tool -> E:\msys64\home\topkek\sca.eiNn7K\installed-check\inventory\bin\Release\net8.0\Tool.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.41
+PASS exact independent published metadata inventories and every selected upstream fixture
+E:\msys64\home\topkek\sca.eiNn7K\installed-check\sample\Sample.cs(1,24): error SA1001: Commas should be followed by whitespace (https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1001.md) [E:\msys64\home\topkek\sca.eiNn7K\installed-check\sample\Sample.csproj]
+E:\msys64\home\topkek\sca.eiNn7K\installed-check\sample\Sample.cs(1,24): error SA1001: Commas should be followed by whitespace (https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1001.md) [E:\msys64\home\topkek\sca.eiNn7K\installed-check\sample\Sample.csproj]
+PASS real MSBuild meta/implementation analyzer assets: expected SA1001 error, then corrected build
+mingw-w64-clang-x86_64-dotnet-stylecop-analyzers 1.2.0.beta556-1
+mingw-w64-clang-x86_64-dotnet-stylecop-analyzers-unstable 1.2.0.beta556-1
+PASS all nine installed NuGet analyzer/fixer/satellite DLLs match both restored consumers byte-for-byte
+
+RESULT: exit 0
+
+The repack script runs makepkg --holdver --verifysource --force,
+the narrow pack.py/dotnet pack checks, makepkg --holdver --repackage --force
+--noconfirm, and makepkg --printsrcinfo in CLANG64. The installed script runs
+pacman -U --noconfirm on both artifacts, bash recipe/check.sh installed-check,
+pacman -Q on both packages and the exact consumer/payload hash comparison.
+
+$ python3 tests/powershell-deps/audit-stylecop-analyzers.py tests/powershell-deps/stylecop-analyzers-artifacts-20261026.json
+StyleCop: exact signed-source commit/checksums, both meta/implementation packages, nine managed assets, all 427 source inputs, 183+183 generation baselines, 182/89/178 inventories, 17/857 resources and 2880 upstream vectors PASS
+RESULT: exit 0

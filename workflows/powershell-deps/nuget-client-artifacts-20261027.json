@@ -1,0 +1,90 @@
+{
+  "NuGet.Frameworks": {
+    "artifact": "mingw-w64-clang-x86_64-dotnet-nuget-frameworks-6.9.1-1-any.pkg.tar.zst",
+    "sha256": "c56f90c9183d11d3357294cdd649a4448ef20ddef1c3c7b0d1d5148a7317f6d6",
+    "original_compile_items": 54,
+    "api_declarations": 419,
+    "implementation_sha256": "c6caac9f82fe754c42390fc75ae9cf6a9b080ca0202d27e1a29985f0044c3826",
+    "reference_sha256": "c8bbedbb35cfcd94fcb01d03fa586538a42ea59e66092110c15beddbd321c7a4"
+  },
+  "NuGet.Common": {
+    "artifact": "mingw-w64-clang-x86_64-dotnet-nuget-common-6.9.1-1-any.pkg.tar.zst",
+    "sha256": "14ce3b0d9aa04ff9ddb9aeef1ee8afa090c426be6c496002b43882b85df4ff52",
+    "original_compile_items": 88,
+    "api_declarations": 653,
+    "implementation_sha256": "08ae13f1f3e96b8d4bd1d0250025de64965e3514b2e113a9cb3504be4debd16f",
+    "reference_sha256": "5c103f714326b74a1e790306b8e668bcf06a23eca1e37440517c1abd08097cca"
+  },
+  "NuGet.Versioning": {
+    "artifact": "mingw-w64-clang-x86_64-dotnet-nuget-versioning-6.9.1-1-any.pkg.tar.zst",
+    "sha256": "802c5278c3dc47748e8d60229d48ce5c29525d00cf2e802e9c82faae6c69242c",
+    "original_compile_items": 37,
+    "api_declarations": 221,
+    "implementation_sha256": "a1fc7d0f0486b7e86ec6e73a3a401a3f405c77422f66cf8733b7341619aafeba",
+    "reference_sha256": "7aa0a730525528a2bcd8211eac3a111c9c2ce0804bcbf050bbdea52227a5a7a5"
+  },
+  "NuGet.Configuration": {
+    "artifact": "mingw-w64-clang-x86_64-dotnet-nuget-configuration-6.9.1-1-any.pkg.tar.zst",
+    "sha256": "035d07718f24d7b8ba72e16695e1b2d5ff159fb6baf0faf8b7b273d8ef2a1d35",
+    "original_compile_items": 78,
+    "api_declarations": 547,
+    "implementation_sha256": "1b99a452c1eebe0d6dedc34dde7f965f3a0557c41f57d4cac14563c94befdb46",
+    "reference_sha256": "06ae4e3e8adb9f9a2cc91f54f467f600c1cbdd5fb40c3c26fa4f998091c99b84"
+  },
+  "NuGet.Packaging": {
+    "artifact": "mingw-w64-clang-x86_64-dotnet-nuget-packaging-6.9.1-1-any.pkg.tar.zst",
+    "sha256": "0ea46ef6b0059fbd62e21991574b9114d3226aad8086dff9f1509aec159dc28d",
+    "original_compile_items": 333,
+    "api_declarations": 1909,
+    "implementation_sha256": "841054f0f773a84beb9ae342fb9498f41d526923ea5af0c4c66e754e06949713",
+    "reference_sha256": "cb91f7dd36ca923ac1be4005b50bc746a09d53fa4b444aea112789a90078c1b9"
+  },
+  "NuGet.LibraryModel": {
+    "artifact": "mingw-w64-clang-x86_64-dotnet-nuget-librarymodel-6.9.1-1-any.pkg.tar.zst",
+    "sha256": "cda684903df56d6bb3350ced222a926e09543fe64b94bfa92c3c6dbcce1b2b7e",
+    "original_compile_items": 34,
+    "api_declarations": 189,
+    "implementation_sha256": "a4e02e7045eedf112f29ca0a619e94ae5b6a92a5fbb9904430924a1644136bb9",
+    "reference_sha256": "05770b1004eb5c3512a86fd7e9b27423e981513f57a34428ebe21295b43f5d02"
+  },
+  "NuGet.DependencyResolver.Core": {
+    "artifact": "mingw-w64-clang-x86_64-dotnet-nuget-dependencyresolver-core-6.9.1-1-any.pkg.tar.zst",
+    "sha256": "318b26218c9db4a9085d4fe667266c82bd0e706b220b4da8470a1cce48ab3f4b",
+    "original_compile_items": 38,
+    "api_declarations": 157,
+    "implementation_sha256": "98138790ef49cee5d3af718e74a2375096c94c7a40bf6535a2e6ce075b0fb1e9",
+    "reference_sha256": "4d60c980cb7c6dc98f738e4d8cffc91be9f563780e769cf884931a037bd34f50"
+  },
+  "NuGet.ProjectModel": {
+    "artifact": "mingw-w64-clang-x86_64-dotnet-nuget-projectmodel-6.9.1-1-any.pkg.tar.zst",
+    "sha256": "ba92748eac6e66a48ad2de61951c08a094885fdc485fae9c219b4814faa7f1e1",
+    "original_compile_items": 74,
+    "api_declarations": 634,
+    "implementation_sha256": "d9f5266ebbaefcfe2dcb227fa10786b701b2cfb519d6fb78e25f21d387fe2da6",
+    "reference_sha256": "ffe7147a741dceb31049c9078e5373bdd4d0a1c7288f072daf889e1c29845a23"
+  },
+  "NuGet.Protocol": {
+    "artifact": "mingw-w64-clang-x86_64-dotnet-nuget-protocol-6.9.1-1-any.pkg.tar.zst",
+    "sha256": "7de8f66775cdaeb869ee3e64c8870e293a496be9638fbb665643d359434bca4c",
+    "original_compile_items": 387,
+    "api_declarations": 2150,
+    "implementation_sha256": "de94e021a37d9156dcbdf8ce1eb8d3bf0c9191439bbdb6cd027f1d18a697dc71",
+    "reference_sha256": "d413761c263cbb40f04369ed1245e58a8afd16a2fb7aa62feaa2e88bf0308b9a"
+  },
+  "NuGet.Credentials": {
+    "artifact": "mingw-w64-clang-x86_64-dotnet-nuget-credentials-6.9.1-1-any.pkg.tar.zst",
+    "sha256": "77e8bac7635b0603c2a7d0a4b5a825fdba2c31f5ba41030ccbb37f5b0c0006ea",
+    "original_compile_items": 34,
+    "api_declarations": 90,
+    "implementation_sha256": "c72c6930d3212fa71fc4eb968a4ec3b9612d1d6e3049ab0fb27a4f8be232f750",
+    "reference_sha256": "1234e9cd7ce5738ff3143af9a52cfcf7ffee5e24da6af0797c844df77234960c"
+  },
+  "NuGet.Commands": {
+    "artifact": "mingw-w64-clang-x86_64-dotnet-nuget-commands-6.9.1-1-any.pkg.tar.zst",
+    "sha256": "8e7b36e53b7136b5999f333be69c8a5dc7be9352a4b77144a87808319eca24cb",
+    "original_compile_items": 131,
+    "api_declarations": 876,
+    "implementation_sha256": "58ae9cab77393925c29fb7ab87f5d1f0e472787df62e34a16e2c00730abfa874",
+    "reference_sha256": "52626f2b924463f05934b4cc1b6cf09e530c67bcf069d20c7eecbe02b6000a5b"
+  }
+}

@@ -1,0 +1,68 @@
+Original PowerShell source project native apphost and actual child-process milestone
+{
+  "build_root": "/home/topkek/powershell-full-sdk.K5kDMN",
+  "source_version": "7.4.20",
+  "original_native_console_build_exit_code": 0,
+  "independent_original_sdk_task_replay_exit_code": 0,
+  "native_console_smoke_exit_code": 0,
+  "actual_start_job_child_exit_code": 0,
+  "source_payload_audit_exit_code": 0,
+  "staged_source_binary_assets": 384,
+  "staged_total_files": 605,
+  "original_project_dlls": 13,
+  "template_source_version": "8.0.31",
+  "template_producer": "/home/topkek/sdk8-servicing.H9EQgk/prepared",
+  "template_sdk_provider": "private SDK prototype, formal package build active",
+  "full_shipping_powershell_complete": false,
+  "remaining": [
+    "formal SDK host/runtime pack artifact/install",
+    "fresh full SDK/catalog rebuild with installed serviced targeting/SDK packs",
+    "conditional GraphicalHost",
+    "complete native package/license closure and broader native/remote compatibility",
+    "PowerShell7.6/.NET10"
+  ]
+}
+
+Build command from the source build root:
+$ /home/topkek/sdk8-servicing.H9EQgk/private-sdk1/dotnet.exe build "$(cygpath -am PowerShell-7.4.20/src/powershell-win-core/powershell-win-core.csproj)" -c Release --no-restore -p:BuildProjectReferences=false -p:UseSharedCompilation=false -p:SDKToUse=Microsoft.NET.Sdk -p:UseAppHost=true -v:minimal
+Result:exit0,zero warnings/errors.
+$ /usr/bin/python3 tests/powershell-full-sdk/audit-native-console.py . /home/topkek/sdk8-servicing.H9EQgk/private-sdk1 /home/topkek/sdk8-servicing.H9EQgk/sdk-stage2 native-replay1
+Result:exit0,byte-exact original SDK task replay using fresh source apphost.
+$ app2/pwsh.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "$(cygpath -am tests/powershell-full-sdk/Smoke.ps1)"
+Result:exit0.
+$ app2/pwsh.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "$(cygpath -am tests/powershell-full-sdk/ChildSmoke.ps1)"
+Result:exit0,actual native child/Unicode CLIXML/source engine/live CIM.
+$ /usr/bin/python3 tests/powershell-full-sdk/audit-payload.py . app2
+Result:exit0.
+
+Recorded native-console-build1.log:
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  powershell-win-core -> E:\msys64\home\topkek\powershell-full-sdk.K5kDMN\PowerShell-7.4.20\src\powershell-win-core\bin\Release\net8.0\pwsh.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:09.93
+
+Recorded native-replay1.log:
+
+PASS original project native pwsh.exe exactly matches unchanged source SDK task replay using freshly source-built8.0.31 apphost and original assembly resources
+
+Recorded native-smoke1.log:
+CATALOG System.Data.SqlClient.SqlConnection -> System.Data.SqlClient
+CATALOG System.ServiceModel.BasicHttpBinding -> System.Private.ServiceModel
+CATALOG System.ServiceModel.NetTcpBinding -> System.Private.ServiceModel
+CATALOG System.IO.Packaging.Package -> System.IO.Packaging
+CATALOG System.Speech.Synthesis.SpeechSynthesizer -> System.Speech
+CATALOG System.Drawing.Bitmap -> System.Drawing.Common
+CATALOG System.Management.ManagementObjectSearcher -> System.Management
+PASS original full SDK catalog/console, module discovery, CIM/GetOwner/serialization, JSON/Add-Type/Authenticode, LocalAccounts and no Framework implementations
+
+Recorded native-child1.log:
+PASS original native console starts actual source pwsh.exe child, Unicode CLIXML, original source engine, serviced runtime and live CIM
+
+Recorded app2-payload-audit.log:
+PASS all 605 staged files, 384 source binary assets, 13 original project DLLs,163 reference assemblies and six source gallery modules; source archive/native owners recorded
+

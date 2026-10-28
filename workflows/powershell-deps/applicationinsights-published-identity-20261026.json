@@ -1,0 +1,14 @@
+{
+  "url": "https://api.nuget.org/v3-flatcontainer/microsoft.applicationinsights/2.23.0/microsoft.applicationinsights.2.23.0.nupkg",
+  "package_sha256": "e6c7f76e0ec26598c7b1e2be1777e839c84486655e8a878fc4c655bd2e918dbd",
+  "entry": "lib/netstandard2.0/Microsoft.ApplicationInsights.dll",
+  "assembly_sha256": "bf9a4b88c7f94267e1cc7ed0700c575d3eb3266ff25bcb76e4f40f1b0fba022d",
+  "use": "PE metadata inspection only; never loaded/executed/compiled against or used as package payload",
+  "identity": {
+    "name": "Microsoft.ApplicationInsights",
+    "assembly_version": "2.23.0.29",
+    "public_key_token": "31bf3856ad364e35",
+    "file_version": "2.23.0.00029",
+    "informational_version": "2.23.0+2faa7e8b157a431daa2e71785d68abd5fa817b53"
+  }
+}

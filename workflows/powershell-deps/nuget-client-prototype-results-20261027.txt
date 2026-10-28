@@ -1,0 +1,260 @@
+NuGet.Client6.9.1 Core complete source prototype, 2026-10-27
+
+Remote root: /home/topkek/nuget-client-source.WHIFNv
+Source commit623fde83a3cd73cb479ec7fa03866c6116894dbf; original eleven Core projects, no production C# patches.
+Pinned per-project original C# inputs: 1145; shared original C# files: 13 (used by original common targets). Actual compile inventory still pending.
+Original source-build flags/identities retained; targets retargeted to net8.0; source NewtonSoft13.0.4/Pkcs8.0.1/ProtectedData8.0.0/Extensions6 selected.
+Original published Core assembly identities, signing keys, file/informational versions,7845 APIs and807 resource strings in13 manifests match.
+Archived LF resource values encoded with XML character refs for the original published Windows CRLF. C# algorithms unchanged.
+Original package/protocol/Commands RestoreRunner behavior tested against owned packages/local feed/cache, including dependencies and Unicode.
+Core build exit0 with27 source retarget/CLS warnings; consumer build and behavior exit0 with zero warnings/errors.
+Not packaged. Formal source compiler/payload/resource overlay gates, broader behavior and installed integration remain open.
+Separate CLI/build-task/VS projects and full PSResourceGet/Azure/MSAL/ClientModel/JSON dependency graph remain open. Actual CLR8.0.0 servicing unchanged.
+
+--- build-nuget-client-prototype.sh ---
+set -euo pipefail
+root=/home/topkek/nuget-client-source.WHIFNv
+cd "$root"
+tar -xzf nuget-client-623fde83a3cd73cb479ec7fa03866c6116894dbf.tar.gz
+/usr/bin/python3 prepare.py "$root/NuGet.Client-623fde83a3cd73cb479ec7fa03866c6116894dbf" "$root/prepared"
+cat > NuGet.config <<'XML'
+<configuration><packageSources><clear/><add key="installed-source" value="E:/msys64/clang64/lib/dotnet/library-packs"/><add key="extensions-source" value="E:/msys64/home/topkek/extensions6-source.5RtLMI/feed2"/></packageSources></configuration>
+XML
+export DOTNET_ROOT=$(cygpath -am /clang64/lib/dotnet) DOTNET_CLI_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false
+export DOTNET_ROOT_X64=$DOTNET_ROOT DOTNET_CLI_HOME=$(cygpath -am "$root/cli-home") NUGET_PACKAGES=$(cygpath -am "$root/cache")
+export BUILD_SOURCEVERSION=623fde83a3cd73cb479ec7fa03866c6116894dbf
+/clang64/lib/dotnet/dotnet.exe build "$(cygpath -am "$root/prepared/src/NuGet.Core/NuGet.Commands/NuGet.Commands.csproj")" -c Release \
+ --configfile "$(cygpath -am "$root/NuGet.config")" -p:DotNetBuildFromSource=true -p:TargetFrameworks=net8.0 -p:NETCoreTargetFramework=net8.0 \
+ -p:IsXPlat=true -p:BuildRTM=true -p:BuildNumber=3 -p:RepositoryCommit=623fde83a3cd73cb479ec7fa03866c6116894dbf \
+ -p:SourceRevisionId=623fde83a3cd73cb479ec7fa03866c6116894dbf -p:NewtonsoftJsonPackageVersion=13.0.4 \
+ -p:SystemSecurityCryptographyPkcsVersion=8.0.1 -p:DebugType=portable -p:TreatWarningsAsErrors=false -p:MSBuildTreatWarningsAsErrors=false \
+ -p:UseSharedCompilation=false -v:minimal
+
+
+--- build1.log ---
+PASS complete original NuGet Core source/resource inventory and central ProtectedData source version selection
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Versioning\NuGet.Versioning.csproj (in 326 ms).
+  Restored E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Common\NuGet.Common.csproj (in 321 ms).
+  Restored E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.LibraryModel\NuGet.LibraryModel.csproj (in 326 ms).
+  Restored E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Protocol\NuGet.Protocol.csproj (in 384 ms).
+  Restored E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.ProjectModel\NuGet.ProjectModel.csproj (in 383 ms).
+  Restored E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.DependencyResolver.Core\NuGet.DependencyResolver.Core.csproj (in 804 ms).
+  Restored E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Commands\NuGet.Commands.csproj (in 384 ms).
+  Restored E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Frameworks\NuGet.Frameworks.csproj (in 4 ms).
+  Restored E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj (in 14 ms).
+  Restored E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Configuration\NuGet.Configuration.csproj (in 9 ms).
+  Restored E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Credentials\NuGet.Credentials.csproj (in 20 ms).
+  NuGet.Versioning -> E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\artifacts\NuGet.Versioning\bin\Release\net8.0\NuGet.Versioning.dll
+  NuGet.Frameworks -> E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\artifacts\NuGet.Frameworks\bin\Release\net8.0\NuGet.Frameworks.dll
+  NuGet.Common -> E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\artifacts\NuGet.Common\bin\Release\net8.0\NuGet.Common.dll
+  NuGet.LibraryModel -> E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\artifacts\NuGet.LibraryModel\bin\Release\net8.0\NuGet.LibraryModel.dll
+  NuGet.Configuration -> E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\artifacts\NuGet.Configuration\bin\Release\net8.0\NuGet.Configuration.dll
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\SigningUtility.cs(60,62): warning CS3002: Return type of 'SigningUtility.CreateSignedAttributes(SignPackageRequest, IReadOnlyList<X509Certificate2>)' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\SigningUtility.cs(90,62): warning CS3002: Return type of 'SigningUtility.CreateSignedAttributes(RepositorySignPackageRequest, IReadOnlyList<X509Certificate2>)' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\SigningUtility.cs(116,33): warning CS3002: Return type of 'SigningUtility.CreateCmsSigner(SignPackageRequest, ILogger)' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(24,52): warning CS3002: Return type of 'AttributeUtility.CreateCommitmentTypeIndication(SignatureType)' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(44,93): warning CS3001: Argument type 'CryptographicAttributeObjectCollection' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(81,52): warning CS3002: Return type of 'AttributeUtility.CreateNuGetV3ServiceIndexUrl(Uri)' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(115,92): warning CS3001: Argument type 'CryptographicAttributeObjectCollection' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(156,52): warning CS3002: Return type of 'AttributeUtility.CreateNuGetPackageOwners(IReadOnlyList<string>)' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(184,106): warning CS3001: Argument type 'CryptographicAttributeObjectCollection' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(251,52): warning CS3002: Return type of 'AttributeUtility.CreateSigningCertificateV2(X509Certificate2, HashAlgorithmName)' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(344,52): warning CS3002: Return type of 'AttributeUtility.GetAttribute(CryptographicAttributeObjectCollection, string)' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(344,109): warning CS3001: Argument type 'CryptographicAttributeObjectCollection' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(380,65): warning CS3002: Return type of 'AttributeUtility.GetAttributes(CryptographicAttributeObjectCollection, string)' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(380,123): warning CS3001: Argument type 'CryptographicAttributeObjectCollection' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Timestamp\Timestamp.cs(39,26): warning CS3003: Type of 'Timestamp.SignedCms' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Timestamp\Timestamp.cs(44,27): warning CS3003: Type of 'Timestamp.SignerInfo' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Timestamp\Timestamp.cs(65,36): warning CS3001: Argument type 'SignedCms' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Signatures\AuthorPrimarySignature.cs(19,49): warning CS3001: Argument type 'SignedCms' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Signatures\ISignature.cs(15,20): warning CS3003: Type of 'ISignature.SignerInfo' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Signatures\PrimarySignatureFactory.cs(14,66): warning CS3001: Argument type 'SignedCms' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Signatures\PrimarySignature.cs(20,26): warning CS3003: Type of 'PrimarySignature.SignedCms' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Signatures\PrimarySignature.cs(53,55): warning CS3001: Argument type 'SignedCms' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Signatures\PrimarySignature.cs(114,46): warning CS3001: Argument type 'SignedCms' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Signatures\Signature.cs(39,27): warning CS3003: Type of 'Signature.SignerInfo' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Signatures\Signature.cs(45,40): warning CS3001: Argument type 'SignerInfo' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Signatures\UnknownPrimarySignature.cs(13,50): warning CS3001: Argument type 'SignedCms' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Signatures\RepositoryPrimarySignature.cs(24,53): warning CS3001: Argument type 'SignedCms' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+  NuGet.Packaging -> E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\artifacts\NuGet.Packaging\bin\Release\net8.0\NuGet.Packaging.dll
+  NuGet.Protocol -> E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\artifacts\NuGet.Protocol\bin\Release\net8.0\NuGet.Protocol.dll
+  NuGet.Credentials -> E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\artifacts\NuGet.Credentials\bin\Release\net8.0\NuGet.Credentials.dll
+  NuGet.DependencyResolver.Core -> E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\artifacts\NuGet.DependencyResolver.Core\bin\Release\net8.0\NuGet.DependencyResolver.Core.dll
+  NuGet.ProjectModel -> E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\artifacts\NuGet.ProjectModel\bin\Release\net8.0\NuGet.ProjectModel.dll
+  NuGet.Commands -> E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\artifacts\NuGet.Commands\bin\Release\net8.0\NuGet.Commands.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\SigningUtility.cs(60,62): warning CS3002: Return type of 'SigningUtility.CreateSignedAttributes(SignPackageRequest, IReadOnlyList<X509Certificate2>)' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\SigningUtility.cs(90,62): warning CS3002: Return type of 'SigningUtility.CreateSignedAttributes(RepositorySignPackageRequest, IReadOnlyList<X509Certificate2>)' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\SigningUtility.cs(116,33): warning CS3002: Return type of 'SigningUtility.CreateCmsSigner(SignPackageRequest, ILogger)' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(24,52): warning CS3002: Return type of 'AttributeUtility.CreateCommitmentTypeIndication(SignatureType)' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(44,93): warning CS3001: Argument type 'CryptographicAttributeObjectCollection' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(81,52): warning CS3002: Return type of 'AttributeUtility.CreateNuGetV3ServiceIndexUrl(Uri)' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(115,92): warning CS3001: Argument type 'CryptographicAttributeObjectCollection' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(156,52): warning CS3002: Return type of 'AttributeUtility.CreateNuGetPackageOwners(IReadOnlyList<string>)' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(184,106): warning CS3001: Argument type 'CryptographicAttributeObjectCollection' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(251,52): warning CS3002: Return type of 'AttributeUtility.CreateSigningCertificateV2(X509Certificate2, HashAlgorithmName)' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(344,52): warning CS3002: Return type of 'AttributeUtility.GetAttribute(CryptographicAttributeObjectCollection, string)' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(344,109): warning CS3001: Argument type 'CryptographicAttributeObjectCollection' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(380,65): warning CS3002: Return type of 'AttributeUtility.GetAttributes(CryptographicAttributeObjectCollection, string)' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(380,123): warning CS3001: Argument type 'CryptographicAttributeObjectCollection' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Timestamp\Timestamp.cs(39,26): warning CS3003: Type of 'Timestamp.SignedCms' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Timestamp\Timestamp.cs(44,27): warning CS3003: Type of 'Timestamp.SignerInfo' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Timestamp\Timestamp.cs(65,36): warning CS3001: Argument type 'SignedCms' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Signatures\AuthorPrimarySignature.cs(19,49): warning CS3001: Argument type 'SignedCms' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Signatures\ISignature.cs(15,20): warning CS3003: Type of 'ISignature.SignerInfo' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Signatures\PrimarySignatureFactory.cs(14,66): warning CS3001: Argument type 'SignedCms' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Signatures\PrimarySignature.cs(20,26): warning CS3003: Type of 'PrimarySignature.SignedCms' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Signatures\PrimarySignature.cs(53,55): warning CS3001: Argument type 'SignedCms' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Signatures\PrimarySignature.cs(114,46): warning CS3001: Argument type 'SignedCms' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Signatures\Signature.cs(39,27): warning CS3003: Type of 'Signature.SignerInfo' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Signatures\Signature.cs(45,40): warning CS3001: Argument type 'SignerInfo' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Signatures\UnknownPrimarySignature.cs(13,50): warning CS3001: Argument type 'SignedCms' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Signatures\RepositoryPrimarySignature.cs(24,53): warning CS3001: Argument type 'SignedCms' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+    27 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:02:22.52
+
+
+--- build3.log ---
+Preserved original CRLF resource messages in 5 resx files
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  NuGet.Versioning -> E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\artifacts\NuGet.Versioning\bin\Release\net8.0\NuGet.Versioning.dll
+  NuGet.Frameworks -> E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\artifacts\NuGet.Frameworks\bin\Release\net8.0\NuGet.Frameworks.dll
+  NuGet.Common -> E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\artifacts\NuGet.Common\bin\Release\net8.0\NuGet.Common.dll
+  NuGet.LibraryModel -> E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\artifacts\NuGet.LibraryModel\bin\Release\net8.0\NuGet.LibraryModel.dll
+  NuGet.Configuration -> E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\artifacts\NuGet.Configuration\bin\Release\net8.0\NuGet.Configuration.dll
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\SigningUtility.cs(60,62): warning CS3002: Return type of 'SigningUtility.CreateSignedAttributes(SignPackageRequest, IReadOnlyList<X509Certificate2>)' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\SigningUtility.cs(90,62): warning CS3002: Return type of 'SigningUtility.CreateSignedAttributes(RepositorySignPackageRequest, IReadOnlyList<X509Certificate2>)' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\SigningUtility.cs(116,33): warning CS3002: Return type of 'SigningUtility.CreateCmsSigner(SignPackageRequest, ILogger)' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(24,52): warning CS3002: Return type of 'AttributeUtility.CreateCommitmentTypeIndication(SignatureType)' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(44,93): warning CS3001: Argument type 'CryptographicAttributeObjectCollection' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(81,52): warning CS3002: Return type of 'AttributeUtility.CreateNuGetV3ServiceIndexUrl(Uri)' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(115,92): warning CS3001: Argument type 'CryptographicAttributeObjectCollection' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(156,52): warning CS3002: Return type of 'AttributeUtility.CreateNuGetPackageOwners(IReadOnlyList<string>)' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(184,106): warning CS3001: Argument type 'CryptographicAttributeObjectCollection' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(251,52): warning CS3002: Return type of 'AttributeUtility.CreateSigningCertificateV2(X509Certificate2, HashAlgorithmName)' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(344,52): warning CS3002: Return type of 'AttributeUtility.GetAttribute(CryptographicAttributeObjectCollection, string)' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(344,109): warning CS3001: Argument type 'CryptographicAttributeObjectCollection' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(380,65): warning CS3002: Return type of 'AttributeUtility.GetAttributes(CryptographicAttributeObjectCollection, string)' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(380,123): warning CS3001: Argument type 'CryptographicAttributeObjectCollection' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Timestamp\Timestamp.cs(39,26): warning CS3003: Type of 'Timestamp.SignedCms' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Timestamp\Timestamp.cs(44,27): warning CS3003: Type of 'Timestamp.SignerInfo' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Timestamp\Timestamp.cs(65,36): warning CS3001: Argument type 'SignedCms' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Signatures\AuthorPrimarySignature.cs(19,49): warning CS3001: Argument type 'SignedCms' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Signatures\ISignature.cs(15,20): warning CS3003: Type of 'ISignature.SignerInfo' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Signatures\PrimarySignatureFactory.cs(14,66): warning CS3001: Argument type 'SignedCms' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Signatures\PrimarySignature.cs(20,26): warning CS3003: Type of 'PrimarySignature.SignedCms' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Signatures\PrimarySignature.cs(53,55): warning CS3001: Argument type 'SignedCms' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Signatures\PrimarySignature.cs(114,46): warning CS3001: Argument type 'SignedCms' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Signatures\RepositoryPrimarySignature.cs(24,53): warning CS3001: Argument type 'SignedCms' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Signatures\Signature.cs(39,27): warning CS3003: Type of 'Signature.SignerInfo' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Signatures\Signature.cs(45,40): warning CS3001: Argument type 'SignerInfo' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Signatures\UnknownPrimarySignature.cs(13,50): warning CS3001: Argument type 'SignedCms' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+  NuGet.Packaging -> E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\artifacts\NuGet.Packaging\bin\Release\net8.0\NuGet.Packaging.dll
+  NuGet.Protocol -> E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\artifacts\NuGet.Protocol\bin\Release\net8.0\NuGet.Protocol.dll
+  NuGet.Credentials -> E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\artifacts\NuGet.Credentials\bin\Release\net8.0\NuGet.Credentials.dll
+  NuGet.DependencyResolver.Core -> E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\artifacts\NuGet.DependencyResolver.Core\bin\Release\net8.0\NuGet.DependencyResolver.Core.dll
+  NuGet.ProjectModel -> E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\artifacts\NuGet.ProjectModel\bin\Release\net8.0\NuGet.ProjectModel.dll
+  NuGet.Commands -> E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\artifacts\NuGet.Commands\bin\Release\net8.0\NuGet.Commands.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\SigningUtility.cs(60,62): warning CS3002: Return type of 'SigningUtility.CreateSignedAttributes(SignPackageRequest, IReadOnlyList<X509Certificate2>)' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\SigningUtility.cs(90,62): warning CS3002: Return type of 'SigningUtility.CreateSignedAttributes(RepositorySignPackageRequest, IReadOnlyList<X509Certificate2>)' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\SigningUtility.cs(116,33): warning CS3002: Return type of 'SigningUtility.CreateCmsSigner(SignPackageRequest, ILogger)' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(24,52): warning CS3002: Return type of 'AttributeUtility.CreateCommitmentTypeIndication(SignatureType)' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(44,93): warning CS3001: Argument type 'CryptographicAttributeObjectCollection' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(81,52): warning CS3002: Return type of 'AttributeUtility.CreateNuGetV3ServiceIndexUrl(Uri)' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(115,92): warning CS3001: Argument type 'CryptographicAttributeObjectCollection' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(156,52): warning CS3002: Return type of 'AttributeUtility.CreateNuGetPackageOwners(IReadOnlyList<string>)' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(184,106): warning CS3001: Argument type 'CryptographicAttributeObjectCollection' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(251,52): warning CS3002: Return type of 'AttributeUtility.CreateSigningCertificateV2(X509Certificate2, HashAlgorithmName)' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(344,52): warning CS3002: Return type of 'AttributeUtility.GetAttribute(CryptographicAttributeObjectCollection, string)' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(344,109): warning CS3001: Argument type 'CryptographicAttributeObjectCollection' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(380,65): warning CS3002: Return type of 'AttributeUtility.GetAttributes(CryptographicAttributeObjectCollection, string)' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Utility\AttributeUtility.cs(380,123): warning CS3001: Argument type 'CryptographicAttributeObjectCollection' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Timestamp\Timestamp.cs(39,26): warning CS3003: Type of 'Timestamp.SignedCms' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Timestamp\Timestamp.cs(44,27): warning CS3003: Type of 'Timestamp.SignerInfo' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Timestamp\Timestamp.cs(65,36): warning CS3001: Argument type 'SignedCms' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Signatures\AuthorPrimarySignature.cs(19,49): warning CS3001: Argument type 'SignedCms' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Signatures\ISignature.cs(15,20): warning CS3003: Type of 'ISignature.SignerInfo' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Signatures\PrimarySignatureFactory.cs(14,66): warning CS3001: Argument type 'SignedCms' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Signatures\PrimarySignature.cs(20,26): warning CS3003: Type of 'PrimarySignature.SignedCms' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Signatures\PrimarySignature.cs(53,55): warning CS3001: Argument type 'SignedCms' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Signatures\PrimarySignature.cs(114,46): warning CS3001: Argument type 'SignedCms' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Signatures\RepositoryPrimarySignature.cs(24,53): warning CS3001: Argument type 'SignedCms' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Signatures\Signature.cs(39,27): warning CS3003: Type of 'Signature.SignerInfo' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Signatures\Signature.cs(45,40): warning CS3001: Argument type 'SignerInfo' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\Signing\Signatures\UnknownPrimarySignature.cs(13,50): warning CS3001: Argument type 'SignedCms' is not CLS-compliant [E:\msys64\home\topkek\nuget-client-source.WHIFNv\prepared\src\NuGet.Core\NuGet.Packaging\NuGet.Packaging.csproj::TargetFramework=net8.0]
+    27 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:52.29
+
+
+--- api-final.log ---
+PASS all7845 exact Core API declarations and identities after final resource-preservation build
+
+
+--- final-prototype2.log ---
+PASS all11 exact NuGet assembly/signing/file/informational identities and 13 resource manifests / 807 resource strings including original CRLF
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Smoke -> E:\msys64\home\topkek\nuget-client-source.WHIFNv\smoke\bin\Release\net8.0\Smoke.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:07.08
+PASS source NuGet package builder/archive, version ranges and local stable/prerelease protocol discovery/download
+PASS original source NuGet.Commands RestoreRunner, complete dependency resolution, owned global cache/assets and Unicode extraction
+
+
+--- prototype-resource-overlays.json ---
+{
+  "src/NuGet.Core/NuGet.Build.Tasks/Strings.resx": {
+    "original_sha256": "fbb148fc100efc1ef56b5e3a1c34b047dcbe5049fc5097338d496b1ee2133148",
+    "prepared_sha256": "c2f699c569c09dda9e75c6f7f9a31183b5d0dbc68af27b504125a476e86c792a"
+  },
+  "src/NuGet.Core/NuGet.CommandLine.XPlat/Strings.resx": {
+    "original_sha256": "755d87cb74d41650824fc4499fdb19f50d6250951c765cbb252a4b7069a73e59",
+    "prepared_sha256": "ffdf57f6037eef3fdbae9ee73be40e0bbd75a3f5ecc3ca1d43ad6255caaeafda"
+  },
+  "src/NuGet.Core/NuGet.Commands/Strings.resx": {
+    "original_sha256": "afb7e6af0d3babc592faf87963b047799bb04f50e2244e21c51c441ad013b3ce",
+    "prepared_sha256": "d854fde3295af3cad5eb1929e2fa7f186437195bfcf9c1e6e95d29c700dbcb17"
+  },
+  "src/NuGet.Core/NuGet.Packaging/Strings.resx": {
+    "original_sha256": "84809b63fb9fdda9d6c0fa6311d4ffee2987db9c1835e12971fca1728bda9170",
+    "prepared_sha256": "eb48a20195dddc5aa026d3d3ff0722293131abe20b829991adc6758b5a3a1f5c"
+  },
+  "src/NuGet.Core/NuGet.Packaging/Rules/AnalysisResources.resx": {
+    "original_sha256": "b929f267a5dee14ee1ca0746f5ca772c66470cb02572446c8cc5e40bab544618",
+    "prepared_sha256": "63679918a1ae6a466f1b85b4584d6911c178d06794ef0b0e7307ce1caacfc766"
+  }
+}
+

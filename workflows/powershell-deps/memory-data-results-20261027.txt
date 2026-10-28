@@ -1,0 +1,235 @@
+System.Memory.Data1.0.2 complete source package validation
+Host: win11, CLANG64, actual CLR8.0.0
+Source commit: 7e3cf643977591e9041f4c628fd4d28237398e0b
+Formal build: /home/topkek/memory-data-package.wharLb
+Fresh installed consumer: /home/topkek/memory-data-installed.4XfpXx/check
+
+$ MSYSTEM=CLANG64 bash -lc 'PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm'
+RESULT: exit0; original library3 nullable warnings, consumers/tools0warnings/errors
+$ pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-memory-data-1.0.2-1-any.pkg.tar.zst
+RESULT: exit0
+$ bash /home/topkek/memory-data-package.wharLb/src/check.sh /home/topkek/memory-data-installed.4XfpXx/check
+RESULT: exit0; fresh installed feed/cache only; all20API and exact release/signing identity, actual source runtime/ref assets and loaded hash
+$ python3 tests/powershell-deps/audit-memory-data.py
+RESULT: exit0; all16 pinned inputs, complete archive/Git-tree/compiler hashes, source JSON reference, implementation/ref/XML, native/NuGet dependencies and licenses
+$ /usr/bin/python3 /home/topkek/memory-data-package.wharLb/postinstall.py
+RESULT: exit0; builtNuGet=installedfeed=freshcache and original license/inventory bytes
+
+No production C# changes. Original2C# files and2generatedSDK metadata inputs.
+Runtime/stream/JSON/Unicode/ownership/cancellation/malformed/empty cases pass.
+Broader upstream/framework/linker/AOT, Azure/PSResourceGet integration and actual CLR
+servicing remain open. This completes this dependency package, not the full goal.
+
+Full makepkg1.log:
+==> Making package: mingw-w64-dotnet-memory-data 1.0.2-1 (27 Oct 2026 11:04:02)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found azure-sdk-7e3cf643977591e9041f4c628fd4d28237398e0b.tar.gz
+  -> Found extract.py
+  -> Found prepare.py
+  -> Found verify-build.py
+  -> Found pack.py
+  -> Found Check.cs
+  -> Found check.sh
+  -> Found check-payload.py
+  -> Found compare.py
+  -> Found InspectApi.cs
+  -> Found InspectAssemblyMetadata.cs
+  -> Found git-tree-provenance.json
+  -> Found published-identity.json
+  -> Found published-api.json
+  -> Found published-metadata.json
+  -> Found README.md
+==> Validating source files with sha256sums...
+    azure-sdk-7e3cf643977591e9041f4c628fd4d28237398e0b.tar.gz ... Passed
+    extract.py ... Passed
+    prepare.py ... Passed
+    verify-build.py ... Passed
+    pack.py ... Passed
+    Check.cs ... Passed
+    check.sh ... Passed
+    check-payload.py ... Passed
+    compare.py ... Passed
+    InspectApi.cs ... Passed
+    InspectAssemblyMetadata.cs ... Passed
+    git-tree-provenance.json ... Passed
+    published-identity.json ... Passed
+    published-api.json ... Passed
+    published-metadata.json ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+==> Starting prepare()...
+PASS full pinned Azure archive and complete BinaryData component/build metadata extraction
+PASS complete original BinaryData src tree Git blob/SHA256 hashes and both unchanged source files
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\memory-data-package.wharLb\src\prepared\Library.csproj (in 1.26 sec).
+E:\msys64\home\topkek\memory-data-package.wharLb\src\source\sdk\core\System.Memory.Data\src\BinaryData.cs(209,48): warning CS8604: Possible null reference argument for parameter 'bytes' in 'string Encoding.GetString(byte[] bytes, int index, int count)'. [E:\msys64\home\topkek\memory-data-package.wharLb\src\prepared\Library.csproj]
+E:\msys64\home\topkek\memory-data-package.wharLb\src\source\sdk\core\System.Memory.Data\src\BinaryData.cs(247,20): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\memory-data-package.wharLb\src\prepared\Library.csproj]
+E:\msys64\home\topkek\memory-data-package.wharLb\src\source\sdk\core\System.Memory.Data\src\BinaryData.cs(247,20): warning CS8603: Possible null reference return. [E:\msys64\home\topkek\memory-data-package.wharLb\src\prepared\Library.csproj]
+  Library -> E:\msys64\home\topkek\memory-data-package.wharLb\src\prepared\bin\Release\net8.0\System.Memory.Data.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\memory-data-package.wharLb\src\source\sdk\core\System.Memory.Data\src\BinaryData.cs(209,48): warning CS8604: Possible null reference argument for parameter 'bytes' in 'string Encoding.GetString(byte[] bytes, int index, int count)'. [E:\msys64\home\topkek\memory-data-package.wharLb\src\prepared\Library.csproj]
+E:\msys64\home\topkek\memory-data-package.wharLb\src\source\sdk\core\System.Memory.Data\src\BinaryData.cs(247,20): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\memory-data-package.wharLb\src\prepared\Library.csproj]
+E:\msys64\home\topkek\memory-data-package.wharLb\src\source\sdk\core\System.Memory.Data\src\BinaryData.cs(247,20): warning CS8603: Possible null reference return. [E:\msys64\home\topkek\memory-data-package.wharLb\src\prepared\Library.csproj]
+    3 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:19.96
+PASS both original compiler items, two SDK metadata files, actual source JSON8.0.5 reference and library/ref/XML outputs
+PASS gated source implementation/reference/XML, original license and original/adapted source/test metadata
+==> Starting check()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\memory-data-package.wharLb\src\check\Check.csproj (in 1.15 sec).
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Check -> E:\msys64\home\topkek\memory-data-package.wharLb\src\check\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:13.14
+PASS original BinaryData byte/string/borrow/copy contracts, Unicode, read-only seek/EOF/disposal/cancellation, seekable/nonseekable streams/ownership and source JSON round trip/errors
+PASS exact source BinaryData runtime/reference payload and actual compiler/runtime asset selection
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\memory-data-package.wharLb\src\check\Api\Inspect.csproj (in 1.61 sec).
+  Inspect -> E:\msys64\home\topkek\memory-data-package.wharLb\src\check\Api\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:17.68
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\memory-data-package.wharLb\src\check\Pe\Inspect.csproj (in 251 ms).
+  Inspect -> E:\msys64\home\topkek\memory-data-package.wharLb\src\check\Pe\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:15.28
+PASS all20 exact published API declarations and release/signing identities
+PASS fresh source BinaryData consumer, owned stream/JSON behavior, exact API/identity/payload gates
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-memory-data"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-memory-data 1.0.2-1 (27 Oct 2026 11:08:28)
+
+Full install.log:
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-dotnet-memory-data-1.0.2-1
+
+Total Installed Size:  0.06 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+installing mingw-w64-clang-x86_64-dotnet-memory-data...
+
+Full installed-check.log:
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\memory-data-installed.4XfpXx\check\Check.csproj (in 1.7 sec).
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Check -> E:\msys64\home\topkek\memory-data-installed.4XfpXx\check\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:18.86
+PASS original BinaryData byte/string/borrow/copy contracts, Unicode, read-only seek/EOF/disposal/cancellation, seekable/nonseekable streams/ownership and source JSON round trip/errors
+PASS exact source BinaryData runtime/reference payload and actual compiler/runtime asset selection
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\memory-data-installed.4XfpXx\check\Api\Inspect.csproj (in 2.12 sec).
+  Inspect -> E:\msys64\home\topkek\memory-data-installed.4XfpXx\check\Api\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:19.18
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\memory-data-installed.4XfpXx\check\Pe\Inspect.csproj (in 248 ms).
+  Inspect -> E:\msys64\home\topkek\memory-data-installed.4XfpXx\check\Pe\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:15.42
+PASS all20 exact published API declarations and release/signing identities
+PASS fresh source BinaryData consumer, owned stream/JSON behavior, exact API/identity/payload gates
+
+Full postinstall.log:
+PASS built NuGet = installed source feed = fresh installed cache; original license and source inventory bytes match
+NuGet SHA256: 0c125261560a6604313e1ad966d7c8835dacce421890940119e3f7e8a8e9d1a1

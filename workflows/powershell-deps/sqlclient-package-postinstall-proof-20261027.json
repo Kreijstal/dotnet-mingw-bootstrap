@@ -1,0 +1,10 @@
+{
+  "nuget_sha256": "d07b0b1373b32b337f35046ab29f31b9317bd7ef7944f780b66a53185c8c6fab",
+  "built_installed_fresh_cache_equal": true,
+  "owned_certificate_files_removed": true,
+  "runtimes": [
+    "Microsoft.NETCore.App 8.0.0 [E:\\msys64\\clang64\\lib\\dotnet\\shared\\Microsoft.NETCore.App]",
+    "Microsoft.WindowsDesktop.App 8.0.0-bootstrap.7.0.20 [E:\\msys64\\clang64\\lib\\dotnet\\shared\\Microsoft.WindowsDesktop.App]",
+    "Microsoft.WindowsDesktop.App 8.0.0-bootstrap.wpf.8.0.0 [E:\\msys64\\clang64\\lib\\dotnet\\shared\\Microsoft.WindowsDesktop.App]"
+  ]
+}

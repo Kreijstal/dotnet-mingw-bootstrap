@@ -1,0 +1,27 @@
+{
+  "native_artifact": "mingw-w64-clang-x86_64-dotnet-windows-compatibility-8.0.31-1-any.pkg.tar.zst",
+  "native_artifact_sha256": "b99748fb9d201c936642473b41a2f33e890934e002ae68bfda408eff4131dbe2",
+  "nuget_metapackage_sha256": "d41596d54e6235e3aed9302482596b5595faf821e6a80af6c500944ffab3d891",
+  "native_dependency_packages": 39,
+  "nuget_dependency_entries": 191,
+  "framework_groups": 5,
+  "net8_restored_source_packages": 40,
+  "source_matched_consumer_dlls": 69,
+  "exact_native_file_sha256": {
+    "clang64/lib/dotnet/library-packs/microsoft.windows.compatibility.8.0.31.nupkg": "d41596d54e6235e3aed9302482596b5595faf821e6a80af6c500944ffab3d891",
+    "clang64/share/doc/dotnet-windows-compatibility/Check.cs": "8113949444aa8317bad40ff7f9245900dd2283c32157b9e0c330f2fbe38eab7c",
+    "clang64/share/doc/dotnet-windows-compatibility/README.md": "92c866bfa87e2d68fd49441853631773d7b7aa12a98686bfe791c8a6bfc3a56c",
+    "clang64/share/doc/dotnet-windows-compatibility/build-audit.json": "34c39a21a8c84f0626f1b022c35e846b73675b901f72d99ce9bcd97d5871529b",
+    "clang64/share/doc/dotnet-windows-compatibility/check-installed.sh": "c65d781883f81cd05c3f55db73152138cbc7cb69cc999b1135318c1192fe3f57",
+    "clang64/share/doc/dotnet-windows-compatibility/check.sh": "d867f9d20f92dc25045a48c2901b13a83e5ac372999b56b806c0201c79bdc5d5",
+    "clang64/share/doc/dotnet-windows-compatibility/dependency-groups.json": "1f3a012740ead173ced9a1f027ce72bd048f7b38cd673293d8ae7893d1546587",
+    "clang64/share/doc/dotnet-windows-compatibility/package-audit.json": "370dc8d515417dded305b1660893a77bf12a5dda9acf609afb1e18dafb95d9ec",
+    "clang64/share/doc/dotnet-windows-compatibility/source-inputs.json": "e698d43f316b0755e5b6c665ca3fddb8b8767cf63992e62e04102b1b486c0f03",
+    "clang64/share/doc/dotnet-windows-compatibility/verify-consumer.py": "9eaa9d4620ccf294f35bdd3d3e84be995d92165f5defe134b9e7111319854643",
+    "clang64/share/licenses/dotnet-windows-compatibility/Arcade-LICENSE.TXT": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+    "clang64/share/licenses/dotnet-windows-compatibility/LICENSE": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b"
+  },
+  "installed_ownership_verified": false,
+  "full_native_sqlclient_compatibility": false,
+  "full_dependency_goal_complete": false
+}

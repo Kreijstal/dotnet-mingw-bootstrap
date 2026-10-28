@@ -1,0 +1,56 @@
+[
+  {
+    "package": "system.private.servicemodel",
+    "sha256": "1786507c1ee2ecae6361e5766465b38b71ad9d3406fbbb9c213a1fd3a4c8437c",
+    "url": "https://api.nuget.org/v3-flatcontainer/system.private.servicemodel/4.10.3/system.private.servicemodel.4.10.3.nupkg",
+    "assemblies": [
+      "lib/netstandard2.0/System.Private.ServiceModel.dll"
+    ]
+  },
+  {
+    "package": "system.servicemodel.primitives",
+    "sha256": "3620a006732eab633e4cf692d2bc72b9a6495e8ed8b646bc1de619df1abad6b2",
+    "url": "https://api.nuget.org/v3-flatcontainer/system.servicemodel.primitives/4.10.3/system.servicemodel.primitives.4.10.3.nupkg",
+    "assemblies": [
+      "lib/net461/System.ServiceModel.Primitives.dll",
+      "lib/net6.0/System.ServiceModel.Primitives.dll",
+      "lib/netstandard2.0/System.ServiceModel.Primitives.dll",
+      "lib/net46/System.ServiceModel.Primitives.dll",
+      "ref/net46/System.ServiceModel.Primitives.dll",
+      "ref/net461/System.ServiceModel.Primitives.dll",
+      "ref/net6.0/System.ServiceModel.dll",
+      "lib/net6.0/System.ServiceModel.dll",
+      "ref/netstandard2.0/System.ServiceModel.dll",
+      "lib/netstandard2.0/System.ServiceModel.dll",
+      "ref/net6.0/System.ServiceModel.Primitives.dll",
+      "lib/netcore50/System.ServiceModel.Primitives.dll",
+      "ref/netcore50/System.ServiceModel.Primitives.dll",
+      "ref/netstandard1.0/System.ServiceModel.Primitives.dll",
+      "ref/netstandard1.1/System.ServiceModel.Primitives.dll",
+      "lib/netstandard1.3/System.ServiceModel.Primitives.dll",
+      "ref/netstandard1.3/System.ServiceModel.Primitives.dll",
+      "ref/netstandard2.0/System.ServiceModel.Primitives.dll"
+    ]
+  },
+  {
+    "package": "system.servicemodel.http",
+    "sha256": "7484a3c14b5246efd32e24fa58c560177a6680c8a4204370df14e7f082659fc5",
+    "url": "https://api.nuget.org/v3-flatcontainer/system.servicemodel.http/4.10.3/system.servicemodel.http.4.10.3.nupkg",
+    "assemblies": [
+      "lib/net461/System.ServiceModel.Http.dll",
+      "lib/net6.0/System.ServiceModel.Http.dll",
+      "lib/netstandard2.0/System.ServiceModel.Http.dll",
+      "lib/net46/System.ServiceModel.Http.dll",
+      "ref/net46/System.ServiceModel.Http.dll",
+      "ref/net461/System.ServiceModel.Http.dll",
+      "ref/net6.0/System.ServiceModel.Http.dll",
+      "lib/netcore50/System.ServiceModel.Http.dll",
+      "ref/netcore50/System.ServiceModel.Http.dll",
+      "ref/netstandard1.0/System.ServiceModel.Http.dll",
+      "ref/netstandard1.1/System.ServiceModel.Http.dll",
+      "lib/netstandard1.3/System.ServiceModel.Http.dll",
+      "ref/netstandard1.3/System.ServiceModel.Http.dll",
+      "ref/netstandard2.0/System.ServiceModel.Http.dll"
+    ]
+  }
+]

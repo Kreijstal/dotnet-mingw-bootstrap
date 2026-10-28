@@ -1,0 +1,147 @@
+From b392441b3448668acca4e60a605b9a3b5f8db3bc Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Thu, 8 Oct 2026 15:23:59 +0200
+Subject: [PATCH 3/3] corehost: build with clang and libc++ for the MinGW
+ target
+
+Fixes for things only MSVC accepts:
+- pal.h: include <share.h> for _SH_DENYNO (MSVC's <windows.h> drags it in).
+- pal.windows.cpp: L ## __FUNCTION__ is an MSVC extension; use the name.
+  Pass function addresses to GetModuleHandleFromAddress(void*) with an
+  explicit cast (no implicit function-to-void* conversion).
+- hostfxr.h, nethost.h, coreclr_delegates.h: char_t is wchar_t when
+  compiling C++, not only when MSVC's _WCHAR_T_DEFINED is set.
+- json_parser.cpp: construct the ifstream from path.c_str(); the
+  std::wstring overload is an MSVC extension, libc++ has const wchar_t*.
+- clsidmap.cpp: StatusCode values do not fit HRESULT in a braced
+  initializer (narrowing); cast.
+---
+ src/native/corehost/comhost/clsidmap.cpp     | 4 ++--
+ src/native/corehost/coreclr_delegates.h      | 2 +-
+ src/native/corehost/hostfxr.h                | 2 +-
+ src/native/corehost/hostmisc/pal.h           | 1 +
+ src/native/corehost/hostmisc/pal.windows.cpp | 6 +++---
+ src/native/corehost/json_parser.cpp          | 2 +-
+ src/native/corehost/nethost/nethost.h        | 2 +-
+ 7 files changed, 10 insertions(+), 9 deletions(-)
+
+diff --git a/src/native/corehost/comhost/clsidmap.cpp b/src/native/corehost/comhost/clsidmap.cpp
+index 978cded..afa3710 100644
+--- a/src/native/corehost/comhost/clsidmap.cpp
++++ b/src/native/corehost/comhost/clsidmap.cpp
+@@ -103,7 +103,7 @@ namespace
+         if (!json.parse_raw_data(reinterpret_cast<char*>(data), size, _X("<embedded .clsidmap>")))
+         {
+             trace::error(_X("Embedded .clsidmap format is invalid"));
+-            throw HResultException{ StatusCode::InvalidConfigFile };
++            throw HResultException{ (HRESULT)StatusCode::InvalidConfigFile };
+         }
+ 
+         return get_map_from_json(json);
+@@ -181,7 +181,7 @@ namespace
+         if (!json.parse_file(map_file_name))
+         {
+             trace::error(_X("File .clsidmap format is invalid"));
+-            throw HResultException{ StatusCode::InvalidConfigFile };
++            throw HResultException{ (HRESULT)StatusCode::InvalidConfigFile };
+         }
+ 
+         return get_map_from_json(json);
+diff --git a/src/native/corehost/coreclr_delegates.h b/src/native/corehost/coreclr_delegates.h
+index 550badf..915de1c 100644
+--- a/src/native/corehost/coreclr_delegates.h
++++ b/src/native/corehost/coreclr_delegates.h
+@@ -8,7 +8,7 @@
+ 
+ #if defined(_WIN32)
+     #define CORECLR_DELEGATE_CALLTYPE __stdcall
+-    #ifdef _WCHAR_T_DEFINED
++    #if defined(_WCHAR_T_DEFINED) || defined(__cplusplus)
+         typedef wchar_t char_t;
+     #else
+         typedef unsigned short char_t;
+diff --git a/src/native/corehost/hostfxr.h b/src/native/corehost/hostfxr.h
+index a19636b..96aadd6 100644
+--- a/src/native/corehost/hostfxr.h
++++ b/src/native/corehost/hostfxr.h
+@@ -9,7 +9,7 @@
+ 
+ #if defined(_WIN32)
+     #define HOSTFXR_CALLTYPE __cdecl
+-    #ifdef _WCHAR_T_DEFINED
++    #if defined(_WCHAR_T_DEFINED) || defined(__cplusplus)
+         typedef wchar_t char_t;
+     #else
+         typedef unsigned short char_t;
+diff --git a/src/native/corehost/hostmisc/pal.h b/src/native/corehost/hostmisc/pal.h
+index aa050d1..e56f3ae 100644
+--- a/src/native/corehost/hostmisc/pal.h
++++ b/src/native/corehost/hostmisc/pal.h
+@@ -23,6 +23,7 @@
+ 
+ #define NOMINMAX
+ #include <windows.h>
++#include <share.h> // _SH_DENYNO (MSVC gets it via <windows.h>)
+ 
+ #define xerr std::wcerr
+ #define xout std::wcout
+diff --git a/src/native/corehost/hostmisc/pal.windows.cpp b/src/native/corehost/hostmisc/pal.windows.cpp
+index b116104..72e36de 100644
+--- a/src/native/corehost/hostmisc/pal.windows.cpp
++++ b/src/native/corehost/hostmisc/pal.windows.cpp
+@@ -194,7 +194,7 @@ bool pal::load_library(const string_t* in_path, dll_t* dll)
+     HMODULE dummy_module;
+     if (!::GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_PIN, path.c_str(), &dummy_module))
+     {
+-        trace::error(_X("Failed to pin library [%s] in [%s]"), path.c_str(), _STRINGIFY(__FUNCTION__));
++        trace::error(_X("Failed to pin library [%s] in [%s]"), path.c_str(), _X("pal::load_library"));
+         return false;
+     }
+ 
+@@ -603,7 +603,7 @@ bool pal::get_own_executable_path(string_t* recv)
+ bool pal::get_current_module(dll_t *mod)
+ {
+     HMODULE hmod = nullptr;
+-    if (!GetModuleHandleFromAddress(&get_current_module, &hmod))
++    if (!GetModuleHandleFromAddress(reinterpret_cast<void*>(&get_current_module), &hmod))
+         return false;
+ 
+     *mod = (pal::dll_t)hmod;
+@@ -613,7 +613,7 @@ bool pal::get_current_module(dll_t *mod)
+ bool pal::get_own_module_path(string_t* recv)
+ {
+     HMODULE hmod;
+-    if (!GetModuleHandleFromAddress(&get_own_module_path, &hmod))
++    if (!GetModuleHandleFromAddress(reinterpret_cast<void*>(&get_own_module_path), &hmod))
+         return false;
+ 
+     return GetModuleFileNameWrapper(hmod, recv);
+diff --git a/src/native/corehost/json_parser.cpp b/src/native/corehost/json_parser.cpp
+index ca49687..618fbe4 100644
+--- a/src/native/corehost/json_parser.cpp
++++ b/src/native/corehost/json_parser.cpp
+@@ -132,7 +132,7 @@ bool json_parser_t::parse_file(const pal::string_t& path)
+         }
+     }
+ 
+-    pal::ifstream_t file{ path };
++    pal::ifstream_t file{ path.c_str() };
+     if (!file.good())
+     {
+         trace::error(_X("Cannot use file stream for [%s]: %s"), path.c_str(), pal::strerror(errno).c_str());
+diff --git a/src/native/corehost/nethost/nethost.h b/src/native/corehost/nethost/nethost.h
+index eaca175..77a1820 100644
+--- a/src/native/corehost/nethost/nethost.h
++++ b/src/native/corehost/nethost/nethost.h
+@@ -20,7 +20,7 @@
+     #endif
+ 
+     #define NETHOST_CALLTYPE __stdcall
+-    #ifdef _WCHAR_T_DEFINED
++    #if defined(_WCHAR_T_DEFINED) || defined(__cplusplus)
+         typedef wchar_t char_t;
+     #else
+         typedef unsigned short char_t;
+-- 
+2.55.0
+

@@ -1,0 +1,954 @@
+Source SDK8.0.131-3 replacement package and real source8.0.31 host/runtime packs
+{
+  "previous_goal_turn_classification": "progress",
+  "current_goal_turn_classification": "progress",
+  "native_package_version": "8.0.131-3",
+  "build_root": "/home/topkek/sdk8pkg1.j0yM6e",
+  "artifact": "mingw-w64-clang-x86_64-dotnet-sdk8-servicing-8.0.131-3-any.pkg.tar.zst",
+  "artifact_sha256": "b1501ea6a8f20dd3c5d704a9ae86e19e8dbe8998adf4189fe41fef600b7b88e6",
+  "source_sdk_seed_sha256": "3e23ceeddb31efcd60b25238115deda3daf7de6ba4b42db143974e9b031c04b5",
+  "unchanged_source_sdk_component_files": 958,
+  "sdk_managed_assemblies_recompiled": false,
+  "sdk_metadata_adaptations": 1,
+  "host_pack_assets": 8,
+  "runtime_pack_assets": 175,
+  "runtime_managed_assemblies": 168,
+  "source_original_runtime_list_task": true,
+  "build_command": "makepkg --cleanbuild --force --noconfirm",
+  "build_exit_code": 0,
+  "artifact_audit_command": "/usr/bin/python3 audit-native-package.py mingw-w64-clang-x86_64-dotnet-sdk8-servicing-8.0.131-3-any.pkg.tar.zst src/sdk-stage --output artifact-audit1.json",
+  "artifact_audit_exit_code": 0,
+  "install_command": "pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-sdk8-servicing-8.0.131-3-any.pkg.tar.zst",
+  "install_exit_code": 0,
+  "installed_check_command": "bash check-installed.sh installed-check1",
+  "installed_check_exit_code": 0,
+  "default_apphost_and_compiler_selection": true,
+  "self_contained_without_runtime_version_override": true,
+  "self_contained_source_payload_byte_gates": 175,
+  "all168_framework_and_six_forwarders_both_execution_modes": true,
+  "full_dependency_goal_complete": false,
+  "remaining": [
+    "fresh full PowerShell build/catalog/apphost using installed servicing packages",
+    "conditional GraphicalHost full integration",
+    "full native package/license closure",
+    "broader COM/native, R2R/NativeAOT/debugger and runtime compatibility",
+    "PowerShell7.6/.NET10"
+  ]
+}
+
+Recorded source-verification.log:
+==> Making package: mingw-w64-dotnet-sdk8-servicing 8.0.131-3 (27 Oct 2026 19:25:16)
+==> Retrieving sources...
+  -> Found mingw-w64-clang-x86_64-dotnet-sdk-8.0.131-2-any.pkg.tar.zst
+  -> Found runtime-v8.0.31.tar.gz
+  -> Found dotnet-bootstrap-3cbf21078968e2290a54ab093392b4dfeb1c6f1f.tar.gz
+  -> Found dotnet-runtime8-servicing-source-3.tar.gz
+  -> Found dotnet-sdk8-servicing-source-1.tar.gz
+  -> Found README.md
+==> Validating source files with sha256sums...
+    mingw-w64-clang-x86_64-dotnet-sdk-8.0.131-2-any.pkg.tar.zst ... Passed
+    runtime-v8.0.31.tar.gz ... Passed
+    dotnet-bootstrap-3cbf21078968e2290a54ab093392b4dfeb1c6f1f.tar.gz ... Passed
+    dotnet-runtime8-servicing-source-3.tar.gz ... Passed
+    dotnet-sdk8-servicing-source-1.tar.gz ... Passed
+    README.md ... Passed
+
+Recorded makepkg.log:
+==> Making package: mingw-w64-dotnet-sdk8-servicing 8.0.131-3 (27 Oct 2026 19:25:21)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found mingw-w64-clang-x86_64-dotnet-sdk-8.0.131-2-any.pkg.tar.zst
+  -> Found runtime-v8.0.31.tar.gz
+  -> Found dotnet-bootstrap-3cbf21078968e2290a54ab093392b4dfeb1c6f1f.tar.gz
+  -> Found dotnet-runtime8-servicing-source-3.tar.gz
+  -> Found dotnet-sdk8-servicing-source-1.tar.gz
+  -> Found README.md
+==> Validating source files with sha256sums...
+    mingw-w64-clang-x86_64-dotnet-sdk-8.0.131-2-any.pkg.tar.zst ... Passed
+    runtime-v8.0.31.tar.gz ... Passed
+    dotnet-bootstrap-3cbf21078968e2290a54ab093392b4dfeb1c6f1f.tar.gz ... Passed
+    dotnet-runtime8-servicing-source-3.tar.gz ... Passed
+    dotnet-sdk8-servicing-source-1.tar.gz ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+  -> Extracting dotnet-runtime8-servicing-source-3.tar.gz with bsdtar
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+  -> Extracting dotnet-sdk8-servicing-source-1.tar.gz with bsdtar
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+==> Starting build()...
+PASS isolated complete runtime8.0.31/pinned bootstrap source,17 zero-fuzz patches and binary-input removal; runtime build/managed framework/integration remain open
+PASS exact original Arcade version task and three upstream vectors: 20260820.0 -> 8.0.3126.42000
+PASS original native/CoreLib/C#/VB/reference helpers retain product8.0.31 and use calculated file8.0.3126.42000
+PASS fresh source8.0.31 apphost/comhost/nethost and native link/header assets; SDK pack integration remains required
+PASS audited source SDK seed preserved; fresh8.0.31 host pack and175 source runtime assets; unchanged upstream RuntimeList task/PE versions
+==> Starting check()...
+PASS private candidate SDK with 1548 byte-verified separately owned source dependencies; candidate SDK metadata retained
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\sdk8pkg1.j0yM6e\src\sdk-pack-check\Check.csproj (in 413 ms).
+E:\msys64\home\topkek\sdk8pkg1.j0yM6e\src\sdk-pack-check\PackChecks.cs(8,78): warning CS8620: Argument of type 'string?[]' cannot be used for parameter 'args' of type 'string[]' in 'void FrameworkForwarderCheck.Verify(string[] args)' due to differences in the nullability of reference types. [E:\msys64\home\topkek\sdk8pkg1.j0yM6e\src\sdk-pack-check\Check.csproj]
+E:\msys64\home\topkek\sdk8pkg1.j0yM6e\src\sdk-pack-check\Forwarders.cs(13,37): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sdk8pkg1.j0yM6e\src\sdk-pack-check\Check.csproj]
+E:\msys64\home\topkek\sdk8pkg1.j0yM6e\src\sdk-pack-check\Forwarders.cs(22,27): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\sdk8pkg1.j0yM6e\src\sdk-pack-check\Check.csproj]
+  Check -> E:\msys64\home\topkek\sdk8pkg1.j0yM6e\src\sdk-pack-check\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\sdk8pkg1.j0yM6e\src\sdk-pack-check\PackChecks.cs(8,78): warning CS8620: Argument of type 'string?[]' cannot be used for parameter 'args' of type 'string[]' in 'void FrameworkForwarderCheck.Verify(string[] args)' due to differences in the nullability of reference types. [E:\msys64\home\topkek\sdk8pkg1.j0yM6e\src\sdk-pack-check\Check.csproj]
+E:\msys64\home\topkek\sdk8pkg1.j0yM6e\src\sdk-pack-check\Forwarders.cs(13,37): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sdk8pkg1.j0yM6e\src\sdk-pack-check\Check.csproj]
+E:\msys64\home\topkek\sdk8pkg1.j0yM6e\src\sdk-pack-check\Forwarders.cs(22,27): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\sdk8pkg1.j0yM6e\src\sdk-pack-check\Check.csproj]
+    3 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.90
+Runtime: 8.0.31
+PASS System.Data -> System.Data.SqlClient.SqlConnection, System.Data.SqlClient, Version=4.6.1.6, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS WindowsBase -> System.IO.Packaging.Package, System.IO.Packaging, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS System.Security -> System.Security.Cryptography.Pkcs.ContentInfo, System.Security.Cryptography.Pkcs, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS System.Security -> System.Security.Cryptography.ProtectedData, System.Security.Cryptography.ProtectedData, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS System.ServiceProcess -> System.ServiceProcess.ServiceController, System.ServiceProcess.ServiceController, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS mscorlib -> System.Security.AccessControl.EventWaitHandleSecurity, System.Threading.AccessControl, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS six original framework facades resolve to actual source-built NuGet types, including lower-version SqlClient
+Runtime: .NET 8.0.31
+LOAD Microsoft.CSharp 8.0.0.0
+LOAD Microsoft.VisualBasic 10.0.0.0
+LOAD Microsoft.VisualBasic.Core 13.0.0.0
+LOAD Microsoft.Win32.Primitives 8.0.0.0
+LOAD Microsoft.Win32.Registry 8.0.0.0
+LOAD System 4.0.0.0
+LOAD System.AppContext 8.0.0.0
+LOAD System.Buffers 8.0.0.0
+LOAD System.Collections 8.0.0.0
+LOAD System.Collections.Concurrent 8.0.0.0
+LOAD System.Collections.Immutable 8.0.0.0
+LOAD System.Collections.NonGeneric 8.0.0.0
+LOAD System.Collections.Specialized 8.0.0.0
+LOAD System.ComponentModel 8.0.0.0
+LOAD System.ComponentModel.Annotations 8.0.0.0
+LOAD System.ComponentModel.DataAnnotations 4.0.0.0
+LOAD System.ComponentModel.EventBasedAsync 8.0.0.0
+LOAD System.ComponentModel.Primitives 8.0.0.0
+LOAD System.ComponentModel.TypeConverter 8.0.0.0
+LOAD System.Configuration 4.0.0.0
+LOAD System.Console 8.0.0.0
+LOAD System.Core 4.0.0.0
+LOAD System.Data 4.0.0.0
+LOAD System.Data.Common 8.0.0.0
+LOAD System.Data.DataSetExtensions 8.0.0.0
+LOAD System.Diagnostics.Contracts 8.0.0.0
+LOAD System.Diagnostics.Debug 8.0.0.0
+LOAD System.Diagnostics.DiagnosticSource 8.0.0.0
+LOAD System.Diagnostics.FileVersionInfo 8.0.0.0
+LOAD System.Diagnostics.Process 8.0.0.0
+LOAD System.Diagnostics.StackTrace 8.0.0.0
+LOAD System.Diagnostics.TextWriterTraceListener 8.0.0.0
+LOAD System.Diagnostics.Tools 8.0.0.0
+LOAD System.Diagnostics.TraceSource 8.0.0.0
+LOAD System.Diagnostics.Tracing 8.0.0.0
+LOAD System.Drawing 4.0.0.0
+LOAD System.Drawing.Primitives 8.0.0.0
+LOAD System.Dynamic.Runtime 8.0.0.0
+LOAD System.Formats.Asn1 8.0.0.0
+LOAD System.Formats.Tar 8.0.0.0
+LOAD System.Globalization 8.0.0.0
+LOAD System.Globalization.Calendars 8.0.0.0
+LOAD System.Globalization.Extensions 8.0.0.0
+LOAD System.IO 8.0.0.0
+LOAD System.IO.Compression 8.0.0.0
+LOAD System.IO.Compression.Brotli 8.0.0.0
+LOAD System.IO.Compression.FileSystem 4.0.0.0
+LOAD System.IO.Compression.ZipFile 8.0.0.0
+LOAD System.IO.FileSystem 8.0.0.0
+LOAD System.IO.FileSystem.AccessControl 8.0.0.0
+LOAD System.IO.FileSystem.DriveInfo 8.0.0.0
+LOAD System.IO.FileSystem.Primitives 8.0.0.0
+LOAD System.IO.FileSystem.Watcher 8.0.0.0
+LOAD System.IO.IsolatedStorage 8.0.0.0
+LOAD System.IO.MemoryMappedFiles 8.0.0.0
+LOAD System.IO.Pipes 8.0.0.0
+LOAD System.IO.Pipes.AccessControl 8.0.0.0
+LOAD System.IO.UnmanagedMemoryStream 8.0.0.0
+LOAD System.Linq 8.0.0.0
+LOAD System.Linq.Expressions 8.0.0.0
+LOAD System.Linq.Parallel 8.0.0.0
+LOAD System.Linq.Queryable 8.0.0.0
+LOAD System.Memory 8.0.0.0
+LOAD System.Net 4.0.0.0
+LOAD System.Net.Http 8.0.0.0
+LOAD System.Net.Http.Json 8.0.0.0
+LOAD System.Net.HttpListener 8.0.0.0
+LOAD System.Net.Mail 8.0.0.0
+LOAD System.Net.NameResolution 8.0.0.0
+LOAD System.Net.NetworkInformation 8.0.0.0
+LOAD System.Net.Ping 8.0.0.0
+LOAD System.Net.Primitives 8.0.0.0
+LOAD System.Net.Quic 8.0.0.0
+LOAD System.Net.Requests 8.0.0.0
+LOAD System.Net.Security 8.0.0.0
+LOAD System.Net.ServicePoint 8.0.0.0
+LOAD System.Net.Sockets 8.0.0.0
+LOAD System.Net.WebClient 8.0.0.0
+LOAD System.Net.WebHeaderCollection 8.0.0.0
+LOAD System.Net.WebProxy 8.0.0.0
+LOAD System.Net.WebSockets 8.0.0.0
+LOAD System.Net.WebSockets.Client 8.0.0.0
+LOAD System.Numerics 4.0.0.0
+LOAD System.Numerics.Vectors 8.0.0.0
+LOAD System.ObjectModel 8.0.0.0
+LOAD System.Private.CoreLib 8.0.0.0
+LOAD System.Private.DataContractSerialization 8.0.0.0
+LOAD System.Private.Uri 8.0.0.0
+LOAD System.Private.Xml 8.0.0.0
+LOAD System.Private.Xml.Linq 8.0.0.0
+LOAD System.Reflection 8.0.0.0
+LOAD System.Reflection.DispatchProxy 8.0.0.0
+LOAD System.Reflection.Emit 8.0.0.0
+LOAD System.Reflection.Emit.ILGeneration 8.0.0.0
+LOAD System.Reflection.Emit.Lightweight 8.0.0.0
+LOAD System.Reflection.Extensions 8.0.0.0
+LOAD System.Reflection.Metadata 8.0.0.0
+LOAD System.Reflection.Primitives 8.0.0.0
+LOAD System.Reflection.TypeExtensions 8.0.0.0
+LOAD System.Resources.Reader 8.0.0.0
+LOAD System.Resources.ResourceManager 8.0.0.0
+LOAD System.Resources.Writer 8.0.0.0
+LOAD System.Runtime 8.0.0.0
+LOAD System.Runtime.CompilerServices.Unsafe 8.0.0.0
+LOAD System.Runtime.CompilerServices.VisualC 8.0.0.0
+LOAD System.Runtime.Extensions 8.0.0.0
+LOAD System.Runtime.Handles 8.0.0.0
+LOAD System.Runtime.InteropServices 8.0.0.0
+LOAD System.Runtime.InteropServices.JavaScript 8.0.0.0
+LOAD System.Runtime.InteropServices.RuntimeInformation 8.0.0.0
+LOAD System.Runtime.Intrinsics 8.0.0.0
+LOAD System.Runtime.Loader 8.0.0.0
+LOAD System.Runtime.Numerics 8.0.0.0
+LOAD System.Runtime.Serialization 4.0.0.0
+LOAD System.Runtime.Serialization.Formatters 8.0.0.0
+LOAD System.Runtime.Serialization.Json 8.0.0.0
+LOAD System.Runtime.Serialization.Primitives 8.0.0.0
+LOAD System.Runtime.Serialization.Xml 8.0.0.0
+LOAD System.Security 4.0.0.0
+LOAD System.Security.AccessControl 8.0.0.0
+LOAD System.Security.Claims 8.0.0.0
+LOAD System.Security.Cryptography 8.0.0.0
+LOAD System.Security.Cryptography.Algorithms 8.0.0.0
+LOAD System.Security.Cryptography.Cng 8.0.0.0
+LOAD System.Security.Cryptography.Csp 8.0.0.0
+LOAD System.Security.Cryptography.Encoding 8.0.0.0
+LOAD System.Security.Cryptography.OpenSsl 8.0.0.0
+LOAD System.Security.Cryptography.Primitives 8.0.0.0
+LOAD System.Security.Cryptography.X509Certificates 8.0.0.0
+LOAD System.Security.Principal 8.0.0.0
+LOAD System.Security.Principal.Windows 8.0.0.0
+LOAD System.Security.SecureString 8.0.0.0
+LOAD System.ServiceModel.Web 4.0.0.0
+LOAD System.ServiceProcess 4.0.0.0
+LOAD System.Text.Encoding 8.0.0.0
+LOAD System.Text.Encoding.CodePages 8.0.0.0
+LOAD System.Text.Encoding.Extensions 8.0.0.0
+LOAD System.Text.Encodings.Web 8.0.0.0
+LOAD System.Text.Json 8.0.0.0
+LOAD System.Text.RegularExpressions 8.0.0.0
+LOAD System.Threading 8.0.0.0
+LOAD System.Threading.Channels 8.0.0.0
+LOAD System.Threading.Overlapped 8.0.0.0
+LOAD System.Threading.Tasks 8.0.0.0
+LOAD System.Threading.Tasks.Dataflow 8.0.0.0
+LOAD System.Threading.Tasks.Extensions 8.0.0.0
+LOAD System.Threading.Tasks.Parallel 8.0.0.0
+LOAD System.Threading.Thread 8.0.0.0
+LOAD System.Threading.ThreadPool 8.0.0.0
+LOAD System.Threading.Timer 8.0.0.0
+LOAD System.Transactions 4.0.0.0
+LOAD System.Transactions.Local 8.0.0.0
+LOAD System.ValueTuple 8.0.0.0
+LOAD System.Web 4.0.0.0
+LOAD System.Web.HttpUtility 8.0.0.0
+LOAD System.Windows 4.0.0.0
+LOAD System.Xml 4.0.0.0
+LOAD System.Xml.Linq 4.0.0.0
+LOAD System.Xml.ReaderWriter 8.0.0.0
+LOAD System.Xml.Serialization 4.0.0.0
+LOAD System.Xml.XDocument 8.0.0.0
+LOAD System.Xml.XPath 8.0.0.0
+LOAD System.Xml.XPath.XDocument 8.0.0.0
+LOAD System.Xml.XmlDocument 8.0.0.0
+LOAD System.Xml.XmlSerializer 8.0.0.0
+LOAD WindowsBase 4.0.0.0
+LOAD mscorlib 4.0.0.0
+LOAD netstandard 2.1.0.0
+PASS complete framework loads and actual serviced CoreLib identity/source: 8.0.31+1219a42122cf5190c7f512850557e38c422430dc
+PASS CLR exception/filter/finally, tasks/GC, dynamic compilation, compiled regex and VB
+PASS native globalization, serviced JSON and XML
+PASS source native compression through managed gzip/deflate/Brotli/ZIP APIs
+PASS SHA256 vector, native RSA/AES-GCM, ephemeral certificate and owned loopback TLS/HTTP
+PASS async Unicode file I/O and native FileSystemWatcher
+NATIVE E:\msys64\home\topkek\sdk8pkg1.j0yM6e\src\sdk-check-root\shared\Microsoft.NETCore.App\8.0.31\hostpolicy.dll
+NATIVE E:\msys64\home\topkek\sdk8pkg1.j0yM6e\src\sdk-check-root\shared\Microsoft.NETCore.App\8.0.31\coreclr.dll
+NATIVE E:\msys64\home\topkek\sdk8pkg1.j0yM6e\src\sdk-check-root\shared\Microsoft.NETCore.App\8.0.31\clrjit.dll
+NATIVE E:\msys64\home\topkek\sdk8pkg1.j0yM6e\src\sdk-check-root\shared\Microsoft.NETCore.App\8.0.31\System.IO.Compression.Native.dll
+PASS isolated actual .NET8.0.31 runtime execution; broader compatibility and packaging remain required
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\sdk8pkg1.j0yM6e\src\sdk-pack-check\Check.csproj (in 212 ms).
+E:\msys64\home\topkek\sdk8pkg1.j0yM6e\src\sdk-pack-check\PackChecks.cs(8,78): warning CS8620: Argument of type 'string?[]' cannot be used for parameter 'args' of type 'string[]' in 'void FrameworkForwarderCheck.Verify(string[] args)' due to differences in the nullability of reference types. [E:\msys64\home\topkek\sdk8pkg1.j0yM6e\src\sdk-pack-check\Check.csproj]
+E:\msys64\home\topkek\sdk8pkg1.j0yM6e\src\sdk-pack-check\Forwarders.cs(13,37): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sdk8pkg1.j0yM6e\src\sdk-pack-check\Check.csproj]
+E:\msys64\home\topkek\sdk8pkg1.j0yM6e\src\sdk-pack-check\Forwarders.cs(22,27): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\sdk8pkg1.j0yM6e\src\sdk-pack-check\Check.csproj]
+  Check -> E:\msys64\home\topkek\sdk8pkg1.j0yM6e\src\sdk-pack-check\bin\Release\net8.0\win-x64\Check.dll
+  Check -> E:\msys64\home\topkek\sdk8pkg1.j0yM6e\src\sdk-pack-check\published\
+Runtime: 8.0.31
+PASS System.Data -> System.Data.SqlClient.SqlConnection, System.Data.SqlClient, Version=4.6.1.6, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS WindowsBase -> System.IO.Packaging.Package, System.IO.Packaging, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS System.Security -> System.Security.Cryptography.Pkcs.ContentInfo, System.Security.Cryptography.Pkcs, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS System.Security -> System.Security.Cryptography.ProtectedData, System.Security.Cryptography.ProtectedData, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS System.ServiceProcess -> System.ServiceProcess.ServiceController, System.ServiceProcess.ServiceController, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS mscorlib -> System.Security.AccessControl.EventWaitHandleSecurity, System.Threading.AccessControl, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS six original framework facades resolve to actual source-built NuGet types, including lower-version SqlClient
+Runtime: .NET 8.0.31
+LOAD Microsoft.CSharp 8.0.0.0
+LOAD Microsoft.VisualBasic 10.0.0.0
+LOAD Microsoft.VisualBasic.Core 13.0.0.0
+LOAD Microsoft.Win32.Primitives 8.0.0.0
+LOAD Microsoft.Win32.Registry 8.0.0.0
+LOAD System 4.0.0.0
+LOAD System.AppContext 8.0.0.0
+LOAD System.Buffers 8.0.0.0
+LOAD System.Collections 8.0.0.0
+LOAD System.Collections.Concurrent 8.0.0.0
+LOAD System.Collections.Immutable 8.0.0.0
+LOAD System.Collections.NonGeneric 8.0.0.0
+LOAD System.Collections.Specialized 8.0.0.0
+LOAD System.ComponentModel 8.0.0.0
+LOAD System.ComponentModel.Annotations 8.0.0.0
+LOAD System.ComponentModel.DataAnnotations 4.0.0.0
+LOAD System.ComponentModel.EventBasedAsync 8.0.0.0
+LOAD System.ComponentModel.Primitives 8.0.0.0
+LOAD System.ComponentModel.TypeConverter 8.0.0.0
+LOAD System.Configuration 4.0.0.0
+LOAD System.Console 8.0.0.0
+LOAD System.Core 4.0.0.0
+LOAD System.Data 4.0.0.0
+LOAD System.Data.Common 8.0.0.0
+LOAD System.Data.DataSetExtensions 8.0.0.0
+LOAD System.Diagnostics.Contracts 8.0.0.0
+LOAD System.Diagnostics.Debug 8.0.0.0
+LOAD System.Diagnostics.DiagnosticSource 8.0.0.0
+LOAD System.Diagnostics.FileVersionInfo 8.0.0.0
+LOAD System.Diagnostics.Process 8.0.0.0
+LOAD System.Diagnostics.StackTrace 8.0.0.0
+LOAD System.Diagnostics.TextWriterTraceListener 8.0.0.0
+LOAD System.Diagnostics.Tools 8.0.0.0
+LOAD System.Diagnostics.TraceSource 8.0.0.0
+LOAD System.Diagnostics.Tracing 8.0.0.0
+LOAD System.Drawing 4.0.0.0
+LOAD System.Drawing.Primitives 8.0.0.0
+LOAD System.Dynamic.Runtime 8.0.0.0
+LOAD System.Formats.Asn1 8.0.0.0
+LOAD System.Formats.Tar 8.0.0.0
+LOAD System.Globalization 8.0.0.0
+LOAD System.Globalization.Calendars 8.0.0.0
+LOAD System.Globalization.Extensions 8.0.0.0
+LOAD System.IO 8.0.0.0
+LOAD System.IO.Compression 8.0.0.0
+LOAD System.IO.Compression.Brotli 8.0.0.0
+LOAD System.IO.Compression.FileSystem 4.0.0.0
+LOAD System.IO.Compression.ZipFile 8.0.0.0
+LOAD System.IO.FileSystem 8.0.0.0
+LOAD System.IO.FileSystem.AccessControl 8.0.0.0
+LOAD System.IO.FileSystem.DriveInfo 8.0.0.0
+LOAD System.IO.FileSystem.Primitives 8.0.0.0
+LOAD System.IO.FileSystem.Watcher 8.0.0.0
+LOAD System.IO.IsolatedStorage 8.0.0.0
+LOAD System.IO.MemoryMappedFiles 8.0.0.0
+LOAD System.IO.Pipes 8.0.0.0
+LOAD System.IO.Pipes.AccessControl 8.0.0.0
+LOAD System.IO.UnmanagedMemoryStream 8.0.0.0
+LOAD System.Linq 8.0.0.0
+LOAD System.Linq.Expressions 8.0.0.0
+LOAD System.Linq.Parallel 8.0.0.0
+LOAD System.Linq.Queryable 8.0.0.0
+LOAD System.Memory 8.0.0.0
+LOAD System.Net 4.0.0.0
+LOAD System.Net.Http 8.0.0.0
+LOAD System.Net.Http.Json 8.0.0.0
+LOAD System.Net.HttpListener 8.0.0.0
+LOAD System.Net.Mail 8.0.0.0
+LOAD System.Net.NameResolution 8.0.0.0
+LOAD System.Net.NetworkInformation 8.0.0.0
+LOAD System.Net.Ping 8.0.0.0
+LOAD System.Net.Primitives 8.0.0.0
+LOAD System.Net.Quic 8.0.0.0
+LOAD System.Net.Requests 8.0.0.0
+LOAD System.Net.Security 8.0.0.0
+LOAD System.Net.ServicePoint 8.0.0.0
+LOAD System.Net.Sockets 8.0.0.0
+LOAD System.Net.WebClient 8.0.0.0
+LOAD System.Net.WebHeaderCollection 8.0.0.0
+LOAD System.Net.WebProxy 8.0.0.0
+LOAD System.Net.WebSockets 8.0.0.0
+LOAD System.Net.WebSockets.Client 8.0.0.0
+LOAD System.Numerics 4.0.0.0
+LOAD System.Numerics.Vectors 8.0.0.0
+LOAD System.ObjectModel 8.0.0.0
+LOAD System.Private.CoreLib 8.0.0.0
+LOAD System.Private.DataContractSerialization 8.0.0.0
+LOAD System.Private.Uri 8.0.0.0
+LOAD System.Private.Xml 8.0.0.0
+LOAD System.Private.Xml.Linq 8.0.0.0
+LOAD System.Reflection 8.0.0.0
+LOAD System.Reflection.DispatchProxy 8.0.0.0
+LOAD System.Reflection.Emit 8.0.0.0
+LOAD System.Reflection.Emit.ILGeneration 8.0.0.0
+LOAD System.Reflection.Emit.Lightweight 8.0.0.0
+LOAD System.Reflection.Extensions 8.0.0.0
+LOAD System.Reflection.Metadata 8.0.0.0
+LOAD System.Reflection.Primitives 8.0.0.0
+LOAD System.Reflection.TypeExtensions 8.0.0.0
+LOAD System.Resources.Reader 8.0.0.0
+LOAD System.Resources.ResourceManager 8.0.0.0
+LOAD System.Resources.Writer 8.0.0.0
+LOAD System.Runtime 8.0.0.0
+LOAD System.Runtime.CompilerServices.Unsafe 8.0.0.0
+LOAD System.Runtime.CompilerServices.VisualC 8.0.0.0
+LOAD System.Runtime.Extensions 8.0.0.0
+LOAD System.Runtime.Handles 8.0.0.0
+LOAD System.Runtime.InteropServices 8.0.0.0
+LOAD System.Runtime.InteropServices.JavaScript 8.0.0.0
+LOAD System.Runtime.InteropServices.RuntimeInformation 8.0.0.0
+LOAD System.Runtime.Intrinsics 8.0.0.0
+LOAD System.Runtime.Loader 8.0.0.0
+LOAD System.Runtime.Numerics 8.0.0.0
+LOAD System.Runtime.Serialization 4.0.0.0
+LOAD System.Runtime.Serialization.Formatters 8.0.0.0
+LOAD System.Runtime.Serialization.Json 8.0.0.0
+LOAD System.Runtime.Serialization.Primitives 8.0.0.0
+LOAD System.Runtime.Serialization.Xml 8.0.0.0
+LOAD System.Security 4.0.0.0
+LOAD System.Security.AccessControl 8.0.0.0
+LOAD System.Security.Claims 8.0.0.0
+LOAD System.Security.Cryptography 8.0.0.0
+LOAD System.Security.Cryptography.Algorithms 8.0.0.0
+LOAD System.Security.Cryptography.Cng 8.0.0.0
+LOAD System.Security.Cryptography.Csp 8.0.0.0
+LOAD System.Security.Cryptography.Encoding 8.0.0.0
+LOAD System.Security.Cryptography.OpenSsl 8.0.0.0
+LOAD System.Security.Cryptography.Primitives 8.0.0.0
+LOAD System.Security.Cryptography.X509Certificates 8.0.0.0
+LOAD System.Security.Principal 8.0.0.0
+LOAD System.Security.Principal.Windows 8.0.0.0
+LOAD System.Security.SecureString 8.0.0.0
+LOAD System.ServiceModel.Web 4.0.0.0
+LOAD System.ServiceProcess 4.0.0.0
+LOAD System.Text.Encoding 8.0.0.0
+LOAD System.Text.Encoding.CodePages 8.0.0.0
+LOAD System.Text.Encoding.Extensions 8.0.0.0
+LOAD System.Text.Encodings.Web 8.0.0.0
+LOAD System.Text.Json 8.0.0.0
+LOAD System.Text.RegularExpressions 8.0.0.0
+LOAD System.Threading 8.0.0.0
+LOAD System.Threading.Channels 8.0.0.0
+LOAD System.Threading.Overlapped 8.0.0.0
+LOAD System.Threading.Tasks 8.0.0.0
+LOAD System.Threading.Tasks.Dataflow 8.0.0.0
+LOAD System.Threading.Tasks.Extensions 8.0.0.0
+LOAD System.Threading.Tasks.Parallel 8.0.0.0
+LOAD System.Threading.Thread 8.0.0.0
+LOAD System.Threading.ThreadPool 8.0.0.0
+LOAD System.Threading.Timer 8.0.0.0
+LOAD System.Transactions 4.0.0.0
+LOAD System.Transactions.Local 8.0.0.0
+LOAD System.ValueTuple 8.0.0.0
+LOAD System.Web 4.0.0.0
+LOAD System.Web.HttpUtility 8.0.0.0
+LOAD System.Windows 4.0.0.0
+LOAD System.Xml 4.0.0.0
+LOAD System.Xml.Linq 4.0.0.0
+LOAD System.Xml.ReaderWriter 8.0.0.0
+LOAD System.Xml.Serialization 4.0.0.0
+LOAD System.Xml.XDocument 8.0.0.0
+LOAD System.Xml.XPath 8.0.0.0
+LOAD System.Xml.XPath.XDocument 8.0.0.0
+LOAD System.Xml.XmlDocument 8.0.0.0
+LOAD System.Xml.XmlSerializer 8.0.0.0
+LOAD WindowsBase 4.0.0.0
+LOAD mscorlib 4.0.0.0
+LOAD netstandard 2.1.0.0
+PASS complete framework loads and actual serviced CoreLib identity/source: 8.0.31+1219a42122cf5190c7f512850557e38c422430dc
+PASS CLR exception/filter/finally, tasks/GC, dynamic compilation, compiled regex and VB
+PASS native globalization, serviced JSON and XML
+PASS source native compression through managed gzip/deflate/Brotli/ZIP APIs
+PASS SHA256 vector, native RSA/AES-GCM, ephemeral certificate and owned loopback TLS/HTTP
+PASS async Unicode file I/O and native FileSystemWatcher
+NATIVE E:\msys64\home\topkek\sdk8pkg1.j0yM6e\src\sdk-pack-check\published\hostpolicy.dll
+NATIVE E:\msys64\home\topkek\sdk8pkg1.j0yM6e\src\sdk-pack-check\published\coreclr.dll
+NATIVE E:\msys64\home\topkek\sdk8pkg1.j0yM6e\src\sdk-pack-check\published\clrjit.dll
+NATIVE E:\msys64\home\topkek\sdk8pkg1.j0yM6e\src\sdk-pack-check\published\System.IO.Compression.Native.dll
+PASS isolated actual .NET8.0.31 runtime execution; broader compatibility and packaging remain required
+PASS default source compiler/apphost selection; ordinary self-contained publish selects8.0.31 and all175 exact runtime-pack bytes
+PASS full168 managed/native runtime and six source-NuGet forwarders in ordinary apphost and self-contained execution
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-sdk8-servicing"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-sdk8-servicing 8.0.131-3 (27 Oct 2026 19:29:17)
+
+Recorded artifact-audit1.log:
+PASS exact unchanged source SDK files, one metadata adaptation, fresh native host/runtime pack bytes, original licenses and replacement SDK ownership/dependencies
+
+Recorded install1.log:
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+:: mingw-w64-clang-x86_64-dotnet-sdk8-servicing-8.0.131-3 and mingw-w64-clang-x86_64-dotnet-sdk-8.0.131-2 are in conflict. Remove mingw-w64-clang-x86_64-dotnet-sdk? [Y/n] 
+
+Packages (2) mingw-w64-clang-x86_64-dotnet-sdk-8.0.131-2 [removal]  mingw-w64-clang-x86_64-dotnet-sdk8-servicing-8.0.131-3
+
+Total Installed Size:  189.30 MiB
+Net Upgrade Size:       44.22 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+removing mingw-w64-clang-x86_64-dotnet-sdk...
+installing mingw-w64-clang-x86_64-dotnet-sdk8-servicing...
+
+Recorded installed-check1.log:
+mingw-w64-clang-x86_64-dotnet-sdk8-servicing 8.0.131-3
+PASS installed unchanged source SDK component, exact metadata adaptation, source host/runtime pack bytes and replacement package ownership
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\sdk8pkg1.j0yM6e\installed-check1\Check.csproj (in 325 ms).
+E:\msys64\home\topkek\sdk8pkg1.j0yM6e\installed-check1\PackChecks.cs(8,78): warning CS8620: Argument of type 'string?[]' cannot be used for parameter 'args' of type 'string[]' in 'void FrameworkForwarderCheck.Verify(string[] args)' due to differences in the nullability of reference types. [E:\msys64\home\topkek\sdk8pkg1.j0yM6e\installed-check1\Check.csproj]
+E:\msys64\home\topkek\sdk8pkg1.j0yM6e\installed-check1\Forwarders.cs(13,37): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sdk8pkg1.j0yM6e\installed-check1\Check.csproj]
+E:\msys64\home\topkek\sdk8pkg1.j0yM6e\installed-check1\Forwarders.cs(22,27): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\sdk8pkg1.j0yM6e\installed-check1\Check.csproj]
+  Check -> E:\msys64\home\topkek\sdk8pkg1.j0yM6e\installed-check1\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\sdk8pkg1.j0yM6e\installed-check1\PackChecks.cs(8,78): warning CS8620: Argument of type 'string?[]' cannot be used for parameter 'args' of type 'string[]' in 'void FrameworkForwarderCheck.Verify(string[] args)' due to differences in the nullability of reference types. [E:\msys64\home\topkek\sdk8pkg1.j0yM6e\installed-check1\Check.csproj]
+E:\msys64\home\topkek\sdk8pkg1.j0yM6e\installed-check1\Forwarders.cs(13,37): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sdk8pkg1.j0yM6e\installed-check1\Check.csproj]
+E:\msys64\home\topkek\sdk8pkg1.j0yM6e\installed-check1\Forwarders.cs(22,27): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\sdk8pkg1.j0yM6e\installed-check1\Check.csproj]
+    3 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.35
+Runtime: 8.0.31
+PASS System.Data -> System.Data.SqlClient.SqlConnection, System.Data.SqlClient, Version=4.6.1.6, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS WindowsBase -> System.IO.Packaging.Package, System.IO.Packaging, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS System.Security -> System.Security.Cryptography.Pkcs.ContentInfo, System.Security.Cryptography.Pkcs, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS System.Security -> System.Security.Cryptography.ProtectedData, System.Security.Cryptography.ProtectedData, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS System.ServiceProcess -> System.ServiceProcess.ServiceController, System.ServiceProcess.ServiceController, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS mscorlib -> System.Security.AccessControl.EventWaitHandleSecurity, System.Threading.AccessControl, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS six original framework facades resolve to actual source-built NuGet types, including lower-version SqlClient
+Runtime: .NET 8.0.31
+LOAD Microsoft.CSharp 8.0.0.0
+LOAD Microsoft.VisualBasic 10.0.0.0
+LOAD Microsoft.VisualBasic.Core 13.0.0.0
+LOAD Microsoft.Win32.Primitives 8.0.0.0
+LOAD Microsoft.Win32.Registry 8.0.0.0
+LOAD System 4.0.0.0
+LOAD System.AppContext 8.0.0.0
+LOAD System.Buffers 8.0.0.0
+LOAD System.Collections 8.0.0.0
+LOAD System.Collections.Concurrent 8.0.0.0
+LOAD System.Collections.Immutable 8.0.0.0
+LOAD System.Collections.NonGeneric 8.0.0.0
+LOAD System.Collections.Specialized 8.0.0.0
+LOAD System.ComponentModel 8.0.0.0
+LOAD System.ComponentModel.Annotations 8.0.0.0
+LOAD System.ComponentModel.DataAnnotations 4.0.0.0
+LOAD System.ComponentModel.EventBasedAsync 8.0.0.0
+LOAD System.ComponentModel.Primitives 8.0.0.0
+LOAD System.ComponentModel.TypeConverter 8.0.0.0
+LOAD System.Configuration 4.0.0.0
+LOAD System.Console 8.0.0.0
+LOAD System.Core 4.0.0.0
+LOAD System.Data 4.0.0.0
+LOAD System.Data.Common 8.0.0.0
+LOAD System.Data.DataSetExtensions 8.0.0.0
+LOAD System.Diagnostics.Contracts 8.0.0.0
+LOAD System.Diagnostics.Debug 8.0.0.0
+LOAD System.Diagnostics.DiagnosticSource 8.0.0.0
+LOAD System.Diagnostics.FileVersionInfo 8.0.0.0
+LOAD System.Diagnostics.Process 8.0.0.0
+LOAD System.Diagnostics.StackTrace 8.0.0.0
+LOAD System.Diagnostics.TextWriterTraceListener 8.0.0.0
+LOAD System.Diagnostics.Tools 8.0.0.0
+LOAD System.Diagnostics.TraceSource 8.0.0.0
+LOAD System.Diagnostics.Tracing 8.0.0.0
+LOAD System.Drawing 4.0.0.0
+LOAD System.Drawing.Primitives 8.0.0.0
+LOAD System.Dynamic.Runtime 8.0.0.0
+LOAD System.Formats.Asn1 8.0.0.0
+LOAD System.Formats.Tar 8.0.0.0
+LOAD System.Globalization 8.0.0.0
+LOAD System.Globalization.Calendars 8.0.0.0
+LOAD System.Globalization.Extensions 8.0.0.0
+LOAD System.IO 8.0.0.0
+LOAD System.IO.Compression 8.0.0.0
+LOAD System.IO.Compression.Brotli 8.0.0.0
+LOAD System.IO.Compression.FileSystem 4.0.0.0
+LOAD System.IO.Compression.ZipFile 8.0.0.0
+LOAD System.IO.FileSystem 8.0.0.0
+LOAD System.IO.FileSystem.AccessControl 8.0.0.0
+LOAD System.IO.FileSystem.DriveInfo 8.0.0.0
+LOAD System.IO.FileSystem.Primitives 8.0.0.0
+LOAD System.IO.FileSystem.Watcher 8.0.0.0
+LOAD System.IO.IsolatedStorage 8.0.0.0
+LOAD System.IO.MemoryMappedFiles 8.0.0.0
+LOAD System.IO.Pipes 8.0.0.0
+LOAD System.IO.Pipes.AccessControl 8.0.0.0
+LOAD System.IO.UnmanagedMemoryStream 8.0.0.0
+LOAD System.Linq 8.0.0.0
+LOAD System.Linq.Expressions 8.0.0.0
+LOAD System.Linq.Parallel 8.0.0.0
+LOAD System.Linq.Queryable 8.0.0.0
+LOAD System.Memory 8.0.0.0
+LOAD System.Net 4.0.0.0
+LOAD System.Net.Http 8.0.0.0
+LOAD System.Net.Http.Json 8.0.0.0
+LOAD System.Net.HttpListener 8.0.0.0
+LOAD System.Net.Mail 8.0.0.0
+LOAD System.Net.NameResolution 8.0.0.0
+LOAD System.Net.NetworkInformation 8.0.0.0
+LOAD System.Net.Ping 8.0.0.0
+LOAD System.Net.Primitives 8.0.0.0
+LOAD System.Net.Quic 8.0.0.0
+LOAD System.Net.Requests 8.0.0.0
+LOAD System.Net.Security 8.0.0.0
+LOAD System.Net.ServicePoint 8.0.0.0
+LOAD System.Net.Sockets 8.0.0.0
+LOAD System.Net.WebClient 8.0.0.0
+LOAD System.Net.WebHeaderCollection 8.0.0.0
+LOAD System.Net.WebProxy 8.0.0.0
+LOAD System.Net.WebSockets 8.0.0.0
+LOAD System.Net.WebSockets.Client 8.0.0.0
+LOAD System.Numerics 4.0.0.0
+LOAD System.Numerics.Vectors 8.0.0.0
+LOAD System.ObjectModel 8.0.0.0
+LOAD System.Private.CoreLib 8.0.0.0
+LOAD System.Private.DataContractSerialization 8.0.0.0
+LOAD System.Private.Uri 8.0.0.0
+LOAD System.Private.Xml 8.0.0.0
+LOAD System.Private.Xml.Linq 8.0.0.0
+LOAD System.Reflection 8.0.0.0
+LOAD System.Reflection.DispatchProxy 8.0.0.0
+LOAD System.Reflection.Emit 8.0.0.0
+LOAD System.Reflection.Emit.ILGeneration 8.0.0.0
+LOAD System.Reflection.Emit.Lightweight 8.0.0.0
+LOAD System.Reflection.Extensions 8.0.0.0
+LOAD System.Reflection.Metadata 8.0.0.0
+LOAD System.Reflection.Primitives 8.0.0.0
+LOAD System.Reflection.TypeExtensions 8.0.0.0
+LOAD System.Resources.Reader 8.0.0.0
+LOAD System.Resources.ResourceManager 8.0.0.0
+LOAD System.Resources.Writer 8.0.0.0
+LOAD System.Runtime 8.0.0.0
+LOAD System.Runtime.CompilerServices.Unsafe 8.0.0.0
+LOAD System.Runtime.CompilerServices.VisualC 8.0.0.0
+LOAD System.Runtime.Extensions 8.0.0.0
+LOAD System.Runtime.Handles 8.0.0.0
+LOAD System.Runtime.InteropServices 8.0.0.0
+LOAD System.Runtime.InteropServices.JavaScript 8.0.0.0
+LOAD System.Runtime.InteropServices.RuntimeInformation 8.0.0.0
+LOAD System.Runtime.Intrinsics 8.0.0.0
+LOAD System.Runtime.Loader 8.0.0.0
+LOAD System.Runtime.Numerics 8.0.0.0
+LOAD System.Runtime.Serialization 4.0.0.0
+LOAD System.Runtime.Serialization.Formatters 8.0.0.0
+LOAD System.Runtime.Serialization.Json 8.0.0.0
+LOAD System.Runtime.Serialization.Primitives 8.0.0.0
+LOAD System.Runtime.Serialization.Xml 8.0.0.0
+LOAD System.Security 4.0.0.0
+LOAD System.Security.AccessControl 8.0.0.0
+LOAD System.Security.Claims 8.0.0.0
+LOAD System.Security.Cryptography 8.0.0.0
+LOAD System.Security.Cryptography.Algorithms 8.0.0.0
+LOAD System.Security.Cryptography.Cng 8.0.0.0
+LOAD System.Security.Cryptography.Csp 8.0.0.0
+LOAD System.Security.Cryptography.Encoding 8.0.0.0
+LOAD System.Security.Cryptography.OpenSsl 8.0.0.0
+LOAD System.Security.Cryptography.Primitives 8.0.0.0
+LOAD System.Security.Cryptography.X509Certificates 8.0.0.0
+LOAD System.Security.Principal 8.0.0.0
+LOAD System.Security.Principal.Windows 8.0.0.0
+LOAD System.Security.SecureString 8.0.0.0
+LOAD System.ServiceModel.Web 4.0.0.0
+LOAD System.ServiceProcess 4.0.0.0
+LOAD System.Text.Encoding 8.0.0.0
+LOAD System.Text.Encoding.CodePages 8.0.0.0
+LOAD System.Text.Encoding.Extensions 8.0.0.0
+LOAD System.Text.Encodings.Web 8.0.0.0
+LOAD System.Text.Json 8.0.0.0
+LOAD System.Text.RegularExpressions 8.0.0.0
+LOAD System.Threading 8.0.0.0
+LOAD System.Threading.Channels 8.0.0.0
+LOAD System.Threading.Overlapped 8.0.0.0
+LOAD System.Threading.Tasks 8.0.0.0
+LOAD System.Threading.Tasks.Dataflow 8.0.0.0
+LOAD System.Threading.Tasks.Extensions 8.0.0.0
+LOAD System.Threading.Tasks.Parallel 8.0.0.0
+LOAD System.Threading.Thread 8.0.0.0
+LOAD System.Threading.ThreadPool 8.0.0.0
+LOAD System.Threading.Timer 8.0.0.0
+LOAD System.Transactions 4.0.0.0
+LOAD System.Transactions.Local 8.0.0.0
+LOAD System.ValueTuple 8.0.0.0
+LOAD System.Web 4.0.0.0
+LOAD System.Web.HttpUtility 8.0.0.0
+LOAD System.Windows 4.0.0.0
+LOAD System.Xml 4.0.0.0
+LOAD System.Xml.Linq 4.0.0.0
+LOAD System.Xml.ReaderWriter 8.0.0.0
+LOAD System.Xml.Serialization 4.0.0.0
+LOAD System.Xml.XDocument 8.0.0.0
+LOAD System.Xml.XPath 8.0.0.0
+LOAD System.Xml.XPath.XDocument 8.0.0.0
+LOAD System.Xml.XmlDocument 8.0.0.0
+LOAD System.Xml.XmlSerializer 8.0.0.0
+LOAD WindowsBase 4.0.0.0
+LOAD mscorlib 4.0.0.0
+LOAD netstandard 2.1.0.0
+PASS complete framework loads and actual serviced CoreLib identity/source: 8.0.31+1219a42122cf5190c7f512850557e38c422430dc
+PASS CLR exception/filter/finally, tasks/GC, dynamic compilation, compiled regex and VB
+PASS native globalization, serviced JSON and XML
+PASS source native compression through managed gzip/deflate/Brotli/ZIP APIs
+PASS SHA256 vector, native RSA/AES-GCM, ephemeral certificate and owned loopback TLS/HTTP
+PASS async Unicode file I/O and native FileSystemWatcher
+NATIVE E:\msys64\clang64\lib\dotnet\shared\Microsoft.NETCore.App\8.0.31\hostpolicy.dll
+NATIVE E:\msys64\clang64\lib\dotnet\shared\Microsoft.NETCore.App\8.0.31\coreclr.dll
+NATIVE E:\msys64\clang64\lib\dotnet\shared\Microsoft.NETCore.App\8.0.31\clrjit.dll
+NATIVE E:\msys64\clang64\lib\dotnet\shared\Microsoft.NETCore.App\8.0.31\System.IO.Compression.Native.dll
+PASS isolated actual .NET8.0.31 runtime execution; broader compatibility and packaging remain required
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\sdk8pkg1.j0yM6e\installed-check1\Check.csproj (in 219 ms).
+E:\msys64\home\topkek\sdk8pkg1.j0yM6e\installed-check1\PackChecks.cs(8,78): warning CS8620: Argument of type 'string?[]' cannot be used for parameter 'args' of type 'string[]' in 'void FrameworkForwarderCheck.Verify(string[] args)' due to differences in the nullability of reference types. [E:\msys64\home\topkek\sdk8pkg1.j0yM6e\installed-check1\Check.csproj]
+E:\msys64\home\topkek\sdk8pkg1.j0yM6e\installed-check1\Forwarders.cs(13,37): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sdk8pkg1.j0yM6e\installed-check1\Check.csproj]
+E:\msys64\home\topkek\sdk8pkg1.j0yM6e\installed-check1\Forwarders.cs(22,27): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\sdk8pkg1.j0yM6e\installed-check1\Check.csproj]
+  Check -> E:\msys64\home\topkek\sdk8pkg1.j0yM6e\installed-check1\bin\Release\net8.0\win-x64\Check.dll
+  Check -> E:\msys64\home\topkek\sdk8pkg1.j0yM6e\installed-check1\published\
+Runtime: 8.0.31
+PASS System.Data -> System.Data.SqlClient.SqlConnection, System.Data.SqlClient, Version=4.6.1.6, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS WindowsBase -> System.IO.Packaging.Package, System.IO.Packaging, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS System.Security -> System.Security.Cryptography.Pkcs.ContentInfo, System.Security.Cryptography.Pkcs, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS System.Security -> System.Security.Cryptography.ProtectedData, System.Security.Cryptography.ProtectedData, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS System.ServiceProcess -> System.ServiceProcess.ServiceController, System.ServiceProcess.ServiceController, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS mscorlib -> System.Security.AccessControl.EventWaitHandleSecurity, System.Threading.AccessControl, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS six original framework facades resolve to actual source-built NuGet types, including lower-version SqlClient
+Runtime: .NET 8.0.31
+LOAD Microsoft.CSharp 8.0.0.0
+LOAD Microsoft.VisualBasic 10.0.0.0
+LOAD Microsoft.VisualBasic.Core 13.0.0.0
+LOAD Microsoft.Win32.Primitives 8.0.0.0
+LOAD Microsoft.Win32.Registry 8.0.0.0
+LOAD System 4.0.0.0
+LOAD System.AppContext 8.0.0.0
+LOAD System.Buffers 8.0.0.0
+LOAD System.Collections 8.0.0.0
+LOAD System.Collections.Concurrent 8.0.0.0
+LOAD System.Collections.Immutable 8.0.0.0
+LOAD System.Collections.NonGeneric 8.0.0.0
+LOAD System.Collections.Specialized 8.0.0.0
+LOAD System.ComponentModel 8.0.0.0
+LOAD System.ComponentModel.Annotations 8.0.0.0
+LOAD System.ComponentModel.DataAnnotations 4.0.0.0
+LOAD System.ComponentModel.EventBasedAsync 8.0.0.0
+LOAD System.ComponentModel.Primitives 8.0.0.0
+LOAD System.ComponentModel.TypeConverter 8.0.0.0
+LOAD System.Configuration 4.0.0.0
+LOAD System.Console 8.0.0.0
+LOAD System.Core 4.0.0.0
+LOAD System.Data 4.0.0.0
+LOAD System.Data.Common 8.0.0.0
+LOAD System.Data.DataSetExtensions 8.0.0.0
+LOAD System.Diagnostics.Contracts 8.0.0.0
+LOAD System.Diagnostics.Debug 8.0.0.0
+LOAD System.Diagnostics.DiagnosticSource 8.0.0.0
+LOAD System.Diagnostics.FileVersionInfo 8.0.0.0
+LOAD System.Diagnostics.Process 8.0.0.0
+LOAD System.Diagnostics.StackTrace 8.0.0.0
+LOAD System.Diagnostics.TextWriterTraceListener 8.0.0.0
+LOAD System.Diagnostics.Tools 8.0.0.0
+LOAD System.Diagnostics.TraceSource 8.0.0.0
+LOAD System.Diagnostics.Tracing 8.0.0.0
+LOAD System.Drawing 4.0.0.0
+LOAD System.Drawing.Primitives 8.0.0.0
+LOAD System.Dynamic.Runtime 8.0.0.0
+LOAD System.Formats.Asn1 8.0.0.0
+LOAD System.Formats.Tar 8.0.0.0
+LOAD System.Globalization 8.0.0.0
+LOAD System.Globalization.Calendars 8.0.0.0
+LOAD System.Globalization.Extensions 8.0.0.0
+LOAD System.IO 8.0.0.0
+LOAD System.IO.Compression 8.0.0.0
+LOAD System.IO.Compression.Brotli 8.0.0.0
+LOAD System.IO.Compression.FileSystem 4.0.0.0
+LOAD System.IO.Compression.ZipFile 8.0.0.0
+LOAD System.IO.FileSystem 8.0.0.0
+LOAD System.IO.FileSystem.AccessControl 8.0.0.0
+LOAD System.IO.FileSystem.DriveInfo 8.0.0.0
+LOAD System.IO.FileSystem.Primitives 8.0.0.0
+LOAD System.IO.FileSystem.Watcher 8.0.0.0
+LOAD System.IO.IsolatedStorage 8.0.0.0
+LOAD System.IO.MemoryMappedFiles 8.0.0.0
+LOAD System.IO.Pipes 8.0.0.0
+LOAD System.IO.Pipes.AccessControl 8.0.0.0
+LOAD System.IO.UnmanagedMemoryStream 8.0.0.0
+LOAD System.Linq 8.0.0.0
+LOAD System.Linq.Expressions 8.0.0.0
+LOAD System.Linq.Parallel 8.0.0.0
+LOAD System.Linq.Queryable 8.0.0.0
+LOAD System.Memory 8.0.0.0
+LOAD System.Net 4.0.0.0
+LOAD System.Net.Http 8.0.0.0
+LOAD System.Net.Http.Json 8.0.0.0
+LOAD System.Net.HttpListener 8.0.0.0
+LOAD System.Net.Mail 8.0.0.0
+LOAD System.Net.NameResolution 8.0.0.0
+LOAD System.Net.NetworkInformation 8.0.0.0
+LOAD System.Net.Ping 8.0.0.0
+LOAD System.Net.Primitives 8.0.0.0
+LOAD System.Net.Quic 8.0.0.0
+LOAD System.Net.Requests 8.0.0.0
+LOAD System.Net.Security 8.0.0.0
+LOAD System.Net.ServicePoint 8.0.0.0
+LOAD System.Net.Sockets 8.0.0.0
+LOAD System.Net.WebClient 8.0.0.0
+LOAD System.Net.WebHeaderCollection 8.0.0.0
+LOAD System.Net.WebProxy 8.0.0.0
+LOAD System.Net.WebSockets 8.0.0.0
+LOAD System.Net.WebSockets.Client 8.0.0.0
+LOAD System.Numerics 4.0.0.0
+LOAD System.Numerics.Vectors 8.0.0.0
+LOAD System.ObjectModel 8.0.0.0
+LOAD System.Private.CoreLib 8.0.0.0
+LOAD System.Private.DataContractSerialization 8.0.0.0
+LOAD System.Private.Uri 8.0.0.0
+LOAD System.Private.Xml 8.0.0.0
+LOAD System.Private.Xml.Linq 8.0.0.0
+LOAD System.Reflection 8.0.0.0
+LOAD System.Reflection.DispatchProxy 8.0.0.0
+LOAD System.Reflection.Emit 8.0.0.0
+LOAD System.Reflection.Emit.ILGeneration 8.0.0.0
+LOAD System.Reflection.Emit.Lightweight 8.0.0.0
+LOAD System.Reflection.Extensions 8.0.0.0
+LOAD System.Reflection.Metadata 8.0.0.0
+LOAD System.Reflection.Primitives 8.0.0.0
+LOAD System.Reflection.TypeExtensions 8.0.0.0
+LOAD System.Resources.Reader 8.0.0.0
+LOAD System.Resources.ResourceManager 8.0.0.0
+LOAD System.Resources.Writer 8.0.0.0
+LOAD System.Runtime 8.0.0.0
+LOAD System.Runtime.CompilerServices.Unsafe 8.0.0.0
+LOAD System.Runtime.CompilerServices.VisualC 8.0.0.0
+LOAD System.Runtime.Extensions 8.0.0.0
+LOAD System.Runtime.Handles 8.0.0.0
+LOAD System.Runtime.InteropServices 8.0.0.0
+LOAD System.Runtime.InteropServices.JavaScript 8.0.0.0
+LOAD System.Runtime.InteropServices.RuntimeInformation 8.0.0.0
+LOAD System.Runtime.Intrinsics 8.0.0.0
+LOAD System.Runtime.Loader 8.0.0.0
+LOAD System.Runtime.Numerics 8.0.0.0
+LOAD System.Runtime.Serialization 4.0.0.0
+LOAD System.Runtime.Serialization.Formatters 8.0.0.0
+LOAD System.Runtime.Serialization.Json 8.0.0.0
+LOAD System.Runtime.Serialization.Primitives 8.0.0.0
+LOAD System.Runtime.Serialization.Xml 8.0.0.0
+LOAD System.Security 4.0.0.0
+LOAD System.Security.AccessControl 8.0.0.0
+LOAD System.Security.Claims 8.0.0.0
+LOAD System.Security.Cryptography 8.0.0.0
+LOAD System.Security.Cryptography.Algorithms 8.0.0.0
+LOAD System.Security.Cryptography.Cng 8.0.0.0
+LOAD System.Security.Cryptography.Csp 8.0.0.0
+LOAD System.Security.Cryptography.Encoding 8.0.0.0
+LOAD System.Security.Cryptography.OpenSsl 8.0.0.0
+LOAD System.Security.Cryptography.Primitives 8.0.0.0
+LOAD System.Security.Cryptography.X509Certificates 8.0.0.0
+LOAD System.Security.Principal 8.0.0.0
+LOAD System.Security.Principal.Windows 8.0.0.0
+LOAD System.Security.SecureString 8.0.0.0
+LOAD System.ServiceModel.Web 4.0.0.0
+LOAD System.ServiceProcess 4.0.0.0
+LOAD System.Text.Encoding 8.0.0.0
+LOAD System.Text.Encoding.CodePages 8.0.0.0
+LOAD System.Text.Encoding.Extensions 8.0.0.0
+LOAD System.Text.Encodings.Web 8.0.0.0
+LOAD System.Text.Json 8.0.0.0
+LOAD System.Text.RegularExpressions 8.0.0.0
+LOAD System.Threading 8.0.0.0
+LOAD System.Threading.Channels 8.0.0.0
+LOAD System.Threading.Overlapped 8.0.0.0
+LOAD System.Threading.Tasks 8.0.0.0
+LOAD System.Threading.Tasks.Dataflow 8.0.0.0
+LOAD System.Threading.Tasks.Extensions 8.0.0.0
+LOAD System.Threading.Tasks.Parallel 8.0.0.0
+LOAD System.Threading.Thread 8.0.0.0
+LOAD System.Threading.ThreadPool 8.0.0.0
+LOAD System.Threading.Timer 8.0.0.0
+LOAD System.Transactions 4.0.0.0
+LOAD System.Transactions.Local 8.0.0.0
+LOAD System.ValueTuple 8.0.0.0
+LOAD System.Web 4.0.0.0
+LOAD System.Web.HttpUtility 8.0.0.0
+LOAD System.Windows 4.0.0.0
+LOAD System.Xml 4.0.0.0
+LOAD System.Xml.Linq 4.0.0.0
+LOAD System.Xml.ReaderWriter 8.0.0.0
+LOAD System.Xml.Serialization 4.0.0.0
+LOAD System.Xml.XDocument 8.0.0.0
+LOAD System.Xml.XPath 8.0.0.0
+LOAD System.Xml.XPath.XDocument 8.0.0.0
+LOAD System.Xml.XmlDocument 8.0.0.0
+LOAD System.Xml.XmlSerializer 8.0.0.0
+LOAD WindowsBase 4.0.0.0
+LOAD mscorlib 4.0.0.0
+LOAD netstandard 2.1.0.0
+PASS complete framework loads and actual serviced CoreLib identity/source: 8.0.31+1219a42122cf5190c7f512850557e38c422430dc
+PASS CLR exception/filter/finally, tasks/GC, dynamic compilation, compiled regex and VB
+PASS native globalization, serviced JSON and XML
+PASS source native compression through managed gzip/deflate/Brotli/ZIP APIs
+PASS SHA256 vector, native RSA/AES-GCM, ephemeral certificate and owned loopback TLS/HTTP
+PASS async Unicode file I/O and native FileSystemWatcher
+NATIVE E:\msys64\home\topkek\sdk8pkg1.j0yM6e\installed-check1\published\hostpolicy.dll
+NATIVE E:\msys64\home\topkek\sdk8pkg1.j0yM6e\installed-check1\published\coreclr.dll
+NATIVE E:\msys64\home\topkek\sdk8pkg1.j0yM6e\installed-check1\published\clrjit.dll
+NATIVE E:\msys64\home\topkek\sdk8pkg1.j0yM6e\installed-check1\published\System.IO.Compression.Native.dll
+PASS isolated actual .NET8.0.31 runtime execution; broader compatibility and packaging remain required
+PASS default source compiler/apphost selection; ordinary self-contained publish selects8.0.31 and all175 exact runtime-pack bytes
+PASS full168 managed/native runtime and six source-NuGet forwarders in ordinary apphost and self-contained execution
+

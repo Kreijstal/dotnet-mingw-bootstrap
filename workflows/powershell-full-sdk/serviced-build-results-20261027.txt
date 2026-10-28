@@ -1,0 +1,361 @@
+Fresh original full PowerShell build on installed source SDK/runtime/targeting servicing packages
+{
+  "previous_goal_turn_classification": "progress",
+  "current_goal_turn_classification": "progress",
+  "build_root": "/home/topkek/powershell-shipping3.DfekoG",
+  "source_version": "7.4.20",
+  "installed_source_sdk_package": "8.0.131-3",
+  "installed_source_targeting_package": "8.0.31-2",
+  "installed_source_runtime_package": "8.0.31-3",
+  "full_core_build_command": "bash tests/powershell-full-sdk/build.sh .",
+  "full_core_build_exit_code": 0,
+  "full_core_validation_command": "bash validate.sh",
+  "full_core_validation_exit_code": 0,
+  "full_core_validation_gates": {
+    "source-audit": 0,
+    "localaccounts-api": 0,
+    "native-apphost-audit": 0,
+    "app-stage": 0,
+    "payload-audit": 0,
+    "native-smoke": 0,
+    "gallery-smoke": 0,
+    "native-child": 0,
+    "catalog-audit": 0
+  },
+  "original_catalog_source_references": 213,
+  "original_core_source_inputs": 1031,
+  "core_source_binary_assets": 380,
+  "core_staged_files": 601,
+  "desktop_build_command": "bash tests/powershell-full-sdk/build-desktop.sh .",
+  "desktop_build_exit_code": 0,
+  "desktop_validation_command": "bash validate-desktop.sh",
+  "desktop_validation_exit_code": 0,
+  "desktop_validation_gates": {
+    "desktop-apphost-audit": 0,
+    "desktop-app-stage": 0,
+    "desktop-payload-audit": 0,
+    "desktop-native-smoke": 0,
+    "desktop-native-child": 0,
+    "desktop-raster-smoke": 0
+  },
+  "desktop_activation": "original ImportWindowsDesktopTargets feature switch, with original SDKToUse conditional edge",
+  "desktop_original_cs_inputs": 165,
+  "desktop_original_xaml_and_baml_pages": 16,
+  "desktop_original_graphics_resources": 12,
+  "desktop_project_dlls": 14,
+  "desktop_source_binary_assets": 372,
+  "desktop_staged_files": 596,
+  "desktop_source_framework": "8.0.0-bootstrap.wpf.8.0.0; experimental source WPF8/interim WinForms7 port",
+  "desktop_visible_raster_pixels": 133905,
+  "upstream_graphicalhost_run_analyzers_false_retained": true,
+  "full_shipping_package_completed": false,
+  "full_dependency_goal_complete": false,
+  "remaining": [
+    "formal PowerShell native package and complete private dependency/license closure",
+    "broader desktop compatibility; partial source native WPF and WinForms8 generator bootstrap remain",
+    "MMI3 remote/provider/ownership and native behavior compatibility",
+    "SqlClient database/native interoperability and complete Windows.Compatibility graph validation",
+    "broader COM/R2R/NativeAOT/debugger/runtime compatibility",
+    "PowerShell7.6/.NET10 complete graph"
+  ]
+}
+
+Exact core validation runner:
+cd /home/topkek/powershell-shipping3.DfekoG
+status=0
+run() {
+ local label=$1; shift
+ printf '\n$ '; printf '%q ' "$@"; printf '\n'
+ "$@" > "$label.log" 2>&1
+ local result=$?; cat "$label.log"; printf 'RESULT %s: exit %s\n' "$label" "$result"
+ if ((result != 0)); then status=1; fi
+}
+run source-audit /usr/bin/python3 tests/powershell-full-sdk/audit-source.py .
+run localaccounts-api bash tests/powershell-full-sdk/check-localaccounts-api.sh . api-check1
+run native-apphost-audit /usr/bin/python3 tests/powershell-full-sdk/audit-native-console.py . /clang64/lib/dotnet /home/topkek/sdk8pkg1.j0yM6e/src/sdk-stage native-replay1
+run app-stage /usr/bin/python3 tests/powershell-full-sdk/stage.py . app1
+run payload-audit /usr/bin/python3 tests/powershell-full-sdk/audit-payload.py . app1
+export DOTNET_ROOT=$(cygpath -am /clang64/lib/dotnet) DOTNET_ROOT_X64=$(cygpath -am /clang64/lib/dotnet)
+export DOTNET_CLI_TELEMETRY_OPTOUT=1 POWERSHELL_TELEMETRY_OPTOUT=1
+run native-smoke timeout 180 app1/pwsh.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "$(cygpath -am tests/powershell-full-sdk/Smoke.ps1)"
+run gallery-smoke timeout 180 app1/pwsh.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "$(cygpath -am tests/powershell-full-sdk/GallerySmoke.ps1)" -Output "$(cygpath -am gallery-output1)"
+run native-child timeout 180 app1/pwsh.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "$(cygpath -am tests/powershell-full-sdk/ChildSmoke.ps1)"
+run catalog-audit /usr/bin/python3 tests/powershell-full-sdk/audit-catalog.py .
+printf '%s\n' "$status" > validation.exit
+exit "$status"
+
+Exact desktop validation runner:
+cd /home/topkek/powershell-shipping3.DfekoG
+status=0
+run() {
+ local label=$1; shift
+ printf '\n$ '; printf '%q ' "$@"; printf '\n'
+ "$@" > "$label.log" 2>&1
+ local result=$?; cat "$label.log"; printf 'RESULT %s: exit %s\n' "$label" "$result"
+ if ((result != 0)); then status=1; fi
+}
+run desktop-apphost-audit /usr/bin/python3 tests/powershell-full-sdk/audit-native-console.py . /clang64/lib/dotnet /home/topkek/sdk8pkg1.j0yM6e/src/sdk-stage desktop-native-replay1
+run desktop-app-stage /usr/bin/python3 tests/powershell-full-sdk/stage.py . app2
+run desktop-payload-audit /usr/bin/python3 tests/powershell-full-sdk/audit-payload.py . app2
+export DOTNET_ROOT=$(cygpath -am /clang64/lib/dotnet) DOTNET_ROOT_X64=$(cygpath -am /clang64/lib/dotnet)
+export DOTNET_CLI_TELEMETRY_OPTOUT=1 POWERSHELL_TELEMETRY_OPTOUT=1
+run desktop-native-smoke timeout 180 app2/pwsh.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "$(cygpath -am tests/powershell-full-sdk/Smoke.ps1)"
+run desktop-native-child timeout 180 app2/pwsh.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "$(cygpath -am tests/powershell-full-sdk/ChildSmoke.ps1)"
+run desktop-raster-smoke timeout 120 app2/pwsh.exe -NoLogo -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File "$(cygpath -am tests/powershell-full-sdk/DesktopSmoke.ps1)"
+printf '%s\n' "$status" > desktop-validation.exit
+exit "$status"
+
+
+Recorded build.log:
+PASS full original SDK/catalog, original Windows console project and original LocalAccounts source builds; source/runtime/shipping checks remain required
+
+Recorded sdk-build.log:
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.cs(123,25): warning CA1846: Prefer 'AsSpan' over 'Substring' when span-based overloads are available (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1846) [E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj]
+E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.cs(124,25): warning CA1846: Prefer 'AsSpan' over 'Substring' when span-based overloads are available (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1846) [E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj]
+E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.cs(125,25): warning CA1846: Prefer 'AsSpan' over 'Substring' when span-based overloads are available (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1846) [E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj]
+  PSVersionInfoGenerator -> E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\bin\Release\net8.0\SMA.Generator.dll
+  Microsoft.PowerShell.CoreCLR.Eventing -> E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\Microsoft.PowerShell.CoreCLR.Eventing\bin\Release\net8.0\Microsoft.PowerShell.CoreCLR.Eventing.dll
+  System.Management.Automation -> E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\System.Management.Automation\bin\Release\net8.0\System.Management.Automation.dll
+  Microsoft.PowerShell.Security -> E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\Microsoft.PowerShell.Security\bin\Release\net8.0\Microsoft.PowerShell.Security.dll
+  Microsoft.PowerShell.ConsoleHost -> E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\Microsoft.PowerShell.ConsoleHost\bin\Release\net8.0\Microsoft.PowerShell.ConsoleHost.dll
+  Microsoft.PowerShell.Commands.Utility -> E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\Microsoft.PowerShell.Commands.Utility\bin\Release\net8.0\Microsoft.PowerShell.Commands.Utility.dll
+  Microsoft.PowerShell.Commands.Management -> E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\Microsoft.PowerShell.Commands.Management\bin\Release\net8.0\Microsoft.PowerShell.Commands.Management.dll
+  Microsoft.PowerShell.SDK -> E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\Microsoft.PowerShell.SDK\bin\Release\net8.0\Microsoft.PowerShell.SDK.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.cs(123,25): warning CA1846: Prefer 'AsSpan' over 'Substring' when span-based overloads are available (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1846) [E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj]
+E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.cs(124,25): warning CA1846: Prefer 'AsSpan' over 'Substring' when span-based overloads are available (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1846) [E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj]
+E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.cs(125,25): warning CA1846: Prefer 'AsSpan' over 'Substring' when span-based overloads are available (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1846) [E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj]
+    3 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:01:45.88
+
+Recorded console-build.log:
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\Microsoft.WSMan.Runtime\Microsoft.WSMan.Runtime.csproj (in 327 ms).
+  Restored E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\Microsoft.WSMan.Management\Microsoft.WSMan.Management.csproj (in 459 ms).
+  Restored E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\Microsoft.PowerShell.Commands.Diagnostics\Microsoft.PowerShell.Commands.Diagnostics.csproj (in 232 ms).
+  Restored E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\powershell-win-core\powershell-win-core.csproj (in 343 ms).
+  Restored E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\Microsoft.Management.Infrastructure.CimCmdlets\Microsoft.Management.Infrastructure.CimCmdlets.csproj (in 7 ms).
+  8 of 13 projects are up-to-date for restore.
+  Microsoft.PowerShell.CoreCLR.Eventing -> E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\Microsoft.PowerShell.CoreCLR.Eventing\bin\Release\net8.0\Microsoft.PowerShell.CoreCLR.Eventing.dll
+  PSVersionInfoGenerator -> E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\bin\Release\net8.0\SMA.Generator.dll
+  System.Management.Automation -> E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\System.Management.Automation\bin\Release\net8.0\System.Management.Automation.dll
+  Microsoft.PowerShell.ConsoleHost -> E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\Microsoft.PowerShell.ConsoleHost\bin\Release\net8.0\Microsoft.PowerShell.ConsoleHost.dll
+  Microsoft.PowerShell.Security -> E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\Microsoft.PowerShell.Security\bin\Release\net8.0\Microsoft.PowerShell.Security.dll
+  Microsoft.WSMan.Runtime -> E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\Microsoft.WSMan.Runtime\bin\Release\net8.0\Microsoft.WSMan.Runtime.dll
+  Microsoft.PowerShell.Commands.Utility -> E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\Microsoft.PowerShell.Commands.Utility\bin\Release\net8.0\Microsoft.PowerShell.Commands.Utility.dll
+  Microsoft.PowerShell.Commands.Diagnostics -> E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\Microsoft.PowerShell.Commands.Diagnostics\bin\Release\net8.0\Microsoft.PowerShell.Commands.Diagnostics.dll
+  Microsoft.Management.Infrastructure.CimCmdlets -> E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\Microsoft.Management.Infrastructure.CimCmdlets\bin\Release\net8.0\Microsoft.Management.Infrastructure.CimCmdlets.dll
+  Microsoft.PowerShell.Commands.Management -> E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\Microsoft.PowerShell.Commands.Management\bin\Release\net8.0\Microsoft.PowerShell.Commands.Management.dll
+  Microsoft.PowerShell.SDK -> E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\Microsoft.PowerShell.SDK\bin\Release\net8.0\Microsoft.PowerShell.SDK.dll
+  Microsoft.WSMan.Management -> E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\Microsoft.WSMan.Management\bin\Release\net8.0\Microsoft.WSMan.Management.dll
+  powershell-win-core -> E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\powershell-win-core\bin\Release\net8.0\pwsh.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:24.17
+
+Recorded localaccounts-build.log:
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\Microsoft.PowerShell.LocalAccounts\Microsoft.PowerShell.LocalAccounts.csproj (in 244 ms).
+  3 of 4 projects are up-to-date for restore.
+  PSVersionInfoGenerator -> E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\bin\Release\net8.0\SMA.Generator.dll
+  Microsoft.PowerShell.CoreCLR.Eventing -> E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\Microsoft.PowerShell.CoreCLR.Eventing\bin\Release\net8.0\Microsoft.PowerShell.CoreCLR.Eventing.dll
+  System.Management.Automation -> E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\System.Management.Automation\bin\Release\net8.0\System.Management.Automation.dll
+  Microsoft.PowerShell.LocalAccounts -> E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\Microsoft.PowerShell.LocalAccounts\bin\Release\net8.0\Microsoft.PowerShell.LocalAccounts.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:07.75
+
+Recorded validation.log:
+
+$ /usr/bin/python3 tests/powershell-full-sdk/audit-source.py . 
+PASS exact original Windows source inventories/hashes, documented exclusions, fresh generators and retained explicit source analyzers: {'System.Management.Automation': (697, 77), 'Microsoft.PowerShell.CoreCLR.Eventing': (9, 3), 'PSVersionInfoGenerator': (1, 2), 'Microsoft.Management.Infrastructure.CimCmdlets': (35, 3), 'ResGen': (1, 2), 'TypeCatalogGen': (1, 2), 'Microsoft.PowerShell.Security': (11, 9), 'Microsoft.PowerShell.Commands.Management': (60, 15), 'Microsoft.PowerShell.Commands.Utility': (142, 37), 'Microsoft.PowerShell.ConsoleHost': (27, 11), 'Microsoft.PowerShell.Commands.Diagnostics': (8, 3), 'Microsoft.WSMan.Management': (11, 3), 'Microsoft.WSMan.Runtime': (1, 2)}
+PASS original full SDK/core/console/LocalAccounts source hashes, generator paths and source analyzer coverage: {'System.Management.Automation': 697, 'Microsoft.PowerShell.CoreCLR.Eventing': 9, 'PSVersionInfoGenerator': 1, 'Microsoft.Management.Infrastructure.CimCmdlets': 35, 'ResGen': 1, 'TypeCatalogGen': 1, 'Microsoft.PowerShell.Security': 11, 'Microsoft.PowerShell.Commands.Management': 60, 'Microsoft.PowerShell.Commands.Utility': 142, 'Microsoft.PowerShell.ConsoleHost': 27, 'Microsoft.PowerShell.Commands.Diagnostics': 8, 'Microsoft.WSMan.Management': 11, 'Microsoft.WSMan.Runtime': 1, 'Microsoft.PowerShell.LocalAccounts': 26, 'pwsh': 1, 'Microsoft.PowerShell.SDK': 0}
+RESULT source-audit: exit 0
+
+$ bash tests/powershell-full-sdk/check-localaccounts-api.sh . api-check1 
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-shipping3.DfekoG\api-check1\Check.csproj (in 329 ms).
+  Check -> E:\msys64\home\topkek\powershell-shipping3.DfekoG\api-check1\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.79
+PASS all 459 original LocalAccounts public/protected entries and attributes; actual emitted declarations/identity/public key;17 serialization annotations; no unpatched assembly emitted
+RESULT localaccounts-api: exit 0
+
+$ /usr/bin/python3 tests/powershell-full-sdk/audit-native-console.py . /clang64/lib/dotnet /home/topkek/sdk8pkg1.j0yM6e/src/sdk-stage native-replay1 
+
+PASS original project native pwsh.exe exactly matches unchanged source SDK task replay using freshly source-built8.0.31 apphost and original assembly resources
+RESULT native-apphost-audit: exit 0
+
+$ /usr/bin/python3 tests/powershell-full-sdk/stage.py . app1 
+PASS original console output, LocalAccounts,163 source references and all six source-built gallery modules staged: /home/topkek/powershell-shipping3.DfekoG/app1
+RESULT app-stage: exit 0
+
+$ /usr/bin/python3 tests/powershell-full-sdk/audit-payload.py . app1 
+PASS all 601 staged files, 380 source binary assets, 13 original project DLLs,163 reference assemblies and six source gallery modules; source archive/native owners recorded
+RESULT payload-audit: exit 0
+
+$ timeout 180 app1/pwsh.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File E:/msys64/home/topkek/powershell-shipping3.DfekoG/tests/powershell-full-sdk/Smoke.ps1 
+CATALOG System.Data.SqlClient.SqlConnection -> System.Data.SqlClient
+CATALOG System.ServiceModel.BasicHttpBinding -> System.Private.ServiceModel
+CATALOG System.ServiceModel.NetTcpBinding -> System.Private.ServiceModel
+CATALOG System.IO.Packaging.Package -> System.IO.Packaging
+CATALOG System.Speech.Synthesis.SpeechSynthesizer -> System.Speech
+CATALOG System.Drawing.Bitmap -> System.Drawing.Common
+CATALOG System.Management.ManagementObjectSearcher -> System.Management
+PASS original full SDK catalog/console, module discovery, CIM/GetOwner/serialization, JSON/Add-Type/Authenticode, LocalAccounts and no Framework implementations
+RESULT native-smoke: exit 0
+
+$ timeout 180 app1/pwsh.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File E:/msys64/home/topkek/powershell-shipping3.DfekoG/tests/powershell-full-sdk/GallerySmoke.ps1 -Output E:/msys64/home/topkek/powershell-shipping3.DfekoG/gallery-output1 
+MODULE PowerShellGet 2.2.5 E:\msys64\home\topkek\powershell-shipping3.DfekoG\app1\Modules\PowerShellGet
+MODULE PackageManagement 1.4.8.1 E:\msys64\home\topkek\powershell-shipping3.DfekoG\app1\Modules\PackageManagement
+MODULE Microsoft.PowerShell.Archive 1.2.6 E:\msys64\home\topkek\powershell-shipping3.DfekoG\app1\Modules\Microsoft.PowerShell.Archive
+MODULE Microsoft.PowerShell.PSResourceGet 1.1.1 E:\msys64\home\topkek\powershell-shipping3.DfekoG\app1\Modules\Microsoft.PowerShell.PSResourceGet
+MODULE ThreadJob 2.0.3 E:\msys64\home\topkek\powershell-shipping3.DfekoG\app1\Modules\ThreadJob
+MODULE PSReadLine 2.3.6 E:\msys64\home\topkek\powershell-shipping3.DfekoG\app1\Modules\PSReadLine
+PASS six source gallery modules in original console, source NuGet provider, PSReadLine options, Unicode archive round trip and real ThreadJob/CIM/Unicode execution
+RESULT gallery-smoke: exit 0
+
+$ timeout 180 app1/pwsh.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File E:/msys64/home/topkek/powershell-shipping3.DfekoG/tests/powershell-full-sdk/ChildSmoke.ps1 
+PASS original native console starts actual source pwsh.exe child, Unicode CLIXML, original source engine, serviced runtime and live CIM
+RESULT native-child: exit 0
+
+$ /usr/bin/python3 tests/powershell-full-sdk/audit-catalog.py . 
+PASS original full SDK catalog: 213 source-owned references; all required dependency types, original MMI exclusion and exact independent regeneration
+RESULT catalog-audit: exit 0
+
+Recorded desktop-build.log:
+PASS original GraphicalHost and conditional Windows desktop console builds; original GraphicalHost analyzer setting retained; desktop/shipping compatibility remains open
+
+Recorded graphicalhost-build.log:
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\Microsoft.Management.UI.Internal\Microsoft.PowerShell.GraphicalHost.csproj (in 380 ms).
+  4 of 5 projects are up-to-date for restore.
+  Microsoft.PowerShell.GraphicalHost -> E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\Microsoft.Management.UI.Internal\bin\Release\net8.0\Microsoft.PowerShell.GraphicalHost.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:19.81
+
+Recorded desktop-console-build.log:
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\powershell-win-core\powershell-win-core.csproj (in 294 ms).
+  13 of 14 projects are up-to-date for restore.
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Sdks\Microsoft.NET.Sdk.WindowsDesktop\targets\Microsoft.NET.Sdk.WindowsDesktop.targets(138,5): warning NETSDK1106: Microsoft.NET.Sdk.WindowsDesktop requires 'UseWpf' or 'UseWindowsForms' to be set to 'true' [E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\powershell-win-core\powershell-win-core.csproj]
+  powershell-win-core -> E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\powershell-win-core\bin\Release\net8.0\pwsh.dll
+
+Build succeeded.
+
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Sdks\Microsoft.NET.Sdk.WindowsDesktop\targets\Microsoft.NET.Sdk.WindowsDesktop.targets(138,5): warning NETSDK1106: Microsoft.NET.Sdk.WindowsDesktop requires 'UseWpf' or 'UseWindowsForms' to be set to 'true' [E:\msys64\home\topkek\powershell-shipping3.DfekoG\PowerShell-7.4.20\src\powershell-win-core\powershell-win-core.csproj]
+    1 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:06.62
+
+Recorded desktop-validation.log:
+
+$ /usr/bin/python3 tests/powershell-full-sdk/audit-native-console.py . /clang64/lib/dotnet /home/topkek/sdk8pkg1.j0yM6e/src/sdk-stage desktop-native-replay1 
+
+PASS original project native pwsh.exe exactly matches unchanged source SDK task replay using freshly source-built8.0.31 apphost and original assembly resources
+RESULT desktop-apphost-audit: exit 0
+
+$ /usr/bin/python3 tests/powershell-full-sdk/stage.py . app2 
+PASS original console output, LocalAccounts,163 source references and all six source-built gallery modules staged: /home/topkek/powershell-shipping3.DfekoG/app2
+RESULT desktop-app-stage: exit 0
+
+$ /usr/bin/python3 tests/powershell-full-sdk/audit-payload.py . app2 
+PASS all 596 staged files, 372 source binary assets, 14 original project DLLs,163 reference assemblies and six source gallery modules; source archive/native owners recorded
+RESULT desktop-payload-audit: exit 0
+
+$ timeout 180 app2/pwsh.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File E:/msys64/home/topkek/powershell-shipping3.DfekoG/tests/powershell-full-sdk/Smoke.ps1 
+CATALOG System.Data.SqlClient.SqlConnection -> System.Data.SqlClient
+CATALOG System.ServiceModel.BasicHttpBinding -> System.Private.ServiceModel
+CATALOG System.ServiceModel.NetTcpBinding -> System.Private.ServiceModel
+CATALOG System.IO.Packaging.Package -> System.IO.Packaging
+CATALOG System.Speech.Synthesis.SpeechSynthesizer -> System.Speech
+CATALOG System.Drawing.Bitmap -> System.Drawing.Common
+CATALOG System.Management.ManagementObjectSearcher -> System.Management
+PASS original full SDK catalog/console, module discovery, CIM/GetOwner/serialization, JSON/Add-Type/Authenticode, LocalAccounts and no Framework implementations
+RESULT desktop-native-smoke: exit 0
+
+$ timeout 180 app2/pwsh.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File E:/msys64/home/topkek/powershell-shipping3.DfekoG/tests/powershell-full-sdk/ChildSmoke.ps1 
+PASS original native console starts actual source pwsh.exe child, Unicode CLIXML, original source engine, serviced runtime and live CIM
+RESULT desktop-native-child: exit 0
+
+$ timeout 120 app2/pwsh.exe -NoLogo -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File E:/msys64/home/topkek/powershell-shipping3.DfekoG/tests/powershell-full-sdk/DesktopSmoke.ps1 
+PASS original GraphicalHost compiled BAML/Show-Command control,STA layout and source WPF raster: 133905 visible pixels; 1 visual children
+RESULT desktop-raster-smoke: exit 0
+
+Recorded graphical-audit1.log:
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-shipping3.DfekoG\graphical-audit1\Inspect.csproj (in 67 ms).
+E:\msys64\home\topkek\powershell-shipping3.DfekoG\graphical-audit1\Program.cs(22,78): error CS1061: 'ImmutableArray<byte>' does not contain a definition for 'ToArray' and no accessible extension method 'ToArray' accepting a first argument of type 'ImmutableArray<byte>' could be found (are you missing a using directive or an assembly reference?) [E:\msys64\home\topkek\powershell-shipping3.DfekoG\graphical-audit1\Inspect.csproj]
+
+Build FAILED.
+
+E:\msys64\home\topkek\powershell-shipping3.DfekoG\graphical-audit1\Program.cs(22,78): error CS1061: 'ImmutableArray<byte>' does not contain a definition for 'ToArray' and no accessible extension method 'ToArray' accepting a first argument of type 'ImmutableArray<byte>' could be found (are you missing a using directive or an assembly reference?) [E:\msys64\home\topkek\powershell-shipping3.DfekoG\graphical-audit1\Inspect.csproj]
+    0 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:03.89
+Traceback (most recent call last):
+  File "/home/topkek/powershell-shipping3.DfekoG/tests/powershell-full-sdk/audit-graphical-source.py", line 27, in <module>
+    subprocess.run([dotnet,'build',native(out/'Inspect.csproj'),'-c','Release','--configfile',native(out/'NuGet.config'),'-p:UseSharedCompilation=false','-v:minimal'],env=env,check=True)
+  File "/usr/lib/python3.12/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['/clang64/lib/dotnet/dotnet.exe', 'build', 'E:/msys64/home/topkek/powershell-shipping3.DfekoG/graphical-audit1/Inspect.csproj', '-c', 'Release', '--configfile', 'E:/msys64/home/topkek/powershell-shipping3.DfekoG/graphical-audit1/NuGet.config', '-p:UseSharedCompilation=false', '-v:minimal']' returned non-zero exit status 1.
+
+Recorded graphical-audit2.log:
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-shipping3.DfekoG\graphical-audit2\Inspect.csproj (in 91 ms).
+  Inspect -> E:\msys64\home\topkek\powershell-shipping3.DfekoG\graphical-audit2\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.88
+PASS original GraphicalHost: 165 C# inputs, 16 XAML/compiled BAML entries and 12 byte-exact original resources; upstream project/analyzer setting retained
+
+
+Additional desktop gallery command:
+$ app2/pwsh.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "$(cygpath -am tests/powershell-full-sdk/GallerySmoke.ps1)" -Output "$(cygpath -am desktop-gallery-output1)"
+Result:exit0.
+MODULE Microsoft.PowerShell.PSResourceGet 1.1.1 E:\msys64\home\topkek\powershell-shipping3.DfekoG\app2\Modules\Microsoft.PowerShell.PSResourceGet
+MODULE Microsoft.PowerShell.Archive 1.2.6 E:\msys64\home\topkek\powershell-shipping3.DfekoG\app2\Modules\Microsoft.PowerShell.Archive
+MODULE PSReadLine 2.3.6 E:\msys64\home\topkek\powershell-shipping3.DfekoG\app2\Modules\PSReadLine
+MODULE PackageManagement 1.4.8.1 E:\msys64\home\topkek\powershell-shipping3.DfekoG\app2\Modules\PackageManagement
+MODULE PowerShellGet 2.2.5 E:\msys64\home\topkek\powershell-shipping3.DfekoG\app2\Modules\PowerShellGet
+MODULE ThreadJob 2.0.3 E:\msys64\home\topkek\powershell-shipping3.DfekoG\app2\Modules\ThreadJob
+PASS six source gallery modules in original console, source NuGet provider, PSReadLine options, Unicode archive round trip and real ThreadJob/CIM/Unicode execution

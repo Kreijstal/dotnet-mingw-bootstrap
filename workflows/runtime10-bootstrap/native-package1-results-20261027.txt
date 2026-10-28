@@ -1,0 +1,32 @@
+Goal turn: progress. Full dependency goal remains incomplete.
+Builder: topkek@win11, CLANG64
+Build root: /c/codex-dotnet10/p1.wKLUFS
+Package: mingw-w64-clang-x86_64-dotnet-host10-bootstrap 10.0.5-1
+
+makepkg --verifysource => 0
+makepkg --cleanbuild --force --noconfirm => 0
+python3 tests/runtime10-bootstrap/audit-native-package.py /tmp/dotnet-host10-native-package1/evidence/mingw-w64-clang-x86_64-dotnet-host10-bootstrap-10.0.5-1-any.pkg.tar.zst tests/runtime10-bootstrap/native-package1-artifact-20261027.json => 0
+pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-host10-bootstrap-10.0.5-1-any.pkg.tar.zst => 0
+bash check-installed-host.sh /c/codex-dotnet10/p1.wKLUFS/installed-check1 => 0
+python3 tests/runtime10-bootstrap/review-coreclr-patches.py /tmp/dotnet10-sources/runtime-v10.0.5.tar.gz /tmp/coreclr10-patch-review4 => 0 (mechanical review completed, not a successful CoreCLR10 port)
+
+Clean source preparation: 60,754 original inputs, 35 binary inputs removed,
+zero-fuzz 13-file host port. Seven AMD64 product images, ten support files,
+apphost actual CET flag, six source-derived PE versions10.0.526.11800.
+Original Arcade version task and three upstream vectors passed.
+Original fx_ver executable and explicit/delay-load nativehost cases passed.
+Installed ownership and all hashes: 28 files, exact native build bytes.
+Unicode host layout, nethost sizing/discovery and hostfxr environment callback
+passed before and after install. Reported source version10.0.5 and original
+commit081d220c0a773ffb7c6bea6b48727833576a65ef, zero SDKs/frameworks in the
+private native test layout. COM and IJW products built; their MSVC-only
+comsxs/ijw/typelibs test projects remain excluded.
+
+CoreCLR10 not built; full runtime10/SDK10 and PowerShell7.6 remain open.
+Old CoreCLR patch review: 31 rejected hunks, one removed assembly path;
+only compatibility headers and jitinterface patch apply completely.
+Dependency counts unchanged: 50/53 direct, 52 transitive, 106 artifacts
+including four experimental. Native host is recorded as toolchain progress.
+
+Archive SHA256: c4a4691c12563a2029e5138e24c53ea2746868d90f1bfb0baa98646dca5cd95e
+Evidence logs: /tmp/dotnet-host10-native-package1/evidence

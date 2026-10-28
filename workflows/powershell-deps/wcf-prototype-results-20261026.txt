@@ -1,0 +1,372 @@
+WCF source prototype: NOT packaged/complete, 2026-10-26
+Host: win11, MSYS2 CLANG64, source-built SDK8.0.131-1/runtime8.0.0.
+
+Implementation and five contract builds after Activity alias
+In MSYSTEM=CLANG64 bash -lc, working directory /home/topkek/powershell-wcf.d3ETGX:
+bash build.sh wcf-build
+result: exit 0
+
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\Internals\System\Xml\XmlMtomReader.cs(2153,17): warning CS1634: Expected 'disable' or 'restore' [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\Internals\System\Xml\XmlMtomReader.cs(2161,17): warning CS1634: Expected 'disable' or 'restore' [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\Internals\System\Xml\XmlMtomReader.cs(2879,17): warning CS1634: Expected 'disable' or 'restore' [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\Internals\System\Xml\XmlMtomReader.cs(2888,17): warning CS1634: Expected 'disable' or 'restore' [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\FaultException.cs(196,30): warning CS0672: Member 'FaultException.GetObjectData(SerializationInfo, StreamingContext)' overrides obsolete member 'Exception.GetObjectData(SerializationInfo, StreamingContext)'. Add the Obsolete attribute to 'FaultException.GetObjectData(SerializationInfo, StreamingContext)'. [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\FaultException.cs(411,30): warning CS0672: Member 'FaultException<TDetail>.GetObjectData(SerializationInfo, StreamingContext)' overrides obsolete member 'Exception.GetObjectData(SerializationInfo, StreamingContext)'. Add the Obsolete attribute to 'FaultException<TDetail>.GetObjectData(SerializationInfo, StreamingContext)'. [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Channels\TransportDefaults.cs(170,44): warning SYSLIB0039: 'SslProtocols.Tls' is obsolete: 'TLS versions 1.0 and 1.1 have known vulnerabilities and are not recommended. Use a newer TLS version instead, or use SslProtocols.None to defer to OS defaults.' (https://aka.ms/dotnet-warnings/SYSLIB0039) [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Channels\TransportDefaults.cs(171,44): warning SYSLIB0039: 'SslProtocols.Tls11' is obsolete: 'TLS versions 1.0 and 1.1 have known vulnerabilities and are not recommended. Use a newer TLS version instead, or use SslProtocols.None to defer to OS defaults.' (https://aka.ms/dotnet-warnings/SYSLIB0039) [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\IdentityModel\Tokens\SecurityTokenException.cs(15,92): warning SYSLIB0051: 'Exception.Exception(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\IdentityModel\SecurityUtils.cs(236,21): warning CS0472: The result of the expression is always 'true' since a value of type 'nint' is never equal to 'null' of type 'nint?' [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\IdentityModel\SecurityMessageSerializationException.cs(20,13): warning SYSLIB0051: 'Exception.Exception(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\Internals\System\Runtime\Fx.cs(976,91): warning SYSLIB0051: 'SystemException.SystemException(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\Internals\System\Runtime\Fx.cs(462,17): warning SYSLIB0004: 'RuntimeHelpers.PrepareConstrainedRegions()' is obsolete: 'The Constrained Execution Region (CER) feature is not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0004) [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\Internals\System\Runtime\FatalException.cs(22,84): warning SYSLIB0051: 'Exception.Exception(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\CommunicationException.cs(15,92): warning SYSLIB0051: 'Exception.Exception(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\Tokens\DerivedKeySecurityToken.cs(44,13): warning SYSLIB0023: 'RNGCryptoServiceProvider' is obsolete: 'RNGCryptoServiceProvider is obsolete. To generate a random number, use one of the RandomNumberGenerator static methods instead.' (https://aka.ms/dotnet-warnings/SYSLIB0023) [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\Tokens\DerivedKeySecurityToken.cs(44,48): warning SYSLIB0023: 'RNGCryptoServiceProvider' is obsolete: 'RNGCryptoServiceProvider is obsolete. To generate a random number, use one of the RandomNumberGenerator static methods instead.' (https://aka.ms/dotnet-warnings/SYSLIB0023) [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Channels\SocketConnection.cs(83,17): warning CS0618: 'Socket.UseOnlyOverlappedIO' is obsolete: 'UseOnlyOverlappedIO has been deprecated and is not supported.' [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Channels\SocketConnection.cs(90,17): warning CS0618: 'Socket.UseOnlyOverlappedIO' is obsolete: 'UseOnlyOverlappedIO has been deprecated and is not supported.' [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Channels\SocketConnection.cs(1003,21): warning CS0618: 'Socket.UseOnlyOverlappedIO' is obsolete: 'UseOnlyOverlappedIO has been deprecated and is not supported.' [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Channels\HttpRequestMessageExtensionMethods.cs(29,54): warning CS0618: 'HttpRequestMessage.Properties' is obsolete: 'HttpRequestMessage.Properties has been deprecated. Use Options instead.' [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\FaultException.cs(198,13): warning SYSLIB0051: 'Exception.GetObjectData(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Dispatcher\InvalidBodyAccessException.cs(14,96): warning SYSLIB0051: 'Exception.Exception(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\QuotaExceededException.cs(15,92): warning SYSLIB0051: 'Exception.Exception(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\InvalidMessageContractException.cs(15,101): warning SYSLIB0051: 'Exception.Exception(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\FaultException.cs(413,13): warning SYSLIB0051: 'Exception.GetObjectData(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\SecurityProtocolFactory.cs(90,22): warning CS0649: Field 'SecurityProtocolFactory._expectChannelSignedTokens' is never assigned to, and will always have its default value false [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\SecurityAppliedMessage.cs(24,30): warning CS0649: Field 'SecurityAppliedMessage._startBodyFragment' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\RequestSecurityTokenResponse.cs(38,24): warning CS0649: Field 'RequestSecurityTokenResponse._authenticator' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\RequestSecurityToken.cs(24,35): warning CS0649: Field 'RequestSecurityToken._negotiationData' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\RequestSecurityToken.cs(35,40): warning CS0649: Field 'RequestSecurityToken._appliesToSerializer' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\IdentityModel\Tokens\KerberosRequestorSecurityToken.cs(16,26): warning CS0649: Field 'KerberosRequestorSecurityToken._effectiveTime' is never assigned to, and will always have its default value [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\SendSecurityHeaderElementContainer.cs(26,30): warning CS0649: Field 'SendSecurityHeaderElementContainer.SourceSigningToken' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\Tokens\IssuedSecurityTokenParameters.cs(23,36): warning CS0649: Field 'IssuedSecurityTokenParameters.AlternativeIssuerEndpoint.IssuerMetadataAddress' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\SendSecurityHeaderElementContainer.cs(29,30): warning CS0649: Field 'SendSecurityHeaderElementContainer.WrappedEncryptionToken' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\SecurityProtocolFactory.cs(89,22): warning CS0649: Field 'SecurityProtocolFactory._expectChannelBasicTokens' is never assigned to, and will always have its default value false [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\RequestSecurityToken.cs(34,24): warning CS0649: Field 'RequestSecurityToken._appliesTo' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\ReceiveSecurityHeader.cs(31,22): warning CS0649: Field 'ReceiveSecurityHeader._allowFirstTokenMismatch' is never assigned to, and will always have its default value false [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\ReceiveSecurityHeader.cs(60,59): warning CS0649: Field 'ReceiveSecurityHeader._outOfBandTokenResolver' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Channels\SslStreamSecurityUpgradeProvider.cs(26,34): warning CS0649: Field 'SslStreamSecurityUpgradeProvider._identity' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\SendSecurityHeader.cs(23,40): warning CS0649: Field 'SendSecurityHeader._signatureConfirmationsToSend' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\ReceiveSecurityHeader.cs(34,41): warning CS0649: Field 'ReceiveSecurityHeader._primaryTokenParameters' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\SecurityAppliedMessage.cs(25,30): warning CS0649: Field 'SecurityAppliedMessage._endBodyFragment' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\SendSecurityHeaderElementContainer.cs(25,30): warning CS0649: Field 'SendSecurityHeaderElementContainer.PrerequisiteToken' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\SendSecurityHeaderElementContainer.cs(28,30): warning CS0649: Field 'SendSecurityHeaderElementContainer.SourceEncryptionToken' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\ReceiveSecurityHeader.cs(77,40): warning CS0649: Field 'ReceiveSecurityHeader._protectionOrder' is never assigned to, and will always have its default value [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\RequestSecurityToken.cs(36,22): warning CS0649: Field 'RequestSecurityToken._appliesToType' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\ReceiveSecurityHeader.cs(33,38): warning CS0649: Field 'ReceiveSecurityHeader._outOfBandPrimaryTokenCollection' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\ReceiveSecurityHeader.cs(40,66): warning CS0649: Field 'ReceiveSecurityHeader._supportingTokenAuthenticators' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\XD.cs(690,36): warning CS0649: Field 'TrustDictionary.RequestFailedFaultCode' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\InitiatorSessionSymmetricTransportSecurityProtocol.cs(19,41): warning CS0649: Field 'InitiatorSessionSymmetricTransportSecurityProtocol._derivedSignatureToken' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\SendSecurityHeader.cs(34,50): warning CS0649: Field 'SendSecurityHeader._correlationState' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\SMDiagnostics\System\ServiceModel\Diagnostics\ExceptionUtility.cs(16,42): warning CS0649: Field 'ExceptionUtility.mainInstance' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\SendSecurityHeaderElementContainer.cs(30,30): warning CS0649: Field 'SendSecurityHeaderElementContainer.DerivedEncryptionToken' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\ReceiveSecurityHeader.cs(30,44): warning CS0649: Field 'ReceiveSecurityHeader._primaryTokenAuthenticator' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\IdentityModel\Tokens\KerberosRequestorSecurityToken.cs(17,26): warning CS0649: Field 'KerberosRequestorSecurityToken._expirationTime' is never assigned to, and will always have its default value [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\SendSecurityHeaderElementContainer.cs(31,33): warning CS0649: Field 'SendSecurityHeaderElementContainer.ReferenceList' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\ReceiveSecurityHeader.cs(37,41): warning CS0649: Field 'ReceiveSecurityHeader._wrappingTokenParameters' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\SecurityProtocolFactory.cs(91,22): warning CS0649: Field 'SecurityProtocolFactory._expectChannelEndorsingTokens' is never assigned to, and will always have its default value false [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\SendSecurityHeaderElementContainer.cs(27,30): warning CS0649: Field 'SendSecurityHeaderElementContainer.DerivedSigningToken' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\RequestSecurityTokenResponse.cs(34,35): warning CS0649: Field 'RequestSecurityTokenResponse._negotiationData' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\ReceiveSecurityHeader.cs(36,31): warning CS0649: Field 'ReceiveSecurityHeader._wrappingToken' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\ReceiveSecurityHeader.cs(55,43): warning CS0649: Field 'ReceiveSecurityHeader._signedEndorsingTokens' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\ReceiveSecurityHeader.cs(832,25): warning CS0649: Field 'ReceiveSecurityHeader.OrderTracker._signatureCount' is never assigned to, and will always have its default value 0 [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\ReceiveSecurityHeader.cs(833,25): warning CS0649: Field 'ReceiveSecurityHeader.OrderTracker._unencryptedSignatureCount' is never assigned to, and will always have its default value 0 [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\ReceiveSecurityHeader.cs(32,31): warning CS0649: Field 'ReceiveSecurityHeader._outOfBandPrimaryToken' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\SendSecurityHeader.cs(26,42): warning CS0649: Field 'SendSecurityHeader._signatureParts' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\Tokens\IssuedSecurityTokenParameters.cs(22,36): warning CS0649: Field 'IssuedSecurityTokenParameters.AlternativeIssuerEndpoint.IssuerAddress' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\Tokens\IssuedSecurityTokenParameters.cs(24,28): warning CS0649: Field 'IssuedSecurityTokenParameters.AlternativeIssuerEndpoint.IssuerBinding' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+  build -> E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\bin\Release\net8.0\System.Private.ServiceModel.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\Internals\System\Xml\XmlMtomReader.cs(2153,17): warning CS1634: Expected 'disable' or 'restore' [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\Internals\System\Xml\XmlMtomReader.cs(2161,17): warning CS1634: Expected 'disable' or 'restore' [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\Internals\System\Xml\XmlMtomReader.cs(2879,17): warning CS1634: Expected 'disable' or 'restore' [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\Internals\System\Xml\XmlMtomReader.cs(2888,17): warning CS1634: Expected 'disable' or 'restore' [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\FaultException.cs(196,30): warning CS0672: Member 'FaultException.GetObjectData(SerializationInfo, StreamingContext)' overrides obsolete member 'Exception.GetObjectData(SerializationInfo, StreamingContext)'. Add the Obsolete attribute to 'FaultException.GetObjectData(SerializationInfo, StreamingContext)'. [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\FaultException.cs(411,30): warning CS0672: Member 'FaultException<TDetail>.GetObjectData(SerializationInfo, StreamingContext)' overrides obsolete member 'Exception.GetObjectData(SerializationInfo, StreamingContext)'. Add the Obsolete attribute to 'FaultException<TDetail>.GetObjectData(SerializationInfo, StreamingContext)'. [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Channels\TransportDefaults.cs(170,44): warning SYSLIB0039: 'SslProtocols.Tls' is obsolete: 'TLS versions 1.0 and 1.1 have known vulnerabilities and are not recommended. Use a newer TLS version instead, or use SslProtocols.None to defer to OS defaults.' (https://aka.ms/dotnet-warnings/SYSLIB0039) [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Channels\TransportDefaults.cs(171,44): warning SYSLIB0039: 'SslProtocols.Tls11' is obsolete: 'TLS versions 1.0 and 1.1 have known vulnerabilities and are not recommended. Use a newer TLS version instead, or use SslProtocols.None to defer to OS defaults.' (https://aka.ms/dotnet-warnings/SYSLIB0039) [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\IdentityModel\Tokens\SecurityTokenException.cs(15,92): warning SYSLIB0051: 'Exception.Exception(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\IdentityModel\SecurityUtils.cs(236,21): warning CS0472: The result of the expression is always 'true' since a value of type 'nint' is never equal to 'null' of type 'nint?' [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\IdentityModel\SecurityMessageSerializationException.cs(20,13): warning SYSLIB0051: 'Exception.Exception(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\Internals\System\Runtime\Fx.cs(976,91): warning SYSLIB0051: 'SystemException.SystemException(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\Internals\System\Runtime\Fx.cs(462,17): warning SYSLIB0004: 'RuntimeHelpers.PrepareConstrainedRegions()' is obsolete: 'The Constrained Execution Region (CER) feature is not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0004) [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\Internals\System\Runtime\FatalException.cs(22,84): warning SYSLIB0051: 'Exception.Exception(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\CommunicationException.cs(15,92): warning SYSLIB0051: 'Exception.Exception(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\Tokens\DerivedKeySecurityToken.cs(44,13): warning SYSLIB0023: 'RNGCryptoServiceProvider' is obsolete: 'RNGCryptoServiceProvider is obsolete. To generate a random number, use one of the RandomNumberGenerator static methods instead.' (https://aka.ms/dotnet-warnings/SYSLIB0023) [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\Tokens\DerivedKeySecurityToken.cs(44,48): warning SYSLIB0023: 'RNGCryptoServiceProvider' is obsolete: 'RNGCryptoServiceProvider is obsolete. To generate a random number, use one of the RandomNumberGenerator static methods instead.' (https://aka.ms/dotnet-warnings/SYSLIB0023) [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Channels\SocketConnection.cs(83,17): warning CS0618: 'Socket.UseOnlyOverlappedIO' is obsolete: 'UseOnlyOverlappedIO has been deprecated and is not supported.' [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Channels\SocketConnection.cs(90,17): warning CS0618: 'Socket.UseOnlyOverlappedIO' is obsolete: 'UseOnlyOverlappedIO has been deprecated and is not supported.' [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Channels\SocketConnection.cs(1003,21): warning CS0618: 'Socket.UseOnlyOverlappedIO' is obsolete: 'UseOnlyOverlappedIO has been deprecated and is not supported.' [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Channels\HttpRequestMessageExtensionMethods.cs(29,54): warning CS0618: 'HttpRequestMessage.Properties' is obsolete: 'HttpRequestMessage.Properties has been deprecated. Use Options instead.' [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\FaultException.cs(198,13): warning SYSLIB0051: 'Exception.GetObjectData(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Dispatcher\InvalidBodyAccessException.cs(14,96): warning SYSLIB0051: 'Exception.Exception(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\QuotaExceededException.cs(15,92): warning SYSLIB0051: 'Exception.Exception(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\InvalidMessageContractException.cs(15,101): warning SYSLIB0051: 'Exception.Exception(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\FaultException.cs(413,13): warning SYSLIB0051: 'Exception.GetObjectData(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\SecurityProtocolFactory.cs(90,22): warning CS0649: Field 'SecurityProtocolFactory._expectChannelSignedTokens' is never assigned to, and will always have its default value false [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\SecurityAppliedMessage.cs(24,30): warning CS0649: Field 'SecurityAppliedMessage._startBodyFragment' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\RequestSecurityTokenResponse.cs(38,24): warning CS0649: Field 'RequestSecurityTokenResponse._authenticator' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\RequestSecurityToken.cs(24,35): warning CS0649: Field 'RequestSecurityToken._negotiationData' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\RequestSecurityToken.cs(35,40): warning CS0649: Field 'RequestSecurityToken._appliesToSerializer' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\IdentityModel\Tokens\KerberosRequestorSecurityToken.cs(16,26): warning CS0649: Field 'KerberosRequestorSecurityToken._effectiveTime' is never assigned to, and will always have its default value [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\SendSecurityHeaderElementContainer.cs(26,30): warning CS0649: Field 'SendSecurityHeaderElementContainer.SourceSigningToken' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\Tokens\IssuedSecurityTokenParameters.cs(23,36): warning CS0649: Field 'IssuedSecurityTokenParameters.AlternativeIssuerEndpoint.IssuerMetadataAddress' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\SendSecurityHeaderElementContainer.cs(29,30): warning CS0649: Field 'SendSecurityHeaderElementContainer.WrappedEncryptionToken' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\SecurityProtocolFactory.cs(89,22): warning CS0649: Field 'SecurityProtocolFactory._expectChannelBasicTokens' is never assigned to, and will always have its default value false [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\RequestSecurityToken.cs(34,24): warning CS0649: Field 'RequestSecurityToken._appliesTo' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\ReceiveSecurityHeader.cs(31,22): warning CS0649: Field 'ReceiveSecurityHeader._allowFirstTokenMismatch' is never assigned to, and will always have its default value false [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\ReceiveSecurityHeader.cs(60,59): warning CS0649: Field 'ReceiveSecurityHeader._outOfBandTokenResolver' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Channels\SslStreamSecurityUpgradeProvider.cs(26,34): warning CS0649: Field 'SslStreamSecurityUpgradeProvider._identity' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\SendSecurityHeader.cs(23,40): warning CS0649: Field 'SendSecurityHeader._signatureConfirmationsToSend' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\ReceiveSecurityHeader.cs(34,41): warning CS0649: Field 'ReceiveSecurityHeader._primaryTokenParameters' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\SecurityAppliedMessage.cs(25,30): warning CS0649: Field 'SecurityAppliedMessage._endBodyFragment' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\SendSecurityHeaderElementContainer.cs(25,30): warning CS0649: Field 'SendSecurityHeaderElementContainer.PrerequisiteToken' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\SendSecurityHeaderElementContainer.cs(28,30): warning CS0649: Field 'SendSecurityHeaderElementContainer.SourceEncryptionToken' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\ReceiveSecurityHeader.cs(77,40): warning CS0649: Field 'ReceiveSecurityHeader._protectionOrder' is never assigned to, and will always have its default value [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\RequestSecurityToken.cs(36,22): warning CS0649: Field 'RequestSecurityToken._appliesToType' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\ReceiveSecurityHeader.cs(33,38): warning CS0649: Field 'ReceiveSecurityHeader._outOfBandPrimaryTokenCollection' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\ReceiveSecurityHeader.cs(40,66): warning CS0649: Field 'ReceiveSecurityHeader._supportingTokenAuthenticators' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\XD.cs(690,36): warning CS0649: Field 'TrustDictionary.RequestFailedFaultCode' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\InitiatorSessionSymmetricTransportSecurityProtocol.cs(19,41): warning CS0649: Field 'InitiatorSessionSymmetricTransportSecurityProtocol._derivedSignatureToken' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\SendSecurityHeader.cs(34,50): warning CS0649: Field 'SendSecurityHeader._correlationState' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\SMDiagnostics\System\ServiceModel\Diagnostics\ExceptionUtility.cs(16,42): warning CS0649: Field 'ExceptionUtility.mainInstance' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\SendSecurityHeaderElementContainer.cs(30,30): warning CS0649: Field 'SendSecurityHeaderElementContainer.DerivedEncryptionToken' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\ReceiveSecurityHeader.cs(30,44): warning CS0649: Field 'ReceiveSecurityHeader._primaryTokenAuthenticator' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\IdentityModel\Tokens\KerberosRequestorSecurityToken.cs(17,26): warning CS0649: Field 'KerberosRequestorSecurityToken._expirationTime' is never assigned to, and will always have its default value [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\SendSecurityHeaderElementContainer.cs(31,33): warning CS0649: Field 'SendSecurityHeaderElementContainer.ReferenceList' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\ReceiveSecurityHeader.cs(37,41): warning CS0649: Field 'ReceiveSecurityHeader._wrappingTokenParameters' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\SecurityProtocolFactory.cs(91,22): warning CS0649: Field 'SecurityProtocolFactory._expectChannelEndorsingTokens' is never assigned to, and will always have its default value false [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\SendSecurityHeaderElementContainer.cs(27,30): warning CS0649: Field 'SendSecurityHeaderElementContainer.DerivedSigningToken' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\RequestSecurityTokenResponse.cs(34,35): warning CS0649: Field 'RequestSecurityTokenResponse._negotiationData' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\ReceiveSecurityHeader.cs(36,31): warning CS0649: Field 'ReceiveSecurityHeader._wrappingToken' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\ReceiveSecurityHeader.cs(55,43): warning CS0649: Field 'ReceiveSecurityHeader._signedEndorsingTokens' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\ReceiveSecurityHeader.cs(832,25): warning CS0649: Field 'ReceiveSecurityHeader.OrderTracker._signatureCount' is never assigned to, and will always have its default value 0 [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\ReceiveSecurityHeader.cs(833,25): warning CS0649: Field 'ReceiveSecurityHeader.OrderTracker._unencryptedSignatureCount' is never assigned to, and will always have its default value 0 [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\ReceiveSecurityHeader.cs(32,31): warning CS0649: Field 'ReceiveSecurityHeader._outOfBandPrimaryToken' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\SendSecurityHeader.cs(26,42): warning CS0649: Field 'SendSecurityHeader._signatureParts' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\Tokens\IssuedSecurityTokenParameters.cs(22,36): warning CS0649: Field 'IssuedSecurityTokenParameters.AlternativeIssuerEndpoint.IssuerAddress' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-6c05fa33450ee3960f0763948e91327f049b302b\src\System.Private.ServiceModel\src\System\ServiceModel\Security\Tokens\IssuedSecurityTokenParameters.cs(24,28): warning CS0649: Field 'IssuedSecurityTokenParameters.AlternativeIssuerEndpoint.IssuerBinding' is never assigned to, and will always have its default value null [E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Private.ServiceModel\build.csproj]
+    69 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:14.27
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Web.Services.Description\build.csproj (in 58 ms).
+  build -> E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\System.Web.Services.Description\bin\Release\net8.0\System.Web.Services.Description.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:11.26
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\contracts\System.ServiceModel.Primitives\build.csproj (in 54 ms).
+  build -> E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\contracts\System.ServiceModel.Primitives\bin\Release\net8.0\System.ServiceModel.Primitives.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.50
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\contracts\System.ServiceModel.Duplex\build.csproj (in 79 ms).
+  1 of 2 projects are up-to-date for restore.
+  build -> E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\contracts\System.ServiceModel.Primitives\bin\Release\net8.0\System.ServiceModel.Primitives.dll
+  build -> E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\contracts\System.ServiceModel.Duplex\bin\Release\net8.0\System.ServiceModel.Duplex.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.82
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\contracts\System.ServiceModel.Security\build.csproj (in 73 ms).
+  1 of 2 projects are up-to-date for restore.
+  build -> E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\contracts\System.ServiceModel.Primitives\bin\Release\net8.0\System.ServiceModel.Primitives.dll
+  build -> E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\contracts\System.ServiceModel.Security\bin\Release\net8.0\System.ServiceModel.Security.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.44
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\contracts\System.ServiceModel.Http\build.csproj (in 91 ms).
+  2 of 3 projects are up-to-date for restore.
+  build -> E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\contracts\System.ServiceModel.Primitives\bin\Release\net8.0\System.ServiceModel.Primitives.dll
+  build -> E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\contracts\System.ServiceModel.Security\bin\Release\net8.0\System.ServiceModel.Security.dll
+  build -> E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\contracts\System.ServiceModel.Http\bin\Release\net8.0\System.ServiceModel.Http.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.34
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\contracts\System.ServiceModel.NetTcp\build.csproj (in 131 ms).
+  1 of 2 projects are up-to-date for restore.
+  build -> E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\contracts\System.ServiceModel.Primitives\bin\Release\net8.0\System.ServiceModel.Primitives.dll
+  build -> E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\contracts\System.ServiceModel.NetTcp\bin\Release\net8.0\System.ServiceModel.NetTcp.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.64
+
+Protocol/source-output probe
+In MSYSTEM=CLANG64 bash -lc, working directory /home/topkek/powershell-wcf.d3ETGX:
+bash probe.sh wcf-build /home/topkek/powershell-wcf.d3ETGX/probe2
+result: exit 0
+
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-wcf.d3ETGX\probe2\probe.csproj (in 276 ms).
+  probe -> E:\msys64\home\topkek\powershell-wcf.d3ETGX\probe2\bin\Release\net8.0\probe.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.20
+Runtime: .NET 8.0.0
+WCF: System.Private.ServiceModel, Version=4.10.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS: SOAP text and binary message encoders preserve Unicode/body/action
+PASS: WSDL reader/writer round trip preserves descriptions
+PASS: real ChannelFactory/DispatchProxy/DataContractSerializer SOAP call over private loopback TCP server
+
+Five facade builds including existing type forwards
+In MSYSTEM=CLANG64 bash -lc, working directory /home/topkek/powershell-wcf.d3ETGX:
+bash facades.sh wcf-build probe2/bin/Release/net8.0
+result: exit 0
+
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  generator -> E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\facade-generator\bin\Release\net8.0\generator.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.87
+Generated 5 root type forwards for System.ServiceModel.Duplex
+Generated 29 root type forwards for System.ServiceModel.Http
+Generated 10 root type forwards for System.ServiceModel.NetTcp
+Generated 182 root type forwards for System.ServiceModel.Primitives
+Generated 28 root type forwards for System.ServiceModel.Security
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  build -> E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\facades\System.ServiceModel.Primitives\bin\Release\net8.0\System.ServiceModel.Primitives.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.06
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  build -> E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\facades\System.ServiceModel.Duplex\bin\Release\net8.0\System.ServiceModel.Duplex.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.72
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  build -> E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\facades\System.ServiceModel.Security\bin\Release\net8.0\System.ServiceModel.Security.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.28
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  build -> E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\facades\System.ServiceModel.Http\bin\Release\net8.0\System.ServiceModel.Http.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.69
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  build -> E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\facades\System.ServiceModel.NetTcp\bin\Release\net8.0\System.ServiceModel.NetTcp.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.70
+
+All facade API checks; three unresolved source contract/implementation members remain
+In MSYSTEM=CLANG64 bash -lc, working directory /home/topkek/powershell-wcf.d3ETGX:
+bash check-api.sh wcf-build probe2/bin/Release/net8.0
+result: exit 1
+
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  check -> E:\msys64\home\topkek\powershell-wcf.d3ETGX\wcf-build\api-check\bin\Release\net8.0\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.12
+MISSING API: System.ServiceModel.Channels.MtomMessageEncodingBindingElement method System.Void set_ReaderQuotas`0(System.Xml.XmlDictionaryReaderQuotas)
+MISSING API: System.ServiceModel.ReliableMessagingVersion ctor()
+API Primitives: exit 1
+PASS: System.ServiceModel.Duplex implements all 64 upstream public/protected type/member signatures
+API Duplex: exit 0
+PASS: System.ServiceModel.Security implements all 203 upstream public/protected type/member signatures
+API Security: exit 0
+MISSING API: System.ServiceModel.WSHttpBindingBase method System.Void set_EnvelopeVersion`0(System.ServiceModel.EnvelopeVersion)
+API Http: exit 1
+PASS: System.ServiceModel.NetTcp implements all 92 upstream public/protected type/member signatures
+API NetTcp: exit 0

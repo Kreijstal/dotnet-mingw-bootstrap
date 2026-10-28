@@ -1,0 +1,57 @@
+{
+  "recipe": "mingw-w64-dotnet-csharp-compiler",
+  "artifact": "mingw-w64-clang-x86_64-dotnet-csharp-compiler-4.9.2-1-any.pkg.tar.zst",
+  "sha256": "0db5d7519d2a5e5709f8c89ebadee3f6dc46c0d3916e3ac5fa58d1cedbf21f58",
+  "source_commit": "9934fb9e3527e1c0c51314e57d4aab30f97e8f9e",
+  "source_sha256": "e01ea67aaec6408de51a0a4c18a7e15b2a527ca7a853c9a0a7742cb5680aeb30",
+  "compiler": "CSharp csc4.9.2 net8.0",
+  "compiler_sha256": "bfdf87f298c0ccdaf56f1cdb1b342f21d5942b067fdf19f26bfc20836865a630",
+  "razor_helper_sha256": "731c9fd8f2f9c3b2564325e98a8016fb3c6ff84cfc091c5fe684cf7896bf316e",
+  "source_counts": {
+    "Microsoft.CodeAnalysis.ExternalAccess.RazorCompiler": 2,
+    "csc": 11
+  },
+  "dependencies": [
+    {
+      "package": "Microsoft.CodeAnalysis.Common",
+      "version": "4.9.2",
+      "managed_sha256": "86f73945cc6a05ed0fd19eb7113275e3ab466529abdf44fdf0eba8d72f8d71fd",
+      "satellite_cultures": [
+        "cs",
+        "de",
+        "es",
+        "fr",
+        "it",
+        "ja",
+        "ko",
+        "pl",
+        "pt-BR",
+        "ru",
+        "tr",
+        "zh-Hans",
+        "zh-Hant"
+      ]
+    },
+    {
+      "package": "Microsoft.CodeAnalysis.CSharp",
+      "version": "4.9.2",
+      "managed_sha256": "9730bd25d683400557a746639c973f1fbeaf21f4c16a8d5c720a9f24214dd6b4",
+      "satellite_cultures": [
+        "cs",
+        "de",
+        "es",
+        "fr",
+        "it",
+        "ja",
+        "ko",
+        "pl",
+        "pt-BR",
+        "ru",
+        "tr",
+        "zh-Hans",
+        "zh-Hant"
+      ]
+    }
+  ],
+  "scope": "standalone CSharp command-line host; existing SDK unchanged, VBCSCompiler/VB/full Toolset not included"
+}

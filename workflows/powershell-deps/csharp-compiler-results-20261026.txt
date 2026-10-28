@@ -1,0 +1,224 @@
+Source CSharp compiler 4.9.2 package, 2026-10-26
+Host: win11, MSYS2 CLANG64
+Root: /home/topkek/powershell-compiler49-package.27Gt42
+SDK package 8.0.131 / original csc4.8; core runtime sources remain 8.0.0.
+
+The package builds all 11 upstream CSC command-line source items and the complete
+2-file RazorCompiler helper at Roslyn commit 9934fb9e3527e1c0c51314e57d4aab30f97e8f9e.
+Original friend declarations are expanded and retained. Source binary fixtures
+are removed. Public-signing identity is upstream MicrosoftShared/31bf.
+Compiler Common/CSharp4.9.2 DLLs and all 26 satellites exactly match the separately
+built source packages, as the audit verifies. No SDK implementation DLLs copied.
+
+The relative csc49.cmd uses ../../dotnet.exe from its compiler-packs directory.
+No SDK or global compiler entry point is replaced. Fresh checks copy the tool
+into a temporary compiler-packs folder with Unicode and spaces, execute real
+MSBuild analyzer/incremental-generator callbacks, require generated value 42 and
+compiler4.9.0.0, require owned analyzer and compiler negative cases, use CSharp12
+and a Unicode/space response-file source/output, verify exit1 and CS0029, and
+require the original SDK csc.dll hash to remain unchanged. Tool copies are removed.
+
+This completes this standalone CSharp host package. The full upstream Toolset,
+VBCSCompiler server, VB, IDE/MSBuild integration beyond the explicit tool selection,
+PowerShell source/application build and required servicing remain separate work.
+This is tooling, not another verified direct NuGet dependency.
+
+Directory: /home/topkek/powershell-compiler49-package.27Gt42/mingw-w64-dotnet-csharp-compiler
+$ PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm
+==> Making package: mingw-w64-dotnet-csharp-compiler 4.9.2-1 (26 Oct 2026 22:00:37)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found roslyn-4.9.2.tar.gz
+  -> Found prepare.py
+  -> Found build.sh
+  -> Found csc49.cmd
+  -> Found Probe.cs
+  -> Found check.sh
+  -> Found README.md
+==> Validating source files with sha256sums...
+    roslyn-4.9.2.tar.gz ... Passed
+    prepare.py ... Passed
+    build.sh ... Passed
+    csc49.cmd ... Passed
+    Probe.cs ... Passed
+    check.sh ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+  -> Extracting roslyn-4.9.2.tar.gz with bsdtar
+==> Starting prepare()...
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-compiler49-package.27Gt42\mingw-w64-dotnet-csharp-compiler\src\prepared\Microsoft.CodeAnalysis.ExternalAccess.RazorCompiler\Tool.csproj (in 310 ms).
+  Restored E:\msys64\home\topkek\powershell-compiler49-package.27Gt42\mingw-w64-dotnet-csharp-compiler\src\prepared\csc\Tool.csproj (in 310 ms).
+  Tool -> E:\msys64\home\topkek\powershell-compiler49-package.27Gt42\mingw-w64-dotnet-csharp-compiler\src\prepared\Microsoft.CodeAnalysis.ExternalAccess.RazorCompiler\bin\Release\net8.0\Microsoft.CodeAnalysis.ExternalAccess.RazorCompiler.dll
+  Tool -> E:\msys64\home\topkek\powershell-compiler49-package.27Gt42\mingw-w64-dotnet-csharp-compiler\src\prepared\csc\bin\Release\net8.0\csc.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:06.11
+==> Starting check()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-compiler49-package.27Gt42\mingw-w64-dotnet-csharp-compiler\src\check\probe\Probe.csproj (in 328 ms).
+  Probe -> E:\msys64\home\topkek\powershell-compiler49-package.27Gt42\mingw-w64-dotnet-csharp-compiler\src\check\probe\bin\Release\net8.0\Compiler49Probe.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.00
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-compiler49-package.27Gt42\mingw-w64-dotnet-csharp-compiler\src\check\consumer\Consumer.csproj (in 63 ms).
+  Consumer -> E:\msys64\home\topkek\powershell-compiler49-package.27Gt42\mingw-w64-dotnet-csharp-compiler\src\check\consumer\bin\Release\net8.0\Consumer.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.39
+PASS compiler49 generated value=42 compiler=4.9.0.0
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Consumer -> E:\msys64\home\topkek\powershell-compiler49-package.27Gt42\mingw-w64-dotnet-csharp-compiler\src\check\consumer\bin\Release\net8.0\Consumer.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.99
+Microsoft (R) Visual C# Compiler version 4.9.2 (9934fb9e)
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+warning CS2023: Ignoring /noconfig option because it was specified in a response file
+PASS source csc49 CLI/version/CSharp12/Unicode-space RSP/error exit, relocated wrapper, actual MSBuild analyzer/incremental generator execution, and unchanged SDK compiler
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> WARNING: Package contains reference to $(cygpath -m /)
+==> Creating package "mingw-w64-clang-x86_64-dotnet-csharp-compiler"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-csharp-compiler 4.9.2-1 (26 Oct 2026 22:01:51)
+Result: exit 0
+
+Fresh installed check:
+$ pacman -U --noconfirm mingw-w64-dotnet-csharp-compiler/mingw-w64-clang-x86_64-dotnet-csharp-compiler-4.9.2-1-any.pkg.tar.zst
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-dotnet-csharp-compiler-4.9.2-1
+
+Total Installed Size:  15.02 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+installing mingw-w64-clang-x86_64-dotnet-csharp-compiler...
+Result: exit 0
+$ bash mingw-w64-dotnet-csharp-compiler/check.sh installed-check
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-compiler49-package.27Gt42\installed-check\probe\Probe.csproj (in 248 ms).
+  Probe -> E:\msys64\home\topkek\powershell-compiler49-package.27Gt42\installed-check\probe\bin\Release\net8.0\Compiler49Probe.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.67
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-compiler49-package.27Gt42\installed-check\consumer\Consumer.csproj (in 49 ms).
+  Consumer -> E:\msys64\home\topkek\powershell-compiler49-package.27Gt42\installed-check\consumer\bin\Release\net8.0\Consumer.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.00
+PASS compiler49 generated value=42 compiler=4.9.0.0
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Consumer -> E:\msys64\home\topkek\powershell-compiler49-package.27Gt42\installed-check\consumer\bin\Release\net8.0\Consumer.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.92
+Microsoft (R) Visual C# Compiler version 4.9.2 (9934fb9e)
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+warning CS2023: Ignoring /noconfig option because it was specified in a response file
+PASS source csc49 CLI/version/CSharp12/Unicode-space RSP/error exit, relocated wrapper, actual MSBuild analyzer/incremental generator execution, and unchanged SDK compiler
+Result: exit 0
+
+$ sha256sum /clang64/lib/dotnet/compiler-packs/roslyn-4.9.2/{csc.dll,Microsoft.CodeAnalysis.ExternalAccess.RazorCompiler.dll}
+bfdf87f298c0ccdaf56f1cdb1b342f21d5942b067fdf19f26bfc20836865a630 */clang64/lib/dotnet/compiler-packs/roslyn-4.9.2/csc.dll
+731c9fd8f2f9c3b2564325e98a8016fb3c6ff84cfc091c5fe684cf7896bf316e */clang64/lib/dotnet/compiler-packs/roslyn-4.9.2/Microsoft.CodeAnalysis.ExternalAccess.RazorCompiler.dll
+PASS installed driver/helper hashes match audited package
+
+$ python3 tests/powershell-deps/audit-csharp-compiler.py
+CSharp compiler49: exact pinned source/checksums/licenses, complete driver/helper/satellites, relative launcher, runtime config and byte-identical source-built compiler dependencies PASS
+Result: exit 0

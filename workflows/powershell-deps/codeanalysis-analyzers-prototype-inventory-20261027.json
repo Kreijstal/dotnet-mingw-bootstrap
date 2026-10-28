@@ -1,0 +1,112 @@
+{
+  "Microsoft.CodeAnalysis.Analyzers": {
+    "analyzers": [
+      "Microsoft.CodeAnalysis.Analyzers.FixAnalyzers.FixerWithFixAllAnalyzer",
+      "Microsoft.CodeAnalysis.Analyzers.ImmutableObjectMethodAnalyzer",
+      "Microsoft.CodeAnalysis.Analyzers.InternalImplementationOnlyAnalyzer",
+      "Microsoft.CodeAnalysis.Analyzers.MetaAnalyzers.ClassIsNotDiagnosticAnalyzer",
+      "Microsoft.CodeAnalysis.Analyzers.MetaAnalyzers.CompareSymbolsCorrectlyAnalyzer",
+      "Microsoft.CodeAnalysis.Analyzers.MetaAnalyzers.ConfigureGeneratedCodeAnalysisAnalyzer",
+      "Microsoft.CodeAnalysis.Analyzers.MetaAnalyzers.DiagnosticAnalyzerAttributeAnalyzer",
+      "Microsoft.CodeAnalysis.Analyzers.MetaAnalyzers.DiagnosticDescriptorCreationAnalyzer",
+      "Microsoft.CodeAnalysis.Analyzers.MetaAnalyzers.DoNotUseCompilationGetSemanticModelAnalyzer",
+      "Microsoft.CodeAnalysis.Analyzers.MetaAnalyzers.EnableConcurrentExecutionAnalyzer",
+      "Microsoft.CodeAnalysis.Analyzers.MetaAnalyzers.PreferIsKindAnalyzer"
+    ],
+    "code_fixes": [
+      "Microsoft.CodeAnalysis.Analyzers.MetaAnalyzers.Fixers.AnalyzerReleaseTrackingFix",
+      "Microsoft.CodeAnalysis.Analyzers.MetaAnalyzers.Fixers.DefineDiagnosticDescriptorArgumentsCorrectlyFix",
+      "Microsoft.CodeAnalysis.Analyzers.MetaAnalyzers.Fixers.FixerWithFixAllFix"
+    ],
+    "diagnostic_ids": {
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.AddCompilationEndCustomTagRuleId": "RS1037",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.AddLanguageSupportToAnalyzerRuleId": "RS1004",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.AnalyzerCategoryAndIdRangeFileInvalidRuleId": "RS1021",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.CompareSymbolsCorrectlyRuleId": "RS1024",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.ConfigureGeneratedCodeAnalysisRuleId": "RS1025",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.CreateCodeActionWithEquivalenceKeyRuleId": "RS1010",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.DeclareDiagnosticIdInAnalyzerReleaseRuleId": "RS2000",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.DefineDiagnosticDescriptionCorrectlyRuleId": "RS1033",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.DefineDiagnosticMessageCorrectlyRuleId": "RS1032",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.DefineDiagnosticTitleCorrectlyRuleId": "RS1031",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.DiagnosticIdMustBeAConstantRuleId": "RS1017",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.DiagnosticIdMustBeInSpecifiedFormatRuleId": "RS1018",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.DoNotIgnoreReturnValueOnImmutableObjectMethodInvocation": "RS1014",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.DoNotStorePerCompilationDataOntoFieldsRuleId": "RS1008",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.DoNotUseCompilationGetSemanticModelRuleId": "RS1030",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.DoNotUseReservedDiagnosticIdRuleId": "RS1029",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.DoNotUseTypesFromAssemblyRuleId": "RS1022",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.EnableAnalyzerReleaseTrackingRuleId": "RS2008",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.EnableConcurrentExecutionRuleId": "RS1026",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.InternalImplementationOnlyRuleId": "RS1009",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.InvalidEntryInAnalyzerReleasesFileRuleId": "RS2007",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.InvalidReportDiagnosticRuleId": "RS1005",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.InvalidSyntaxKindTypeArgumentRuleId": "RS1006",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.MissingDiagnosticAnalyzerAttributeRuleId": "RS1001",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.MissingKindArgumentToRegisterActionRuleId": "RS1002",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.NoSettingSpecifiedSymbolIsBannedInAnalyzersRuleId": "RS1036",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.OverrideCodeActionEquivalenceKeyRuleId": "RS1011",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.OverrideGetFixAllProviderRuleId": "RS1016",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.PreferIsKindRuleId": "RS1034",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.ProvideCustomTagsInDescriptorRuleId": "RS1028",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.ProvideHelpUriInDescriptorRuleId": "RS1015",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.RemoveDuplicateEntriesBetweenAnalyzerReleasesRuleId": "RS2006",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.RemoveDuplicateEntriesForAnalyzerReleaseRuleId": "RS2005",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.RemoveShippedDeletedDiagnosticIdRuleId": "RS2003",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.RemoveUnshippedDeletedDiagnosticIdRuleId": "RS2002",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.StartActionWithNoRegisteredActionsRuleId": "RS1012",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.StartActionWithOnlyEndActionRuleId": "RS1013",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.SymbolIsBannedInAnalyzersRuleId": "RS1035",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.TypeIsNotDiagnosticAnalyzerRuleId": "RS1027",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.UnexpectedAnalyzerDiagnosticForRemovedDiagnosticIdRuleId": "RS2004",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.UnsupportedSymbolKindArgumentRuleId": "RS1003",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.UpdateDiagnosticIdInAnalyzerReleaseRuleId": "RS2001",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.UpgradeMSBuildWorkspaceRuleId": "RS1023",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.UseCategoriesFromSpecifiedRangeRuleId": "RS1020",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.UseLocalizableStringsInDescriptorRuleId": "RS1007",
+      "Microsoft.CodeAnalysis.Analyzers.DiagnosticIds.UseUniqueDiagnosticIdRuleId": "RS1019"
+    },
+    "resources": [
+      "Microsoft.CodeAnalysis.Analyzers.AnalyzerBannedSymbols.txt",
+      "Microsoft.CodeAnalysis.Analyzers.CodeAnalysisDiagnosticsResources.resources"
+    ]
+  },
+  "Microsoft.CodeAnalysis.CSharp.Analyzers": {
+    "analyzers": [
+      "Microsoft.CodeAnalysis.CSharp.Analyzers.CSharpSymbolIsBannedInAnalyzersAnalyzer",
+      "Microsoft.CodeAnalysis.CSharp.Analyzers.CSharpUpgradeMSBuildWorkspaceAnalyzer",
+      "Microsoft.CodeAnalysis.CSharp.Analyzers.MetaAnalyzers.CSharpDiagnosticAnalyzerApiUsageAnalyzer",
+      "Microsoft.CodeAnalysis.CSharp.Analyzers.MetaAnalyzers.CSharpDiagnosticAnalyzerFieldsAnalyzer",
+      "Microsoft.CodeAnalysis.CSharp.Analyzers.MetaAnalyzers.CSharpRegisterActionAnalyzer",
+      "Microsoft.CodeAnalysis.CSharp.Analyzers.MetaAnalyzers.CSharpReportDiagnosticAnalyzer"
+    ],
+    "code_fixes": [
+      "Microsoft.CodeAnalysis.CSharp.Analyzers.MetaAnalyzers.Fixers.CSharpApplyDiagnosticAnalyzerAttributeFix",
+      "Microsoft.CodeAnalysis.CSharp.Analyzers.MetaAnalyzers.Fixers.CSharpCompareSymbolsCorrectlyFix",
+      "Microsoft.CodeAnalysis.CSharp.Analyzers.MetaAnalyzers.Fixers.CSharpConfigureGeneratedCodeAnalysisFix",
+      "Microsoft.CodeAnalysis.CSharp.Analyzers.MetaAnalyzers.Fixers.CSharpEnableConcurrentExecutionFix",
+      "Microsoft.CodeAnalysis.CSharp.Analyzers.MetaAnalyzers.Fixers.CSharpPreferIsKindFix"
+    ],
+    "diagnostic_ids": {},
+    "resources": []
+  },
+  "Microsoft.CodeAnalysis.VisualBasic.Analyzers": {
+    "analyzers": [
+      "Microsoft.CodeAnalysis.VisualBasic.Analyzers.BasicSymbolIsBannedInAnalyzersAnalyzer",
+      "Microsoft.CodeAnalysis.VisualBasic.Analyzers.MetaAnalyzers.BasicDiagnosticAnalyzerApiUsageAnalyzer",
+      "Microsoft.CodeAnalysis.VisualBasic.Analyzers.MetaAnalyzers.BasicDiagnosticAnalyzerFieldsAnalyzer",
+      "Microsoft.CodeAnalysis.VisualBasic.Analyzers.MetaAnalyzers.BasicRegisterActionAnalyzer",
+      "Microsoft.CodeAnalysis.VisualBasic.Analyzers.MetaAnalyzers.BasicReportDiagnosticAnalyzer",
+      "Microsoft.CodeAnalysis.VisualBasic.Analyzers.VisualBasicUpgradeMSBuildWorkspaceAnalyzer"
+    ],
+    "code_fixes": [
+      "Microsoft.CodeAnalysis.VisualBasic.Analyzers.MetaAnalyzers.CodeFixes.BasicApplyDiagnosticAnalyzerAttributeFix",
+      "Microsoft.CodeAnalysis.VisualBasic.Analyzers.MetaAnalyzers.CodeFixes.BasicConfigureGeneratedCodeAnalysisFix",
+      "Microsoft.CodeAnalysis.VisualBasic.Analyzers.MetaAnalyzers.CodeFixes.BasicEnableConcurrentExecutionFix",
+      "Microsoft.CodeAnalysis.VisualBasic.Analyzers.MetaAnalyzers.CodeFixes.BasicPreferIsKindFix",
+      "Microsoft.CodeAnalysis.VisualBasic.Analyzers.MetaAnalyzers.Fixers.BasicCompareSymbolsCorrectlyFix"
+    ],
+    "diagnostic_ids": {},
+    "resources": []
+  }
+}

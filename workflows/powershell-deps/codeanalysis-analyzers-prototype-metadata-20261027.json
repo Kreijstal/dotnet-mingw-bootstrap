@@ -1,0 +1,321 @@
+{
+  "Microsoft.CodeAnalysis.Analyzers": {
+    "name": "Microsoft.CodeAnalysis.Analyzers",
+    "version": "3.3.8.6701",
+    "culture": "",
+    "public_key_token": "31bf3856ad364e35",
+    "versions": {
+      "AssemblyFileVersionAttribute": "3.3.8.6701",
+      "AssemblyInformationalVersionAttribute": "3.3.4+22ea6422f85b05ca0793cc3b76375487be407f5d"
+    },
+    "references": [
+      {
+        "name": "Microsoft.CodeAnalysis",
+        "version": "4.9.0.0"
+      },
+      {
+        "name": "Microsoft.CodeAnalysis.Workspaces",
+        "version": "4.9.0.0"
+      },
+      {
+        "name": "System.Collections",
+        "version": "8.0.0.0"
+      },
+      {
+        "name": "System.Collections.Concurrent",
+        "version": "8.0.0.0"
+      },
+      {
+        "name": "System.Collections.Immutable",
+        "version": "8.0.0.0"
+      },
+      {
+        "name": "System.Composition.AttributedModel",
+        "version": "8.0.0.0"
+      },
+      {
+        "name": "System.Linq",
+        "version": "8.0.0.0"
+      },
+      {
+        "name": "System.Linq.Expressions",
+        "version": "8.0.0.0"
+      },
+      {
+        "name": "System.Memory",
+        "version": "8.0.0.0"
+      },
+      {
+        "name": "System.Reflection.Metadata",
+        "version": "8.0.0.0"
+      },
+      {
+        "name": "System.Runtime",
+        "version": "8.0.0.0"
+      },
+      {
+        "name": "System.Security.Cryptography",
+        "version": "8.0.0.0"
+      },
+      {
+        "name": "System.Text.RegularExpressions",
+        "version": "8.0.0.0"
+      },
+      {
+        "name": "System.Threading",
+        "version": "8.0.0.0"
+      },
+      {
+        "name": "System.Xml.ReaderWriter",
+        "version": "8.0.0.0"
+      },
+      {
+        "name": "System.Xml.XDocument",
+        "version": "8.0.0.0"
+      }
+    ],
+    "resources": {
+      "Microsoft.CodeAnalysis.Analyzers.AnalyzerBannedSymbols.txt": {
+        "sha256": "6a5c25e561d42e60504e5711fd60a4cd7f12dd39ff629419a3341b9f6d1c73e3",
+        "length": 1122
+      },
+      "Microsoft.CodeAnalysis.Analyzers.CodeAnalysisDiagnosticsResources.resources": {
+        "AddCompilationEndCustomTagDescription": "'DiagnosticDescriptor' assigned to field is used to report a compilation end diagnostic, but the 'DiagnosticDescriptor' constructor used to initialize it does not pass in the required custom tag \"CompilationEnd\". See documentation for 'WellKnownDiagnosticTags.CompilationEnd' for details.",
+        "AddCompilationEndCustomTagMessage": "Add \"CompilationEnd\" custom tag to the diagnostic descriptor used to initialize field '{0}' as it is used to report a compilation end diagnostic",
+        "AddCompilationEndCustomTagTitle": "Add \"CompilationEnd\" custom tag to compilation end diagnostic descriptor",
+        "AddEntryForDiagnosticIdInAnalyzerReleaseCodeFixTitle": "Add rule entry to unshipped release file",
+        "AddLanguageSupportToAnalyzerDescription": "Diagnostic analyzer is marked as supporting only one language, but the analyzer assembly doesn't seem to refer to any language specific CodeAnalysis assemblies, and so is likely to work for more than one language. Consider adding an additional language argument to DiagnosticAnalyzerAttribute.",
+        "AddLanguageSupportToAnalyzerMessage": "Diagnostic analyzer '{0}' may be able to support both C# and Visual Basic. Consider adding an argument to DiagnosticAnalyzerAttribute for '{1}' language support.",
+        "AddLanguageSupportToAnalyzerTitle": "Recommend adding language support to diagnostic analyzer",
+        "AnalyzerCategoryAndIdRangeFileInvalidDescription": "Invalid entry in analyzer category and diagnostic ID range specification file.",
+        "AnalyzerCategoryAndIdRangeFileInvalidMessage": "Invalid entry '{0}' in analyzer category and diagnostic ID range specification file '{1}'",
+        "AnalyzerCategoryAndIdRangeFileInvalidTitle": "Invalid entry in analyzer category and diagnostic ID range specification file",
+        "ApplyDiagnosticAnalyzerAttribute_1": "Apply DiagnosticAnalyzer attribute for '{0}'.",
+        "ApplyDiagnosticAnalyzerAttribute_2": "Apply DiagnosticAnalyzer attribute for both '{0}' and '{1}'.",
+        "ClassIsNotDiagnosticAnalyzerMessage": "Inherit type '{0}' from DiagnosticAnalyzer or remove the DiagnosticAnalyzerAttribute(s)",
+        "ClassIsNotDiagnosticAnalyzerTitle": "Types marked with DiagnosticAnalyzerAttribute(s) should inherit from DiagnosticAnalyzer",
+        "CodeActionNeedsEquivalenceKeyDescription": "A CodeFixProvider that intends to support fix all occurrences must classify the registered code actions into equivalence classes by assigning it an explicit, non-null equivalence key which is unique for each kind of code action created by this fixer. This enables the FixAllProvider to fix all diagnostics in the required scope by applying code actions from this fixer that are in the equivalence class of the trigger code action.",
+        "CompareSymbolsCorrectlyCodeFix": "Use a 'SymbolEqualityComparer' for symbol comparison",
+        "CompareSymbolsCorrectlyDescription": "Symbols should be compared for equality, not identity. Use an overload accepting an 'IEqualityComparer' and pass 'SymbolEqualityComparer'.",
+        "CompareSymbolsCorrectlyDescriptionGetHashCode": "Symbols should be compared for equality, not identity. An explicit call to 'GetHashCode' will likely result in the wrong behavior.",
+        "CompareSymbolsCorrectlyMessage": "Use 'SymbolEqualityComparer' when comparing symbols",
+        "CompareSymbolsCorrectlyTitle": "Symbols should be compared for equality",
+        "ConfigureGeneratedCodeAnalysisFix": "Configure generated code analysis",
+        "ConfigureGeneratedCodeAnalysisMessage": "Configure generated code analysis",
+        "ConfigureGeneratedCodeAnalysisTitle": "Configure generated code analysis",
+        "CreateCodeActionWithEquivalenceKeyMessage": "Provide an explicit argument for optional parameter '{0}', which is non-null and unique for each kind of code action created by this fixer",
+        "CreateCodeActionWithEquivalenceKeyTitle": "Create code actions should have a unique EquivalenceKey for FixAll occurrences support",
+        "DeclareDiagnosticIdInAnalyzerReleaseDescription": "All supported analyzer diagnostic IDs should be part of an analyzer release.",
+        "DeclareDiagnosticIdInAnalyzerReleaseMessage": "Rule '{0}' is not part of any analyzer release",
+        "DeclareDiagnosticIdInAnalyzerReleaseTitle": "Add analyzer diagnostic IDs to analyzer release",
+        "DefineDiagnosticDescriptionCorrectlyMessage": "The diagnostic description should be one or multiple sentences ending with a punctuation sign and should not have any leading or trailing whitespaces",
+        "DefineDiagnosticDescriptionCorrectlyTitle": "Define diagnostic description correctly",
+        "DefineDiagnosticMessageCorrectlyMessage": "The diagnostic message should not contain any line return character nor any leading or trailing whitespaces and should either be a single sentence without a trailing period or a multi-sentences with a trailing period",
+        "DefineDiagnosticMessageCorrectlyTitle": "Define diagnostic message correctly",
+        "DefineDiagnosticTitleCorrectlyMessage": "The diagnostic title should not contain a period, nor any line return character, nor any leading or trailing whitespaces",
+        "DefineDiagnosticTitleCorrectlyTitle": "Define diagnostic title correctly",
+        "DiagnosticIdMustBeAConstantDescription": "DiagnosticId for analyzers must be a non-null constant.",
+        "DiagnosticIdMustBeAConstantMessage": "Diagnostic Id for rule '{0}' must be a non-null constant",
+        "DiagnosticIdMustBeAConstantTitle": "DiagnosticId for analyzers must be a non-null constant",
+        "DiagnosticIdMustBeInSpecifiedFormatDescription": "DiagnosticId for analyzers must be in specified format.",
+        "DiagnosticIdMustBeInSpecifiedFormatMessage": "Diagnostic Id '{0}' belonging to category '{1}' is not in the required range and/or format '{2}' specified in the file '{3}'",
+        "DiagnosticIdMustBeInSpecifiedFormatTitle": "DiagnosticId for analyzers must be in specified format",
+        "DoNotIgnoreReturnValueOnImmutableObjectMethodInvocationDescription": "Many objects exposed by Roslyn are immutable. The return value from a method invocation on these objects should not be ignored.",
+        "DoNotIgnoreReturnValueOnImmutableObjectMethodInvocationMessage": "'{0}' is immutable and '{1}' will not have any effect on it. Consider using the return value from '{1}'.",
+        "DoNotIgnoreReturnValueOnImmutableObjectMethodInvocationTitle": "Do not ignore values returned by methods on immutable objects",
+        "DoNotStorePerCompilationDataOntoFieldsDescription": "Instance of a diagnostic analyzer might outlive the lifetime of compilation. Hence, storing per-compilation data, such as symbols, into the fields of a diagnostic analyzer might cause stale compilations to stay alive and cause memory leaks.  Instead, you should store this data on a separate type instantiated in a compilation start action, registered using '{0}.{1}' API. An instance of this type will be created per-compilation and it won't outlive compilation's lifetime, hence avoiding memory leaks.",
+        "DoNotStorePerCompilationDataOntoFieldsMessage": "Avoid storing per-compilation data of type '{0}' into the fields of a diagnostic analyzer",
+        "DoNotStorePerCompilationDataOntoFieldsTitle": "Avoid storing per-compilation data into the fields of a diagnostic analyzer",
+        "DoNotUseCompilationGetSemanticModelDescription": "'GetSemanticModel' is an expensive method to invoke within a diagnostic analyzer because it creates a completely new semantic model, which does not share compilation data with the compiler or other analyzers. This incurs an additional performance cost during semantic analysis. Instead, consider registering a different analyzer action which allows used of a shared 'SemanticModel', such as 'RegisterOperationAction', 'RegisterSyntaxNodeAction', or 'RegisterSemanticModelAction'.",
+        "DoNotUseCompilationGetSemanticModelMessage": "Do not invoke Compilation.GetSemanticModel() method within a diagnostic analyzer",
+        "DoNotUseCompilationGetSemanticModelTitle": "Do not invoke Compilation.GetSemanticModel() method within a diagnostic analyzer",
+        "DoNotUseReservedDiagnosticIdDescription": "DiagnosticId for analyzers should not use reserved IDs.",
+        "DoNotUseReservedDiagnosticIdMessage": "'{0}' is a reserved diagnostic ID",
+        "DoNotUseReservedDiagnosticIdTitle": "Do not use reserved diagnostic IDs",
+        "DoNotUseTypesFromAssemblyRuleDescription": "Diagnostic analyzer types should not use types from Workspaces assemblies. Workspaces assemblies are only available when the analyzer executes in Visual Studio IDE live analysis, but are not available during command line build. Referencing types from Workspaces assemblies will lead to runtime exception during analyzer execution in command line build.",
+        "DoNotUseTypesFromAssemblyRuleDirectMessage": "Change diagnostic analyzer type '{0}' to remove all direct accesses to type(s) '{1}'",
+        "DoNotUseTypesFromAssemblyRuleIndirectMessage": "Change diagnostic analyzer type '{0}' to remove all direct and/or indirect accesses to type(s) '{1}', which access type(s) '{2}'",
+        "DoNotUseTypesFromAssemblyRuleTitle": "Do not use types from Workspaces assembly in an analyzer",
+        "EnableAnalyzerReleaseTrackingRuleDescription": "Enabling release tracking for analyzer packages helps in tracking and documenting the analyzer diagnostics that ship and/or change with each analyzer release. See details at https://github.com/dotnet/roslyn-analyzers/blob/main/src/Microsoft.CodeAnalysis.Analyzers/ReleaseTrackingAnalyzers.Help.md.",
+        "EnableAnalyzerReleaseTrackingRuleMessage": "Enable analyzer release tracking for the analyzer project containing rule '{0}'",
+        "EnableAnalyzerReleaseTrackingRuleTitle": "Enable analyzer release tracking",
+        "EnableConcurrentExecutionFix": "Enable concurrent execution",
+        "EnableConcurrentExecutionMessage": "Enable concurrent execution",
+        "EnableConcurrentExecutionTitle": "Enable concurrent execution",
+        "InternalImplementationOnlyDescription": "The author of this interface did not intend to have third party implementations of this interface and reserves the right to change it. Implementing this interface could therefore result in a source or binary compatibility issue with a future version of this interface.",
+        "InternalImplementationOnlyMessage": "Type {0} cannot implement interface {1} because {1} is not available for public implementation",
+        "InternalImplementationOnlyTitle": "Only internal implementations of this interface are allowed",
+        "InvalidEntryInAnalyzerReleasesFileRuleDescription": "Invalid entry in analyzer release file.",
+        "InvalidEntryInAnalyzerReleasesFileRuleMessage": "Analyzer release file '{0}' has an invalid entry '{1}'",
+        "InvalidEntryInAnalyzerReleasesFileRuleTitle": "Invalid entry in analyzer release file",
+        "InvalidHeaderInAnalyzerReleasesFileRuleMessage": "Analyzer release file '{0}' has a missing or invalid release header '{1}'",
+        "InvalidRemovedOrChangedWithoutPriorNewEntryInAnalyzerReleasesFileRuleMessageMessage": "Analyzer release file '{0}' has an invalid '{1}' entry without a prior shipped release for the rule '{2}'. Instead, add a separate '{1}' entry for the rule in unshipped release file.",
+        "InvalidReportDiagnosticDescription": "ReportDiagnostic should only be invoked with supported DiagnosticDescriptors that are returned from DiagnosticAnalyzer.SupportedDiagnostics property. Otherwise, the reported diagnostic will be filtered out by the analysis engine.",
+        "InvalidReportDiagnosticMessage": "ReportDiagnostic invoked with an unsupported DiagnosticDescriptor '{0}'",
+        "InvalidReportDiagnosticTitle": "ReportDiagnostic invoked with an unsupported DiagnosticDescriptor",
+        "InvalidSyntaxKindTypeArgumentDescription": "DiagnosticAnalyzer's language-specific Register methods, such as RegisterSyntaxNodeAction, RegisterCodeBlockStartAction and RegisterCodeBlockEndAction, expect a language-specific 'SyntaxKind' type argument for it's '{0}' type parameter. Otherwise, the registered analyzer action can never be invoked during analysis.",
+        "InvalidSyntaxKindTypeArgumentMessage": "Type argument '{0}' for type parameter '{1}' of method '{2}' is not a SyntaxKind enum",
+        "InvalidSyntaxKindTypeArgumentTitle": "Invalid type argument for DiagnosticAnalyzer's Register method",
+        "InvalidUndetectedEntryInAnalyzerReleasesFileRuleMessage": "Analyzer release file '{0}' has an entry with one or more 'Undetected' fields that need to be manually filled in '{1}'",
+        "MissingAttributeMessage": "Missing '{0}' attribute",
+        "MissingDiagnosticAnalyzerAttributeDescription": "Non-abstract sub-types of DiagnosticAnalyzer should be marked with DiagnosticAnalyzerAttribute(s). The argument to this attribute(s), if any, determine the supported languages for the analyzer. Analyzer types without this attribute will be ignored by the analysis engine.",
+        "MissingDiagnosticAnalyzerAttributeTitle": "Missing diagnostic analyzer attribute",
+        "MissingKindArgumentToRegisterActionDescription": "You must specify at least one syntax, symbol or operation kind when registering a syntax, symbol, or operation analyzer action respectively. Otherwise, the registered action will never be invoked during analysis.",
+        "MissingKindArgumentToRegisterActionTitle": "Missing kind argument when registering an analyzer action",
+        "MissingOperationKindArgumentToRegisterActionMessage": "Specify at least one OperationKind of interest when registering an operation analyzer action",
+        "MissingSymbolKindArgumentToRegisterActionMessage": "Specify at least one SymbolKind of interest when registering a symbol analyzer action",
+        "MissingSyntaxKindArgumentToRegisterActionMessage": "Specify at least one SyntaxKind of interest when registering a syntax node analyzer action",
+        "NoSettingSpecifiedSymbolIsBannedInAnalyzersDescription": "A project containing analyzers or source generators should specify the property '<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>'.",
+        "NoSettingSpecifiedSymbolIsBannedInAnalyzersMessage": "'{0}': A project containing analyzers or source generators should specify the property '<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>'",
+        "NoSettingSpecifiedSymbolIsBannedInAnalyzersTitle": "Specify analyzer banned API enforcement setting",
+        "OverrideCodeActionEquivalenceKeyMessage": "'{0}' has the default value of 'null' for property '{1}'. Either override this property on '{0}' to return a non-null and unique value across all code actions per-fixer or use such an existing code action.",
+        "OverrideCodeActionEquivalenceKeyTitle": "Use code actions that have a unique EquivalenceKey for FixAll occurrences support",
+        "OverrideGetFixAllProviderCodeFixTitle": "Override GetFixAllProvider.",
+        "OverrideGetFixAllProviderDescription": "A CodeFixProvider should provide FixAll support to enable users to fix multiple instances of the underlying diagnostic with a single code fix. See documentation at https://github.com/dotnet/roslyn/blob/main/docs/analyzers/FixAllProvider.md for further details.",
+        "OverrideGetFixAllProviderMessage": "'{0}' registers one or more code fixes, but does not override the method 'CodeFixProvider.GetFixAllProvider'. Override this method and provide a non-null FixAllProvider for FixAll support, potentially 'WellKnownFixAllProviders.BatchFixer', or 'null' to explicitly disable FixAll support.",
+        "OverrideGetFixAllProviderTitle": "Code fix providers should provide FixAll support",
+        "PreferIsKindDescription": "Prefer 'syntax.IsKind(kind)' to 'syntax.Kind() == kind' when checking syntax kinds. Code using 'IsKind' is slightly more efficient at runtime, so consistent use of this form where applicable helps improve performance in complex analysis scenarios.",
+        "PreferIsKindFix": "Use 'IsKind' instead of 'Kind'",
+        "PreferIsKindMessage": "Prefer 'IsKind' for checking syntax kinds",
+        "PreferIsKindTitle": "Prefer 'IsKind' for checking syntax kinds",
+        "ProvideCustomTagsInDescriptorDescription": "The 'customTags' value is used as a way to enable specific actions and filters on diagnostic descriptors based on the specific values of the tags. Every Roslyn analyzer should have at least one tag from the 'WellKnownDiagnosticTags' class.",
+        "ProvideCustomTagsInDescriptorMessage": "Consider providing a non-null 'customTags' to diagnostic descriptor constructor to enable metatada filtering of diagnostic descriptors",
+        "ProvideCustomTagsInDescriptorTitle": "Provide non-null 'customTags' value to diagnostic descriptor constructor",
+        "ProvideHelpUriInDescriptorDescription": "The 'helpLinkUri' value is used to show information when this diagnostic in the error list. Every analyzer should have a helpLinkUri specified which points to a help page that does not change over time.",
+        "ProvideHelpUriInDescriptorMessage": "Consider providing a non-null 'helpLinkUri' to diagnostic descriptor constructor to show information when this diagnostic appears in the error list",
+        "ProvideHelpUriInDescriptorTitle": "Provide non-null 'helpLinkUri' value to diagnostic descriptor constructor",
+        "RemoveDuplicateEntriesBetweenAnalyzerReleasesRuleDescription": "Remove duplicate entries for diagnostic ID between analyzer releases.",
+        "RemoveDuplicateEntriesBetweenAnalyzerReleasesRuleMessage": "Rule '{0}' has duplicate entry between release '{1}' and release '{2}'",
+        "RemoveDuplicateEntriesBetweenAnalyzerReleasesRuleTitle": "Remove duplicate entries for diagnostic ID between analyzer releases",
+        "RemoveDuplicateEntriesForAnalyzerReleaseRuleDescription": "Remove duplicate entries for diagnostic ID in the same analyzer release.",
+        "RemoveDuplicateEntriesForAnalyzerReleaseRuleMessage": "Rule '{0}' has more then one entry for release '{1}' in analyzer release file '{2}'",
+        "RemoveDuplicateEntriesForAnalyzerReleaseRuleTitle": "Remove duplicate entries for diagnostic ID in the same analyzer release",
+        "RemoveShippedDeletedDiagnosticIdDescription": "Shipped diagnostic IDs that are no longer reported should have an entry in the 'Removed Rules' table in unshipped file.",
+        "RemoveShippedDeletedDiagnosticIdMessage": "Rule '{0}' was shipped in analyzer release '{1}', but is no longer a supported diagnostic for any analyzer. Add an entry for this rule in a 'Removed Rules' table to unshipped file.",
+        "RemoveShippedDeletedDiagnosticIdTitle": "Shipped diagnostic IDs that are no longer reported should have an entry in the 'Removed Rules' table in unshipped file",
+        "RemoveUnshippedDeletedDiagnosticIdDescription": "Entries for analyzer diagnostic IDs that are no longer reported and never shipped can be removed from unshipped analyzer release.",
+        "RemoveUnshippedDeletedDiagnosticIdMessage": "Rule '{0}' is part of the next unshipped analyzer release, but is not a supported diagnostic for any analyzer",
+        "RemoveUnshippedDeletedDiagnosticIdTitle": "Do not add removed analyzer diagnostic IDs to unshipped analyzer release",
+        "StartActionWithNoRegisteredActionsMessage": "'{0}' does not register any analyzer actions. Consider moving actions registered in '{1}' that depend on this start action to '{0}'.",
+        "StartActionWithNoRegisteredActionsTitle": "Start action has no registered actions",
+        "StartActionWithOnlyEndActionMessage": "'{0}' does not register any analyzer actions, except for a '{1}'. Consider replacing this start/end action pair with a '{2}' or moving actions registered in '{3}' that depend on this start action to '{0}'.",
+        "StartActionWithOnlyEndActionTitle": "Start action has no registered non-end actions",
+        "StatefulAnalyzerRegisterActionsDescription": "An analyzer start action enables performing stateful analysis over a given code unit, such as a code block, compilation, etc. Careful design is necessary to achieve efficient analyzer execution without memory leaks. Use the following guidelines for writing such analyzers:\r\n1. Define a new scope for the registered start action, possibly with a private nested type for analyzing each code unit.\r\n2. If required, define and initialize state in the start action.\r\n3. Register at least one non-end action that refers to this state in the start action. If no such action is necessary, consider replacing the start action with a non-start action. For example, a CodeBlockStartAction with no registered actions or only a registered CodeBlockEndAction should be replaced with a CodeBlockAction.\r\n4. If required, register an end action to report diagnostics based on the final state.",
+        "SymbolIsBannedInAnalyzersDescription": "The symbol has been marked as banned for use in analyzers, and an alternate should be used instead.",
+        "SymbolIsBannedInAnalyzersMessage": "The symbol '{0}' is banned for use by analyzers{1}",
+        "SymbolIsBannedInAnalyzersTitle": "Do not use APIs banned for analyzers",
+        "UnexpectedAnalyzerDiagnosticForRemovedDiagnosticIdDescription": "Diagnostic IDs marked as removed in analyzer release file should not be reported by analyzers.",
+        "UnexpectedAnalyzerDiagnosticForRemovedDiagnosticIdMessage": "Rule '{0}' is marked as removed in the latest analyzer release, but is still being reported",
+        "UnexpectedAnalyzerDiagnosticForRemovedDiagnosticIdTitle": "Diagnostic IDs marked as removed in analyzer release file should not be reported by analyzers",
+        "UnsupportedSymbolKindArgumentToRegisterActionMessage": "SymbolKind '{0}' is not supported for symbol analyzer actions",
+        "UnsupportedSymbolKindArgumentToRegisterActionTitle": "Unsupported SymbolKind argument when registering a symbol analyzer action",
+        "UpdateDiagnosticIdInAnalyzerReleaseDescription": "Ensure up-to-date entry for analyzer diagnostic IDs are added to analyzer release.",
+        "UpdateDiagnosticIdInAnalyzerReleaseMessage": "Rule '{0}' has a changed 'Category' or 'Severity' from the last release. Either revert the update(s) in source or add a new up-to-date entry to unshipped release file.",
+        "UpdateDiagnosticIdInAnalyzerReleaseTitle": "Ensure up-to-date entry for analyzer diagnostic IDs are added to analyzer release",
+        "UpdateEntryForDiagnosticIdInAnalyzerReleaseCodeFixTitle": "Update rule entry in unshipped release file",
+        "UpgradeMSBuildWorkspaceDescription": "MSBuildWorkspace has moved to the Microsoft.CodeAnalysis.Workspaces.MSBuild NuGet package and there are breaking API changes.",
+        "UpgradeMSBuildWorkspaceMessage": "Please upgrade MSBuildWorkspace by adding a package reference to the Microsoft.CodeAnalysis.Workspaces.MSBuild NuGet package. See https://go.microsoft.com/fwlink/?linkid=874285 for details on using MSBuildWorkspace successfully.",
+        "UpgradeMSBuildWorkspaceTitle": "Upgrade MSBuildWorkspace",
+        "UseCategoriesFromSpecifiedRangeDescription": "Category for analyzers must be from the specified values.",
+        "UseCategoriesFromSpecifiedRangeMessage": "Category '{0}' is not from the allowed categories specified in the file '{1}'",
+        "UseCategoriesFromSpecifiedRangeTitle": "Category for analyzers must be from the specified values",
+        "UseLocalizableStringsInDescriptorDescription": "If your diagnostic analyzer and it's reported diagnostics need to be localizable, then the supported DiagnosticDescriptors used for constructing the diagnostics must also be localizable. If so, then localizable argument(s) must be provided for parameter 'title' (and optionally 'description') to the diagnostic descriptor constructor to ensure that the descriptor is localizable.",
+        "UseLocalizableStringsInDescriptorMessage": "Consider providing localizable arguments of type '{0}' to diagnostic descriptor constructor to ensure the descriptor is localizable",
+        "UseLocalizableStringsInDescriptorTitle": "Provide localizable arguments to diagnostic descriptor constructor",
+        "UseUniqueDiagnosticIdDescription": "DiagnosticId must be unique across analyzers.",
+        "UseUniqueDiagnosticIdMessage": "Diagnostic Id '{0}' is already used by analyzer '{1}'. Please use a different diagnostic ID.",
+        "UseUniqueDiagnosticIdTitle": "DiagnosticId must be unique across analyzers"
+      }
+    }
+  },
+  "Microsoft.CodeAnalysis.CSharp.Analyzers": {
+    "name": "Microsoft.CodeAnalysis.CSharp.Analyzers",
+    "version": "3.3.8.6701",
+    "culture": "",
+    "public_key_token": "31bf3856ad364e35",
+    "versions": {
+      "AssemblyFileVersionAttribute": "3.3.8.6701",
+      "AssemblyInformationalVersionAttribute": "3.3.4+22ea6422f85b05ca0793cc3b76375487be407f5d"
+    },
+    "references": [
+      {
+        "name": "Microsoft.CodeAnalysis",
+        "version": "4.9.0.0"
+      },
+      {
+        "name": "Microsoft.CodeAnalysis.Analyzers",
+        "version": "3.3.8.6701"
+      },
+      {
+        "name": "Microsoft.CodeAnalysis.CSharp",
+        "version": "4.9.0.0"
+      },
+      {
+        "name": "Microsoft.CodeAnalysis.Workspaces",
+        "version": "4.9.0.0"
+      },
+      {
+        "name": "System.Collections.Immutable",
+        "version": "8.0.0.0"
+      },
+      {
+        "name": "System.Composition.AttributedModel",
+        "version": "8.0.0.0"
+      },
+      {
+        "name": "System.Linq",
+        "version": "8.0.0.0"
+      },
+      {
+        "name": "System.Runtime",
+        "version": "8.0.0.0"
+      }
+    ],
+    "resources": {}
+  },
+  "Microsoft.CodeAnalysis.VisualBasic.Analyzers": {
+    "name": "Microsoft.CodeAnalysis.VisualBasic.Analyzers",
+    "version": "3.3.8.6701",
+    "culture": "",
+    "public_key_token": "31bf3856ad364e35",
+    "versions": {
+      "AssemblyFileVersionAttribute": "3.3.8.6701",
+      "AssemblyInformationalVersionAttribute": "3.3.4+22ea6422f85b05ca0793cc3b76375487be407f5d"
+    },
+    "references": [
+      {
+        "name": "Microsoft.CodeAnalysis",
+        "version": "4.9.0.0"
+      },
+      {
+        "name": "Microsoft.CodeAnalysis.Analyzers",
+        "version": "3.3.8.6701"
+      },
+      {
+        "name": "Microsoft.CodeAnalysis.VisualBasic",
+        "version": "4.9.0.0"
+      },
+      {
+        "name": "Microsoft.CodeAnalysis.Workspaces",
+        "version": "4.9.0.0"
+      },
+      {
+        "name": "System.Collections.Immutable",
+        "version": "8.0.0.0"
+      },
+      {
+        "name": "System.Composition.AttributedModel",
+        "version": "8.0.0.0"
+      },
+      {
+        "name": "System.Linq",
+        "version": "8.0.0.0"
+      },
+      {
+        "name": "System.Runtime",
+        "version": "8.0.0.0"
+      }
+    ],
+    "resources": {}
+  }
+}

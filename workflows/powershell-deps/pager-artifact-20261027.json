@@ -1,0 +1,14 @@
+{
+  "artifact": "mingw-w64-clang-x86_64-dotnet-powershell-pager-1.0.0-1-any.pkg.tar.zst",
+  "sha256": "46c938980af67ccc7099a8162c371e709e4956d3806f331819acbff4db2a4e1f",
+  "nuget_sha256": "e07aa1bcbe3853311ebaf42ae2127f11b53ea4286566dadcaf6386cca8a9744f",
+  "source_dll_sha256": "4caf1e2bf5f1d3a7fede46025be716ff97127c3f3cee7580720a36cd6cd2dcd2",
+  "pinned_inputs": 12,
+  "source_commit": "965675f549dfa074eb02a47ca6d6e07d0ee7771f",
+  "original_cs_files": 2,
+  "production_csharp_changes": 0,
+  "public_api_entries": 3,
+  "upstream_test_method_bodies": 4,
+  "upstream_test_console_unchanged": true,
+  "test_assertion_adapter": "four ordinal string comparisons; no xUnit replacement assembly"
+}

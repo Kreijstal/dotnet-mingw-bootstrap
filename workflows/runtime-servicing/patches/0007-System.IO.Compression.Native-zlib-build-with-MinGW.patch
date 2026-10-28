@@ -1,0 +1,84 @@
+From 92397316217009c8b5209c5a519927103ade2b33 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Fri, 9 Oct 2026 10:29:52 +0200
+Subject: [PATCH 7/7] System.IO.Compression.Native, zlib: build with MinGW
+
+- zlib_allocator_win.c: FAST_FAIL_HEAP_METADATA_CORRUPTION (50) is
+  missing from MinGW's winnt.h.
+- zlib-intel: GNU compilers need -mpclmul -msse4.2 on crc_folding.c and
+  -msse4.2 on deflate_quick.c for the intrinsics MSVC allows anywhere
+  (zlib-intel's own Makefile does the same); they are only called after
+  the CPUID check in x86.c.
+- System.IO.Compression.Native: the PDB is installed only with MSVC, and
+  windres needs one more level of quoting for VER_FILEDESCRIPTION_STR,
+  so pass it to the .rc file only, escaped.
+---
+ src/native/external/zlib-intel.cmake                 |  8 ++++++++
+ .../libs/System.IO.Compression.Native/CMakeLists.txt | 12 ++++++++++--
+ .../zlib_allocator_win.c                             |  4 ++++
+ 3 files changed, 22 insertions(+), 2 deletions(-)
+
+diff --git a/src/native/external/zlib-intel.cmake b/src/native/external/zlib-intel.cmake
+index e8f1982..7d56785 100644
+--- a/src/native/external/zlib-intel.cmake
++++ b/src/native/external/zlib-intel.cmake
+@@ -21,3 +21,11 @@ set(ZLIB_SOURCES_BASE
+ add_definitions(-DMY_ZCALLOC)
+ 
+ addprefix(ZLIB_SOURCES "${CMAKE_CURRENT_LIST_DIR}/zlib-intel"  "${ZLIB_SOURCES_BASE}")
++
++# MSVC allows SSE4.2/PCLMUL intrinsics anywhere; GNU-style compilers need the
++# target features on the files that use them (as zlib-intel's own Makefile
++# does). They are only called after the runtime CPU check in x86.c.
++if (NOT MSVC)
++    set_source_files_properties("${CMAKE_CURRENT_LIST_DIR}/zlib-intel/crc_folding.c" PROPERTIES COMPILE_OPTIONS "-mpclmul;-msse4.2")
++    set_source_files_properties("${CMAKE_CURRENT_LIST_DIR}/zlib-intel/deflate_quick.c" PROPERTIES COMPILE_OPTIONS "-msse4.2")
++endif ()
+diff --git a/src/native/libs/System.IO.Compression.Native/CMakeLists.txt b/src/native/libs/System.IO.Compression.Native/CMakeLists.txt
+index b8a7265..57b56f8 100644
+--- a/src/native/libs/System.IO.Compression.Native/CMakeLists.txt
++++ b/src/native/libs/System.IO.Compression.Native/CMakeLists.txt
+@@ -113,7 +113,13 @@ else ()
+     set(NATIVECOMPRESSION_SOURCES ${ZLIB_SOURCES} ${NATIVECOMPRESSION_SOURCES})
+ 
+     if (GEN_SHARED_LIB)
+-        add_definitions(-DVER_FILEDESCRIPTION_STR="System.IO.Compression.Native")
++        if (MSVC)
++            add_definitions(-DVER_FILEDESCRIPTION_STR="System.IO.Compression.Native")
++        else ()
++            # (llvm-)windres hands -D values to its preprocessor once more: the
++            # string needs another level of quoting there.
++            set_property(SOURCE ${VERSION_FILE_RC_PATH} APPEND PROPERTY COMPILE_DEFINITIONS [[VER_FILEDESCRIPTION_STR=\"System.IO.Compression.Native\"]])
++        endif ()
+         add_library(System.IO.Compression.Native
+             SHARED
+             ${NATIVECOMPRESSION_SOURCES}
+@@ -155,7 +161,9 @@ else ()
+         )
+ 
+         install (TARGETS System.IO.Compression.Native DESTINATION .)
+-        install (FILES $<TARGET_PDB_FILE:System.IO.Compression.Native> DESTINATION .)
++        if (MSVC)
++            install (FILES $<TARGET_PDB_FILE:System.IO.Compression.Native> DESTINATION .)
++        endif ()
+     endif ()
+ 
+     if(STATIC_LIBS_ONLY)
+diff --git a/src/native/libs/System.IO.Compression.Native/zlib_allocator_win.c b/src/native/libs/System.IO.Compression.Native/zlib_allocator_win.c
+index 9bdf694..8ea706c 100644
+--- a/src/native/libs/System.IO.Compression.Native/zlib_allocator_win.c
++++ b/src/native/libs/System.IO.Compression.Native/zlib_allocator_win.c
+@@ -144,6 +144,10 @@ void zcfree_trash_cookie(UNALIGNED DOTNET_ALLOC_COOKIE* pCookie)
+ 
+ // Marked noinline to keep it on the call stack during crash reports.
+ DECLSPEC_NOINLINE
++#ifndef FAST_FAIL_HEAP_METADATA_CORRUPTION
++#define FAST_FAIL_HEAP_METADATA_CORRUPTION 50 // winnt.h of the Windows SDK; missing from MinGW's
++#endif
++
+ DECLSPEC_NORETURN
+ void zcfree_cookie_check_failed()
+ {
+-- 
+2.55.0
+

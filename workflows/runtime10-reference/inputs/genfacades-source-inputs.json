@@ -1,0 +1,22 @@
+{
+  "GenFacades-BuildTask.cs": {
+    "vmr_path": "src/arcade/src/Common/Internal/BuildTask.cs",
+    "vmr_commit": "12f41dd0da1a94621e039e27aef264179c1104b5",
+    "sha256": "62cc755b3bfc635db520c4bad47d14c72d04a1de3acc22ffe1b22e5bca407572"
+  },
+  "ClearAssemblyReferenceVersions.cs": {
+    "vmr_path": "src/arcade/src/Microsoft.DotNet.GenFacades/ClearAssemblyReferenceVersions.cs",
+    "vmr_commit": "12f41dd0da1a94621e039e27aef264179c1104b5",
+    "sha256": "946f05a407e5f919f55093a1ab7f532a4272a86d0e5cd8ca3a4bddcc4c45781b"
+  },
+  "GenFacades.Main.targets": {
+    "vmr_path": "src/arcade/src/Microsoft.DotNet.GenFacades/build/Microsoft.DotNet.GenFacades.targets",
+    "vmr_commit": "12f41dd0da1a94621e039e27aef264179c1104b5",
+    "sha256": "bc0c690ffcff3d77984678e492900eeac634c182584adbad9ba6e2bc5954efeb"
+  },
+  "GenFacades.ClearVersion.targets": {
+    "vmr_path": "src/arcade/src/Microsoft.DotNet.GenFacades/build/Microsoft.DotNet.GenFacades.ClearVersion.targets",
+    "vmr_commit": "12f41dd0da1a94621e039e27aef264179c1104b5",
+    "sha256": "56ca6f12848f16d8a749c4ec1c6e81ceb767e1953c097484bfef979eb4bd77c3"
+  }
+}

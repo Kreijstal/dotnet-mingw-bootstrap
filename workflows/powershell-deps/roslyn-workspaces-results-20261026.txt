@@ -1,0 +1,259 @@
+Roslyn Workspaces 4.9.2 source packages, 2026-10-26
+Host: win11, MSYS2 CLANG64
+Remote root: /home/topkek/powershell-workspaces.Y0NseS
+SDK package 8.0.131; running core runtime 8.0.0, servicing still open.
+
+Packages: Microsoft.CodeAnalysis.Workspaces.Common and
+Microsoft.CodeAnalysis.CSharp.Workspaces 4.9.2, retargeted to net8.0 from pinned
+Roslyn commit 9934fb9e3527e1c0c51314e57d4aab30f97e8f9e. Both preserve assembly
+4.9.0.0/31bf3856ad364e35 identity and all 1,898 published public/protected entries.
+Published assemblies are read only as metadata, never executed, compiled against
+or shipped. Actual consumer implementation hashes match audited package assets.
+
+The complete 1,467/272 main/shared source lists, 98 resource sets/3,780 strings,
+13 satellite cultures, normal/restricted friend identities and allowed namespaces
+are validated. Recursive key aliases are expanded; identical upstream duplicate
+friend entries are compared once, matching the compiler's emitted metadata.
+Resource property identifiers retain their original resx keys, including braces.
+
+Source build follows upstream DotNetBuildFromSource=true and defines
+DOTNET_BUILD_FROM_SOURCE. Upstream explicitly excludes its optional SQLite cache
+provider/native package in this configuration. No SQLite-enabled claim is made.
+Channels comes from the net8.0 shared framework; compiler/Humanizer/MEF2/Pipelines
+are separately packaged dependencies. No SDK implementation DLL is repackaged.
+
+The fresh installed consumer composes CSharp MEF services and exercises Unicode
+documents, project references, semantic models, cross-project references/rename,
+formatting, simplification, solution changes/PE emit, actual analyzer diagnostics,
+DocumentEditor/code-fix registration, CodeAction/ApplyChanges operations,
+incremental changes and cancellation. Normal and restricted friend attributes,
+all neutral/translated strings and source locations/identities are checked.
+
+Scope: this Workspaces layer is packaged and verified. Analyzer packages, Visual
+Basic/workspaces, MSBuild/IDE integration, bundled modules, native gaps, servicing
+and full PowerShell integration remain. Direct requirements remain 41/53;
+verified transitive packages rise from 22 to 24.
+
+Directory: /home/topkek/powershell-workspaces.Y0NseS/mingw-w64-dotnet-roslyn-workspaces
+$ PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm
+==> Making package: mingw-w64-dotnet-roslyn-workspaces 4.9.2-1 (26 Oct 2026 21:25:57)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found roslyn-4.9.2.tar.gz
+  -> Found prepare.py
+  -> Found build.sh
+  -> Found Check.cs
+  -> Found check.sh
+  -> Found InspectApi.cs
+  -> Found ExpectedApi.json
+  -> Found published-metadata-provenance.json
+  -> Found check-api.sh
+  -> Found README.md
+==> Validating source files with sha256sums...
+    roslyn-4.9.2.tar.gz ... Passed
+    prepare.py ... Passed
+    build.sh ... Passed
+    Check.cs ... Passed
+    check.sh ... Passed
+    InspectApi.cs ... Passed
+    ExpectedApi.json ... Passed
+    published-metadata-provenance.json ... Passed
+    check-api.sh ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+  -> Extracting roslyn-4.9.2.tar.gz with bsdtar
+==> Starting prepare()...
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-workspaces.Y0NseS\mingw-w64-dotnet-roslyn-workspaces\src\prepared\Microsoft.CodeAnalysis.Workspaces\Library.csproj (in 384 ms).
+  Library -> E:\msys64\home\topkek\powershell-workspaces.Y0NseS\mingw-w64-dotnet-roslyn-workspaces\src\prepared\Microsoft.CodeAnalysis.Workspaces\bin\Release\net8.0\Microsoft.CodeAnalysis.Workspaces.dll
+  Successfully created package 'E:\msys64\home\topkek\powershell-workspaces.Y0NseS\mingw-w64-dotnet-roslyn-workspaces\src\feed\Microsoft.CodeAnalysis.Workspaces.Common.4.9.2.nupkg'.
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-workspaces.Y0NseS\mingw-w64-dotnet-roslyn-workspaces\src\prepared\Microsoft.CodeAnalysis.CSharp.Workspaces\Library.csproj (in 338 ms).
+  Library -> E:\msys64\home\topkek\powershell-workspaces.Y0NseS\mingw-w64-dotnet-roslyn-workspaces\src\prepared\Microsoft.CodeAnalysis.CSharp.Workspaces\bin\Release\net8.0\Microsoft.CodeAnalysis.CSharp.Workspaces.dll
+  Successfully created package 'E:\msys64\home\topkek\powershell-workspaces.Y0NseS\mingw-w64-dotnet-roslyn-workspaces\src\feed\Microsoft.CodeAnalysis.CSharp.Workspaces.4.9.2.nupkg'.
+==> Starting check()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-workspaces.Y0NseS\mingw-w64-dotnet-roslyn-workspaces\src\check\Check.csproj (in 413 ms).
+  Check -> E:\msys64\home\topkek\powershell-workspaces.Y0NseS\mingw-w64-dotnet-roslyn-workspaces\src\check\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.09
+Microsoft.CodeAnalysis.Workspaces friend attributes: actual=97 expected=97
+Microsoft.CodeAnalysis.CSharp.Workspaces friend attributes: actual=28 expected=28
+PASS source identity/location/types and all expanded friend declarations; 98 resource sets/3780 source strings
+PASS MEF-hosted CSharp workspace, Unicode documents, project references, semantic models, cross-project reference search/rename, formatting, solution changes and PE emit
+PASS CSharp simplification, real analyzer diagnostics, DocumentEditor/code-fix registration, CodeAction/ApplyChanges operation, incremental solution edits and cancellation
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-workspaces.Y0NseS\mingw-w64-dotnet-roslyn-workspaces\src\check-api\Inspect.csproj (in 419 ms).
+  Inspect -> E:\msys64\home\topkek\powershell-workspaces.Y0NseS\mingw-w64-dotnet-roslyn-workspaces\src\check-api\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.12
+PASS Microsoft.CodeAnalysis.Workspaces 1842 published declarations and exact identity
+PASS Microsoft.CodeAnalysis.CSharp.Workspaces 56 published declarations and exact identity
+PASS all 1898 published Roslyn Workspaces public/protected declarations, no omissions or extras
+==> Starting package_mingw-w64-clang-x86_64-dotnet-codeanalysis-workspaces-common()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-codeanalysis-workspaces-common"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Starting package_mingw-w64-clang-x86_64-dotnet-codeanalysis-csharp-workspaces()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-codeanalysis-csharp-workspaces"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-roslyn-workspaces 4.9.2-1 (26 Oct 2026 21:27:42)
+Result: exit 0
+
+Fresh installed-feed checks:
+$ pacman -U --noconfirm mingw-w64-dotnet-roslyn-workspaces/mingw-w64-clang-x86_64-dotnet-codeanalysis-csharp-workspaces-4.9.2-1-any.pkg.tar.zst mingw-w64-dotnet-roslyn-workspaces/mingw-w64-clang-x86_64-dotnet-codeanalysis-workspaces-common-4.9.2-1-any.pkg.tar.zst
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (2) mingw-w64-clang-x86_64-dotnet-codeanalysis-csharp-workspaces-4.9.2-1  mingw-w64-clang-x86_64-dotnet-codeanalysis-workspaces-common-4.9.2-1
+
+Total Installed Size:  3.42 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+installing mingw-w64-clang-x86_64-dotnet-codeanalysis-workspaces-common...
+installing mingw-w64-clang-x86_64-dotnet-codeanalysis-csharp-workspaces...
+Result: exit 0
+$ bash mingw-w64-dotnet-roslyn-workspaces/check.sh installed-consumer /clang64/share/doc/dotnet-codeanalysis-workspaces-common/localization.json /clang64/share/doc/dotnet-codeanalysis-workspaces-common/source-items.json
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-workspaces.Y0NseS\installed-consumer\Check.csproj (in 395 ms).
+  Check -> E:\msys64\home\topkek\powershell-workspaces.Y0NseS\installed-consumer\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.31
+Microsoft.CodeAnalysis.Workspaces friend attributes: actual=97 expected=97
+Microsoft.CodeAnalysis.CSharp.Workspaces friend attributes: actual=28 expected=28
+PASS source identity/location/types and all expanded friend declarations; 98 resource sets/3780 source strings
+PASS MEF-hosted CSharp workspace, Unicode documents, project references, semantic models, cross-project reference search/rename, formatting, solution changes and PE emit
+PASS CSharp simplification, real analyzer diagnostics, DocumentEditor/code-fix registration, CodeAction/ApplyChanges operation, incremental solution edits and cancellation
+Result: exit 0
+$ bash mingw-w64-dotnet-roslyn-workspaces/check-api.sh installed-consumer installed-api
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-workspaces.Y0NseS\installed-api\Inspect.csproj (in 277 ms).
+  Inspect -> E:\msys64\home\topkek\powershell-workspaces.Y0NseS\installed-api\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.03
+PASS Microsoft.CodeAnalysis.Workspaces 1842 published declarations and exact identity
+PASS Microsoft.CodeAnalysis.CSharp.Workspaces 56 published declarations and exact identity
+PASS all 1898 published Roslyn Workspaces public/protected declarations, no omissions or extras
+Result: exit 0
+
+$ sha256sum installed-consumer/bin/Release/net8.0/Microsoft.CodeAnalysis.Workspaces.dll installed-consumer/bin/Release/net8.0/Microsoft.CodeAnalysis.CSharp.Workspaces.dll
+2f5614097f7612cab13de4f75e10420e8fcae6b68c5634072a16d64cd2f65255 *installed-consumer/bin/Release/net8.0/Microsoft.CodeAnalysis.Workspaces.dll
+3d1d303cddfa82b95e0994b4a9542bd1a33d2d030fa1e7a6a3250986f6c11a55 *installed-consumer/bin/Release/net8.0/Microsoft.CodeAnalysis.CSharp.Workspaces.dll
+PASS both consumer DLL hashes match audited package assets
+
+$ python3 tests/powershell-deps/audit-roslyn-workspaces.py
+Roslyn Workspaces: source checksums/licenses, dependencies, complete managed/satellite payload, source lists, expanded friends, 1898-entry API baseline and 98/3780 resource manifest PASS
+Result: exit 0

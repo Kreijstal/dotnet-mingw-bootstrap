@@ -1,0 +1,180 @@
+{
+  "archive": "/home/topkek/pspkg3.1nO7uT/mingw-w64-clang-x86_64-powershell-7.4.20-2-any.pkg.tar.zst",
+  "archive_sha256": "f254901ff79aa6b4b61c43aeae2f68f901f1edc850e02ef9e59b79f1a6ec437c",
+  "package_metadata": {
+    "pkgname": [
+      "mingw-w64-clang-x86_64-powershell"
+    ],
+    "pkgbase": [
+      "mingw-w64-powershell"
+    ],
+    "xdata": [
+      "pkgtype=pkg"
+    ],
+    "pkgver": [
+      "7.4.20-2"
+    ],
+    "pkgdesc": [
+      "Original PowerShell console, SDK and modules with experimental source-built Windows dependencies (mingw-w64)"
+    ],
+    "url": [
+      "https://github.com/PowerShell/PowerShell"
+    ],
+    "builddate": [
+      "1793130748"
+    ],
+    "packager": [
+      "Unknown Packager"
+    ],
+    "size": [
+      "76886425"
+    ],
+    "arch": [
+      "any"
+    ],
+    "license": [
+      "spdx:MIT"
+    ],
+    "depend": [
+      "mingw-w64-clang-x86_64-dotnet-runtime8-servicing=8.0.31-3",
+      "mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap=8.0.0-64",
+      "mingw-w64-clang-x86_64-cc-libs"
+    ],
+    "makedepend": [
+      "mingw-w64-clang-x86_64-cc",
+      "mingw-w64-clang-x86_64-python",
+      "python",
+      "mingw-w64-clang-x86_64-dotnet-applicationinsights=2.23.0-1",
+      "mingw-w64-clang-x86_64-dotnet-asyncinterfaces8=8.0.0-1",
+      "mingw-w64-clang-x86_64-dotnet-azure-core=1.38.0-1",
+      "mingw-w64-clang-x86_64-dotnet-azure-identity=1.11.4-1",
+      "mingw-w64-clang-x86_64-dotnet-clientmodel=1.0.0-1",
+      "mingw-w64-clang-x86_64-dotnet-codeanalysis-analyzers=3.3.4-1",
+      "mingw-w64-clang-x86_64-dotnet-codeanalysis-common=4.9.2-1",
+      "mingw-w64-clang-x86_64-dotnet-codeanalysis-csharp=4.9.2-1",
+      "mingw-w64-clang-x86_64-dotnet-codedom=8.0.31-1",
+      "mingw-w64-clang-x86_64-dotnet-composition=8.0.31-1",
+      "mingw-w64-clang-x86_64-dotnet-composition-registration=8.0.31-1",
+      "mingw-w64-clang-x86_64-dotnet-configuration-manager=8.0.31-1",
+      "mingw-w64-clang-x86_64-dotnet-cryptography-pkcs=8.0.31-1",
+      "mingw-w64-clang-x86_64-dotnet-cryptography-xml=8.0.31-1",
+      "mingw-w64-clang-x86_64-dotnet-csharp-compiler=4.9.2-1",
+      "mingw-w64-clang-x86_64-dotnet-diagnosticsource=8.0.31-1",
+      "mingw-w64-clang-x86_64-dotnet-directoryservices=8.0.31-1",
+      "mingw-w64-clang-x86_64-dotnet-directoryservices-accountmanagement=8.0.31-1",
+      "mingw-w64-clang-x86_64-dotnet-directoryservices-protocols=8.0.31-1",
+      "mingw-w64-clang-x86_64-dotnet-documentation-analyzers=1.0.0.beta59-1",
+      "mingw-w64-clang-x86_64-dotnet-documentation-analyzers-unstable=1.0.0.beta59-1",
+      "mingw-w64-clang-x86_64-dotnet-drawing-common=8.0.31-1",
+      "mingw-w64-clang-x86_64-dotnet-encoding-codepages=8.0.31-1",
+      "mingw-w64-clang-x86_64-dotnet-encodings-web=8.0.31-1",
+      "mingw-w64-clang-x86_64-dotnet-eventlog=8.0.31-1",
+      "mingw-w64-clang-x86_64-dotnet-extensions-primitives6=6.0.0-1",
+      "mingw-w64-clang-x86_64-dotnet-fileproviders-abstractions6=6.0.0-1",
+      "mingw-w64-clang-x86_64-dotnet-filesystem-globbing6=6.0.0-1",
+      "mingw-w64-clang-x86_64-dotnet-formats-asn1=8.0.31-1",
+      "mingw-w64-clang-x86_64-dotnet-humanizer=2.14.1-1",
+      "mingw-w64-clang-x86_64-dotnet-identitymodel-abstractions=6.35.0-1",
+      "mingw-w64-clang-x86_64-dotnet-io-packaging=8.0.31-1",
+      "mingw-w64-clang-x86_64-dotnet-io-ports=8.0.31-1",
+      "mingw-w64-clang-x86_64-dotnet-json-more=2.0.2-1",
+      "mingw-w64-clang-x86_64-dotnet-jsonpointer=5.0.2-1",
+      "mingw-w64-clang-x86_64-dotnet-jsonschema=7.0.4-1",
+      "mingw-w64-clang-x86_64-dotnet-management=8.0.0-2",
+      "mingw-w64-clang-x86_64-dotnet-markdig=0.33.0-1",
+      "mingw-w64-clang-x86_64-dotnet-memory-data=1.0.2-1",
+      "mingw-w64-clang-x86_64-dotnet-mmi3=3.0.0-1",
+      "mingw-w64-clang-x86_64-dotnet-msal=4.61.3-1",
+      "mingw-w64-clang-x86_64-dotnet-msal-extensions=4.61.3-1",
+      "mingw-w64-clang-x86_64-dotnet-netcore-platforms=1.1.2-1",
+      "mingw-w64-clang-x86_64-dotnet-newtonsoft-json=13.0.4-1",
+      "mingw-w64-clang-x86_64-dotnet-nuget-commands=6.9.1-1",
+      "mingw-w64-clang-x86_64-dotnet-nuget-common=6.9.1-1",
+      "mingw-w64-clang-x86_64-dotnet-nuget-configuration=6.9.1-1",
+      "mingw-w64-clang-x86_64-dotnet-nuget-credentials=6.9.1-1",
+      "mingw-w64-clang-x86_64-dotnet-nuget-dependencyresolver-core=6.9.1-1",
+      "mingw-w64-clang-x86_64-dotnet-nuget-frameworks=6.9.1-1",
+      "mingw-w64-clang-x86_64-dotnet-nuget-librarymodel=6.9.1-1",
+      "mingw-w64-clang-x86_64-dotnet-nuget-packaging=6.9.1-1",
+      "mingw-w64-clang-x86_64-dotnet-nuget-projectmodel=6.9.1-1",
+      "mingw-w64-clang-x86_64-dotnet-nuget-protocol=6.9.1-1",
+      "mingw-w64-clang-x86_64-dotnet-nuget-versioning=6.9.1-1",
+      "mingw-w64-clang-x86_64-dotnet-objectpool=8.0.31-1",
+      "mingw-w64-clang-x86_64-dotnet-odbc=8.0.31-1",
+      "mingw-w64-clang-x86_64-dotnet-oledb=8.0.31-1",
+      "mingw-w64-clang-x86_64-dotnet-performancecounter=8.0.31-1",
+      "mingw-w64-clang-x86_64-dotnet-powershell-markdownrender=7.2.1-1",
+      "mingw-w64-clang-x86_64-dotnet-powershell-pager=1.0.0-1",
+      "mingw-w64-clang-x86_64-dotnet-private-servicemodel=4.10.3-1",
+      "mingw-w64-clang-x86_64-dotnet-protecteddata=8.0.31-1",
+      "mingw-w64-clang-x86_64-dotnet-reflection-context=8.0.31-1",
+      "mingw-w64-clang-x86_64-dotnet-registry-accesscontrol=8.0.31-1",
+      "mingw-w64-clang-x86_64-dotnet-runtime-caching=8.0.31-1",
+      "mingw-w64-clang-x86_64-dotnet-runtime8-servicing=8.0.31-3",
+      "mingw-w64-clang-x86_64-dotnet-sdk-codestyle=4.9.2-1",
+      "mingw-w64-clang-x86_64-dotnet-sdk-netanalyzers=8.0.0.preview26274.2-1",
+      "mingw-w64-clang-x86_64-dotnet-sdk8-servicing=8.0.131-3",
+      "mingw-w64-clang-x86_64-dotnet-security-accesscontrol6=6.0.1-1",
+      "mingw-w64-clang-x86_64-dotnet-security-extensions=1.4.0-1",
+      "mingw-w64-clang-x86_64-dotnet-security-permissions=8.0.31-1",
+      "mingw-w64-clang-x86_64-dotnet-servicecontroller=8.0.31-1",
+      "mingw-w64-clang-x86_64-dotnet-servicemodel-duplex=4.10.3-1",
+      "mingw-w64-clang-x86_64-dotnet-servicemodel-http=4.10.3-1",
+      "mingw-w64-clang-x86_64-dotnet-servicemodel-nettcp=4.10.3-1",
+      "mingw-w64-clang-x86_64-dotnet-servicemodel-primitives=4.10.3-1",
+      "mingw-w64-clang-x86_64-dotnet-servicemodel-security=4.10.3-1",
+      "mingw-w64-clang-x86_64-dotnet-speech=8.0.31-1",
+      "mingw-w64-clang-x86_64-dotnet-sqlclient=4.9.1-1",
+      "mingw-w64-clang-x86_64-dotnet-stylecop-analyzers=1.2.0.beta556-1",
+      "mingw-w64-clang-x86_64-dotnet-stylecop-analyzers-unstable=1.2.0.beta556-1",
+      "mingw-w64-clang-x86_64-dotnet-syndication8=8.0.31-1",
+      "mingw-w64-clang-x86_64-dotnet-system-text-json8=8.0.5-1",
+      "mingw-w64-clang-x86_64-dotnet-systemevents=8.0.31-1",
+      "mingw-w64-clang-x86_64-dotnet-targeting8-servicing=8.0.31-2",
+      "mingw-w64-clang-x86_64-dotnet-threading-accesscontrol=8.0.0-2",
+      "mingw-w64-clang-x86_64-dotnet-web-services-description=4.10.3-1",
+      "mingw-w64-clang-x86_64-dotnet-windows-compatibility=8.0.31-1",
+      "mingw-w64-clang-x86_64-dotnet-windows-extensions=8.0.31-1",
+      "mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap=8.0.0-64",
+      "mingw-w64-clang-x86_64-dotnet-winhttp-handler=8.0.31-1",
+      "mingw-w64-clang-x86_64-powershell-archive=1.2.6-1",
+      "mingw-w64-clang-x86_64-powershell-native=700.0.0-1",
+      "mingw-w64-clang-x86_64-powershell-packagemanagement=1.4.8.1-1",
+      "mingw-w64-clang-x86_64-powershell-powershellget=2.2.5-1",
+      "mingw-w64-clang-x86_64-powershell-psreadline=2.3.6-1",
+      "mingw-w64-clang-x86_64-powershell-psresourceget=1.1.1-1",
+      "mingw-w64-clang-x86_64-powershell-threadjob=2.0.3-1"
+    ]
+  },
+  "distribution_files": 826,
+  "native_entry_images": {
+    "clang64/bin/pwsh.exe": {
+      "machine": "AMD64",
+      "subsystem": "Windows CUI",
+      "sha256": "29d8c31c90a13523a817ad34739ce912a7dadbeb5e294771a13b18d6af40dd52"
+    },
+    "clang64/lib/powershell/7/pwsh.exe": {
+      "machine": "AMD64",
+      "subsystem": "Windows CUI",
+      "sha256": "7157e9051dfd4eab55c7ce2210de2095595520ae4982e55d4bd48e68120d919f"
+    }
+  },
+  "application_files": 596,
+  "source_binary_assets": 372,
+  "original_project_dlls": 14,
+  "source_references": 163,
+  "gallery_modules": [
+    "Microsoft.PowerShell.Archive",
+    "Microsoft.PowerShell.PSResourceGet",
+    "PSReadLine",
+    "PackageManagement",
+    "PowerShellGet",
+    "ThreadJob"
+  ],
+  "source_nuget_archives": 93,
+  "pinned_build_packages": 100,
+  "bundled_license_owners": 78,
+  "copied_license_files": 208,
+  "all_distribution_application_license_hashes_match": true,
+  "full_dependency_goal_complete": false
+}

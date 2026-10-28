@@ -1,0 +1,530 @@
+From 66a4d4d2c36010bff5b6a3a5c3f60dcbc8a6d1d5 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Fri, 9 Oct 2026 17:26:09 +0200
+Subject: [PATCH 15/16] coreclr: C++ sources for clang with the GNU driver
+
+MSVC accepts these, clang does not, or the Windows code paths key on
+_MSC_VER where they mean the Windows SDK/LLP64:
+- functions converted to void* implicitly (ComInterfaceSlotIs,
+  GetMemoryRangeForFunction take any function pointer; casts at the
+  GetProcAddress and hijack-target sites);
+- gotos past initializations (peimagelayout, threadsuspend);
+- copy-initialization through a private copy constructor (AllocMemHolder);
+- ULONG overloads of AlignUp/AlignDown, the BitScan* wrappers of the JIT,
+  JITINTERFACE_HRESULT = long, GET_UNALIGNED_* also with MinGW;
+- the dummy VPTR constructors of daccess.h for the DAC table (as on Unix:
+  no /ALTERNATENAME), a default CodeRangeMapRangeList constructor for them;
+- forward-declared enums without a type, an enumerator that does not fit,
+  the address of a temporary, an ambiguous conditional, invalid token
+  pastes, _alloca/__report_gsfailure/roerrorapi.h declarations;
+- the GS cookie seeded without MSVC's __security_cookie;
+- gcenv.windows.cpp's g_SystemInfo static (Itanium does not mangle
+  variable types, so it clashed with the VM's SYSTEM_INFO g_SystemInfo);
+- mingw-w64's JOBOBJECT_CPU_RATE_CONTROL_INFORMATION lacks MaxRate.
+---
+ src/coreclr/debug/ee/controller.cpp      | 2 +-
+ src/coreclr/debug/ee/debugger.cpp        | 9 +++++++++
+ src/coreclr/debug/ee/rcthread.cpp        | 2 +-
+ src/coreclr/gc/windows/gcenv.windows.cpp | 4 +++-
+ src/coreclr/inc/clrtypes.h               | 4 ++--
+ src/coreclr/inc/corinfo.h                | 2 +-
+ src/coreclr/inc/daccess.h                | 6 ++++--
+ src/coreclr/inc/palclr.h                 | 2 +-
+ src/coreclr/jit/utils.h                  | 4 ++--
+ src/coreclr/utilcode/stacktrace.cpp      | 2 +-
+ src/coreclr/utilcode/util.cpp            | 6 ++++++
+ src/coreclr/vm/appdomain.cpp             | 2 +-
+ src/coreclr/vm/ceemain.cpp               | 8 ++++++++
+ src/coreclr/vm/codeman.cpp               | 6 +++---
+ src/coreclr/vm/comcallablewrapper.h      | 2 +-
+ src/coreclr/vm/dispatchinfo.h            | 2 +-
+ src/coreclr/vm/dwbucketmanager.hpp       | 2 +-
+ src/coreclr/vm/dwreport.h                | 4 ++++
+ src/coreclr/vm/excep.cpp                 | 2 ++
+ src/coreclr/vm/interoputil.h             | 2 +-
+ src/coreclr/vm/interoputil.inl           | 9 +++++++++
+ src/coreclr/vm/jithelpers.cpp            | 4 ++++
+ src/coreclr/vm/loaderallocator.hpp       | 3 ++-
+ src/coreclr/vm/olevariant.cpp            | 5 ++++-
+ src/coreclr/vm/peimagelayout.cpp         | 2 ++
+ src/coreclr/vm/stubhelpers.cpp           | 2 +-
+ src/coreclr/vm/threads.cpp               | 2 +-
+ src/coreclr/vm/threadsuspend.cpp         | 6 ++++--
+ src/coreclr/vm/util.hpp                  | 3 ++-
+ 29 files changed, 82 insertions(+), 27 deletions(-)
+
+diff --git a/src/coreclr/debug/ee/controller.cpp b/src/coreclr/debug/ee/controller.cpp
+index 58e63ab39..f23feb6d1 100644
+--- a/src/coreclr/debug/ee/controller.cpp
++++ b/src/coreclr/debug/ee/controller.cpp
+@@ -4748,7 +4748,7 @@ TP_RESULT DebuggerPatchSkip::TriggerExceptionHook(Thread *thread, CONTEXT * cont
+ 
+             if ((size_t)pExcepDispProc != (size_t)(-1))
+             {
+-                LPVOID pExcepDispEntryPoint = pExcepDispProc;
++                LPVOID pExcepDispEntryPoint = (LPVOID)pExcepDispProc;
+ 
+                 if ((size_t)GetIP(context) > (size_t)pExcepDispEntryPoint &&
+                     (size_t)GetIP(context) <= ((size_t)pExcepDispEntryPoint + MAX_INSTRUCTION_LENGTH * 2 + 1))
+diff --git a/src/coreclr/debug/ee/debugger.cpp b/src/coreclr/debug/ee/debugger.cpp
+index d58a98724..418e20ca6 100644
+--- a/src/coreclr/debug/ee/debugger.cpp
++++ b/src/coreclr/debug/ee/debugger.cpp
+@@ -999,6 +999,15 @@ Debugger::~Debugger()
+ #if defined(FEATURE_HIJACK) && !defined(TARGET_UNIX)
+ 
+ // Given the start address and the end address of a function, return a MemoryRange for the function.
++inline MemoryRange GetMemoryRangeForFunction(void *pfnStart, void *pfnEnd);
++#if defined(__GNUC__)
++// (clang does not convert a function to void* implicitly, MSVC does)
++template <typename TStart, typename TEnd>
++inline MemoryRange GetMemoryRangeForFunction(TStart *pfnStart, TEnd *pfnEnd)
++{
++    return GetMemoryRangeForFunction((void *)pfnStart, (void *)pfnEnd);
++}
++#endif
+ inline MemoryRange GetMemoryRangeForFunction(void *pfnStart, void *pfnEnd)
+ {
+     PCODE pfnStartAddress = (PCODE)GetEEFuncEntryPoint(pfnStart);
+diff --git a/src/coreclr/debug/ee/rcthread.cpp b/src/coreclr/debug/ee/rcthread.cpp
+index b20c46559..b7cd2f526 100644
+--- a/src/coreclr/debug/ee/rcthread.cpp
++++ b/src/coreclr/debug/ee/rcthread.cpp
+@@ -475,7 +475,7 @@ HRESULT DebuggerRCThread::SetupRuntimeOffsets(DebuggerIPCControlBlock * pDebugge
+ 
+     // Fill out the struct.
+ #ifdef FEATURE_INTEROP_DEBUGGING
+-    pDebuggerRuntimeOffsets->m_genericHijackFuncAddr = Debugger::GenericHijackFunc;
++    pDebuggerRuntimeOffsets->m_genericHijackFuncAddr = (void*)Debugger::GenericHijackFunc;
+     // the following 6 flares only exist for interop debugging.
+     pDebuggerRuntimeOffsets->m_signalHijackStartedBPAddr = (void*) SignalHijackStartedFlare;
+     pDebuggerRuntimeOffsets->m_excepForRuntimeHandoffStartBPAddr = (void*) ExceptionForRuntimeHandoffStartFlare;
+diff --git a/src/coreclr/gc/windows/gcenv.windows.cpp b/src/coreclr/gc/windows/gcenv.windows.cpp
+index f12a64d7e..87dc3c956 100644
+--- a/src/coreclr/gc/windows/gcenv.windows.cpp
++++ b/src/coreclr/gc/windows/gcenv.windows.cpp
+@@ -15,7 +15,9 @@
+ #include "volatile.h"
+ #include "gcconfig.h"
+ 
+-GCSystemInfo g_SystemInfo;
++// (only used in this file: internal linkage, since without MSVC's type-mangled
++// variable names it would clash with the VM's SYSTEM_INFO g_SystemInfo)
++static GCSystemInfo g_SystemInfo;
+ 
+ static bool g_SeLockMemoryPrivilegeAcquired = false;
+ 
+diff --git a/src/coreclr/inc/clrtypes.h b/src/coreclr/inc/clrtypes.h
+index 19e9720b3..e65663d27 100644
+--- a/src/coreclr/inc/clrtypes.h
++++ b/src/coreclr/inc/clrtypes.h
+@@ -322,7 +322,7 @@ inline UINT AlignUp(UINT value, UINT alignment)
+     return (value+alignment-1)&~(alignment-1);
+ }
+ 
+-#if defined(_MSC_VER)
++#if defined(_MSC_VER) || defined(__MINGW32__)
+ inline ULONG AlignUp(ULONG value, UINT alignment)
+ {
+     STATIC_CONTRACT_LEAF;
+@@ -354,7 +354,7 @@ inline UINT AlignDown(UINT value, UINT alignment)
+     return (value&~(alignment-1));
+ }
+ 
+-#if defined(_MSC_VER)
++#if defined(_MSC_VER) || defined(__MINGW32__)
+ inline ULONG AlignDown(ULONG value, UINT alignment)
+ {
+     STATIC_CONTRACT_LEAF;
+diff --git a/src/coreclr/inc/corinfo.h b/src/coreclr/inc/corinfo.h
+index 4941bf56f..00945085e 100644
+--- a/src/coreclr/inc/corinfo.h
++++ b/src/coreclr/inc/corinfo.h
+@@ -203,7 +203,7 @@ TODO: Talk about initializing strutures before use
+ 
+ #include "jiteeversionguid.h"
+ 
+-#ifdef _MSC_VER
++#if defined(_MSC_VER) || defined(__MINGW32__)
+ typedef long JITINTERFACE_HRESULT;
+ #else
+ typedef int JITINTERFACE_HRESULT;
+diff --git a/src/coreclr/inc/daccess.h b/src/coreclr/inc/daccess.h
+index 3ca0ca40e..3dadffbbf 100644
+--- a/src/coreclr/inc/daccess.h
++++ b/src/coreclr/inc/daccess.h
+@@ -2138,7 +2138,9 @@ typedef const void* PTR_CVOID;
+ #define S16PTR(type) type*
+ #define S16PTRMAX(type, maxChars) type*
+ 
+-#if defined(TARGET_UNIX)
++// (MinGW: without MSVC's /ALTERNATENAME the DAC table takes the vtables from dummy
++// objects, as on Unix; see debug/ee/dactable.cpp)
++#if defined(TARGET_UNIX) || defined(__MINGW32__)
+ 
+ #define VPTR_VTABLE_CLASS(name, base) \
+         friend struct _DacGlobals; \
+@@ -2178,7 +2180,7 @@ public: name(int dummy) : base(dummy) {}
+ #define VPTR_ABSTRACT_VTABLE_CLASS(name, base) friend struct _DacGlobals;
+ #define VPTR_ABSTRACT_VTABLE_CLASS_AND_CTOR(name, base)
+ 
+-#endif // TARGET_UNIX
++#endif // TARGET_UNIX || __MINGW32__
+ 
+ // helper macro to make the vtables unique for DAC
+ #define VPTR_UNIQUE(unique) virtual int MakeVTableUniqueForDAC() { return unique; }
+diff --git a/src/coreclr/inc/palclr.h b/src/coreclr/inc/palclr.h
+index fe0b112d8..10fe95760 100644
+--- a/src/coreclr/inc/palclr.h
++++ b/src/coreclr/inc/palclr.h
+@@ -560,7 +560,7 @@
+ #define SwapGuid(x)
+ #endif  // !BIGENDIAN
+ 
+-#ifdef _MSC_VER
++#if defined(_MSC_VER) || defined(__MINGW32__)
+ // Get Unaligned values from a potentially unaligned object
+ #define GET_UNALIGNED_16(_pObject)  (*(UINT16 UNALIGNED *)(_pObject))
+ #define GET_UNALIGNED_32(_pObject)  (*(UINT32 UNALIGNED *)(_pObject))
+diff --git a/src/coreclr/jit/utils.h b/src/coreclr/jit/utils.h
+index 77f74ba95..1be6e83c3 100644
+--- a/src/coreclr/jit/utils.h
++++ b/src/coreclr/jit/utils.h
+@@ -25,7 +25,7 @@ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+ // Needed for unreached()
+ #include "error.h"
+ 
+-#if defined(_MSC_VER)
++#if defined(_MSC_VER) || defined(__MINGW32__)
+ 
+ // Define wrappers over the non-underscore versions of the BitScan* APIs. The PAL defines these already.
+ // We've #undef'ed the definitions in winnt.h for these names to avoid confusion.
+@@ -52,7 +52,7 @@ inline BOOLEAN BitScanReverse64(DWORD* Index, DWORD64 Mask)
+ }
+ #endif // defined(HOST_64BIT)
+ 
+-#endif // _MSC_VER
++#endif // _MSC_VER || __MINGW32__
+ 
+ template <typename T, int size>
+ inline constexpr unsigned ArrLen(T (&)[size])
+diff --git a/src/coreclr/utilcode/stacktrace.cpp b/src/coreclr/utilcode/stacktrace.cpp
+index 215e66246..d8b9d313c 100644
+--- a/src/coreclr/utilcode/stacktrace.cpp
++++ b/src/coreclr/utilcode/stacktrace.cpp
+@@ -433,7 +433,7 @@ void MagicInit()
+     //
+     for (int i = 0; i < ARRAY_SIZE(ailFuncList); i++)
+     {
+-        *(ailFuncList[i].ppvfn) = GetProcAddress(
++        *(ailFuncList[i].ppvfn) = (LPVOID)GetProcAddress(
+                 g_hinstImageHlp,
+                 ailFuncList[i].pszFnName);
+         LOCAL_ASSERT(*(ailFuncList[i].ppvfn));
+diff --git a/src/coreclr/utilcode/util.cpp b/src/coreclr/utilcode/util.cpp
+index c19154668..3736abb1a 100644
+--- a/src/coreclr/utilcode/util.cpp
++++ b/src/coreclr/utilcode/util.cpp
+@@ -1031,7 +1031,13 @@ int GetCurrentProcessCpuCount()
+             }
+             else if ((cpuRateControl.ControlFlags & MinMaxRateEnabled) == MinMaxRateEnabled)
+             {
++#ifdef __MINGW32__
++                // mingw-w64's JOBOBJECT_CPU_RATE_CONTROL_INFORMATION lacks the
++                // {MinRate, MaxRate} WORD pair of the union; MaxRate is the high word.
++                maxRate = HIWORD(cpuRateControl.CpuRate);
++#else
+                 maxRate = cpuRateControl.MaxRate;
++#endif
+             }
+ 
+             // The rate is the percentage times 100
+diff --git a/src/coreclr/vm/appdomain.cpp b/src/coreclr/vm/appdomain.cpp
+index 4d2a705df..878a33e0f 100644
+--- a/src/coreclr/vm/appdomain.cpp
++++ b/src/coreclr/vm/appdomain.cpp
+@@ -2144,7 +2144,7 @@ DispIDCache* AppDomain::SetupRefDispIDCache()
+ 
+     if (m_pRefDispIDCache == NULL)
+     {
+-        AllocMemHolder<void> pCache = GetLowFrequencyHeap()->AllocMem(S_SIZE_T(sizeof (DispIDCache)));
++        AllocMemHolder<void> pCache(GetLowFrequencyHeap()->AllocMem(S_SIZE_T(sizeof (DispIDCache))));
+ 
+         DispIDCache *tmp = new (pCache) DispIDCache;
+         tmp->Init();
+diff --git a/src/coreclr/vm/ceemain.cpp b/src/coreclr/vm/ceemain.cpp
+index 1fd898684..672789462 100644
+--- a/src/coreclr/vm/ceemain.cpp
++++ b/src/coreclr/vm/ceemain.cpp
+@@ -461,11 +461,19 @@ void InitGSCookie()
+     assert(((oldProtection & (PAGE_READWRITE|PAGE_WRITECOPY|PAGE_EXECUTE_READWRITE|
+                               PAGE_EXECUTE_WRITECOPY|PAGE_WRITECOMBINE)) == 0));
+ 
++#ifdef __MINGW32__
++    // No MSVC /GS runtime (__security_cookie) with MinGW: seed the cookie from the
++    // performance counter, the process id and an ASLR'd address instead.
++    LARGE_INTEGER qpc;
++    QueryPerformanceCounter(&qpc);
++    GSCookie val = (GSCookie)((ULONGLONG)qpc.QuadPart ^ ((ULONGLONG)GetCurrentProcessId() << 32) ^ GetTickCount64() ^ (ULONGLONG)(SIZE_T)&qpc);
++#else
+     // Forces VC cookie to be initialized.
+     void * pf = &__security_check_cookie;
+     pf = NULL;
+ 
+     GSCookie val = (GSCookie)(__security_cookie ^ GetTickCount());
++#endif
+ #else // !TARGET_UNIX
+     // REVIEW: Need something better for PAL...
+     GSCookie val = (GSCookie)GetTickCount();
+diff --git a/src/coreclr/vm/codeman.cpp b/src/coreclr/vm/codeman.cpp
+index 6468794ad..85af32ec6 100644
+--- a/src/coreclr/vm/codeman.cpp
++++ b/src/coreclr/vm/codeman.cpp
+@@ -118,9 +118,9 @@ bool InitUnwindFtns()
+         HINSTANCE hNtdll = WszGetModuleHandle(W("ntdll.dll"));
+         if (hNtdll != NULL)
+         {
+-            void* growFunctionTable = GetProcAddress(hNtdll, "RtlGrowFunctionTable");
+-            void* deleteGrowableFunctionTable = GetProcAddress(hNtdll, "RtlDeleteGrowableFunctionTable");
+-            void* addGrowableFunctionTable = GetProcAddress(hNtdll, "RtlAddGrowableFunctionTable");
++            void* growFunctionTable = (void*)GetProcAddress(hNtdll, "RtlGrowFunctionTable");
++            void* deleteGrowableFunctionTable = (void*)GetProcAddress(hNtdll, "RtlDeleteGrowableFunctionTable");
++            void* addGrowableFunctionTable = (void*)GetProcAddress(hNtdll, "RtlAddGrowableFunctionTable");
+ 
+             // All or nothing AddGroableFunctionTable is last (marker)
+             if (growFunctionTable != NULL &&
+diff --git a/src/coreclr/vm/comcallablewrapper.h b/src/coreclr/vm/comcallablewrapper.h
+index 71b79ca00..49be9f844 100644
+--- a/src/coreclr/vm/comcallablewrapper.h
++++ b/src/coreclr/vm/comcallablewrapper.h
+@@ -1116,7 +1116,7 @@ public :
+         CLEANUP_SENTINEL        = 0x0000000080000000,       // Sentinel -> 1 bit
+         COM_REFCOUNT_MASK       = 0x000000007FFFFFFF,       // COM -> 31 bits
+         EXT_COM_REFCOUNT_MASK   = 0x00000000FFFFFFFF,       // For back-compat, preserve the higher-bit so that outside can observe it
+-        ALL_REFCOUNT_MASK       = 0xFFFFFFFF7FFFFFFF,
++        ALL_REFCOUNT_MASK       = (LONGLONG)0xFFFFFFFF7FFFFFFF,
+     };
+ 
+     #define GET_COM_REF(x)      ((ULONG)((x) & SimpleComCallWrapper::COM_REFCOUNT_MASK))
+diff --git a/src/coreclr/vm/dispatchinfo.h b/src/coreclr/vm/dispatchinfo.h
+index 59485847e..e21493ba8 100644
+--- a/src/coreclr/vm/dispatchinfo.h
++++ b/src/coreclr/vm/dispatchinfo.h
+@@ -28,7 +28,7 @@ struct ComMTMethodProps;
+ class DispParamMarshaler;
+ class MarshalInfo;
+ class DispatchInfo;
+-enum BinderMethodID;
++enum BinderMethodID : int;
+ 
+ // An enumeration of the types of managed MemberInfo's. This must stay in synch with
+ // the ones defined in MemberInfo.cs.
+diff --git a/src/coreclr/vm/dwbucketmanager.hpp b/src/coreclr/vm/dwbucketmanager.hpp
+index 82532aa5b..74fac4224 100644
+--- a/src/coreclr/vm/dwbucketmanager.hpp
++++ b/src/coreclr/vm/dwbucketmanager.hpp
+@@ -455,7 +455,7 @@ void BaseBucketParamsManager::GetAppName(_Out_writes_(maxLength) WCHAR* targetPa
+     {
+         // Get just the module name; remove the path
+         const WCHAR* appName = u16_strrchr(appPath, DIRECTORY_SEPARATOR_CHAR_W);
+-        appName = appName ? appName + 1 : appPath;
++        appName = appName ? appName + 1 : appPath.GetUnicode();
+ 
+         CopyStringToBucket(targetParam, maxLength, appName);
+     }
+diff --git a/src/coreclr/vm/dwreport.h b/src/coreclr/vm/dwreport.h
+index 6f2684b6d..00339a5a3 100644
+--- a/src/coreclr/vm/dwreport.h
++++ b/src/coreclr/vm/dwreport.h
+@@ -81,7 +81,11 @@ extern LONG g_watsonAlreadyLaunched;
+ //----------------------------------------------------------------------------
+ // Passes data between DoFaultReport and DoFaultReportCallback
+ //----------------------------------------------------------------------------
++#ifdef __MINGW32__
++#include <errorrep.h>   // (a forward-declared enum without a fixed type is an MSVC extension)
++#else
+ typedef enum tagEFaultRepRetVal EFaultRepRetVal;
++#endif
+ struct FaultReportInfo
+ {
+     EXCEPTION_POINTERS  /*in*/  *m_pExceptionInfo;
+diff --git a/src/coreclr/vm/excep.cpp b/src/coreclr/vm/excep.cpp
+index ce8b325a5..6b22c524f 100644
+--- a/src/coreclr/vm/excep.cpp
++++ b/src/coreclr/vm/excep.cpp
+@@ -35,8 +35,10 @@
+ #include "eventreporter.h"
+ 
+ #ifdef FEATURE_COMINTEROP
++#ifndef __MINGW32__
+ #include<roerrorapi.h>
+ #endif
++#endif
+ #ifdef FEATURE_EH_FUNCLETS
+ #include "exceptionhandling.h"
+ #endif
+diff --git a/src/coreclr/vm/interoputil.h b/src/coreclr/vm/interoputil.h
+index 557e5cdfd..ede51ecde 100644
+--- a/src/coreclr/vm/interoputil.h
++++ b/src/coreclr/vm/interoputil.h
+@@ -393,7 +393,7 @@ VOID EnsureComStarted(BOOL fCoInitCurrentThread = TRUE);
+ IUnknown* MarshalObjectToInterface(OBJECTREF* ppObject, MethodTable* pItfMT, MethodTable* pClassMT, DWORD dwFlags);
+ void UnmarshalObjectFromInterface(OBJECTREF *ppObjectDest, IUnknown **ppUnkSrc, MethodTable *pItfMT, MethodTable *pClassMT, DWORD dwFlags);
+ 
+-#define DEFINE_ASM_QUAL_TYPE_NAME(varname, typename, asmname)          static const char varname##[] = { typename##", "##asmname## };
++#define DEFINE_ASM_QUAL_TYPE_NAME(varname, typename, asmname)          static const char varname[] = { typename ", " asmname };
+ 
+ #else // FEATURE_COMINTEROP
+ inline HRESULT EnsureComStartedNoThrow()
+diff --git a/src/coreclr/vm/interoputil.inl b/src/coreclr/vm/interoputil.inl
+index cf4d24377..ab12b0fe3 100644
+--- a/src/coreclr/vm/interoputil.inl
++++ b/src/coreclr/vm/interoputil.inl
+@@ -5,6 +5,15 @@
+ #include "comcallablewrapper.h"
+ 
+ #if !defined(DACCESS_COMPILE)
++#if defined(__GNUC__)
++inline BOOL ComInterfaceSlotIs(IUnknown* pUnk, int slot, LPVOID pvFunction);
++// (clang does not convert a function to void* implicitly, MSVC does)
++template <typename TFunc>
++inline BOOL ComInterfaceSlotIs(IUnknown* pUnk, int slot, TFunc* pfnFunction)
++{
++    return ComInterfaceSlotIs(pUnk, slot, (LPVOID)pfnFunction);
++}
++#endif
+ inline BOOL ComInterfaceSlotIs(IUnknown* pUnk, int slot, LPVOID pvFunction)
+ {
+     CONTRACTL
+diff --git a/src/coreclr/vm/jithelpers.cpp b/src/coreclr/vm/jithelpers.cpp
+index e225a6e38..197e8575d 100644
+--- a/src/coreclr/vm/jithelpers.cpp
++++ b/src/coreclr/vm/jithelpers.cpp
+@@ -27,6 +27,10 @@
+ #ifndef TARGET_UNIX
+ // Included for referencing __report_gsfailure
+ #include "process.h"
++#ifdef __MINGW32__
++// (exported by the UCRT; MSVC declares it in its own headers)
++extern "C" void __cdecl __report_gsfailure(ULONG_PTR StackCookie);
++#endif
+ #endif // !TARGET_UNIX
+ 
+ #ifdef PROFILING_SUPPORTED
+diff --git a/src/coreclr/vm/loaderallocator.hpp b/src/coreclr/vm/loaderallocator.hpp
+index 365063b0b..0951c276e 100644
+--- a/src/coreclr/vm/loaderallocator.hpp
++++ b/src/coreclr/vm/loaderallocator.hpp
+@@ -46,7 +46,8 @@ class CodeRangeMapRangeList : public RangeList
+ public:
+     VPTR_VTABLE_CLASS(CodeRangeMapRangeList, RangeList)
+ 
+-#if defined(DACCESS_COMPILE) || !defined(TARGET_WINDOWS)
++#if defined(DACCESS_COMPILE) || !defined(TARGET_WINDOWS) || defined(__MINGW32__)
++    // (also for the dummy LoaderAllocator(int) constructor of daccess.h's VPTR macros)
+     CodeRangeMapRangeList() : 
+         _RangeListRWLock(COOPERATIVE_OR_PREEMPTIVE, LOCK_TYPE_DEFAULT),
+         _rangeListType(STUB_CODE_BLOCK_UNKNOWN),
+diff --git a/src/coreclr/vm/olevariant.cpp b/src/coreclr/vm/olevariant.cpp
+index e4d9174dc..3e1c125ac 100644
+--- a/src/coreclr/vm/olevariant.cpp
++++ b/src/coreclr/vm/olevariant.cpp
+@@ -5012,7 +5012,10 @@ BASEARRAYREF OleVariant::ExtractWrappedObjectsFromArray(BASEARRAYREF *pArray)
+             for (; pSrc < pSrcEnd; pSrc++, pDest++)
+             {
+                 if (*pSrc != NULL)
+-                    memcpyNoGCRefs(pDest, &(*pSrc)->GetWrappedObject(), sizeof(DECIMAL));
++                {
++                    DECIMAL wrapped = (*pSrc)->GetWrappedObject();
++                    memcpyNoGCRefs(pDest, &wrapped, sizeof(DECIMAL));
++                }
+                 else
+                     memset(pDest, 0, sizeof(DECIMAL));
+             }
+diff --git a/src/coreclr/vm/peimagelayout.cpp b/src/coreclr/vm/peimagelayout.cpp
+index 0f0dde276..b25ab874c 100644
+--- a/src/coreclr/vm/peimagelayout.cpp
++++ b/src/coreclr/vm/peimagelayout.cpp
+@@ -1029,6 +1029,7 @@ void* FlatImageLayout::LoadImageByMappingParts(SIZE_T* m_imageParts) const
+         goto UNSUPPORTED;
+     }
+ 
++    {   // (a block: the gotos above may not jump past the initializations below)
+     SIZE_T preferredBase = ntHeader->OptionalHeader.ImageBase;
+     SIZE_T virtualSize = ntHeader->OptionalHeader.SizeOfImage;
+     SIZE_T reserveSize = RoundToPage(virtualSize, offset);
+@@ -1177,6 +1178,7 @@ void* FlatImageLayout::LoadImageByMappingParts(SIZE_T* m_imageParts) const
+     }
+ 
+     return loadedHeader;
++    }
+ 
+ FAILED:
+     _ASSERTE(!"FAILED");
+diff --git a/src/coreclr/vm/stubhelpers.cpp b/src/coreclr/vm/stubhelpers.cpp
+index 9988a9129..b4abd861e 100644
+--- a/src/coreclr/vm/stubhelpers.cpp
++++ b/src/coreclr/vm/stubhelpers.cpp
+@@ -320,7 +320,7 @@ FCIMPL4(IUnknown*, StubHelpers::GetCOMIPFromRCW, Object* pSrcUNSAFE, MethodDesc*
+ 
+     /* if we didn't find the COM interface pointer in the cache we will have to erect an HMF */
+     *pfNeedsRelease = true;
+-    FC_INNER_RETURN(IUnknown*, GetCOMIPFromRCWHelper(StubHelpers::GetCOMIPFromRCW, pSrc, pMD, ppTarget));
++    FC_INNER_RETURN(IUnknown*, GetCOMIPFromRCWHelper((LPVOID)StubHelpers::GetCOMIPFromRCW, pSrc, pMD, ppTarget));
+ }
+ FCIMPLEND
+ 
+diff --git a/src/coreclr/vm/threads.cpp b/src/coreclr/vm/threads.cpp
+index 52e1b4f07..b7423e867 100644
+--- a/src/coreclr/vm/threads.cpp
++++ b/src/coreclr/vm/threads.cpp
+@@ -6138,7 +6138,7 @@ void UniqueStackHelper(size_t stackTraceHash, size_t *stackTrace)
+         if (nElem >= UniqueStackDepth) {
+             nElem = UniqueStackDepth;
+         }
+-        AllocMemHolder<size_t> stackTraceInMap = SystemDomain::GetGlobalLoaderAllocator()->GetLowFrequencyHeap()->AllocMem(S_SIZE_T(sizeof(size_t *)) * (S_SIZE_T(nElem) + S_SIZE_T(1)));
++        AllocMemHolder<size_t> stackTraceInMap(SystemDomain::GetGlobalLoaderAllocator()->GetLowFrequencyHeap()->AllocMem(S_SIZE_T(sizeof(size_t *)) * (S_SIZE_T(nElem) + S_SIZE_T(1))));
+         memcpy (stackTraceInMap, stackTrace, sizeof(size_t *) * (nElem + 1));
+         g_pUniqueStackMap->InsertValue(stackTraceHash, stackTraceInMap);
+         stackTraceInMap.SuppressRelease();
+diff --git a/src/coreclr/vm/threadsuspend.cpp b/src/coreclr/vm/threadsuspend.cpp
+index 1a454a8dc..ee15271ed 100644
+--- a/src/coreclr/vm/threadsuspend.cpp
++++ b/src/coreclr/vm/threadsuspend.cpp
+@@ -4412,14 +4412,16 @@ bool Thread::SysSweepThreadsForDebug(bool forceSync)
+         // Suspend the thread
+ 
+ #if defined(FEATURE_HIJACK) && !defined(TARGET_UNIX)
+-        DWORD dwSwitchCount = 0;
++        DWORD dwSwitchCount;    // (assigned, not initialized: a goto above jumps past this)
++        dwSwitchCount = 0;
+ #endif
+ 
+ RetrySuspension:
+         // We can not allocate memory after we suspend a thread.
+         // Otherwise, we may deadlock if the suspended thread holds allocator locks.
+         ThreadStore::AllocateOSContext();
+-        SuspendThreadResult str = thread->SuspendThread();
++        SuspendThreadResult str;
++        str = thread->SuspendThread();
+ 
+         if (str == STR_Failure || str == STR_UnstartedOrDead)
+         {
+diff --git a/src/coreclr/vm/util.hpp b/src/coreclr/vm/util.hpp
+index e7b311d87..4a570c445 100644
+--- a/src/coreclr/vm/util.hpp
++++ b/src/coreclr/vm/util.hpp
+@@ -33,8 +33,9 @@ extern bool g_arm64_atomics_present;
+ #endif
+ #endif
+ 
+-#ifndef TARGET_UNIX
++#if !defined(TARGET_UNIX) && !defined(__MINGW32__)
+ // Copied from malloc.h: don't want to bring in the whole header file.
++// (mingw-w64's malloc.h makes _alloca a macro for __builtin_alloca)
+ void * __cdecl _alloca(size_t);
+ #endif // !TARGET_UNIX
+ 
+-- 
+2.55.0
+

@@ -1,0 +1,17 @@
+{
+  "original_source": "src/powershell/Program.cs",
+  "source_sha256": "d1d43b422b1d19c993622abba1ae0886d0fd02f1d1c34dd41c136ce1c37eff20",
+  "source_changes": [],
+  "references": {
+    "System.Management.Automation.dll": "bee14d524697b793d653043c0e2cf634c979881a5a3d41573b570b1910a33e5c",
+    "Microsoft.PowerShell.ConsoleHost.dll": "47ee6d625b5aacfb33be6937e7c42294e31af5dd90da2c66805f695414c4aa76"
+  },
+  "sdk_source_apphost_sha256": "f62e93eb4cf769a08b4ea78d7d6886389ff587295567b70117a55c0bc78014cc",
+  "sdk_source_apphost_path": "/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Host.win-x64/8.0.31/runtimes/win-x64/native/apphost.exe",
+  "outputs": {
+    "pwsh.exe": "06a447907a595ecd046aa52c27e552f17ed81961ec7f35ec0ee8c16bdcbe5e4b",
+    "pwsh.dll": "5edf53f6e1cb234aed1bbd2859da6272969acd4861dd1fa142a58af1d887cee2",
+    "pwsh.runtimeconfig.json": "28329cf08f6505e73806b17558b187c02f0c1c516fe47ebfb7a013d082aaa306",
+    "pwsh.deps.json": "4c4571da140830d9c359d829a3018e9318bd248eaae7ec2e05fb956a39dea269"
+  }
+}

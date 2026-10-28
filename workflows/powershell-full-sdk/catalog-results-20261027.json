@@ -1,0 +1,1402 @@
+{
+  "original_source_hashes": {
+    "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj": "001b645159cf67408b106b26005f281ef9578033fa3daa6b119d486466ae52f7",
+    "src/TypeCatalogGen/TypeCatalogGen.cs": "894c6a13375e52bf40d21ebd6c45861b9a42b47a95abece0e68bea6103a30409",
+    "src/TypeCatalogGen/TypeCatalogGen.csproj": "58a778537238fa92644c8036bd6515c8453d3b8b25d58c95cd7f6d58afb054b5"
+  },
+  "original_sdk_reference_count": 213,
+  "reference_sha256_and_owners": {
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/microsoft.security.extensions/1.4.0/lib/net8.0/getfilesiginforedistwrapper.dll": {
+      "sha256": "d543c3abaab14ec7836fa7095a05ee9373a28c8f3f11a4b399aac7ad9ba21972",
+      "source_nuget_assets": [
+        {
+          "package": "microsoft.security.extensions.1.4.0.nupkg",
+          "asset": "lib/net8.0/getfilesiginforedistwrapper.dll"
+        }
+      ]
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/humanizer.core/2.14.1/lib/net8.0/Humanizer.dll": {
+      "sha256": "71fdc20a5e43dcd1f4d8bf9593961c567eb576e11753dcafaf0cd1d7fd0fd06b",
+      "source_nuget_assets": [
+        {
+          "package": "humanizer.core.2.14.1.nupkg",
+          "asset": "lib/net8.0/Humanizer.dll"
+        }
+      ]
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/json.more.net/2.0.2/lib/net8.0/Json.More.dll": {
+      "sha256": "3c088bd02c1a51fab9e32dc80bdf34ac23b1fd6470178dac0f37cda0eb84a0be",
+      "source_nuget_assets": [
+        {
+          "package": "json.more.net.2.0.2.nupkg",
+          "asset": "lib/net8.0/Json.More.dll"
+        }
+      ]
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/jsonpointer.net/5.0.2/lib/net8.0/JsonPointer.Net.dll": {
+      "sha256": "a5682af03250268ce6edd152ce9e0806f1fb2ebc3b3751cc5e861199b0ec066e",
+      "source_nuget_assets": [
+        {
+          "package": "jsonpointer.net.5.0.2.nupkg",
+          "asset": "lib/net8.0/JsonPointer.Net.dll"
+        }
+      ]
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/jsonschema.net/7.0.4/lib/net8.0/JsonSchema.Net.dll": {
+      "sha256": "f6b3bd118a75583b9bcbee93c7a179aa868989e8812b3d37d8b97cb9973bb9ac",
+      "source_nuget_assets": [
+        {
+          "package": "jsonschema.net.7.0.4.nupkg",
+          "asset": "lib/net8.0/JsonSchema.Net.dll"
+        }
+      ]
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/markdig.signed/0.33.0/lib/net8.0/Markdig.Signed.dll": {
+      "sha256": "f6636f40dd62c5623b63fe304141358d3336e2294b87c0ef3fcd923243dc78b3",
+      "source_nuget_assets": [
+        {
+          "package": "markdig.signed.0.33.0.nupkg",
+          "asset": "lib/net8.0/Markdig.Signed.dll"
+        }
+      ]
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/microsoft.applicationinsights/2.23.0/lib/net8.0/Microsoft.ApplicationInsights.dll": {
+      "sha256": "f6c5b15a4ffe6202fc4a40775545591918b60683b6db7f059ba0127c63c18a0f",
+      "source_nuget_assets": [
+        {
+          "package": "microsoft.applicationinsights.2.23.0.nupkg",
+          "asset": "lib/net8.0/Microsoft.ApplicationInsights.dll"
+        }
+      ]
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/microsoft.bcl.asyncinterfaces/8.0.0/lib/net8.0/Microsoft.Bcl.AsyncInterfaces.dll": {
+      "sha256": "4577de23c660dd594cc5e044587fbf1f17063bc208808504b8fc804a9d79776a",
+      "source_nuget_assets": [
+        {
+          "package": "microsoft.bcl.asyncinterfaces.8.0.0.nupkg",
+          "asset": "lib/net8.0/Microsoft.Bcl.AsyncInterfaces.dll"
+        }
+      ]
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/microsoft.codeanalysis.csharp/4.9.2/lib/net8.0/Microsoft.CodeAnalysis.CSharp.dll": {
+      "sha256": "9730bd25d683400557a746639c973f1fbeaf21f4c16a8d5c720a9f24214dd6b4",
+      "source_nuget_assets": [
+        {
+          "package": "microsoft.codeanalysis.csharp.4.9.2.nupkg",
+          "asset": "lib/net8.0/Microsoft.CodeAnalysis.CSharp.dll"
+        }
+      ]
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/microsoft.codeanalysis.common/4.9.2/lib/net8.0/Microsoft.CodeAnalysis.dll": {
+      "sha256": "86f73945cc6a05ed0fd19eb7113275e3ab466529abdf44fdf0eba8d72f8d71fd",
+      "source_nuget_assets": [
+        {
+          "package": "microsoft.codeanalysis.common.4.9.2.nupkg",
+          "asset": "lib/net8.0/Microsoft.CodeAnalysis.dll"
+        }
+      ]
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/Microsoft.CSharp.dll": {
+      "sha256": "b1f380ba9a70f0387b428c98a8739eec8a83cfe37b619d2c06be1535c64e79de",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/microsoft.extensions.objectpool/8.0.31/lib/net8.0/Microsoft.Extensions.ObjectPool.dll": {
+      "sha256": "2fa2f4005b52f845b052c4c98483e480d2045826989d9faae6f26eecc9cfb1e7",
+      "source_nuget_assets": [
+        {
+          "package": "microsoft.extensions.objectpool.8.0.31.nupkg",
+          "asset": "lib/net8.0/Microsoft.Extensions.ObjectPool.dll"
+        }
+      ]
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/microsoft.powershell.markdownrender/7.2.1/lib/net8.0/Microsoft.PowerShell.MarkdownRender.dll": {
+      "sha256": "17f177b498e345fbb25663f0be5a169921629c75e1e750f618775bded268191f",
+      "source_nuget_assets": [
+        {
+          "package": "microsoft.powershell.markdownrender.7.2.1.nupkg",
+          "asset": "lib/net8.0/Microsoft.PowerShell.MarkdownRender.dll"
+        }
+      ]
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/Microsoft.VisualBasic.Core.dll": {
+      "sha256": "bac073af69e012883a856f1f02e927eb14153ec5a45f9a014e51a3e8083630ef",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/Microsoft.VisualBasic.dll": {
+      "sha256": "e9fed52918dd5968e18f3fbf914e8bd4de742d230042069b11a512a71cb40e2d",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/Microsoft.Win32.Primitives.dll": {
+      "sha256": "3b306632d45597da56e29d1e95adda7426d9d72f6918404acb8f7136a771a60f",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/microsoft.win32.registry.accesscontrol/8.0.0/ref/net8.0/Microsoft.Win32.Registry.AccessControl.dll": {
+      "sha256": "a732faea93da9b071aa7cbd654a26e6e49ffd2f28615ae8c4778b876ce5b45e2",
+      "source_nuget_assets": [
+        {
+          "package": "microsoft.win32.registry.accesscontrol.8.0.0.nupkg",
+          "asset": "ref/net8.0/Microsoft.Win32.Registry.AccessControl.dll"
+        }
+      ]
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/Microsoft.Win32.Registry.dll": {
+      "sha256": "460c453c2de3cc039cbbe800596c7032f30b879f62a49e706e801c7712cbd82f",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/microsoft.win32.systemevents/8.0.0/ref/net8.0/Microsoft.Win32.SystemEvents.dll": {
+      "sha256": "f23bb61d03f23aee7871a484dc98f7415a1d1f0a3c947de3f8ff613e5f9ae3f1",
+      "source_nuget_assets": [
+        {
+          "package": "microsoft.win32.systemevents.8.0.0.nupkg",
+          "asset": "ref/net8.0/Microsoft.Win32.SystemEvents.dll"
+        }
+      ]
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/mscorlib.dll": {
+      "sha256": "14292820394f56ab378ae20b6788589364511aab69956a2e9c6ff78da9845db9",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/netstandard.dll": {
+      "sha256": "61ca45c381d6a99276f85686dcb77fcd960dbb98dd0ed8460fc890a25edc19ea",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/newtonsoft.json/13.0.4/lib/net8.0/Newtonsoft.Json.dll": {
+      "sha256": "dbd632f1e37926c74e8b40d4672af029a85fcd878d4a7c95e6c401516f14a1e7",
+      "source_nuget_assets": [
+        {
+          "package": "newtonsoft.json.13.0.4.nupkg",
+          "asset": "lib/net8.0/Newtonsoft.Json.dll"
+        }
+      ]
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.AppContext.dll": {
+      "sha256": "1ab9a9093d1c58eb20a0746e70605f05ba729a94d433353f9adcc46d771230a3",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Buffers.dll": {
+      "sha256": "71d40b9b87867d1093314695445297967c0eddc9d5964a06bbeb28964ebc3ba5",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/system.codedom/8.0.0/lib/net8.0/System.CodeDom.dll": {
+      "sha256": "6487c814ff3223e622bcaccc7ac2c0c48b0c9b2b56bab74d246cb46d411d3ba6",
+      "source_nuget_assets": [
+        {
+          "package": "system.codedom.8.0.0.nupkg",
+          "asset": "lib/net8.0/System.CodeDom.dll"
+        }
+      ]
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Collections.Concurrent.dll": {
+      "sha256": "e5b29a67f6efc7d40d2ee0f8c80beafbfe71e15cfa4c20277eb9c5c96e300f52",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Collections.dll": {
+      "sha256": "f05821d8a1b88143d21121c089c2f5545720dc378344569c7c79d96578ad7284",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Collections.Immutable.dll": {
+      "sha256": "2d29dbf75111c93522c5c2319e8bb57efdfb605b476aba6f1fa532b1e28c56d4",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Collections.NonGeneric.dll": {
+      "sha256": "f04f0d812a152b3b961dbd6c284dcdb8fb054934bf636363ddf062bc1ab2306d",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Collections.Specialized.dll": {
+      "sha256": "2e13f9918e6a07ab41abb8441daef4910df90849220c4cf78aeb767190f3a682",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.ComponentModel.Annotations.dll": {
+      "sha256": "7240e53b661c14b3e1f346cfc525e1410af48ac052362a6b11c08c7977027974",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/system.componentmodel.composition/8.0.0/lib/net8.0/System.ComponentModel.Composition.dll": {
+      "sha256": "250c983fc28458a826ed2501fcb5ff5ea68387f95ec6621df94bf04d289f603c",
+      "source_nuget_assets": [
+        {
+          "package": "system.componentmodel.composition.8.0.0.nupkg",
+          "asset": "lib/net8.0/System.ComponentModel.Composition.dll"
+        }
+      ]
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/system.componentmodel.composition.registration/8.0.0/lib/net8.0/System.ComponentModel.Composition.Registration.dll": {
+      "sha256": "f04c7e8c5ef796dd8d573dce1ed4f918f97ec23a4688c4f3c10db54be0dc9515",
+      "source_nuget_assets": [
+        {
+          "package": "system.componentmodel.composition.registration.8.0.0.nupkg",
+          "asset": "lib/net8.0/System.ComponentModel.Composition.Registration.dll"
+        }
+      ]
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.ComponentModel.DataAnnotations.dll": {
+      "sha256": "8535683ddd0f45fa43f25edfee1fe8eec646d0e69fdd3adab3bec23b0b964fa3",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.ComponentModel.dll": {
+      "sha256": "9bd0914ff21ee70bc12cbc266cde94d5f6fb21c0dc6ab0c29e6efa13d23f05c3",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.ComponentModel.EventBasedAsync.dll": {
+      "sha256": "b23c3333f0577213dcdaedc6691390cdcc23a5224d19df9cbc8f54182d617aaa",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.ComponentModel.Primitives.dll": {
+      "sha256": "0b220d7a6cfbe521c0ee8473d9670f5ffedf5822335cc297f0b6a8ebcb701e42",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.ComponentModel.TypeConverter.dll": {
+      "sha256": "bf4c6653e28e1a2a87383175968558dc25d06e5458b2786363b716e2a6d52c74",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/system.configuration.configurationmanager/8.0.1/lib/net8.0/System.Configuration.ConfigurationManager.dll": {
+      "sha256": "a58da7ee9f4055a91f0fae21f26bc8fc11ec78bcfd4b1e6145f997559038f07e",
+      "source_nuget_assets": [
+        {
+          "package": "system.configuration.configurationmanager.8.0.1.nupkg",
+          "asset": "lib/net8.0/System.Configuration.ConfigurationManager.dll"
+        }
+      ]
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Configuration.dll": {
+      "sha256": "2bf45cde00a3f53cb5ad39c07e06333c868b37dd26654890b489ae9348c439db",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Console.dll": {
+      "sha256": "cdb2d7331c140dd3d3d545def374d71fd40346ba234e1ca644cd13be2e40d1db",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Core.dll": {
+      "sha256": "a004a7d0d70b43e2734a2928c18d99c4bc08c010f414c6a7b5e5f0001c7a79cf",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Data.Common.dll": {
+      "sha256": "0990ae28916158c388c0c6c60ce51acf2867cd135bed748a657701ebac0e7cdb",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Data.DataSetExtensions.dll": {
+      "sha256": "1a8de6461df97a38f86a37d2cebc5a8cf094135889e57bdbd459df852f4faaaf",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Data.dll": {
+      "sha256": "d49cf0743d0b80dc07f949f902cd38d08fc68f2da2abbc95fc2b3bf579029dd6",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/system.data.odbc/8.0.1/ref/net8.0/System.Data.Odbc.dll": {
+      "sha256": "019dbdbcf338eedeac5d38b368a7428078373e04fc7c0661b88746ae345f40aa",
+      "source_nuget_assets": [
+        {
+          "package": "system.data.odbc.8.0.1.nupkg",
+          "asset": "ref/net8.0/System.Data.Odbc.dll"
+        }
+      ]
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/system.data.oledb/8.0.1/ref/net8.0/System.Data.OleDb.dll": {
+      "sha256": "6162d35204384d1276c89b633effd47bd5e8bbcdbdc03c6186dc0bb603eb36dd",
+      "source_nuget_assets": [
+        {
+          "package": "system.data.oledb.8.0.1.nupkg",
+          "asset": "ref/net8.0/System.Data.OleDb.dll"
+        }
+      ]
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/system.data.sqlclient/4.9.1/ref/net8.0/System.Data.SqlClient.dll": {
+      "sha256": "8b6d1274da71b26f74b446982211b7496267efd9426196ee27ccb16d98f25853",
+      "source_nuget_assets": [
+        {
+          "package": "system.data.sqlclient.4.9.1.nupkg",
+          "asset": "ref/net8.0/System.Data.SqlClient.dll"
+        }
+      ]
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Diagnostics.Contracts.dll": {
+      "sha256": "d9cdfc31571a2c910c5d1fc0abcff7fa9ae1a023d6f2f59d0b11cf2b3d9628f8",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Diagnostics.Debug.dll": {
+      "sha256": "8662695176c67864e111fceff1e07ef5038ecb86d65a3a374d803e50debf6318",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/system.diagnostics.diagnosticsource/8.0.1/lib/net8.0/System.Diagnostics.DiagnosticSource.dll": {
+      "sha256": "9b6827ee74420aaf7428dcf8053d9549feda0f48fa3aa4cb00b68f395f7a252a",
+      "source_nuget_assets": [
+        {
+          "package": "system.diagnostics.diagnosticsource.8.0.1.nupkg",
+          "asset": "lib/net8.0/System.Diagnostics.DiagnosticSource.dll"
+        }
+      ]
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/system.diagnostics.eventlog/8.0.2/ref/net8.0/System.Diagnostics.EventLog.dll": {
+      "sha256": "0d8632e3afd07910fda8cbfe709f069eb56e5043b09a3286058fc4f22acb8766",
+      "source_nuget_assets": [
+        {
+          "package": "system.diagnostics.eventlog.8.0.2.nupkg",
+          "asset": "ref/net8.0/System.Diagnostics.EventLog.dll"
+        }
+      ]
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Diagnostics.FileVersionInfo.dll": {
+      "sha256": "b9525dcc4bfa96980516d7e380254b4d54b4600b3d6dbbb25083d88c10093c17",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/system.diagnostics.performancecounter/8.0.1/ref/net8.0/System.Diagnostics.PerformanceCounter.dll": {
+      "sha256": "e3b9a3edc1da2e52305cad348decafc3d643b8c2ef76ee26a4ad4bad8574c956",
+      "source_nuget_assets": [
+        {
+          "package": "system.diagnostics.performancecounter.8.0.1.nupkg",
+          "asset": "ref/net8.0/System.Diagnostics.PerformanceCounter.dll"
+        }
+      ]
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Diagnostics.Process.dll": {
+      "sha256": "85d894d3c314ed52842fa78f7204a2ae65c22e412689115db8dc3ee3f9230b4e",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Diagnostics.StackTrace.dll": {
+      "sha256": "c3617afb07573417ae6a22cbd39b571c3c4f7de7bda0295515133fb3dd31f1ff",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Diagnostics.TextWriterTraceListener.dll": {
+      "sha256": "89304212364fbc7f66a3feb8f11ab4e687114808ee34c9ad8573f8f564a6236f",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Diagnostics.Tools.dll": {
+      "sha256": "16e812fd127539662deb506b5ec07fa8bd29fa6865d34ae702bc2028c48875b8",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Diagnostics.TraceSource.dll": {
+      "sha256": "a5ca3640a334bb40a1fe10643964a3fc1528e944d8878cef358966f8315c7684",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Diagnostics.Tracing.dll": {
+      "sha256": "af8f8e203007a4181ae0793deae416444e8fb5a10c2ebd5a49fd534524145fea",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/system.directoryservices.accountmanagement/8.0.1/ref/net8.0/System.DirectoryServices.AccountManagement.dll": {
+      "sha256": "e1726792195cf6a9b00d75435f0b0c82dbfe8954e037099a1462e2e51533e01f",
+      "source_nuget_assets": [
+        {
+          "package": "system.directoryservices.accountmanagement.8.0.1.nupkg",
+          "asset": "ref/net8.0/System.DirectoryServices.AccountManagement.dll"
+        }
+      ]
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/system.directoryservices/8.0.0/ref/net8.0/System.DirectoryServices.dll": {
+      "sha256": "6f12fb342e2825c76f610e26133aa1046feeb54b7d9e0042c9f6bd4e9e418a92",
+      "source_nuget_assets": [
+        {
+          "package": "system.directoryservices.8.0.0.nupkg",
+          "asset": "ref/net8.0/System.DirectoryServices.dll"
+        }
+      ]
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/system.directoryservices.protocols/8.0.2/ref/net8.0/System.DirectoryServices.Protocols.dll": {
+      "sha256": "9477fc52ec34d51cf6a2dbdf7479249dbf9d75a09311b5eeaf481805691870e5",
+      "source_nuget_assets": [
+        {
+          "package": "system.directoryservices.protocols.8.0.2.nupkg",
+          "asset": "ref/net8.0/System.DirectoryServices.Protocols.dll"
+        }
+      ]
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.dll": {
+      "sha256": "f22ac16ce9242c3b55c2478576cba3cd1d89c0b2e4c62441ff5821e191f725d2",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/system.drawing.common/8.0.31/ref/net8.0/System.Drawing.Common.dll": {
+      "sha256": "da7252314e3c93bafc1abd5297132ee361d5b1e317919dbf11d7df1d57eaef92",
+      "source_nuget_assets": [
+        {
+          "package": "system.drawing.common.8.0.31.nupkg",
+          "asset": "ref/net8.0/System.Drawing.Common.dll"
+        }
+      ]
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Drawing.dll": {
+      "sha256": "2a079f78f1259dea6266bd7bf80b37b5830c2b31bc6a29ff0b0cad702241c321",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Drawing.Primitives.dll": {
+      "sha256": "34b92dd3d5369028a4956a2eae620d3f00a4a1ca3d8bb6760d79c368465f463c",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Dynamic.Runtime.dll": {
+      "sha256": "b15ce2918e5d20357d98aadfe75555914959354a9f2438b94a2c8ae6259c3f48",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/system.formats.asn1/8.0.2/lib/net8.0/System.Formats.Asn1.dll": {
+      "sha256": "482383202bb846a7150a53976414e3e93bcd496315b0a040912e85175a806e5f",
+      "source_nuget_assets": [
+        {
+          "package": "system.formats.asn1.8.0.2.nupkg",
+          "asset": "lib/net8.0/System.Formats.Asn1.dll"
+        }
+      ]
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Formats.Tar.dll": {
+      "sha256": "51413faadbccb58cd44b1d4a87e824ba914f5908abfcbc36823983deaeadf9ad",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Globalization.Calendars.dll": {
+      "sha256": "27e2957a930999925197e99f1aa153157adfdada790bebb0bd522cfd32b55eb6",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Globalization.dll": {
+      "sha256": "3061d8a93a11ae0b257b80060978efcc609712bd87cb6daccd7d56aaa578df6b",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Globalization.Extensions.dll": {
+      "sha256": "c01b32a78b69f3bfe39fbb7370838d3e3a3883ded045c32542c5c06d313d4a1b",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.IO.Compression.Brotli.dll": {
+      "sha256": "3ac3cc38596d43eea3b58ddffda519b8b18c1a1c00c4da31becc5f005860e7f0",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.IO.Compression.dll": {
+      "sha256": "8c5fca6cfd24fc3bc66721d8546c2a06f7b340fdf021271975e0cbc4434fcc5c",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.IO.Compression.FileSystem.dll": {
+      "sha256": "c184dfc4851c23941fdb3491192b75c3ac84892993e4868f3f0cdc7a77c2388a",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.IO.Compression.ZipFile.dll": {
+      "sha256": "6ab15b47f063b4fa965bb1cec2fba057b56ff98ae8079a4704ab21bab22b7cad",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.IO.dll": {
+      "sha256": "ba077cb648b6c902a3de1e6db3208488e38cb1c9807a59f2107bf65f7f089909",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.IO.FileSystem.AccessControl.dll": {
+      "sha256": "edd4870d0b1194c8c53d72e70429694c366e9cdcec09d9a42894ac85d1af93d2",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.IO.FileSystem.dll": {
+      "sha256": "4a1b32ad265c01110ae6a1a479dd22fd507113e17107ecb55facf63c0a3b6f96",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.IO.FileSystem.DriveInfo.dll": {
+      "sha256": "17f61f98a38c332299de3627583b056d2a02dfb29f3550289c60b23a093b4acb",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.IO.FileSystem.Primitives.dll": {
+      "sha256": "6077b2938e4cf1ad23dedd9af946ffd53ef441cb78b2d1a1c14811704b27ac13",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.IO.FileSystem.Watcher.dll": {
+      "sha256": "f519d91540e37bc7bb20f838a924202e8758c7367a869a3195b3e140ff3cc5e2",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.IO.IsolatedStorage.dll": {
+      "sha256": "7624b493014e0777baa3b3e851f22f9c73045a019e4bb6294bed7b2f858d55cb",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.IO.MemoryMappedFiles.dll": {
+      "sha256": "a18063fa650cedf1ff9b7b1ca0500452e452f453138789f4af3ed30e0b9f565c",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/system.io.packaging/8.0.1/lib/net8.0/System.IO.Packaging.dll": {
+      "sha256": "93f951a4fc8279037158cfea451992622d79578020468e5428c5aab9fcff49ef",
+      "source_nuget_assets": [
+        {
+          "package": "system.io.packaging.8.0.1.nupkg",
+          "asset": "lib/net8.0/System.IO.Packaging.dll"
+        }
+      ]
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.IO.Pipes.AccessControl.dll": {
+      "sha256": "2a811f57c506c6e31579b21d6c19bc9cd401cd7a793402b0cc049ec0cd27f48e",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.IO.Pipes.dll": {
+      "sha256": "12747ef8d5854e887e1865be9872f4e96fd59e29a9083f3b73571bbef49c0681",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/system.io.ports/8.0.0/ref/net8.0/System.IO.Ports.dll": {
+      "sha256": "39acc0385908d29ac19c9c7650cabfc1feccebd4d85650509f69141e2a29056c",
+      "source_nuget_assets": [
+        {
+          "package": "system.io.ports.8.0.0.nupkg",
+          "asset": "ref/net8.0/System.IO.Ports.dll"
+        }
+      ]
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.IO.UnmanagedMemoryStream.dll": {
+      "sha256": "e6ef700ed25fec81613dc40e7570b4419867db56bd7faa578771defbcf656405",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Linq.dll": {
+      "sha256": "1150ffe1403ee8cf3822be68c2fa5b24ac21ced9da17045382736b091f3cf204",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Linq.Expressions.dll": {
+      "sha256": "332b7bc4f90f43b6e0a0edab4620c360d544a3db8ece37ebc8da0849fe5fd3b0",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Linq.Parallel.dll": {
+      "sha256": "ee3684388b71bdc175c8060c7d25d391c9fb2dd574f37b94e962b20d1877ed90",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Linq.Queryable.dll": {
+      "sha256": "4dfdb917deac363157f68efdb124e98bdf5dfdcbf7abe58df591b5c9b8775ba7",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/system.management/8.0.0/ref/net8.0/System.Management.dll": {
+      "sha256": "0786fff8db8c65c9b817c4b4ac1eacb988d854382f19ccfdbcf777429303c3c7",
+      "source_nuget_assets": [
+        {
+          "package": "system.management.8.0.0.nupkg",
+          "asset": "ref/net8.0/System.Management.dll"
+        }
+      ]
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Memory.dll": {
+      "sha256": "cf9f9bc1540981ffea7cc3bce06edbe212adcafdde1505756909e1cb0e0f65f1",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Net.dll": {
+      "sha256": "6b805c17237e5ca2cea2a521eb973eba2809d3311c1835951d217fa0325e2d1b",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Net.Http.dll": {
+      "sha256": "9c1875093f195c65c8a916719a1f1b7a277e1ed307715b8ed4764956304a60ed",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Net.Http.Json.dll": {
+      "sha256": "bfd17ac6e6e3c2c469773a1a5ef99296e84b4aabbd3e369ca83dabe232f92f31",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/system.net.http.winhttphandler/8.0.3/ref/net8.0/System.Net.Http.WinHttpHandler.dll": {
+      "sha256": "c3e6e5aeec35bc48b6a1eb9e28fbecacbab22bb213262b3477767d4b769d5d7f",
+      "source_nuget_assets": [
+        {
+          "package": "system.net.http.winhttphandler.8.0.3.nupkg",
+          "asset": "ref/net8.0/System.Net.Http.WinHttpHandler.dll"
+        }
+      ]
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Net.HttpListener.dll": {
+      "sha256": "0b8919b920d7044b7ad38ae553ddf7cb81ea98f97d20bad44773a75ca32c0a09",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Net.Mail.dll": {
+      "sha256": "f5338f47844614593918354a58f49a717dc04bdfb61d93a4fcd1f437eb77d220",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Net.NameResolution.dll": {
+      "sha256": "e4c1dff7c69fbfacb916d2137f70fe185436736eedf1b18017739fd0f6b01bad",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Net.NetworkInformation.dll": {
+      "sha256": "d0543af9747967dad6df764fb07f37ef36f61ac43ea0bad158a62409f500ae9b",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Net.Ping.dll": {
+      "sha256": "b4c1c5cdb217e9028df7feaabb8a57cdd1129cd72684161505fbc93a7ecee483",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Net.Primitives.dll": {
+      "sha256": "681d30fcfa82eb9e0456142d3d21b676d5e156994d3f8a1a7c55ff7269d81cb4",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Net.Quic.dll": {
+      "sha256": "8457994e78a4a583596409752e3af1a6aaa345bc3bf8b3c1bca78e2e1c1b7afb",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Net.Requests.dll": {
+      "sha256": "fca7c7269fca979b8b7f350980b4ab6aa5747e40ac9c16d330982a6f7327ccc9",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Net.Security.dll": {
+      "sha256": "8eddda2d61ee70d8ab71f191f15625a8be7e11d1c2c13794094cdc3a7fab0b99",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Net.ServicePoint.dll": {
+      "sha256": "924786ddf7c4c4da862f6ff782c6919397791af8af2bb9be389099d4bf5f22eb",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Net.Sockets.dll": {
+      "sha256": "a8cefaa955ca1a5b2c3dc36b5c411a17566b8dcee4d3d08966a7d6a305e8618e",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Net.WebClient.dll": {
+      "sha256": "2e220231404c15304d4bfae80c1b10961547fb2c5f5cd6497999336abffd6752",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Net.WebHeaderCollection.dll": {
+      "sha256": "d798b378799ac1328d9d43b887e45717bd10bcf01c5ffa8587f483922c2652da",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Net.WebProxy.dll": {
+      "sha256": "04de90407fb5bce69b4408a90dd3773bfd1739050718650f4696b7c2a2f4a88c",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Net.WebSockets.Client.dll": {
+      "sha256": "d0efe91993b97eba9f1f13b4744e02006b50c6fc0aed931d79551bf17e01291b",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Net.WebSockets.dll": {
+      "sha256": "c96355ee531bef125075c1e9b29797942df882e0b103e8ead65799950630cfe2",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Numerics.dll": {
+      "sha256": "87142ef352fa639e7b4102df97fb24655ad7d526aad696e079873235443a46ce",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Numerics.Vectors.dll": {
+      "sha256": "d61e917dddc1e7252d7d4aaaf8705ed2e2997614d82dadded3c60d6abe089492",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.ObjectModel.dll": {
+      "sha256": "035b890b6f6e3c68e7a01ee67a153ac5c8f178eaff26373590c169c96f7b1d90",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/system.reflection.context/8.0.0/lib/net8.0/System.Reflection.Context.dll": {
+      "sha256": "0912063cebc8d6226b8a939b81ad18ab5fbae0bd8c77c1e544371c176a92d9ef",
+      "source_nuget_assets": [
+        {
+          "package": "system.reflection.context.8.0.0.nupkg",
+          "asset": "lib/net8.0/System.Reflection.Context.dll"
+        }
+      ]
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Reflection.DispatchProxy.dll": {
+      "sha256": "34801a34e80b43bd96107eb4f13ac5c8e79c3cd536b9f2e959a5d0b0e0b1ba96",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Reflection.dll": {
+      "sha256": "7a6215aa4383c98c6bc18b3f915d02e2af6e5f6299aeda2b1401257ed11f8846",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Reflection.Emit.dll": {
+      "sha256": "a99909b818acbd810e64d5f2e032432195f454af29e22ed41411fc357f31b83a",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Reflection.Emit.ILGeneration.dll": {
+      "sha256": "e75cfb178d06f9dac53c3a74affbeccf33f9277dddb96235ec1b1d788c770cb0",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Reflection.Emit.Lightweight.dll": {
+      "sha256": "d6a78c8b07f0993a6604b62a85e1c52e21b3e41f33e0c8fb5ab384ee2a76a247",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Reflection.Extensions.dll": {
+      "sha256": "8130b36ddf492d24e3ead43c136d12b3a89614bec6d4abf36054609916e7f7bb",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Reflection.Metadata.dll": {
+      "sha256": "9ff6df61fa1f682f94f006b2dd7710f02e12f0c566f64784471b27588d5d78ba",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Reflection.Primitives.dll": {
+      "sha256": "725ac5590ac473143dbb5222a6fd07da509528a34407755a2716a99d26b9bd42",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Reflection.TypeExtensions.dll": {
+      "sha256": "a29bed4100a345a4e40a6a9654c5eda631f7bc56bf32a35f2366580712d52922",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Resources.Reader.dll": {
+      "sha256": "5c61c54086da9c3af8296c03daf087980861cc5e764586f89fcfef16017bdad5",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Resources.ResourceManager.dll": {
+      "sha256": "93fc2c022165a4b11ce15ef4e0ee115015ca1f673b71437dbff35c0c1f4d1ce7",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Resources.Writer.dll": {
+      "sha256": "248ead9728f85d185adf2ff504e739bd66dd120c2e6edadf5fed27e187990ea9",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/system.runtime.caching/8.0.1/ref/net8.0/System.Runtime.Caching.dll": {
+      "sha256": "9ab300ca517ae5bfc863b2b21bbd09728fcedd74bbb3c87d150e6cf2895f5bed",
+      "source_nuget_assets": [
+        {
+          "package": "system.runtime.caching.8.0.1.nupkg",
+          "asset": "ref/net8.0/System.Runtime.Caching.dll"
+        }
+      ]
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Runtime.CompilerServices.Unsafe.dll": {
+      "sha256": "25a9adac72993bc4f7498dc4a52b02a27f1d5606eac070b762e102c1bf6ed7d3",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Runtime.CompilerServices.VisualC.dll": {
+      "sha256": "9d1e52409ac0f74eef1f5e27bfb4f9607447c3481c96e93b0a1f8c9c9532d7da",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Runtime.dll": {
+      "sha256": "e8d328a38aba70702341d92a12cba1658e798a5b697a08c43d8403f6d5d2b9d4",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Runtime.Extensions.dll": {
+      "sha256": "469f5d3feff183c5713790fa1741a82c94e7676e89a8f33cb50b8b3b3d18faf1",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Runtime.Handles.dll": {
+      "sha256": "fe2d009ab4a931540f63ace2d5a6ab0a53142dd49067e84eaa023bde62c1b892",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Runtime.InteropServices.dll": {
+      "sha256": "5e4a7d7f6b326080a359d3eba815986f7233b1ac06af1364eba22a844de49f9d",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Runtime.InteropServices.JavaScript.dll": {
+      "sha256": "324f8c06a20c595c618e087a1be6c3013ec92816c782d9e07b6990135b4a0637",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Runtime.InteropServices.RuntimeInformation.dll": {
+      "sha256": "d60443cdd89d467ac5e925084dc59b175eae9fac02b6209802a5180c9b4d978b",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Runtime.Intrinsics.dll": {
+      "sha256": "3d2c24c9ab678847af00ac47dc0ba0d589f30f6dae31cf7019ad1823dfd34545",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Runtime.Loader.dll": {
+      "sha256": "21aad2420ac21b50381fc7ee4f2c55f5c0b27b4b6956c201e7a9b5d312364670",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Runtime.Numerics.dll": {
+      "sha256": "285a350482ab085bb0d131dd37f49d820604ae6f3d67910c5d7296d33f386b87",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Runtime.Serialization.dll": {
+      "sha256": "15e04ac515f46667f95ba11ccb7d04eb3b85e49e001127f84b07e090cbcca918",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Runtime.Serialization.Formatters.dll": {
+      "sha256": "6dd201dc4b521d3936047f64d1511c06fb29864b0db14bc82eb9891d541d3c43",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Runtime.Serialization.Json.dll": {
+      "sha256": "077d4750214f6c85304548c627f98b378bc3233709357ef16f0c4a0bf71d7361",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Runtime.Serialization.Primitives.dll": {
+      "sha256": "fe073bb797cfb78ed33d16f4da2d102cf3b45cd075d40bf49d9bfc34fa2bd319",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Runtime.Serialization.Xml.dll": {
+      "sha256": "69bec3b7894b5f91b0ef8699604291d3721af5b327e6b88a6865573059b1e072",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Security.AccessControl.dll": {
+      "sha256": "e488aa1fc439c4aa0770300b7a95094ea06c626eb19e73237c0b78066d34ce09",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Security.Claims.dll": {
+      "sha256": "41851b5e64222c72465bcf4305c1a335d2726eb2834b8167742c4f9cb4617a97",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Security.Cryptography.Algorithms.dll": {
+      "sha256": "76f6fabcb25a2ca962147823e5d92c9f73f072c5e151b0a926c2e1b26fe6366d",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Security.Cryptography.Cng.dll": {
+      "sha256": "3abd455b897b7c90c85c94e8b01865d8b9ab289b3cb8f20264a660c2907560f2",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Security.Cryptography.Csp.dll": {
+      "sha256": "a9300892eca2a60baca009b4249437b1eb158266c733849838d1d315696c5b1e",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Security.Cryptography.dll": {
+      "sha256": "3d7d38b2aee12dea5e0c842c69893426dde181d03a07e02ff307ea6a262f8e23",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Security.Cryptography.Encoding.dll": {
+      "sha256": "04b5ea1b1df9c66c8fa189f5c3601d9f51ac927bf4e5078cf5c35510b5ef187f",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Security.Cryptography.OpenSsl.dll": {
+      "sha256": "c3fb927486fb4437b230100e65120a8ca75a0760f50f9dcfed2406aade846f6e",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/system.security.cryptography.pkcs/8.0.1/ref/net8.0/System.Security.Cryptography.Pkcs.dll": {
+      "sha256": "91e3ac2afded90da7ca2b00f7636ca3e7bea83d12626a84d4354e3d32bf2f1c6",
+      "source_nuget_assets": [
+        {
+          "package": "system.security.cryptography.pkcs.8.0.1.nupkg",
+          "asset": "ref/net8.0/System.Security.Cryptography.Pkcs.dll"
+        }
+      ]
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Security.Cryptography.Primitives.dll": {
+      "sha256": "56505263b4fba5303b48cd082bf7369678151314c95a02a3e6f18a8fb141aee3",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/system.security.cryptography.protecteddata/8.0.0/lib/net8.0/System.Security.Cryptography.ProtectedData.dll": {
+      "sha256": "896271c7f4ebe0c9a65d8af51e6624828f9eda18f7bbfc847a5f10ed44b56a17",
+      "source_nuget_assets": [
+        {
+          "package": "system.security.cryptography.protecteddata.8.0.0.nupkg",
+          "asset": "lib/net8.0/System.Security.Cryptography.ProtectedData.dll"
+        }
+      ]
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Security.Cryptography.X509Certificates.dll": {
+      "sha256": "e206120ee64aad39aabc2c401e8bdae93f308f6bb431cd88d6f931867ec63bdc",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/system.security.cryptography.xml/8.0.4/lib/net8.0/System.Security.Cryptography.Xml.dll": {
+      "sha256": "7e6b35ef2dabb884d7437a861cad0567ff8fb1ca3417a8aaadb6e5d30b2e0830",
+      "source_nuget_assets": [
+        {
+          "package": "system.security.cryptography.xml.8.0.4.nupkg",
+          "asset": "lib/net8.0/System.Security.Cryptography.Xml.dll"
+        }
+      ]
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Security.dll": {
+      "sha256": "d1ce5af9d4392b79c5e6af45aaa96f6faabb9e9e32023d532a07b5f0b8d1276e",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/system.security.permissions/8.0.0/lib/net8.0/System.Security.Permissions.dll": {
+      "sha256": "5374d24f1ac7c1d737cf39b675a08ed56d6bcfb74fee14b9d296708d81fbb98a",
+      "source_nuget_assets": [
+        {
+          "package": "system.security.permissions.8.0.0.nupkg",
+          "asset": "lib/net8.0/System.Security.Permissions.dll"
+        }
+      ]
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Security.Principal.dll": {
+      "sha256": "5c9210b383a227e0348f6961e363df5b0760b57b0f4fe068549ed51f3be4c719",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Security.Principal.Windows.dll": {
+      "sha256": "935f00901ecaad701afc545a68144e5a62298ad6465709a6eb9864e0289b53cb",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Security.SecureString.dll": {
+      "sha256": "48c7a674f9959f57bdd3ccd91373ee70c52838dfe2f5e260361aa577804e1cb8",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/system.servicemodel.primitives/4.10.3/ref/net8.0/System.ServiceModel.dll": {
+      "sha256": "4b553adfaf37e198f335582a325801a80d205e42edb6437d6e5a64ee4d2e7462",
+      "source_nuget_assets": [
+        {
+          "package": "system.servicemodel.primitives.4.10.3.nupkg",
+          "asset": "ref/net8.0/System.ServiceModel.dll"
+        }
+      ]
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/system.servicemodel.duplex/4.10.3/ref/net8.0/System.ServiceModel.Duplex.dll": {
+      "sha256": "1e92c7eb46dc96d0a6323ad67412b76cfcfc2b2f414a67e459c3f41204536acd",
+      "source_nuget_assets": [
+        {
+          "package": "system.servicemodel.duplex.4.10.3.nupkg",
+          "asset": "ref/net8.0/System.ServiceModel.Duplex.dll"
+        }
+      ]
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/system.servicemodel.http/4.10.3/ref/net8.0/System.ServiceModel.Http.dll": {
+      "sha256": "35e986e2315a6fb1b981d9ecbf6cf54e33d55cb65d0dc40bc087f4cecfa697b1",
+      "source_nuget_assets": [
+        {
+          "package": "system.servicemodel.http.4.10.3.nupkg",
+          "asset": "ref/net8.0/System.ServiceModel.Http.dll"
+        }
+      ]
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/system.servicemodel.nettcp/4.10.3/ref/net8.0/System.ServiceModel.NetTcp.dll": {
+      "sha256": "c2e575169e7ebd721ada764e3b1e34d89ec1d763513c95c900d08346559dd21c",
+      "source_nuget_assets": [
+        {
+          "package": "system.servicemodel.nettcp.4.10.3.nupkg",
+          "asset": "ref/net8.0/System.ServiceModel.NetTcp.dll"
+        }
+      ]
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/system.servicemodel.primitives/4.10.3/ref/net8.0/System.ServiceModel.Primitives.dll": {
+      "sha256": "9cd5adb77731c8476c84990ab7a7ce497b2c5d641cdc820ac03175150544b838",
+      "source_nuget_assets": [
+        {
+          "package": "system.servicemodel.primitives.4.10.3.nupkg",
+          "asset": "ref/net8.0/System.ServiceModel.Primitives.dll"
+        }
+      ]
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/system.servicemodel.security/4.10.3/ref/net8.0/System.ServiceModel.Security.dll": {
+      "sha256": "d22d9f4e95254200cd53a4c88c522f5d724de9a349d1b842dae966d5bf689199",
+      "source_nuget_assets": [
+        {
+          "package": "system.servicemodel.security.4.10.3.nupkg",
+          "asset": "ref/net8.0/System.ServiceModel.Security.dll"
+        }
+      ]
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/system.servicemodel.syndication/8.0.0/lib/net8.0/System.ServiceModel.Syndication.dll": {
+      "sha256": "3bbf68dd17ee0d91b2dbd1d1a5e6c63178dc697411da49602ea68b1f19639294",
+      "source_nuget_assets": [
+        {
+          "package": "system.servicemodel.syndication.8.0.0.nupkg",
+          "asset": "lib/net8.0/System.ServiceModel.Syndication.dll"
+        }
+      ]
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.ServiceModel.Web.dll": {
+      "sha256": "e13c3d826323b2c2acb9351cfc0e26f7f8c039bb76e4b1fc8dfca31cd63453db",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.ServiceProcess.dll": {
+      "sha256": "930d40791c0d1baf4e771d16d92e96a73c44059e6231203ba04a1803915fae14",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/system.serviceprocess.servicecontroller/8.0.1/ref/net8.0/System.ServiceProcess.ServiceController.dll": {
+      "sha256": "abfe87dfeb1ea663a6b3ceb43881e46b89ae207526ac82a0122a74d939371542",
+      "source_nuget_assets": [
+        {
+          "package": "system.serviceprocess.servicecontroller.8.0.1.nupkg",
+          "asset": "ref/net8.0/System.ServiceProcess.ServiceController.dll"
+        }
+      ]
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/system.speech/8.0.0/ref/net8.0/System.Speech.dll": {
+      "sha256": "236026d2a023f3c1632e7e0568c67b6b3e6b9df7b465d029b815c6dba4a0d452",
+      "source_nuget_assets": [
+        {
+          "package": "system.speech.8.0.0.nupkg",
+          "asset": "ref/net8.0/System.Speech.dll"
+        }
+      ]
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/system.text.encoding.codepages/8.0.0/ref/net8.0/System.Text.Encoding.CodePages.dll": {
+      "sha256": "bc2a109b07bfaddf7e12228a86d316e2ca98d47517a9668f0f3f8fc8a7a8d7b7",
+      "source_nuget_assets": [
+        {
+          "package": "system.text.encoding.codepages.8.0.0.nupkg",
+          "asset": "ref/net8.0/System.Text.Encoding.CodePages.dll"
+        }
+      ]
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Text.Encoding.dll": {
+      "sha256": "38e580a377a8bcdc114e706f44facd0f39002e24feba88116589c2e6a29ee814",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Text.Encoding.Extensions.dll": {
+      "sha256": "acf520a545de13719d9b99a3394f5d8081ce279081a646bfcbda9107ea2f8481",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/system.text.encodings.web/8.0.0/lib/net8.0/System.Text.Encodings.Web.dll": {
+      "sha256": "355c552888757cd7b37319b7b1b73488d19f9359988e878f5270db26700e52c1",
+      "source_nuget_assets": [
+        {
+          "package": "system.text.encodings.web.8.0.0.nupkg",
+          "asset": "lib/net8.0/System.Text.Encodings.Web.dll"
+        }
+      ]
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Text.Json.dll": {
+      "sha256": "2677528ac2315ea7f73cce3c5119acc42677529509bd0e311917cab9620270ef",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Text.RegularExpressions.dll": {
+      "sha256": "97b3952d29cbd5a1f8dbf33772e75eda8967143daed453d1870987fcef788d34",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/system.threading.accesscontrol/8.0.0/ref/net8.0/System.Threading.AccessControl.dll": {
+      "sha256": "dc564cd638e9a899ba365c7920926ed7b3314563baeafcbe7e03a340946ec237",
+      "source_nuget_assets": [
+        {
+          "package": "system.threading.accesscontrol.8.0.0.nupkg",
+          "asset": "ref/net8.0/System.Threading.AccessControl.dll"
+        }
+      ]
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Threading.Channels.dll": {
+      "sha256": "29cec8efceee86130d989e4727ea49a83e4a1c1aef4b6d81c858e8e8a87534bd",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Threading.dll": {
+      "sha256": "b7a6bb8967c214ff6f5ee892a7d26f0b83ffd0ee6760987c2e376298a7b30853",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Threading.Overlapped.dll": {
+      "sha256": "35630956f00273de0b7b03547e94d571299154583a77514694dd03e4a034d87d",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Threading.Tasks.Dataflow.dll": {
+      "sha256": "528db41adebb0143b358c78176e8241f0aadebcc33af16d9b2b5a05dcc8f8821",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Threading.Tasks.dll": {
+      "sha256": "f58bc06ff2ef181cb086bdc3ab7fba7b7fd1b5040c043ffe9cbc54023c3913a2",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Threading.Tasks.Extensions.dll": {
+      "sha256": "46de6e064e85b79cc17ef383ede86561b6fc4855f6b213a278792c8c3a4f1ac0",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Threading.Tasks.Parallel.dll": {
+      "sha256": "48999c45cfdf2e68673b5afefd9fb550420b44fe548c63aac58899e8c80fbf81",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Threading.Thread.dll": {
+      "sha256": "1550e64481e5a57bea38302b24236996971550f54e13945d01ce17f9a7d4f345",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Threading.ThreadPool.dll": {
+      "sha256": "a6d21b429e3ec9f436c19b41651d7504760dfcb62446b900092e49845883e797",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Threading.Timer.dll": {
+      "sha256": "20b9c8e879dbf55eb546a73121dd44eba5e866002d9320a04b1376641dc563b8",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Transactions.dll": {
+      "sha256": "ffaca21fb0f6821b16bad18b306958c8f6974336fe1357f16ec8b69bcb1bb268",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Transactions.Local.dll": {
+      "sha256": "e2cf9a86727a9f1cc32164a722e49fa78a2b60c7a3ec0b9aa627cfa4d8fd21a2",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.ValueTuple.dll": {
+      "sha256": "c92c2fdc727b320a61d1d2bef62ce784bce5092838939bc0b060f255ac012e22",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Web.dll": {
+      "sha256": "9057a6b387c3a61b4bf70fbb5426663ce12190b6d44483862868c73ae5cb9754",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Web.HttpUtility.dll": {
+      "sha256": "834fa11da68b6b6a87a57fea5ea4a880ea809c772810fdbb83279e30e0fb9378",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/system.web.services.description/4.10.3/ref/net8.0/System.Web.Services.Description.dll": {
+      "sha256": "3467fa116d60a18cf3237720022f24af9ee8f0f2cc7f4c8748e26498d1d83cc3",
+      "source_nuget_assets": [
+        {
+          "package": "system.web.services.description.4.10.3.nupkg",
+          "asset": "ref/net8.0/System.Web.Services.Description.dll"
+        }
+      ]
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Windows.dll": {
+      "sha256": "d3200c254470f07e0c24a9acf193a83b601e9c40e84f669a5b7c4c41eecd3be9",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/home/topkek/powershell-full-sdk.K5kDMN/empty-packages/system.windows.extensions/8.0.0/ref/net8.0/System.Windows.Extensions.dll": {
+      "sha256": "266d267a5d0e4808e4cd130c05be952953d12f73fb7b9a800d4fd25b41aaecf5",
+      "source_nuget_assets": [
+        {
+          "package": "system.windows.extensions.8.0.0.nupkg",
+          "asset": "ref/net8.0/System.Windows.Extensions.dll"
+        }
+      ]
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Xml.dll": {
+      "sha256": "ef07e6ff6aba0f2b7249515ab35e576220c14971c9b781a469346ad91f447e94",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Xml.Linq.dll": {
+      "sha256": "e9ea42c76c44b20066e4b0c6663373a648772325430c51e1ea138a57c50869cf",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Xml.ReaderWriter.dll": {
+      "sha256": "e3a54d355645699080684db7197bb42de472410f3940c42cb71a2b299d23072a",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Xml.Serialization.dll": {
+      "sha256": "216aaefdd6c9d8aeb10581eb9d6630989e549aa4578a29520d20ecfec3bc4f60",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Xml.XDocument.dll": {
+      "sha256": "b6ab03366c8115c34adc3b758407c2a8edeb3f7ff021c5d23114eab52b10060f",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Xml.XmlDocument.dll": {
+      "sha256": "ae666f5a7dae8c62561de3f69d231bb705b07ba49401e6139c76a50d5d99dd8e",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Xml.XmlSerializer.dll": {
+      "sha256": "b6b8927f871cbec55e4a2ff8b1056ad123a4476389382bd461a94548f9a3708c",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Xml.XPath.dll": {
+      "sha256": "5aa0977fac57eb60e8006e8162d3c48ec150ed721925fb1c325a6cfbefe37dfd",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/System.Xml.XPath.XDocument.dll": {
+      "sha256": "067eca56a8581b2fcb7499cb683b7894632ad2e4d39193f1603a37ccbcd65f2e",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    },
+    "E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/WindowsBase.dll": {
+      "sha256": "acc6674f30d3879fbd792d6230e0b3abeef5df372df43fa251f3ceb8ed61a481",
+      "source_targeting_native_owner": "mingw-w64-clang-x86_64-dotnet-targeting-pack"
+    }
+  },
+  "restored_source_archive_owners": {
+    "dotnetanalyzers.documentationanalyzers.1.0.0-beta.59.nupkg": {
+      "sha256": "9d5ab62ae646765c8b0a21bef32eb15a821b4b2a99c0441201a12143c6487a48",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-documentation-analyzers"
+    },
+    "dotnetanalyzers.documentationanalyzers.unstable.1.0.0.59.nupkg": {
+      "sha256": "58888dfea0ef82eece5eb7f996d1d7315af6cafc31d974a64221f6b81d79e310",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-documentation-analyzers-unstable"
+    },
+    "humanizer.core.2.14.1.nupkg": {
+      "sha256": "2300a683ce2d6f3517a4c303f5bda9c1f3d82148196484eb94645cdee8ad5ed1",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-humanizer"
+    },
+    "json.more.net.2.0.2.nupkg": {
+      "sha256": "94b3ccb804abd07c78ab2d0c3ccd783f01e8af487207decca1ff8dfdc698afc2",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-json-more"
+    },
+    "jsonpointer.net.5.0.2.nupkg": {
+      "sha256": "b2e014d81d83653e583091113cf89bfc844ec498d70e04cef66088f1957b8412",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-jsonpointer"
+    },
+    "jsonschema.net.7.0.4.nupkg": {
+      "sha256": "d28edeac09a01946484737eb6a02c7777d3f4db16c552d268adb0b151fe0acb1",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-jsonschema"
+    },
+    "markdig.signed.0.33.0.nupkg": {
+      "sha256": "fc741319bbcf17f798fcff72ee4a48566f2cf77824fa86debdf0459cebe80493",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-markdig"
+    },
+    "microsoft.applicationinsights.2.23.0.nupkg": {
+      "sha256": "e47413c1aac416dbcce872412038182c6a6617567cbaf90dba9a43907a368aab",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-applicationinsights"
+    },
+    "microsoft.bcl.asyncinterfaces.8.0.0.nupkg": {
+      "sha256": "19723efcd9f89a37efdab274946d7bad15d1cff7604b509bfe8c0e6378ceed22",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-asyncinterfaces8"
+    },
+    "microsoft.codeanalysis.analyzers.3.3.4.nupkg": {
+      "sha256": "c3703782ae55455e95ac718a960344991cf6e31c55f66d1a51b8ded634a11773",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-codeanalysis-analyzers"
+    },
+    "microsoft.codeanalysis.common.4.9.2.nupkg": {
+      "sha256": "4332fa469e5d6ee74a295438ef21ad45c64d96a41fd81fab4a13748d050921bc",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-codeanalysis-common"
+    },
+    "microsoft.codeanalysis.csharp.4.9.2.nupkg": {
+      "sha256": "d8f2a1dd14ff523a2b4183a43192ff187b62612c363d2519ef76bd40a6926197",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-codeanalysis-csharp"
+    },
+    "microsoft.extensions.objectpool.8.0.31.nupkg": {
+      "sha256": "088562aa79cd3d7885eaa9f7201e910ef526aa000fc40e19483396bdd2ce6c18",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-objectpool"
+    },
+    "microsoft.management.infrastructure.3.0.0.nupkg": {
+      "sha256": "f787ad19bf0964f76922ebdf5c2bc30058497ff42f80897861ab0ca4ceb2f0a5",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-mmi3"
+    },
+    "microsoft.netcore.platforms.1.1.2.nupkg": {
+      "sha256": "effceb8bcd26f8929119959562a5a6c69ba34e47fc88bf1ce69eb2ef3a31a530",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-netcore-platforms"
+    },
+    "microsoft.powershell.markdownrender.7.2.1.nupkg": {
+      "sha256": "ac816080d5ef9ac4d310445ef8fef59583065a213ccda19e4680c00662a3d4cb",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-powershell-markdownrender"
+    },
+    "microsoft.powershell.native.700.0.0.nupkg": {
+      "sha256": "e30d145b7d4f66f4a0b49c0eb2b965a262eec7a469ac40fb73911079ae8ae1a4",
+      "native_owner": "mingw-w64-clang-x86_64-powershell-native"
+    },
+    "microsoft.security.extensions.1.4.0.nupkg": {
+      "sha256": "cc9fc5a0b968b4685b6ab68ea6b48e1ba308e52544f9c8249ae0d0fbc30f3646",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-security-extensions"
+    },
+    "microsoft.win32.registry.accesscontrol.8.0.0.nupkg": {
+      "sha256": "436d08daf759864bfc3f2009b5a3e2cbc8a91542a741046c216e7af8ba0c2b96",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-registry-accesscontrol"
+    },
+    "microsoft.win32.systemevents.8.0.0.nupkg": {
+      "sha256": "02c9d90cfbf8c01d6a131fb6f9d7dd525bf7a4edba930086a9459f982e5d6792",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-systemevents"
+    },
+    "microsoft.windows.compatibility.8.0.31.nupkg": {
+      "sha256": "d41596d54e6235e3aed9302482596b5595faf821e6a80af6c500944ffab3d891",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-windows-compatibility"
+    },
+    "newtonsoft.json.13.0.4.nupkg": {
+      "sha256": "94044f9727ea93f1f9aa94261c5416b6adea47e9b859a899d7621fdc8a23e0c5",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-newtonsoft-json"
+    },
+    "stylecop.analyzers.1.2.0-beta.556.nupkg": {
+      "sha256": "6c7fc16c62a9507579acedfbf16aab882433347b2853e668886971eb40054b29",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-stylecop-analyzers"
+    },
+    "stylecop.analyzers.unstable.1.2.0.556.nupkg": {
+      "sha256": "22b4675f916121705a535f9c62b9bd87a6ea52006242de048af1a55185980e6d",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-stylecop-analyzers-unstable"
+    },
+    "system.codedom.8.0.0.nupkg": {
+      "sha256": "ecc772f18d38e84706974ac2b38b019a60d8ea31689114ad85a0e2b018e59ccc",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-codedom"
+    },
+    "system.componentmodel.composition.8.0.0.nupkg": {
+      "sha256": "70568fdd8c170c012fac35b678629bc38c2e2b2c9c9b3b3b1626bb720ec47df3",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-composition"
+    },
+    "system.componentmodel.composition.registration.8.0.0.nupkg": {
+      "sha256": "3acb5f56c69f396254d32476dbb58212d3343387b50456bd938ae3d81cef931c",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-composition-registration"
+    },
+    "system.configuration.configurationmanager.8.0.1.nupkg": {
+      "sha256": "f1606f721aff048d3df56fe408d3c53b55a42ff248d6a63f3f200133fb0893ed",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-configuration-manager"
+    },
+    "system.data.odbc.8.0.1.nupkg": {
+      "sha256": "f83858578267bfc1de73e8ed9aad108bf56060433e8e5dcd09d35270ca221b13",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-odbc"
+    },
+    "system.data.oledb.8.0.1.nupkg": {
+      "sha256": "7b7e9207859e5683adaa43d5f86ee4408d849ef1516403abb9fbcde55aa7e3fa",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-oledb"
+    },
+    "system.data.sqlclient.4.9.1.nupkg": {
+      "sha256": "d07b0b1373b32b337f35046ab29f31b9317bd7ef7944f780b66a53185c8c6fab",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-sqlclient"
+    },
+    "system.diagnostics.diagnosticsource.8.0.1.nupkg": {
+      "sha256": "b9617659c0b8a92b9633eac5bdd84f7ec3b18d2e6ea075f67122061800ff80cd",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-diagnosticsource"
+    },
+    "system.diagnostics.eventlog.8.0.2.nupkg": {
+      "sha256": "6a0df18e0ee598fdbbc8df554955358099c34d5029ca08c21887ea211dc5338e",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-eventlog"
+    },
+    "system.diagnostics.performancecounter.8.0.1.nupkg": {
+      "sha256": "999908beb187910809b9a6345eac85684f0b12755ce49ddc590b3a8af6296c60",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-performancecounter"
+    },
+    "system.directoryservices.8.0.0.nupkg": {
+      "sha256": "853f96cc7e02eaf4cf56db4c2732d82361e79e9b6cba5126ce3109cd793c3834",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-directoryservices"
+    },
+    "system.directoryservices.accountmanagement.8.0.1.nupkg": {
+      "sha256": "fb6516c30e01642627572a363fc9d291588fb405ae557897ed21d30cec34653f",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-directoryservices-accountmanagement"
+    },
+    "system.directoryservices.protocols.8.0.2.nupkg": {
+      "sha256": "aa5d2c958f79e38393dcf4cb490fd5a3b5e8ce9d5fdd925557a3e5c6f6599b5e",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-directoryservices-protocols"
+    },
+    "system.drawing.common.8.0.31.nupkg": {
+      "sha256": "b347023afb10809a0c05c1005460b005aca6cd84c7667054d14cd3824f4d0ec0",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-drawing-common"
+    },
+    "system.formats.asn1.8.0.2.nupkg": {
+      "sha256": "7015304ed9b5a1f3774bdb446434259e72ecf641bbe68e30caf37efb5b322721",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-formats-asn1"
+    },
+    "system.io.packaging.8.0.1.nupkg": {
+      "sha256": "a4eabbd17308300a68e67ffa69d3575cedba1c3c665cc022c901948e36c536b3",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-io-packaging"
+    },
+    "system.io.ports.8.0.0.nupkg": {
+      "sha256": "626c3929116ecf72446b72ba83c80357a52842648d20fdc02f308f2f49d7a9b8",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-io-ports"
+    },
+    "system.management.8.0.0.nupkg": {
+      "sha256": "2d078f05b3069f21631c2cbd9a271d525c821711b4a4b428f848fe4fb989466b",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-management"
+    },
+    "system.net.http.winhttphandler.8.0.3.nupkg": {
+      "sha256": "626cdd53ff68fa66de2713a1dc2b655f5de0e2cfc15a46a546a389bc1f470040",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-winhttp-handler"
+    },
+    "system.private.servicemodel.4.10.3.nupkg": {
+      "sha256": "b862f8badd0a26df03fa70d0001751cff4ab3a238ff6f11abda81b498930e561",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-private-servicemodel"
+    },
+    "system.reflection.context.8.0.0.nupkg": {
+      "sha256": "574e286f6120e832943b95e649ac0598b496c0d271a19cfbf813052a4de67052",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-reflection-context"
+    },
+    "system.runtime.caching.8.0.1.nupkg": {
+      "sha256": "85c444e5b2f6ca36d6f9723a863b0d51ef003ccd38389fcfa2b9967275d57faf",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-runtime-caching"
+    },
+    "system.security.accesscontrol.6.0.1.nupkg": {
+      "sha256": "88463bc1af0ee645d0e6a3786b23c5c48e3f66a0f39336968f2db89902cb3def",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-security-accesscontrol6"
+    },
+    "system.security.cryptography.pkcs.8.0.1.nupkg": {
+      "sha256": "ccd263f9019633293927af95a175e90fae48caabf70df01a3c75873c4c8df48e",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-cryptography-pkcs"
+    },
+    "system.security.cryptography.protecteddata.8.0.0.nupkg": {
+      "sha256": "bcf01e73da045a9b0bf8f632969ec217d74c338fc75ae91cc5a69432e94a1034",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-protecteddata"
+    },
+    "system.security.cryptography.xml.8.0.4.nupkg": {
+      "sha256": "92b5e733ecc684e8e1bc25c7904222f47e96112b11d9ebcefc64fe2db254cd99",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-cryptography-xml"
+    },
+    "system.security.permissions.8.0.0.nupkg": {
+      "sha256": "b5fa8e1e708057f1a8f4c2c7d481b4b3d3b2ddd81bf906f59348e1ec8a083811",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-security-permissions"
+    },
+    "system.servicemodel.duplex.4.10.3.nupkg": {
+      "sha256": "9d4c84aaab0b5723c098f0442e2d6d04cd76860b6e01896080dca31f8cefed91",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-servicemodel-duplex"
+    },
+    "system.servicemodel.http.4.10.3.nupkg": {
+      "sha256": "4027ac59e36eaff6b2c0a0585649751b88de575bf04b841ffe4529608df7dd0b",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-servicemodel-http"
+    },
+    "system.servicemodel.nettcp.4.10.3.nupkg": {
+      "sha256": "02085cb008329727d3abf728f35cd0f91afccab7bb36dcd847e11b68d7f5bdda",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-servicemodel-nettcp"
+    },
+    "system.servicemodel.primitives.4.10.3.nupkg": {
+      "sha256": "5b928a833c8f3e93ee42b895bbcb39c025aa5d18469258632f005953ee1c3920",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-servicemodel-primitives"
+    },
+    "system.servicemodel.security.4.10.3.nupkg": {
+      "sha256": "912c58cc23181bf08e10e5f773f71d1c6e959db4dc4c49d28d71e3b54a94c68c",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-servicemodel-security"
+    },
+    "system.servicemodel.syndication.8.0.0.nupkg": {
+      "sha256": "76ca358e57242931bb44b6b13fff26e8a007b4824de34b43acd6ca1f07318d6f",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-syndication8"
+    },
+    "system.serviceprocess.servicecontroller.8.0.1.nupkg": {
+      "sha256": "c624bb81488f6246cdb8455dbb6631c97fd0f804fc29237c031d31fb6ce637fb",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-servicecontroller"
+    },
+    "system.speech.8.0.0.nupkg": {
+      "sha256": "3ca8bdef060cc892377cb0612c13ada8d7be315af3c460bda5cb343b63ff3b4c",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-speech"
+    },
+    "system.text.encoding.codepages.8.0.0.nupkg": {
+      "sha256": "e185333f9f626d9324d83a580bd3a741265f9bbc3cc2c3abe3cfcfc2e996e345",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-encoding-codepages"
+    },
+    "system.text.encodings.web.8.0.0.nupkg": {
+      "sha256": "0c7afba57d8196afa6b7e8bb277a1f5878c91c1f9d418851c35b0ba7be24bb50",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-encodings-web"
+    },
+    "system.threading.accesscontrol.8.0.0.nupkg": {
+      "sha256": "f89cb6e048a665aa9ee5f47f3aa97c72bf92eafdc00af8ef32c5c9519d33dace",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-threading-accesscontrol"
+    },
+    "system.web.services.description.4.10.3.nupkg": {
+      "sha256": "9e61ea7f0590a393977bf1cb740ba4c716add0e1b24e269a2da705c48d10d3a2",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-web-services-description"
+    },
+    "system.windows.extensions.8.0.0.nupkg": {
+      "sha256": "00f24f90595ef056ca4a84b3f17ac1b57cb9656980591089b6c3491c374ee12b",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-windows-extensions"
+    }
+  },
+  "full_catalog_sha256": "860e1bdb06ae2a521c1be81ae0d307dafaa902e74ee81592b3b05e8c831916f1",
+  "independent_original_generator_output_matches": true,
+  "mmi_excluded_as_upstream": true,
+  "required_dependency_catalog_types": [
+    "System.Data.SqlClient.SqlConnection",
+    "System.Management.ManagementObject",
+    "System.ServiceModel.BasicHttpBinding",
+    "System.ServiceModel.NetTcpBinding",
+    "System.IO.Packaging.Package",
+    "System.Speech.Synthesis.SpeechSynthesizer"
+  ],
+  "full_shipping_powershell_complete": false
+}

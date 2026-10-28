@@ -1,0 +1,51 @@
+{
+  "source_dll_sha256": "4caf1e2bf5f1d3a7fede46025be716ff97127c3f3cee7580720a36cd6cd2dcd2",
+  "api": {
+    "identity": "Microsoft.PowerShell.Pager, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+    "api": [
+      "Method public Microsoft.PowerShell.Pager.Pager()",
+      "Method public void Microsoft.PowerShell.Pager.Write(string content, string scrollToRegexPattern = null)",
+      "TYPE Microsoft.PowerShell.Pager kind=Class enum= abstract=False sealed=False base=object"
+    ]
+  },
+  "identity": {
+    "name": "Microsoft.PowerShell.Pager",
+    "version": "1.0.0.0",
+    "public_key_token": "null",
+    "attributes": {
+      "AssemblyFileVersionAttribute": "1.0.0.0",
+      "AssemblyInformationalVersionAttribute": "1.0.0"
+    },
+    "types": {
+      ".<Module>": [],
+      "Microsoft.PowerShell.IConsole": [
+        "get_BufferHeight flags=Public, Virtual, HideBySig, VtableLayoutMask, Abstract, SpecialName",
+        "get_BufferWidth flags=Public, Virtual, HideBySig, VtableLayoutMask, Abstract, SpecialName",
+        "get_WindowHeight flags=Public, Virtual, HideBySig, VtableLayoutMask, Abstract, SpecialName",
+        "get_WindowWidth flags=Public, Virtual, HideBySig, VtableLayoutMask, Abstract, SpecialName",
+        "Clear flags=Public, Virtual, HideBySig, VtableLayoutMask, Abstract",
+        "ReadKey flags=Public, Virtual, HideBySig, VtableLayoutMask, Abstract",
+        "Write flags=Public, Virtual, HideBySig, VtableLayoutMask, Abstract",
+        "WriteLine flags=Public, Virtual, HideBySig, VtableLayoutMask, Abstract"
+      ],
+      "Microsoft.PowerShell.Pager": [
+        ".ctor flags=Public, HideBySig, SpecialName, RTSpecialName",
+        ".ctor flags=Assembly, HideBySig, SpecialName, RTSpecialName",
+        "Write flags=Public, HideBySig",
+        "WriteContentToConsole flags=Private, HideBySig",
+        ".cctor flags=Private, Static, HideBySig, SpecialName, RTSpecialName"
+      ],
+      "Microsoft.PowerShell.SystemConsole": [
+        "get_BufferHeight flags=Public, Final, Virtual, HideBySig, VtableLayoutMask, SpecialName",
+        "get_BufferWidth flags=Public, Final, Virtual, HideBySig, VtableLayoutMask, SpecialName",
+        "get_WindowHeight flags=Public, Final, Virtual, HideBySig, VtableLayoutMask, SpecialName",
+        "get_WindowWidth flags=Public, Final, Virtual, HideBySig, VtableLayoutMask, SpecialName",
+        "Clear flags=Public, Final, Virtual, HideBySig, VtableLayoutMask",
+        "ReadKey flags=Public, Final, Virtual, HideBySig, VtableLayoutMask",
+        "Write flags=Public, Final, Virtual, HideBySig, VtableLayoutMask",
+        "WriteLine flags=Public, Final, Virtual, HideBySig, VtableLayoutMask",
+        ".ctor flags=Public, HideBySig, SpecialName, RTSpecialName"
+      ]
+    }
+  }
+}

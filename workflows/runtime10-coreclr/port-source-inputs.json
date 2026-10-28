@@ -1,0 +1,267 @@
+{
+  "runtime_source_version": "10.0.5",
+  "runtime_source_commit": "081d220c0a773ffb7c6bea6b48727833576a65ef",
+  "patch_sha256": "1175aaa81f9b16e46aa7b5a7398e261fe58c4e1b1eaa778660fa0421fe9e3862",
+  "changed_files": {
+    "src/coreclr/CMakeLists.txt": {
+      "original_sha256": "10333a3ed6f11b9caab4366990275f09ff7edec031a6336e777142d163f8091f",
+      "ported_sha256": "10e86b4ccaa7dfb8db1d9d8f42f707a9a639f19d88b98b5cc5659cd547d83a97"
+    },
+    "src/coreclr/clrfeatures.cmake": {
+      "original_sha256": "8d5ba57130265825539260ef54783e50271f6d407ac8ba926e246be2a684bb13",
+      "ported_sha256": "2aa6eb67454d2e6b0e5c5fc245eaa70cb7a6310811b09b6db5501a61a072e364"
+    },
+    "src/coreclr/debug/CMakeLists.txt": {
+      "original_sha256": "92b788fd3f41fbb9e6e6db68fc1d6a278490a146704dc14cb1154878fee87ce3",
+      "ported_sha256": "3105f6c17a215c91f523a2d0180cd1b38500070ae0a7e69584b2209bfe127f81"
+    },
+    "src/coreclr/debug/ee/debugger.cpp": {
+      "original_sha256": "0d7942a2fdd35c2299adf43f191846c4af722844108742134fb0bae24d880927",
+      "ported_sha256": "ce996ddf704e7c97598a124e8473220c8870a9856b156db2f6918dc2449ba37d"
+    },
+    "src/coreclr/debug/ee/rcthread.cpp": {
+      "original_sha256": "0dc64aa3551b418aeb4469db0d0c7c2b9befbb3f5093ee27a645e3a7d5e0d832",
+      "ported_sha256": "1ef553acf49abb55b888812f8585f30cfb514015094fdcfa4d6511f1e7cce74a"
+    },
+    "src/coreclr/debug/ee/wks/CMakeLists.txt": {
+      "original_sha256": "c11fd85999f7d198dd2dc758a2cad1d30e6caf009698ac18de6a525a21e8cd07",
+      "ported_sha256": "2356240eee8204734bbe5566feeb8dfc9d33eab3e18c54bab5979fbf30d74719"
+    },
+    "src/coreclr/dlls/CMakeLists.txt": {
+      "original_sha256": "859840fa8eb67d25bd392d628c27dbd09bfe3000efbc8dd02bd2842048a33df3",
+      "ported_sha256": "ee99590c5bbd29bb736be9469dd771fb35d9f7d26f15e72bf32a2cfbae66d76d"
+    },
+    "src/coreclr/dlls/clretwrc/CMakeLists.txt": {
+      "original_sha256": "c21c2436a42f0bfa2f3e1318dd8afc12ae0ef17d4c3343063cc4b51d3ee15f18",
+      "ported_sha256": "9eb9c6321c6336edd98d3bb224f73ef1800cef20b2bffb4c8814cb3ed5918309"
+    },
+    "src/coreclr/dlls/mscoree/coreclr/CMakeLists.txt": {
+      "original_sha256": "b08679bd8510e0be1edc67885bcaf3523c4c45f1741ea633a6db5a8e2c8821e3",
+      "ported_sha256": "1a8f21681dd03899a338ff3d00dcbd5f52839748ed099d76d2429e108619aec6"
+    },
+    "src/coreclr/dlls/mscoree/mscorwks_ntdef.src": {
+      "original_sha256": "e1cacd96f7a8f8dec3d1d00768e62a4862b214e561e3343bd48c64daa6b13b0c",
+      "ported_sha256": "fe17ce018f239e63329cdcdf7eb90e9c1d677be2e8d8aa8ebfe641d079c5ad14"
+    },
+    "src/coreclr/dlls/mscorrc/CMakeLists.txt": {
+      "original_sha256": "57b44a8a3cb312b1701abd572fe83e56da0b93f7505ff8d3b37fd4602b29ff89",
+      "ported_sha256": "8d9230457277cbf31c5f9e9487465a79fb731bbf2d4ae86adbb00b3db91dab5c"
+    },
+    "src/coreclr/dlls/mscorrc/mscorrc.rc": {
+      "original_sha256": "c93178a62f29892cc47f08af04d8986cdeee61b6c0abec511852882b32d03230",
+      "ported_sha256": "f11c0752792fe6a8f084aaef76648afd8f99eb6182d3c0e7fba00bac496f5d67"
+    },
+    "src/coreclr/gc/vxsort/CMakeLists.txt": {
+      "original_sha256": "bd49c7a194225728fd460dc960032176afc8ad1a60ca8fe19c3b0d1071075163",
+      "ported_sha256": "ffaf9ddebe9dd18a828ba4a69bc1473eaa4cbec16a919610d59f38ef0e891c9f"
+    },
+    "src/coreclr/gc/windows/gcenv.windows.cpp": {
+      "original_sha256": "7703266590259d9a2ea3401db3324867aa59370d5b75023746c45cb75b811885",
+      "ported_sha256": "090556cf84a28204d6850ed986e25ca446fb6f4b60f51efb5e2ba701ca0469b3"
+    },
+    "src/coreclr/inc/CMakeLists.txt": {
+      "original_sha256": "9e716f19fb4411a867a31878291415d0775f9978fb86330a52a4f56b506781f3",
+      "ported_sha256": "ccbed65a78189fec6e17b9e618e60bead368e0b384ff09ce101dd8c411e73a1b"
+    },
+    "src/coreclr/inc/clrtypes.h": {
+      "original_sha256": "939720aee053289004ceb878645414190f7af2a89e391eae841719f416c2f7c7",
+      "ported_sha256": "83a434b42d4d5b63c82e1753d614f23e6f42c202c6cc5573b893b4fc029ca69d"
+    },
+    "src/coreclr/inc/corinfo.h": {
+      "original_sha256": "49135d232936171324dca33649ef3a72cc805eb46cd3396240ce51f03f713f24",
+      "ported_sha256": "96ea4cf841b195587130d607672cb5d6aceed24024f309455a08c9626795db0d"
+    },
+    "src/coreclr/inc/daccess.h": {
+      "original_sha256": "fe94e765f154f9e6a8ae5342346cc02d03963a84880d5edec59d1fff0f343708",
+      "ported_sha256": "ff2918135e7e063e260cc514bd450a3535999e5565c80b8edf8a6ef57afd2af2"
+    },
+    "src/coreclr/inc/eventtracebase.h": {
+      "original_sha256": "2b1a42aa3f48111ba5f00dc3e51b358bcd5690bd91cc3b5003fee31f4abf00d5",
+      "ported_sha256": "3bc67c3e25bb3e14521089822b8c64cff73d28a2f89edf07b956a73edb802617"
+    },
+    "src/coreclr/inc/mingw/msvc_compat.h": {
+      "original_sha256": null,
+      "ported_sha256": "4c590d86942943cea22f2a2f590162c358130f4754badd503f109d8b57835765"
+    },
+    "src/coreclr/inc/mingw/sal_legacy.h": {
+      "original_sha256": null,
+      "ported_sha256": "43296340060aba3754eeb392f2380ab29e4e60b767053d2705390a4679dc029f"
+    },
+    "src/coreclr/inc/mingw/verrsrc.h": {
+      "original_sha256": null,
+      "ported_sha256": "c46011138a2a8a9110d79ccf04108cedb23b27efa7309c37e423a95de99d3749"
+    },
+    "src/coreclr/inc/mingw/winnt.h": {
+      "original_sha256": null,
+      "ported_sha256": "c2b6ea7fbfb21af7ee969345dc4645c7fdefcf91af5f21c01601f15cab7cb954"
+    },
+    "src/coreclr/inc/palclr.h": {
+      "original_sha256": "2358d263391cd3f478f0ef53122fb5d055ba69077eb7ff0e7042efe90aa5c6e2",
+      "ported_sha256": "4ba62823a45464881f43f9b13d897f435899bd721aff3d964799908a1a26011e"
+    },
+    "src/coreclr/jit/CMakeLists.txt": {
+      "original_sha256": "b3e785686cd2f8c0629435f78f78b52b1aaaffcafc72f6388b7f018704e13fa1",
+      "ported_sha256": "56ca2cc861f4762fe10aa57e6c89b5b8ab15a5a38214fedd9268825f13d04cce"
+    },
+    "src/coreclr/jit/compiler.cpp": {
+      "original_sha256": "672488b0dad3b780798b2af21820dca71c99ac88f482636b9659d614e8db3599",
+      "ported_sha256": "c2e4f2725beaa20467b2c804487af729520427d0516b3ec5f12379e6608f83ad"
+    },
+    "src/coreclr/jit/utils.h": {
+      "original_sha256": "fbf8e248f6cc7a112c075c373873328546fd02aa3a4ca28fb292f4130516844e",
+      "ported_sha256": "638f1e36616ed27b78b7eb05c3f18b8c4eac576575285b0ecce78e763d97aca1"
+    },
+    "src/coreclr/minipal/Windows/CMakeLists.txt": {
+      "original_sha256": "ef26a0d3be7a6f725f4245883d1b7fb9f4ba24c72658fd2aaeb60bff2bc39270",
+      "ported_sha256": "1a8a564f6afaa9d44a365c9d81c1952d251fca43bd383c91a3d778be5c04a062"
+    },
+    "src/coreclr/minipal/Windows/mingw_eha.cpp": {
+      "original_sha256": null,
+      "ported_sha256": "3742bc205dcbe6202252ec1bb628ddddeb5e4ce4eca92920fca0b564ed42f172"
+    },
+    "src/coreclr/minipal/Windows/mingw_guids.cpp": {
+      "original_sha256": null,
+      "ported_sha256": "5671480abeb98bbd65c46b7037c7eb0db27784b5b8bde7e3396d3bcca91272d0"
+    },
+    "src/coreclr/scripts/genEtwProvider.py": {
+      "original_sha256": "29ba37d84279085c68b6c4e6b14786187947d721d0808fb64a34d301a16e6890",
+      "ported_sha256": "50de90cbcd8a810049faa6ae70a1ca152b7a29a9b863dafd45044f33624d0364"
+    },
+    "src/coreclr/utilcode/stacktrace.cpp": {
+      "original_sha256": "bce6f33509e737de1bc6fdc8756d2a0f1d61d02288e250edea6398d2d3932bbc",
+      "ported_sha256": "7e0428e8c8b688b71e2975ffd3675500e0b3fa497ac06571af67ffa3c5e2be82"
+    },
+    "src/coreclr/utilcode/util.cpp": {
+      "original_sha256": "99c8fab0b142a07247ef050447a318118090a0dfd532604c9f0d26d69d1566d7",
+      "ported_sha256": "455edbf2aa974d7dd4a9e5cb8d1008caa89be11925299adb04c4436630be4520"
+    },
+    "src/coreclr/vm/amd64/AsmMacros.inc": {
+      "original_sha256": "30ee55399df457422259fe1308271640a8c010e597cdb21b14d79b7212c8701b",
+      "ported_sha256": "ea644a942de723aa2dc485f475a6474bd34b05d986afc827d6dd3b85df66846a"
+    },
+    "src/coreclr/vm/amd64/Context.asm": {
+      "original_sha256": "f2d6a59950599b8a4e421de71fca9d48e897fe150101ce390827aacb4f7ccc38",
+      "ported_sha256": "315fa981fba582d7ee2d669e4038295281ca35f58d46a43c96d79e27c952e55a"
+    },
+    "src/coreclr/vm/amd64/JitHelpers_Fast.asm": {
+      "original_sha256": "4896fa2163a8a5efe615801e3b1251e03aca7edb151ba04e8f2f0413cfef8806",
+      "ported_sha256": "d5656be9dfe22e92aa00367322b98fb3c453eacd8bef8cf587e985da3d04ac1c"
+    },
+    "src/coreclr/vm/amd64/JitHelpers_Slow.asm": {
+      "original_sha256": "401fb0257cb11f11222e654088b58e07bf4d1e75dc16a432e9710a01c8dfd0d5",
+      "ported_sha256": "92d3cf297f362f884b89d0cc12f211039d202226e7cbae4bd115e29f2e79dc99"
+    },
+    "src/coreclr/vm/amd64/RedirectedHandledJITCase.asm": {
+      "original_sha256": "68639df7c6d1e88ce7ba51d6782da744599cf6f7075d1b7b3ef554ad83892814",
+      "ported_sha256": "8f6e5cad8db02d6ee8d6f2259a47ff8c0339ae1c66c2bdfcbb5e4716f3704da0"
+    },
+    "src/coreclr/vm/appdomain.cpp": {
+      "original_sha256": "410519630306e312de0da4ce128cc930f3ce880e96d0d3b413c8e4ea203b6015",
+      "ported_sha256": "2bfaa0e99c9322ac489c3689da18cda2fa9b989524dae42749c7841e8bb0d563"
+    },
+    "src/coreclr/vm/assembly.cpp": {
+      "original_sha256": "96ba3c1f5c6b1e12f9a865ffae6eb89116a5ff664f25fe2270076b6fd455ca3d",
+      "ported_sha256": "c4217fa227d2901edd9d6891212a06f88e4276a658bf8b989beeff510bec1f2f"
+    },
+    "src/coreclr/vm/ceemain.cpp": {
+      "original_sha256": "b3bb2a01dc48ee6b0c55f22a09c063d58714ff3ddb32733ada7cfac7918a7a07",
+      "ported_sha256": "a9e85665984a71072dd6c7daf6eb22c4f00d71444a253410fe6bbb2ce5675306"
+    },
+    "src/coreclr/vm/codeman.cpp": {
+      "original_sha256": "b67cb1947c08cefd4f9426bb519e4fc44a680db30363cb2b572fdcb9be23075a",
+      "ported_sha256": "bcdd403b0e56fa144fbb58ac13669c20f1f43d1ef86de68040dc4ef34283726c"
+    },
+    "src/coreclr/vm/comcallablewrapper.h": {
+      "original_sha256": "fef15f8e0f5e563b72de1c9957a4fa63ff56ba02c4e087c67b6bb889f6ccbdcb",
+      "ported_sha256": "887c82e3cc148b822e0d27956bd911594f0feb04f121e72901aafba52b5cf081"
+    },
+    "src/coreclr/vm/dispatchinfo.h": {
+      "original_sha256": "09393a989e96961123944a87009ae4f290b0fa3fa18d8b5e20466730828b73d4",
+      "ported_sha256": "297fd934b9bba4a8fe9899189840f7b6f1e676f8358a43cf8f2cdea7a65d8809"
+    },
+    "src/coreclr/vm/dwbucketmanager.hpp": {
+      "original_sha256": "b9f12ec8c7d64d314168b5986ccd624d7710c837de51f6208810a3500b681805",
+      "ported_sha256": "aa2849de85968cfd1199112688565a6e28550f878714b6fe4d29c7a33e4c11e0"
+    },
+    "src/coreclr/vm/dwreport.h": {
+      "original_sha256": "bb092488fee38e2af258abbcc619394429b72ed43ce9efee8c1cc1766be10bf8",
+      "ported_sha256": "d32f4d1c9188df1121c2af7cf5ca7706a73d046b4d288c7de88ce819322cdc5a"
+    },
+    "src/coreclr/vm/eventing/EtwProvider/CMakeLists.txt": {
+      "original_sha256": "6cfebc6a9c1f647a0fd49e196600a5cb81b4666532ac5a303723341cbcfcaac7",
+      "ported_sha256": "66e834cf29702dff2260fc8cae7bbdd6d9f82c05758487ae6d2c00e99f04b8b6"
+    },
+    "src/coreclr/vm/eventtrace.cpp": {
+      "original_sha256": "1a3bdedbe04d20265f558eeb163175dc33186aba3fa3b941ef4b58be5b679d24",
+      "ported_sha256": "e0560e3fcf043f7004e250a94e4f25a109dcc0342fb8efd89d4ee526b6c2b801"
+    },
+    "src/coreclr/vm/excep.cpp": {
+      "original_sha256": "68e8866e9a5b191608ce5c0b1ed3dbe470c434865f006b20073640be068fee01",
+      "ported_sha256": "67171992797b1ad9dd370116559d814e072126242c0d64779e3f61f17bd4b211"
+    },
+    "src/coreclr/vm/exceptionhandling.cpp": {
+      "original_sha256": "92fc42e749f62bd872c9509e84df30b0e2dac6b566feece682540ffe22e35849",
+      "ported_sha256": "dfb9f568ee6714d748b42b9c98fa16aad72178ac2ef2059aa18dc2e6ce20f26f"
+    },
+    "src/coreclr/vm/interoputil.inl": {
+      "original_sha256": "52ec250bd1a68ddf812bd7b43aad4830c0e6462037e86cb9b13b51f5516139b7",
+      "ported_sha256": "096fc2a1273e933d66d5d50bb9f24f717d4ecb056a616a01e879667cbff685e0"
+    },
+    "src/coreclr/vm/jithelpers.cpp": {
+      "original_sha256": "96803d77d427c3297d27de01ed906defe332e3f603223196c2a4c57319e7a435",
+      "ported_sha256": "0ce460fca7e99c42cabffe01bc309e91dd6f33821113f14a17f047d335ab829e"
+    },
+    "src/coreclr/vm/loaderallocator.hpp": {
+      "original_sha256": "9c7dff58c9133dac50432b76c111ae7b121bd364c60ae66c20d896ece711fcff",
+      "ported_sha256": "1a9bfc6f1725c19d56f80700055b897c925004f5b9826bc5311c438eedbdda1f"
+    },
+    "src/coreclr/vm/olevariant.cpp": {
+      "original_sha256": "ffb6c0d184ff36afd36190bc5000fc8ecd9bb5ca94a2feef61506f965cd5051d",
+      "ported_sha256": "6d112c597f8334b2883e5b839e50a443e3bbb5e96efb00199f35d7704c8f8e9f"
+    },
+    "src/coreclr/vm/peimagelayout.cpp": {
+      "original_sha256": "18bd858a43d2269be4ffbdf36198b3219d09af74301fe47c7deb17dedb29f47e",
+      "ported_sha256": "833f5ffacc5161b180a089584bba85d376ac35581987f8313f56303df293cdd6"
+    },
+    "src/coreclr/vm/syncblk.cpp": {
+      "original_sha256": "24ab8e9241f8221a0f0b1a2139ce34d81a8b1d85945720b5296d0847d584abfc",
+      "ported_sha256": "a3c9c5a397c55729aa419493d281e0e875f17cd16ad43ff15d29f73e41193b64"
+    },
+    "src/coreclr/vm/threads.cpp": {
+      "original_sha256": "5f8fe48211c76200970f3e019ea7a983cadea813c8be9ef43346282fc182857a",
+      "ported_sha256": "d80d41411816dd364d013128443b9cc98826257468f147c4487c7b4242c20e72"
+    },
+    "src/coreclr/vm/threadsuspend.cpp": {
+      "original_sha256": "0d7f686dbead3d328d6166959a679514a53587920e11f877744db67bade6819d",
+      "ported_sha256": "b819996285642f39f030365cd56327deadb3d0f9cc933f5dcf9689dda73c5bec"
+    },
+    "src/coreclr/vm/util.hpp": {
+      "original_sha256": "8b44c497cc2a0f14a4315a7ef5882d3dfbd44bcb502f2fca7a2f49633cf83677",
+      "ported_sha256": "f6cb56339a836ea4bdd331ff67c788a30d991a1136585d1073f5d34247434cf6"
+    },
+    "src/coreclr/vm/wks/CMakeLists.txt": {
+      "original_sha256": "f8c91b51df83eccfdde972997101866e399eba3ba722eff31c3ee2d3b1c40310",
+      "ported_sha256": "0bb71a801d9ff9c0d34b16d86086f98fd1283b92ccca937a05b5acabc336c92f"
+    },
+    "src/native/eventpipe/ds-ipc-pal-namedpipe.c": {
+      "original_sha256": "f15ac0444b2ab6100ffdab04584849fe121086d0f5bf71d93c9ca959ceef8141",
+      "ported_sha256": "812293a3040da93eb4fc22bdcf3a70f36a88965882c5cefec70175d448e23062"
+    },
+    "src/native/libs/Common/delayloadhook_windows.cpp": {
+      "original_sha256": "3f0a4e811d5f93a8c21a3a89d02bae7fa1de05c7f31556c22d7fea28f02c9c3c",
+      "ported_sha256": "c3fe7899282a10df46e28b732c4de6ce4b5130d379ed0d618cfa24b091fbcb97"
+    },
+    "src/native/libs/System.Globalization.Native/pal_icushim_internal.h": {
+      "original_sha256": "28d6074001c3fe4d47ff7069b2e93351b930051368b97279b67fbe2fba3f5075",
+      "ported_sha256": "90e1f3bf138903ba1547191807e3161fdc1bea8d83fd5d3024a31894f0eb7282"
+    },
+    "src/native/minipal/cpufeatures.c": {
+      "original_sha256": "6fd347458c86394092cb45534768983f0f8ce20492a0c75b5e00d90c768ff566",
+      "ported_sha256": "007446a0d0c04042a13665ec4af3c4b8c17366466f0f264ea4ce46990f7290f0"
+    }
+  },
+  "clean_apply_exit_code": 0,
+  "clean_apply_log": "patching file src/coreclr/CMakeLists.txt\npatching file src/coreclr/clrfeatures.cmake\npatching file src/coreclr/debug/CMakeLists.txt\npatching file src/coreclr/debug/ee/debugger.cpp\npatching file src/coreclr/debug/ee/rcthread.cpp\npatching file src/coreclr/debug/ee/wks/CMakeLists.txt\npatching file src/coreclr/dlls/CMakeLists.txt\npatching file src/coreclr/dlls/clretwrc/CMakeLists.txt\npatching file src/coreclr/dlls/mscoree/coreclr/CMakeLists.txt\npatching file src/coreclr/dlls/mscoree/mscorwks_ntdef.src\npatching file src/coreclr/dlls/mscorrc/CMakeLists.txt\npatching file src/coreclr/dlls/mscorrc/mscorrc.rc\npatching file src/coreclr/gc/vxsort/CMakeLists.txt\npatching file src/coreclr/gc/windows/gcenv.windows.cpp\npatching file src/coreclr/inc/CMakeLists.txt\npatching file src/coreclr/inc/clrtypes.h\npatching file src/coreclr/inc/corinfo.h\npatching file src/coreclr/inc/daccess.h\npatching file src/coreclr/inc/eventtracebase.h\npatching file src/coreclr/inc/mingw/msvc_compat.h\npatching file src/coreclr/inc/mingw/sal_legacy.h\npatching file src/coreclr/inc/mingw/verrsrc.h\npatching file src/coreclr/inc/mingw/winnt.h\npatching file src/coreclr/inc/palclr.h\npatching file src/coreclr/jit/CMakeLists.txt\npatching file src/coreclr/jit/compiler.cpp\npatching file src/coreclr/jit/utils.h\npatching file src/coreclr/minipal/Windows/CMakeLists.txt\npatching file src/coreclr/minipal/Windows/mingw_eha.cpp\npatching file src/coreclr/minipal/Windows/mingw_guids.cpp\npatching file src/coreclr/scripts/genEtwProvider.py\npatching file src/coreclr/utilcode/stacktrace.cpp\npatching file src/coreclr/utilcode/util.cpp\npatching file src/coreclr/vm/amd64/AsmMacros.inc\npatching file src/coreclr/vm/amd64/Context.asm\npatching file src/coreclr/vm/amd64/JitHelpers_Fast.asm\npatching file src/coreclr/vm/amd64/JitHelpers_Slow.asm\npatching file src/coreclr/vm/amd64/RedirectedHandledJITCase.asm\npatching file src/coreclr/vm/appdomain.cpp\npatching file src/coreclr/vm/assembly.cpp\npatching file src/coreclr/vm/ceemain.cpp\npatching file src/coreclr/vm/codeman.cpp\npatching file src/coreclr/vm/comcallablewrapper.h\npatching file src/coreclr/vm/dispatchinfo.h\npatching file src/coreclr/vm/dwbucketmanager.hpp\npatching file src/coreclr/vm/dwreport.h\npatching file src/coreclr/vm/eventing/EtwProvider/CMakeLists.txt\npatching file src/coreclr/vm/eventtrace.cpp\npatching file src/coreclr/vm/excep.cpp\npatching file src/coreclr/vm/exceptionhandling.cpp\npatching file src/coreclr/vm/interoputil.inl\npatching file src/coreclr/vm/jithelpers.cpp\npatching file src/coreclr/vm/loaderallocator.hpp\npatching file src/coreclr/vm/olevariant.cpp\npatching file src/coreclr/vm/peimagelayout.cpp\npatching file src/coreclr/vm/syncblk.cpp\npatching file src/coreclr/vm/threads.cpp\npatching file src/coreclr/vm/threadsuspend.cpp\npatching file src/coreclr/vm/util.hpp\npatching file src/coreclr/vm/wks/CMakeLists.txt\npatching file src/native/eventpipe/ds-ipc-pal-namedpipe.c\npatching file src/native/libs/Common/delayloadhook_windows.cpp\npatching file src/native/libs/System.Globalization.Native/pal_icushim_internal.h\npatching file src/native/minipal/cpufeatures.c\n",
+  "full_dependency_goal_complete": false,
+  "managed_coreclr10_execution_verified": false
+}

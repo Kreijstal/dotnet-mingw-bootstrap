@@ -1,0 +1,132 @@
+StyleCop.Analyzers 1.2.0-beta.556 source-port prototype, 2026-10-26
+Host: win11 / MSYS2 CLANG64; installed source SDK 8.0.131 and csc49 4.9.2
+Remote working directory: /home/topkek/powershell-stylecop.QLYIXz
+Local scripts: mingw-w64-dotnet-stylecop-analyzers
+
+This is NOT a completed pacman/NuGet package. The direct requirement remains
+open. Source, build, regeneration, runtime and compiler-loading evidence below
+does not prove full upstream behavioral coverage or installed-package assets.
+Remaining: full diagnostic/fix corpus, both meta/implementation packages,
+clean makepkg build, fresh installed-feed consumer and exact artifact audit.
+
+Source provenance:
+Official tag commit 73a46ae2e65e7870fefe35e2c4c12bb7152f4ec5
+Exact Git tree c825926498b59694e7f559cd6d55377bbac57283
+All 2811 official raw GitHub files verified against Git blobs; all tree objects
+and the original signed commit reconstructed into a shallow Git repository.
+$ git --git-dir=/tmp/powershell-stylecop/verified-source.git fsck --strict
+Result: exit 0.
+$ python3 mingw-w64-dotnet-stylecop-analyzers/verify-source.py /tmp/powershell-stylecop/source-snapshot
+Result: exit 0; exact source tree and original signed commit.
+
+All final Windows commands below ran in MSYSTEM=CLANG64; each exited 0.
+Each new prepared/check output used its own initially empty NuGet cache and only
+/clang64/lib/dotnet/library-packs. No vendor implementation was compiled against,
+executed or packaged. No changes to installed SDK compiler files were made.
+The build has nine upstream nullable warnings with the newer annotations.
+
+Ports: retain all 57 source-baseline syntax wrappers when generating against
+newer Roslyn; qualify original DocumentBasedFixAllProvider and two WithoutTrivia
+calls to resolve new name collisions. All 7 generator / 313 analyzer / 107
+code-fix source files are retained, excluding hidden preview generator output.
+All 183 light-up outputs regenerate: 179 match C# tokens; four have six explicit
+extension-to-property accesses chosen by the upstream generator on newer refs.
+182 analyzer / 89 exported fixer classes and 178 DiagnosticId constants match
+the independent published PE-metadata inventory. Runtime validates 197 live
+descriptors and 17 resource sets / 857 strings in seven satellite cultures.
+All analyzer classes execute on the owned C#12 probe without AD0001; this probe
+observes 15 diagnostic IDs. Two real fix actions pass exact output/reanalysis.
+This is deliberately not described as full rule/code-fix behavioral coverage.
+
+$ /usr/bin/python3 recipe/prepare.py source prepared-final
+PASS all 2811 source files, exact Git tree c825926498b59694e7f559cd6d55377bbac57283 and original signed commit 73a46ae2e65e7870fefe35e2c4c12bb7152f4ec5
+Public key token: cfeb5dbada5e1c25
+
+RESULT: exit 0
+
+$ bash recipe/build-libraries.sh prepared-final
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-stylecop.QLYIXz\prepared-final\StyleCop.Analyzers.CodeGeneration\Library.csproj (in 354 ms).
+  Restored E:\msys64\home\topkek\powershell-stylecop.QLYIXz\prepared-final\StyleCop.Analyzers\Library.csproj (in 354 ms).
+  Restored E:\msys64\home\topkek\powershell-stylecop.QLYIXz\prepared-final\StyleCop.Analyzers.CodeFixes\Library.csproj (in 354 ms).
+E:\msys64\home\topkek\powershell-stylecop.QLYIXz\prepared-final\StyleCop.Analyzers.CodeGeneration\SyntaxLightupGenerator.cs(1592,63): warning CS8607: A possible null value may not be used for a type marked with [NotNull] or [DisallowNull] [E:\msys64\home\topkek\powershell-stylecop.QLYIXz\prepared-final\StyleCop.Analyzers.CodeGeneration\Library.csproj]
+E:\msys64\home\topkek\powershell-stylecop.QLYIXz\prepared-final\StyleCop.Analyzers.CodeGeneration\SyntaxLightupGenerator.cs(1542,68): warning CS8607: A possible null value may not be used for a type marked with [NotNull] or [DisallowNull] [E:\msys64\home\topkek\powershell-stylecop.QLYIXz\prepared-final\StyleCop.Analyzers.CodeGeneration\Library.csproj]
+  Library -> E:\msys64\home\topkek\powershell-stylecop.QLYIXz\prepared-final\StyleCop.Analyzers.CodeGeneration\bin\Release\net8.0\StyleCop.Analyzers.CodeGeneration.dll
+E:\msys64\home\topkek\powershell-stylecop.QLYIXz\source\StyleCop.Analyzers\StyleCop.Analyzers\DocumentationRules\SA1648InheritDocMustBeUsedWithInheritingClass.cs(96,60): warning CS8604: Possible null reference argument for parameter 'text' in 'XElement XElement.Parse(string text, LoadOptions options)'. [E:\msys64\home\topkek\powershell-stylecop.QLYIXz\prepared-final\StyleCop.Analyzers\Library.csproj]
+E:\msys64\home\topkek\powershell-stylecop.QLYIXz\source\StyleCop.Analyzers\StyleCop.Analyzers\DocumentationRules\SA1648InheritDocMustBeUsedWithInheritingClass.cs(149,38): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\powershell-stylecop.QLYIXz\prepared-final\StyleCop.Analyzers\Library.csproj]
+E:\msys64\home\topkek\powershell-stylecop.QLYIXz\source\StyleCop.Analyzers\StyleCop.Analyzers\DocumentationRules\SA1648InheritDocMustBeUsedWithInheritingClass.cs(155,49): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\powershell-stylecop.QLYIXz\prepared-final\StyleCop.Analyzers\Library.csproj]
+E:\msys64\home\topkek\powershell-stylecop.QLYIXz\source\StyleCop.Analyzers\StyleCop.Analyzers\DocumentationRules\SA1648InheritDocMustBeUsedWithInheritingClass.cs(157,46): warning CS8602: Dereference of a possibly null reference. [E:\msys64\home\topkek\powershell-stylecop.QLYIXz\prepared-final\StyleCop.Analyzers\Library.csproj]
+E:\msys64\home\topkek\powershell-stylecop.QLYIXz\source\StyleCop.Analyzers\StyleCop.Analyzers\DocumentationRules\SA1648InheritDocMustBeUsedWithInheritingClass.cs(170,38): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\powershell-stylecop.QLYIXz\prepared-final\StyleCop.Analyzers\Library.csproj]
+E:\msys64\home\topkek\powershell-stylecop.QLYIXz\source\StyleCop.Analyzers\StyleCop.Analyzers\DocumentationRules\SA1648InheritDocMustBeUsedWithInheritingClass.cs(182,60): warning CS8604: Possible null reference argument for parameter 'text' in 'XElement XElement.Parse(string text, LoadOptions options)'. [E:\msys64\home\topkek\powershell-stylecop.QLYIXz\prepared-final\StyleCop.Analyzers\Library.csproj]
+E:\msys64\home\topkek\powershell-stylecop.QLYIXz\source\StyleCop.Analyzers\StyleCop.Analyzers\Helpers\SyntaxNodeExtensions.cs(55,41): warning CS8604: Possible null reference argument for parameter 'symbol' in 'bool TakesExpressionTree(ISymbol symbol, INamedTypeSymbol expressionType)'. [E:\msys64\home\topkek\powershell-stylecop.QLYIXz\prepared-final\StyleCop.Analyzers\Library.csproj]
+  Library -> E:\msys64\home\topkek\powershell-stylecop.QLYIXz\prepared-final\StyleCop.Analyzers\bin\Release\net8.0\StyleCop.Analyzers.dll
+  Library -> E:\msys64\home\topkek\powershell-stylecop.QLYIXz\prepared-final\StyleCop.Analyzers.CodeFixes\bin\Release\net8.0\StyleCop.Analyzers.CodeFixes.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\powershell-stylecop.QLYIXz\prepared-final\StyleCop.Analyzers.CodeGeneration\SyntaxLightupGenerator.cs(1592,63): warning CS8607: A possible null value may not be used for a type marked with [NotNull] or [DisallowNull] [E:\msys64\home\topkek\powershell-stylecop.QLYIXz\prepared-final\StyleCop.Analyzers.CodeGeneration\Library.csproj]
+E:\msys64\home\topkek\powershell-stylecop.QLYIXz\prepared-final\StyleCop.Analyzers.CodeGeneration\SyntaxLightupGenerator.cs(1542,68): warning CS8607: A possible null value may not be used for a type marked with [NotNull] or [DisallowNull] [E:\msys64\home\topkek\powershell-stylecop.QLYIXz\prepared-final\StyleCop.Analyzers.CodeGeneration\Library.csproj]
+E:\msys64\home\topkek\powershell-stylecop.QLYIXz\source\StyleCop.Analyzers\StyleCop.Analyzers\DocumentationRules\SA1648InheritDocMustBeUsedWithInheritingClass.cs(96,60): warning CS8604: Possible null reference argument for parameter 'text' in 'XElement XElement.Parse(string text, LoadOptions options)'. [E:\msys64\home\topkek\powershell-stylecop.QLYIXz\prepared-final\StyleCop.Analyzers\Library.csproj]
+E:\msys64\home\topkek\powershell-stylecop.QLYIXz\source\StyleCop.Analyzers\StyleCop.Analyzers\DocumentationRules\SA1648InheritDocMustBeUsedWithInheritingClass.cs(149,38): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\powershell-stylecop.QLYIXz\prepared-final\StyleCop.Analyzers\Library.csproj]
+E:\msys64\home\topkek\powershell-stylecop.QLYIXz\source\StyleCop.Analyzers\StyleCop.Analyzers\DocumentationRules\SA1648InheritDocMustBeUsedWithInheritingClass.cs(155,49): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\powershell-stylecop.QLYIXz\prepared-final\StyleCop.Analyzers\Library.csproj]
+E:\msys64\home\topkek\powershell-stylecop.QLYIXz\source\StyleCop.Analyzers\StyleCop.Analyzers\DocumentationRules\SA1648InheritDocMustBeUsedWithInheritingClass.cs(157,46): warning CS8602: Dereference of a possibly null reference. [E:\msys64\home\topkek\powershell-stylecop.QLYIXz\prepared-final\StyleCop.Analyzers\Library.csproj]
+E:\msys64\home\topkek\powershell-stylecop.QLYIXz\source\StyleCop.Analyzers\StyleCop.Analyzers\DocumentationRules\SA1648InheritDocMustBeUsedWithInheritingClass.cs(170,38): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\powershell-stylecop.QLYIXz\prepared-final\StyleCop.Analyzers\Library.csproj]
+E:\msys64\home\topkek\powershell-stylecop.QLYIXz\source\StyleCop.Analyzers\StyleCop.Analyzers\DocumentationRules\SA1648InheritDocMustBeUsedWithInheritingClass.cs(182,60): warning CS8604: Possible null reference argument for parameter 'text' in 'XElement XElement.Parse(string text, LoadOptions options)'. [E:\msys64\home\topkek\powershell-stylecop.QLYIXz\prepared-final\StyleCop.Analyzers\Library.csproj]
+E:\msys64\home\topkek\powershell-stylecop.QLYIXz\source\StyleCop.Analyzers\StyleCop.Analyzers\Helpers\SyntaxNodeExtensions.cs(55,41): warning CS8604: Possible null reference argument for parameter 'symbol' in 'bool TakesExpressionTree(ISymbol symbol, INamedTypeSymbol expressionType)'. [E:\msys64\home\topkek\powershell-stylecop.QLYIXz\prepared-final\StyleCop.Analyzers\Library.csproj]
+    9 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:26.24
+
+RESULT: exit 0
+
+$ bash recipe/check-prototype.sh prepared-final check-clean-final source
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-stylecop.QLYIXz\check-clean-final\Check.csproj (in 337 ms).
+  Check -> E:\msys64\home\topkek\powershell-stylecop.QLYIXz\check-clean-final\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.44
+PASS both upstream generators regenerate all 183 pinned output files: 179 token-identical, four wrappers with six explicit newer-Roslyn property accesses; formatting trivia may differ
+PASS source assembly identities, 182 analyzer/89 fixer classes, 197 live descriptors and 17 resource sets/857 strings
+PASS all analyzers execute on C# 12 records/file-scoped namespace/init/tuples without exceptions; 15 diagnostic IDs observed
+PASS real code-fix action, exact output and clean reanalysis: SA1001
+PASS real code-fix action, exact output and clean reanalysis: SA1142
+PASS source prototype checks; full upstream behavioral corpus and installed-package checks remain required
+E:\msys64\home\topkek\powershell-stylecop.QLYIXz\check-clean-final\msbuild\Sample.cs(1,24): error SA1001: Commas should be followed by whitespace (https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1001.md) [E:\msys64\home\topkek\powershell-stylecop.QLYIXz\check-clean-final\msbuild\Sample.csproj]
+E:\msys64\home\topkek\powershell-stylecop.QLYIXz\check-clean-final\msbuild\Sample.cs(1,24): error SA1001: Commas should be followed by whitespace (https://github.com/DotNetAnalyzers/StyleCopAnalyzers/blob/master/documentation/SA1001.md) [E:\msys64\home\topkek\powershell-stylecop.QLYIXz\check-clean-final\msbuild\Sample.csproj]
+PASS real MSBuild/source-csc49 analyzer loading, expected SA1001 error and corrected build
+
+RESULT: exit 0
+

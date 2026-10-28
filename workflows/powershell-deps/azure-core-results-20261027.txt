@@ -1,0 +1,380 @@
+Azure.Core1.38.0 complete source package validation
+Host: win11, CLANG64, actual CLR8.0.0
+Source commit: dae9516a40d0661a3351c3f6ddf0e0eb85ea2f6b
+Formal build: /home/topkek/azure-core-package.yhCCHO
+Fresh installed consumer: /home/topkek/azure-core-installed.86Rcmg/check
+
+$ MSYSTEM=CLANG64 bash -lc 'PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm'
+First run (makepkg1.log): exit4 in the metadata report helper. The HTTP consumer
+passed; the reflection-disabled property was accidentally also set on the two
+metadata report executables. Fixed check.sh to apply it only to the HTTP sample.
+Second clean run (makepkg2.log): exit0. Original library3 obsolete-serialization
+warnings; consumers/tools0warnings/errors. No production C# changes.
+$ pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-azure-core-1.38.0-1-any.pkg.tar.zst
+RESULT: exit0
+$ bash /home/topkek/azure-core-package.yhCCHO/src/check.sh /home/topkek/azure-core-installed.86Rcmg/check
+RESULT: exit0; fresh installed source feed/cache only
+$ python3 tests/powershell-deps/audit-azure-core.py
+RESULT: exit0; all15 pinned inputs, full archive/project/compiler hashes, original
+Shared selection, source JSON generator/output hashes, all3source dependency refs,
+implementation/ref/XML, native/NuGet dependencies and original licenses
+$ /usr/bin/python3 /home/topkek/azure-core-package.yhCCHO/postinstall.py
+RESULT: exit0; builtNuGet=installedfeed=freshcache, original license/inventory bytes
+
+Complete247-file production tree; original193C# compiler items,32explicit Shared
+selections,2SDKmetadata files. Actual selected JSON8.0.5 Roslyn4.4 source generator
+bytes match the source JSON package; all12generated context files are shipped/hash
+checked. All914published APIs and frozen release/public-signing identities match.
+Real sync/async HTTP over an owned loopback TCP server, UTF8 payload/retry ownership,
+503 retry,400negative generated JSON error parsing with reflection disabled,
+response bodies and cancellation pass. Core/ClientModel/BinaryData/JSON loaded
+paths/hashes and compiler/runtime asset selection match source-built payloads.
+Vendor DLL is metadata-only input. No external authentication/remote service call.
+Broader HTTP/authentication/upstream/framework/trimming/AOT, Azure.Identity/MSAL/
+PSResourceGet integration and actual CLR servicing remain open. Full goal stays open.
+
+Full makepkg1.log:
+==> Making package: mingw-w64-dotnet-azure-core 1.38.0-1 (27 Oct 2026 11:41:09)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found azure-sdk-dae9516a40d0661a3351c3f6ddf0e0eb85ea2f6b.tar.gz
+  -> Found extract.py
+  -> Found prepare.py
+  -> Found verify-build.py
+  -> Found pack.py
+  -> Found Check.cs
+  -> Found check.sh
+  -> Found check-payload.py
+  -> Found compare.py
+  -> Found InspectApi.cs
+  -> Found InspectAssemblyMetadata.cs
+  -> Found source-inputs.json
+  -> Found published-api.json
+  -> Found published-metadata.json
+  -> Found README.md
+==> Validating source files with sha256sums...
+    azure-sdk-dae9516a40d0661a3351c3f6ddf0e0eb85ea2f6b.tar.gz ... Passed
+    extract.py ... Passed
+    prepare.py ... Passed
+    verify-build.py ... Passed
+    pack.py ... Passed
+    Check.cs ... Passed
+    check.sh ... Passed
+    check-payload.py ... Passed
+    compare.py ... Passed
+    InspectApi.cs ... Passed
+    InspectAssemblyMetadata.cs ... Passed
+    source-inputs.json ... Passed
+    published-api.json ... Passed
+    published-metadata.json ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+==> Starting prepare()...
+PASS full pinned Azure archive and complete Azure.Core component/build metadata extraction
+PASS complete original Azure.Core project/tree and 193 unchanged C# selected by original Shared rules
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\azure-core-package.yhCCHO\src\prepared\Library.csproj (in 1.24 sec).
+E:\msys64\home\topkek\azure-core-package.yhCCHO\src\source\sdk\core\Azure.Core\src\RequestFailedException.cs(139,30): warning CS0672: Member 'RequestFailedException.GetObjectData(SerializationInfo, StreamingContext)' overrides obsolete member 'Exception.GetObjectData(SerializationInfo, StreamingContext)'. Add the Obsolete attribute to 'RequestFailedException.GetObjectData(SerializationInfo, StreamingContext)'. [E:\msys64\home\topkek\azure-core-package.yhCCHO\src\prepared\Library.csproj]
+E:\msys64\home\topkek\azure-core-package.yhCCHO\src\source\sdk\core\Azure.Core\src\RequestFailedException.cs(132,13): warning SYSLIB0051: 'Exception.Exception(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\azure-core-package.yhCCHO\src\prepared\Library.csproj]
+E:\msys64\home\topkek\azure-core-package.yhCCHO\src\source\sdk\core\Azure.Core\src\RequestFailedException.cs(146,13): warning SYSLIB0051: 'Exception.GetObjectData(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\azure-core-package.yhCCHO\src\prepared\Library.csproj]
+  Library -> E:\msys64\home\topkek\azure-core-package.yhCCHO\src\prepared\bin\Release\net8.0\Azure.Core.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\azure-core-package.yhCCHO\src\source\sdk\core\Azure.Core\src\RequestFailedException.cs(139,30): warning CS0672: Member 'RequestFailedException.GetObjectData(SerializationInfo, StreamingContext)' overrides obsolete member 'Exception.GetObjectData(SerializationInfo, StreamingContext)'. Add the Obsolete attribute to 'RequestFailedException.GetObjectData(SerializationInfo, StreamingContext)'. [E:\msys64\home\topkek\azure-core-package.yhCCHO\src\prepared\Library.csproj]
+E:\msys64\home\topkek\azure-core-package.yhCCHO\src\source\sdk\core\Azure.Core\src\RequestFailedException.cs(132,13): warning SYSLIB0051: 'Exception.Exception(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\azure-core-package.yhCCHO\src\prepared\Library.csproj]
+E:\msys64\home\topkek\azure-core-package.yhCCHO\src\source\sdk\core\Azure.Core\src\RequestFailedException.cs(146,13): warning SYSLIB0051: 'Exception.GetObjectData(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\azure-core-package.yhCCHO\src\prepared\Library.csproj]
+    3 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:27.30
+PASS all193 original compiler items, two SDK metadata files, exact source dependency references and library/ref/XML outputs
+PASS gated source implementation/reference/XML, original license and source/compiler/reference metadata
+==> Starting check()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\azure-core-package.yhCCHO\src\check\Check.csproj (in 660 ms).
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Check -> E:\msys64\home\topkek\azure-core-package.yhCCHO\src\check\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:10.66
+PASS original source Azure.Core real sync/async HTTP pipeline, UTF8 request/retry ownership,503retry/400negative parsing with reflection disabled, response bodies and cancellation
+PASS all four source implementation/reference hashes and actual compiler/runtime asset selection
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\azure-core-package.yhCCHO\src\check\Api\Inspect.csproj (in 1.42 sec).
+  Inspect -> E:\msys64\home\topkek\azure-core-package.yhCCHO\src\check\Api\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:15.16
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\azure-core-package.yhCCHO\src\check\Pe\Inspect.csproj (in 184 ms).
+  Inspect -> E:\msys64\home\topkek\azure-core-package.yhCCHO\src\check\Pe\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:13.31
+Unhandled exception. System.InvalidOperationException: Reflection-based serialization has been disabled for this application. Either use the source generator APIs or explicitly configure the 'JsonSerializerOptions.TypeInfoResolver' property.
+   at System.Text.Json.ThrowHelper.ThrowInvalidOperationException_JsonSerializerIsReflectionDisabled()
+   at System.Text.Json.JsonSerializerOptions.ConfigureForJsonSerializer()
+   at System.Text.Json.JsonSerializer.GetTypeInfo(JsonSerializerOptions options, Type inputType)
+   at System.Text.Json.JsonSerializer.GetTypeInfo[T](JsonSerializerOptions options)
+   at System.Text.Json.JsonSerializer.Serialize[TValue](TValue value, JsonSerializerOptions options)
+   at Program.Main(String[] args) in E:\msys64\home\topkek\azure-core-package.yhCCHO\src\check\Api\InspectApi.cs:line 49
+==> ERROR: A failure occurred in check().
+    Aborting...
+
+Full makepkg2.log:
+==> Making package: mingw-w64-dotnet-azure-core 1.38.0-1 (27 Oct 2026 11:45:28)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found azure-sdk-dae9516a40d0661a3351c3f6ddf0e0eb85ea2f6b.tar.gz
+  -> Found extract.py
+  -> Found prepare.py
+  -> Found verify-build.py
+  -> Found pack.py
+  -> Found Check.cs
+  -> Found check.sh
+  -> Found check-payload.py
+  -> Found compare.py
+  -> Found InspectApi.cs
+  -> Found InspectAssemblyMetadata.cs
+  -> Found source-inputs.json
+  -> Found published-api.json
+  -> Found published-metadata.json
+  -> Found README.md
+==> Validating source files with sha256sums...
+    azure-sdk-dae9516a40d0661a3351c3f6ddf0e0eb85ea2f6b.tar.gz ... Passed
+    extract.py ... Passed
+    prepare.py ... Passed
+    verify-build.py ... Passed
+    pack.py ... Passed
+    Check.cs ... Passed
+    check.sh ... Passed
+    check-payload.py ... Passed
+    compare.py ... Passed
+    InspectApi.cs ... Passed
+    InspectAssemblyMetadata.cs ... Passed
+    source-inputs.json ... Passed
+    published-api.json ... Passed
+    published-metadata.json ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+==> Starting prepare()...
+PASS full pinned Azure archive and complete Azure.Core component/build metadata extraction
+PASS complete original Azure.Core project/tree and 193 unchanged C# selected by original Shared rules
+==> Removing existing $pkgdir/ directory...
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\azure-core-package.yhCCHO\src\prepared\Library.csproj (in 396 ms).
+E:\msys64\home\topkek\azure-core-package.yhCCHO\src\source\sdk\core\Azure.Core\src\RequestFailedException.cs(139,30): warning CS0672: Member 'RequestFailedException.GetObjectData(SerializationInfo, StreamingContext)' overrides obsolete member 'Exception.GetObjectData(SerializationInfo, StreamingContext)'. Add the Obsolete attribute to 'RequestFailedException.GetObjectData(SerializationInfo, StreamingContext)'. [E:\msys64\home\topkek\azure-core-package.yhCCHO\src\prepared\Library.csproj]
+E:\msys64\home\topkek\azure-core-package.yhCCHO\src\source\sdk\core\Azure.Core\src\RequestFailedException.cs(132,13): warning SYSLIB0051: 'Exception.Exception(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\azure-core-package.yhCCHO\src\prepared\Library.csproj]
+E:\msys64\home\topkek\azure-core-package.yhCCHO\src\source\sdk\core\Azure.Core\src\RequestFailedException.cs(146,13): warning SYSLIB0051: 'Exception.GetObjectData(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\azure-core-package.yhCCHO\src\prepared\Library.csproj]
+  Library -> E:\msys64\home\topkek\azure-core-package.yhCCHO\src\prepared\bin\Release\net8.0\Azure.Core.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\azure-core-package.yhCCHO\src\source\sdk\core\Azure.Core\src\RequestFailedException.cs(139,30): warning CS0672: Member 'RequestFailedException.GetObjectData(SerializationInfo, StreamingContext)' overrides obsolete member 'Exception.GetObjectData(SerializationInfo, StreamingContext)'. Add the Obsolete attribute to 'RequestFailedException.GetObjectData(SerializationInfo, StreamingContext)'. [E:\msys64\home\topkek\azure-core-package.yhCCHO\src\prepared\Library.csproj]
+E:\msys64\home\topkek\azure-core-package.yhCCHO\src\source\sdk\core\Azure.Core\src\RequestFailedException.cs(132,13): warning SYSLIB0051: 'Exception.Exception(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\azure-core-package.yhCCHO\src\prepared\Library.csproj]
+E:\msys64\home\topkek\azure-core-package.yhCCHO\src\source\sdk\core\Azure.Core\src\RequestFailedException.cs(146,13): warning SYSLIB0051: 'Exception.GetObjectData(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\azure-core-package.yhCCHO\src\prepared\Library.csproj]
+    3 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:17.00
+PASS all193 original compiler items, two SDK metadata files, exact source dependency references and library/ref/XML outputs
+PASS gated source implementation/reference/XML, original license and source/compiler/reference metadata
+==> Starting check()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\azure-core-package.yhCCHO\src\check\Check.csproj (in 463 ms).
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Check -> E:\msys64\home\topkek\azure-core-package.yhCCHO\src\check\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:08.44
+PASS original source Azure.Core real sync/async HTTP pipeline, UTF8 request/retry ownership,503retry/400negative parsing with reflection disabled, response bodies and cancellation
+PASS all four source implementation/reference hashes and actual compiler/runtime asset selection
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\azure-core-package.yhCCHO\src\check\Api\Inspect.csproj (in 414 ms).
+  Inspect -> E:\msys64\home\topkek\azure-core-package.yhCCHO\src\check\Api\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:07.61
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\azure-core-package.yhCCHO\src\check\Pe\Inspect.csproj (in 109 ms).
+  Inspect -> E:\msys64\home\topkek\azure-core-package.yhCCHO\src\check\Pe\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:07.31
+PASS all914 exact published API declarations and release/signing identities
+PASS fresh source Azure.Core consumer, owned model/JSON behavior, exact API/identity/payload gates
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-azure-core"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-azure-core 1.38.0-1 (27 Oct 2026 11:47:21)
+
+Full install.log:
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-dotnet-azure-core-1.38.0-1
+
+Total Installed Size:  0.41 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+installing mingw-w64-clang-x86_64-dotnet-azure-core...
+
+Full installed-check.log:
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\azure-core-installed.86Rcmg\check\Check.csproj (in 809 ms).
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Check -> E:\msys64\home\topkek\azure-core-installed.86Rcmg\check\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:08.08
+PASS original source Azure.Core real sync/async HTTP pipeline, UTF8 request/retry ownership,503retry/400negative parsing with reflection disabled, response bodies and cancellation
+PASS all four source implementation/reference hashes and actual compiler/runtime asset selection
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\azure-core-installed.86Rcmg\check\Api\Inspect.csproj (in 432 ms).
+  Inspect -> E:\msys64\home\topkek\azure-core-installed.86Rcmg\check\Api\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:06.08
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\azure-core-installed.86Rcmg\check\Pe\Inspect.csproj (in 99 ms).
+  Inspect -> E:\msys64\home\topkek\azure-core-installed.86Rcmg\check\Pe\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:07.29
+PASS all914 exact published API declarations and release/signing identities
+PASS fresh source Azure.Core consumer, owned model/JSON behavior, exact API/identity/payload gates
+
+Full postinstall.log:
+PASS built NuGet = installed source feed = fresh installed cache; original license and source inventory bytes match
+NuGet SHA256: 42afea71e62f5f371139784f5c3fa84188ffc4196a785004dee18b5318a25313

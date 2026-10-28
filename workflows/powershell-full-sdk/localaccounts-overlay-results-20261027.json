@@ -1,0 +1,97 @@
+{
+  "archive_sha256": "3dac352752acd64a0502c1f002ecf65eca177d2919bea3bcefbf8856afedd9eb",
+  "helper_sha256": "1121d78849b3c93120dbb8bedffc3164961fff4ae474551f00c5e052976a6871",
+  "changed_sources": {
+    "src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/AddLocalGroupMemberCommand.cs": {
+      "original_sha256": "afbb53f58bf46aaeb7663e255175a2dc229e143be31de31c09f52b7c22ebf065",
+      "adapted_sha256": "66940984a34cc2cd88b4bf1869dfdc804b72c33379c45ce18293ab1162e01265"
+    },
+    "src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/DisableLocalUserCommand.cs": {
+      "original_sha256": "3667422830a2f9486cbdd9227391b3f64403b18e1cac3b0ec415d8c58a8cf104",
+      "adapted_sha256": "35799bb15967df4c99e5da8dd7d51656bda9c8b422cd9f05128b96b8e9f57f41"
+    },
+    "src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/EnableLocalUserCommand.cs": {
+      "original_sha256": "53a56d51c6298310e3b74529738f6cfff851b5302c644ef33c28472683154e88",
+      "adapted_sha256": "6dc29b63ef8e28b471440ad45bcc765d330c0e3a08f0c0d45de0c71aea32e2a8"
+    },
+    "src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/GetLocalGroupCommand.cs": {
+      "original_sha256": "bb55a999dec42ee1ce7ff4e5cf68df2e054c6c0a50c0e19be9ecc0ab29b9f113",
+      "adapted_sha256": "ecc74c4f62e8700cfc1a92c799dfcbb3858987a1224002c77a5bf43d540e2a61"
+    },
+    "src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/GetLocalGroupMemberCommand.cs": {
+      "original_sha256": "c58d69af1cd0dea6fbb46b6ddf613c038c623b99e36c3b43d34145e788efb0ba",
+      "adapted_sha256": "a33a1b33845cbebc1eb003e4c2f7470a81d2f065cc94c73b87337c15923222ea"
+    },
+    "src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/GetLocalUserCommand.cs": {
+      "original_sha256": "3471ecabdb415f1ae8ea34d4b7b02cef2c2e393cda113e7c8586cacef0783b4f",
+      "adapted_sha256": "1b0ec8c51c2d363dbfb56f9df292ea80e1373721891c1d2520341b361e1071b6"
+    },
+    "src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/NewLocalGroupCommand.cs": {
+      "original_sha256": "5d2d671b3c470e72dd8c3e511823c86652f2a89c14be7da004ac4d15ee80a5e1",
+      "adapted_sha256": "93e5b1047a2df38c6b8a96874c4bd9d642fd4e7c68ce702ca7404686fad12f59"
+    },
+    "src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/NewLocalUserCommand.cs": {
+      "original_sha256": "45723bf2ec7f061a416f080a320952b083f42e579312f8c1a24e03b350cb94b3",
+      "adapted_sha256": "6764897d34432322fd59cf6c001532407619aa8ea99bf7dbd05a15d814004940"
+    },
+    "src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/RemoveLocalGroupCommand.cs": {
+      "original_sha256": "278e8ad02fa0540babddd900e83ddaa18e79618e8a93b67f1ad59dd3f62179e5",
+      "adapted_sha256": "ce6c92ab7ce48bf10856891d6ca7be7ab36fe10ea30083290ffa9b7859f278a5"
+    },
+    "src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/RemoveLocalGroupMemberCommand.cs": {
+      "original_sha256": "b29f8329a6d1b61bf80c4f2755337de4c8fb4373ad27520a6070bd32ec48a910",
+      "adapted_sha256": "b6cbc70893bb4619a90341763be99dbf76aaec0adbf5cda2629f07c8b61d39dd"
+    },
+    "src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/RemoveLocalUserCommand.cs": {
+      "original_sha256": "ea2208e83af8b07cef33dc014afca442f9403f41d8f13294633d71af128f91a8",
+      "adapted_sha256": "32d204b638ff274f72f89bf43bc0b783a6d447946deb5d790dd1821d9f601429"
+    },
+    "src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/RenameLocalGroupCommand.cs": {
+      "original_sha256": "d81e8cf63e1a0331c7170adda509a0ad015017befed79fd3ada0aa97cf8f04d0",
+      "adapted_sha256": "e3262b2c43c26110ca52ab4c3820613683c35386a21fe7726b4d95b0022f7194"
+    },
+    "src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/RenameLocalUserCommand.cs": {
+      "original_sha256": "365bfb99d7b775dd8f5034fd25ffd4175ed75d600cf634e5f2685f101f75cc21",
+      "adapted_sha256": "5b1a5d92dfc7b1e78a92383461fe1011ca98eac34f17a1b93099835878801eb1"
+    },
+    "src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/SetLocalGroupCommand.cs": {
+      "original_sha256": "7af94405ab89b52ee571b65dff10fe7936c3d696afa1b7a3eac68e2428b90fb5",
+      "adapted_sha256": "bb0f499b958034deecf0a12b80199756d95ccdcb2ffc0a7d72fa2a8f3077eaa0"
+    },
+    "src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/SetLocalUserCommand.cs": {
+      "original_sha256": "4bf49c4f4e42148a38784644a628f287155a2d96656e6b9ef86ecf9015c716f5",
+      "adapted_sha256": "fadba3f392a32fdb6d036f61eb8b126891616e2ded506849dcde035aa0dbebed"
+    },
+    "src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Exceptions.cs": {
+      "original_sha256": "863c66e9ebd3b61a8b189f47db6a148a60bc03e6d409464176feace234dbbed0",
+      "adapted_sha256": "ee6a9cd57ae5b765b13f9ee296a17cbcf69c6f63442f3514aee417754b629c3c"
+    },
+    "src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Extensions.cs": {
+      "original_sha256": "0572b75c8a47c79a7843630038fe2063e6adb2dea5130fe29952beb3381d3a70",
+      "adapted_sha256": "794d29ad4c60590d5e21ee4446902109948b482aa2a613f071903fc2d539a1fe"
+    },
+    "src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Native.cs": {
+      "original_sha256": "99a5ea8fe60aa3687ccc6008810f6b8f65c2b47d9fa70d14bf303eb3dbed2fcb",
+      "adapted_sha256": "6eb840916f2e71cfa8737945f31d39dcc5d1017931db64456e3f503e77b0b047"
+    },
+    "src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/NtStatus.cs": {
+      "original_sha256": "a6326a6c6a5144e7753e97e352a8aeba25a97334f10b94462fa836b6afd22d2a",
+      "adapted_sha256": "3419cf65787eed06d0d16e3f9ba17ab882d6e09ea91841d745647657014da10d"
+    },
+    "src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Sam.cs": {
+      "original_sha256": "6e981a045d93e89a0e9d087e1f0cb78666c44affd60ab9f420fb5dbfec5b27d0",
+      "adapted_sha256": "6d99ea9f03b74d4c2ba991d9396f84a685d8f7c817ea9d78cb12c808b15e1a69"
+    },
+    "src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/SamApi.cs": {
+      "original_sha256": "c127d22207ebdfe7d75796efb42fa1920152fc7ccbc0f6ea894c1e45b2d64660",
+      "adapted_sha256": "5a27628d0093280db6d499f5c494c20e14dc0331a3e6f58a504b2da304b7c188"
+    },
+    "src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/StringUtil.cs": {
+      "original_sha256": "c7f0fe20289d9e3577073a2b68b3aa9ee0e693edf246a8211874900b72794796",
+      "adapted_sha256": "63f1f89daf00db59411fa4cfce0ffb2ee08dad9bfedc857e059fe79a3afb3c50"
+    }
+  },
+  "removed_original_sources": [],
+  "legacy_serialization": "17 protected constructors retained and annotated SYSLIB0051 obsolete",
+  "analyzers_disabled": false
+}

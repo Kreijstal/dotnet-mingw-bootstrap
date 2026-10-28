@@ -1,0 +1,126 @@
+Serviced8.0.31 targeting generator source build/audit/execution,2026-10-27
+Previous goal turn: progress. Current turn: progress.
+
+Eight complete original projects build with no production C# overlays:
+source interop common, LibraryImport, COM, Regex, JS import/export and JSON3.11/4.0/4.4.
+All99 main/resource satellite DLLs pass original source/compiler-input hash gates,
+actual compiler-reference validation, exact original neutral/XLF PE strings,
+assembly8.0.0.0/file8.0.3126.42000/Open cc7 public identities and byte hashes.
+These tools target the.NET8/source Roslyn4.9.2 host; historical Roslyn/netstandard
+compatibility is not claimed. Targeting package staging/install remains required.
+
+The first JSON prototype retained a framework JSON reference and emitted duplicate-
+type warnings. The corrected adapter honors the original reference exclusion in
+both early resolved references and final Csc inputs; no warning suppression or
+production code removal was used. The initial JS port referenced a private unsigned
+common helper. Rebuilding all complete interop/Regex projects with matched signed
+identities removes that warning. Original nullable/analyzer suggestions remain.
+
+Exact commands (MSYSTEM=CLANG64 bash -lc; from /home/topkek/runtime-servicing.8KDIjx):
+/usr/bin/python3 harness/prepare-targeting-generators.py prepared
+bash harness/build-targeting-generators.sh prepared Json3.11 Json4.0 Json4.4 "JSImport"
+/usr/bin/python3 harness/prepare-targeting-common.py prepared
+bash harness/build-targeting-generators.sh prepared Microsoft.Interop.SourceGeneration Microsoft.Interop.LibraryImportGenerator Microsoft.Interop.ComInterfaceGenerator System.Text.RegularExpressions.Generator "JSImport"
+bash harness/inspect-targeting-generators.sh prepared harness/InspectAssemblyMetadata.cs
+/usr/bin/python3 harness/audit-targeting-generators.py prepared prepared/targeting-generators/pe-metadata.json
+bash harness/check-targeting-generators.sh prepared sdk-check1/sdk-root targeting-check2
+All final commands exit0. SDK consumers:4 cases,0 warnings,0 errors. They select the
+new signed source set, compile generated interop/COM/Regex/JSON on the private
+actual.NET8.0.31 SDK, execute a native generated COM vtable call/free, native PID,
+Unicode regex and all3 reflection-disabled JSON variants. JS imports compile; no
+Windows browser/WASM invocation is asserted. No installed runtime/SDK changes.
+
+Native runtime clean package remains live in /home/topkek/runtime8pkg2.ym1eaB,
+exec session49034. Its183 reference/stub source/compiler-output audits now pass;
+framework library compilation is continuing. No dependency counts increased and
+full goal remains incomplete.
+
+
+Full targeting audit
+PASS full original JS/JSON compiler inputs and actual source references, exact neutral/XLF PE strings, signing/version identities and all99 outputs; serviced targeting package/legacy host compatibility remain open
+
+
+Matched source helper preparation
+PASS original complete interop/Regex compiler inputs, neutral/XLF resources and matching signed8.0.0.0 helper identities
+
+
+Matched full generator builds
+PASS requested original targeting generator builds
+
+
+Full signed-set SDK/native COM/generator execution
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:01:12.35
+SDK CONSUMER RUNTIME 8.0.31
+SDK CONSUMER CORELIB E:\msys64\home\topkek\runtime-servicing.8KDIjx\sdk-check1\sdk-root\shared\Microsoft.NETCore.App\8.0.31\System.Private.CoreLib.dll
+SDK CONSUMER JSON 8.0.3126.42000
+PASS source SDK compiler and original LibraryImport/COM/Regex/JSON generators execute on serviced runtime
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:01:03.89
+SDK CONSUMER RUNTIME 8.0.31
+SDK CONSUMER CORELIB E:\msys64\home\topkek\runtime-servicing.8KDIjx\sdk-check1\sdk-root\shared\Microsoft.NETCore.App\8.0.31\System.Private.CoreLib.dll
+SDK CONSUMER JSON 8.0.3126.42000
+PASS source SDK compiler and original LibraryImport/COM/Regex/JSON generators execute on serviced runtime
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:53.92
+SDK CONSUMER RUNTIME 8.0.31
+SDK CONSUMER CORELIB E:\msys64\home\topkek\runtime-servicing.8KDIjx\sdk-check1\sdk-root\shared\Microsoft.NETCore.App\8.0.31\System.Private.CoreLib.dll
+SDK CONSUMER JSON 8.0.3126.42000
+PASS source SDK compiler and original LibraryImport/COM/Regex/JSON generators execute on serviced runtime
+  Restored E:\msys64\home\topkek\runtime-servicing.8KDIjx\targeting-check2\JSImport\Check.csproj (in 585 ms).
+  Check -> E:\msys64\home\topkek\runtime-servicing.8KDIjx\targeting-check2\JSImport\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:49.72
+PASS generated JS import compiled on serviced runtime; browser invocation remains platform-specific
+PASS new signed interop/COM/Regex/JSON analyzer selection, native COM vtable execution, all JSON variants with reflection disabled and JS import compilation; historical/browser runtime compatibility remain open
+
+
+Original SDK COM fixture baseline
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\runtime-servicing.8KDIjx\com-generator-baseline1\Check.csproj (in 1.38 sec).
+  MSBUILD RUNTIME 8.0.31 CORELIB E:\msys64\home\topkek\runtime-servicing.8KDIjx\sdk-check1\sdk-root\shared\Microsoft.NETCore.App\8.0.31\System.Private.CoreLib.dll
+  Check -> E:\msys64\home\topkek\runtime-servicing.8KDIjx\com-generator-baseline1\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:01:30.34
+SDK CONSUMER RUNTIME 8.0.31
+SDK CONSUMER CORELIB E:\msys64\home\topkek\runtime-servicing.8KDIjx\sdk-check1\sdk-root\shared\Microsoft.NETCore.App\8.0.31\System.Private.CoreLib.dll
+SDK CONSUMER JSON 8.0.3126.42000
+PASS source SDK compiler and original LibraryImport/COM/Regex/JSON generators execute on serviced runtime
+
+
+Runtime reference audit
+PASS complete original framework manifest, independently reconstructed helper overlays, 183 reference/stub outputs and 0 library compiler-input/output hashes; runtime integration and packaging remain required
+
+
+Final live checkpoint 2026-10-27 15:52:26 UTC: makepkg PID1642720 and library helper PID1676519 confirmed live. src/prepared/m/build/libraries-8.0.31/failed.txt is empty; build reached System.Formats.Asn1. Continue exec session49034; no restart justified. Package artifact/install and full goal remain incomplete.

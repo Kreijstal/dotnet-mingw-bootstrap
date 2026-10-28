@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <UseAppHost>false</UseAppHost>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <EnableNETAnalyzers>false</EnableNETAnalyzers>
+    <NuGetAudit>false</NuGetAudit>
+    <OutputPath>bin-wmi/</OutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="WmiProbe.cs" />
+    <Compile Include="NativeDependencies.cs" />
+    <Reference Include="System.Management"><HintPath>wmi-build-root/oob-8.0.0/lib/System.Management.dll</HintPath></Reference>
+    <Reference Include="System.CodeDom"><HintPath>wmi-build-root/oob-8.0.0/lib/System.CodeDom.dll</HintPath></Reference>
+  </ItemGroup>
+</Project>

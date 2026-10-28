@@ -1,0 +1,52 @@
+From 517d0600b52ee8dfa10a52cc5fba7a8105d72b83 Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Fri, 9 Oct 2026 17:51:33 +0200
+Subject: [PATCH] coreclr: jitinterface (crossgen2) builds with inc/mingw
+
+jitinterface includes corhdr.h without windows.h, so corhdr.h's own
+ReplacesCorHdrNumericDefines enum is compiled; msvc_compat.h, which is
+force-included before it, defined COMIMAGE_FLAGS_NATIVE_ENTRYPOINT as a
+macro and broke that enum.  Define the constant (missing from
+mingw-w64's winnt.h) in the winnt.h wrapper instead, after mingw-w64's
+header, where only code that sees winnt.h's enum gets it.
+---
+ src/coreclr/inc/mingw/msvc_compat.h | 5 -----
+ src/coreclr/inc/mingw/winnt.h       | 6 ++++++
+ 2 files changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/src/coreclr/inc/mingw/msvc_compat.h b/src/coreclr/inc/mingw/msvc_compat.h
+index 71d716469..e86eff886 100644
+--- a/src/coreclr/inc/mingw/msvc_compat.h
++++ b/src/coreclr/inc/mingw/msvc_compat.h
+@@ -27,11 +27,6 @@
+ #endif
+ #endif
+ 
+-// winnt.h (ReplacesCorHdrNumericDefines) constants missing from mingw-w64
+-#ifndef COMIMAGE_FLAGS_NATIVE_ENTRYPOINT
+-#define COMIMAGE_FLAGS_NATIVE_ENTRYPOINT 0x00000010
+-#endif
+-
+ // MSVC's C++ library headers bring in crtdbg.h (_ASSERTE, _RPT*), and the
+ // standalone GC environment relies on that.
+ #if defined(__cplusplus)
+diff --git a/src/coreclr/inc/mingw/winnt.h b/src/coreclr/inc/mingw/winnt.h
+index 89b8c3229..607387b9b 100644
+--- a/src/coreclr/inc/mingw/winnt.h
++++ b/src/coreclr/inc/mingw/winnt.h
+@@ -16,6 +16,12 @@
+ 
+ #include_next <winnt.h>
+ 
++// A ReplacesCorHdrNumericDefines constant missing from mingw-w64's winnt.h (code
++// that includes only corhdr.h, e.g. jitinterface, gets corhdr's own enum).
++#ifndef COMIMAGE_FLAGS_NATIVE_ENTRYPOINT
++#define COMIMAGE_FLAGS_NATIVE_ENTRYPOINT 0x00000010
++#endif
++
+ #if defined(__x86_64__)
+ #undef _KNONVOLATILE_CONTEXT_POINTERS
+ #undef KNONVOLATILE_CONTEXT_POINTERS
+-- 
+2.55.0
+

@@ -1,0 +1,272 @@
+MSAL4.61.3 and cache extension4.61.3 complete source split-package validation
+Host: win11 / CLANG64, actual runtime .NET8.0.0
+Source commit: 88df64013795d4e3716e1f677600f8164ffdb542
+Build root: /home/topkek/msal-package.r9IBJe
+Fresh installed root: /home/topkek/msal-installed.HWMsLD/check
+
+$ MSYSTEM=CLANG64 bash -lc 'PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm'
+RESULT: exit0, first formal clean build; main0warnings, cache extension1original
+SYSLIB0051 warning; all consumer/inspection builds0warnings/errors.
+$ pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-msal-4.61.3-1-any.pkg.tar.zst mingw-w64-clang-x86_64-dotnet-msal-extensions-4.61.3-1-any.pkg.tar.zst
+RESULT: exit0
+$ bash /home/topkek/msal-package.r9IBJe/src/check.sh /home/topkek/msal-installed.HWMsLD/check
+RESULT: exit0; installed source feed only, fresh cache and output
+$ python3 tests/powershell-deps/audit-msal.py
+RESULT: exit0; all17 pinned inputs, both complete original source/compiler branches,
+449 originalC# items,4SDKmetadata files, source JSON generator/context hashes,
+implementation/ref/XML, exact native/NuGet dependencies, licenses/notices/directives
+$ /usr/bin/python3 /home/topkek/msal-package.r9IBJe/postinstall.py
+RESULT: exit0; both builtNuGets=installedfeed=freshcache and licenses/notices/inventory bytes
+
+Original projects/globs/imports and NET6 platform/feature selection retained on
+source.NET8. Main421 and cache28 C# inputs unchanged. All1068+69 published APIs,
+assembly/file/informational versions, full strong-name headers/nonzero signatures,
+repository/IsTrimmable/Serviceable metadata and exact original embedded directives
+match. The original public key pair signs both implementations. Original directive
+CRLF resource bytes are reproduced without production C# edits.45 source JSON
+context files and exact selected source generator4.4 bytes are audited/shipped.
+
+Owned runtime test: real loopback TLS/OIDC, Unicode client-secret form encoding,
+certificate JWT/RSA-PSS signature verification and tamper rejection, cache hit/
+force refresh, Windows DPAPI encrypted cache persistence/reopen in a new application,
+OAuth400error propagation, cancellation, reflection-disabled original source JSON
+contexts and all5loaded source runtime hashes. No external authentication call.
+
+Prototype preparation first exposed central-version imports and was corrected
+before the formal recipe. The owned test initially needed a Schannel-compatible
+per-user temporary key import and corrected its expectations to the original
+PS256/x5t#S256 and string-encoded expiration formats. Production algorithms were
+unchanged. Temporary certificates are not installed in certificate stores and
+owned cache files are cleaned. Broader upstream/broker/interactive/remote/auth,
+cross-process cache/non-Windows/framework/trimming/AOT and Azure.Identity/
+PSResourceGet integration remain open. The full packaging goal is incomplete.
+
+Full makepkg1.log:
+==> Making package: mingw-w64-dotnet-msal 4.61.3-1 (27 Oct 2026 12:14:11)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found msal-88df64013795d4e3716e1f677600f8164ffdb542.tar.gz
+  -> Found extract.py
+  -> Found prepare.py
+  -> Found verify-build.py
+  -> Found pack.py
+  -> Found Check.cs
+  -> Found check.sh
+  -> Found check-payload.py
+  -> Found compare.py
+  -> Found InspectApi.cs
+  -> Found InspectAssemblyMetadata.cs
+  -> Found source-inputs.json
+  -> Found Microsoft.Identity.Client.api.json
+  -> Found Microsoft.Identity.Client.metadata.json
+  -> Found Microsoft.Identity.Client.Extensions.Msal.api.json
+  -> Found Microsoft.Identity.Client.Extensions.Msal.metadata.json
+  -> Found README.md
+==> Validating source files with sha256sums...
+    msal-88df64013795d4e3716e1f677600f8164ffdb542.tar.gz ... Passed
+    extract.py ... Passed
+    prepare.py ... Passed
+    verify-build.py ... Passed
+    pack.py ... Passed
+    Check.cs ... Passed
+    check.sh ... Passed
+    check-payload.py ... Passed
+    compare.py ... Passed
+    InspectApi.cs ... Passed
+    InspectAssemblyMetadata.cs ... Passed
+    source-inputs.json ... Passed
+    Microsoft.Identity.Client.api.json ... Passed
+    Microsoft.Identity.Client.metadata.json ... Passed
+    Microsoft.Identity.Client.Extensions.Msal.api.json ... Passed
+    Microsoft.Identity.Client.Extensions.Msal.metadata.json ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+==> Starting prepare()...
+PASS full pinned MSAL repository archive extraction
+PASS complete original MSAL/cache projects, unmodified C#, original NET6 feature/platform selection, open signing key and frozen release versions
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\msal-package.r9IBJe\src\prepared\src\client\Microsoft.Identity.Client.Extensions.Msal\Microsoft.Identity.Client.Extensions.Msal.csproj (in 370 ms).
+  Restored E:\msys64\home\topkek\msal-package.r9IBJe\src\prepared\src\client\Microsoft.Identity.Client\Microsoft.Identity.Client.csproj (in 370 ms).
+  Microsoft.Identity.Client -> E:\msys64\home\topkek\msal-package.r9IBJe\src\prepared\src\client\Microsoft.Identity.Client\bin\Release\net8.0\Microsoft.Identity.Client.dll
+E:\msys64\home\topkek\msal-package.r9IBJe\src\prepared\src\client\Microsoft.Identity.Client.Extensions.Msal\MsalCachePersistenceException.cs(44,99): warning SYSLIB0051: 'Exception.Exception(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\msal-package.r9IBJe\src\prepared\src\client\Microsoft.Identity.Client.Extensions.Msal\Microsoft.Identity.Client.Extensions.Msal.csproj::TargetFramework=net8.0]
+  Microsoft.Identity.Client.Extensions.Msal -> E:\msys64\home\topkek\msal-package.r9IBJe\src\prepared\src\client\Microsoft.Identity.Client.Extensions.Msal\bin\Release\net8.0\Microsoft.Identity.Client.Extensions.Msal.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\msal-package.r9IBJe\src\prepared\src\client\Microsoft.Identity.Client.Extensions.Msal\MsalCachePersistenceException.cs(44,99): warning SYSLIB0051: 'Exception.Exception(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\msal-package.r9IBJe\src\prepared\src\client\Microsoft.Identity.Client.Extensions.Msal\Microsoft.Identity.Client.Extensions.Msal.csproj::TargetFramework=net8.0]
+    1 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:19.85
+PASS exact original NET6 branch/compiler bytes, all feature flags, full signing, source dependency references, SDK metadata and selected source JSON generator
+Microsoft.Identity.Client 421 original C# inputs
+Microsoft.Identity.Client.Extensions.Msal 28 original C# inputs
+PASS both complete source NuGets: implementation/ref/XML, licenses/notices, exact dependency graphs and generator evidence
+==> Starting check()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\msal-package.r9IBJe\src\check\Check.csproj (in 444 ms).
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Check -> E:\msys64\home\topkek\msal-package.r9IBJe\src\check\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:06.55
+PASS original MSAL real pinned-loopback TLS/OIDC/client-secret/certificate JWT verification, Unicode forms, cache/force-refresh, DPAPI encrypted persistence/reopen, OAuth errors/cancellation and source contexts with reflection disabled; all five source runtime hashes match
+PASS all five source runtime hashes and actual MSAL/cache/dependency compiler/runtime assets
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\msal-package.r9IBJe\src\check\Api\Inspect.csproj (in 1.28 sec).
+  Inspect -> E:\msys64\home\topkek\msal-package.r9IBJe\src\check\Api\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:09.05
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\msal-package.r9IBJe\src\check\Pe\Inspect.csproj (in 87 ms).
+  Inspect -> E:\msys64\home\topkek\msal-package.r9IBJe\src\check\Pe\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.80
+PASS Microsoft.Identity.Client all1068 published APIs, exact release/signing metadata and original embedded resource bytes
+PASS Microsoft.Identity.Client.Extensions.Msal all69 published APIs, exact release/signing metadata and original embedded resource bytes
+PASS complete source MSAL/cache packages, real TLS/OIDC/token/DPAPI/crypto checks and exact API/identity/payload gates
+==> Starting package_mingw-w64-clang-x86_64-dotnet-msal()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-msal"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Starting package_mingw-w64-clang-x86_64-dotnet-msal-extensions()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-msal-extensions"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-msal 4.61.3-1 (27 Oct 2026 12:15:48)
+
+Full install.log:
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (2) mingw-w64-clang-x86_64-dotnet-msal-4.61.3-1  mingw-w64-clang-x86_64-dotnet-msal-extensions-4.61.3-1
+
+Total Installed Size:  1.34 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+installing mingw-w64-clang-x86_64-dotnet-msal...
+installing mingw-w64-clang-x86_64-dotnet-msal-extensions...
+
+Full installed-check.log:
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\msal-installed.HWMsLD\check\Check.csproj (in 594 ms).
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Check -> E:\msys64\home\topkek\msal-installed.HWMsLD\check\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:12.70
+PASS original MSAL real pinned-loopback TLS/OIDC/client-secret/certificate JWT verification, Unicode forms, cache/force-refresh, DPAPI encrypted persistence/reopen, OAuth errors/cancellation and source contexts with reflection disabled; all five source runtime hashes match
+PASS all five source runtime hashes and actual MSAL/cache/dependency compiler/runtime assets
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\msal-installed.HWMsLD\check\Api\Inspect.csproj (in 476 ms).
+  Inspect -> E:\msys64\home\topkek\msal-installed.HWMsLD\check\Api\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:12.63
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\msal-installed.HWMsLD\check\Pe\Inspect.csproj (in 88 ms).
+  Inspect -> E:\msys64\home\topkek\msal-installed.HWMsLD\check\Pe\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:06.06
+PASS Microsoft.Identity.Client all1068 published APIs, exact release/signing metadata and original embedded resource bytes
+PASS Microsoft.Identity.Client.Extensions.Msal all69 published APIs, exact release/signing metadata and original embedded resource bytes
+PASS complete source MSAL/cache packages, real TLS/OIDC/token/DPAPI/crypto checks and exact API/identity/payload gates
+
+Full postinstall.log:
+PASS Microsoft.Identity.Client built NuGet = installed feed = fresh cache; license/notice/inventory bytes match; SHA256 8f5ce8552d29a1d0669147426e25a6532c4bffbb8e525288a9101e1e7580752b
+PASS Microsoft.Identity.Client.Extensions.Msal built NuGet = installed feed = fresh cache; license/notice/inventory bytes match; SHA256 fd9fe8c7de97403b7ae9be002e384a655df46feeb3b587deacd3e8e74fcc5010

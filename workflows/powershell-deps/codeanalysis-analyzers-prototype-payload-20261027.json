@@ -1,0 +1,18 @@
+{
+  "Microsoft.CodeAnalysis.Analyzers.dll": "a1c97893b77fce6597cbee7aee20deaad1bebd4c2012e1fc45e4b83175da5a60",
+  "cs/Microsoft.CodeAnalysis.Analyzers.resources.dll": "39dab056b83edb39f53570e5b00f481cf512c2d34605f214fa830e85acaf5611",
+  "de/Microsoft.CodeAnalysis.Analyzers.resources.dll": "414f7a9072eda705f228c2ed7abc1c96b9e6c793150f46cc1d040a710718dc4f",
+  "es/Microsoft.CodeAnalysis.Analyzers.resources.dll": "a76bb0ea110c32f743b5199875a4a3a9a0e76368f4f154a8b3356f3a9c309352",
+  "fr/Microsoft.CodeAnalysis.Analyzers.resources.dll": "35e5018cf29f04738edeb7621533d0d757d846bebf1961e5a9e903add4e5438a",
+  "it/Microsoft.CodeAnalysis.Analyzers.resources.dll": "bd98014add75977ab3c510487bf9b027794efbdffed5100c11ad0ebbfe8caa8a",
+  "ja/Microsoft.CodeAnalysis.Analyzers.resources.dll": "2c6bb7031211b3bbc352c5695be1c8a07a4ace2d6af2613cf2260d41de572fda",
+  "ko/Microsoft.CodeAnalysis.Analyzers.resources.dll": "2cf8095f0b08fa3d48300e970a41c7161a348fb09a129a45f494146898c7769d",
+  "pl/Microsoft.CodeAnalysis.Analyzers.resources.dll": "50a2690dab17ad7b7c50dee276e1cdf03a7e635806300772346f9271c098d852",
+  "pt-BR/Microsoft.CodeAnalysis.Analyzers.resources.dll": "4534bb1304311e35e55eb928241f4525635b6aaec45237716d81de78ea1114d8",
+  "ru/Microsoft.CodeAnalysis.Analyzers.resources.dll": "7be07dd3b68e57469742766b9fcb9a786924f47b03cd715a05b72c262556e92c",
+  "tr/Microsoft.CodeAnalysis.Analyzers.resources.dll": "dc24e45ae5e644dfbc01852c1121b050f566f1da13e10531113e2f3b1f78fb6c",
+  "zh-Hans/Microsoft.CodeAnalysis.Analyzers.resources.dll": "4cb171fddaf7db2877c3f0149fad601e2a153f2eeab395b28d4cc0225e6f656b",
+  "zh-Hant/Microsoft.CodeAnalysis.Analyzers.resources.dll": "6b57e2afe51d17c45136a2003dae0d680b91435fddd3482ce2421d598f846f67",
+  "Microsoft.CodeAnalysis.CSharp.Analyzers.dll": "2ce7ab0dcb788b67504232f6286bed7e29e0f95f40ff34888e64d1b6e9e84026",
+  "Microsoft.CodeAnalysis.VisualBasic.Analyzers.dll": "a513f07035766e3b058db33dcd6a16482a4adb54af91cfe424c7af9790351c76"
+}

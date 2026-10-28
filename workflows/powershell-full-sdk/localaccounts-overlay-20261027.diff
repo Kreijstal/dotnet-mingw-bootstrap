@@ -1,0 +1,839 @@
+--- a/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/AddLocalGroupMemberCommand.cs
++++ b/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/AddLocalGroupMemberCommand.cs
+@@ -41,7 +41,7 @@
+         [ValidateNotNull]
+         public Microsoft.PowerShell.Commands.LocalGroup Group
+         {
+-            get { return this.group;}
++            get { return this.group; }
+ 
+             set { this.group = value; }
+         }
+@@ -62,7 +62,7 @@
+         [SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays")]
+         public Microsoft.PowerShell.Commands.LocalPrincipal[] Member
+         {
+-            get { return this.member;}
++            get { return this.member; }
+ 
+             set { this.member = value; }
+         }
+@@ -79,7 +79,7 @@
+         [ValidateNotNullOrEmpty]
+         public string Name
+         {
+-            get { return this.name;}
++            get { return this.name; }
+ 
+             set { this.name = value; }
+         }
+@@ -96,7 +96,7 @@
+         [ValidateNotNull]
+         public System.Security.Principal.SecurityIdentifier SID
+         {
+-            get { return this.sid;}
++            get { return this.sid; }
+ 
+             set { this.sid = value; }
+         }
+@@ -301,4 +301,3 @@
+     }
+ 
+ }
+-
+--- a/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/DisableLocalUserCommand.cs
++++ b/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/DisableLocalUserCommand.cs
+@@ -91,7 +91,7 @@
+         [SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays")]
+         public System.Security.Principal.SecurityIdentifier[] SID
+         {
+-            get { return this.sid;}
++            get { return this.sid; }
+ 
+             set { this.sid = value; }
+         }
+@@ -217,4 +217,3 @@
+     }
+ 
+ }
+-
+--- a/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/EnableLocalUserCommand.cs
++++ b/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/EnableLocalUserCommand.cs
+@@ -91,7 +91,7 @@
+         [SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays")]
+         public System.Security.Principal.SecurityIdentifier[] SID
+         {
+-            get { return this.sid;}
++            get { return this.sid; }
+ 
+             set { this.sid = value; }
+         }
+@@ -217,4 +217,3 @@
+     }
+ 
+ }
+-
+--- a/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/GetLocalGroupCommand.cs
++++ b/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/GetLocalGroupCommand.cs
+@@ -59,7 +59,7 @@
+         [SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays")]
+         public System.Security.Principal.SecurityIdentifier[] SID
+         {
+-            get { return this.sid;}
++            get { return this.sid; }
+ 
+             set { this.sid = value; }
+         }
+@@ -168,4 +168,3 @@
+     }
+ 
+ }
+-
+--- a/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/GetLocalGroupMemberCommand.cs
++++ b/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/GetLocalGroupMemberCommand.cs
+@@ -39,7 +39,7 @@
+         [ValidateNotNull]
+         public Microsoft.PowerShell.Commands.LocalGroup Group
+         {
+-            get { return this.group;}
++            get { return this.group; }
+ 
+             set { this.group = value; }
+         }
+@@ -56,7 +56,7 @@
+         [ValidateNotNullOrEmpty]
+         public string Member
+         {
+-            get { return this.member;}
++            get { return this.member; }
+ 
+             set { this.member = value; }
+         }
+@@ -75,7 +75,7 @@
+         [ValidateNotNullOrEmpty]
+         public string Name
+         {
+-            get { return this.name;}
++            get { return this.name; }
+ 
+             set { this.name = value; }
+         }
+@@ -94,7 +94,7 @@
+         [ValidateNotNullOrEmpty]
+         public System.Security.Principal.SecurityIdentifier SID
+         {
+-            get { return this.sid;}
++            get { return this.sid; }
+ 
+             set { this.sid = value; }
+         }
+@@ -233,4 +233,3 @@
+     }
+ 
+ }
+-
+--- a/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/GetLocalUserCommand.cs
++++ b/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/GetLocalUserCommand.cs
+@@ -170,4 +170,3 @@
+     }
+ 
+ }
+-
+--- a/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/NewLocalGroupCommand.cs
++++ b/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/NewLocalGroupCommand.cs
+@@ -36,7 +36,7 @@
+         [ValidateNotNull]
+         public string Description
+         {
+-            get { return this.description;}
++            get { return this.description; }
+ 
+             set { this.description = value; }
+         }
+@@ -55,7 +55,7 @@
+         [ValidateLength(1, 256)]
+         public string Name
+         {
+-            get { return this.name;}
++            get { return this.name; }
+ 
+             set { this.name = value; }
+         }
+@@ -118,4 +118,3 @@
+     }
+ 
+ }
+-
+--- a/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/NewLocalUserCommand.cs
++++ b/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/NewLocalUserCommand.cs
+@@ -49,7 +49,7 @@
+         [Parameter(ValueFromPipelineByPropertyName = true)]
+         public System.DateTime AccountExpires
+         {
+-            get { return this.accountexpires;}
++            get { return this.accountexpires; }
+ 
+             set { this.accountexpires = value; }
+         }
+@@ -64,7 +64,7 @@
+         [Parameter(ValueFromPipelineByPropertyName = true)]
+         public System.Management.Automation.SwitchParameter AccountNeverExpires
+         {
+-            get { return this.accountneverexpires;}
++            get { return this.accountneverexpires; }
+ 
+             set { this.accountneverexpires = value; }
+         }
+@@ -79,7 +79,7 @@
+         [ValidateNotNull]
+         public string Description
+         {
+-            get { return this.description;}
++            get { return this.description; }
+ 
+             set { this.description = value; }
+         }
+@@ -93,7 +93,7 @@
+         [Parameter(ValueFromPipelineByPropertyName = true)]
+         public System.Management.Automation.SwitchParameter Disabled
+         {
+-            get { return this.disabled;}
++            get { return this.disabled; }
+ 
+             set { this.disabled = value; }
+         }
+@@ -109,7 +109,7 @@
+         [ValidateNotNull]
+         public string FullName
+         {
+-            get { return this.fullname;}
++            get { return this.fullname; }
+ 
+             set { this.fullname = value; }
+         }
+@@ -129,7 +129,7 @@
+         [ValidateLength(1, 20)]
+         public string Name
+         {
+-            get { return this.name;}
++            get { return this.name; }
+ 
+             set { this.name = value; }
+         }
+@@ -147,7 +147,7 @@
+         [ValidateNotNull]
+         public System.Security.SecureString Password
+         {
+-            get { return this.password;}
++            get { return this.password; }
+ 
+             set { this.password = value; }
+         }
+@@ -193,7 +193,7 @@
+         [Parameter(ValueFromPipelineByPropertyName = true)]
+         public System.Management.Automation.SwitchParameter UserMayNotChangePassword
+         {
+-            get { return this.usermaynotchangepassword;}
++            get { return this.usermaynotchangepassword; }
+ 
+             set { this.usermaynotchangepassword = value; }
+         }
+@@ -292,4 +292,3 @@
+     }
+ 
+ }
+-
+--- a/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/RemoveLocalGroupCommand.cs
++++ b/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/RemoveLocalGroupCommand.cs
+@@ -210,4 +210,3 @@
+     }
+ 
+ }
+-
+--- a/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/RemoveLocalGroupMemberCommand.cs
++++ b/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/RemoveLocalGroupMemberCommand.cs
+@@ -41,7 +41,7 @@
+         [ValidateNotNull]
+         public Microsoft.PowerShell.Commands.LocalGroup Group
+         {
+-            get { return this.group;}
++            get { return this.group; }
+ 
+             set { this.group = value; }
+         }
+@@ -62,7 +62,7 @@
+         [SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays")]
+         public Microsoft.PowerShell.Commands.LocalPrincipal[] Member
+         {
+-            get { return this.member;}
++            get { return this.member; }
+ 
+             set { this.member = value; }
+         }
+@@ -79,7 +79,7 @@
+         [ValidateNotNullOrEmpty]
+         public string Name
+         {
+-            get { return this.name;}
++            get { return this.name; }
+ 
+             set { this.name = value; }
+         }
+@@ -96,7 +96,7 @@
+         [ValidateNotNull]
+         public System.Security.Principal.SecurityIdentifier SID
+         {
+-            get { return this.sid;}
++            get { return this.sid; }
+ 
+             set { this.sid = value; }
+         }
+@@ -299,4 +299,3 @@
+     }
+ 
+ }
+-
+--- a/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/RemoveLocalUserCommand.cs
++++ b/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/RemoveLocalUserCommand.cs
+@@ -43,7 +43,7 @@
+         [SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays")]
+         public Microsoft.PowerShell.Commands.LocalUser[] InputObject
+         {
+-            get { return this.inputobject;}
++            get { return this.inputobject; }
+ 
+             set { this.inputobject = value; }
+         }
+@@ -211,4 +211,3 @@
+     }
+ 
+ }
+-
+--- a/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/RenameLocalGroupCommand.cs
++++ b/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/RenameLocalGroupCommand.cs
+@@ -41,7 +41,7 @@
+         [ValidateNotNullOrEmpty]
+         public Microsoft.PowerShell.Commands.LocalGroup InputObject
+         {
+-            get { return this.inputobject;}
++            get { return this.inputobject; }
+ 
+             set { this.inputobject = value; }
+         }
+@@ -61,7 +61,7 @@
+         [ValidateNotNullOrEmpty]
+         public string Name
+         {
+-            get { return this.name;}
++            get { return this.name; }
+ 
+             set { this.name = value; }
+         }
+@@ -78,7 +78,7 @@
+         [ValidateNotNullOrEmpty]
+         public string NewName
+         {
+-            get { return this.newname;}
++            get { return this.newname; }
+ 
+             set { this.newname = value; }
+         }
+@@ -97,7 +97,7 @@
+         [ValidateNotNullOrEmpty]
+         public System.Security.Principal.SecurityIdentifier SID
+         {
+-            get { return this.sid;}
++            get { return this.sid; }
+ 
+             set { this.sid = value; }
+         }
+@@ -230,4 +230,3 @@
+     }
+ 
+ }
+-
+--- a/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/RenameLocalUserCommand.cs
++++ b/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/RenameLocalUserCommand.cs
+@@ -41,7 +41,7 @@
+         [ValidateNotNull]
+         public Microsoft.PowerShell.Commands.LocalUser InputObject
+         {
+-            get { return this.inputobject;}
++            get { return this.inputobject; }
+ 
+             set { this.inputobject = value; }
+         }
+@@ -61,7 +61,7 @@
+         [ValidateNotNullOrEmpty]
+         public string Name
+         {
+-            get { return this.name;}
++            get { return this.name; }
+ 
+             set { this.name = value; }
+         }
+@@ -78,7 +78,7 @@
+         [ValidateNotNullOrEmpty]
+         public string NewName
+         {
+-            get { return this.newname;}
++            get { return this.newname; }
+ 
+             set { this.newname = value; }
+         }
+@@ -97,7 +97,7 @@
+         [ValidateNotNull]
+         public System.Security.Principal.SecurityIdentifier SID
+         {
+-            get { return this.sid;}
++            get { return this.sid; }
+ 
+             set { this.sid = value; }
+         }
+@@ -230,4 +230,3 @@
+     }
+ 
+ }
+-
+--- a/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/SetLocalGroupCommand.cs
++++ b/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/SetLocalGroupCommand.cs
+@@ -36,7 +36,7 @@
+         [ValidateNotNull]
+         public string Description
+         {
+-            get { return this.description;}
++            get { return this.description; }
+ 
+             set { this.description = value; }
+         }
+@@ -56,7 +56,7 @@
+         [ValidateNotNull]
+         public Microsoft.PowerShell.Commands.LocalGroup InputObject
+         {
+-            get { return this.inputobject;}
++            get { return this.inputobject; }
+ 
+             set { this.inputobject = value; }
+         }
+@@ -76,7 +76,7 @@
+         [ValidateNotNull]
+         public string Name
+         {
+-            get { return this.name;}
++            get { return this.name; }
+ 
+             set { this.name = value; }
+         }
+@@ -95,7 +95,7 @@
+         [ValidateNotNull]
+         public System.Security.Principal.SecurityIdentifier SID
+         {
+-            get { return this.sid;}
++            get { return this.sid; }
+ 
+             set { this.sid = value; }
+         }
+@@ -177,4 +177,3 @@
+     }
+ 
+ }
+-
+--- a/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/SetLocalUserCommand.cs
++++ b/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Commands/SetLocalUserCommand.cs
+@@ -53,7 +53,7 @@
+         [Parameter]
+         public System.DateTime AccountExpires
+         {
+-            get { return this.accountexpires;}
++            get { return this.accountexpires; }
+ 
+             set { this.accountexpires = value; }
+         }
+@@ -67,7 +67,7 @@
+         [Parameter]
+         public System.Management.Automation.SwitchParameter AccountNeverExpires
+         {
+-            get { return this.accountneverexpires;}
++            get { return this.accountneverexpires; }
+ 
+             set { this.accountneverexpires = value; }
+         }
+@@ -82,7 +82,7 @@
+         [ValidateNotNull]
+         public string Description
+         {
+-            get { return this.description;}
++            get { return this.description; }
+ 
+             set { this.description = value; }
+         }
+@@ -98,7 +98,7 @@
+         [ValidateNotNull]
+         public string FullName
+         {
+-            get { return this.fullname;}
++            get { return this.fullname; }
+ 
+             set { this.fullname = value; }
+         }
+@@ -117,7 +117,7 @@
+         [ValidateNotNull]
+         public Microsoft.PowerShell.Commands.LocalUser InputObject
+         {
+-            get { return this.inputobject;}
++            get { return this.inputobject; }
+ 
+             set { this.inputobject = value; }
+         }
+@@ -136,7 +136,7 @@
+         [ValidateNotNullOrEmpty]
+         public string Name
+         {
+-            get { return this.name;}
++            get { return this.name; }
+ 
+             set { this.name = value; }
+         }
+@@ -151,7 +151,7 @@
+         [ValidateNotNull]
+         public System.Security.SecureString Password
+         {
+-            get { return this.password;}
++            get { return this.password; }
+ 
+             set { this.password = value; }
+         }
+@@ -184,7 +184,7 @@
+         [ValidateNotNull]
+         public System.Security.Principal.SecurityIdentifier SID
+         {
+-            get { return this.sid;}
++            get { return this.sid; }
+ 
+             set { this.sid = value; }
+         }
+@@ -199,7 +199,7 @@
+         [Parameter]
+         public bool UserMayChangePassword
+         {
+-            get { return this.usermaychangepassword;}
++            get { return this.usermaychangepassword; }
+ 
+             set { this.usermaychangepassword = value; }
+         }
+@@ -320,4 +320,3 @@
+     }
+ 
+ }
+-
+--- a/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Exceptions.cs
++++ b/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Exceptions.cs
+@@ -85,6 +85,7 @@
+         /// </summary>
+         /// <param name="info"></param>
+         /// <param name="ctx"></param>
++        [Obsolete("Formatter-based serialization is obsolete.", DiagnosticId = "SYSLIB0051")]
+         protected LocalAccountsException(SerializationInfo info, StreamingContext ctx) : base(info, ctx) { }
+     }
+ 
+@@ -144,6 +145,7 @@
+         /// </summary>
+         /// <param name="info"></param>
+         /// <param name="ctx"></param>
++        [Obsolete("Formatter-based serialization is obsolete.", DiagnosticId = "SYSLIB0051")]
+         protected InternalException(SerializationInfo info, StreamingContext ctx) : base(info, ctx) { }
+     }
+ 
+@@ -204,6 +206,7 @@
+         /// </summary>
+         /// <param name="info"></param>
+         /// <param name="ctx"></param>
++        [Obsolete("Formatter-based serialization is obsolete.", DiagnosticId = "SYSLIB0051")]
+         protected Win32InternalException(SerializationInfo info, StreamingContext ctx) : base(info, ctx) { }
+     }
+ 
+@@ -249,6 +252,7 @@
+         /// </summary>
+         /// <param name="info"></param>
+         /// <param name="ctx"></param>
++        [Obsolete("Formatter-based serialization is obsolete.", DiagnosticId = "SYSLIB0051")]
+         protected InvalidPasswordException(SerializationInfo info, StreamingContext ctx) : base(info, ctx) { }
+     }
+ 
+@@ -286,6 +290,7 @@
+         /// </summary>
+         /// <param name="info"></param>
+         /// <param name="ctx"></param>
++        [Obsolete("Formatter-based serialization is obsolete.", DiagnosticId = "SYSLIB0051")]
+         protected InvalidParametersException(SerializationInfo info, StreamingContext ctx) : base(info, ctx) { }
+     }
+ 
+@@ -319,6 +324,7 @@
+         /// </summary>
+         /// <param name="info"></param>
+         /// <param name="ctx"></param>
++        [Obsolete("Formatter-based serialization is obsolete.", DiagnosticId = "SYSLIB0051")]
+         protected AccessDeniedException(SerializationInfo info, StreamingContext ctx) : base(info, ctx) { }
+     }
+ 
+@@ -352,6 +358,7 @@
+         /// </summary>
+         /// <param name="info"></param>
+         /// <param name="ctx"></param>
++        [Obsolete("Formatter-based serialization is obsolete.", DiagnosticId = "SYSLIB0051")]
+         protected InvalidNameException(SerializationInfo info, StreamingContext ctx) : base(info, ctx) { }
+     }
+ 
+@@ -385,6 +392,7 @@
+         /// </summary>
+         /// <param name="info"></param>
+         /// <param name="ctx"></param>
++        [Obsolete("Formatter-based serialization is obsolete.", DiagnosticId = "SYSLIB0051")]
+         protected NameInUseException(SerializationInfo info, StreamingContext ctx) : base(info, ctx) { }
+     }
+ 
+@@ -419,6 +427,7 @@
+         /// </summary>
+         /// <param name="info"></param>
+         /// <param name="ctx"></param>
++        [Obsolete("Formatter-based serialization is obsolete.", DiagnosticId = "SYSLIB0051")]
+         protected NotFoundException(SerializationInfo info, StreamingContext ctx) : base(info, ctx) { }
+     }
+ 
+@@ -452,6 +461,7 @@
+         /// </summary>
+         /// <param name="info"></param>
+         /// <param name="ctx"></param>
++        [Obsolete("Formatter-based serialization is obsolete.", DiagnosticId = "SYSLIB0051")]
+         protected PrincipalNotFoundException(SerializationInfo info, StreamingContext ctx) : base(info, ctx) { }
+     }
+ 
+@@ -485,6 +495,7 @@
+         /// </summary>
+         /// <param name="info"></param>
+         /// <param name="ctx"></param>
++        [Obsolete("Formatter-based serialization is obsolete.", DiagnosticId = "SYSLIB0051")]
+         protected GroupNotFoundException(SerializationInfo info, StreamingContext ctx) : base(info, ctx) { }
+     }
+ 
+@@ -518,6 +529,7 @@
+         /// </summary>
+         /// <param name="info"></param>
+         /// <param name="ctx"></param>
++        [Obsolete("Formatter-based serialization is obsolete.", DiagnosticId = "SYSLIB0051")]
+         protected UserNotFoundException(SerializationInfo info, StreamingContext ctx) : base(info, ctx) { }
+     }
+ 
+@@ -551,6 +563,7 @@
+         /// </summary>
+         /// <param name="info"></param>
+         /// <param name="ctx"></param>
++        [Obsolete("Formatter-based serialization is obsolete.", DiagnosticId = "SYSLIB0051")]
+         protected MemberNotFoundException(SerializationInfo info, StreamingContext ctx) : base(info, ctx) { }
+     }
+ 
+@@ -585,6 +598,7 @@
+         /// </summary>
+         /// <param name="info"></param>
+         /// <param name="ctx"></param>
++        [Obsolete("Formatter-based serialization is obsolete.", DiagnosticId = "SYSLIB0051")]
+         protected ObjectExistsException(SerializationInfo info, StreamingContext ctx) : base(info, ctx) { }
+     }
+ 
+@@ -618,6 +632,7 @@
+         /// </summary>
+         /// <param name="info"></param>
+         /// <param name="ctx"></param>
++        [Obsolete("Formatter-based serialization is obsolete.", DiagnosticId = "SYSLIB0051")]
+         protected GroupExistsException(SerializationInfo info, StreamingContext ctx) : base(info, ctx) { }
+     }
+ 
+@@ -651,6 +666,7 @@
+         /// </summary>
+         /// <param name="info"></param>
+         /// <param name="ctx"></param>
++        [Obsolete("Formatter-based serialization is obsolete.", DiagnosticId = "SYSLIB0051")]
+         protected UserExistsException(SerializationInfo info, StreamingContext ctx) : base(info, ctx) { }
+     }
+ 
+@@ -684,6 +700,7 @@
+         /// </summary>
+         /// <param name="info"></param>
+         /// <param name="ctx"></param>
++        [Obsolete("Formatter-based serialization is obsolete.", DiagnosticId = "SYSLIB0051")]
+         protected MemberExistsException(SerializationInfo info, StreamingContext ctx) : base(info, ctx) { }
+     }
+ }
+--- a/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Extensions.cs
++++ b/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Extensions.cs
+@@ -107,7 +107,7 @@
+             byte[] sidBinary = new byte[sid.BinaryLength];
+             sid.GetBinaryForm(sidBinary, 0);
+ 
+-            return System.BitConverter.ToUInt32(sidBinary, sidBinary.Length-4);
++            return System.BitConverter.ToUInt32(sidBinary, sidBinary.Length - 4);
+         }
+ 
+         /// <summary>
+@@ -130,7 +130,7 @@
+ 
+             // The Identifier Authority is six bytes wide,
+             // in big-endian format, starting at the third byte
+-            long authority = (long) (((long)sidBinary[2]) << 40) +
++            long authority = (long)(((long)sidBinary[2]) << 40) +
+                                     (((long)sidBinary[3]) << 32) +
+                                     (((long)sidBinary[4]) << 24) +
+                                     (((long)sidBinary[5]) << 16) +
+--- a/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Native.cs
++++ b/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Native.cs
+@@ -169,7 +169,7 @@
+ // invisibly to the C# compiler, and some fields will not be used in C# code.
+ #pragma warning disable 0649, 0169
+     [StructLayout(LayoutKind.Explicit, Size = 8)]
+-    struct LARGE_INTEGER
++    internal struct LARGE_INTEGER
+     {
+         [FieldOffset(0)]
+         public Int64 QuadPart;
+--- a/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/NtStatus.cs
++++ b/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/NtStatus.cs
+@@ -28,7 +28,6 @@
+         //
+         public const UInt32 STATUS_MORE_ENTRIES             = 0x00000105;
+ 
+-
+         /////////////////////////////////////////////////////////////////////////
+         //
+         // Standard Information values
+--- a/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Sam.cs
++++ b/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/Sam.cs
+@@ -1247,7 +1247,7 @@
+ 
+                 status = SamApi.SamCreateUser2InDomain(domainHandle,
+                     ref str,
+-                    (int) SamApi.USER_NORMAL_ACCOUNT,
++                    (int)SamApi.USER_NORMAL_ACCOUNT,
+                     Win32.MAXIMUM_ALLOWED,
+                     out userHandle,
+                     out grantedAccess,
+@@ -1273,7 +1273,7 @@
+             }
+             catch (Exception)
+             {
+-                if (IntPtr.Zero != userHandle)
++                if (userHandle != IntPtr.Zero)
+                 {
+                     SamApi.SamDeleteUser(userHandle);
+                 }
+@@ -1473,7 +1473,7 @@
+ 
+                     Marshal.Copy(memberIds, idArray, 0, (int)memberCount);
+ 
+-                    for (int i=0; i < memberCount; i++)
++                    for (int i = 0; i < memberCount; i++)
+                     {
+                         var sid = new SecurityIdentifier(idArray[i]);
+                         yield return MakeLocalPrincipalObject(LookupAccountInfo(sid));
+@@ -2134,7 +2134,7 @@
+             if (user.PasswordRequired != changed.PasswordRequired)
+                 properties |= UserProperties.PasswordRequired;
+ 
+-            if (   properties != UserProperties.None
++            if (properties != UserProperties.None
+                 || passwordExpired != PasswordExpiredState.Unchanged
+                 || password != null)
+             {
+@@ -2369,7 +2369,7 @@
+             }
+             finally
+             {
+-                if (IntPtr.Zero != securityObject)
++                if (securityObject != IntPtr.Zero)
+                     status = SamApi.SamFreeMemory(securityObject);
+             }
+ 
+@@ -2662,7 +2662,7 @@
+             }
+             finally
+             {
+-                if (IntPtr.Zero != sidBytes)
++                if (sidBytes != IntPtr.Zero)
+                     status = SamApi.SamFreeMemory(sidBytes);
+             }
+ 
+@@ -2817,7 +2817,7 @@
+         /// A new LocalPrincipal object representing the account, or null if the
+         /// <paramref name="info"/> parameter is null.
+         /// </returns>
+-        private LocalPrincipal MakeLocalPrincipalObject(AccountInfo info)
++        private static LocalPrincipal MakeLocalPrincipalObject(AccountInfo info)
+         {
+             if (info == null)
+                 return null;    // this is a legitimate case
+@@ -2904,8 +2904,7 @@
+             if (!NtStatus.IsError(ntStatus))
+                 return null;
+ 
+-            if (context == null)
+-                context = this.context;
++            context ??= this.context;
+ 
+             switch (ntStatus)
+             {
+@@ -3023,7 +3022,7 @@
+         /// One of the <see cref="PrincipalSource"/> enumerations identifying the
+         /// source of the object.
+         /// </returns>
+-        private PrincipalSource? GetPrincipalSource(SecurityIdentifier sid)
++        private static PrincipalSource? GetPrincipalSource(SecurityIdentifier sid)
+         {
+             var bSid = new byte[sid.BinaryLength];
+ 
+@@ -3089,7 +3088,7 @@
+         /// One of the <see cref="PrincipalSource"/> enumerations identifying the
+         /// source of the object.
+         /// </returns>
+-        private PrincipalSource? GetPrincipalSource(AccountInfo info)
++        private static PrincipalSource? GetPrincipalSource(AccountInfo info)
+         {
+             return GetPrincipalSource(info.Sid);
+         }
+@@ -3189,7 +3188,7 @@
+ #endif
+ 
+         // Wraps calls to acquire the OperatingSystem version
+-        private OperatingSystem GetOperatingSystem()
++        private static OperatingSystem GetOperatingSystem()
+         {
+ #if CORECLR
+             if (localOs == null)
+--- a/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/SamApi.cs
++++ b/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/SamApi.cs
+@@ -190,7 +190,7 @@
+     [StructLayout(LayoutKind.Sequential)]
+     internal struct USER_ADMIN_COMMENT_INFORMATION
+     {
+-        UNICODE_STRING AdminComment;
++        private UNICODE_STRING AdminComment;
+     }
+ 
+     [StructLayout(LayoutKind.Sequential)]
+--- a/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/StringUtil.cs
++++ b/src/Microsoft.PowerShell.LocalAccounts/LocalAccounts/StringUtil.cs
+@@ -9,15 +9,8 @@
+     /// <summary>
+     /// Contains utility functions for formatting localizable strings.
+     /// </summary>
+-    internal class StringUtil
++    internal static class StringUtil
+     {
+-        /// <summary>
+-        /// Private constructor to present auto-generation of a default constructor with greater accessibility.
+-        /// </summary>
+-        private StringUtil()
+-        {
+-        }
+-
+         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
+         internal static string Format(string str)
+         {

@@ -1,0 +1,719 @@
+{
+  "m/corehost-8.0.31/corehost/dotnet.exe": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "cdef4008b75c59a546806798e33f97d371190eb67ee301d4e1ff8c0b571564ef"
+  },
+  "m/corehost-8.0.31/corehost/hostfxr.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "1081992fc2ce3df126d8f220ab56d64a79ee9ed879627718f096ac0f1646843e"
+  },
+  "m/corehost-8.0.31/corehost/hostpolicy.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "a752030f3408286cd56038872c0ccfe1fa8ae3b1a1a5fdf4694133180eaeb5cb"
+  },
+  "m/corehost-8.0.31/corehost/apphost.exe": {
+    "file_version": null,
+    "reason": "Original apphost standalone CMake sets SKIP_VERSIONING=1; SDK copies application resources",
+    "sha256": "3ecc474f096644b87894ce5c516bfe262546ab503d68dffd3fbcb6be3a860dab"
+  },
+  "m/corehost-8.0.31/corehost/comhost.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "c0d8da78ee519008e32c8ee7379db62bfa725f6833b9c3c391ad566a6847d746"
+  },
+  "m/corehost-8.0.31/corehost/nethost.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "b34214768f0c63e897bac31f154b91d7d35eac601d4fbdc096ff931ec0f3f372"
+  },
+  "m/coreclr-8.0.31/coreclr.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "c5cc82bdcf9aa3bce11a31434493c16a749a21af43c971dc83aac7e98b2f4e47"
+  },
+  "m/coreclr-8.0.31/clrjit.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "1a20154fcd51860663d88258c4160b0a9f93e18d5d758b2aafb004e104a43472"
+  },
+  "m/coreclr-8.0.31/mscorrc.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "b0cee88aff042b5c0d6be7b5776387fc6942f11882086f23dd9a05f9a014964b"
+  },
+  "m/coreclr-8.0.31/clretwrc.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "b15c65b891ed2b4ba6d628e6d1bf0c36cba3b9a3fe9237e7cf76cc4442601c52"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Private.CoreLib.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "5b34c90ac99bd2715a31aaea7e6087efcfb13230353a16da6e345e4b20bfc516"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/Microsoft.CSharp.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "c3c224f70d4705df22fcebb263994d8dfad0c1b805b105068593a663df829ebb"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/Microsoft.VisualBasic.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "778f9ecca09e48a10ce7c03c4c8456735125bd424a6260c60dbda9179513328e"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/Microsoft.VisualBasic.Core.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "ebf53055549e44ee3bfba5f23c5c2a2e28e094922b490515c1a4cc896ff956cd"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/Microsoft.Win32.Primitives.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "eb49ca188aa3d9ab4cc8f5755859adbb6b2ca3422ea0611bccbe14e00a653cd2"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/Microsoft.Win32.Registry.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "3358c201606a777cd5ac280a325772e628488f4896a30ff47622e14b1b8c59da"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "25bd229289c99fdbcc632515733102fdec926172c5f11f32cdd05cd4e5f4b9cc"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.AppContext.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "4a5f345eb60da4c96e1670eaadbc06b5b9434f82b47af656494d3553f2ce536f"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Buffers.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "fa7a8a3353925197536e53520c344928de8f9333db74d8a6a6c699611839a7ef"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Collections.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "0377238ca00a49badf22e8a0078d26fdaa331e4b7bb6b64386a9d2eca110eca0"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Collections.Concurrent.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "defd227d9ad2492be90d2071b0da0323bc71b6834e6e46695e2708506617e447"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Collections.Immutable.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "7c0a2650f2e50a1440e64293b0f300d6ba41efd15814c44a4229ded23b1bd738"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Collections.NonGeneric.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "e7d0047364c27161c5d3d91a6a5b57b63d14cee20b8d32707875c8961571745d"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Collections.Specialized.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "469ed8e921c2d039805d6f290092e62bffe8d189247331adf7f3890ab3b24069"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.ComponentModel.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "8a48f6404a9618c3ce5a6681adcba624538ac833079a44667bdf841882978abf"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.ComponentModel.Annotations.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "427a8a2180d7a72f56c8c91cd2cad55e8d39ddfe9c5f25dc2f8cf706986195ae"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.ComponentModel.DataAnnotations.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "43d185cbb7ba0a427c08177299066545d5ed013cd5b41bc214f142adee770dd9"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.ComponentModel.EventBasedAsync.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "0961c1ad10f98fc7bd16a6f49d4b4e642d405163bacc458b70102efd68942f7c"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.ComponentModel.Primitives.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "cb9c61ccc693d6a7f4f783ae16d4d7b93822e64c17a5a5be73836c2107f4f973"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.ComponentModel.TypeConverter.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "dc100da8cec4d160c9e6b35630c888f295febcece8168fa4f73b75d5f71d34ec"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Configuration.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "e57bd99b2bbdea91356e9a6b008b582bcf170aaa185980e4b875deba49d916d7"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Console.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "14f224ab4e5de40afe33718453ab3a747cebf30015d5eea674eb3f221d3c9e44"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Core.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "0d0e9e7d3956ca31a758ba2c37b41f2c0234ff34d9b3efdfb018ff5eae1b6f06"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Data.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "6e235e1549cebd2474d28f001ddf6af3b4bec3f1a305a61b1c4bce647f199f7c"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Data.Common.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "5e7900d4f5a76ac2e8d62732318e0abf13217c86f63f8a1c328020ffe0956a01"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Data.DataSetExtensions.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "f59928660809cc974899ea3aee18f11855942b6af0ce2eea21bf6dd75c7f741e"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Diagnostics.Contracts.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "bf75aa4269253ed87539ddc1078d3c11d3cb05f1d390b1bd1c1d9de1969edb90"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Diagnostics.Debug.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "bf677530eefd96b2772c60e2ba9f53dd6b8277866a83feee70bda16c28b704ed"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Diagnostics.DiagnosticSource.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "bba0825e48dfd91b971890f563211e4bdafe21974d934ee4bc48af47744fd340"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Diagnostics.FileVersionInfo.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "ce33356c2121fc8d1b05c30094b5f230890060b37f1a9464de14e59f38cd104e"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Diagnostics.Process.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "f855a4f405202f82047b9c4c6152494a73b66cd898052d7089d4b64fb0e2acac"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Diagnostics.StackTrace.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "8d2e62c52a92b8b1332fd407679fe14c2b050d5394263148b30dd12b978b1a6e"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Diagnostics.TextWriterTraceListener.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "43211bebeb50696845cf901b86fabf93f4802c41f9e78b85b2d1d72a3b3281a1"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Diagnostics.Tools.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "50f4ebbcf438807e0b87037b3963452b0bcf9675da2d85c0ac7cff6ecb5c0ab8"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Diagnostics.TraceSource.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "163f010f29766133de58c5996a49e5f1773ca5f7783cb3b11cd23c0db901508e"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Diagnostics.Tracing.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "4f3e85647cf0b7abc66aaaaa7867367fe057d7677939388db1e95fc3b3be1fa5"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Drawing.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "9af67a8e9f7bc0fa932f4cfbfdbfdb63512b958c423139fcc2df57da6a4f1b69"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Drawing.Primitives.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "698eb164ae78e2b2f6808529a94ff271014d5f64501ee0e977f31ed642455ea7"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Dynamic.Runtime.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "9fe7414ca56b0db6d65bbdf30b090f1ae20c372d145abcbea8d110002800c1df"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Formats.Asn1.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "accea6f938bca52cd76eeef2a8f277a72ae30154ec5a7b79a5ed95097d098533"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Formats.Tar.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "c4026dc1398830c22c82f065f4bce78890dd9be77b644d119e3496159b9e03a8"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Globalization.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "640f113099144b9ba458cf2342b87ebe988483c15c2217db84b46411081f9004"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Globalization.Calendars.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "02c008150470aaad4f27011ee3cf5908a768e7ae36030e6e7b1a4c2b60445bd7"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Globalization.Extensions.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "d6ddf4c21a8a8be98bc5fd80bc2b509b405abe740a3c4d059a49b063ffc24e23"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.IO.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "c3f3550c90d1fd2f35933e5239b3abbb037a847e8a4f04a90eb2a6f87bce202d"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.IO.Compression.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "e81921cc433f54f45d62dd1cc8e70f860df4136f3944c5330a1fc77381b79776"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.IO.Compression.Brotli.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "b10c3a5140ff4b84ceb3c29b0b9b49bd545e7d5baf04ef46d3dbce644d3e2dbc"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.IO.Compression.FileSystem.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "d0842aa0315ba30ec976f239c6e7821cf473fc7a2a02963ea0d49543791895d5"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.IO.Compression.ZipFile.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "6c11166c8fe478d7d0dd232120eae4966d519b09372b70d67c68feeed1e7f537"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.IO.FileSystem.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "37410239c86cb2ee9695d14ce81553c4b63253bedc7acee4e84f523210af40fb"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.IO.FileSystem.AccessControl.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "8f2286597ce3bd7d66cfd5fe5b4169ee7ae17781c3928b2a5fa3f3fe2cba3c8c"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.IO.FileSystem.DriveInfo.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "3096a2ba376c016d1c8145b1d12105e6a40ca884142a93d30db4421ca74d26e1"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.IO.FileSystem.Primitives.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "91ba153c150c56880443ea7d06a3d82c124ffa7438872a6e06f77182126a94bd"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.IO.FileSystem.Watcher.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "0ccefd05836bbce7a2a4e6156b3ab4e02de237bd5d4f767f260415ddc07899fe"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.IO.IsolatedStorage.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "77f81e328779fd3008b092e11417489e6335b796b702b0773adffc7161edbc2f"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.IO.MemoryMappedFiles.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "4ef686c1cd5fedfa8d0c92ee4d6f2caca62581b8a335ae4049f01c56565a03bc"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.IO.Pipes.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "f6bdfe7f653f4f1947ca13b48c24c8670eb311797e4a7e5c7f32f3014bd98336"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.IO.Pipes.AccessControl.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "748398bafd8fa4855bf6edae3886cc18522af6d2c4b6035c4e98f87c851e5b7f"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.IO.UnmanagedMemoryStream.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "e539b2c4acff5adea1eebfb9a686cb6db1504877371979b908fe4f287f0db452"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Linq.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "0bd90ea3ec407c360a11aea32524f687d5a92935b25c29970f5b3aacc0660566"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Linq.Expressions.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "5b85c6e8b6850420b1df83e2bd3568317a8850f7963d8a31328b3f4a95ac4190"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Linq.Parallel.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "cae902f939d6a0b83cc0fb912ef0a3697c71b924e7f5b92519debcad47b648e7"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Linq.Queryable.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "683a6241c628ff74c134c74b7f2a34c788a91bed90eef1453cac76e67713b686"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Memory.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "cecc47d3115551609b37318ecce3f78a7a245585b6c54d46d8c923a9f87622ac"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Net.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "149abb3f39fccf796194f9be7379d8916eaf0ab64700294b77c9569b21287d69"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Net.Http.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "9ff8c8c7aa6620c1bbb9ce445d6e3c5addca60193f90ea96bf97cde176dfe3fe"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Net.Http.Json.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "b2b2b0ef36cf307d4723f34e3097c6e854dce230f12bbb7acab383463ff0cf79"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Net.HttpListener.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "b27e574a3ccef6ae9be598630f371ced2a1a820b52a3b8ec3c12d4a2ca3e3549"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Net.Mail.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "d0fb7fc594588c18c3ac28b82b22221d3838c5b8cc57b815fb18ffdf92d61dfe"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Net.NameResolution.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "1af272dd3db6ff1764200bdabe6e3f26b15450af5cd798748a602fbc78addbf9"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Net.NetworkInformation.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "56fca62a9a1eb6a0bc1e6032ea96f38c86bdbc3c1f32e86bebd31a07d78e729a"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Net.Ping.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "81c8e5278d6b1811a1dd026315a464636a608aca526eb9ecb39beb2a6c0b9ede"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Net.Primitives.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "c6343d218998a5be2780e5a4487108b8249970f5aa8f5477f22938acf47e8c4b"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Net.Quic.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "edbb6d137a268f96372a2fbd9a8e4b3303210ac21c31a018fc617a25ad8b659f"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Net.Requests.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "2d7b270bffe30b0ab299da36c405fed7d3aab2a345ed18ac10c739af15cf6a3a"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Net.Security.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "916a9c3c461803b5d204a728afaf61c76bf28bf33c12518beeca3400799c242a"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Net.ServicePoint.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "a0688ea5dd09237a9557aec22797b299c1364db61f3b7c93fd461d7e6462252c"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Net.Sockets.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "79a5267f181681ed2514a911683b7337c12b4a1c1637491f89b5f243fa3816e1"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Net.WebClient.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "eda30b09037afe60c65736d8548d2fdea0cf4e2c93bb22ddfaacdaf1e1be571b"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Net.WebHeaderCollection.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "5ae50fe4229cad70ed528976e8dc03d1fae311682ae69e0734118d02f8f9affa"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Net.WebProxy.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "476538a5b14d5aeedcd6fb3e85a6962a935aea020a0a1bc18f018f304ae7e3b4"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Net.WebSockets.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "54eaf6c5e5451f951bb4e30655a89eb9c91e0a3c532302a0a24de4ef2a382eed"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Net.WebSockets.Client.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "58388ec1f80a3a609fa6b1925acb74c06be3555f9111b0bf773b6510ec8e20e4"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Numerics.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "9ad9655a26e899bc0ce85df592be84a039475c8fcf7d8cf2b454411bf13dd6f9"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Numerics.Vectors.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "cb86963dba25abfb7bb2c3874e9b9a778d083cd1208cc6a570d8b6bfba0b1e32"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.ObjectModel.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "3a60f577a6f5112bfbf4062fcc90337d731ab5074247291ab2f36ed692390369"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Private.DataContractSerialization.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "164b14fdb73afe95f2f9382f070722a624dece8643635f7a85b26592d32d3a50"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Private.Uri.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "d98864fb7fff5e30dca87e884288e5fbc42f1080cfa8c332a7051301968ebe9d"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Private.Xml.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "180bc56e9ecea0a1989185fff752275984aa242f53f26c1656d22b5a80adcd64"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Private.Xml.Linq.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "1a840583ea32136e3f9c853539ad89195663bdd7a05af3dd4ccd4ce89f6c745c"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Reflection.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "1483f4f9e50fee361cfabd65af2726b753b85a99d07a07d53ea12bd3cd23ed7a"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Reflection.DispatchProxy.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "4d41d1eb8fb024cf629f3981f9150ce51abc2ecce9755819506a22ecc2e32c63"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Reflection.Emit.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "54a5a2e977cf407bdf410bbb1da4befe73a18f029a001de865b0308818c34740"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Reflection.Emit.ILGeneration.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "6a25defdd6312bf52fadd88270899bf706d6d0c40da98f612205626cce58a7f3"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Reflection.Emit.Lightweight.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "0cf1a9c4325995b1798dc2e0104f8fa6aa3feec48c83ccc1efdccca14d67dd82"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Reflection.Extensions.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "54e2aaa45070a54c141407bafe0d31a9f94e4c870403140458019790737ffeb6"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Reflection.Metadata.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "5defd8b73bc84d1d3f1ec114d2255627e1fd24c3659434cd25dff2ea674d3246"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Reflection.Primitives.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "0d5597f98819e83982123586f910889995c3218c03ce8e247eb06ef72dc39f4c"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Reflection.TypeExtensions.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "3f205f76182df6813ba1c1e9029071f04eaa3a5a6b27d6b36a2248ff2c5670d3"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Resources.Reader.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "3d38623091c0beaf8d0adf39473adb6157e841abcf570a08d1b02199ebdbad74"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Resources.ResourceManager.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "c11de08bb165d52bc056c16aa58be376502bfc520079c04461112cc931f98d93"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Resources.Writer.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "d8cb32ad1a8a5b10af1d2c432ff0b7942d6e40f754f04cf93fc247b24849993f"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Runtime.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "630a5a7a9ed3dd366e5090897d642aa1291f5e75c3c1d9ea341cecddd8368a13"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Runtime.CompilerServices.Unsafe.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "b4c479845ce7f49fa12804f858d6a11231347ba633780a50193eabc39b1dcdf0"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Runtime.CompilerServices.VisualC.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "3fe3a790a8155960cabdda8b9ad8e5c43a84df2ca97d21ac21a9b74a8caf7ab8"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Runtime.Extensions.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "5da64ef99bdb2e42b2d10e9b1416d5c16c407ad50b15193e1cf43226c265f503"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Runtime.Handles.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "03425a278e21802b3d55fcf90e1c81b6f322a17577b325a8dc8ee90a3f1fbc3e"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Runtime.InteropServices.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "5d011aefd8aa99742b85542ad4fe0cbb5c21b88ce08508580dadd8681facd916"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Runtime.InteropServices.JavaScript.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "6ea62e2f404e131c25a201e2e1e73b7100a0302f3b3bbc31d953919a6610ecf4"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Runtime.InteropServices.RuntimeInformation.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "238aef21d73e4a74aa61656a18599a22a2f2ee8edb561edac0c5039e40324240"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Runtime.Intrinsics.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "b74f1e4cf593a6b90a1acdbb635544821610991e5ca189fbf3f7a76373971446"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Runtime.Loader.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "8b14c606caba4227488f067bf3955cad968e65345b5d3685faaa1bc34c0af967"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Runtime.Numerics.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "8c8d8454cf1ffbde700f9dc18c204ee0483e326c90299d7a79f5d66f79f0fe91"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Runtime.Serialization.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "63a62733e6bc7013b91b8e8cf7f3c3f8bd7537870e0cb08d8d8674b1dcc35ceb"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Runtime.Serialization.Formatters.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "2163f467663499d10dc9280f4c38d77013ef7fb364308e0c70db8f375067bf9c"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Runtime.Serialization.Json.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "32f19025d86c141d0439dbbf90d63e9ccf157eaeca36f9545237d41f7f23e024"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Runtime.Serialization.Primitives.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "9847c27c931f06c0b7c5bb38d4462397b1362652becab48841db0a3c730f86ed"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Runtime.Serialization.Xml.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "6074cd3ffda8724376eef70d0ce6f35666bdfb840536ee1a80a751192b1b5dd8"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Security.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "0d0e4b645d62b1694c215d12c57c4bbb2439f207293d713a9a5d907ea3f1831f"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Security.AccessControl.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "0dfcbf2abb0a27ac22ce22b012196aca2370129997248e99345a23e8b677aaaa"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Security.Claims.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "8fc13023e6edb586cf31e868943a49bad9c522022b3bcaa7d139209fa48dc92e"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Security.Cryptography.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "5837aaf2ba56e525f1c1ea4d8a0e5a2caf390502e01c001a2d3d5bf2216c5547"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Security.Cryptography.Algorithms.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "18da0766f97b5077b70db7324dafed5f45cb696ffec8209c24cb09dc5c61ffe5"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Security.Cryptography.Cng.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "40aea99a9ff67c72dc597b05a19eb352788aa7586b5a65e7a2aa4c76ed452450"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Security.Cryptography.Csp.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "d71bb23bebc9405d86e9c3f285a4b5e3614e7f8c4823e4023d1b432f9047582a"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Security.Cryptography.Encoding.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "8e2e85bebd2eea15f9610d00de6263448c3074fd28ccc7135559902733966cdd"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Security.Cryptography.OpenSsl.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "8c64ad31c87eb75c5d7c2f6cf647264fb65650f92b265a776a22fb1a8309eefa"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Security.Cryptography.Primitives.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "fbb888cfecea6e4e0e4148fca80741b7933fab81f564cb02985d01a1dc4f013c"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Security.Cryptography.X509Certificates.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "7563e0da4a7a9be21a24f82d9ab666acf1c6a01007bda4f93d1fc3630d09b8bb"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Security.Principal.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "06a2484f944ae435e70caba641cbcddd5914e2c770f68a9b13e76a209d0b9ec5"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Security.Principal.Windows.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "aeb6aff7876d71ce04e9e7a4a7d6801949e7a2982b9641407ceab49d0737d8cc"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Security.SecureString.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "328285c890d45077061e162ae13391a10018ad21b55ab0e7abeae152419dd927"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.ServiceModel.Web.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "8f58eabdec4799dc031bcebdf6683847842d2515e9951e8341c7cad84f5eeda0"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.ServiceProcess.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "abf040053e18567a73c795c8be80583a5235c1b2da633b596b2ba9f763494656"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Text.Encoding.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "30b3e7065ba2324d39967943fbb83117c16a5ed2b3e769d7c5394cace00a2d92"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Text.Encoding.CodePages.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "9edc636b0bc904b3886d6a15c0da608c6a5bb5436f81642e7872bc136c33534e"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Text.Encoding.Extensions.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "70f412d9392e6a39ac2f5590dd741c730f547e7568517de460fee28e3cf230d2"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Text.Encodings.Web.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "a4e44f386ef1e4d68742648df50eddb6702aaf6974703e1d36f735e410df6b36"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Text.Json.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "505f5e87a6959987470f1bbe9a0d34bfd995cd56d94d21e094ba07d276e584e9"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Text.RegularExpressions.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "532c873823e8979cee7d472958b06324b5d2e72948e335bd7bb24e8421310490"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Threading.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "4744c4c50c57126098eea27804f93857a52deebee825e5d40ac6e1895aa7c197"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Threading.Channels.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "f533227aa60291ecb346cbd746e27cfe2e30758066b63648d3d104cae6597c2e"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Threading.Overlapped.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "0421b0307094f0ee91167bd0a91f5a4e0e3e463771b9e816c1c5c5dd60734134"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Threading.Tasks.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "8bb8e7e5f644f2931483c757900373681a440ddd865c8be41699e551fd7afb4d"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Threading.Tasks.Dataflow.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "d10c4c33403d92ab745ef23491e82785bd27c7e360bb616539674625a8284e1f"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Threading.Tasks.Extensions.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "787744d17881f385d0172e1d9262172e29bae68e181b867a7e8e0f83a35f9174"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Threading.Tasks.Parallel.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "9532a8b610bc6b24b50525431d9cc4befbecc0ddd9a33722ceaf842f96146547"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Threading.Thread.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "b72b9b7f84eb3c45cef0fb21d8b6fac74602355082607b99c8d5e0286a63ac7a"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Threading.ThreadPool.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "04e56046c3f6ccc1cb2ae7fac5d25e69d2ca207ab9e1e3adb5193fa5ab1eafe5"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Threading.Timer.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "337b8358eb13325133be4b67dd6e64487a09adb0c567a16835118686de0f7d55"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Transactions.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "d896fad4e2d2ac69b08aa260df01f1a84638cb5d54a2ebbdf9e13079bab3a26a"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Transactions.Local.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "d77ff0cd81a4847281bfeeb6dcf03b8be853843722f7246d0724af443bc7c1b4"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.ValueTuple.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "64d9ab9692bcd15ba2397ed01e22a6dd5a6397eb88b703b48495ce1a9145bb32"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Web.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "644e9c7388e13fe62c6bf5352895b98d5bde83a82480a264d9d3389f48655536"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Web.HttpUtility.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "06145040ea3904a53455f931452dddd4be8900aca8505d18e0caaf62a6a65821"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Windows.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "46ea121fcd1dc63cd9511865e53313677406b7b9367f97802b5009bf72f3c585"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Xml.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "5d5540ed852cc911ed531fcd2b85ddb4093cf0c92a55cfdd9675c9e01b0eb2e5"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Xml.Linq.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "ed7ab8d42a810239d85347455619994ec7279bbf3fa0a744e81f60cecda3b122"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Xml.ReaderWriter.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "fa89838dcd21b75d82ee94e7ff653c8589ff7b5e26056976d0be8587c320b44d"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Xml.Serialization.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "e340770d7f268a340b569f3cc626ced87eac672a36b71027a6e7dd53ad7109b2"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Xml.XDocument.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "8dd94ac23c1b5067afda7eaa224bc13f4a8e7dfff8dd4e6cd3aafc5692d73a3c"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Xml.XPath.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "c9e4aba7a4a4abf2ea663d2475aa34114d3066add5bc51b6fcc84ac8aecb0746"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Xml.XPath.XDocument.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "ca4dd885f9b100e4a95073774c131ec97f1d62fc114a036a2a8075846d9c2fa7"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Xml.XmlDocument.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "d292808530619ed27ec2894218f895b906715da3a974165e899d3f6299d459a6"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/System.Xml.XmlSerializer.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "88d621d6580840ff03f206ba43889eda4b24304b1a75cffe72b69ae90c7ef855"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/WindowsBase.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "3f8587742a1bc32cd46055f6138045792d69f5e7b48316518faf5053b111a50c"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/mscorlib.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "083e2e793cd34a43c08ca981e592e4fe114c67023d63bc5a174a2775c091f46b"
+  },
+  "m/netcoreapp-8.0.31-coreclr/lib/netstandard.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "0640daa3aee50aac7c54fa110123a7d4d88b31988bc4d98d5d9326819c8b4fe8"
+  },
+  "m/mono-8.0.31/libs/System.IO.Compression.Native.dll": {
+    "file_version": "8.0.3126.42000",
+    "sha256": "00b7938094f307f6f0ac56c5083f4ac90dae0dd14ffc4dd5ee41ad4d1e5f040d"
+  }
+}

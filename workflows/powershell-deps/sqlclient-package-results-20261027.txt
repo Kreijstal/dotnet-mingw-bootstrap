@@ -1,0 +1,830 @@
+Experimental System.Data.SqlClient4.9.1 source package and MC-SMP flow-control repair
+Date: 2026-10-27
+Host: win11 / Windows11 build26200 / MSYS2 CLANG64
+Build root: /home/topkek/sqlclient-package.KLddl9
+Fresh installed root: /home/topkek/sqlclient-installed.XDgwGc
+Source commit: 84b081710c66cc560b77d4de38cee493c3a38e9d
+Source archive SHA256: f5b1bd0cf8b2c6e232ff866a4f3b069c30c48f37820c10c81691de211d4ba3c6
+
+This is concrete progress toward the full dependency port, not completion of SqlClient's
+native compatibility requirement. The new native/NuGet package is experimental. The
+verified direct dependency count stays50/53; the overall goal remains incomplete.
+Full Windows source is retained:242 selected original inputs,238 unchanged plus four
+explicit overlays; three selected original generic-facade inputs; four/three generated
+resource/SDK/ThisAssembly inputs; original SqlFileStream.Windows implementation.
+Assembly4.6.1.6/file4.9.1.0/source informational commit/public b03f identity are retained.
+Public signing is not a Microsoft private-key signature. Vendor implementations are
+never compile inputs or package payloads. The original unsupported-platform facade is
+retained in lib/net8.0, its generated reference is in ref/net8.0, and the complete
+managed Windows source implementation is in runtimes/win/lib/net8.0. No empty/fake
+native SNI NuGet package is emitted.
+
+New production repair: MC-SMP WNDW is an inclusive maximum DATA sequence. The old
+managed sender uses < in synchronous/queued send and >= in queue-full checks. It
+therefore stalls after sequence3 while WNDW4 still permits sequence4. The exact patch
+changes only those three comparisons to <= / >, with zero-fuzz replay against the
+pinned original source. Protocol reference:
+https://learn.microsoft.com/en-us/openspecs/windows_protocols/mc-smp/4ada62f7-33c2-45bb-980c-f566f5a6c11a
+The independent peer verifies25 query DATA frames, six stopped/resumed windows,
+ten fragmented response frames, two client receive-credit ACK grants, ordered public
+SqlDataReader rows, compacting GC and DONE. The final consumer runs the Release port
+without the original Debug environment switch.
+
+Final clean package build, fresh installed-feed checks, independent artifact audit and
+built=installed=fresh-cache proof all exit0. All18 TCP/long/short pipe, SQL-login,
+requested/required TLS, expected untrusted-certificate rejection and real current-user
+SSPI scenarios pass. Basic two-reader MARS/session reuse/FIN checks pass. All1020
+original contract signatures,407 resource strings and exact metadata XML pass. Actual
+source PowerShell loads the exact restored Windows DLL and passes scalar/reader/schema/
+DONE against the original source TDS peer. Native module records reject sni.dll and
+Framework implementations. Owned PFX files are removed; no policy, registry, trust-store,
+service, firewall, persistent PATH or database settings are changed.
+
+Producer implementation and generic-facade builds:0 warnings,0 errors. Protocol consumer:
+8 original/owned obsolete-API warnings; values consumer:8; asset consumer:1. API inspector:
+0 warnings/errors. These tests use protocol fixtures, not a SQL Server database engine.
+The Windows host has no SQL Server/LocalDB installation; the local Docker daemon is
+unavailable. No service or database installation was performed. Actual CLR reports.NET8.0.0.
+
+Still required: LocalDB automatic/named/shared-instance discovery/connections; native
+shared-memory lpc protocol/full transport parity; real transactional FILESTREAM and
+SQL Server/database interoperability; broader TLS trust/host and remote/domain auth;
+MARS error/cancellation/combined-encryption/full SMP conformance; complete shipping
+PowerShell/compatibility integration and runtime servicing. Basic local PowerShell
+integration and formal package/install/audit are now achieved, not left as TODOs.
+
+Earlier test corrections and outcomes:
+- window-baseline: exit127, fixture expected only one logical SYN; SqlClient opens
+  another MARS session before the query. The peer was corrected to track those sessions.
+- window-baseline2: exit124 at the owned120s timeout. Its peer failed, but cleanup
+  entered the old blocked Close/send queue. This observation alone is not the regression
+  proof. The fixture now reports the peer failure before cleanup and lets its isolated
+  process terminate on failure; successful runs dispose normally.
+- window-baseline3: exit127, decisive diagnostic: received3 DATA, permitted4; sequence4
+  not transmitted. The repaired producer and same fixture return0 below.
+- makepkg1: exit4 in the new PowerShell fixture after all other package checks passed.
+  Set-Location did not change Environment.CurrentDirectory, so the original peer could
+  not locate its owned relative PFX file. The fixture now sets/restores both directories.
+  The narrow PowerShell rerun exits0, followed by final clean makepkg2 and installed1.
+
+Exact commands (remote commands run with MSYSTEM=CLANG64 bash -lc):
+$ cd /home/topkek/sqlclient-package.KLddl9
+$ /usr/bin/python3 extract.py maintenance-packages-84b081710c66cc560b77d4de38cee493c3a38e9d.tar.gz prototype-source
+$ /usr/bin/python3 prepare.py prototype-source prototype-build --managed-sni
+$ bash build.sh prototype-build
+RESULT source baseline build: exit0
+$ bash probe-source-sni.sh prototype-source prototype-build window-baseline3 --mars-window-only
+RESULT failing pre-window-fix baseline: exit127 (specific inclusive-window diagnostic)
+$ /usr/bin/python3 prepare.py prototype-source repaired-build --managed-sni
+$ bash build.sh repaired-build
+$ /usr/bin/python3 audit-source-sni.py prototype-source repaired-build maintenance-packages-84b081710c66cc560b77d4de38cee493c3a38e9d.tar.gz
+$ bash probe-source-sni.sh prototype-source repaired-build window-repaired --mars-window-only
+RESULT repaired source/audit/window checks: exit0
+$ PATH=/usr/bin:/clang64/bin:$PATH makepkg --printsrcinfo > .SRCINFO
+$ PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm
+RESULT makepkg2: exit0
+$ pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-sqlclient-4.9.1-1-any.pkg.tar.zst
+RESULT install1: exit0
+$ cd /home/topkek/sqlclient-installed.XDgwGc
+$ /usr/bin/python3 extract.py maintenance-packages-84b081710c66cc560b77d4de38cee493c3a38e9d.tar.gz source
+$ bash check.sh check source
+RESULT installed1: exit0
+$ /usr/bin/python3 sqlclient-postinstall-proof.py
+RESULT exact installed/cache bytes, owned PFX cleanup and actual runtime proof: exit0
+Local independent artifact audit:
+$ python3 tests/powershell-deps/audit-sqlclient.py
+PASS experimental SqlClient all23 pinned inputs, complete242/3 source/compiler/resource inventories, four exact patches, reference/generic/Windows assets,142 original test inputs, native/NuGet metadata/license and tested bytes; full runtime parity remains open
+RESULT artifact audit: exit0
+
+window-baseline3.log:
+patching file PlaceholderStream.cs
+Staged complete pinned TDS utility sources, one explicit .NET 8 test-stream overlay: {'TDS': 95, 'TDS.EndPoint': 33, 'TDS.Servers': 14}
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\sqlclient-package.KLddl9\window-baseline3\Probe.csproj (in 78 ms).
+  Restored E:\msys64\home\topkek\sqlclient-package.KLddl9\window-baseline3\TDS\build.csproj (in 77 ms).
+  Restored E:\msys64\home\topkek\sqlclient-package.KLddl9\window-baseline3\TDS.EndPoint\build.csproj (in 78 ms).
+  Restored E:\msys64\home\topkek\sqlclient-package.KLddl9\window-baseline3\TDS.Servers\build.csproj (in 78 ms).
+  build -> E:\msys64\home\topkek\sqlclient-package.KLddl9\window-baseline3\TDS\bin\Release\net8.0-windows\Microsoft.SqlServer.TDS.dll
+  build -> E:\msys64\home\topkek\sqlclient-package.KLddl9\window-baseline3\TDS.EndPoint\bin\Release\net8.0-windows\Microsoft.SqlServer.TDS.EndPoint.dll
+  build -> E:\msys64\home\topkek\sqlclient-package.KLddl9\window-baseline3\TDS.Servers\bin\Release\net8.0-windows\Microsoft.SqlServer.TDS.Servers.dll
+E:\msys64\home\topkek\sqlclient-package.KLddl9\SourceSniProbe.cs(112,31): warning CS0618: 'SqlConnectionStringBuilder' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\window-baseline3\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\SourceSniProbe.cs(118,40): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\window-baseline3\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\SourceSniProbe.cs(121,20): warning CS0618: 'SqlException' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\window-baseline3\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\SourceSniProbe.cs(164,31): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\window-baseline3\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\MarsTdsProbe.cs(132,41): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\window-baseline3\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\MarsWindowProbe.cs(111,9): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\window-baseline3\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\MarsWindowProbe.cs(115,28): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\window-baseline3\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\MarsWindowProbe.cs(120,22): warning CS0618: 'SqlDataReader' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\window-baseline3\Probe.csproj]
+  Probe -> E:\msys64\home\topkek\sqlclient-package.KLddl9\window-baseline3\bin\Release\net8.0-windows\Probe.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\sqlclient-package.KLddl9\SourceSniProbe.cs(112,31): warning CS0618: 'SqlConnectionStringBuilder' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\window-baseline3\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\SourceSniProbe.cs(118,40): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\window-baseline3\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\SourceSniProbe.cs(121,20): warning CS0618: 'SqlException' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\window-baseline3\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\SourceSniProbe.cs(164,31): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\window-baseline3\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\MarsTdsProbe.cs(132,41): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\window-baseline3\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\MarsWindowProbe.cs(111,9): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\window-baseline3\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\MarsWindowProbe.cs(115,28): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\window-baseline3\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\MarsWindowProbe.cs(120,22): warning CS0618: 'SqlDataReader' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\window-baseline3\Probe.csproj]
+    8 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:10.77
+SMP inclusive-window failure: received=3 permitted=4
+System.AggregateException: One or more errors occurred. (SMP inclusive-window failure: received 3 DATA packets; sequence 4 is permitted by WNDW=4 but was not transmitted)
+ ---> System.Exception: SMP inclusive-window failure: received 3 DATA packets; sequence 4 is permitted by WNDW=4 but was not transmitted
+   at MarsWindowProbe.Peer(TcpListener listener) in E:\msys64\home\topkek\sqlclient-package.KLddl9\MarsWindowProbe.cs:line 63
+   at MarsWindowProbe.Run() in E:\msys64\home\topkek\sqlclient-package.KLddl9\MarsWindowProbe.cs:line 121
+   --- End of inner exception stack trace ---
+Unhandled exception. System.Exception: SMP inclusive-window failure: received 3 DATA packets; sequence 4 is permitted by WNDW=4 but was not transmitted
+   at MarsWindowProbe.Peer(TcpListener listener) in E:\msys64\home\topkek\sqlclient-package.KLddl9\MarsWindowProbe.cs:line 63
+   at MarsWindowProbe.Run() in E:\msys64\home\topkek\sqlclient-package.KLddl9\MarsWindowProbe.cs:line 121
+   at SourceSniProbe.Main(String[] args) in E:\msys64\home\topkek\sqlclient-package.KLddl9\SourceSniProbe.cs:line 169
+   at SourceSniProbe.<Main>(String[] args)
+
+window-repaired.log:
+patching file PlaceholderStream.cs
+Staged complete pinned TDS utility sources, one explicit .NET 8 test-stream overlay: {'TDS': 95, 'TDS.EndPoint': 33, 'TDS.Servers': 14}
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\sqlclient-package.KLddl9\window-repaired\Probe.csproj (in 88 ms).
+  Restored E:\msys64\home\topkek\sqlclient-package.KLddl9\window-repaired\TDS\build.csproj (in 88 ms).
+  Restored E:\msys64\home\topkek\sqlclient-package.KLddl9\window-repaired\TDS.EndPoint\build.csproj (in 88 ms).
+  Restored E:\msys64\home\topkek\sqlclient-package.KLddl9\window-repaired\TDS.Servers\build.csproj (in 88 ms).
+  build -> E:\msys64\home\topkek\sqlclient-package.KLddl9\window-repaired\TDS\bin\Release\net8.0-windows\Microsoft.SqlServer.TDS.dll
+  build -> E:\msys64\home\topkek\sqlclient-package.KLddl9\window-repaired\TDS.EndPoint\bin\Release\net8.0-windows\Microsoft.SqlServer.TDS.EndPoint.dll
+  build -> E:\msys64\home\topkek\sqlclient-package.KLddl9\window-repaired\TDS.Servers\bin\Release\net8.0-windows\Microsoft.SqlServer.TDS.Servers.dll
+E:\msys64\home\topkek\sqlclient-package.KLddl9\SourceSniProbe.cs(112,31): warning CS0618: 'SqlConnectionStringBuilder' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\window-repaired\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\SourceSniProbe.cs(118,40): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\window-repaired\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\SourceSniProbe.cs(121,20): warning CS0618: 'SqlException' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\window-repaired\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\SourceSniProbe.cs(164,31): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\window-repaired\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\MarsTdsProbe.cs(132,41): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\window-repaired\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\MarsWindowProbe.cs(111,9): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\window-repaired\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\MarsWindowProbe.cs(115,28): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\window-repaired\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\MarsWindowProbe.cs(120,22): warning CS0618: 'SqlDataReader' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\window-repaired\Probe.csproj]
+  Probe -> E:\msys64\home\topkek\sqlclient-package.KLddl9\window-repaired\bin\Release\net8.0-windows\Probe.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\sqlclient-package.KLddl9\SourceSniProbe.cs(112,31): warning CS0618: 'SqlConnectionStringBuilder' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\window-repaired\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\SourceSniProbe.cs(118,40): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\window-repaired\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\SourceSniProbe.cs(121,20): warning CS0618: 'SqlException' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\window-repaired\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\SourceSniProbe.cs(164,31): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\window-repaired\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\MarsTdsProbe.cs(132,41): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\window-repaired\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\MarsWindowProbe.cs(111,9): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\window-repaired\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\MarsWindowProbe.cs(115,28): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\window-repaired\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\MarsWindowProbe.cs(120,22): warning CS0618: 'SqlDataReader' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\window-repaired\Probe.csproj]
+    8 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:11.79
+PASS MC-SMP inclusive WNDW boundary: 25 query DATA frames, 6 verified sender stalls/resumes,10 response frames and 2 client ACK window grants
+PASS public SqlClient MARS large-batch send/receive flow control, fragmented TDS/SMP, ordered async rows, compacting GC and DONE
+PASS recorded native module paths; no sni.dll or Framework implementation
+
+makepkg2.log:
+==> Making package: mingw-w64-dotnet-sqlclient 4.9.1-1 (27 Oct 2026 13:54:02)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found maintenance-packages-84b081710c66cc560b77d4de38cee493c3a38e9d.tar.gz
+  -> Found extract.py
+  -> Found prepare.py
+  -> Found build.sh
+  -> Found audit-source-sni.py
+  -> Found pack.py
+  -> Found check.sh
+  -> Found verify-consumer.py
+  -> Found prepare-tds.py
+  -> Found CheckApi.cs
+  -> Found CheckAssets.cs
+  -> Found Probe.cs
+  -> Found SourceSniProbe.cs
+  -> Found MarsTdsProbe.cs
+  -> Found MarsWindowProbe.cs
+  -> Found PowerShell.ps1
+  -> Found Microsoft.pubkey.hex
+  -> Found 0001-use-managed-sni-on-windows.patch
+  -> Found 0002-tds-test-peer-return-partial-handshake-reads.patch
+  -> Found 0003-pass-complete-spns-to-windows-sspi.patch
+  -> Found 0004-accept-short-custom-named-pipe-paths.patch
+  -> Found 0005-honor-inclusive-smp-send-window.patch
+  -> Found README.md
+==> Validating source files with sha256sums...
+    maintenance-packages-84b081710c66cc560b77d4de38cee493c3a38e9d.tar.gz ... Passed
+    extract.py ... Passed
+    prepare.py ... Passed
+    build.sh ... Passed
+    audit-source-sni.py ... Passed
+    pack.py ... Passed
+    check.sh ... Passed
+    verify-consumer.py ... Passed
+    prepare-tds.py ... Passed
+    CheckApi.cs ... Passed
+    CheckAssets.cs ... Passed
+    Probe.cs ... Passed
+    SourceSniProbe.cs ... Passed
+    MarsTdsProbe.cs ... Passed
+    MarsWindowProbe.cs ... Passed
+    PowerShell.ps1 ... Passed
+    Microsoft.pubkey.hex ... Passed
+    0001-use-managed-sni-on-windows.patch ... Passed
+    0002-tds-test-peer-return-partial-handshake-reads.patch ... Passed
+    0003-pass-complete-spns-to-windows-sspi.patch ... Passed
+    0004-accept-short-custom-named-pipe-paths.patch ... Passed
+    0005-honor-inclusive-smp-send-window.patch ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+==> Starting prepare()...
+PASS complete pinned maintenance-packages source archive hash and extraction
+patching file TdsParserStateObjectFactory.Windows.cs
+patching file SecuritySafeHandles.cs
+patching file SNIProxy.cs
+patching file SNIMarsHandle.cs
+==> Removing existing $pkgdir/ directory...
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\sqlclient-package.KLddl9\src\prepared\implementation\build.csproj (in 68 ms).
+  build -> E:\msys64\home\topkek\sqlclient-package.KLddl9\src\prepared\implementation\bin\Release\net8.0-windows\System.Data.SqlClient.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:07.15
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\sqlclient-package.KLddl9\src\prepared\contract\build.csproj (in 58 ms).
+  build -> E:\msys64\home\topkek\sqlclient-package.KLddl9\src\prepared\contract\bin\Release\net8.0\System.Data.SqlClient.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.85
+PASS full pinned source/compiler/framework/resource/implementation/reference inventories; experimental runtime parity remains open
+PASS experimental SqlClient package: complete Windows runtime, original generic unsupported facade, reference assembly, 407 original resource strings, metadata, exact overlays/compiler provenance and MIT license; full runtime parity remains open
+==> Starting check()...
+patching file PlaceholderStream.cs
+Staged complete pinned TDS utility sources, one explicit .NET 8 test-stream overlay: {'TDS': 95, 'TDS.EndPoint': 33, 'TDS.Servers': 14}
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\protocol\TDS\build.csproj (in 79 ms).
+  Restored E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\protocol\TDS.Servers\build.csproj (in 79 ms).
+  Restored E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\protocol\TDS.EndPoint\build.csproj (in 79 ms).
+  Restored E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\protocol\Probe.csproj (in 202 ms).
+  build -> E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\protocol\TDS\bin\Release\net8.0-windows\Microsoft.SqlServer.TDS.dll
+  build -> E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\protocol\TDS.EndPoint\bin\Release\net8.0-windows\Microsoft.SqlServer.TDS.EndPoint.dll
+  build -> E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\protocol\TDS.Servers\bin\Release\net8.0-windows\Microsoft.SqlServer.TDS.Servers.dll
+E:\msys64\home\topkek\sqlclient-package.KLddl9\src\SourceSniProbe.cs(112,31): warning CS0618: 'SqlConnectionStringBuilder' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\protocol\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\src\SourceSniProbe.cs(118,40): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\protocol\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\src\SourceSniProbe.cs(121,20): warning CS0618: 'SqlException' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\protocol\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\src\SourceSniProbe.cs(164,31): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\protocol\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\src\MarsTdsProbe.cs(132,41): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\protocol\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\src\MarsWindowProbe.cs(111,9): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\protocol\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\src\MarsWindowProbe.cs(115,28): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\protocol\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\src\MarsWindowProbe.cs(120,22): warning CS0618: 'SqlDataReader' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\protocol\Probe.csproj]
+  Probe -> E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\protocol\bin\Release\net8.0-windows\Probe.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\sqlclient-package.KLddl9\src\SourceSniProbe.cs(112,31): warning CS0618: 'SqlConnectionStringBuilder' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\protocol\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\src\SourceSniProbe.cs(118,40): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\protocol\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\src\SourceSniProbe.cs(121,20): warning CS0618: 'SqlException' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\protocol\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\src\SourceSniProbe.cs(164,31): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\protocol\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\src\MarsTdsProbe.cs(132,41): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\protocol\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\src\MarsWindowProbe.cs(111,9): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\protocol\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\src\MarsWindowProbe.cs(115,28): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\protocol\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\src\MarsWindowProbe.cs(120,22): warning CS0618: 'SqlDataReader' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\protocol\Probe.csproj]
+    8 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:11.65
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\values\Check.csproj (in 110 ms).
+E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\values\Probe.cs(14,29): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\values\Check.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\values\Probe.cs(19,25): warning CS0618: 'SqlConnectionStringBuilder' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\values\Check.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\values\Probe.cs(20,21): warning CS0618: 'SqlConnectionStringBuilder' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\values\Check.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\values\Probe.cs(21,34): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\values\Check.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\values\Probe.cs(24,20): warning CS0618: 'SqlCommand' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\values\Check.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\values\Probe.cs(26,24): warning CS0618: 'SqlDataRecord' is obsolete: 'Use the Microsoft.SqlServer.Server package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\values\Check.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\values\Probe.cs(26,42): warning CS0618: 'SqlMetaData' is obsolete: 'Use the Microsoft.SqlServer.Server package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\values\Check.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\values\Probe.cs(26,78): warning CS0618: 'SqlMetaData' is obsolete: 'Use the Microsoft.SqlServer.Server package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\values\Check.csproj]
+  Check -> E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\values\bin\Release\net8.0-windows\Check.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\values\Probe.cs(14,29): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\values\Check.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\values\Probe.cs(19,25): warning CS0618: 'SqlConnectionStringBuilder' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\values\Check.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\values\Probe.cs(20,21): warning CS0618: 'SqlConnectionStringBuilder' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\values\Check.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\values\Probe.cs(21,34): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\values\Check.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\values\Probe.cs(24,20): warning CS0618: 'SqlCommand' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\values\Check.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\values\Probe.cs(26,24): warning CS0618: 'SqlDataRecord' is obsolete: 'Use the Microsoft.SqlServer.Server package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\values\Check.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\values\Probe.cs(26,42): warning CS0618: 'SqlMetaData' is obsolete: 'Use the Microsoft.SqlServer.Server package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\values\Check.csproj]
+E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\values\Probe.cs(26,78): warning CS0618: 'SqlMetaData' is obsolete: 'Use the Microsoft.SqlServer.Server package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\values\Check.csproj]
+    8 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.37
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\assets\Check.csproj (in 143 ms).
+E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\assets\CheckAssets.cs(19,29): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\assets\Check.csproj]
+  Check -> E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\assets\bin\Release\net8.0-windows\Check.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\assets\CheckAssets.cs(19,29): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\assets\Check.csproj]
+    1 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.87
+PASS fresh source-only NuGet package, exact reference/generic/Windows runtime asset selections and all consumer payload bytes
+TDSServerEndPoint pipe=False/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=False/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Endpoint test successful.
+TDSServerEndPoint pipe=False/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Listener Thread Started 
+TDSServerEndPoint pipe=False/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Connection Closed
+PASS Release SNI upstream peer pipe=False/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=False: sync/async rows, schema, DONE; encryption=FALSE
+TDSServerEndPoint pipe=False/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Connection Closed
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=True/SSPI=False Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=True/SSPI=False Endpoint test successful.
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=True/SSPI=False Listener Thread Started 
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=True/SSPI=False Connection Closed
+PASS Release SNI upstream peer pipe=False/short=False/TLS=On/encrypt=True/trust=True/SSPI=False: sync/async rows, schema, DONE; encryption=TRUE
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=True/SSPI=False Connection Closed
+TDSServerEndPoint pipe=False/short=False/TLS=Required/encrypt=False/trust=True/SSPI=False Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=False/short=False/TLS=Required/encrypt=False/trust=True/SSPI=False Endpoint test successful.
+TDSServerEndPoint pipe=False/short=False/TLS=Required/encrypt=False/trust=True/SSPI=False Listener Thread Started 
+TDSServerEndPoint pipe=False/short=False/TLS=Required/encrypt=False/trust=True/SSPI=False Connection Closed
+PASS Release SNI upstream peer pipe=False/short=False/TLS=Required/encrypt=False/trust=True/SSPI=False: sync/async rows, schema, DONE; encryption=TRUE
+TDSServerEndPoint pipe=False/short=False/TLS=Required/encrypt=False/trust=True/SSPI=False Connection Closed
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=False/SSPI=False Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=False/SSPI=False Endpoint test successful.
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=False/SSPI=False Listener Thread Started 
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=False/SSPI=False Connection Closed
+PASS untrusted owned certificate rejected with TrustServerCertificate=false
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=False/SSPI=False Connection Closed
+TDSServerEndPoint pipe=False/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=False/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Endpoint test successful.
+TDSServerEndPoint pipe=False/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Listener Thread Started 
+TDSServerEndPoint pipe=False/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Connection Closed
+PASS Windows integrated login: upstream native SSPI context authenticates current user; marker=NTML
+PASS Release SNI upstream peer pipe=False/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=True: sync/async rows, schema, DONE; encryption=FALSE
+TDSServerEndPoint pipe=False/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Connection Closed
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=True/SSPI=True Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=True/SSPI=True Endpoint test successful.
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=True/SSPI=True Listener Thread Started 
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=True/SSPI=True Connection Closed
+PASS Windows integrated login: upstream native SSPI context authenticates current user; marker=NTML
+PASS Release SNI upstream peer pipe=False/short=False/TLS=On/encrypt=True/trust=True/SSPI=True: sync/async rows, schema, DONE; encryption=TRUE
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=True/SSPI=True Connection Closed
+TDSServerEndPoint pipe=True/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=True/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Endpoint test successful.
+TDSServerEndPoint pipe=True/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Listener Thread Started 
+TDSServerEndPoint pipe=True/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Connection Closed
+PASS Release SNI upstream peer pipe=True/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=False: sync/async rows, schema, DONE; encryption=FALSE
+TDSServerEndPoint pipe=True/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Connection Closed
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=True/SSPI=False Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=True/SSPI=False Endpoint test successful.
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=True/SSPI=False Listener Thread Started 
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=True/SSPI=False Connection Closed
+PASS Release SNI upstream peer pipe=True/short=False/TLS=On/encrypt=True/trust=True/SSPI=False: sync/async rows, schema, DONE; encryption=TRUE
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=True/SSPI=False Connection Closed
+TDSServerEndPoint pipe=True/short=False/TLS=Required/encrypt=False/trust=True/SSPI=False Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=True/short=False/TLS=Required/encrypt=False/trust=True/SSPI=False Endpoint test successful.
+TDSServerEndPoint pipe=True/short=False/TLS=Required/encrypt=False/trust=True/SSPI=False Listener Thread Started 
+TDSServerEndPoint pipe=True/short=False/TLS=Required/encrypt=False/trust=True/SSPI=False Connection Closed
+PASS Release SNI upstream peer pipe=True/short=False/TLS=Required/encrypt=False/trust=True/SSPI=False: sync/async rows, schema, DONE; encryption=TRUE
+TDSServerEndPoint pipe=True/short=False/TLS=Required/encrypt=False/trust=True/SSPI=False Connection Closed
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=False/SSPI=False Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=False/SSPI=False Endpoint test successful.
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=False/SSPI=False Listener Thread Started 
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=False/SSPI=False Connection Closed
+PASS untrusted owned certificate rejected with TrustServerCertificate=false
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=False/SSPI=False Connection Closed
+TDSServerEndPoint pipe=True/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=True/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Endpoint test successful.
+TDSServerEndPoint pipe=True/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Listener Thread Started 
+TDSServerEndPoint pipe=True/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Connection Closed
+PASS Windows integrated login: upstream native SSPI context authenticates current user; marker=NTML
+PASS Release SNI upstream peer pipe=True/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=True: sync/async rows, schema, DONE; encryption=FALSE
+TDSServerEndPoint pipe=True/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Connection Closed
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=True/SSPI=True Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=True/SSPI=True Endpoint test successful.
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=True/SSPI=True Listener Thread Started 
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=True/SSPI=True Connection Closed
+PASS Windows integrated login: upstream native SSPI context authenticates current user; marker=NTML
+PASS Release SNI upstream peer pipe=True/short=False/TLS=On/encrypt=True/trust=True/SSPI=True: sync/async rows, schema, DONE; encryption=TRUE
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=True/SSPI=True Connection Closed
+TDSServerEndPoint pipe=True/short=True/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=True/short=True/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Endpoint test successful.
+TDSServerEndPoint pipe=True/short=True/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Listener Thread Started 
+TDSServerEndPoint pipe=True/short=True/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Connection Closed
+PASS Release SNI upstream peer pipe=True/short=True/TLS=NotSupported/encrypt=False/trust=False/SSPI=False: sync/async rows, schema, DONE; encryption=FALSE
+TDSServerEndPoint pipe=True/short=True/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Connection Closed
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=True/SSPI=False Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=True/SSPI=False Endpoint test successful.
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=True/SSPI=False Listener Thread Started 
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=True/SSPI=False Connection Closed
+PASS Release SNI upstream peer pipe=True/short=True/TLS=On/encrypt=True/trust=True/SSPI=False: sync/async rows, schema, DONE; encryption=TRUE
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=True/SSPI=False Connection Closed
+TDSServerEndPoint pipe=True/short=True/TLS=Required/encrypt=False/trust=True/SSPI=False Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=True/short=True/TLS=Required/encrypt=False/trust=True/SSPI=False Endpoint test successful.
+TDSServerEndPoint pipe=True/short=True/TLS=Required/encrypt=False/trust=True/SSPI=False Listener Thread Started 
+TDSServerEndPoint pipe=True/short=True/TLS=Required/encrypt=False/trust=True/SSPI=False Connection Closed
+PASS Release SNI upstream peer pipe=True/short=True/TLS=Required/encrypt=False/trust=True/SSPI=False: sync/async rows, schema, DONE; encryption=TRUE
+TDSServerEndPoint pipe=True/short=True/TLS=Required/encrypt=False/trust=True/SSPI=False Connection Closed
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=False/SSPI=False Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=False/SSPI=False Endpoint test successful.
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=False/SSPI=False Listener Thread Started 
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=False/SSPI=False Connection Closed
+PASS untrusted owned certificate rejected with TrustServerCertificate=false
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=False/SSPI=False Connection Closed
+TDSServerEndPoint pipe=True/short=True/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=True/short=True/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Endpoint test successful.
+TDSServerEndPoint pipe=True/short=True/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Listener Thread Started 
+TDSServerEndPoint pipe=True/short=True/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Connection Closed
+PASS Windows integrated login: upstream native SSPI context authenticates current user; marker=NTML
+PASS Release SNI upstream peer pipe=True/short=True/TLS=NotSupported/encrypt=False/trust=False/SSPI=True: sync/async rows, schema, DONE; encryption=FALSE
+TDSServerEndPoint pipe=True/short=True/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Connection Closed
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=True/SSPI=True Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=True/SSPI=True Endpoint test successful.
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=True/SSPI=True Listener Thread Started 
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=True/SSPI=True Connection Closed
+PASS Windows integrated login: upstream native SSPI context authenticates current user; marker=NTML
+PASS Release SNI upstream peer pipe=True/short=True/TLS=On/encrypt=True/trust=True/SSPI=True: sync/async rows, schema, DONE; encryption=TRUE
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=True/SSPI=True Connection Closed
+PASS independent SMP peer: 2 query sessions, three batches, fragmented headers/payloads and 3 FINs
+PASS public Release SqlClient MARS: simultaneous readers, interleaved rows, compacting GC, independent DONE and session reuse
+PASS MC-SMP inclusive WNDW boundary: 25 query DATA frames, 6 verified sender stalls/resumes,10 response frames and 2 client ACK window grants
+PASS public SqlClient MARS large-batch send/receive flow control, fragmented TDS/SMP, ordered async rows, compacting GC and DONE
+PASS recorded native module paths; no sni.dll or Framework implementation
+PASS Release source-managed SNI: original upstream TDS peer, TLS/certificate policies, Windows SSPI; no sni.dll
+PASS SqlClient source identities, exported types, connection strings, command/parameter clones and typed SQL records
+PASS experimental source SqlClient exact selected runtime/hash/identity, Release managed SNI, all original resource strings and metadata XML; location=E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\assets\bin\Release\net8.0-windows\runtimes\win\lib\net8.0\System.Data.SqlClient.dll
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\api\Check.csproj (in 53 ms).
+  Check -> E:\msys64\home\topkek\sqlclient-package.KLddl9\src\check\api\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.39
+PASS: System.Data.SqlClient implements all 1020 upstream public/protected type/member signatures
+PASS actual source PowerShell with installed SqlClient Windows asset: exact package bytes, owned original TDS peer scalar/reader/schema/DONE, no proprietary SNI or Framework implementation
+PASS fresh source-only NuGet package, exact reference/generic/Windows runtime asset selections and all consumer payload bytes
+PASS experimental installed-source SqlClient package: exact assets/resources/API,18 transport/TLS/SSPI scenarios, basic MARS/inclusive flow control and actual source PowerShell; full native/database parity remains open
+PASS exact pinned archive, complete original compiler inputs, four production overlays, 142 upstream TDS utility inputs/one test-stream overlay, and tested Release DLL bytes: {'implementation': 242, 'contract': 3}
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-sqlclient"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-sqlclient 4.9.1-1 (27 Oct 2026 13:55:50)
+
+install1.log:
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-dotnet-sqlclient-4.9.1-1
+
+Total Installed Size:  0.68 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+installing mingw-w64-clang-x86_64-dotnet-sqlclient...
+
+installed1.log:
+patching file PlaceholderStream.cs
+Staged complete pinned TDS utility sources, one explicit .NET 8 test-stream overlay: {'TDS': 95, 'TDS.EndPoint': 33, 'TDS.Servers': 14}
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\protocol\TDS.Servers\build.csproj (in 78 ms).
+  Restored E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\protocol\TDS.EndPoint\build.csproj (in 79 ms).
+  Restored E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\protocol\TDS\build.csproj (in 79 ms).
+  Restored E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\protocol\Probe.csproj (in 207 ms).
+  build -> E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\protocol\TDS\bin\Release\net8.0-windows\Microsoft.SqlServer.TDS.dll
+  build -> E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\protocol\TDS.EndPoint\bin\Release\net8.0-windows\Microsoft.SqlServer.TDS.EndPoint.dll
+  build -> E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\protocol\TDS.Servers\bin\Release\net8.0-windows\Microsoft.SqlServer.TDS.Servers.dll
+E:\msys64\home\topkek\sqlclient-installed.XDgwGc\SourceSniProbe.cs(112,31): warning CS0618: 'SqlConnectionStringBuilder' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\protocol\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-installed.XDgwGc\SourceSniProbe.cs(118,40): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\protocol\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-installed.XDgwGc\SourceSniProbe.cs(121,20): warning CS0618: 'SqlException' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\protocol\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-installed.XDgwGc\SourceSniProbe.cs(164,31): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\protocol\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-installed.XDgwGc\MarsTdsProbe.cs(132,41): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\protocol\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-installed.XDgwGc\MarsWindowProbe.cs(111,9): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\protocol\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-installed.XDgwGc\MarsWindowProbe.cs(115,28): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\protocol\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-installed.XDgwGc\MarsWindowProbe.cs(120,22): warning CS0618: 'SqlDataReader' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\protocol\Probe.csproj]
+  Probe -> E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\protocol\bin\Release\net8.0-windows\Probe.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\sqlclient-installed.XDgwGc\SourceSniProbe.cs(112,31): warning CS0618: 'SqlConnectionStringBuilder' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\protocol\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-installed.XDgwGc\SourceSniProbe.cs(118,40): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\protocol\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-installed.XDgwGc\SourceSniProbe.cs(121,20): warning CS0618: 'SqlException' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\protocol\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-installed.XDgwGc\SourceSniProbe.cs(164,31): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\protocol\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-installed.XDgwGc\MarsTdsProbe.cs(132,41): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\protocol\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-installed.XDgwGc\MarsWindowProbe.cs(111,9): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\protocol\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-installed.XDgwGc\MarsWindowProbe.cs(115,28): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\protocol\Probe.csproj]
+E:\msys64\home\topkek\sqlclient-installed.XDgwGc\MarsWindowProbe.cs(120,22): warning CS0618: 'SqlDataReader' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\protocol\Probe.csproj]
+    8 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:11.84
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\values\Check.csproj (in 129 ms).
+E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\values\Probe.cs(14,29): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\values\Check.csproj]
+E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\values\Probe.cs(19,25): warning CS0618: 'SqlConnectionStringBuilder' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\values\Check.csproj]
+E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\values\Probe.cs(20,21): warning CS0618: 'SqlConnectionStringBuilder' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\values\Check.csproj]
+E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\values\Probe.cs(21,34): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\values\Check.csproj]
+E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\values\Probe.cs(24,20): warning CS0618: 'SqlCommand' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\values\Check.csproj]
+E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\values\Probe.cs(26,24): warning CS0618: 'SqlDataRecord' is obsolete: 'Use the Microsoft.SqlServer.Server package instead.' [E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\values\Check.csproj]
+E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\values\Probe.cs(26,42): warning CS0618: 'SqlMetaData' is obsolete: 'Use the Microsoft.SqlServer.Server package instead.' [E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\values\Check.csproj]
+E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\values\Probe.cs(26,78): warning CS0618: 'SqlMetaData' is obsolete: 'Use the Microsoft.SqlServer.Server package instead.' [E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\values\Check.csproj]
+  Check -> E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\values\bin\Release\net8.0-windows\Check.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\values\Probe.cs(14,29): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\values\Check.csproj]
+E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\values\Probe.cs(19,25): warning CS0618: 'SqlConnectionStringBuilder' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\values\Check.csproj]
+E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\values\Probe.cs(20,21): warning CS0618: 'SqlConnectionStringBuilder' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\values\Check.csproj]
+E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\values\Probe.cs(21,34): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\values\Check.csproj]
+E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\values\Probe.cs(24,20): warning CS0618: 'SqlCommand' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\values\Check.csproj]
+E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\values\Probe.cs(26,24): warning CS0618: 'SqlDataRecord' is obsolete: 'Use the Microsoft.SqlServer.Server package instead.' [E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\values\Check.csproj]
+E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\values\Probe.cs(26,42): warning CS0618: 'SqlMetaData' is obsolete: 'Use the Microsoft.SqlServer.Server package instead.' [E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\values\Check.csproj]
+E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\values\Probe.cs(26,78): warning CS0618: 'SqlMetaData' is obsolete: 'Use the Microsoft.SqlServer.Server package instead.' [E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\values\Check.csproj]
+    8 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.57
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\assets\Check.csproj (in 108 ms).
+E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\assets\CheckAssets.cs(19,29): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\assets\Check.csproj]
+  Check -> E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\assets\bin\Release\net8.0-windows\Check.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\assets\CheckAssets.cs(19,29): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\assets\Check.csproj]
+    1 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.30
+PASS fresh source-only NuGet package, exact reference/generic/Windows runtime asset selections and all consumer payload bytes
+TDSServerEndPoint pipe=False/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=False/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Endpoint test successful.
+TDSServerEndPoint pipe=False/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Listener Thread Started 
+TDSServerEndPoint pipe=False/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Connection Closed
+PASS Release SNI upstream peer pipe=False/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=False: sync/async rows, schema, DONE; encryption=FALSE
+TDSServerEndPoint pipe=False/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Connection Closed
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=True/SSPI=False Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=True/SSPI=False Endpoint test successful.
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=True/SSPI=False Listener Thread Started 
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=True/SSPI=False Connection Closed
+PASS Release SNI upstream peer pipe=False/short=False/TLS=On/encrypt=True/trust=True/SSPI=False: sync/async rows, schema, DONE; encryption=TRUE
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=True/SSPI=False Connection Closed
+TDSServerEndPoint pipe=False/short=False/TLS=Required/encrypt=False/trust=True/SSPI=False Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=False/short=False/TLS=Required/encrypt=False/trust=True/SSPI=False Endpoint test successful.
+TDSServerEndPoint pipe=False/short=False/TLS=Required/encrypt=False/trust=True/SSPI=False Listener Thread Started 
+TDSServerEndPoint pipe=False/short=False/TLS=Required/encrypt=False/trust=True/SSPI=False Connection Closed
+PASS Release SNI upstream peer pipe=False/short=False/TLS=Required/encrypt=False/trust=True/SSPI=False: sync/async rows, schema, DONE; encryption=TRUE
+TDSServerEndPoint pipe=False/short=False/TLS=Required/encrypt=False/trust=True/SSPI=False Connection Closed
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=False/SSPI=False Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=False/SSPI=False Endpoint test successful.
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=False/SSPI=False Listener Thread Started 
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=False/SSPI=False Connection Closed
+PASS untrusted owned certificate rejected with TrustServerCertificate=false
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=False/SSPI=False Connection Closed
+TDSServerEndPoint pipe=False/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=False/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Endpoint test successful.
+TDSServerEndPoint pipe=False/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Listener Thread Started 
+TDSServerEndPoint pipe=False/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Connection Closed
+PASS Windows integrated login: upstream native SSPI context authenticates current user; marker=NTML
+PASS Release SNI upstream peer pipe=False/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=True: sync/async rows, schema, DONE; encryption=FALSE
+TDSServerEndPoint pipe=False/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Connection Closed
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=True/SSPI=True Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=True/SSPI=True Endpoint test successful.
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=True/SSPI=True Listener Thread Started 
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=True/SSPI=True Connection Closed
+PASS Windows integrated login: upstream native SSPI context authenticates current user; marker=NTML
+PASS Release SNI upstream peer pipe=False/short=False/TLS=On/encrypt=True/trust=True/SSPI=True: sync/async rows, schema, DONE; encryption=TRUE
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=True/SSPI=True Connection Closed
+TDSServerEndPoint pipe=True/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=True/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Endpoint test successful.
+TDSServerEndPoint pipe=True/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Listener Thread Started 
+TDSServerEndPoint pipe=True/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Connection Closed
+PASS Release SNI upstream peer pipe=True/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=False: sync/async rows, schema, DONE; encryption=FALSE
+TDSServerEndPoint pipe=True/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Connection Closed
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=True/SSPI=False Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=True/SSPI=False Endpoint test successful.
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=True/SSPI=False Listener Thread Started 
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=True/SSPI=False Connection Closed
+PASS Release SNI upstream peer pipe=True/short=False/TLS=On/encrypt=True/trust=True/SSPI=False: sync/async rows, schema, DONE; encryption=TRUE
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=True/SSPI=False Connection Closed
+TDSServerEndPoint pipe=True/short=False/TLS=Required/encrypt=False/trust=True/SSPI=False Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=True/short=False/TLS=Required/encrypt=False/trust=True/SSPI=False Endpoint test successful.
+TDSServerEndPoint pipe=True/short=False/TLS=Required/encrypt=False/trust=True/SSPI=False Listener Thread Started 
+TDSServerEndPoint pipe=True/short=False/TLS=Required/encrypt=False/trust=True/SSPI=False Connection Closed
+PASS Release SNI upstream peer pipe=True/short=False/TLS=Required/encrypt=False/trust=True/SSPI=False: sync/async rows, schema, DONE; encryption=TRUE
+TDSServerEndPoint pipe=True/short=False/TLS=Required/encrypt=False/trust=True/SSPI=False Connection Closed
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=False/SSPI=False Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=False/SSPI=False Endpoint test successful.
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=False/SSPI=False Listener Thread Started 
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=False/SSPI=False Connection Closed
+PASS untrusted owned certificate rejected with TrustServerCertificate=false
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=False/SSPI=False Connection Closed
+TDSServerEndPoint pipe=True/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=True/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Endpoint test successful.
+TDSServerEndPoint pipe=True/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Listener Thread Started 
+TDSServerEndPoint pipe=True/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Connection Closed
+PASS Windows integrated login: upstream native SSPI context authenticates current user; marker=NTML
+PASS Release SNI upstream peer pipe=True/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=True: sync/async rows, schema, DONE; encryption=FALSE
+TDSServerEndPoint pipe=True/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Connection Closed
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=True/SSPI=True Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=True/SSPI=True Endpoint test successful.
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=True/SSPI=True Listener Thread Started 
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=True/SSPI=True Connection Closed
+PASS Windows integrated login: upstream native SSPI context authenticates current user; marker=NTML
+PASS Release SNI upstream peer pipe=True/short=False/TLS=On/encrypt=True/trust=True/SSPI=True: sync/async rows, schema, DONE; encryption=TRUE
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=True/SSPI=True Connection Closed
+TDSServerEndPoint pipe=True/short=True/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=True/short=True/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Endpoint test successful.
+TDSServerEndPoint pipe=True/short=True/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Listener Thread Started 
+TDSServerEndPoint pipe=True/short=True/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Connection Closed
+PASS Release SNI upstream peer pipe=True/short=True/TLS=NotSupported/encrypt=False/trust=False/SSPI=False: sync/async rows, schema, DONE; encryption=FALSE
+TDSServerEndPoint pipe=True/short=True/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Connection Closed
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=True/SSPI=False Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=True/SSPI=False Endpoint test successful.
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=True/SSPI=False Listener Thread Started 
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=True/SSPI=False Connection Closed
+PASS Release SNI upstream peer pipe=True/short=True/TLS=On/encrypt=True/trust=True/SSPI=False: sync/async rows, schema, DONE; encryption=TRUE
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=True/SSPI=False Connection Closed
+TDSServerEndPoint pipe=True/short=True/TLS=Required/encrypt=False/trust=True/SSPI=False Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=True/short=True/TLS=Required/encrypt=False/trust=True/SSPI=False Endpoint test successful.
+TDSServerEndPoint pipe=True/short=True/TLS=Required/encrypt=False/trust=True/SSPI=False Listener Thread Started 
+TDSServerEndPoint pipe=True/short=True/TLS=Required/encrypt=False/trust=True/SSPI=False Connection Closed
+PASS Release SNI upstream peer pipe=True/short=True/TLS=Required/encrypt=False/trust=True/SSPI=False: sync/async rows, schema, DONE; encryption=TRUE
+TDSServerEndPoint pipe=True/short=True/TLS=Required/encrypt=False/trust=True/SSPI=False Connection Closed
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=False/SSPI=False Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=False/SSPI=False Endpoint test successful.
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=False/SSPI=False Listener Thread Started 
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=False/SSPI=False Connection Closed
+PASS untrusted owned certificate rejected with TrustServerCertificate=false
+System.IO.IOException: The read operation failed, see inner exception.
+ ---> System.Security.Authentication.AuthenticationException: Cannot determine the frame size or a corrupted frame was received.
+   at System.Net.Security.SslStream.EnsureFullTlsFrameAsync[TIOAdapter](CancellationToken cancellationToken, Int32 estimatedSize)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at System.Net.Security.SslStream.ReadAsyncInternal[TIOAdapter](Memory`1 buffer, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Security.SslStream.ReadAsyncInternal[TIOAdapter](Memory`1 buffer, CancellationToken cancellationToken)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at System.Net.Security.SslStream.Read(Byte[] buffer, Int32 offset, Int32 count)
+   at Microsoft.SqlServer.TDS.TDSStream.ReadNextHeader() in E:\msys64\home\topkek\sqlclient-installed.XDgwGc\source\src\System.Data.SqlClient\tests\Tools\TDS\TDS\TDSStream.cs:line 227
+   at Microsoft.SqlServer.TDS.TDSMessage._InflateDataStream(TDSStream stream) in E:\msys64\home\topkek\sqlclient-installed.XDgwGc\source\src\System.Data.SqlClient\tests\Tools\TDS\TDS\TDSMessage.cs:line 171
+   at Microsoft.SqlServer.TDS.TDSMessage.InflateClientRequest(TDSStream stream) in E:\msys64\home\topkek\sqlclient-installed.XDgwGc\source\src\System.Data.SqlClient\tests\Tools\TDS\TDS\TDSMessage.cs:line 93
+   at Microsoft.SqlServer.TDS.EndPoint.TDSServerParser.Run() in E:\msys64\home\topkek\sqlclient-installed.XDgwGc\source\src\System.Data.SqlClient\tests\Tools\TDS\TDS.EndPoint\TDSServerParser.cs:line 61
+   at Microsoft.SqlServer.TDS.EndPoint.TDSServerEndPointConnection.ProcessData(Stream rawStream) in E:\msys64\home\topkek\sqlclient-installed.XDgwGc\source\src\System.Data.SqlClient\tests\Tools\TDS\TDS.EndPoint\TDSServerEndPointConnection.cs:line 40
+   at Microsoft.SqlServer.TDS.EndPoint.ServerEndPointConnection._ConnectionHandler() in E:\msys64\home\topkek\sqlclient-installed.XDgwGc\source\src\System.Data.SqlClient\tests\Tools\TDS\TDS.EndPoint\TDSServerEndPointConnection.cs:line 179
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=False/SSPI=False Connection Closed
+TDSServerEndPoint pipe=True/short=True/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=True/short=True/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Endpoint test successful.
+TDSServerEndPoint pipe=True/short=True/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Listener Thread Started 
+TDSServerEndPoint pipe=True/short=True/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Connection Closed
+PASS Windows integrated login: upstream native SSPI context authenticates current user; marker=NTML
+PASS Release SNI upstream peer pipe=True/short=True/TLS=NotSupported/encrypt=False/trust=False/SSPI=True: sync/async rows, schema, DONE; encryption=FALSE
+TDSServerEndPoint pipe=True/short=True/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Connection Closed
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=True/SSPI=True Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=True/SSPI=True Endpoint test successful.
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=True/SSPI=True Listener Thread Started 
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=True/SSPI=True Connection Closed
+PASS Windows integrated login: upstream native SSPI context authenticates current user; marker=NTML
+PASS Release SNI upstream peer pipe=True/short=True/TLS=On/encrypt=True/trust=True/SSPI=True: sync/async rows, schema, DONE; encryption=TRUE
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=True/SSPI=True Connection Closed
+PASS independent SMP peer: 2 query sessions, three batches, fragmented headers/payloads and 3 FINs
+PASS public Release SqlClient MARS: simultaneous readers, interleaved rows, compacting GC, independent DONE and session reuse
+PASS MC-SMP inclusive WNDW boundary: 25 query DATA frames, 6 verified sender stalls/resumes,10 response frames and 2 client ACK window grants
+PASS public SqlClient MARS large-batch send/receive flow control, fragmented TDS/SMP, ordered async rows, compacting GC and DONE
+PASS recorded native module paths; no sni.dll or Framework implementation
+PASS Release source-managed SNI: original upstream TDS peer, TLS/certificate policies, Windows SSPI; no sni.dll
+PASS SqlClient source identities, exported types, connection strings, command/parameter clones and typed SQL records
+PASS experimental source SqlClient exact selected runtime/hash/identity, Release managed SNI, all original resource strings and metadata XML; location=E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\assets\bin\Release\net8.0-windows\runtimes\win\lib\net8.0\System.Data.SqlClient.dll
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\api\Check.csproj (in 53 ms).
+  Check -> E:\msys64\home\topkek\sqlclient-installed.XDgwGc\check\api\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.37
+PASS: System.Data.SqlClient implements all 1020 upstream public/protected type/member signatures
+PASS actual source PowerShell with installed SqlClient Windows asset: exact package bytes, owned original TDS peer scalar/reader/schema/DONE, no proprietary SNI or Framework implementation
+PASS fresh source-only NuGet package, exact reference/generic/Windows runtime asset selections and all consumer payload bytes
+PASS experimental installed-source SqlClient package: exact assets/resources/API,18 transport/TLS/SSPI scenarios, basic MARS/inclusive flow control and actual source PowerShell; full native/database parity remains open
+
+postinstall-proof.log:
+PASS built=installed=fresh-cache NuGet bytes, owned PFX cleanup and actual runtime records: d07b0b1373b32b337f35046ab29f31b9317bd7ef7944f780b66a53185c8c6fab
+
+postinstall-proof.json:
+{
+  "nuget_sha256": "d07b0b1373b32b337f35046ab29f31b9317bd7ef7944f780b66a53185c8c6fab",
+  "built_installed_fresh_cache_equal": true,
+  "owned_certificate_files_removed": true,
+  "runtimes": [
+    "Microsoft.NETCore.App 8.0.0 [E:\\msys64\\clang64\\lib\\dotnet\\shared\\Microsoft.NETCore.App]",
+    "Microsoft.WindowsDesktop.App 8.0.0-bootstrap.7.0.20 [E:\\msys64\\clang64\\lib\\dotnet\\shared\\Microsoft.WindowsDesktop.App]",
+    "Microsoft.WindowsDesktop.App 8.0.0-bootstrap.wpf.8.0.0 [E:\\msys64\\clang64\\lib\\dotnet\\shared\\Microsoft.WindowsDesktop.App]"
+  ]
+}

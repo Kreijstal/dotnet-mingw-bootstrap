@@ -1,0 +1,453 @@
+From 97701ce93b66afa3b6ab992a4bea9a03dd1da901 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Fri, 9 Oct 2026 17:26:09 +0200
+Subject: [PATCH 14/16] coreclr: amd64 MASM helpers for UASM and the Itanium
+ C++ ABI
+
+- .errnz/.erre messages in <> (UASM takes a single token otherwise).
+- NOP_3_BYTE, rdsspq/incsspq and the REX.W prefix of JIT_DispatchIndirect-
+  Call as bytes; ALTENTRY as a public label for UASM.
+- With __MINGW32__, the C++ symbols the stubs use by their MSVC-mangled
+  names get their Itanium names (InlinedCallFrame's vtable address point
+  is _ZTV16InlinedCallFrame+16; the redirect targets' names are built
+  with @CatStr/@SizeStr).
+---
+ src/coreclr/vm/amd64/AsmMacros.inc            | 25 ++++++-----
+ src/coreclr/vm/amd64/Context.asm              |  6 ++-
+ src/coreclr/vm/amd64/JitHelpers_Fast.asm      | 12 +++++-
+ .../vm/amd64/JitHelpers_InlineGetThread.asm   | 24 +++++++++++
+ src/coreclr/vm/amd64/JitHelpers_Slow.asm      | 32 +++++++++++++++
+ src/coreclr/vm/amd64/PInvokeStubs.asm         | 10 +++++
+ .../vm/amd64/RedirectedHandledJITCase.asm     | 41 +++++++++++++++----
+ src/coreclr/vm/amd64/VirtualCallStubAMD64.asm |  4 ++
+ 8 files changed, 134 insertions(+), 20 deletions(-)
+
+diff --git a/src/coreclr/vm/amd64/AsmMacros.inc b/src/coreclr/vm/amd64/AsmMacros.inc
+index 2d14b9c31..4ee1696b6 100644
+--- a/src/coreclr/vm/amd64/AsmMacros.inc
++++ b/src/coreclr/vm/amd64/AsmMacros.inc
+@@ -16,7 +16,7 @@ push_nonvol_reg macro Reg
+ 
+ push_vol_reg macro Reg
+ 
+-        .errnz ___STACK_ADJUSTMENT_FORBIDDEN, push_vol_reg cannot be used after save_reg_postrsp
++        .errnz ___STACK_ADJUSTMENT_FORBIDDEN, <push_vol_reg cannot be used after save_reg_postrsp>
+ 
+         push    Reg
+         .allocstack 8
+@@ -25,7 +25,7 @@ push_vol_reg macro Reg
+ 
+ push_eflags macro
+ 
+-        .errnz ___STACK_ADJUSTMENT_FORBIDDEN, push_eflags cannot be used after save_reg_postrsp
++        .errnz ___STACK_ADJUSTMENT_FORBIDDEN, <push_eflags cannot be used after save_reg_postrsp>
+ 
+         pushfq
+         .allocstack 8
+@@ -34,7 +34,7 @@ push_eflags macro
+ 
+ alloc_stack macro Size
+ 
+-        .errnz ___STACK_ADJUSTMENT_FORBIDDEN, alloc_stack cannot be used after save_reg_postrsp
++        .errnz ___STACK_ADJUSTMENT_FORBIDDEN, <alloc_stack cannot be used after save_reg_postrsp>
+ 
+         sub     rsp, Size
+         .allocstack Size
+@@ -43,7 +43,7 @@ alloc_stack macro Size
+ 
+ save_reg_frame macro Reg, FrameReg, Offset
+ 
+-        .erre ___FRAME_REG_SET, save_reg_frame cannot be used before set_frame
++        .erre ___FRAME_REG_SET, <save_reg_frame cannot be used before set_frame>
+ 
+         mov     Offset[FrameReg], Reg
+         .savereg Reg, Offset
+@@ -52,7 +52,7 @@ save_reg_frame macro Reg, FrameReg, Offset
+ 
+ save_reg_postrsp macro Reg, Offset
+ 
+-        .errnz ___FRAME_REG_SET, save_reg_postrsp cannot be used after set_frame
++        .errnz ___FRAME_REG_SET, <save_reg_postrsp cannot be used after set_frame>
+ 
+         mov     Offset[rsp], Reg
+         .savereg Reg, Offset
+@@ -63,7 +63,7 @@ save_reg_postrsp macro Reg, Offset
+ 
+ save_xmm128_frame macro Reg, FrameReg, Offset
+ 
+-        .erre ___FRAME_REG_SET, save_xmm128_frame cannot be used before set_frame
++        .erre ___FRAME_REG_SET, <save_xmm128_frame cannot be used before set_frame>
+ 
+         movdqa  Offset[FrameReg], Reg
+         .savexmm128 Reg, Offset
+@@ -72,7 +72,7 @@ save_xmm128_frame macro Reg, FrameReg, Offset
+ 
+ save_xmm128_postrsp macro Reg, Offset
+ 
+-        .errnz ___FRAME_REG_SET, save_reg_postrsp cannot be used after set_frame
++        .errnz ___FRAME_REG_SET, <save_reg_postrsp cannot be used after set_frame>
+ 
+         movdqa  Offset[rsp], Reg
+         .savexmm128 Reg, Offset
+@@ -83,7 +83,7 @@ save_xmm128_postrsp macro Reg, Offset
+ 
+ set_frame macro Reg, Offset
+ 
+-        .errnz ___FRAME_REG_SET, set_frame cannot be used more than once
++        .errnz ___FRAME_REG_SET, <set_frame cannot be used more than once>
+ 
+ if Offset
+ 
+@@ -191,7 +191,11 @@ Section ends
+ ; Inlined version of GetThread
+ ; Trashes rax and r11
+ ;
++ifdef __MINGW32__
++; (gCurrentThreadInfo: same name without C++ mangling)
++else
+ gCurrentThreadInfo  TEXTEQU <?gCurrentThreadInfo@@3UThreadLocalInfo@@A>
++endif
+ 
+ INLINE_GETTHREAD macro Reg
+ 
+@@ -253,7 +257,8 @@ NOP_2_BYTE macro
+ 
+ NOP_3_BYTE macro
+ 
+-        nop dword ptr [rax]
++        ; nop dword ptr [rax], spelled as bytes for assemblers without multi-byte nop
++        db 0Fh, 1Fh, 00h
+ 
+         endm
+ 
+@@ -373,7 +378,7 @@ PROLOG_WITH_TRANSITION_BLOCK macro extraLocals := <0>, stackAllocOnEntry := <0>,
+         __PWTB_TransitionBlock = __PWTB_StackAlloc
+         __PWTB_ArgumentRegisters = __PWTB_StackAlloc + 9 * 8
+ 
+-        .errnz stackAllocOnEntry ge 4*8, Max supported stackAllocOnEntry is 3*8
++        .errnz stackAllocOnEntry ge 4*8, <Max supported stackAllocOnEntry is 3*8>
+ 
+         if stackAllocOnEntry gt 0
+         .allocstack stackAllocOnEntry
+diff --git a/src/coreclr/vm/amd64/Context.asm b/src/coreclr/vm/amd64/Context.asm
+index 71bc2566f..50c5e9929 100644
+--- a/src/coreclr/vm/amd64/Context.asm
++++ b/src/coreclr/vm/amd64/Context.asm
+@@ -43,10 +43,12 @@ NESTED_ENTRY ClrRestoreNonvolatileContextWorker, _TEXT
+ 
+         test    rdx, rdx
+         je      No_Ssp_Update
+-        rdsspq  rax
++        ; rdsspq rax (as bytes: not every MASM-compatible assembler knows the CET instructions)
++        db 0F3h, 48h, 0Fh, 1Eh, 0C8h
+         sub     rdx, rax
+         shr     rdx, 3
+-        incsspq rdx
++        ; incsspq rdx
++        db 0F3h, 48h, 0Fh, 0AEh, 0EAh
+     No_Ssp_Update:
+ 
+         ; When user-mode shadow stacks are enabled, and for example the intent is to continue execution in managed code after
+diff --git a/src/coreclr/vm/amd64/JitHelpers_Fast.asm b/src/coreclr/vm/amd64/JitHelpers_Fast.asm
+index dd5b891a4..14f12b55c 100644
+--- a/src/coreclr/vm/amd64/JitHelpers_Fast.asm
++++ b/src/coreclr/vm/amd64/JitHelpers_Fast.asm
+@@ -35,8 +35,16 @@ endif
+ 
+ ifdef WRITE_BARRIER_CHECK
+ ; Those global variables are always defined, but should be 0 for Server GC
++ifdef __MINGW32__
++; (g_GCShadow: same name without C++ mangling)
++else
+ g_GCShadow                      TEXTEQU <?g_GCShadow@@3PEAEEA>
++endif
++ifdef __MINGW32__
++; (g_GCShadowEnd: same name without C++ mangling)
++else
+ g_GCShadowEnd                   TEXTEQU <?g_GCShadowEnd@@3PEAEEA>
++endif
+ EXTERN  g_GCShadow:QWORD
+ EXTERN  g_GCShadowEnd:QWORD
+ endif
+@@ -525,7 +533,9 @@ ifdef _DEBUG
+         mov r10, 0CDCDCDCDCDCDCDCDh ; The real helper clobbers these registers, so clobber them too in the fake helper
+         mov r11, 0CDCDCDCDCDCDCDCDh
+ endif
+-        rexw jmp rax
++        ; rexw jmp rax (REX.W prefix as a byte for assemblers without "rexw")
++        db 48h
++        jmp rax
+ LEAF_END JIT_DispatchIndirectCall, _TEXT
+ 
+ 
+diff --git a/src/coreclr/vm/amd64/JitHelpers_InlineGetThread.asm b/src/coreclr/vm/amd64/JitHelpers_InlineGetThread.asm
+index bf79668e5..17c0ce425 100644
+--- a/src/coreclr/vm/amd64/JitHelpers_InlineGetThread.asm
++++ b/src/coreclr/vm/amd64/JitHelpers_InlineGetThread.asm
+@@ -15,12 +15,36 @@ include asmconstants.inc
+ ; Min amount of stack space that a nested function should allocate.
+ MIN_SIZE equ 28h
+ 
++ifdef __MINGW32__
++JIT_NEW                 equ     _Z7JIT_NewP21CORINFO_CLASS_STRUCT_
++else
+ JIT_NEW                 equ     ?JIT_New@@YAPEAVObject@@PEAUCORINFO_CLASS_STRUCT_@@@Z
++endif
++ifdef __MINGW32__
++CopyValueClassUnchecked equ     _Z23CopyValueClassUncheckedPvS_P11MethodTable
++else
+ CopyValueClassUnchecked equ     ?CopyValueClassUnchecked@@YAXPEAX0PEAVMethodTable@@@Z
++endif
++ifdef __MINGW32__
++JIT_Box                 equ     _Z7JIT_BoxP21CORINFO_CLASS_STRUCT_Pv
++else
+ JIT_Box                 equ     ?JIT_Box@@YAPEAVObject@@PEAUCORINFO_CLASS_STRUCT_@@PEAX@Z
++endif
++ifdef __MINGW32__
++; (g_pStringClass: same name without C++ mangling)
++else
+ g_pStringClass          equ     ?g_pStringClass@@3PEAVMethodTable@@EA
++endif
++ifdef __MINGW32__
++FramedAllocateString    equ     _Z20FramedAllocateStringm
++else
+ FramedAllocateString    equ     ?FramedAllocateString@@YAPEAVStringObject@@K@Z
++endif
++ifdef __MINGW32__
++JIT_NewArr1             equ     _Z11JIT_NewArr1P21CORINFO_CLASS_STRUCT_x
++else
+ JIT_NewArr1             equ     ?JIT_NewArr1@@YAPEAVObject@@PEAUCORINFO_CLASS_STRUCT_@@_J@Z
++endif
+ 
+ INVALIDGCVALUE          equ     0CCCCCCCDh
+ 
+diff --git a/src/coreclr/vm/amd64/JitHelpers_Slow.asm b/src/coreclr/vm/amd64/JitHelpers_Slow.asm
+index b864801bf..b5c14a187 100644
+--- a/src/coreclr/vm/amd64/JitHelpers_Slow.asm
++++ b/src/coreclr/vm/amd64/JitHelpers_Slow.asm
+@@ -33,18 +33,50 @@ endif
+ 
+ ifdef WRITE_BARRIER_CHECK
+ ; Those global variables are always defined, but should be 0 for Server GC
++ifdef __MINGW32__
++; (g_GCShadow: same name without C++ mangling)
++else
+ g_GCShadow                      TEXTEQU <?g_GCShadow@@3PEAEEA>
++endif
++ifdef __MINGW32__
++; (g_GCShadowEnd: same name without C++ mangling)
++else
+ g_GCShadowEnd                   TEXTEQU <?g_GCShadowEnd@@3PEAEEA>
++endif
+ EXTERN  g_GCShadow:QWORD
+ EXTERN  g_GCShadowEnd:QWORD
+ endif
+ 
++ifdef __MINGW32__
++JIT_NEW                 equ     _Z7JIT_NewP21CORINFO_CLASS_STRUCT_
++else
+ JIT_NEW                 equ     ?JIT_New@@YAPEAVObject@@PEAUCORINFO_CLASS_STRUCT_@@@Z
++endif
++ifdef __MINGW32__
++CopyValueClassUnchecked equ     _Z23CopyValueClassUncheckedPvS_P11MethodTable
++else
+ CopyValueClassUnchecked equ     ?CopyValueClassUnchecked@@YAXPEAX0PEAVMethodTable@@@Z
++endif
++ifdef __MINGW32__
++JIT_Box                 equ     _Z7JIT_BoxP21CORINFO_CLASS_STRUCT_Pv
++else
+ JIT_Box                 equ     ?JIT_Box@@YAPEAVObject@@PEAUCORINFO_CLASS_STRUCT_@@PEAX@Z
++endif
++ifdef __MINGW32__
++; (g_pStringClass: same name without C++ mangling)
++else
+ g_pStringClass          equ     ?g_pStringClass@@3PEAVMethodTable@@EA
++endif
++ifdef __MINGW32__
++FramedAllocateString    equ     _Z20FramedAllocateStringm
++else
+ FramedAllocateString    equ     ?FramedAllocateString@@YAPEAVStringObject@@K@Z
++endif
++ifdef __MINGW32__
++JIT_NewArr1             equ     _Z11JIT_NewArr1P21CORINFO_CLASS_STRUCT_x
++else
+ JIT_NewArr1             equ     ?JIT_NewArr1@@YAPEAVObject@@PEAUCORINFO_CLASS_STRUCT_@@_J@Z
++endif
+ 
+ INVALIDGCVALUE          equ     0CCCCCCCDh
+ 
+diff --git a/src/coreclr/vm/amd64/PInvokeStubs.asm b/src/coreclr/vm/amd64/PInvokeStubs.asm
+index 4f19cb7d0..4e774e0d4 100644
+--- a/src/coreclr/vm/amd64/PInvokeStubs.asm
++++ b/src/coreclr/vm/amd64/PInvokeStubs.asm
+@@ -9,7 +9,13 @@ extern VarargPInvokeStubWorker:proc
+ extern JIT_PInvokeEndRarePath:proc
+ 
+ extern s_gsCookie:QWORD
++ifdef __MINGW32__
++; Itanium ABI: the vtable symbol starts with offset-to-top and the RTTI pointer;
++; an object's vptr is the address point 16 bytes in.
++extern _ZTV16InlinedCallFrame:QWORD
++else
+ extern ??_7InlinedCallFrame@@6B@:QWORD
++endif
+ extern g_TrapReturningThreads:DWORD
+ 
+ ;
+@@ -146,7 +152,11 @@ LEAF_ENTRY JIT_PInvokeBegin, _TEXT
+         add             rcx, SIZEOF_GSCookie
+ 
+         ;; set first slot to the value of InlinedCallFrame::`vftable' (checked by runtime code)
++ifdef __MINGW32__
++        lea             rax,[_ZTV16InlinedCallFrame + 10h]
++else
+         lea             rax,[??_7InlinedCallFrame@@6B@]
++endif
+         mov             qword ptr [rcx], rax
+ 
+         mov             qword ptr [rcx + OFFSETOF__InlinedCallFrame__m_Datum], 0
+diff --git a/src/coreclr/vm/amd64/RedirectedHandledJITCase.asm b/src/coreclr/vm/amd64/RedirectedHandledJITCase.asm
+index 61146cc6f..eabd9628a 100644
+--- a/src/coreclr/vm/amd64/RedirectedHandledJITCase.asm
++++ b/src/coreclr/vm/amd64/RedirectedHandledJITCase.asm
+@@ -4,7 +4,11 @@
+ include AsmMacros.inc
+ include asmconstants.inc
+ 
++ifdef __MINGW32__
++Thread__GetAbortContext equ _ZN6Thread15GetAbortContextEv
++else
+ Thread__GetAbortContext equ ?GetAbortContext@Thread@@QEAAPEAU_CONTEXT@@XZ
++endif
+ 
+ extern GetCurrentSavedRedirectContext:proc
+ extern Thread__GetAbortContext:proc
+@@ -27,7 +31,13 @@ extern FixRedirectContextHandler:proc
+ ; This function is used by both the personality routine and the debugger to retrieve the original CONTEXT.
+ GenerateRedirectedHandledJITCaseStub macro reason
+ 
+-extern ?RedirectedHandledJITCaseFor&reason&@Thread@@CAXXZ:proc
++ifdef __MINGW32__
++; Itanium name of Thread::RedirectedHandledJITCaseFor<reason>(): _ZN6Thread<length>...Ev
++RedirectTarget TEXTEQU @CatStr(<_ZN6Thread>, %(27 + @SizeStr(reason)), <RedirectedHandledJITCaseFor>, <reason>, <Ev>)
++else
++RedirectTarget TEXTEQU <?RedirectedHandledJITCaseFor&reason&@Thread@@CAXXZ>
++endif
++extern RedirectTarget:proc
+ 
+ NESTED_ENTRY RedirectedHandledJITCaseFor&reason&_Stub, _TEXT, FixRedirectContextHandler
+ 
+@@ -45,7 +55,7 @@ NESTED_ENTRY RedirectedHandledJITCaseFor&reason&_Stub, _TEXT, FixRedirectContext
+         alloc_stack     28h                     ; CONTEXT*, callee scratch area
+         set_frame       rbp, 0
+ 
+-.errnz REDIRECTSTUB_ESTABLISHER_OFFSET_RBP, REDIRECTSTUB_ESTABLISHER_OFFSET_RBP has changed - update asm stubs
++.errnz REDIRECTSTUB_ESTABLISHER_OFFSET_RBP, <REDIRECTSTUB_ESTABLISHER_OFFSET_RBP has changed - update asm stubs>
+ 
+         END_PROLOGUE
+ 
+@@ -62,7 +72,7 @@ NESTED_ENTRY RedirectedHandledJITCaseFor&reason&_Stub, _TEXT, FixRedirectContext
+         call            GetCurrentSavedRedirectContext
+ 
+         mov             [rbp+20h], rax
+-.errnz REDIRECTSTUB_RBP_OFFSET_CONTEXT - 20h, REDIRECTSTUB_RBP_OFFSET_CONTEXT has changed - update asm stubs
++.errnz REDIRECTSTUB_RBP_OFFSET_CONTEXT - 20h, <REDIRECTSTUB_RBP_OFFSET_CONTEXT has changed - update asm stubs>
+ 
+         ;
+         ; Fetch the interrupted rip and save it as our return address.
+@@ -74,7 +84,7 @@ NESTED_ENTRY RedirectedHandledJITCaseFor&reason&_Stub, _TEXT, FixRedirectContext
+         ; Call target, which will do whatever we needed to do in the context
+         ; of the target thread, and will RtlRestoreContext when it is done.
+         ;
+-        call            ?RedirectedHandledJITCaseFor&reason&@Thread@@CAXXZ
++        call            RedirectTarget
+ 
+         int             3                       ; target shouldn't return.
+ 
+@@ -105,7 +115,12 @@ SIZEOF__FaultingExceptionFrame = SIZEOF__FaultingExceptionFrame
+ 
+ GenerateRedirectedStubWithFrame macro STUB, FILTER, TARGET
+ 
++ifdef __UASM__
++; UASM has no ALTENTRY; the label is inside the NESTED_ENTRY below and covered by its unwind info
++public STUB&_RspAligned
++else
+ altentry STUB&_RspAligned
++endif
+ 
+ NESTED_ENTRY STUB, _TEXT, FILTER
+ 
+@@ -122,7 +137,11 @@ NESTED_ENTRY STUB, _TEXT, FILTER
+         test            rsp, 0fh
+         jnz             STUB&_FixRsp
+ 
++ifdef __UASM__
++STUB&_RspAligned::
++else
+ STUB&_RspAligned:
++endif
+ 
+         ; Any stack operations hereafter must be recorded in the unwind info, but
+         ; only nonvolatile register locations are needed.  Anything else is only
+@@ -133,7 +152,7 @@ STUB&_RspAligned:
+ 
+         alloc_stack     OFFSET_OF_FRAME + SIZEOF__FaultingExceptionFrame
+ 
+-.errnz THROWSTUB_ESTABLISHER_OFFSET_FaultingExceptionFrame - OFFSET_OF_FRAME, THROWSTUB_ESTABLISHER_OFFSET_FaultingExceptionFrame has changed - update asm stubs
++.errnz THROWSTUB_ESTABLISHER_OFFSET_FaultingExceptionFrame - OFFSET_OF_FRAME, <THROWSTUB_ESTABLISHER_OFFSET_FaultingExceptionFrame has changed - update asm stubs>
+ 
+         END_PROLOGUE
+ 
+@@ -206,7 +225,11 @@ GenerateRedirectedStubWithFrame RedirectForThrowControl, HijackHandler, Redirect
+ 
+ ifdef FEATURE_SPECIAL_USER_MODE_APC
+ 
++ifdef __MINGW32__
++extern _ZN6Thread21ApcActivationCallbackEy:proc
++else
+ extern ?ApcActivationCallback@Thread@@CAX_K@Z:proc
++endif
+ 
+ ; extern "C" void NTAPI ApcActivationCallbackStub(ULONG_PTR Parameter);
+ NESTED_ENTRY ApcActivationCallbackStub, _TEXT, FixRedirectContextHandler
+@@ -214,15 +237,19 @@ NESTED_ENTRY ApcActivationCallbackStub, _TEXT, FixRedirectContextHandler
+         push_nonvol_reg rbp
+         alloc_stack     30h ; padding for alignment, CONTEXT *, callee scratch area
+         set_frame       rbp, 0
+-    .errnz REDIRECTSTUB_ESTABLISHER_OFFSET_RBP, REDIRECTSTUB_ESTABLISHER_OFFSET_RBP has changed - update asm stubs
++    .errnz REDIRECTSTUB_ESTABLISHER_OFFSET_RBP, <REDIRECTSTUB_ESTABLISHER_OFFSET_RBP has changed - update asm stubs>
+         END_PROLOGUE
+ 
+         ; Save the pointer to the interrupted context on the stack for the stack walker
+         mov             rax, [rcx + OFFSETOF__APC_CALLBACK_DATA__ContextRecord]
+         mov             [rbp + 20h], rax
+-    .errnz REDIRECTSTUB_RBP_OFFSET_CONTEXT - 20h, REDIRECTSTUB_RBP_OFFSET_CONTEXT has changed - update asm stubs
++    .errnz REDIRECTSTUB_RBP_OFFSET_CONTEXT - 20h, <REDIRECTSTUB_RBP_OFFSET_CONTEXT has changed - update asm stubs>
+ 
++ifdef __MINGW32__
++        call            _ZN6Thread21ApcActivationCallbackEy
++else
+         call            ?ApcActivationCallback@Thread@@CAX_K@Z
++endif
+ 
+         add             rsp, 30h
+         pop             rbp
+diff --git a/src/coreclr/vm/amd64/VirtualCallStubAMD64.asm b/src/coreclr/vm/amd64/VirtualCallStubAMD64.asm
+index b53378998..5efcccac8 100644
+--- a/src/coreclr/vm/amd64/VirtualCallStubAMD64.asm
++++ b/src/coreclr/vm/amd64/VirtualCallStubAMD64.asm
+@@ -4,7 +4,11 @@
+ include <AsmMacros.inc>
+ include AsmConstants.inc
+ 
++ifdef __MINGW32__
++CHAIN_SUCCESS_COUNTER  equ g_dispatch_cache_chain_success_counter
++else
+ CHAIN_SUCCESS_COUNTER  equ ?g_dispatch_cache_chain_success_counter@@3_KA
++endif
+ 
+         extern  VSD_ResolveWorker:proc
+         extern  CHAIN_SUCCESS_COUNTER:dword
+-- 
+2.55.0
+

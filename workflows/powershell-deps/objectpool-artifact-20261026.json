@@ -1,0 +1,14 @@
+{
+  "recipe": "mingw-w64-dotnet-objectpool",
+  "artifact": "mingw-w64-clang-x86_64-dotnet-objectpool-8.0.31-1-any.pkg.tar.zst",
+  "sha256": "f8240831b7d94dad338569f574484d973acb2f9526a1fce95fc0f5e4adae7ac1",
+  "nuget_id": "Microsoft.Extensions.ObjectPool",
+  "nuget_version": "8.0.31",
+  "source_tag": "aspnetcore v8.0.31",
+  "source_sha256": "ad8ef8f6331576a03714941a90f33fb418b3d1ab9765e792418da5d9a328a60c",
+  "framework": "net8.0",
+  "assembly_version": "8.0.0.0",
+  "public_key_token": "adb9793829ddae60",
+  "upstream_api_declarations": 51,
+  "dependencies": {}
+}

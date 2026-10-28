@@ -1,0 +1,275 @@
+Fresh installed PowerShell / MMI / CIM / WMI retest
+
+{
+  "date_utc": "2026-10-27",
+  "host": "win11",
+  "root": "/c/codex-dotnet10/cim-wmi-retest.ueSKJ5",
+  "packages": [
+    "mingw-w64-clang-x86_64-powershell 7.4.20-2",
+    "mingw-w64-clang-x86_64-dotnet-management 8.0.0-2",
+    "mingw-w64-clang-x86_64-dotnet-mmi3 3.0.0-1",
+    "mingw-w64-clang-x86_64-dotnet-runtime8-servicing 8.0.31-3",
+    "mingw-w64-clang-x86_64-dotnet-sdk8-servicing 8.0.131-3"
+  ],
+  "harness_sha256": "42ff2113214fef446ba4af56068eca5646995bb324461550eb22a1d25cc56198",
+  "checks": [
+    {
+      "name": "powershell-mta",
+      "command": "timeout -k 10 90 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -MTA -ExecutionPolicy Bypass -File C:/codex-dotnet10/cim-wmi-retest.ueSKJ5/tests/powershell-full-sdk/CimWmiSmoke.ps1",
+      "exit_code": 0,
+      "log_sha256": "2396e461e1afbcdaccf1674e24de344ffd9ac9f7561f8bbdcc5391d4994f6b36"
+    },
+    {
+      "name": "powershell-sta",
+      "command": "timeout -k 10 90 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File C:/codex-dotnet10/cim-wmi-retest.ueSKJ5/tests/powershell-full-sdk/CimWmiSmoke.ps1",
+      "exit_code": 0,
+      "log_sha256": "2396e461e1afbcdaccf1674e24de344ffd9ac9f7561f8bbdcc5391d4994f6b36"
+    },
+    {
+      "name": "powershell-wmi-sta",
+      "command": "timeout -k 10 60 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File C:/codex-dotnet10/cim-wmi-retest.ueSKJ5/tests/powershell-full-sdk/WmiStaProbe.ps1",
+      "exit_code": 0,
+      "log_sha256": "76b4e351007b81902980ac04c8b279478cfe2e46ff9fcf9dbc15372459a234f9"
+    },
+    {
+      "name": "mmi3",
+      "command": "bash mingw-w64-dotnet-mmi3/check.sh mmi3-consumer",
+      "exit_code": 0,
+      "log_sha256": "a308ed1f098f7066eec1ac3131a05455c4f1e496c6eeaa9671bb026c043c6614"
+    },
+    {
+      "name": "wmi-mta",
+      "command": "bash tests/mmi-cim-wmi/check-wmi.sh wmi-mta-consumer",
+      "exit_code": 0,
+      "log_sha256": "6f6e3c2a812b023635e1956ab04d2c121f0b04a113e5595d8582f01f973c79c4"
+    },
+    {
+      "name": "wmi-sta",
+      "command": "bash tests/mmi-cim-wmi/check-source-wmi-sta.sh wmi-sta-consumer",
+      "exit_code": 0,
+      "log_sha256": "c528b40d5ea55d63e1ac70ad7b61ad8287531e6baf1242c16ef4fb431f75e8d0"
+    },
+    {
+      "name": "combined",
+      "command": "bash tests/mmi-cim-wmi/check-mmi3-combined.sh combined-consumer",
+      "exit_code": 0,
+      "log_sha256": "6c3751b39f8c5666f9a523484f1e0b9a227e389cb81f1abe0ea1a7f0889fda21"
+    }
+  ],
+  "all_passed": true,
+  "full_remote_provider_ownership_compatibility_verified": false,
+  "implementation_changed": false,
+  "full_dependency_goal_complete": false,
+  "additional_audits": [
+    {
+      "command": "python3 tests/mmi-cim-wmi/audit-mmi3.py",
+      "exit_code": 0
+    },
+    {
+      "command": "python3 tests/powershell-deps/audit-management.py",
+      "exit_code": 1,
+      "reason": "No package artifact in recipe directory; rerun using isolated recipe copy with existing package artifact."
+    },
+    {
+      "command": "python3 tests/powershell-deps/audit-management.py /tmp/wmi-current-audit.va87uq6d /tmp/wmi-current-audit.va87uq6d/artifact.json",
+      "exit_code": 0
+    }
+  ]
+}
+
+Full runtime logs
+
+$ timeout -k 10 90 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -MTA -ExecutionPolicy Bypass -File C:/codex-dotnet10/cim-wmi-retest.ueSKJ5/tests/powershell-full-sdk/CimWmiSmoke.ps1
+RESULT: exit 0
+PASS packaged MMI direct local query/disposal, original CIM cmdlets and source System.Management WMI OS/GetOwner/disposal
+
+$ timeout -k 10 90 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File C:/codex-dotnet10/cim-wmi-retest.ueSKJ5/tests/powershell-full-sdk/CimWmiSmoke.ps1
+RESULT: exit 0
+PASS packaged MMI direct local query/disposal, original CIM cmdlets and source System.Management WMI OS/GetOwner/disposal
+
+$ timeout -k 10 60 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File C:/codex-dotnet10/cim-wmi-retest.ueSKJ5/tests/powershell-full-sdk/WmiStaProbe.ps1
+RESULT: exit 0
+PASS source WMI local enumeration in STA
+
+$ bash mingw-w64-dotnet-mmi3/check.sh mmi3-consumer
+RESULT: exit 0
+PASS native mi.h credential size=32 union-offset=8; native round trips; DCOM Default=0 NegoNoCreds=7 empty-Default-query=1
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored C:\codex-dotnet10\cim-wmi-retest.ueSKJ5\mmi3-consumer\friend-sma\Friend.csproj (in 523 ms).
+  Restored C:\codex-dotnet10\cim-wmi-retest.ueSKJ5\mmi3-consumer\friend-cim\Friend.csproj (in 523 ms).
+  Restored C:\codex-dotnet10\cim-wmi-retest.ueSKJ5\mmi3-consumer\Check.csproj (in 523 ms).
+  Friend -> C:\codex-dotnet10\cim-wmi-retest.ueSKJ5\mmi3-consumer\friend-cim\bin\Release\net8.0\Microsoft.Management.Infrastructure.CimCmdlets.dll
+  Friend -> C:\codex-dotnet10\cim-wmi-retest.ueSKJ5\mmi3-consumer\friend-sma\bin\Release\net8.0\System.Management.Automation.dll
+  Check -> C:\codex-dotnet10\cim-wmi-retest.ueSKJ5\mmi3-consumer\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:19.04
+PASS MMI3 source-port identity/version/location, corrected enum contracts and signed friend access used by PowerShell sources
+Runtime: .NET 8.0.31
+MMI: Microsoft.Management.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+CIM OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+CIM process: dotnet.exe; PID matches current source-built runtime
+CIM invalid class: correctly returned InvalidClass
+CIM OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+CIM process: dotnet.exe; PID matches current source-built runtime
+CIM invalid class: correctly returned InvalidClass
+Native dependency: C:\WINDOWS\SYSTEM32\mi.dll
+PASS: source-built MMI local DCOM/default queries, errors, disposal and reopen
+PASS MMI3 source-port identity/version/location, corrected enum contracts and signed friend access used by PowerShell sources
+Runtime: .NET 8.0.31
+MMI: Microsoft.Management.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+Streaming mode 0
+Streaming mode 1
+Streaming mode 2
+Streaming mode 3
+Streaming mode 4
+Streaming mode 5
+Streaming mode 6
+PASS native stream ABI for all 32 MI types, scalar/chunk flattening, Unicode/null/empty values, clone lifetimes/session metadata, shortening, errors/ack failures, regular final result and GC/root cleanup
+Native original interval=0 count=2
+Native option result=0 type=12 flags=0
+Native option result=0 type=21 flags=0
+Native interval clone probe (before/after MI_Result): 606
+PASS mi.h native prompt/error/message/progress callback table, Unicode values, cloned error instance, reply values/exactly-once replies, managed/reply exceptions, compacting GC, options clone and root cleanup
+PASS native credential union ABI, all destination/proxy authentication forms, Unicode user/domain/password, independent SecureString copy, native clone after source disposal, validation and native DCOM transport error propagation
+PASS: native operation/session timeouts, microseconds, infinity, negatives and timed query
+PASS: native MI_XML instance/class round-trips, offsets, Unicode, arrays, intervals, capacity, cached classes, errors and disposal
+PASS: native asynchronous instances/classes/methods/errors, observer exceptions, compacting GC, independent result lifetime, unsubscribe, CancellationToken, callback-root cleanup and session close
+Native dependency: C:\WINDOWS\SYSTEM32\mi.dll
+PASS: MMI timeout and serialization port checks
+PASS MMI3 source-port identity/version/location, corrected enum contracts and signed friend access used by PowerShell sources
+Runtime: .NET 8.0.31
+MMI: Microsoft.Management.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+CAPABILITY operation timeout: PASS
+CAPABILITY class metadata: PASS
+CAPABILITY instance serialization: PASS
+CAPABILITY asynchronous query: PASS
+
+$ bash tests/mmi-cim-wmi/check-wmi.sh wmi-mta-consumer
+RESULT: exit 0
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored C:\codex-dotnet10\cim-wmi-retest.ueSKJ5\wmi-mta-consumer\check.csproj (in 656 ms).
+  check -> C:\codex-dotnet10\cim-wmi-retest.ueSKJ5\wmi-mta-consumer\bin\Release\net8.0\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:08.60
+PASS consumer restored exact candidate/installed source archive and loads its exact managed/native asset bytes
+Runtime: .NET 8.0.31
+WMI: System.Management, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS WMI identity/source/location, exported types and 79 resource strings
+WMI OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+WMI process: dotnet.exe; PID matches current source-built runtime
+WMI invalid class: correctly returned InvalidClass
+WMI OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+WMI process: dotnet.exe; PID matches current source-built runtime
+WMI invalid class: correctly returned InvalidClass
+PASS WMI metadata/types/origins, qualifier and method enumeration, clone/compare/MOF, in-memory class/property/method/qualifier edits; no repository writes
+PASS WMI native GetOwner method invocation and independent enumerator clones
+PASS WMI native asynchronous sink delivery/completion and compacting GC
+PASS WMI native process event callback, owned child PID and subscription cancellation
+PASS WMI EnablePrivileges query and restored thread identity
+Source-built WMI backend: C:\codex-dotnet10\cim-wmi-retest.ueSKJ5\wmi-mta-consumer\bin\Release\net8.0\runtimes\win-x64\native\msys-wmi-native.dll
+PASS native WMI ABI/null-pointer validation and temporary privilege token setup/reset
+PASS STA/MTA local queries/GetOwner/class metadata, scopes shared in both directions and temporary thread-token restoration
+PASS: source-built System.Management local WMI queries, errors, disposal and reopen
+
+$ bash tests/mmi-cim-wmi/check-source-wmi-sta.sh wmi-sta-consumer
+RESULT: exit 0
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored C:\codex-dotnet10\cim-wmi-retest.ueSKJ5\wmi-sta-consumer\check.csproj (in 488 ms).
+  check -> C:\codex-dotnet10\cim-wmi-retest.ueSKJ5\wmi-sta-consumer\bin\Release\net8.0\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:08.40
+PASS exact installed source archive and managed/native asset bytes
+PASS WMI metadata/types/origins, qualifier and method enumeration, clone/compare/MOF, in-memory class/property/method/qualifier edits; no repository writes
+PASS WMI native GetOwner method invocation and independent enumerator clones
+PASS WMI native asynchronous sink delivery/completion and compacting GC
+PASS WMI native process event callback, owned child PID and subscription cancellation
+PASS WMI EnablePrivileges query and restored thread identity
+Source-built WMI backend: C:\codex-dotnet10\cim-wmi-retest.ueSKJ5\wmi-sta-consumer\bin\Release\net8.0\runtimes\win-x64\native\msys-wmi-native.dll
+PASS native WMI ABI/null-pointer validation and temporary privilege token setup/reset
+PASS full source WMI metadata/method/async/event/privilege/native suite from STA caller
+
+$ bash tests/mmi-cim-wmi/check-mmi3-combined.sh combined-consumer
+RESULT: exit 0
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored C:\codex-dotnet10\cim-wmi-retest.ueSKJ5\combined-consumer\check.csproj (in 606 ms).
+  check -> C:\codex-dotnet10\cim-wmi-retest.ueSKJ5\combined-consumer\bin\Release\net8.0\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:09.98
+Runtime: .NET 8.0.31
+MMI: Microsoft.Management.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+WMI: System.Management, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+Native dependency: C:\WINDOWS\SYSTEM32\mi.dll
+PASS installed source-built CIM/MMI and WMI share one process, agree on OS build 26200, survive GC and load no Framework implementations
+This uses the experimental MMI3 contract port; full PowerShell/remote/ownership compatibility remains open.

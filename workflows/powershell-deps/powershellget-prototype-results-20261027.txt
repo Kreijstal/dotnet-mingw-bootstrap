@@ -1,0 +1,35 @@
+PowerShellGet2.2.5 original-source assembly/import candidate, 2026-10-27
+Host: win11 / MSYS2 CLANG64
+Root: /home/topkek/powershellget-source.fZivLR
+Source: PowerShellGetv2-22a87ee00bc461fe49068c9e8e1b079bfdc6c3f8
+Output: source/dist/PowerShellGet
+
+Original tools/build.psm1 New-ModulePSMFile function ran unchanged through the
+source PowerShell7.4.20 host. Full generated PSModule.psm1 matches published2.2.5
+source after encoding/BOM/newline/signature normalization:654574 characters.
+Manifest differs only in leading indentation of the function-export list.
+No script algorithm/source function changes. No bootstrap/dependency-download,
+global temp zip or external publish functions invoked by the owned driver.
+
+Exact source module imports with installed source PackageManagement1.4.8.1;
+module/GUID/exported-function list and exact implementation script paths pass.
+AppData/LocalAppData/ProgramFiles/ProgramData point to owned directories. Original
+module import creates CurrentUser script-info directories; the fixture snapshots
+existence and removes only newly created empty directories, without recursive
+removal. No user's script/module/package files are overwritten or installed.
+
+Commands, MSYSTEM=CLANG64, with owned environment overrides (exit0):
+/clang64/bin/powershell-module-test-host E:/msys64/home/topkek/powershellget-source.fZivLR/BuildModule.ps1 E:/msys64/home/topkek/powershellget-source.fZivLR/PowerShellGetv2-22a87ee00bc461fe49068c9e8e1b079bfdc6c3f8
+/clang64/bin/powershell-module-test-host E:/msys64/home/topkek/powershellget-source.fZivLR/Smoke.ps1 E:/msys64/home/topkek/powershellget-source.fZivLR/PowerShellGetv2-22a87ee00bc461fe49068c9e8e1b079bfdc6c3f8/dist/PowerShellGet/PowerShellGet.psd1 E:/msys64/clang64/lib/powershell/Modules/PackageManagement/1.4.8.1/PackageManagement.psd1 E:/msys64/home/topkek/powershellget-source.fZivLR/smoke-owned
+
+Remaining: validate full script/data/DSC/helper asset inventory, owned repository/
+module/script operations, NuGet/MSYS2 package/install and fresh installed checks.
+PowerShellGet stays package_completed=false and is not counted verified.
+
+
+LOG build1.log
+PASS original PowerShellGet module assembly function completed
+
+
+LOG smoke1.log
+PASS exact source PowerShellGet2.2.5 import and all exported functions against installed source PackageManagement

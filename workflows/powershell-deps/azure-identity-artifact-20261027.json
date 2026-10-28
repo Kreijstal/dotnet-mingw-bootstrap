@@ -1,0 +1,18 @@
+{
+  "artifact": "mingw-w64-clang-x86_64-dotnet-azure-identity-1.11.4-1-any.pkg.tar.zst",
+  "sha256": "180aa38e6e716c8bae1c43c57d6cc40f107b7772dedbb37ca52affcdd7a44b31",
+  "source_commit": "2856f9a00d6cb96f71b724d29b1ce8ce271c4137",
+  "original_compile_items": 132,
+  "public_protected_api_declarations": 356,
+  "production_cs_changes": [
+    {
+      "path": "sdk/identity/Azure.Identity/src/Credentials/AuthorizationCodeCredential.cs",
+      "overlay": "overlays/AuthorizationCodeCredential.cs",
+      "original_sha256": "866c3151f5c707a13c28c2e351cc78682fbd5f465b77ebabf9388bcdfbd04936",
+      "prepared_sha256": "31e0ba3294a29a0d15dd931e24d8b52b1ddcbfabf503a362b7294f2e6a5e97f7",
+      "reason": "Initialize the AccessToken local passed to a helper that overwrites its token parameter before reading; required for NET8 definite assignment"
+    }
+  ],
+  "implementation_sha256": "bbdc292690bda37db3ce7195df80a13f95484a82e1fca0d52d27e9e7f0d34752",
+  "reference_sha256": "2eb08ae38652a3f415e91dcb9319d7a35b65010946877a8f88e434dce33fb5a7"
+}

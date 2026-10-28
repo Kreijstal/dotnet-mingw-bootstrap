@@ -1,0 +1,6 @@
+{
+  "original_basic_tests_sha256": "aac3948bb0847dab58a1cc596a855d09da0cad37044b027b6116af70169590cf",
+  "staged_basic_tests_sha256": "cf85d4cbc3212b8d0b18f13d9fc99f6ce901268d79c77f281ece166e2db6cdf3",
+  "original_test_console_sha256": "11104c45e0428253707c6838d5c3342c6278d639b8753f072fc59895d00955d0",
+  "change": "Remove four xUnit discovery attributes/using; substitute four string-equality assertion calls with owned ordinal string equality. All four method bodies, input keys and expected console output retained."
+}

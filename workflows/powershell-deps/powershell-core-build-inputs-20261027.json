@@ -1,0 +1,41 @@
+{
+  "version": "7.4.20",
+  "source_commit": "013edf910bbe781f503c27370941ce54d02d3f33",
+  "source_archive_sha256": "3dac352752acd64a0502c1f002ecf65eca177d2919bea3bcefbf8856afedd9eb",
+  "original_global_json": "{\n  \"sdk\": {\n    \"version\": \"8.0.425\"\n  }\n}\n",
+  "removed_prebuilt_inputs": [
+    {
+      "path": "test/powershell/engine/Module/assets/PowerShell.TestPackage.3.2.1.nupkg",
+      "sha256": "58787f490d51b8bf4ca6f82d9c912d1b9a4e29200d8ace18ca4a4272a1e2075b"
+    },
+    {
+      "path": "test/powershell/Modules/PackageManagement/assets/PowerShell.TestPackage.3.2.1.nupkg",
+      "sha256": "58787f490d51b8bf4ca6f82d9c912d1b9a4e29200d8ace18ca4a4272a1e2075b"
+    }
+  ],
+  "build_adjustments": [
+    "select installed source SDK8.0.131",
+    "source archive release metadata instead of git describe",
+    "source generator targets host net8.0 for source Roslyn4.9.2",
+    "public signing with original public key",
+    "framework-dependent IL build, no apphost or R2R download",
+    "implicit SDK .NET analyzers disabled because their implementations are absent; explicit source Documentation/StyleCop/CodeAnalysis analyzers retained",
+    "SDK CodeStyle enforcement deferred: required CSharp.CodeStyle.targets absent; all explicit source analyzer packages retained",
+    "preserve original generator-output cleanup and exclude persisted generator outputs from Compile"
+  ],
+  "limits": [
+    "MMI3 is experimental",
+    "actual runtime8.0.0 servicing remains",
+    "core-reference catalog only; full SDK closure still needs SqlClient/Compatibility",
+    "full PowerShell application and modules not yet built",
+    "source SDK CodeStyle and built-in .NET analyzers remain build-tool prerequisites"
+  ],
+  "project_overrides": [
+    {
+      "path": "src/System.Management.Automation/SourceGenerators/PSVersionInfoGenerator/PSVersionInfoGenerator.csproj",
+      "original_sha256": "55bcd318a91e3fe2004cdacf03f527dc3543b1d0e6759d96f4c62eebcae0858a",
+      "source_build_sha256": "ddaf738ca000c1c30d55ef4861ae74fd3dc519eed67201acbfac5096a399b5c3",
+      "change": "TargetFramework netstandard2.0 -> net8.0; original generator algorithm unchanged"
+    }
+  ]
+}

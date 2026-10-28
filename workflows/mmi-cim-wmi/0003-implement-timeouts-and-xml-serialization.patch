@@ -1,0 +1,627 @@
+--- a/CimException.cs
++++ b/CimException.cs
+@@ -61,7 +61,7 @@
+         {
+             if (errorDetailsHandle != null)
+             {
+-                var temporaryErrorData = new CimInstance(errorDetailsHandle);
++                using var temporaryErrorData = new CimInstance(errorDetailsHandle.Clone());
+                 string cimErrorMessage;
+                 if (TryGetErrorDataProperty(temporaryErrorData, "Message", out cimErrorMessage))
+                 {
+--- a/Native/MI_Deserializer.cs
++++ b/Native/MI_Deserializer.cs
+@@ -419,7 +419,7 @@
+             return resultLocal;
+         }
+ 
+-        private MI_Result DeserializeInstance(
++        internal MI_Result DeserializeInstance(
+             MI_SerializerFlags flags,
+             IntPtr serializedBuffer,
+             UInt32 serializedBufferLength,
+@@ -445,7 +445,7 @@
+                 serializedBuffer,
+                 serializedBufferLength,
+                 classArrayPtr.Ptrs,
+-                (uint)classObjects.Length,
++                (uint)(classObjects?.Length ?? 0),
+                 classObjectNeeded,
+                 IntPtr.Zero,
+                 out serializedBufferRead,
+--- a/Native/Structures/MI_Interval.cs
++++ b/Native/Structures/MI_Interval.cs
+@@ -26,12 +26,18 @@
+ 
+         public static implicit operator TimeSpan(MI_Interval interval)
+         {
+-            throw new NotImplementedException();
++            // MI_Datetime already implements the native infinite-duration sentinel
++            // and microsecond precision used by CIM interval properties.
++            return (TimeSpan)new MI_Datetime { isTimestamp = false, interval = interval }.ConvertFromNativeLayer();
+         }
+ 
+         public static implicit operator MI_Interval(TimeSpan timespan)
+         {
+-            throw new NotImplementedException();
++            if (timespan < TimeSpan.Zero)
++            {
++                throw new ArgumentOutOfRangeException(nameof(timespan));
++            }
++            return new MI_Datetime(timespan).interval;
+         }
+     }
+ }
+--- a/Serialization/CimDeserializer.cs
++++ b/Serialization/CimDeserializer.cs
+@@ -15,6 +15,7 @@
+ using System.Diagnostics;
+ using System.Diagnostics.CodeAnalysis;
+ using System.Linq;
++using System.Runtime.InteropServices;
+ 
+ namespace Microsoft.Management.Infrastructure.Serialization
+ {
+@@ -30,17 +31,17 @@
+ 
+         private CimDeserializer(string format, uint flags)
+         {
+-            Debug.Assert(!string.IsNullOrEmpty(format), "Caller should verify that format != null");
+-
+-            MI_Deserializer tmpHandle;
+-            // TODO: Fix MI_SerializerFlags in next line to come from "flags"
+-            MI_Result result = CimApplication.Handle.NewDeserializer(MI_SerializerFlags.None, format, out tmpHandle);
+-            if (result == MI_Result.MI_RESULT_INVALID_PARAMETER)
+-            {
+-                throw new ArgumentOutOfRangeException("format");
+-            }
+-            CimException.ThrowIfMiResultFailure(result);
+-            this._myHandle = tmpHandle;
++            if (flags != 0) throw new ArgumentOutOfRangeException(nameof(flags));
++            MI_Deserializer handle;
++            MI_Result result = CimApplication.Handle.NewDeserializer(MI_SerializerFlags.None, format, out handle);
++            if (result != MI_Result.MI_RESULT_OK)
++            {
++                handle?.Dispose();
++                if (result == MI_Result.MI_RESULT_INVALID_PARAMETER)
++                    throw new ArgumentOutOfRangeException(nameof(format));
++                CimException.ThrowIfMiResultFailure(result);
++            }
++            this._myHandle = handle;
+         }
+ 
+         /// <summary>
+@@ -86,43 +87,48 @@
+ 
+         internal MI_Instance DeserializeInstanceHandle(byte[] serializedData, ref uint offset, IEnumerable<CimClass> cimClasses)
+         {
+-            if (serializedData == null)
+-            {
+-                throw new ArgumentNullException("serializedData");
+-            }
+-            if (offset >= serializedData.Length)
+-            {
+-                throw new ArgumentOutOfRangeException("offset");
+-            }
+-            this.AssertNotDisposed();
+-
+-            MI_Class[] nativeClassHandles = null;
+-            if (cimClasses != null)
+-            {
+-                nativeClassHandles = cimClasses.Select(cimClass => cimClass.ClassHandle).ToArray();
+-            }
+-
+-            // TODO: Implement this next function
+-            /*
+-                UInt32 inputBufferUsed;
+-                MI_Instance deserializedInstance;
+-                MI_Instance cimError;
+-                MI_Result result = this._myHandle.DeserializeInstance(
+-                    0,
+-                    serializedData,
+-                    offset,
+-                    nativeClassHandles,
+-                    out deserializedInstance,
+-                    out inputBufferUsed,
+-                    out cimError);
+-                CimException.ThrowIfMiResultFailure(result, cimError);
+-                offset += inputBufferUsed;
+-
+-                return deserializedInstance;
+-            */
+-
+-            // TODO: remove this next line once above is fixed
+-            return MI_Instance.NewIndirectPtr();
++            if (serializedData == null) throw new ArgumentNullException(nameof(serializedData));
++            if (offset >= serializedData.Length) throw new ArgumentOutOfRangeException(nameof(offset));
++            this.AssertNotDisposed();
++            MI_Class[] classes = cimClasses?.Select(c => c.ClassHandle).ToArray();
++            MI_Instance resultHandle = null;
++            MI_Instance errorHandle = null;
++            try
++            {
++                uint used;
++                MI_Result result;
++                unsafe
++                {
++                    fixed (byte* pointer = serializedData)
++                        result = this._myHandle.DeserializeInstance(MI_SerializerFlags.None,
++                            new IntPtr(pointer + offset), (uint)serializedData.Length - offset,
++                            classes, null, IntPtr.Zero, out used, out resultHandle, out errorHandle);
++                }
++                // Error instances are owned by this call; CimException clones details.
++                CimException.ThrowIfMiResultFailure(result,
++                    errorHandle != null && !errorHandle.IsNull ? errorHandle : null);
++                if (used == 0 || used > serializedData.Length - offset)
++                    throw new InvalidOperationException("The native deserializer returned an invalid input length.");
++                offset = checked(offset + used);
++                MI_Instance transferred = resultHandle;
++                resultHandle = null;
++                return transferred;
++            }
++            finally
++            {
++                if (resultHandle != null)
++                {
++                    if (!resultHandle.IsNull) resultHandle.Delete();
++                    resultHandle.Dispose();
++                }
++                if (errorHandle != null)
++                {
++                    if (!errorHandle.IsNull) errorHandle.Delete();
++                    errorHandle.Dispose();
++                }
++                GC.KeepAlive(this);
++                GC.KeepAlive(cimClasses);
++            }
+         }
+ 
+         /// <summary>
+@@ -159,41 +165,48 @@
+ 
+         internal MI_Class DeserializeClassHandle(byte[] serializedData, ref uint offset, CimClass parentClass, string computerName, string namespaceName)
+         {
+-            if (serializedData == null)
+-            {
+-                throw new ArgumentNullException("serializedData");
+-            }
+-            if (offset >= serializedData.Length)
+-            {
+-                throw new ArgumentOutOfRangeException("offset");
+-            }
+-            this.AssertNotDisposed();
+-
+-            // TODO: Implement the following function
+-            /*
+-                MI_Class nativeClassHandle = parentClass != null ? parentClass.ClassHandle : null;
+-
+-                UInt32 inputBufferUsed;
+-                MI_Class deserializedClass;
+-                MI_Instance cimError;
+-                MI_Result result = this._myHandle.DeserializeClass(
+-                    0,
+-                    serializedData,
+-                    offset,
+-                    nativeClassHandle,
+-                    computerName,
+-                    namespaceName,
+-                    out deserializedClass,
+-                    out inputBufferUsed,
+-                    out cimError);
+-                CimException.ThrowIfMiResultFailure(result, cimError);
+-                offset += inputBufferUsed;
+-
+-                return deserializedClass;
+-            */
+-
+-            // TODO: remove next line once above is fixed
+-            return MI_Class.NewIndirectPtr();
++            if (serializedData == null) throw new ArgumentNullException(nameof(serializedData));
++            if (offset >= serializedData.Length) throw new ArgumentOutOfRangeException(nameof(offset));
++            this.AssertNotDisposed();
++            MI_Class resultHandle = null;
++            MI_Instance errorHandle = null;
++            try
++            {
++                uint used;
++                MI_Result result;
++                unsafe
++                {
++                    fixed (byte* pointer = serializedData)
++                        result = this._myHandle.DeserializeClass(MI_SerializerFlags.None,
++                            new IntPtr(pointer + offset), (uint)serializedData.Length - offset,
++                            parentClass?.ClassHandle, computerName, namespaceName, IntPtr.Zero, IntPtr.Zero,
++                        out used, out resultHandle, out errorHandle);
++                }
++                // Error instances are owned by this call; CimException clones details.
++                CimException.ThrowIfMiResultFailure(result,
++                    errorHandle != null && !errorHandle.IsNull ? errorHandle : null);
++                if (used == 0 || used > serializedData.Length - offset)
++                    throw new InvalidOperationException("The native deserializer returned an invalid input length.");
++                offset = checked(offset + used);
++                MI_Class transferred = resultHandle;
++                resultHandle = null;
++                return transferred;
++            }
++            finally
++            {
++                if (resultHandle != null)
++                {
++                    if (!resultHandle.IsNull) resultHandle.Delete();
++                    resultHandle.Dispose();
++                }
++                if (errorHandle != null)
++                {
++                    if (!errorHandle.IsNull) errorHandle.Delete();
++                    errorHandle.Dispose();
++                }
++                GC.KeepAlive(this);
++                GC.KeepAlive(parentClass);
++            }
+         }
+ 
+         /// <summary>
+@@ -325,6 +338,11 @@
+ 
+         #endregion Methods
+ 
++        ~CimDeserializer()
++        {
++            try { Dispose(false); } catch { /* Finalizers cannot report native cleanup failures. */ }
++        }
++
+         #region IDisposable Members
+ 
+         /// <summary>
+@@ -341,18 +359,13 @@
+         /// </summary>
+         private void Dispose(bool disposing)
+         {
+-            if (_disposed)
+-            {
+-                return;
+-            }
+-
+-            if (disposing)
+-            {
+-                // TODO: Add Delete/Dispose function then uncomment
+-                //this._myHandle.Dispose();
+-            }
+-
++            if (_disposed) return;
+             _disposed = true;
++            try
++            {
++                if (this._myHandle != null && !this._myHandle.IsNull) this._myHandle.Close();
++            }
++            finally { this._myHandle?.Dispose(); }
+         }
+ 
+         internal void AssertNotDisposed()
+--- a/Serialization/CimSerializer.cs
++++ b/Serialization/CimSerializer.cs
+@@ -9,11 +9,12 @@
+ 
+ 
+ using Microsoft.Management.Infrastructure.Native;
++using Microsoft.Management.Infrastructure.Internal;
+ using System;
+ using System.Diagnostics;
+ using System.Diagnostics.CodeAnalysis;
+ 
+-// TODO: Entire file needs Serializer support
++
+ 
+ namespace Microsoft.Management.Infrastructure.Serialization
+ {
+@@ -50,18 +51,17 @@
+ 
+         private CimSerializer(string format, uint flags)
+         {
+-            Debug.Assert(!string.IsNullOrEmpty(format), "Caller should verify that format != null");
+-
+-            /*
+-	      MI_Serializer tmpHandle;
+-            MI_Result result = Native.ApplicationMethods.NewSerializer(CimApplication.Handle, format, flags, out tmpHandle);
+-            if (result == MI_Result.MI_RESULT_INVALID_PARAMETER)
+-            {
+-                throw new ArgumentOutOfRangeException("format");
+-            }
+-            CimException.ThrowIfMiResultFailure(result);
+-            this._myHandle = tmpHandle;
+-	    */
++            if (flags != 0) throw new ArgumentOutOfRangeException(nameof(flags));
++            MI_Serializer handle;
++            MI_Result result = CimApplication.Handle.NewSerializer(MI_SerializerFlags.None, format, out handle);
++            if (result != MI_Result.MI_RESULT_OK)
++            {
++                handle?.Dispose();
++                if (result == MI_Result.MI_RESULT_INVALID_PARAMETER)
++                    throw new ArgumentOutOfRangeException(nameof(format));
++                CimException.ThrowIfMiResultFailure(result);
++            }
++            this._myHandle = handle;
+         }
+ 
+         /// <summary>
+@@ -120,63 +120,18 @@
+         [SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", MessageId = "3#", Justification = "Have to return 2 things.  Wrapping those 2 things in a class will result in a more, not less complexity")]
+         public bool Serialize(CimInstance cimInstance, InstanceSerializationOptions options, byte[] buffer, ref uint offset)
+         {
+-            /*
+-                if (cimInstance == null)
+-                {
+-                    throw new ArgumentNullException("cimInstance");
+-                }
+-                if (buffer == null)
+-                {
+-                    if (offset != 0)
+-                    {
+-                        throw new ArgumentNullException("buffer");
+-                    }
+-                }
+-                else
+-                {
+-                    if (offset > buffer.Length) // offset == buffer.Length points outside of buffer, but is ok
+-                    {
+-                        throw new ArgumentOutOfRangeException("offset");
+-                    }
+-                    else if (offset == buffer.Length)
+-                    {
+-                        buffer = null;
+-                    }
+-                }
+-                this.AssertNotDisposed();
+-
+-                bool doesDataFitIntoTheBuffer = true;
+-                uint numberOfBytesUsed;
+-                MI_Result result = Native.SerializerMethods.SerializeInstance(
+-                    this._myHandle,
+-                    (UInt32)options,
+-                    cimInstance.InstanceHandle,
+-                    buffer,
+-                    offset,
+-                    out numberOfBytesUsed);
+-                switch (result)
+-                {
+-                    case MI_Result.MI_RESULT_FAILED:
+-                        if ((buffer == null) || ((offset + numberOfBytesUsed) > buffer.Length))
+-                        {
+-                            result = MI_Result.MI_RESULT_OK;
+-                            offset += numberOfBytesUsed;
+-                        }
+-                        doesDataFitIntoTheBuffer = false;
+-                        return doesDataFitIntoTheBuffer;
+-
+-                    case MI_Result.MI_RESULT_OK:
+-                        offset += numberOfBytesUsed;
+-                        doesDataFitIntoTheBuffer = true;
+-                        return doesDataFitIntoTheBuffer;
+-
+-                    default:
+-                        CimException.ThrowIfMiResultFailure(result);
+-                        Debug.Assert(false, "Should throw in the previous statement");
+-                        return doesDataFitIntoTheBuffer;
+-                }
+-            */
+-            return false;
++            if (cimInstance == null) throw new ArgumentNullException(nameof(cimInstance));
++            if ((options & ~InstanceSerializationOptions.IncludeClasses) != 0)
++                throw new ArgumentOutOfRangeException(nameof(options));
++            this.AssertNotDisposed();
++            return WriteBuffer(buffer, ref offset, (pointer, capacity) =>
++            {
++                uint needed;
++                MI_Result result = this._myHandle.SerializeInstance(
++                    (MI_SerializerFlags)(uint)options, cimInstance.InstanceHandle, pointer, capacity, out needed);
++                GC.KeepAlive(cimInstance);
++                return (result, needed);
++            });
+         }
+ 
+         /// <summary>
+@@ -199,64 +154,18 @@
+         [SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", MessageId = "3#", Justification = "Have to return 2 values.  Wrapping the values in a class makes things more, not less complex")]
+         public bool Serialize(CimClass cimClass, ClassSerializationOptions options, byte[] buffer, ref uint offset)
+         {
+-            /*
+-                if (cimClass == null)
+-                {
+-                    throw new ArgumentNullException("cimClass");
+-                }
+-                if (buffer == null)
+-                {
+-                    if (offset != 0)
+-                    {
+-                        throw new ArgumentNullException("buffer");
+-                    }
+-                }
+-                else
+-                {
+-                    if (offset > buffer.Length) // offset == buffer.Length points outside of buffer, but is ok
+-                    {
+-                        throw new ArgumentOutOfRangeException("offset");
+-                    }
+-                    else if (offset == buffer.Length)
+-                    {
+-                        buffer = null;
+-                    }
+-                }
+-                this.AssertNotDisposed();
+-
+-                bool doesDataFitIntoTheBuffer = true;
+-
+-                uint numberOfBytesUsed;
+-                MI_Result result = Native.SerializerMethods.SerializeClass(
+-                    this._myHandle,
+-                    (UInt32)options,
+-                    cimClass.ClassHandle,
+-                    buffer,
+-                    offset,
+-                    out numberOfBytesUsed);
+-                switch (result)
+-                {
+-                    case MI_Result.MI_RESULT_FAILED:
+-                        if ((buffer == null) || ((offset + numberOfBytesUsed) > buffer.Length))
+-                        {
+-                            result = MI_Result.MI_RESULT_OK;
+-                            offset += numberOfBytesUsed;
+-                        }
+-                        doesDataFitIntoTheBuffer = false;
+-                        return doesDataFitIntoTheBuffer;
+-
+-                    case MI_Result.MI_RESULT_OK:
+-                        offset += numberOfBytesUsed;
+-                        doesDataFitIntoTheBuffer = true;
+-                        return doesDataFitIntoTheBuffer;
+-
+-                    default:
+-                        CimException.ThrowIfMiResultFailure(result);
+-                        Debug.Assert(false, "Should throw in the previous statement");
+-                        return doesDataFitIntoTheBuffer;
+-                }
+-            */
+-            return false;
++            if (cimClass == null) throw new ArgumentNullException(nameof(cimClass));
++            if ((options & ~ClassSerializationOptions.IncludeParentClasses) != 0)
++                throw new ArgumentOutOfRangeException(nameof(options));
++            this.AssertNotDisposed();
++            return WriteBuffer(buffer, ref offset, (pointer, capacity) =>
++            {
++                uint needed;
++                MI_Result result = this._myHandle.SerializeClass(
++                    (MI_SerializerFlags)(uint)options, cimClass.ClassHandle, pointer, capacity, out needed);
++                GC.KeepAlive(cimClass);
++                return (result, needed);
++            });
+         }
+ 
+         /// <summary>
+@@ -267,28 +176,14 @@
+         /// <returns>Serialized representation of <paramref name="cimInstance"/></returns>
+         public byte[] Serialize(CimInstance cimInstance, InstanceSerializationOptions options)
+         {
+-            // TODO: Add Serializer support
+-            /*
+-                if (cimInstance == null)
+-                {
+-                    throw new ArgumentNullException("cimInstance");
+-                }
+-                this.AssertNotDisposed();
+-
+-                bool dataFitsIntoBuffer;
+-                uint requiredBufferSize = 0;
+-                dataFitsIntoBuffer = Serialize(cimInstance, options, null, ref requiredBufferSize);
+-                Debug.Assert(!dataFitsIntoBuffer, "Passing null buffer - data cannot possibly fit into this buffer");
+-
+-                byte[] buffer = new byte[requiredBufferSize];
+-                uint offset = 0;
+-                dataFitsIntoBuffer = Serialize(cimInstance, options, buffer, ref offset);
+-                Debug.Assert(dataFitsIntoBuffer, "Newly allocated buffer should fit (1)");
+-                Debug.Assert(buffer.Length == offset, "Newly allocated buffer should fit exactly (2)");
+-
+-                return buffer;
+-            */
+-            return new byte[1];
++            uint needed = 0;
++            Serialize(cimInstance, options, null, ref needed);
++            byte[] buffer = new byte[checked((int)needed)];
++            uint used = 0;
++            if (!Serialize(cimInstance, options, buffer, ref used))
++                throw new InvalidOperationException("The native serialized size changed during serialization.");
++            if (used != buffer.Length) Array.Resize(ref buffer, checked((int)used));
++            return buffer;
+         }
+ 
+         /// <summary>
+@@ -299,30 +194,44 @@
+         /// <returns>Serialized representation of <paramref name="cimClass"/></returns>
+         public byte[] Serialize(CimClass cimClass, ClassSerializationOptions options)
+         {
+-            /*
+-                if (cimClass == null)
+-                {
+-                    throw new ArgumentNullException("cimClass");
+-                }
+-                this.AssertNotDisposed();
+-
+-                bool dataFitsIntoBuffer;
+-                uint requiredBufferSize = 0;
+-                dataFitsIntoBuffer = Serialize(cimClass, options, null, ref requiredBufferSize);
+-                Debug.Assert(!dataFitsIntoBuffer, "Passing null buffer - data cannot possibly fit into this buffer");
+-
+-                byte[] buffer = new byte[requiredBufferSize];
+-                uint offset = 0;
+-                dataFitsIntoBuffer = Serialize(cimClass, options, buffer, ref offset);
+-                Debug.Assert(dataFitsIntoBuffer, "Newly allocated buffer should fit (1)");
+-                Debug.Assert(buffer.Length == offset, "Newly allocated buffer should fit exactly (2)");
+-
+-                return buffer;
+-            */
+-            return new byte[1];
++            uint needed = 0;
++            Serialize(cimClass, options, null, ref needed);
++            byte[] buffer = new byte[checked((int)needed)];
++            uint used = 0;
++            if (!Serialize(cimClass, options, buffer, ref used))
++                throw new InvalidOperationException("The native serialized size changed during serialization.");
++            if (used != buffer.Length) Array.Resize(ref buffer, checked((int)used));
++            return buffer;
+         }
+ 
+         #endregion Methods
++
++        private unsafe bool WriteBuffer(byte[] buffer, ref uint offset,
++            Func<IntPtr, uint, (MI_Result result, uint needed)> serialize)
++        {
++            if (buffer == null && offset != 0) throw new ArgumentNullException(nameof(buffer));
++            if (buffer != null && offset > buffer.Length) throw new ArgumentOutOfRangeException(nameof(offset));
++            uint capacity = buffer == null ? 0 : (uint)buffer.Length - offset;
++            (MI_Result result, uint needed) response;
++            fixed (byte* pointer = buffer)
++            {
++                IntPtr destination = capacity == 0 ? IntPtr.Zero : new IntPtr(pointer + offset);
++                response = serialize(destination, capacity);
++            }
++            GC.KeepAlive(this);
++            if (response.result != MI_Result.MI_RESULT_OK &&
++                !(response.result == MI_Result.MI_RESULT_FAILED && response.needed > capacity))
++                CimException.ThrowIfMiResultFailure(response.result);
++            if (response.result == MI_Result.MI_RESULT_OK && response.needed > capacity)
++                throw new InvalidOperationException("The native serializer returned an invalid output length.");
++            offset = checked(offset + response.needed);
++            return response.result == MI_Result.MI_RESULT_OK;
++        }
++
++        ~CimSerializer()
++        {
++            try { Dispose(false); } catch { /* Finalizers cannot report native cleanup failures. */ }
++        }
+ 
+         #region IDisposable Members
+ 
+@@ -340,18 +249,13 @@
+         /// </summary>
+         private void Dispose(bool disposing)
+         {
+-            if (_disposed)
+-            {
+-                return;
+-            }
+-
+-            if (disposing)
+-            {
+-                // TODO: Uncomment once this function is implemented
+-                //this._myHandle.Delete();
+-            }
+-
++            if (_disposed) return;
+             _disposed = true;
++            try
++            {
++                if (this._myHandle != null && !this._myHandle.IsNull) this._myHandle.Close();
++            }
++            finally { this._myHandle?.Dispose(); }
+         }
+ 
+         internal void AssertNotDisposed()

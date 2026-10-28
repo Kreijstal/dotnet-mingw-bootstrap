@@ -1,0 +1,11 @@
+{
+  "original_project": "src/powershell-win-core/powershell-win-core.csproj",
+  "apphost_template": "/home/topkek/sdk8-servicing.H9EQgk/private-sdk1/packs/Microsoft.NETCore.App.Host.win-x64/8.0.31/runtimes/win-x64/native/apphost.exe",
+  "apphost_template_sha256": "4b66446ec6340eb08726beea4c4b50dea9d766b2eba84142ede6ca7581883593",
+  "original_source_sdk_task": "/home/topkek/sdk8-servicing.H9EQgk/private-sdk1/sdk/8.0.131/Sdks/Microsoft.NET.Sdk/tools/net8.0/Microsoft.NET.Build.Tasks.dll",
+  "original_source_sdk_task_sha256": "09bef3c4e269e974d4d68855e4d404b37408297cbba82159d04ae55345c9e07a",
+  "intermediate_assembly_sha256": "ef7a9dcea3916f093c9087f42b17a6a3cf8880a4d4abb17b443403391f131d84",
+  "native_executable_sha256": "7b9b2ecda9ef85df5564dd02c142601259b38494fa5fd433c9b24129c49e7c6f",
+  "exact_original_sdk_task_replay_matches": true,
+  "template_source_version": "8.0.31"
+}

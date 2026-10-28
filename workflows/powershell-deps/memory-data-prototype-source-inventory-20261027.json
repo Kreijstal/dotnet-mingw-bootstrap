@@ -1,0 +1,47 @@
+{
+  "source_commit": "7e3cf643977591e9041f4c628fd4d28237398e0b",
+  "git_tree_files": [
+    {
+      "path": "sdk/core/System.Memory.Data/src/BinaryData.cs",
+      "git_blob": "b97d683f841ba2564875e739cdc4b8ee403de1bb",
+      "sha256": "da5dc5444777ee5ecfe604341101c9f78fc9c6a2faa40109e8f2deca70e23c62"
+    },
+    {
+      "path": "sdk/core/System.Memory.Data/src/Open.snk",
+      "git_blob": "22a3cbd253a7f1091078ac81eb16eb2ffd32880c",
+      "sha256": "b897629e0b20090c9219ac80392c037fa4cfcc2bdc21d3c45d9bf74b8df0f671"
+    },
+    {
+      "path": "sdk/core/System.Memory.Data/src/ReadOnlyMemoryStream.cs",
+      "git_blob": "f97ed9b01f82d18592559998741da2ebc11435d7",
+      "sha256": "4aa9fe17201ebe1bd247656e9bb5577e9ac142497ce2fb57ec4ce56a519d5eda"
+    },
+    {
+      "path": "sdk/core/System.Memory.Data/src/System.Memory.Data.csproj",
+      "git_blob": "1c7759a01641118123bdde68f8e05b7bd898d32d",
+      "sha256": "3e2ab8eb8a9949f19b944eb5815c63f668299624bdb7e47589c9092c449599e8"
+    }
+  ],
+  "original_cs": {
+    "sdk/core/System.Memory.Data/src/BinaryData.cs": "da5dc5444777ee5ecfe604341101c9f78fc9c6a2faa40109e8f2deca70e23c62",
+    "sdk/core/System.Memory.Data/src/ReadOnlyMemoryStream.cs": "4aa9fe17201ebe1bd247656e9bb5577e9ac142497ce2fb57ec4ce56a519d5eda"
+  },
+  "production_cs_changes": [],
+  "framework_provided": [
+    "System.Text.Encodings.Web"
+  ],
+  "source_dependencies": {
+    "System.Text.Json": "8.0.5"
+  },
+  "status": "prototype-unpackaged-pending-full-archive-and-source-closure-gates",
+  "actual_original_compile_items": {
+    "sdk/core/System.Memory.Data/src/BinaryData.cs": "da5dc5444777ee5ecfe604341101c9f78fc9c6a2faa40109e8f2deca70e23c62",
+    "sdk/core/System.Memory.Data/src/ReadOnlyMemoryStream.cs": "4aa9fe17201ebe1bd247656e9bb5577e9ac142497ce2fb57ec4ce56a519d5eda"
+  },
+  "generated_metadata": [
+    "E:/msys64/home/topkek/memory-data-source.ttVAen/prepared/obj/Release/net8.0/.NETCoreApp,Version=v8.0.AssemblyAttributes.cs",
+    "E:/msys64/home/topkek/memory-data-source.ttVAen/prepared/obj/Release/net8.0/Library.AssemblyInfo.cs"
+  ],
+  "implementation_sha256": "e1320bd45403f0acd8c135ce45745629d0e0911eaeac43e2801fb7da3917217c",
+  "reference_sha256": "aebda739db222b623c69807983b9515542913677e341a41fc5565fdd77ef0937"
+}

@@ -1,0 +1,167 @@
+Threading ACL package validation, win11 / CLANG64
+Root: /home/topkek/powershell-compatibility.UIIT7O
+Source: dotnet/runtime v8.0.31; NuGet 8.0.0; package 8.0.0-2.
+Plain net8.0 consumer selects rebuilt ref/net8.0 contract and Windows runtime implementation.
+Underlying core runtime source/version remains 8.0.0.
+
+In mingw-w64-dotnet-threading-accesscontrol:
+$ PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm
+Result: exit 0
+==> Making package: mingw-w64-dotnet-threading-accesscontrol 8.0.0-2 (26 Oct 2026 17:37:59)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found runtime-v8.0.31.tar.gz
+  -> Found prepare.py
+  -> Found libraries.json
+  -> Found Microsoft.pubkey.hex
+  -> Found check.cs
+  -> Found CheckAssets.cs
+  -> Found check.sh
+  -> Found check-api.cs
+  -> Found check-api.sh
+  -> Found README.md
+==> Validating source files with sha256sums...
+    runtime-v8.0.31.tar.gz ... Passed
+    prepare.py ... Passed
+    libraries.json ... Passed
+    Microsoft.pubkey.hex ... Passed
+    check.cs ... Passed
+    CheckAssets.cs ... Passed
+    check.sh ... Passed
+    check-api.cs ... Passed
+    check-api.sh ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+==> Starting prepare()...
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-threading-accesscontrol\src\prepared\System.Threading.AccessControl\contract\Contract.csproj (in 90 ms).
+  Contract -> E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-threading-accesscontrol\src\prepared\System.Threading.AccessControl\contract\bin\Release\net8.0\System.Threading.AccessControl.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.11
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-threading-accesscontrol\src\prepared\System.Threading.AccessControl\Library.csproj (in 84 ms).
+  Library -> E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-threading-accesscontrol\src\prepared\System.Threading.AccessControl\bin\Release\net8.0-windows\System.Threading.AccessControl.dll
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Sdks\NuGet.Build.Tasks.Pack\build\NuGet.Build.Tasks.Pack.targets(221,5): warning NU5131: References were found in the nuspec, but some reference assemblies were not found in both the nuspec and ref folder. Add the following reference assemblies: [E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-threading-accesscontrol\src\prepared\System.Threading.AccessControl\Library.csproj]
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Sdks\NuGet.Build.Tasks.Pack\build\NuGet.Build.Tasks.Pack.targets(221,5): warning NU5131: - Add System.Threading.AccessControl.dll to the net8.0 reference group in the nuspec [E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-threading-accesscontrol\src\prepared\System.Threading.AccessControl\Library.csproj]
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Sdks\NuGet.Build.Tasks.Pack\build\NuGet.Build.Tasks.Pack.targets(221,5): warning NU5131:  [E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-threading-accesscontrol\src\prepared\System.Threading.AccessControl\Library.csproj]
+  The package System.Threading.AccessControl.8.0.0 is missing a readme. Go to https://aka.ms/nuget/authoring-best-practices/readme to learn why package readmes are important.
+  Successfully created package 'E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-threading-accesscontrol\src\feed\System.Threading.AccessControl.8.0.0.nupkg'.
+==> Starting check()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-threading-accesscontrol\src\check\check.csproj (in 263 ms).
+  check -> E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-threading-accesscontrol\src\check\bin\Release\net8.0\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.66
+PASS ACL identity/source/location, exported types and 21 resource strings
+PASS: native named mutex, event and semaphore ACLs; reopen and mutex contention
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-threading-accesscontrol\src\check-api\check-api.csproj (in 134 ms).
+  check-api -> E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-threading-accesscontrol\src\check-api\bin\Release\net8.0\check-api.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.58
+PASS: System.Threading.AccessControl implements all 135 upstream public/protected type/member signatures
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-threading-accesscontrol"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-threading-accesscontrol 8.0.0-2 (26 Oct 2026 17:38:44)
+
+$ /usr/bin/pacman -U --noconfirm mingw-w64-dotnet-threading-accesscontrol/*.pkg.tar.zst
+Result: exit 0
+$ bash mingw-w64-dotnet-threading-accesscontrol/check.sh threading-acl-installed /clang64/share/doc/dotnet-threading-accesscontrol/localization.json
+Result: exit 0; new cache/output; installed feed only
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-compatibility.UIIT7O\threading-acl-installed\check.csproj (in 162 ms).
+  check -> E:\msys64\home\topkek\powershell-compatibility.UIIT7O\threading-acl-installed\bin\Release\net8.0\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.58
+PASS ACL identity/source/location, exported types and 21 resource strings
+PASS: native named mutex, event and semaphore ACLs; reopen and mutex contention
+
+$ python3 tests/powershell-deps/audit-threading-accesscontrol.py tests/powershell-deps/threading-accesscontrol-artifact-20261026.json
+Result: exit 0; checksums, licenses, dependencies, exact ref/runtime payload and 21-string manifest pass.
+135 upstream public/protected signatures and native mutex/event/semaphore ACL behavior verified.

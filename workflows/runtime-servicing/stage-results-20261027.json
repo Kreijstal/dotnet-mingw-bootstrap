@@ -1,0 +1,2523 @@
+{
+  "checked_at_utc": "2026-10-27T14:28:34.650723+00:00",
+  "remote_root": "/home/topkek/runtime-servicing.8KDIjx",
+  "actual_executed_runtime": "8.0.31",
+  "installed_runtime": "8.0.0",
+  "runtime_source_commit": "1219a42122cf5190c7f512850557e38c422430dc",
+  "runtime_archive_sha256": "b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070",
+  "original_source_files_checked": 58893,
+  "native_patch_files_replayed": 17,
+  "corelib_original_compiler_inputs": 1803,
+  "corelib_sha256": "03e9ebcc5d4a774098ab6ea75b773407e86ffdca1e36c6a2522c4a38bd1b391a",
+  "native_outputs": {
+    "m/coreclr-8.0.31/clretwrc.dll": "063c5973f836a695000b6e49f46f5d3f87e495e457475b8ba19cb062bf031671",
+    "m/coreclr-8.0.31/clrjit.dll": "57e03dc62b0ecbd4878d03a5c0aff677c108523135e7c6fdf0f1290e596f07f5",
+    "m/coreclr-8.0.31/coreclr.dll": "30413ed6097046ea5bbe23c890119b0cc92964eb4dddc2cc5606d6422c74a9a0",
+    "m/coreclr-8.0.31/mscorrc.dll": "2e50d5e959125968c35a69d2fa10d5ce8097912e7533630718b0b8b87253d505",
+    "m/corehost-8.0.31/corehost/apphost.exe": "b527a268dd82d90ed41d026d9ec8704eb03dabc6ed49a99772f39e909caaafe5",
+    "m/corehost-8.0.31/corehost/comhost.dll": "5cff8880905e0a8347b2ab2bc744117daa66984a5b5699ecf7f28810c16750f2",
+    "m/corehost-8.0.31/corehost/comhost.dll.a": "967578f38064e54f69a0cf0db61ce44af36052b66533ba64144daafd2307d0a2",
+    "m/corehost-8.0.31/corehost/coreclr_delegates.h": "735b39150b9f0311082eb6d8b90c264a2ea429eadf44a1c2d5fcdb666e2b0153",
+    "m/corehost-8.0.31/corehost/dotnet.exe": "a3c854e5311d6ba1cfc9bdcc59fc238a054b1ddfba8abdc248f89ccd88bbc3d2",
+    "m/corehost-8.0.31/corehost/hostfxr.dll": "956324522b7b2d2d13c2f0959651f460a96463a2c5f6f35f916fa6651d22a0bd",
+    "m/corehost-8.0.31/corehost/hostfxr.dll.a": "8b64c1dd39e5f06ad49efd200ddae356e206e73f9a89358bf0e7eb381f74cf92",
+    "m/corehost-8.0.31/corehost/hostfxr.h": "90c552bdbb8a8837387f9f4a76c25b32fd7a7497458d9a7026f461719f599c81",
+    "m/corehost-8.0.31/corehost/hostpolicy.dll": "68d5334484b96fab52cd82d50bc14d1f79a9bc89a0e86551ba9df6006f5dda1e",
+    "m/corehost-8.0.31/corehost/hostpolicy.dll.a": "d815ed8e4713fb4d2aa7cd6d61265f2a0ea444a2cda315c221cf23a73e61d22a",
+    "m/corehost-8.0.31/corehost/libhostfxr.a": "9382c4011a00ad56eb243a073c391ef1c15fbcb0b0252db669110089817db380",
+    "m/corehost-8.0.31/corehost/libnethost.a": "394c4f1c60f2a2edbd89587025960b5d5d527f279301436125bfb7cce7f631a0",
+    "m/corehost-8.0.31/corehost/nethost.dll": "7cd6cebff4b7e29cc39b12ab638b09314d53bc738bfe6683ccdb6ae6483ff106",
+    "m/corehost-8.0.31/corehost/nethost.dll.a": "4a3009853a06abd4dfe9382bcb619ca8c4e1b0ecf4818706a19101e6732fd188",
+    "m/corehost-8.0.31/corehost/nethost.h": "971409598f6e23ad6168624ae8939279ebf623173859a7cb76c06234dfedf9fa"
+  },
+  "generators": {
+    "Microsoft.Interop.SourceGeneration": {
+      "original_compiler_inputs": 87,
+      "implementation_sha256": "4a7df75a871c628f53fe9f3c30bd747cd31ac15dcf8bfdf3081468eff5d8b154"
+    },
+    "Microsoft.Interop.LibraryImportGenerator": {
+      "original_compiler_inputs": 28,
+      "implementation_sha256": "4e358f87b12e691c22da30e48387aa16de80199b57b85e1aa7103c333cb39b27"
+    },
+    "Microsoft.Interop.ComInterfaceGenerator": {
+      "original_compiler_inputs": 48,
+      "implementation_sha256": "f0fcc0981ff5669f8629cdf3699f71d9219f042a1c90b53256ac3d1cc72d2b56"
+    },
+    "System.Private.CoreLib.Generators": {
+      "original_compiler_inputs": 7,
+      "implementation_sha256": "f323309e8a03230f0e687347c5c82d3f00161f39b1d277eaaab03e57a043ef3a"
+    },
+    "System.Text.RegularExpressions.Generator": {
+      "original_compiler_inputs": 33,
+      "implementation_sha256": "527b3d2aaac3907516d7cabb276ba8b6b2a66f6cdd727eca4e4261b5c68d19f8"
+    }
+  },
+  "managed_framework_manifest": [
+    "Microsoft.CSharp",
+    "Microsoft.VisualBasic",
+    "Microsoft.VisualBasic.Core",
+    "Microsoft.Win32.Primitives",
+    "Microsoft.Win32.Registry",
+    "System",
+    "System.AppContext",
+    "System.Buffers",
+    "System.Collections",
+    "System.Collections.Concurrent",
+    "System.Collections.Immutable",
+    "System.Collections.NonGeneric",
+    "System.Collections.Specialized",
+    "System.ComponentModel",
+    "System.ComponentModel.Annotations",
+    "System.ComponentModel.DataAnnotations",
+    "System.ComponentModel.EventBasedAsync",
+    "System.ComponentModel.Primitives",
+    "System.ComponentModel.TypeConverter",
+    "System.Configuration",
+    "System.Console",
+    "System.Core",
+    "System.Data",
+    "System.Data.Common",
+    "System.Data.DataSetExtensions",
+    "System.Diagnostics.Contracts",
+    "System.Diagnostics.Debug",
+    "System.Diagnostics.DiagnosticSource",
+    "System.Diagnostics.FileVersionInfo",
+    "System.Diagnostics.Process",
+    "System.Diagnostics.StackTrace",
+    "System.Diagnostics.TextWriterTraceListener",
+    "System.Diagnostics.Tools",
+    "System.Diagnostics.TraceSource",
+    "System.Diagnostics.Tracing",
+    "System.Drawing",
+    "System.Drawing.Primitives",
+    "System.Dynamic.Runtime",
+    "System.Formats.Asn1",
+    "System.Formats.Tar",
+    "System.Globalization",
+    "System.Globalization.Calendars",
+    "System.Globalization.Extensions",
+    "System.IO",
+    "System.IO.Compression",
+    "System.IO.Compression.Brotli",
+    "System.IO.Compression.FileSystem",
+    "System.IO.Compression.ZipFile",
+    "System.IO.FileSystem",
+    "System.IO.FileSystem.AccessControl",
+    "System.IO.FileSystem.DriveInfo",
+    "System.IO.FileSystem.Primitives",
+    "System.IO.FileSystem.Watcher",
+    "System.IO.IsolatedStorage",
+    "System.IO.MemoryMappedFiles",
+    "System.IO.Pipes",
+    "System.IO.Pipes.AccessControl",
+    "System.IO.UnmanagedMemoryStream",
+    "System.Linq",
+    "System.Linq.Expressions",
+    "System.Linq.Parallel",
+    "System.Linq.Queryable",
+    "System.Memory",
+    "System.Net",
+    "System.Net.Http",
+    "System.Net.Http.Json",
+    "System.Net.HttpListener",
+    "System.Net.Mail",
+    "System.Net.NameResolution",
+    "System.Net.NetworkInformation",
+    "System.Net.Ping",
+    "System.Net.Primitives",
+    "System.Net.Quic",
+    "System.Net.Requests",
+    "System.Net.Security",
+    "System.Net.ServicePoint",
+    "System.Net.Sockets",
+    "System.Net.WebClient",
+    "System.Net.WebHeaderCollection",
+    "System.Net.WebProxy",
+    "System.Net.WebSockets",
+    "System.Net.WebSockets.Client",
+    "System.Numerics",
+    "System.Numerics.Vectors",
+    "System.ObjectModel",
+    "System.Private.CoreLib",
+    "System.Private.DataContractSerialization",
+    "System.Private.Uri",
+    "System.Private.Xml",
+    "System.Private.Xml.Linq",
+    "System.Reflection",
+    "System.Reflection.DispatchProxy",
+    "System.Reflection.Emit",
+    "System.Reflection.Emit.ILGeneration",
+    "System.Reflection.Emit.Lightweight",
+    "System.Reflection.Extensions",
+    "System.Reflection.Metadata",
+    "System.Reflection.Primitives",
+    "System.Reflection.TypeExtensions",
+    "System.Resources.Reader",
+    "System.Resources.ResourceManager",
+    "System.Resources.Writer",
+    "System.Runtime",
+    "System.Runtime.CompilerServices.Unsafe",
+    "System.Runtime.CompilerServices.VisualC",
+    "System.Runtime.Extensions",
+    "System.Runtime.Handles",
+    "System.Runtime.InteropServices",
+    "System.Runtime.InteropServices.JavaScript",
+    "System.Runtime.InteropServices.RuntimeInformation",
+    "System.Runtime.Intrinsics",
+    "System.Runtime.Loader",
+    "System.Runtime.Numerics",
+    "System.Runtime.Serialization",
+    "System.Runtime.Serialization.Formatters",
+    "System.Runtime.Serialization.Json",
+    "System.Runtime.Serialization.Primitives",
+    "System.Runtime.Serialization.Xml",
+    "System.Security",
+    "System.Security.AccessControl",
+    "System.Security.Claims",
+    "System.Security.Cryptography",
+    "System.Security.Cryptography.Algorithms",
+    "System.Security.Cryptography.Cng",
+    "System.Security.Cryptography.Csp",
+    "System.Security.Cryptography.Encoding",
+    "System.Security.Cryptography.OpenSsl",
+    "System.Security.Cryptography.Primitives",
+    "System.Security.Cryptography.X509Certificates",
+    "System.Security.Principal",
+    "System.Security.Principal.Windows",
+    "System.Security.SecureString",
+    "System.ServiceModel.Web",
+    "System.ServiceProcess",
+    "System.Text.Encoding",
+    "System.Text.Encoding.CodePages",
+    "System.Text.Encoding.Extensions",
+    "System.Text.Encodings.Web",
+    "System.Text.Json",
+    "System.Text.RegularExpressions",
+    "System.Threading",
+    "System.Threading.Channels",
+    "System.Threading.Overlapped",
+    "System.Threading.Tasks",
+    "System.Threading.Tasks.Dataflow",
+    "System.Threading.Tasks.Extensions",
+    "System.Threading.Tasks.Parallel",
+    "System.Threading.Thread",
+    "System.Threading.ThreadPool",
+    "System.Threading.Timer",
+    "System.Transactions",
+    "System.Transactions.Local",
+    "System.ValueTuple",
+    "System.Web",
+    "System.Web.HttpUtility",
+    "System.Windows",
+    "System.Xml",
+    "System.Xml.Linq",
+    "System.Xml.ReaderWriter",
+    "System.Xml.Serialization",
+    "System.Xml.XDocument",
+    "System.Xml.XPath",
+    "System.Xml.XPath.XDocument",
+    "System.Xml.XmlDocument",
+    "System.Xml.XmlSerializer",
+    "WindowsBase",
+    "mscorlib",
+    "netstandard"
+  ],
+  "libraries": {
+    "Microsoft.CSharp": {
+      "sha256": "a637ec717e54bf71377be8001b2e31d8070b1f2ac08e02af207f4169f38b5ad3",
+      "origin": "new-source-implementation",
+      "original_inputs": 211,
+      "generated_inputs": 2,
+      "resources": 3
+    },
+    "Microsoft.Win32.Primitives": {
+      "sha256": "4df9eb35042f0a6ed7a0aa7d4a1f70f6e256a5cd342de7e5d9457e1d9582850d",
+      "origin": "new-source-implementation",
+      "original_inputs": 1,
+      "generated_inputs": 2,
+      "resources": 0
+    },
+    "Microsoft.Win32.Registry": {
+      "sha256": "8b84e7669fda3b4bd928c0cfeeac1c3e359c20db41414505c380741552b58c6f",
+      "origin": "new-source-implementation",
+      "original_inputs": 33,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Collections": {
+      "sha256": "2cd60dc3500d1640a24c949843d4b22199a92476e560586ca5342afc6b7a56c8",
+      "origin": "new-source-implementation",
+      "original_inputs": 20,
+      "generated_inputs": 3,
+      "resources": 2
+    },
+    "System.Diagnostics.Tracing": {
+      "sha256": "3d56e520f793339cc9f39ef168c33bcb00673193aea382f03cfb62e411577de3",
+      "origin": "new-source-implementation",
+      "original_inputs": 1,
+      "generated_inputs": 2,
+      "resources": 0
+    },
+    "System.Threading": {
+      "sha256": "f2277dcdf3739da9232ddece8bd10c41a28036797231c52052419a4711d96708",
+      "origin": "new-source-implementation",
+      "original_inputs": 11,
+      "generated_inputs": 3,
+      "resources": 2
+    },
+    "System.Collections.Concurrent": {
+      "sha256": "f3ca4eb856faed44c80bc34343dc50560eaf20299432ce1db4df66da6bdf6498",
+      "origin": "new-source-implementation",
+      "original_inputs": 13,
+      "generated_inputs": 3,
+      "resources": 2
+    },
+    "System.Collections.Immutable": {
+      "sha256": "6ab9a7e83b4bbdca77290412de6b30bbf2eb60c429615ac3aa24ddd05105ccb9",
+      "origin": "new-source-implementation",
+      "original_inputs": 133,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Collections.NonGeneric": {
+      "sha256": "18d12126e5e20c539841ed261d73a5f6e487fbb7bc6d7834b51af67bd3797a22",
+      "origin": "new-source-implementation",
+      "original_inputs": 12,
+      "generated_inputs": 3,
+      "resources": 2
+    },
+    "System.Collections.Specialized": {
+      "sha256": "a2dfb12bac2792d6269400dc10b73a7605684b65db6129f8ec265277a044c9de",
+      "origin": "new-source-implementation",
+      "original_inputs": 13,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.ComponentModel": {
+      "sha256": "4a05d79395cd98ceeb76d1c878758e340069abb2e7c9df2e7e02fc1b0981b725",
+      "origin": "new-source-implementation",
+      "original_inputs": 6,
+      "generated_inputs": 1,
+      "resources": 0
+    },
+    "System.ComponentModel.Annotations": {
+      "sha256": "299c7d71ada7ba9c02da4bfc7bb29ce235449b330b5f3f35663847148ffb7767",
+      "origin": "new-source-implementation",
+      "original_inputs": 55,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.ComponentModel.EventBasedAsync": {
+      "sha256": "4ed4ae9038a3f90f17478f78b652cc1ab164635fdb9eb4e5ae2c8cd04297851e",
+      "origin": "new-source-implementation",
+      "original_inputs": 9,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.ComponentModel.Primitives": {
+      "sha256": "a3caef259354859c42b89a6c3bdc40ba48ab863c9aef48dae14cd8f87b8fb0ad",
+      "origin": "new-source-implementation",
+      "original_inputs": 33,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.ComponentModel.TypeConverter": {
+      "sha256": "a806014d92613d14475082c2a893e25467d2dbfe75581cea90d6b425886a3dd4",
+      "origin": "new-source-implementation",
+      "original_inputs": 229,
+      "generated_inputs": 3,
+      "resources": 2
+    },
+    "System.Console": {
+      "sha256": "53973be000dc8028518647d18303a9da2901e231c24bf7d530923d18e0b29371",
+      "origin": "new-source-implementation",
+      "original_inputs": 62,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Private.Uri": {
+      "sha256": "a25b1304a32f58ec47ffa6d889e01e1a8fa8a7b83faff80ddb34eb9bff813ad4",
+      "origin": "new-source-implementation",
+      "original_inputs": 28,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Runtime": {
+      "sha256": "389669b3630e727e8937e49c872d674a862027d1f354974ddb823b3367a22887",
+      "origin": "new-source-implementation",
+      "original_inputs": 2,
+      "generated_inputs": 2,
+      "resources": 0
+    },
+    "System.Data.Common": {
+      "sha256": "8443f49992a62bfbdd7437f4a8f10270d903642de4492c3992a3de3eb7259d8c",
+      "origin": "new-source-implementation",
+      "original_inputs": 271,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Diagnostics.Contracts": {
+      "sha256": "ea01b8cc13401f283adf7b97fd36db00ab3e50b523d348d1866770cae0472964",
+      "origin": "new-source-implementation",
+      "original_inputs": 1,
+      "generated_inputs": 2,
+      "resources": 0
+    },
+    "System.Diagnostics.DiagnosticSource": {
+      "sha256": "881597dbe5753fa4dd926b2deefb1dd31d8c52e703314124c2d19f6596f48cf6",
+      "origin": "new-source-implementation",
+      "original_inputs": 63,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Diagnostics.FileVersionInfo": {
+      "sha256": "88da11ed23c8cc565822dff21a042557347d9ba4929463495e4e70dda29db09b",
+      "origin": "new-source-implementation",
+      "original_inputs": 13,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Diagnostics.Process": {
+      "sha256": "ff1f9d1dc25efbc2ff78e273f6071444b43b1c4c8d99c1d96f1deffa33936ddf",
+      "origin": "new-source-implementation",
+      "original_inputs": 124,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Reflection.Metadata": {
+      "sha256": "870417843f80aa8f739b25ddef76524e0ff1274174cdb7e3eb6e514c01c6b0b9",
+      "origin": "new-source-implementation",
+      "original_inputs": 223,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Diagnostics.StackTrace": {
+      "sha256": "deceb49d1537583ee37bf2f6887373c883823d481983c072c151e85fcd9540ef",
+      "origin": "new-source-implementation",
+      "original_inputs": 15,
+      "generated_inputs": 2,
+      "resources": 0
+    },
+    "System.Diagnostics.TextWriterTraceListener": {
+      "sha256": "76116c6563dd845d897f7f652c576091e273215c9dd6924861681d7936a0a726",
+      "origin": "new-source-implementation",
+      "original_inputs": 6,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Diagnostics.TraceSource": {
+      "sha256": "f6a020c51b00adcf08acd82e45cc86393f0bf68081df68263611a331317cecf2",
+      "origin": "new-source-implementation",
+      "original_inputs": 27,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Drawing.Primitives": {
+      "sha256": "42d45cd813c0b151fe5b7d13b2095714f20fc43f4adb9f0eed8f1a61d6813067",
+      "origin": "new-source-implementation",
+      "original_inputs": 19,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Formats.Asn1": {
+      "sha256": "8a3443decd182dcd37f89aa3ec98bdac61c23dfaee123e599d56ab6ad9aabc25",
+      "origin": "new-source-implementation",
+      "original_inputs": 44,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Formats.Tar": {
+      "sha256": "63572b726fa686b62e138c4ec92b894014fc7460c39efa51e607de2afc368b72",
+      "origin": "new-source-implementation",
+      "original_inputs": 37,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.IO.Compression": {
+      "sha256": "ba998df170091fae2dc56017f71509b73a5dec87e7e77dc28cfb7b67c14ceea2",
+      "origin": "new-source-implementation",
+      "original_inputs": 34,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.IO.Compression.Brotli": {
+      "sha256": "3d9cbeb38127d38dca3b8b2d738fb369700864996deeb318cefecc074fad98f8",
+      "origin": "new-source-implementation",
+      "original_inputs": 14,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.IO.Compression.ZipFile": {
+      "sha256": "96f55dd332f4c0630fe731b704477a91eea584ffed555a95115f2e6fe2f9e608",
+      "origin": "new-source-implementation",
+      "original_inputs": 12,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.IO.FileSystem.AccessControl": {
+      "sha256": "7d96924b94fe1175d7bd9416cb7707d716bc2080f16a5afb95636d3dcac8eea4",
+      "origin": "new-source-implementation",
+      "original_inputs": 44,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.IO.FileSystem.DriveInfo": {
+      "sha256": "793852d89138e83bc2c9f376b47ec5549ae7dbe5245c72273b4669d9ed4ad127",
+      "origin": "new-source-implementation",
+      "original_inputs": 26,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.IO.FileSystem.Watcher": {
+      "sha256": "b81bc7bb33b46f84af30409f8b36476ac0edb6c695254cb709b5e48c294c0a24",
+      "origin": "new-source-implementation",
+      "original_inputs": 28,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.IO.IsolatedStorage": {
+      "sha256": "cbbf4c95b80632b45a98df5db3f2931eafce712030d9697fc721ae5bb8d61890",
+      "origin": "new-source-implementation",
+      "original_inputs": 14,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.IO.MemoryMappedFiles": {
+      "sha256": "cfc5791120fc69b3dd826dcc9869e04b650964cf58c24cb29bcb6a5e5fecb074",
+      "origin": "new-source-implementation",
+      "original_inputs": 43,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.IO.Pipes": {
+      "sha256": "ba412e18b965b9d7c20cbc960565cb5d07e32d6abdf50652f92a121067f87a5d",
+      "origin": "new-source-implementation",
+      "original_inputs": 68,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.IO.Pipes.AccessControl": {
+      "sha256": "5f339a41943efd1a9a0137db2aced57ae27cecba2ef956c14956315be1c31236",
+      "origin": "new-source-implementation",
+      "original_inputs": 1,
+      "generated_inputs": 2,
+      "resources": 0
+    },
+    "System.Linq": {
+      "sha256": "3416e5c804532e8361b33b6919f2b04ee59ca485a8474f8e5e8648e29db85f51",
+      "origin": "new-source-implementation",
+      "original_inputs": 74,
+      "generated_inputs": 2,
+      "resources": 3
+    },
+    "System.Linq.Expressions": {
+      "sha256": "a207e5baf495bfae1988b11629fdc2c6156c1163aea30350e3c642d6c5b4fef3",
+      "origin": "new-source-implementation",
+      "original_inputs": 180,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Linq.Parallel": {
+      "sha256": "63c33feb21c3ad26a3857cd28263d1f353e62dc5a2cd4bce1b8f2a9454aeab27",
+      "origin": "new-source-implementation",
+      "original_inputs": 139,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Linq.Queryable": {
+      "sha256": "98502281d30c72ca8ea43dccb37347d3848d315c13257566cf74ab59c491280e",
+      "origin": "new-source-implementation",
+      "original_inputs": 9,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Memory": {
+      "sha256": "79660869f2c2890ef9cb46a3d1964464b965b89f6f12c057060e7bc8164cfa5f",
+      "origin": "new-source-implementation",
+      "original_inputs": 19,
+      "generated_inputs": 3,
+      "resources": 2
+    },
+    "System.Net.Http": {
+      "sha256": "063d6d29818f66a5c0f54afc27d614af04a1eaa21127193e5dc3d9fc9873152d",
+      "origin": "new-source-implementation",
+      "original_inputs": 222,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Net.Http.Json": {
+      "sha256": "e2b0b7baa3c2328df3a3753dd38f6bacbd8b3c4d55f42f7a1f761bd1985f2fea",
+      "origin": "new-source-implementation",
+      "original_inputs": 17,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Net.HttpListener": {
+      "sha256": "2cf8237b9aa49cde2fb8e11374f87aaac9f42d554901a4218872cf4e42240b3e",
+      "origin": "new-source-implementation",
+      "original_inputs": 88,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Net.Mail": {
+      "sha256": "7cf5042a5908c96891d8978e8d23dd6bd073d34b1f179a2811d7b0b9c8ce43d7",
+      "origin": "new-source-implementation",
+      "original_inputs": 88,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Net.NameResolution": {
+      "sha256": "74d12030fcbf27708d7cc3cd491667bbf11b307c8fb93e1914b38a38756b6eda",
+      "origin": "new-source-implementation",
+      "original_inputs": 27,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Net.NetworkInformation": {
+      "sha256": "5f903dd74c751c351049001bbd47d33ae634bd5eb57be95ac1ee1ec5bd74c093",
+      "origin": "new-source-implementation",
+      "original_inputs": 81,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Net.Ping": {
+      "sha256": "22af891d9bb6be146a8cf51d5f061b62b8e5a7f949cce1b75bc90830acf3e103",
+      "origin": "new-source-implementation",
+      "original_inputs": 24,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Net.Primitives": {
+      "sha256": "73fdf2da98cdb63a523e539a4892f22d9cdf39059aa5ceaed0a5bf0063e73e88",
+      "origin": "new-source-implementation",
+      "original_inputs": 67,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Net.Quic": {
+      "sha256": "1029cf22cfcd390d286a21121ecd6df39fbd196f4b5aa31b90288a2f2374e860",
+      "origin": "new-source-implementation",
+      "original_inputs": 59,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Net.Requests": {
+      "sha256": "3eae15c8bc0cfeff60fca437b7149ecd869de33e25babfd14a7737e0f2c6adf8",
+      "origin": "new-source-implementation",
+      "original_inputs": 55,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Net.Security": {
+      "sha256": "fa27b9e1072b8883e3fdc72d24f349ad51c4a8748d70a66df97fc58d962d8d0a",
+      "origin": "new-source-implementation",
+      "original_inputs": 120,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Net.ServicePoint": {
+      "sha256": "dce760ce1bc6f75a123e0937cf2df2ab4918934d74f9d850ba6e293e2777a232",
+      "origin": "new-source-implementation",
+      "original_inputs": 7,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Net.Sockets": {
+      "sha256": "d7523ec83807f758e8b525984f638532655b3a93ba1f67ae83e1fbf74a44b9df",
+      "origin": "new-source-implementation",
+      "original_inputs": 97,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Net.WebClient": {
+      "sha256": "97838d9e09aaf80b0d1ee072fce10c939ce9c0536fc439823379d09711bb8637",
+      "origin": "new-source-implementation",
+      "original_inputs": 10,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Net.WebHeaderCollection": {
+      "sha256": "954a3c80ba3f408b9cf4a8f0ef0f4dd7ecefd346881b4d6adb4a253495d4dd70",
+      "origin": "new-source-implementation",
+      "original_inputs": 11,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Net.WebProxy": {
+      "sha256": "1fde2506a440b2bff86e1a3d4f8ca805b475cc4f7fb9fffceab93d17f6d3c175",
+      "origin": "new-source-implementation",
+      "original_inputs": 5,
+      "generated_inputs": 1,
+      "resources": 0
+    },
+    "System.Net.WebSockets": {
+      "sha256": "b1f48fc8be56d6324f8fc49318ae35fc2db40b40263def9d67fd87e5268c8c4d",
+      "origin": "new-source-implementation",
+      "original_inputs": 24,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Net.WebSockets.Client": {
+      "sha256": "c01bad55b7f3a2ae19956d2adbc2c899f9723b4fe33fd9277d7c4a2aabdcfc52",
+      "origin": "new-source-implementation",
+      "original_inputs": 10,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Numerics.Vectors": {
+      "sha256": "905ca90068bb31e3b2d145d0a723a0f5703b2b3861669c77fe129ade1e502ee1",
+      "origin": "new-source-implementation",
+      "original_inputs": 1,
+      "generated_inputs": 2,
+      "resources": 0
+    },
+    "System.ObjectModel": {
+      "sha256": "8fc43122f9444f69386f5bd7731c2574e1fac6e335bb273059aee531015d20a4",
+      "origin": "new-source-implementation",
+      "original_inputs": 24,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Private.DataContractSerialization": {
+      "sha256": "4232528ea463c27cb918f086e10787c262fafd1d5cfdbb08393915b13c9875d7",
+      "origin": "new-source-implementation",
+      "original_inputs": 133,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Private.Xml": {
+      "sha256": "382ed9cfde5a0230f2ec294f2d19a6e0c1d4f57099cbe18287d6ff062c8a72c1",
+      "origin": "new-source-implementation",
+      "original_inputs": 643,
+      "generated_inputs": 2,
+      "resources": 9
+    },
+    "System.Private.Xml.Linq": {
+      "sha256": "bf70470f67e13e3511e2911d8431e98ba6d07822b2d1dd70121d6d469b5c3980",
+      "origin": "new-source-implementation",
+      "original_inputs": 35,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Reflection.DispatchProxy": {
+      "sha256": "f1594508b448b3f48c1e13b6af3ef71260874b32cb46eb1d6c164f64f28c5814",
+      "origin": "new-source-implementation",
+      "original_inputs": 5,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Reflection.Emit": {
+      "sha256": "5fa8d22d04c73bd96fbfb3323f8091f7c80defabb6ae34a1061b62f8f2e992a6",
+      "origin": "new-source-implementation",
+      "original_inputs": 14,
+      "generated_inputs": 3,
+      "resources": 2
+    },
+    "System.Reflection.Emit.ILGeneration": {
+      "sha256": "ba2fd978ad83f4c18407bb41f6753696cea3491ba15259b92b3c6f74ff63d83b",
+      "origin": "new-source-implementation",
+      "original_inputs": 1,
+      "generated_inputs": 2,
+      "resources": 0
+    },
+    "System.Reflection.Emit.Lightweight": {
+      "sha256": "e8e3a8b80cfe5ad5b89c9587b76f526e951620e75bd552b81a3c1274eaad7f1e",
+      "origin": "new-source-implementation",
+      "original_inputs": 1,
+      "generated_inputs": 2,
+      "resources": 0
+    },
+    "System.Reflection.Primitives": {
+      "sha256": "40e9a51810d56f943ed775cdd0f5d57304d29b82ffb830b4cd458a87ec129939",
+      "origin": "new-source-implementation",
+      "original_inputs": 1,
+      "generated_inputs": 2,
+      "resources": 0
+    },
+    "System.Reflection.TypeExtensions": {
+      "sha256": "54f5419ada9b8272174baee89542a05b8a0c645fb14700523322ab742aa3db65",
+      "origin": "new-source-implementation",
+      "original_inputs": 3,
+      "generated_inputs": 3,
+      "resources": 2
+    },
+    "System.Resources.Writer": {
+      "sha256": "aa2969c69d22f8ce3fdac59c783521d39b6720a0768d1ce8cb20c36ab5b24716",
+      "origin": "new-source-implementation",
+      "original_inputs": 7,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Runtime.CompilerServices.VisualC": {
+      "sha256": "b9cd69500138e67bd48fbf0878444c8e434c3b98098881531b218d71c6bada1a",
+      "origin": "new-source-implementation",
+      "original_inputs": 2,
+      "generated_inputs": 2,
+      "resources": 0
+    },
+    "System.Runtime.InteropServices": {
+      "sha256": "eeeda03f7ee40e67bd0379423ba3203bb0b3d7a7b06b1fa37cfbb9240515e51e",
+      "origin": "new-source-implementation",
+      "original_inputs": 67,
+      "generated_inputs": 3,
+      "resources": 2
+    },
+    "System.Runtime.InteropServices.JavaScript": {
+      "sha256": "65644715d987f8cf1dceed19ab864c11fa6266f2a93664a4d2d5fd353ad656e9",
+      "origin": "new-source-implementation",
+      "original_inputs": 0,
+      "generated_inputs": 2,
+      "resources": 0
+    },
+    "System.Runtime.Intrinsics": {
+      "sha256": "4a3914ee786ee7e773e3ddab6f12c24cc13a3753e40bf7e63ef2ea9404d61966",
+      "origin": "new-source-implementation",
+      "original_inputs": 1,
+      "generated_inputs": 2,
+      "resources": 0
+    },
+    "System.Runtime.Loader": {
+      "sha256": "2050ea7a9b7ce4695bd81fcdad9e163fe59fb28fdf569ef988f609ca26e66693",
+      "origin": "new-source-implementation",
+      "original_inputs": 1,
+      "generated_inputs": 2,
+      "resources": 0
+    },
+    "System.Runtime.Numerics": {
+      "sha256": "9556da9af7d8c11d8dc227a1fd0e5a7db39aacc7ff7a3ae2fbb315b93f383ad8",
+      "origin": "new-source-implementation",
+      "original_inputs": 20,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Runtime.Serialization.Formatters": {
+      "sha256": "2e09cc4a3608769f245b94f6c59c3c2cc12c5b611ee6b8a740f5ba8ece61ad6c",
+      "origin": "new-source-implementation",
+      "original_inputs": 56,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Runtime.Serialization.Json": {
+      "sha256": "d57885bad03aead4d5f2236c2f7a8ebc3be4c331060b2016252868ebcc607066",
+      "origin": "new-source-implementation",
+      "original_inputs": 1,
+      "generated_inputs": 2,
+      "resources": 0
+    },
+    "System.Runtime.Serialization.Primitives": {
+      "sha256": "0aa63156e66616bbae6263df18387a6666956c5fbbf6697a6f361691dffd79fb",
+      "origin": "new-source-implementation",
+      "original_inputs": 14,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Runtime.Serialization.Xml": {
+      "sha256": "b2f0eba00f7ed45ca191881f4ab8db74222492bda812cdbd3abc9186e53336a4",
+      "origin": "new-source-implementation",
+      "original_inputs": 1,
+      "generated_inputs": 2,
+      "resources": 0
+    },
+    "System.Security.AccessControl": {
+      "sha256": "dc9280145b42cec915d453cc7339f8843e7e2b05bf01a7e8159f17b6ef0bf35a",
+      "origin": "new-source-implementation",
+      "original_inputs": 45,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Security.Claims": {
+      "sha256": "479c43a3a0dbd6b93c8221f5bdd5179f02613e17d44634426fa38276f02ee770",
+      "origin": "new-source-implementation",
+      "original_inputs": 10,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Security.Cryptography": {
+      "sha256": "2bde3bb5db825e7c6aa826e5404c27ba7ef032c946bc4429de66739e13042640",
+      "origin": "new-source-implementation",
+      "original_inputs": 624,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Security.Principal.Windows": {
+      "sha256": "91d116206d4318c153edb10f42b4aa019246f08a5bf3963764997a49fe55f44c",
+      "origin": "new-source-implementation",
+      "original_inputs": 69,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Text.Encoding.CodePages": {
+      "sha256": "ebb78c7fa132c6fbb120672ac221669025cb38271d182c0cd95497d4b3b6da1d",
+      "origin": "new-source-implementation",
+      "original_inputs": 30,
+      "generated_inputs": 2,
+      "resources": 3
+    },
+    "System.Text.Encoding.Extensions": {
+      "sha256": "744054d2b6073eacc677e226d3ca64ac45387499f6e8fadb5b849101fe8a6cd6",
+      "origin": "new-source-implementation",
+      "original_inputs": 1,
+      "generated_inputs": 2,
+      "resources": 0
+    },
+    "System.Text.Encodings.Web": {
+      "sha256": "c93db4d6165e13d5d2f1432374a5dbf7e0fe22d578de91a91d8c659ee90a9bb7",
+      "origin": "new-source-implementation",
+      "original_inputs": 29,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Text.Json": {
+      "sha256": "d3ff760f191b04cc33f56c5c3344bdd52ae66a0cea99885f73e2d87528f0cb49",
+      "origin": "new-source-implementation",
+      "original_inputs": 321,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Text.RegularExpressions": {
+      "sha256": "5a48f68ea86d56213b956d1a5b38eb9e46d0daff383a47335c7ed2bb2cd8ef81",
+      "origin": "new-source-implementation",
+      "original_inputs": 88,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Threading.Channels": {
+      "sha256": "1e7440df97655b35e621e98a0ebd3b3d0e657264eaab3330250b32e9556cf7f0",
+      "origin": "new-source-implementation",
+      "original_inputs": 26,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Threading.Overlapped": {
+      "sha256": "17a78a84b5b6e2277ed409a8f863fd8844b683f5267e6522a6e73fc1ca4e1883",
+      "origin": "new-source-implementation",
+      "original_inputs": 1,
+      "generated_inputs": 2,
+      "resources": 0
+    },
+    "System.Threading.Tasks.Dataflow": {
+      "sha256": "eda53e01ecfa83a6e77f438c87e2c812a9e51e56b35ad58011c666f2ceaec391",
+      "origin": "new-source-implementation",
+      "original_inputs": 40,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Threading.Tasks.Parallel": {
+      "sha256": "3d7e3e93e6d54c61dea43ad2d5e2897a755880329051fd42b3739cf6358c5ef4",
+      "origin": "new-source-implementation",
+      "original_inputs": 8,
+      "generated_inputs": 2,
+      "resources": 2
+    },
+    "System.Threading.Thread": {
+      "sha256": "4c3d00793e9d367420d2afabd8f243f53aa6167fb6ab37c7eb904caf77105e43",
+      "origin": "new-source-implementation",
+      "original_inputs": 1,
+      "generated_inputs": 2,
+      "resources": 0
+    },
+    "System.Threading.ThreadPool": {
+      "sha256": "366ad22bd7868ba0ef9f4e7ab5166311157eea3fa12b732cc6dda1158d51fec6",
+      "origin": "new-source-implementation",
+      "original_inputs": 1,
+      "generated_inputs": 2,
+      "resources": 0
+    },
+    "System.Transactions.Local": {
+      "sha256": "f10c7ff5904382c76d624d59f28d952d3028ffdb2dcabee09894e8069c0314b2",
+      "origin": "new-source-implementation",
+      "original_inputs": 91,
+      "generated_inputs": 3,
+      "resources": 2
+    },
+    "System.Web.HttpUtility": {
+      "sha256": "913fdf6708271f9ec7e3c360ae7cd771a584fe4f6d664113cc1a777611e9414e",
+      "origin": "new-source-implementation",
+      "original_inputs": 8,
+      "generated_inputs": 1,
+      "resources": 0
+    },
+    "System.Xml.ReaderWriter": {
+      "sha256": "c89e0674583ecefd740d9c08fdfa529008f40f1b10988ac266c8e2a36e63e1e6",
+      "origin": "new-source-implementation",
+      "original_inputs": 1,
+      "generated_inputs": 2,
+      "resources": 0
+    },
+    "System.Xml.XDocument": {
+      "sha256": "a9c6d8a0fedd5fdbdeadbe2ef594c6521456fad6506413e773807bd27a9b1ade",
+      "origin": "new-source-implementation",
+      "original_inputs": 1,
+      "generated_inputs": 2,
+      "resources": 0
+    },
+    "System.Xml.XPath": {
+      "sha256": "0a01c1f421868d46d5371eea169638d98879734019d1290dd9b471a728a53e41",
+      "origin": "new-source-implementation",
+      "original_inputs": 1,
+      "generated_inputs": 2,
+      "resources": 0
+    },
+    "System.Xml.XPath.XDocument": {
+      "sha256": "11e73ca2a73a84bf514538f238f90af1697b79743a500f8d8e19db0869d2f193",
+      "origin": "new-source-implementation",
+      "original_inputs": 2,
+      "generated_inputs": 2,
+      "resources": 0
+    },
+    "System.Xml.XmlSerializer": {
+      "sha256": "7f50db00677f1fa655ec38d444571abbf9e3a1a1dbbeea720d04b8e5deaed4ed",
+      "origin": "new-source-implementation",
+      "original_inputs": 1,
+      "generated_inputs": 2,
+      "resources": 0
+    },
+    "Microsoft.VisualBasic": {
+      "sha256": "e9fed52918dd5968e18f3fbf914e8bd4de742d230042069b11a512a71cb40e2d",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System": {
+      "sha256": "800517d56b9bf5fc0f1da3e87b4897c57b160362e883d980c8e32992cf2627df",
+      "origin": "new-source-implementation",
+      "original_inputs": 2,
+      "generated_inputs": 1,
+      "resources": 0
+    },
+    "System.AppContext": {
+      "sha256": "1ab9a9093d1c58eb20a0746e70605f05ba729a94d433353f9adcc46d771230a3",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Buffers": {
+      "sha256": "71d40b9b87867d1093314695445297967c0eddc9d5964a06bbeb28964ebc3ba5",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.ComponentModel.DataAnnotations": {
+      "sha256": "8535683ddd0f45fa43f25edfee1fe8eec646d0e69fdd3adab3bec23b0b964fa3",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Configuration": {
+      "sha256": "2bf45cde00a3f53cb5ad39c07e06333c868b37dd26654890b489ae9348c439db",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Core": {
+      "sha256": "a004a7d0d70b43e2734a2928c18d99c4bc08c010f414c6a7b5e5f0001c7a79cf",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Data": {
+      "sha256": "6af264b01ae8095c9ac504fcc47a23d15191397b48cbf497cb085b1c28a0d393",
+      "origin": "new-source-implementation",
+      "original_inputs": 2,
+      "generated_inputs": 1,
+      "resources": 0
+    },
+    "System.Data.DataSetExtensions": {
+      "sha256": "1a8de6461df97a38f86a37d2cebc5a8cf094135889e57bdbd459df852f4faaaf",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Diagnostics.Debug": {
+      "sha256": "8662695176c67864e111fceff1e07ef5038ecb86d65a3a374d803e50debf6318",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Diagnostics.Tools": {
+      "sha256": "16e812fd127539662deb506b5ec07fa8bd29fa6865d34ae702bc2028c48875b8",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Drawing": {
+      "sha256": "2a079f78f1259dea6266bd7bf80b37b5830c2b31bc6a29ff0b0cad702241c321",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Dynamic.Runtime": {
+      "sha256": "b15ce2918e5d20357d98aadfe75555914959354a9f2438b94a2c8ae6259c3f48",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Globalization": {
+      "sha256": "3061d8a93a11ae0b257b80060978efcc609712bd87cb6daccd7d56aaa578df6b",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Globalization.Calendars": {
+      "sha256": "27e2957a930999925197e99f1aa153157adfdada790bebb0bd522cfd32b55eb6",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Globalization.Extensions": {
+      "sha256": "c01b32a78b69f3bfe39fbb7370838d3e3a3883ded045c32542c5c06d313d4a1b",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.IO": {
+      "sha256": "ba077cb648b6c902a3de1e6db3208488e38cb1c9807a59f2107bf65f7f089909",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.IO.Compression.FileSystem": {
+      "sha256": "c184dfc4851c23941fdb3491192b75c3ac84892993e4868f3f0cdc7a77c2388a",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.IO.FileSystem": {
+      "sha256": "4a1b32ad265c01110ae6a1a479dd22fd507113e17107ecb55facf63c0a3b6f96",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.IO.FileSystem.Primitives": {
+      "sha256": "6077b2938e4cf1ad23dedd9af946ffd53ef441cb78b2d1a1c14811704b27ac13",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.IO.UnmanagedMemoryStream": {
+      "sha256": "e6ef700ed25fec81613dc40e7570b4419867db56bd7faa578771defbcf656405",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Net": {
+      "sha256": "6b805c17237e5ca2cea2a521eb973eba2809d3311c1835951d217fa0325e2d1b",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Numerics": {
+      "sha256": "87142ef352fa639e7b4102df97fb24655ad7d526aad696e079873235443a46ce",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Reflection": {
+      "sha256": "7a6215aa4383c98c6bc18b3f915d02e2af6e5f6299aeda2b1401257ed11f8846",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Reflection.Extensions": {
+      "sha256": "8130b36ddf492d24e3ead43c136d12b3a89614bec6d4abf36054609916e7f7bb",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Resources.Reader": {
+      "sha256": "5c61c54086da9c3af8296c03daf087980861cc5e764586f89fcfef16017bdad5",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Resources.ResourceManager": {
+      "sha256": "93fc2c022165a4b11ce15ef4e0ee115015ca1f673b71437dbff35c0c1f4d1ce7",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Runtime.CompilerServices.Unsafe": {
+      "sha256": "25a9adac72993bc4f7498dc4a52b02a27f1d5606eac070b762e102c1bf6ed7d3",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Runtime.Extensions": {
+      "sha256": "469f5d3feff183c5713790fa1741a82c94e7676e89a8f33cb50b8b3b3d18faf1",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Runtime.Handles": {
+      "sha256": "fe2d009ab4a931540f63ace2d5a6ab0a53142dd49067e84eaa023bde62c1b892",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Runtime.InteropServices.RuntimeInformation": {
+      "sha256": "d60443cdd89d467ac5e925084dc59b175eae9fac02b6209802a5180c9b4d978b",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Runtime.Serialization": {
+      "sha256": "15e04ac515f46667f95ba11ccb7d04eb3b85e49e001127f84b07e090cbcca918",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Security": {
+      "sha256": "d1ce5af9d4392b79c5e6af45aaa96f6faabb9e9e32023d532a07b5f0b8d1276e",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Security.Cryptography.Algorithms": {
+      "sha256": "76f6fabcb25a2ca962147823e5d92c9f73f072c5e151b0a926c2e1b26fe6366d",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Security.Cryptography.Cng": {
+      "sha256": "3abd455b897b7c90c85c94e8b01865d8b9ab289b3cb8f20264a660c2907560f2",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Security.Cryptography.Csp": {
+      "sha256": "a9300892eca2a60baca009b4249437b1eb158266c733849838d1d315696c5b1e",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Security.Cryptography.Encoding": {
+      "sha256": "04b5ea1b1df9c66c8fa189f5c3601d9f51ac927bf4e5078cf5c35510b5ef187f",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Security.Cryptography.OpenSsl": {
+      "sha256": "c3fb927486fb4437b230100e65120a8ca75a0760f50f9dcfed2406aade846f6e",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Security.Cryptography.Primitives": {
+      "sha256": "56505263b4fba5303b48cd082bf7369678151314c95a02a3e6f18a8fb141aee3",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Security.Cryptography.X509Certificates": {
+      "sha256": "e206120ee64aad39aabc2c401e8bdae93f308f6bb431cd88d6f931867ec63bdc",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Security.Principal": {
+      "sha256": "5c9210b383a227e0348f6961e363df5b0760b57b0f4fe068549ed51f3be4c719",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Security.SecureString": {
+      "sha256": "48c7a674f9959f57bdd3ccd91373ee70c52838dfe2f5e260361aa577804e1cb8",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.ServiceModel.Web": {
+      "sha256": "e13c3d826323b2c2acb9351cfc0e26f7f8c039bb76e4b1fc8dfca31cd63453db",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.ServiceProcess": {
+      "sha256": "930d40791c0d1baf4e771d16d92e96a73c44059e6231203ba04a1803915fae14",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Text.Encoding": {
+      "sha256": "38e580a377a8bcdc114e706f44facd0f39002e24feba88116589c2e6a29ee814",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Threading.Tasks": {
+      "sha256": "f58bc06ff2ef181cb086bdc3ab7fba7b7fd1b5040c043ffe9cbc54023c3913a2",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Threading.Tasks.Extensions": {
+      "sha256": "46de6e064e85b79cc17ef383ede86561b6fc4855f6b213a278792c8c3a4f1ac0",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Threading.Timer": {
+      "sha256": "20b9c8e879dbf55eb546a73121dd44eba5e866002d9320a04b1376641dc563b8",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Transactions": {
+      "sha256": "ffaca21fb0f6821b16bad18b306958c8f6974336fe1357f16ec8b69bcb1bb268",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.ValueTuple": {
+      "sha256": "c92c2fdc727b320a61d1d2bef62ce784bce5092838939bc0b060f255ac012e22",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Web": {
+      "sha256": "9057a6b387c3a61b4bf70fbb5426663ce12190b6d44483862868c73ae5cb9754",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Windows": {
+      "sha256": "d3200c254470f07e0c24a9acf193a83b601e9c40e84f669a5b7c4c41eecd3be9",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Xml": {
+      "sha256": "ef07e6ff6aba0f2b7249515ab35e576220c14971c9b781a469346ad91f447e94",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Xml.Linq": {
+      "sha256": "e9ea42c76c44b20066e4b0c6663373a648772325430c51e1ea138a57c50869cf",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Xml.Serialization": {
+      "sha256": "216aaefdd6c9d8aeb10581eb9d6630989e549aa4578a29520d20ecfec3bc4f60",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "System.Xml.XmlDocument": {
+      "sha256": "ae666f5a7dae8c62561de3f69d231bb705b07ba49401e6139c76a50d5d99dd8e",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "WindowsBase": {
+      "sha256": "acc6674f30d3879fbd792d6230e0b3abeef5df372df43fa251f3ceb8ed61a481",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "mscorlib": {
+      "sha256": "27aee0b4695329c14cb099aadcfa67e75f685ce19fc9783b3617a3a022131ced",
+      "origin": "new-source-implementation",
+      "original_inputs": 3,
+      "generated_inputs": 1,
+      "resources": 0
+    },
+    "netstandard": {
+      "sha256": "61ca45c381d6a99276f85686dcb77fcd960dbb98dd0ed8460fc890a25edc19ea",
+      "origin": "new-source-reference-shim",
+      "original_inputs": 0,
+      "generated_inputs": 0,
+      "resources": 0
+    },
+    "Microsoft.VisualBasic.Core": {
+      "sha256": "75202e08c128b0d591f9f5d70112afce311d3fe1ed555be29751e9a9dccbf514",
+      "origin": "new-source-vb-implementation",
+      "original_inputs": 72,
+      "generated_inputs": 2,
+      "resources": 1
+    }
+  },
+  "reference_outputs": {
+    "System.Runtime": {
+      "sha256": "a4115880235fa83f3ffe6efd12e632a2fefe8bb4c0a1585fab0fa393003e4b15",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Collections": {
+      "sha256": "43a16d6e0427a8e2521531ba4b987233ce1f303c19c5feb76048238e41661532",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.ObjectModel": {
+      "sha256": "035b890b6f6e3c68e7a01ee67a153ac5c8f178eaff26373590c169c96f7b1d90",
+      "kind": "ref",
+      "original_inputs": 2
+    },
+    "System.Linq.Expressions": {
+      "sha256": "332b7bc4f90f43b6e0a0edab4620c360d544a3db8ece37ebc8da0849fe5fd3b0",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "Microsoft.CSharp": {
+      "sha256": "b1f380ba9a70f0387b428c98a8739eec8a83cfe37b619d2c06be1535c64e79de",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.IO.FileSystem.DriveInfo": {
+      "sha256": "17f61f98a38c332299de3627583b056d2a02dfb29f3550289c60b23a093b4acb",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "Microsoft.VisualBasic.Core": {
+      "sha256": "bac073af69e012883a856f1f02e927eb14153ec5a45f9a014e51a3e8083630ef",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "Microsoft.Win32.Primitives": {
+      "sha256": "3b306632d45597da56e29d1e95adda7426d9d72f6918404acb8f7136a771a60f",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Collections.NonGeneric": {
+      "sha256": "f04f0d812a152b3b961dbd6c284dcdb8fb054934bf636363ddf062bc1ab2306d",
+      "kind": "ref",
+      "original_inputs": 2
+    },
+    "System.Security.Claims": {
+      "sha256": "41851b5e64222c72465bcf4305c1a335d2726eb2834b8167742c4f9cb4617a97",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Security.Principal.Windows": {
+      "sha256": "935f00901ecaad701afc545a68144e5a62298ad6465709a6eb9864e0289b53cb",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Security.AccessControl": {
+      "sha256": "e488aa1fc439c4aa0770300b7a95094ea06c626eb19e73237c0b78066d34ce09",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "Microsoft.Win32.Registry": {
+      "sha256": "460c453c2de3cc039cbbe800596c7032f30b879f62a49e706e801c7712cbd82f",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Collections.Concurrent": {
+      "sha256": "e5b29a67f6efc7d40d2ee0f8c80beafbfe71e15cfa4c20277eb9c5c96e300f52",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.ComponentModel": {
+      "sha256": "9bd0914ff21ee70bc12cbc266cde94d5f6fb21c0dc6ab0c29e6efa13d23f05c3",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.ComponentModel.Primitives": {
+      "sha256": "0b220d7a6cfbe521c0ee8473d9670f5ffedf5822335cc297f0b6a8ebcb701e42",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Collections.Specialized": {
+      "sha256": "2e13f9918e6a07ab41abb8441daef4910df90849220c4cf78aeb767190f3a682",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Threading": {
+      "sha256": "b7a6bb8967c214ff6f5ee892a7d26f0b83ffd0ee6760987c2e376298a7b30853",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.ComponentModel.EventBasedAsync": {
+      "sha256": "b23c3333f0577213dcdaedc6691390cdcc23a5224d19df9cbc8f54182d617aaa",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Resources.Writer": {
+      "sha256": "248ead9728f85d185adf2ff504e739bd66dd120c2e6edadf5fed27e187990ea9",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.ComponentModel.TypeConverter": {
+      "sha256": "bf4c6653e28e1a2a87383175968558dc25d06e5458b2786363b716e2a6d52c74",
+      "kind": "ref",
+      "original_inputs": 3
+    },
+    "System.Diagnostics.FileVersionInfo": {
+      "sha256": "b9525dcc4bfa96980516d7e380254b4d54b4600b3d6dbbb25083d88c10093c17",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Runtime.InteropServices": {
+      "sha256": "5e4a7d7f6b326080a359d3eba815986f7233b1ac06af1364eba22a844de49f9d",
+      "kind": "ref",
+      "original_inputs": 2
+    },
+    "System.Diagnostics.Process": {
+      "sha256": "85d894d3c314ed52842fa78f7204a2ae65c22e412689115db8dc3ee3f9230b4e",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Diagnostics.StackTrace": {
+      "sha256": "c3617afb07573417ae6a22cbd39b571c3c4f7de7bda0295515133fb3dd31f1ff",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Diagnostics.TraceSource": {
+      "sha256": "a5ca3640a334bb40a1fe10643964a3fc1528e944d8878cef358966f8315c7684",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Diagnostics.TextWriterTraceListener": {
+      "sha256": "89304212364fbc7f66a3feb8f11ab4e687114808ee34c9ad8573f8f564a6236f",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.IO.Compression": {
+      "sha256": "8c5fca6cfd24fc3bc66721d8546c2a06f7b340fdf021271975e0cbc4434fcc5c",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.IO.FileSystem.Watcher": {
+      "sha256": "f519d91540e37bc7bb20f838a924202e8758c7367a869a3195b3e140ff3cc5e2",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Net.Primitives": {
+      "sha256": "681d30fcfa82eb9e0456142d3d21b676d5e156994d3f8a1a7c55ff7269d81cb4",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Memory": {
+      "sha256": "cf9f9bc1540981ffea7cc3bce06edbe212adcafdde1505756909e1cb0e0f65f1",
+      "kind": "ref",
+      "original_inputs": 2
+    },
+    "System.Runtime.Numerics": {
+      "sha256": "285a350482ab085bb0d131dd37f49d820604ae6f3d67910c5d7296d33f386b87",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Formats.Asn1": {
+      "sha256": "0436598fe11726ad9a5b1ba92ca4d5631dd7e2b9164b891b90e8868e3d35b004",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Security.Cryptography": {
+      "sha256": "3d7d38b2aee12dea5e0c842c69893426dde181d03a07e02ff307ea6a262f8e23",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Net.Security": {
+      "sha256": "8eddda2d61ee70d8ab71f191f15625a8be7e11d1c2c13794094cdc3a7fab0b99",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Net.WebHeaderCollection": {
+      "sha256": "d798b378799ac1328d9d43b887e45717bd10bcf01c5ffa8587f483922c2652da",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Net.WebSockets": {
+      "sha256": "c96355ee531bef125075c1e9b29797942df882e0b103e8ead65799950630cfe2",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Net.HttpListener": {
+      "sha256": "0b8919b920d7044b7ad38ae553ddf7cb81ea98f97d20bad44773a75ca32c0a09",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Net.ServicePoint": {
+      "sha256": "924786ddf7c4c4da862f6ff782c6919397791af8af2bb9be389099d4bf5f22eb",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Net.Mail": {
+      "sha256": "f5338f47844614593918354a58f49a717dc04bdfb61d93a4fcd1f437eb77d220",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Net.NameResolution": {
+      "sha256": "e4c1dff7c69fbfacb916d2137f70fe185436736eedf1b18017739fd0f6b01bad",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Net.NetworkInformation": {
+      "sha256": "d0543af9747967dad6df764fb07f37ef36f61ac43ea0bad158a62409f500ae9b",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Net.Ping": {
+      "sha256": "b4c1c5cdb217e9028df7feaabb8a57cdd1129cd72684161505fbc93a7ecee483",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Net.Requests": {
+      "sha256": "fca7c7269fca979b8b7f350980b4ab6aa5747e40ac9c16d330982a6f7327ccc9",
+      "kind": "ref",
+      "original_inputs": 2
+    },
+    "System.Net.Sockets": {
+      "sha256": "a8cefaa955ca1a5b2c3dc36b5c411a17566b8dcee4d3d08966a7d6a305e8618e",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Net.WebClient": {
+      "sha256": "2e220231404c15304d4bfae80c1b10961547fb2c5f5cd6497999336abffd6752",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Reflection.Primitives": {
+      "sha256": "725ac5590ac473143dbb5222a6fd07da509528a34407755a2716a99d26b9bd42",
+      "kind": "ref",
+      "original_inputs": 2
+    },
+    "System.Reflection.Emit.ILGeneration": {
+      "sha256": "e75cfb178d06f9dac53c3a74affbeccf33f9277dddb96235ec1b1d788c770cb0",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Text.RegularExpressions": {
+      "sha256": "97b3952d29cbd5a1f8dbf33772e75eda8967143daed453d1870987fcef788d34",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Net.WebProxy": {
+      "sha256": "04de90407fb5bce69b4408a90dd3773bfd1739050718650f4696b7c2a2f4a88c",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Diagnostics.DiagnosticSource": {
+      "sha256": "d874d13f012b4a54e40aacfc7cd51761f14fd6054fd36fe51c0313ad5206635c",
+      "kind": "ref",
+      "original_inputs": 3
+    },
+    "System.Net.Http": {
+      "sha256": "9c1875093f195c65c8a916719a1f1b7a277e1ed307715b8ed4764956304a60ed",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Net.WebSockets.Client": {
+      "sha256": "d0efe91993b97eba9f1f13b4744e02006b50c6fc0aed931d79551bf17e01291b",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Threading.Thread": {
+      "sha256": "1550e64481e5a57bea38302b24236996971550f54e13945d01ce17f9a7d4f345",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "stub:Microsoft.Win32.SystemEvents": {
+      "sha256": "5c5e1d3e641108df53a94fe209a0846fa6d7dc67544886bbf0473048a552c12b",
+      "kind": "stub",
+      "original_inputs": 0
+    },
+    "stub:System.CodeDom": {
+      "sha256": "51dbf0d4cfcea074fd427cce973bb4f3e0e1877d092328755234f6d6c273ae4a",
+      "kind": "stub",
+      "original_inputs": 0
+    },
+    "stub:System.Configuration.ConfigurationManager": {
+      "sha256": "648ceed360abd6794d058f86cdfd6f8736704d2b7372d320d2c5d3d5d2c2eeee",
+      "kind": "stub",
+      "original_inputs": 0
+    },
+    "stub:System.Diagnostics.EventLog": {
+      "sha256": "8802c20a914f377ddc627d49cf090ae6393a72cbfefe8c637b6ed10501bf51c8",
+      "kind": "stub",
+      "original_inputs": 0
+    },
+    "stub:System.Diagnostics.PerformanceCounter": {
+      "sha256": "ba3ff870239b6c0cecf5b32b4059b77633c8833236f1d03b5e56d8911a99db2e",
+      "kind": "stub",
+      "original_inputs": 0
+    },
+    "stub:System.IO.Ports": {
+      "sha256": "08413167bbcd5b3cf1c22021fdbf7d068c18b69012d3e85252f99896fd375059",
+      "kind": "stub",
+      "original_inputs": 0
+    },
+    "stub:System.Security.Permissions": {
+      "sha256": "77da6c63daf0a85c94c29f769790b731091c7e25b1a7cdc391734a7f8cc10a85",
+      "kind": "stub",
+      "original_inputs": 0
+    },
+    "stub:System.Threading.AccessControl": {
+      "sha256": "447995abb2a791ec5a08186893981c5606fcf826a735f001c7f1eadfc27602a4",
+      "kind": "stub",
+      "original_inputs": 0
+    },
+    "stub:System.Windows.Extensions": {
+      "sha256": "048a4267b27b6851fb6b93e753ae16d7cca1602bc48367c424d6341740204cc4",
+      "kind": "stub",
+      "original_inputs": 0
+    },
+    "System": {
+      "sha256": "a94e9dab25eb833b3837faf08647918be90e5af0668181c99edf942c8defc66f",
+      "kind": "shimref",
+      "original_inputs": 1
+    },
+    "System.Collections.Immutable": {
+      "sha256": "2d29dbf75111c93522c5c2319e8bb57efdfb605b476aba6f1fa532b1e28c56d4",
+      "kind": "ref",
+      "original_inputs": 2
+    },
+    "System.ComponentModel.Annotations": {
+      "sha256": "7240e53b661c14b3e1f346cfc525e1410af48ac052362a6b11c08c7977027974",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Console": {
+      "sha256": "cdb2d7331c140dd3d3d545def374d71fd40346ba234e1ca644cd13be2e40d1db",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Transactions.Local": {
+      "sha256": "e2cf9a86727a9f1cc32164a722e49fa78a2b60c7a3ec0b9aa627cfa4d8fd21a2",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Xml.ReaderWriter": {
+      "sha256": "e3a54d355645699080684db7197bb42de472410f3940c42cb71a2b299d23072a",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Data.Common": {
+      "sha256": "0990ae28916158c388c0c6c60ce51acf2867cd135bed748a657701ebac0e7cdb",
+      "kind": "ref",
+      "original_inputs": 3
+    },
+    "stub:System.Data.Odbc": {
+      "sha256": "c620e9f465aadd80b3170f1ae823d637c2fa5cb891c5f79634d35768bc7fb3bc",
+      "kind": "stub",
+      "original_inputs": 0
+    },
+    "stub:System.Data.OleDb": {
+      "sha256": "9fcdd711cb0ccc3346d83fe34fe7d45588892acf66defbbee4543a2932cf2813",
+      "kind": "stub",
+      "original_inputs": 0
+    },
+    "stub:System.Data.SqlClient": {
+      "sha256": "fe4e9c5318efac10f77bc7335ea734de63e422091f123cba8257589ef7b2ca1e",
+      "kind": "stub",
+      "original_inputs": 0
+    },
+    "System.Data": {
+      "sha256": "94378136df96a55bf190528d8e35370fcd780514663ed20c7e3114dd919d5ccf",
+      "kind": "shimref",
+      "original_inputs": 1
+    },
+    "System.Diagnostics.Contracts": {
+      "sha256": "d9cdfc31571a2c910c5d1fc0abcff7fa9ae1a023d6f2f59d0b11cf2b3d9628f8",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Diagnostics.Tracing": {
+      "sha256": "af8f8e203007a4181ae0793deae416444e8fb5a10c2ebd5a49fd534524145fea",
+      "kind": "ref",
+      "original_inputs": 2
+    },
+    "System.Numerics.Vectors": {
+      "sha256": "d61e917dddc1e7252d7d4aaaf8705ed2e2997614d82dadded3c60d6abe089492",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Drawing.Primitives": {
+      "sha256": "34b92dd3d5369028a4956a2eae620d3f00a4a1ca3d8bb6760d79c368465f463c",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Formats.Tar": {
+      "sha256": "51413faadbccb58cd44b1d4a87e824ba914f5908abfcbc36823983deaeadf9ad",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.IO.Compression.Brotli": {
+      "sha256": "3ac3cc38596d43eea3b58ddffda519b8b18c1a1c00c4da31becc5f005860e7f0",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.IO.Compression.ZipFile": {
+      "sha256": "6ab15b47f063b4fa965bb1cec2fba057b56ff98ae8079a4704ab21bab22b7cad",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.IO.FileSystem.AccessControl": {
+      "sha256": "edd4870d0b1194c8c53d72e70429694c366e9cdcec09d9a42894ac85d1af93d2",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.IO.IsolatedStorage": {
+      "sha256": "7624b493014e0777baa3b3e851f22f9c73045a019e4bb6294bed7b2f858d55cb",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.IO.MemoryMappedFiles": {
+      "sha256": "a18063fa650cedf1ff9b7b1ca0500452e452f453138789f4af3ed30e0b9f565c",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.IO.Pipes": {
+      "sha256": "12747ef8d5854e887e1865be9872f4e96fd59e29a9083f3b73571bbef49c0681",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.IO.Pipes.AccessControl": {
+      "sha256": "2a811f57c506c6e31579b21d6c19bc9cd401cd7a793402b0cc049ec0cd27f48e",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Linq": {
+      "sha256": "1150ffe1403ee8cf3822be68c2fa5b24ac21ced9da17045382736b091f3cf204",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Linq.Parallel": {
+      "sha256": "ee3684388b71bdc175c8060c7d25d391c9fb2dd574f37b94e962b20d1877ed90",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Linq.Queryable": {
+      "sha256": "4dfdb917deac363157f68efdb124e98bdf5dfdcbf7abe58df591b5c9b8775ba7",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Text.Encodings.Web": {
+      "sha256": "f812ed59adadd8da8bfe81e84e634e4f600cb08b1d7a17b6009d12cfad24e95a",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Text.Json": {
+      "sha256": "2677528ac2315ea7f73cce3c5119acc42677529509bd0e311917cab9620270ef",
+      "kind": "ref",
+      "original_inputs": 3
+    },
+    "System.Net.Http.Json": {
+      "sha256": "bfd17ac6e6e3c2c469773a1a5ef99296e84b4aabbd3e369ca83dabe232f92f31",
+      "kind": "ref",
+      "original_inputs": 2
+    },
+    "System.Net.Quic": {
+      "sha256": "8457994e78a4a583596409752e3af1a6aaa345bc3bf8b3c1bca78e2e1c1b7afb",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Reflection.DispatchProxy": {
+      "sha256": "34801a34e80b43bd96107eb4f13ac5c8e79c3cd536b9f2e959a5d0b0e0b1ba96",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Reflection.Emit": {
+      "sha256": "a99909b818acbd810e64d5f2e032432195f454af29e22ed41411fc357f31b83a",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Reflection.Emit.Lightweight": {
+      "sha256": "d6a78c8b07f0993a6604b62a85e1c52e21b3e41f33e0c8fb5ab384ee2a76a247",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Reflection.Metadata": {
+      "sha256": "9ff6df61fa1f682f94f006b2dd7710f02e12f0c566f64784471b27588d5d78ba",
+      "kind": "ref",
+      "original_inputs": 2
+    },
+    "System.Reflection.TypeExtensions": {
+      "sha256": "a29bed4100a345a4e40a6a9654c5eda631f7bc56bf32a35f2366580712d52922",
+      "kind": "ref",
+      "original_inputs": 2
+    },
+    "System.Runtime.CompilerServices.VisualC": {
+      "sha256": "9d1e52409ac0f74eef1f5e27bfb4f9607447c3481c96e93b0a1f8c9c9532d7da",
+      "kind": "ref",
+      "original_inputs": 3
+    },
+    "System.Runtime.InteropServices.JavaScript": {
+      "sha256": "324f8c06a20c595c618e087a1be6c3013ec92816c782d9e07b6990135b4a0637",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Runtime.Intrinsics": {
+      "sha256": "3d2c24c9ab678847af00ac47dc0ba0d589f30f6dae31cf7019ad1823dfd34545",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Runtime.Loader": {
+      "sha256": "21aad2420ac21b50381fc7ee4f2c55f5c0b27b4b6956c201e7a9b5d312364670",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Runtime.Serialization.Formatters": {
+      "sha256": "6dd201dc4b521d3936047f64d1511c06fb29864b0db14bc82eb9891d541d3c43",
+      "kind": "ref",
+      "original_inputs": 2
+    },
+    "System.Runtime.Serialization.Primitives": {
+      "sha256": "fe073bb797cfb78ed33d16f4da2d102cf3b45cd075d40bf49d9bfc34fa2bd319",
+      "kind": "ref",
+      "original_inputs": 2
+    },
+    "System.Runtime.Serialization.Xml": {
+      "sha256": "69bec3b7894b5f91b0ef8699604291d3721af5b327e6b88a6865573059b1e072",
+      "kind": "ref",
+      "original_inputs": 2
+    },
+    "System.Runtime.Serialization.Json": {
+      "sha256": "077d4750214f6c85304548c627f98b378bc3233709357ef16f0c4a0bf71d7361",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Text.Encoding.CodePages": {
+      "sha256": "98421f91a9c0723ba0bde0807a5fa0af9191735e5525a73c8ebc45e2544d8938",
+      "kind": "ref",
+      "original_inputs": 2
+    },
+    "System.Text.Encoding.Extensions": {
+      "sha256": "acf520a545de13719d9b99a3394f5d8081ce279081a646bfcbda9107ea2f8481",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Threading.Channels": {
+      "sha256": "29cec8efceee86130d989e4727ea49a83e4a1c1aef4b6d81c858e8e8a87534bd",
+      "kind": "ref",
+      "original_inputs": 2
+    },
+    "System.Threading.Overlapped": {
+      "sha256": "35630956f00273de0b7b03547e94d571299154583a77514694dd03e4a034d87d",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Threading.Tasks.Dataflow": {
+      "sha256": "528db41adebb0143b358c78176e8241f0aadebcc33af16d9b2b5a05dcc8f8821",
+      "kind": "ref",
+      "original_inputs": 2
+    },
+    "System.Threading.Tasks.Parallel": {
+      "sha256": "48999c45cfdf2e68673b5afefd9fb550420b44fe548c63aac58899e8c80fbf81",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Threading.ThreadPool": {
+      "sha256": "a6d21b429e3ec9f436c19b41651d7504760dfcb62446b900092e49845883e797",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Web.HttpUtility": {
+      "sha256": "834fa11da68b6b6a87a57fea5ea4a880ea809c772810fdbb83279e30e0fb9378",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Xml.XDocument": {
+      "sha256": "b6ab03366c8115c34adc3b758407c2a8edeb3f7ff021c5d23114eab52b10060f",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Xml.XPath": {
+      "sha256": "5aa0977fac57eb60e8006e8162d3c48ec150ed721925fb1c325a6cfbefe37dfd",
+      "kind": "ref",
+      "original_inputs": 2
+    },
+    "System.Xml.XPath.XDocument": {
+      "sha256": "067eca56a8581b2fcb7499cb683b7894632ad2e4d39193f1603a37ccbcd65f2e",
+      "kind": "ref",
+      "original_inputs": 1
+    },
+    "System.Xml.XmlSerializer": {
+      "sha256": "b6b8927f871cbec55e4a2ff8b1056ad123a4476389382bd461a94548f9a3708c",
+      "kind": "ref",
+      "original_inputs": 2
+    },
+    "mscorlib": {
+      "sha256": "6c28e2911efd31f20be555d75d0336d3662ab020e18ff7f44f73d5cc7c5b20a3",
+      "kind": "shimref",
+      "original_inputs": 1
+    },
+    "stub:System.Drawing.Common": {
+      "sha256": "9c68c797bad1c201d2a59bcf90da3f155791bebb5ec69f495ab181b2f1a68fd5",
+      "kind": "stub",
+      "original_inputs": 0
+    },
+    "stub:System.IO.Packaging": {
+      "sha256": "54628f01d46dbfa32029835bcf326db2341b7fb08c97e704a66ead5424b2e069",
+      "kind": "stub",
+      "original_inputs": 0
+    },
+    "stub:System.Runtime.Serialization.Schema": {
+      "sha256": "b681a93c56b917dcbf5c4dda6e98c6135ed9f3ae83653ac96db235cc3c5cf6a5",
+      "kind": "stub",
+      "original_inputs": 0
+    },
+    "stub:System.Security.Cryptography.Pkcs": {
+      "sha256": "7838447ed556bf797467712afc9c2b986fdb5036f1988b281b00f2b463782800",
+      "kind": "stub",
+      "original_inputs": 0
+    },
+    "stub:System.Security.Cryptography.ProtectedData": {
+      "sha256": "f66f3f446bc78cfbcab5492902d5bb46dd3ca511ccfefef68e4abd190a19cdd0",
+      "kind": "stub",
+      "original_inputs": 0
+    },
+    "stub:System.Security.Cryptography.Xml": {
+      "sha256": "423d1bffd46ff4d440a6a57963e45180f79939bb8c6a82a41c29d0be33e25159",
+      "kind": "stub",
+      "original_inputs": 0
+    },
+    "stub:System.ServiceModel.Syndication": {
+      "sha256": "722ad8895a8532a8c6ed4ac39659e9115de7fdbdd4f7650337407242e8c1eb23",
+      "kind": "stub",
+      "original_inputs": 0
+    },
+    "stub:System.ServiceProcess.ServiceController": {
+      "sha256": "292f9f8632656f707d890680ab4dcbcc681371d52f61496d6a606439c61c6384",
+      "kind": "stub",
+      "original_inputs": 0
+    },
+    "Microsoft.VisualBasic": {
+      "sha256": "e9fed52918dd5968e18f3fbf914e8bd4de742d230042069b11a512a71cb40e2d",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.AppContext": {
+      "sha256": "1ab9a9093d1c58eb20a0746e70605f05ba729a94d433353f9adcc46d771230a3",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Buffers": {
+      "sha256": "71d40b9b87867d1093314695445297967c0eddc9d5964a06bbeb28964ebc3ba5",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.ComponentModel.DataAnnotations": {
+      "sha256": "8535683ddd0f45fa43f25edfee1fe8eec646d0e69fdd3adab3bec23b0b964fa3",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Configuration": {
+      "sha256": "2bf45cde00a3f53cb5ad39c07e06333c868b37dd26654890b489ae9348c439db",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Core": {
+      "sha256": "a004a7d0d70b43e2734a2928c18d99c4bc08c010f414c6a7b5e5f0001c7a79cf",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Data.DataSetExtensions": {
+      "sha256": "1a8de6461df97a38f86a37d2cebc5a8cf094135889e57bdbd459df852f4faaaf",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Diagnostics.Debug": {
+      "sha256": "8662695176c67864e111fceff1e07ef5038ecb86d65a3a374d803e50debf6318",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Diagnostics.Tools": {
+      "sha256": "16e812fd127539662deb506b5ec07fa8bd29fa6865d34ae702bc2028c48875b8",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Drawing": {
+      "sha256": "2a079f78f1259dea6266bd7bf80b37b5830c2b31bc6a29ff0b0cad702241c321",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Dynamic.Runtime": {
+      "sha256": "b15ce2918e5d20357d98aadfe75555914959354a9f2438b94a2c8ae6259c3f48",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Globalization": {
+      "sha256": "3061d8a93a11ae0b257b80060978efcc609712bd87cb6daccd7d56aaa578df6b",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Globalization.Calendars": {
+      "sha256": "27e2957a930999925197e99f1aa153157adfdada790bebb0bd522cfd32b55eb6",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Globalization.Extensions": {
+      "sha256": "c01b32a78b69f3bfe39fbb7370838d3e3a3883ded045c32542c5c06d313d4a1b",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.IO": {
+      "sha256": "ba077cb648b6c902a3de1e6db3208488e38cb1c9807a59f2107bf65f7f089909",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.IO.Compression.FileSystem": {
+      "sha256": "c184dfc4851c23941fdb3491192b75c3ac84892993e4868f3f0cdc7a77c2388a",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.IO.FileSystem": {
+      "sha256": "4a1b32ad265c01110ae6a1a479dd22fd507113e17107ecb55facf63c0a3b6f96",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.IO.FileSystem.Primitives": {
+      "sha256": "6077b2938e4cf1ad23dedd9af946ffd53ef441cb78b2d1a1c14811704b27ac13",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.IO.UnmanagedMemoryStream": {
+      "sha256": "e6ef700ed25fec81613dc40e7570b4419867db56bd7faa578771defbcf656405",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Net": {
+      "sha256": "6b805c17237e5ca2cea2a521eb973eba2809d3311c1835951d217fa0325e2d1b",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Numerics": {
+      "sha256": "87142ef352fa639e7b4102df97fb24655ad7d526aad696e079873235443a46ce",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Reflection": {
+      "sha256": "7a6215aa4383c98c6bc18b3f915d02e2af6e5f6299aeda2b1401257ed11f8846",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Reflection.Extensions": {
+      "sha256": "8130b36ddf492d24e3ead43c136d12b3a89614bec6d4abf36054609916e7f7bb",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Resources.Reader": {
+      "sha256": "5c61c54086da9c3af8296c03daf087980861cc5e764586f89fcfef16017bdad5",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Resources.ResourceManager": {
+      "sha256": "93fc2c022165a4b11ce15ef4e0ee115015ca1f673b71437dbff35c0c1f4d1ce7",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Runtime.CompilerServices.Unsafe": {
+      "sha256": "25a9adac72993bc4f7498dc4a52b02a27f1d5606eac070b762e102c1bf6ed7d3",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Runtime.Extensions": {
+      "sha256": "469f5d3feff183c5713790fa1741a82c94e7676e89a8f33cb50b8b3b3d18faf1",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Runtime.Handles": {
+      "sha256": "fe2d009ab4a931540f63ace2d5a6ab0a53142dd49067e84eaa023bde62c1b892",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Runtime.InteropServices.RuntimeInformation": {
+      "sha256": "d60443cdd89d467ac5e925084dc59b175eae9fac02b6209802a5180c9b4d978b",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Runtime.Serialization": {
+      "sha256": "15e04ac515f46667f95ba11ccb7d04eb3b85e49e001127f84b07e090cbcca918",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Security": {
+      "sha256": "d1ce5af9d4392b79c5e6af45aaa96f6faabb9e9e32023d532a07b5f0b8d1276e",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Security.Cryptography.Algorithms": {
+      "sha256": "76f6fabcb25a2ca962147823e5d92c9f73f072c5e151b0a926c2e1b26fe6366d",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Security.Cryptography.Cng": {
+      "sha256": "3abd455b897b7c90c85c94e8b01865d8b9ab289b3cb8f20264a660c2907560f2",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Security.Cryptography.Csp": {
+      "sha256": "a9300892eca2a60baca009b4249437b1eb158266c733849838d1d315696c5b1e",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Security.Cryptography.Encoding": {
+      "sha256": "04b5ea1b1df9c66c8fa189f5c3601d9f51ac927bf4e5078cf5c35510b5ef187f",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Security.Cryptography.OpenSsl": {
+      "sha256": "c3fb927486fb4437b230100e65120a8ca75a0760f50f9dcfed2406aade846f6e",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Security.Cryptography.Primitives": {
+      "sha256": "56505263b4fba5303b48cd082bf7369678151314c95a02a3e6f18a8fb141aee3",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Security.Cryptography.X509Certificates": {
+      "sha256": "e206120ee64aad39aabc2c401e8bdae93f308f6bb431cd88d6f931867ec63bdc",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Security.Principal": {
+      "sha256": "5c9210b383a227e0348f6961e363df5b0760b57b0f4fe068549ed51f3be4c719",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Security.SecureString": {
+      "sha256": "48c7a674f9959f57bdd3ccd91373ee70c52838dfe2f5e260361aa577804e1cb8",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.ServiceModel.Web": {
+      "sha256": "e13c3d826323b2c2acb9351cfc0e26f7f8c039bb76e4b1fc8dfca31cd63453db",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.ServiceProcess": {
+      "sha256": "930d40791c0d1baf4e771d16d92e96a73c44059e6231203ba04a1803915fae14",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Text.Encoding": {
+      "sha256": "38e580a377a8bcdc114e706f44facd0f39002e24feba88116589c2e6a29ee814",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Threading.Tasks": {
+      "sha256": "f58bc06ff2ef181cb086bdc3ab7fba7b7fd1b5040c043ffe9cbc54023c3913a2",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Threading.Tasks.Extensions": {
+      "sha256": "46de6e064e85b79cc17ef383ede86561b6fc4855f6b213a278792c8c3a4f1ac0",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Threading.Timer": {
+      "sha256": "20b9c8e879dbf55eb546a73121dd44eba5e866002d9320a04b1376641dc563b8",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Transactions": {
+      "sha256": "ffaca21fb0f6821b16bad18b306958c8f6974336fe1357f16ec8b69bcb1bb268",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.ValueTuple": {
+      "sha256": "c92c2fdc727b320a61d1d2bef62ce784bce5092838939bc0b060f255ac012e22",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Web": {
+      "sha256": "9057a6b387c3a61b4bf70fbb5426663ce12190b6d44483862868c73ae5cb9754",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Windows": {
+      "sha256": "d3200c254470f07e0c24a9acf193a83b601e9c40e84f669a5b7c4c41eecd3be9",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Xml": {
+      "sha256": "ef07e6ff6aba0f2b7249515ab35e576220c14971c9b781a469346ad91f447e94",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Xml.Linq": {
+      "sha256": "e9ea42c76c44b20066e4b0c6663373a648772325430c51e1ea138a57c50869cf",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Xml.Serialization": {
+      "sha256": "216aaefdd6c9d8aeb10581eb9d6630989e549aa4578a29520d20ecfec3bc4f60",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "System.Xml.XmlDocument": {
+      "sha256": "ae666f5a7dae8c62561de3f69d231bb705b07ba49401e6139c76a50d5d99dd8e",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "WindowsBase": {
+      "sha256": "acc6674f30d3879fbd792d6230e0b3abeef5df372df43fa251f3ceb8ed61a481",
+      "kind": "shim",
+      "original_inputs": 1
+    },
+    "netstandard": {
+      "sha256": "61ca45c381d6a99276f85686dcb77fcd960dbb98dd0ed8460fc890a25edc19ea",
+      "kind": "shim",
+      "original_inputs": 2
+    }
+  },
+  "tested_layout_payload_sha256": {
+    "dotnet.exe": "a3c854e5311d6ba1cfc9bdcc59fc238a054b1ddfba8abdc248f89ccd88bbc3d2",
+    "required-framework.txt": "5a1b73dea3fb8fa9a7f3934af8e408f7db2911a3f829a390954365db5e369daa",
+    "host/fxr/8.0.31/hostfxr.dll": "956324522b7b2d2d13c2f0959651f460a96463a2c5f6f35f916fa6651d22a0bd",
+    "shared/Microsoft.NETCore.App/8.0.31/clretwrc.dll": "063c5973f836a695000b6e49f46f5d3f87e495e457475b8ba19cb062bf031671",
+    "shared/Microsoft.NETCore.App/8.0.31/clrjit.dll": "57e03dc62b0ecbd4878d03a5c0aff677c108523135e7c6fdf0f1290e596f07f5",
+    "shared/Microsoft.NETCore.App/8.0.31/coreclr.dll": "30413ed6097046ea5bbe23c890119b0cc92964eb4dddc2cc5606d6422c74a9a0",
+    "shared/Microsoft.NETCore.App/8.0.31/hostpolicy.dll": "68d5334484b96fab52cd82d50bc14d1f79a9bc89a0e86551ba9df6006f5dda1e",
+    "shared/Microsoft.NETCore.App/8.0.31/Microsoft.CSharp.dll": "a637ec717e54bf71377be8001b2e31d8070b1f2ac08e02af207f4169f38b5ad3",
+    "shared/Microsoft.NETCore.App/8.0.31/Microsoft.NETCore.App.deps.json": "5158cf9ccfa820deb8ff7b66eb777a0f875220db65d60f9d03527d504c3154b2",
+    "shared/Microsoft.NETCore.App/8.0.31/Microsoft.VisualBasic.Core.dll": "75202e08c128b0d591f9f5d70112afce311d3fe1ed555be29751e9a9dccbf514",
+    "shared/Microsoft.NETCore.App/8.0.31/Microsoft.VisualBasic.dll": "e9fed52918dd5968e18f3fbf914e8bd4de742d230042069b11a512a71cb40e2d",
+    "shared/Microsoft.NETCore.App/8.0.31/Microsoft.Win32.Primitives.dll": "4df9eb35042f0a6ed7a0aa7d4a1f70f6e256a5cd342de7e5d9457e1d9582850d",
+    "shared/Microsoft.NETCore.App/8.0.31/Microsoft.Win32.Registry.dll": "8b84e7669fda3b4bd928c0cfeeac1c3e359c20db41414505c380741552b58c6f",
+    "shared/Microsoft.NETCore.App/8.0.31/mscorlib.dll": "27aee0b4695329c14cb099aadcfa67e75f685ce19fc9783b3617a3a022131ced",
+    "shared/Microsoft.NETCore.App/8.0.31/mscorrc.dll": "2e50d5e959125968c35a69d2fa10d5ce8097912e7533630718b0b8b87253d505",
+    "shared/Microsoft.NETCore.App/8.0.31/netstandard.dll": "61ca45c381d6a99276f85686dcb77fcd960dbb98dd0ed8460fc890a25edc19ea",
+    "shared/Microsoft.NETCore.App/8.0.31/System.AppContext.dll": "1ab9a9093d1c58eb20a0746e70605f05ba729a94d433353f9adcc46d771230a3",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Buffers.dll": "71d40b9b87867d1093314695445297967c0eddc9d5964a06bbeb28964ebc3ba5",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Collections.Concurrent.dll": "f3ca4eb856faed44c80bc34343dc50560eaf20299432ce1db4df66da6bdf6498",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Collections.dll": "2cd60dc3500d1640a24c949843d4b22199a92476e560586ca5342afc6b7a56c8",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Collections.Immutable.dll": "6ab9a7e83b4bbdca77290412de6b30bbf2eb60c429615ac3aa24ddd05105ccb9",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Collections.NonGeneric.dll": "18d12126e5e20c539841ed261d73a5f6e487fbb7bc6d7834b51af67bd3797a22",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Collections.Specialized.dll": "a2dfb12bac2792d6269400dc10b73a7605684b65db6129f8ec265277a044c9de",
+    "shared/Microsoft.NETCore.App/8.0.31/System.ComponentModel.Annotations.dll": "299c7d71ada7ba9c02da4bfc7bb29ce235449b330b5f3f35663847148ffb7767",
+    "shared/Microsoft.NETCore.App/8.0.31/System.ComponentModel.DataAnnotations.dll": "8535683ddd0f45fa43f25edfee1fe8eec646d0e69fdd3adab3bec23b0b964fa3",
+    "shared/Microsoft.NETCore.App/8.0.31/System.ComponentModel.dll": "4a05d79395cd98ceeb76d1c878758e340069abb2e7c9df2e7e02fc1b0981b725",
+    "shared/Microsoft.NETCore.App/8.0.31/System.ComponentModel.EventBasedAsync.dll": "4ed4ae9038a3f90f17478f78b652cc1ab164635fdb9eb4e5ae2c8cd04297851e",
+    "shared/Microsoft.NETCore.App/8.0.31/System.ComponentModel.Primitives.dll": "a3caef259354859c42b89a6c3bdc40ba48ab863c9aef48dae14cd8f87b8fb0ad",
+    "shared/Microsoft.NETCore.App/8.0.31/System.ComponentModel.TypeConverter.dll": "a806014d92613d14475082c2a893e25467d2dbfe75581cea90d6b425886a3dd4",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Configuration.dll": "2bf45cde00a3f53cb5ad39c07e06333c868b37dd26654890b489ae9348c439db",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Console.dll": "53973be000dc8028518647d18303a9da2901e231c24bf7d530923d18e0b29371",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Core.dll": "a004a7d0d70b43e2734a2928c18d99c4bc08c010f414c6a7b5e5f0001c7a79cf",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Data.Common.dll": "8443f49992a62bfbdd7437f4a8f10270d903642de4492c3992a3de3eb7259d8c",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Data.DataSetExtensions.dll": "1a8de6461df97a38f86a37d2cebc5a8cf094135889e57bdbd459df852f4faaaf",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Data.dll": "6af264b01ae8095c9ac504fcc47a23d15191397b48cbf497cb085b1c28a0d393",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Diagnostics.Contracts.dll": "ea01b8cc13401f283adf7b97fd36db00ab3e50b523d348d1866770cae0472964",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Diagnostics.Debug.dll": "8662695176c67864e111fceff1e07ef5038ecb86d65a3a374d803e50debf6318",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Diagnostics.DiagnosticSource.dll": "881597dbe5753fa4dd926b2deefb1dd31d8c52e703314124c2d19f6596f48cf6",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Diagnostics.FileVersionInfo.dll": "88da11ed23c8cc565822dff21a042557347d9ba4929463495e4e70dda29db09b",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Diagnostics.Process.dll": "ff1f9d1dc25efbc2ff78e273f6071444b43b1c4c8d99c1d96f1deffa33936ddf",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Diagnostics.StackTrace.dll": "deceb49d1537583ee37bf2f6887373c883823d481983c072c151e85fcd9540ef",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Diagnostics.TextWriterTraceListener.dll": "76116c6563dd845d897f7f652c576091e273215c9dd6924861681d7936a0a726",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Diagnostics.Tools.dll": "16e812fd127539662deb506b5ec07fa8bd29fa6865d34ae702bc2028c48875b8",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Diagnostics.TraceSource.dll": "f6a020c51b00adcf08acd82e45cc86393f0bf68081df68263611a331317cecf2",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Diagnostics.Tracing.dll": "3d56e520f793339cc9f39ef168c33bcb00673193aea382f03cfb62e411577de3",
+    "shared/Microsoft.NETCore.App/8.0.31/System.dll": "800517d56b9bf5fc0f1da3e87b4897c57b160362e883d980c8e32992cf2627df",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Drawing.dll": "2a079f78f1259dea6266bd7bf80b37b5830c2b31bc6a29ff0b0cad702241c321",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Drawing.Primitives.dll": "42d45cd813c0b151fe5b7d13b2095714f20fc43f4adb9f0eed8f1a61d6813067",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Dynamic.Runtime.dll": "b15ce2918e5d20357d98aadfe75555914959354a9f2438b94a2c8ae6259c3f48",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Formats.Asn1.dll": "8a3443decd182dcd37f89aa3ec98bdac61c23dfaee123e599d56ab6ad9aabc25",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Formats.Tar.dll": "63572b726fa686b62e138c4ec92b894014fc7460c39efa51e607de2afc368b72",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Globalization.Calendars.dll": "27e2957a930999925197e99f1aa153157adfdada790bebb0bd522cfd32b55eb6",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Globalization.dll": "3061d8a93a11ae0b257b80060978efcc609712bd87cb6daccd7d56aaa578df6b",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Globalization.Extensions.dll": "c01b32a78b69f3bfe39fbb7370838d3e3a3883ded045c32542c5c06d313d4a1b",
+    "shared/Microsoft.NETCore.App/8.0.31/System.IO.Compression.Brotli.dll": "3d9cbeb38127d38dca3b8b2d738fb369700864996deeb318cefecc074fad98f8",
+    "shared/Microsoft.NETCore.App/8.0.31/System.IO.Compression.dll": "ba998df170091fae2dc56017f71509b73a5dec87e7e77dc28cfb7b67c14ceea2",
+    "shared/Microsoft.NETCore.App/8.0.31/System.IO.Compression.FileSystem.dll": "c184dfc4851c23941fdb3491192b75c3ac84892993e4868f3f0cdc7a77c2388a",
+    "shared/Microsoft.NETCore.App/8.0.31/System.IO.Compression.Native.dll": "a5bd7d6532d6a13ec624aaa4f36a7708c00b1e24a56672d7fcc89dc34d03a5b0",
+    "shared/Microsoft.NETCore.App/8.0.31/System.IO.Compression.ZipFile.dll": "96f55dd332f4c0630fe731b704477a91eea584ffed555a95115f2e6fe2f9e608",
+    "shared/Microsoft.NETCore.App/8.0.31/System.IO.dll": "ba077cb648b6c902a3de1e6db3208488e38cb1c9807a59f2107bf65f7f089909",
+    "shared/Microsoft.NETCore.App/8.0.31/System.IO.FileSystem.AccessControl.dll": "7d96924b94fe1175d7bd9416cb7707d716bc2080f16a5afb95636d3dcac8eea4",
+    "shared/Microsoft.NETCore.App/8.0.31/System.IO.FileSystem.dll": "4a1b32ad265c01110ae6a1a479dd22fd507113e17107ecb55facf63c0a3b6f96",
+    "shared/Microsoft.NETCore.App/8.0.31/System.IO.FileSystem.DriveInfo.dll": "793852d89138e83bc2c9f376b47ec5549ae7dbe5245c72273b4669d9ed4ad127",
+    "shared/Microsoft.NETCore.App/8.0.31/System.IO.FileSystem.Primitives.dll": "6077b2938e4cf1ad23dedd9af946ffd53ef441cb78b2d1a1c14811704b27ac13",
+    "shared/Microsoft.NETCore.App/8.0.31/System.IO.FileSystem.Watcher.dll": "b81bc7bb33b46f84af30409f8b36476ac0edb6c695254cb709b5e48c294c0a24",
+    "shared/Microsoft.NETCore.App/8.0.31/System.IO.IsolatedStorage.dll": "cbbf4c95b80632b45a98df5db3f2931eafce712030d9697fc721ae5bb8d61890",
+    "shared/Microsoft.NETCore.App/8.0.31/System.IO.MemoryMappedFiles.dll": "cfc5791120fc69b3dd826dcc9869e04b650964cf58c24cb29bcb6a5e5fecb074",
+    "shared/Microsoft.NETCore.App/8.0.31/System.IO.Pipes.AccessControl.dll": "5f339a41943efd1a9a0137db2aced57ae27cecba2ef956c14956315be1c31236",
+    "shared/Microsoft.NETCore.App/8.0.31/System.IO.Pipes.dll": "ba412e18b965b9d7c20cbc960565cb5d07e32d6abdf50652f92a121067f87a5d",
+    "shared/Microsoft.NETCore.App/8.0.31/System.IO.UnmanagedMemoryStream.dll": "e6ef700ed25fec81613dc40e7570b4419867db56bd7faa578771defbcf656405",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Linq.dll": "3416e5c804532e8361b33b6919f2b04ee59ca485a8474f8e5e8648e29db85f51",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Linq.Expressions.dll": "a207e5baf495bfae1988b11629fdc2c6156c1163aea30350e3c642d6c5b4fef3",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Linq.Parallel.dll": "63c33feb21c3ad26a3857cd28263d1f353e62dc5a2cd4bce1b8f2a9454aeab27",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Linq.Queryable.dll": "98502281d30c72ca8ea43dccb37347d3848d315c13257566cf74ab59c491280e",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Memory.dll": "79660869f2c2890ef9cb46a3d1964464b965b89f6f12c057060e7bc8164cfa5f",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Net.dll": "6b805c17237e5ca2cea2a521eb973eba2809d3311c1835951d217fa0325e2d1b",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Net.Http.dll": "063d6d29818f66a5c0f54afc27d614af04a1eaa21127193e5dc3d9fc9873152d",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Net.Http.Json.dll": "e2b0b7baa3c2328df3a3753dd38f6bacbd8b3c4d55f42f7a1f761bd1985f2fea",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Net.HttpListener.dll": "2cf8237b9aa49cde2fb8e11374f87aaac9f42d554901a4218872cf4e42240b3e",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Net.Mail.dll": "7cf5042a5908c96891d8978e8d23dd6bd073d34b1f179a2811d7b0b9c8ce43d7",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Net.NameResolution.dll": "74d12030fcbf27708d7cc3cd491667bbf11b307c8fb93e1914b38a38756b6eda",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Net.NetworkInformation.dll": "5f903dd74c751c351049001bbd47d33ae634bd5eb57be95ac1ee1ec5bd74c093",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Net.Ping.dll": "22af891d9bb6be146a8cf51d5f061b62b8e5a7f949cce1b75bc90830acf3e103",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Net.Primitives.dll": "73fdf2da98cdb63a523e539a4892f22d9cdf39059aa5ceaed0a5bf0063e73e88",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Net.Quic.dll": "1029cf22cfcd390d286a21121ecd6df39fbd196f4b5aa31b90288a2f2374e860",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Net.Requests.dll": "3eae15c8bc0cfeff60fca437b7149ecd869de33e25babfd14a7737e0f2c6adf8",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Net.Security.dll": "fa27b9e1072b8883e3fdc72d24f349ad51c4a8748d70a66df97fc58d962d8d0a",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Net.ServicePoint.dll": "dce760ce1bc6f75a123e0937cf2df2ab4918934d74f9d850ba6e293e2777a232",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Net.Sockets.dll": "d7523ec83807f758e8b525984f638532655b3a93ba1f67ae83e1fbf74a44b9df",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Net.WebClient.dll": "97838d9e09aaf80b0d1ee072fce10c939ce9c0536fc439823379d09711bb8637",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Net.WebHeaderCollection.dll": "954a3c80ba3f408b9cf4a8f0ef0f4dd7ecefd346881b4d6adb4a253495d4dd70",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Net.WebProxy.dll": "1fde2506a440b2bff86e1a3d4f8ca805b475cc4f7fb9fffceab93d17f6d3c175",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Net.WebSockets.Client.dll": "c01bad55b7f3a2ae19956d2adbc2c899f9723b4fe33fd9277d7c4a2aabdcfc52",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Net.WebSockets.dll": "b1f48fc8be56d6324f8fc49318ae35fc2db40b40263def9d67fd87e5268c8c4d",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Numerics.dll": "87142ef352fa639e7b4102df97fb24655ad7d526aad696e079873235443a46ce",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Numerics.Vectors.dll": "905ca90068bb31e3b2d145d0a723a0f5703b2b3861669c77fe129ade1e502ee1",
+    "shared/Microsoft.NETCore.App/8.0.31/System.ObjectModel.dll": "8fc43122f9444f69386f5bd7731c2574e1fac6e335bb273059aee531015d20a4",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Private.CoreLib.dll": "03e9ebcc5d4a774098ab6ea75b773407e86ffdca1e36c6a2522c4a38bd1b391a",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Private.DataContractSerialization.dll": "4232528ea463c27cb918f086e10787c262fafd1d5cfdbb08393915b13c9875d7",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Private.Uri.dll": "a25b1304a32f58ec47ffa6d889e01e1a8fa8a7b83faff80ddb34eb9bff813ad4",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Private.Xml.dll": "382ed9cfde5a0230f2ec294f2d19a6e0c1d4f57099cbe18287d6ff062c8a72c1",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Private.Xml.Linq.dll": "bf70470f67e13e3511e2911d8431e98ba6d07822b2d1dd70121d6d469b5c3980",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Reflection.DispatchProxy.dll": "f1594508b448b3f48c1e13b6af3ef71260874b32cb46eb1d6c164f64f28c5814",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Reflection.dll": "7a6215aa4383c98c6bc18b3f915d02e2af6e5f6299aeda2b1401257ed11f8846",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Reflection.Emit.dll": "5fa8d22d04c73bd96fbfb3323f8091f7c80defabb6ae34a1061b62f8f2e992a6",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Reflection.Emit.ILGeneration.dll": "ba2fd978ad83f4c18407bb41f6753696cea3491ba15259b92b3c6f74ff63d83b",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Reflection.Emit.Lightweight.dll": "e8e3a8b80cfe5ad5b89c9587b76f526e951620e75bd552b81a3c1274eaad7f1e",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Reflection.Extensions.dll": "8130b36ddf492d24e3ead43c136d12b3a89614bec6d4abf36054609916e7f7bb",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Reflection.Metadata.dll": "870417843f80aa8f739b25ddef76524e0ff1274174cdb7e3eb6e514c01c6b0b9",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Reflection.Primitives.dll": "40e9a51810d56f943ed775cdd0f5d57304d29b82ffb830b4cd458a87ec129939",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Reflection.TypeExtensions.dll": "54f5419ada9b8272174baee89542a05b8a0c645fb14700523322ab742aa3db65",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Resources.Reader.dll": "5c61c54086da9c3af8296c03daf087980861cc5e764586f89fcfef16017bdad5",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Resources.ResourceManager.dll": "93fc2c022165a4b11ce15ef4e0ee115015ca1f673b71437dbff35c0c1f4d1ce7",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Resources.Writer.dll": "aa2969c69d22f8ce3fdac59c783521d39b6720a0768d1ce8cb20c36ab5b24716",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Runtime.CompilerServices.Unsafe.dll": "25a9adac72993bc4f7498dc4a52b02a27f1d5606eac070b762e102c1bf6ed7d3",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Runtime.CompilerServices.VisualC.dll": "b9cd69500138e67bd48fbf0878444c8e434c3b98098881531b218d71c6bada1a",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Runtime.dll": "389669b3630e727e8937e49c872d674a862027d1f354974ddb823b3367a22887",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Runtime.Extensions.dll": "469f5d3feff183c5713790fa1741a82c94e7676e89a8f33cb50b8b3b3d18faf1",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Runtime.Handles.dll": "fe2d009ab4a931540f63ace2d5a6ab0a53142dd49067e84eaa023bde62c1b892",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Runtime.InteropServices.dll": "eeeda03f7ee40e67bd0379423ba3203bb0b3d7a7b06b1fa37cfbb9240515e51e",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Runtime.InteropServices.JavaScript.dll": "65644715d987f8cf1dceed19ab864c11fa6266f2a93664a4d2d5fd353ad656e9",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Runtime.InteropServices.RuntimeInformation.dll": "d60443cdd89d467ac5e925084dc59b175eae9fac02b6209802a5180c9b4d978b",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Runtime.Intrinsics.dll": "4a3914ee786ee7e773e3ddab6f12c24cc13a3753e40bf7e63ef2ea9404d61966",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Runtime.Loader.dll": "2050ea7a9b7ce4695bd81fcdad9e163fe59fb28fdf569ef988f609ca26e66693",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Runtime.Numerics.dll": "9556da9af7d8c11d8dc227a1fd0e5a7db39aacc7ff7a3ae2fbb315b93f383ad8",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Runtime.Serialization.dll": "15e04ac515f46667f95ba11ccb7d04eb3b85e49e001127f84b07e090cbcca918",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Runtime.Serialization.Formatters.dll": "2e09cc4a3608769f245b94f6c59c3c2cc12c5b611ee6b8a740f5ba8ece61ad6c",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Runtime.Serialization.Json.dll": "d57885bad03aead4d5f2236c2f7a8ebc3be4c331060b2016252868ebcc607066",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Runtime.Serialization.Primitives.dll": "0aa63156e66616bbae6263df18387a6666956c5fbbf6697a6f361691dffd79fb",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Runtime.Serialization.Xml.dll": "b2f0eba00f7ed45ca191881f4ab8db74222492bda812cdbd3abc9186e53336a4",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Security.AccessControl.dll": "dc9280145b42cec915d453cc7339f8843e7e2b05bf01a7e8159f17b6ef0bf35a",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Security.Claims.dll": "479c43a3a0dbd6b93c8221f5bdd5179f02613e17d44634426fa38276f02ee770",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Security.Cryptography.Algorithms.dll": "76f6fabcb25a2ca962147823e5d92c9f73f072c5e151b0a926c2e1b26fe6366d",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Security.Cryptography.Cng.dll": "3abd455b897b7c90c85c94e8b01865d8b9ab289b3cb8f20264a660c2907560f2",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Security.Cryptography.Csp.dll": "a9300892eca2a60baca009b4249437b1eb158266c733849838d1d315696c5b1e",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Security.Cryptography.dll": "2bde3bb5db825e7c6aa826e5404c27ba7ef032c946bc4429de66739e13042640",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Security.Cryptography.Encoding.dll": "04b5ea1b1df9c66c8fa189f5c3601d9f51ac927bf4e5078cf5c35510b5ef187f",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Security.Cryptography.OpenSsl.dll": "c3fb927486fb4437b230100e65120a8ca75a0760f50f9dcfed2406aade846f6e",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Security.Cryptography.Primitives.dll": "56505263b4fba5303b48cd082bf7369678151314c95a02a3e6f18a8fb141aee3",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Security.Cryptography.X509Certificates.dll": "e206120ee64aad39aabc2c401e8bdae93f308f6bb431cd88d6f931867ec63bdc",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Security.dll": "d1ce5af9d4392b79c5e6af45aaa96f6faabb9e9e32023d532a07b5f0b8d1276e",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Security.Principal.dll": "5c9210b383a227e0348f6961e363df5b0760b57b0f4fe068549ed51f3be4c719",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Security.Principal.Windows.dll": "91d116206d4318c153edb10f42b4aa019246f08a5bf3963764997a49fe55f44c",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Security.SecureString.dll": "48c7a674f9959f57bdd3ccd91373ee70c52838dfe2f5e260361aa577804e1cb8",
+    "shared/Microsoft.NETCore.App/8.0.31/System.ServiceModel.Web.dll": "e13c3d826323b2c2acb9351cfc0e26f7f8c039bb76e4b1fc8dfca31cd63453db",
+    "shared/Microsoft.NETCore.App/8.0.31/System.ServiceProcess.dll": "930d40791c0d1baf4e771d16d92e96a73c44059e6231203ba04a1803915fae14",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Text.Encoding.CodePages.dll": "ebb78c7fa132c6fbb120672ac221669025cb38271d182c0cd95497d4b3b6da1d",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Text.Encoding.dll": "38e580a377a8bcdc114e706f44facd0f39002e24feba88116589c2e6a29ee814",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Text.Encoding.Extensions.dll": "744054d2b6073eacc677e226d3ca64ac45387499f6e8fadb5b849101fe8a6cd6",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Text.Encodings.Web.dll": "c93db4d6165e13d5d2f1432374a5dbf7e0fe22d578de91a91d8c659ee90a9bb7",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Text.Json.dll": "d3ff760f191b04cc33f56c5c3344bdd52ae66a0cea99885f73e2d87528f0cb49",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Text.RegularExpressions.dll": "5a48f68ea86d56213b956d1a5b38eb9e46d0daff383a47335c7ed2bb2cd8ef81",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Threading.Channels.dll": "1e7440df97655b35e621e98a0ebd3b3d0e657264eaab3330250b32e9556cf7f0",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Threading.dll": "f2277dcdf3739da9232ddece8bd10c41a28036797231c52052419a4711d96708",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Threading.Overlapped.dll": "17a78a84b5b6e2277ed409a8f863fd8844b683f5267e6522a6e73fc1ca4e1883",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Threading.Tasks.Dataflow.dll": "eda53e01ecfa83a6e77f438c87e2c812a9e51e56b35ad58011c666f2ceaec391",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Threading.Tasks.dll": "f58bc06ff2ef181cb086bdc3ab7fba7b7fd1b5040c043ffe9cbc54023c3913a2",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Threading.Tasks.Extensions.dll": "46de6e064e85b79cc17ef383ede86561b6fc4855f6b213a278792c8c3a4f1ac0",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Threading.Tasks.Parallel.dll": "3d7e3e93e6d54c61dea43ad2d5e2897a755880329051fd42b3739cf6358c5ef4",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Threading.Thread.dll": "4c3d00793e9d367420d2afabd8f243f53aa6167fb6ab37c7eb904caf77105e43",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Threading.ThreadPool.dll": "366ad22bd7868ba0ef9f4e7ab5166311157eea3fa12b732cc6dda1158d51fec6",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Threading.Timer.dll": "20b9c8e879dbf55eb546a73121dd44eba5e866002d9320a04b1376641dc563b8",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Transactions.dll": "ffaca21fb0f6821b16bad18b306958c8f6974336fe1357f16ec8b69bcb1bb268",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Transactions.Local.dll": "f10c7ff5904382c76d624d59f28d952d3028ffdb2dcabee09894e8069c0314b2",
+    "shared/Microsoft.NETCore.App/8.0.31/System.ValueTuple.dll": "c92c2fdc727b320a61d1d2bef62ce784bce5092838939bc0b060f255ac012e22",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Web.dll": "9057a6b387c3a61b4bf70fbb5426663ce12190b6d44483862868c73ae5cb9754",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Web.HttpUtility.dll": "913fdf6708271f9ec7e3c360ae7cd771a584fe4f6d664113cc1a777611e9414e",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Windows.dll": "d3200c254470f07e0c24a9acf193a83b601e9c40e84f669a5b7c4c41eecd3be9",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Xml.dll": "ef07e6ff6aba0f2b7249515ab35e576220c14971c9b781a469346ad91f447e94",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Xml.Linq.dll": "e9ea42c76c44b20066e4b0c6663373a648772325430c51e1ea138a57c50869cf",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Xml.ReaderWriter.dll": "c89e0674583ecefd740d9c08fdfa529008f40f1b10988ac266c8e2a36e63e1e6",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Xml.Serialization.dll": "216aaefdd6c9d8aeb10581eb9d6630989e549aa4578a29520d20ecfec3bc4f60",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Xml.XDocument.dll": "a9c6d8a0fedd5fdbdeadbe2ef594c6521456fad6506413e773807bd27a9b1ade",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Xml.XmlDocument.dll": "ae666f5a7dae8c62561de3f69d231bb705b07ba49401e6139c76a50d5d99dd8e",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Xml.XmlSerializer.dll": "7f50db00677f1fa655ec38d444571abbf9e3a1a1dbbeea720d04b8e5deaed4ed",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Xml.XPath.dll": "0a01c1f421868d46d5371eea169638d98879734019d1290dd9b471a728a53e41",
+    "shared/Microsoft.NETCore.App/8.0.31/System.Xml.XPath.XDocument.dll": "11e73ca2a73a84bf514538f238f90af1697b79743a500f8d8e19db0869d2f193",
+    "shared/Microsoft.NETCore.App/8.0.31/WindowsBase.dll": "acc6674f30d3879fbd792d6230e0b3abeef5df372df43fa251f3ceb8ed61a481"
+  },
+  "full_audits": {
+    "prepared/build-audit.json": {
+      "remote_path": "/home/topkek/runtime-servicing.8KDIjx/prepared/build-audit.json",
+      "sha256": "6551ae31ab345bc782730c373dbbc2ad86d1d8830bb3d892a3c810da9481943f",
+      "bytes": 457912
+    },
+    "prepared/framework-audit.json": {
+      "remote_path": "/home/topkek/runtime-servicing.8KDIjx/prepared/framework-audit.json",
+      "sha256": "f7331e81cab43e5d8648d229db43e026f8934761312f5ae851ed559d29434659",
+      "bytes": 2477877
+    },
+    "prepared/reference-audit.json": {
+      "remote_path": "/home/topkek/runtime-servicing.8KDIjx/prepared/reference-audit.json",
+      "sha256": "e99d9428707a6cc78a048137f4fa4ebe90a0b206d64ea56ac5507e79b7bef018",
+      "bytes": 1229755
+    }
+  },
+  "formal_package_build": {
+    "root": "/home/topkek/runtime8pkg.9aqCTE",
+    "command": "makepkg --cleanbuild --force --noconfirm",
+    "status": "running",
+    "exec_session": 68508,
+    "package_completed": false,
+    "last_verified_live_utc": "2026-10-27 14:30:55 UTC",
+    "stage": "source extraction and all17 patches passed; native host completed; CoreCLR native compilation live",
+    "remote_makepkg_pid": 1636624,
+    "remote_coreclr_helper_pid": 1637485
+  },
+  "full_servicing_requirement_complete": false,
+  "full_dependency_goal_complete": false
+}

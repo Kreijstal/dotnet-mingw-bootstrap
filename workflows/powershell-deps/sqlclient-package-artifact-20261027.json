@@ -1,0 +1,48 @@
+{
+  "artifact": "mingw-w64-clang-x86_64-dotnet-sqlclient-4.9.1-1-any.pkg.tar.zst",
+  "sha256": "e3778b96773593e14765125dbfb62c0f8498d848bfd0a257fb5dea056301b323",
+  "nuget_sha256": "d07b0b1373b32b337f35046ab29f31b9317bd7ef7944f780b66a53185c8c6fab",
+  "experimental": true,
+  "full_runtime_compatibility_verified": false,
+  "verified_direct_dependency_count_increment": 0,
+  "source_commit": "84b081710c66cc560b77d4de38cee493c3a38e9d",
+  "source_sha256": "f5b1bd0cf8b2c6e232ff866a4f3b069c30c48f37820c10c81691de211d4ba3c6",
+  "windows_original_compile_items": 242,
+  "contract_original_compile_items": 3,
+  "production_source_overlays": 4,
+  "upstream_tds_fixture_inputs": 142,
+  "resource_strings": 407,
+  "implementation_sha256": "3a11b6a7fbd8793455e41c978abb1470cc59ede912922c459b2b4603d044d3d6",
+  "contract_sha256": "d65a567bff95601d51a7a5950190ff99a331f65204b33c5ca91106e3c91888a1",
+  "reference_sha256": "8b6d1274da71b26f74b446982211b7496267efd9426196ee27ccb16d98f25853",
+  "production_overlays": [
+    {
+      "original_path": "src/System.Data.SqlClient/src/System/Data/SqlClient/TdsParserStateObjectFactory.Windows.cs",
+      "original_sha256": "d94a2c8a9071b55070fdc60fcf17dd6e6d30caa481ca722f19d54310f712c037",
+      "patch_name": "0001-use-managed-sni-on-windows.patch",
+      "patch_sha256": "e04edd0e37056c8d97284e8413956d59c33df7fe43f8e708e6c46c943c0e0727",
+      "overlay_sha256": "8d4950ff3736e29c4a13350722ace0e23544a84c86e6be3df3b8d4288bfe42cb"
+    },
+    {
+      "original_path": "src/Common/src/Interop/Windows/SspiCli/SecuritySafeHandles.cs",
+      "original_sha256": "70c67ae1b7b2567c24e03ba7e5172cae96ef896f3e4f5af914adef41c71f0e2f",
+      "patch_name": "0003-pass-complete-spns-to-windows-sspi.patch",
+      "patch_sha256": "c3b03f226ae516ca5f0375af069855fa54aa5439e8ef2818d04822643077e21f",
+      "overlay_sha256": "6bb91344d4462e82a6e7036757388c8bd45ccb24201ad09cf36f465538292d04"
+    },
+    {
+      "original_path": "src/System.Data.SqlClient/src/System/Data/SqlClient/SNI/SNIProxy.cs",
+      "original_sha256": "28fe4cec4804872f57b42406a26c6d906f121f1f43beb6d465a8d6bf8bad0647",
+      "patch_name": "0004-accept-short-custom-named-pipe-paths.patch",
+      "patch_sha256": "9d234bc7b25f2d6b734ea959681082adf3f2d41af0971119d8eb68a7383a9614",
+      "overlay_sha256": "f07a8a597810adfd99ab053bb8024e7579eb9028c4e1ffef7aa2bad14de6d35c"
+    },
+    {
+      "original_path": "src/System.Data.SqlClient/src/System/Data/SqlClient/SNI/SNIMarsHandle.cs",
+      "original_sha256": "47982b033618aa5505da8922ff41fbc3e1fb4df7b07da8d3cc9096305d17945d",
+      "patch_name": "0005-honor-inclusive-smp-send-window.patch",
+      "patch_sha256": "57ebaf32f50d4245e985e3de80ccc5e71f3188ece1b91bfcffff98d5db42c192",
+      "overlay_sha256": "32042a9526c4ee3ffe12da8f7d83e899be02f14c1280f5f89249f024d21617dd"
+    }
+  ]
+}

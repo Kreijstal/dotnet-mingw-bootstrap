@@ -1,0 +1,78 @@
+[
+  {
+    "recipe": "mingw-w64-dotnet-crypto",
+    "package_suffix": "dotnet-formats-asn1",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-formats-asn1-8.0.31-1-any.pkg.tar.zst",
+    "sha256": "4eec1d9d2edf4944c7e204a687145688b1a6f86343ad2ea0907dbb761aa2cce2",
+    "nuget_id": "System.Formats.Asn1",
+    "nuget_version": "8.0.2",
+    "dependencies": {},
+    "source_tag": "v8.0.31",
+    "source_sha256": "b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070",
+    "removed_binary_count": 0
+  },
+  {
+    "recipe": "mingw-w64-dotnet-crypto",
+    "package_suffix": "dotnet-cryptography-pkcs",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-cryptography-pkcs-8.0.31-1-any.pkg.tar.zst",
+    "sha256": "7c0c3b123441f17d1ef0a3055e1a825ff6d8f1d2b484ad0e50befcae8d5080f1",
+    "nuget_id": "System.Security.Cryptography.Pkcs",
+    "nuget_version": "8.0.1",
+    "dependencies": {
+      "System.Formats.Asn1": "8.0.2"
+    },
+    "source_tag": "v8.0.31",
+    "source_sha256": "b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070",
+    "removed_binary_count": 0
+  },
+  {
+    "recipe": "mingw-w64-dotnet-crypto",
+    "package_suffix": "dotnet-cryptography-xml",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-cryptography-xml-8.0.31-1-any.pkg.tar.zst",
+    "sha256": "974b859241d2aee5b01a56ffe304c85ab4c0247e3d0507a3e75de8453de86fa3",
+    "nuget_id": "System.Security.Cryptography.Xml",
+    "nuget_version": "8.0.4",
+    "dependencies": {
+      "System.Security.Cryptography.Pkcs": "8.0.1"
+    },
+    "source_tag": "v8.0.31",
+    "source_sha256": "b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070",
+    "removed_binary_count": 0
+  },
+  {
+    "recipe": "mingw-w64-dotnet-crypto",
+    "package_suffix": "dotnet-diagnosticsource",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-diagnosticsource-8.0.31-1-any.pkg.tar.zst",
+    "sha256": "3bbe7cd0579bb4a971903565a99d9c755baecb1f9e5439e4579af3bc301ca14c",
+    "nuget_id": "System.Diagnostics.DiagnosticSource",
+    "nuget_version": "8.0.1",
+    "dependencies": {},
+    "source_tag": "v8.0.31",
+    "source_sha256": "b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070",
+    "removed_binary_count": 0
+  },
+  {
+    "recipe": "mingw-w64-dotnet-crypto",
+    "package_suffix": "dotnet-encodings-web",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-encodings-web-8.0.31-1-any.pkg.tar.zst",
+    "sha256": "a9d1bd67543d7917d8c91a3332fb960d3ad5e6bb8430ecaa73f435e8b488ec28",
+    "nuget_id": "System.Text.Encodings.Web",
+    "nuget_version": "8.0.0",
+    "dependencies": {},
+    "source_tag": "v8.0.31",
+    "source_sha256": "b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070",
+    "removed_binary_count": 0
+  },
+  {
+    "recipe": "mingw-w64-dotnet-crypto",
+    "package_suffix": "dotnet-encoding-codepages",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-encoding-codepages-8.0.31-1-any.pkg.tar.zst",
+    "sha256": "42695a279e7105946693adc062d6e6897c9dcc5505c6a418b9e3bd8957d3fd78",
+    "nuget_id": "System.Text.Encoding.CodePages",
+    "nuget_version": "8.0.0",
+    "dependencies": {},
+    "source_tag": "v8.0.31",
+    "source_sha256": "b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070",
+    "removed_binary_count": 0
+  }
+]

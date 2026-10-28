@@ -1,0 +1,10 @@
+{
+  "artifact": "mingw-w64-clang-x86_64-dotnet-azure-core-1.38.0-1-any.pkg.tar.zst",
+  "sha256": "06df9d920dc038058fb8df07f5fad6dee25bc95ae4e7eefdd58aaaba3fbefcd5",
+  "source_commit": "dae9516a40d0661a3351c3f6ddf0e0eb85ea2f6b",
+  "original_compile_items": 193,
+  "public_protected_api_declarations": 914,
+  "production_cs_changes": [],
+  "implementation_sha256": "d1190f5ddc34214ccd4f540948aa3d6fcba1c6b1d2993343f819420164b7c1ee",
+  "reference_sha256": "8b0ea7f361edf8ee4cfb2312abc1e62ffe254a43bc9b69be839f28366eb0c6f8"
+}

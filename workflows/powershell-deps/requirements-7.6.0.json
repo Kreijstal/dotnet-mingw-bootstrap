@@ -1,0 +1,2191 @@
+{
+  "powershell_version": "7.6.0",
+  "source_url": "https://github.com/PowerShell/PowerShell/tree/v7.6.0",
+  "source_archive_sha256": "9970c95bea498a6d30587c2df4885e22f6dbbdf974d57e644046e088434a117d",
+  "source_tag_object": "3a9c841177966fd94eedc0c8cc8fb3204e7ce67c",
+  "source_commit": "767990ba06f8579d69f99eec46057541374aa892",
+  "sdk": {
+    "version": "10.0.201"
+  },
+  "scope": "declared Windows console and conditional desktop graph, LocalAccounts, generators, bundled modules and analyzers; includes forced non-Windows native package references",
+  "roots": [
+    "src/powershell-win-core/powershell-win-core.csproj",
+    "src/Microsoft.PowerShell.LocalAccounts/Microsoft.PowerShell.LocalAccounts.csproj",
+    "src/ResGen/ResGen.csproj",
+    "src/TypeCatalogGen/TypeCatalogGen.csproj",
+    "src/Modules/PSGalleryModules.csproj"
+  ],
+  "projects": [
+    "Analyzers.props",
+    "PowerShell.Common.props",
+    "src/Microsoft.Management.Infrastructure.CimCmdlets/Microsoft.Management.Infrastructure.CimCmdlets.csproj",
+    "src/Microsoft.Management.UI.Internal/Microsoft.PowerShell.GraphicalHost.csproj",
+    "src/Microsoft.PowerShell.Commands.Diagnostics/Microsoft.PowerShell.Commands.Diagnostics.csproj",
+    "src/Microsoft.PowerShell.Commands.Management/Microsoft.PowerShell.Commands.Management.csproj",
+    "src/Microsoft.PowerShell.Commands.Utility/Microsoft.PowerShell.Commands.Utility.csproj",
+    "src/Microsoft.PowerShell.ConsoleHost/Microsoft.PowerShell.ConsoleHost.csproj",
+    "src/Microsoft.PowerShell.CoreCLR.Eventing/Microsoft.PowerShell.CoreCLR.Eventing.csproj",
+    "src/Microsoft.PowerShell.LocalAccounts/Microsoft.PowerShell.LocalAccounts.csproj",
+    "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+    "src/Microsoft.PowerShell.Security/Microsoft.PowerShell.Security.csproj",
+    "src/Microsoft.WSMan.Management/Microsoft.WSMan.Management.csproj",
+    "src/Microsoft.WSMan.Runtime/Microsoft.WSMan.Runtime.csproj",
+    "src/Modules/PSGalleryModules.csproj",
+    "src/ResGen/ResGen.csproj",
+    "src/System.Management.Automation/SourceGenerators/PSVersionInfoGenerator/PSVersionInfoGenerator.csproj",
+    "src/System.Management.Automation/System.Management.Automation.csproj",
+    "src/TypeCatalogGen/TypeCatalogGen.csproj",
+    "src/powershell-win-core/powershell-win-core.csproj"
+  ],
+  "project_reference_edges": [
+    {
+      "project": "src/Microsoft.PowerShell.LocalAccounts/Microsoft.PowerShell.LocalAccounts.csproj",
+      "declared_path": "..\\System.Management.Automation\\System.Management.Automation.csproj",
+      "resolved_path": "src/System.Management.Automation/System.Management.Automation.csproj",
+      "conditions": [],
+      "sdk": null
+    },
+    {
+      "project": "src/System.Management.Automation/System.Management.Automation.csproj",
+      "declared_path": "SourceGenerators\\PSVersionInfoGenerator\\PSVersionInfoGenerator.csproj",
+      "resolved_path": "src/System.Management.Automation/SourceGenerators/PSVersionInfoGenerator/PSVersionInfoGenerator.csproj",
+      "conditions": [],
+      "sdk": null
+    },
+    {
+      "project": "src/System.Management.Automation/System.Management.Automation.csproj",
+      "declared_path": "..\\Microsoft.PowerShell.CoreCLR.Eventing\\Microsoft.PowerShell.CoreCLR.Eventing.csproj",
+      "resolved_path": "src/Microsoft.PowerShell.CoreCLR.Eventing/Microsoft.PowerShell.CoreCLR.Eventing.csproj",
+      "conditions": [
+        " '$(IsWindows)' == 'true' "
+      ],
+      "sdk": null
+    },
+    {
+      "project": "src/powershell-win-core/powershell-win-core.csproj",
+      "declared_path": "..\\Microsoft.PowerShell.SDK\\Microsoft.PowerShell.SDK.csproj",
+      "resolved_path": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+      "conditions": [],
+      "sdk": null
+    },
+    {
+      "project": "src/powershell-win-core/powershell-win-core.csproj",
+      "declared_path": "..\\Microsoft.PowerShell.Commands.Diagnostics\\Microsoft.PowerShell.Commands.Diagnostics.csproj",
+      "resolved_path": "src/Microsoft.PowerShell.Commands.Diagnostics/Microsoft.PowerShell.Commands.Diagnostics.csproj",
+      "conditions": [],
+      "sdk": null
+    },
+    {
+      "project": "src/powershell-win-core/powershell-win-core.csproj",
+      "declared_path": "..\\Microsoft.Management.Infrastructure.CimCmdlets\\Microsoft.Management.Infrastructure.CimCmdlets.csproj",
+      "resolved_path": "src/Microsoft.Management.Infrastructure.CimCmdlets/Microsoft.Management.Infrastructure.CimCmdlets.csproj",
+      "conditions": [],
+      "sdk": null
+    },
+    {
+      "project": "src/powershell-win-core/powershell-win-core.csproj",
+      "declared_path": "..\\Microsoft.WSMan.Management\\Microsoft.WSMan.Management.csproj",
+      "resolved_path": "src/Microsoft.WSMan.Management/Microsoft.WSMan.Management.csproj",
+      "conditions": [],
+      "sdk": null
+    },
+    {
+      "project": "src/powershell-win-core/powershell-win-core.csproj",
+      "declared_path": "..\\Microsoft.Management.UI.Internal\\Microsoft.PowerShell.GraphicalHost.csproj",
+      "resolved_path": "src/Microsoft.Management.UI.Internal/Microsoft.PowerShell.GraphicalHost.csproj",
+      "conditions": [
+        "'$(SDKToUse)' == 'Microsoft.NET.Sdk.WindowsDesktop' "
+      ],
+      "sdk": null
+    },
+    {
+      "project": "src/Microsoft.Management.UI.Internal/Microsoft.PowerShell.GraphicalHost.csproj",
+      "declared_path": "..\\System.Management.Automation\\System.Management.Automation.csproj",
+      "resolved_path": "src/System.Management.Automation/System.Management.Automation.csproj",
+      "conditions": [],
+      "sdk": null
+    },
+    {
+      "project": "src/Microsoft.Management.UI.Internal/Microsoft.PowerShell.GraphicalHost.csproj",
+      "declared_path": "..\\Microsoft.PowerShell.Commands.Utility\\Microsoft.PowerShell.Commands.Utility.csproj",
+      "resolved_path": "src/Microsoft.PowerShell.Commands.Utility/Microsoft.PowerShell.Commands.Utility.csproj",
+      "conditions": [],
+      "sdk": null
+    },
+    {
+      "project": "src/Microsoft.PowerShell.Commands.Utility/Microsoft.PowerShell.Commands.Utility.csproj",
+      "declared_path": "..\\System.Management.Automation\\System.Management.Automation.csproj",
+      "resolved_path": "src/System.Management.Automation/System.Management.Automation.csproj",
+      "conditions": [],
+      "sdk": null
+    },
+    {
+      "project": "src/Microsoft.WSMan.Management/Microsoft.WSMan.Management.csproj",
+      "declared_path": "..\\System.Management.Automation\\System.Management.Automation.csproj",
+      "resolved_path": "src/System.Management.Automation/System.Management.Automation.csproj",
+      "conditions": [],
+      "sdk": null
+    },
+    {
+      "project": "src/Microsoft.WSMan.Management/Microsoft.WSMan.Management.csproj",
+      "declared_path": "..\\Microsoft.WSMan.Runtime\\Microsoft.WSMan.Runtime.csproj",
+      "resolved_path": "src/Microsoft.WSMan.Runtime/Microsoft.WSMan.Runtime.csproj",
+      "conditions": [],
+      "sdk": null
+    },
+    {
+      "project": "src/Microsoft.Management.Infrastructure.CimCmdlets/Microsoft.Management.Infrastructure.CimCmdlets.csproj",
+      "declared_path": "..\\System.Management.Automation\\System.Management.Automation.csproj",
+      "resolved_path": "src/System.Management.Automation/System.Management.Automation.csproj",
+      "conditions": [],
+      "sdk": null
+    },
+    {
+      "project": "src/Microsoft.PowerShell.Commands.Diagnostics/Microsoft.PowerShell.Commands.Diagnostics.csproj",
+      "declared_path": "..\\System.Management.Automation\\System.Management.Automation.csproj",
+      "resolved_path": "src/System.Management.Automation/System.Management.Automation.csproj",
+      "conditions": [],
+      "sdk": null
+    },
+    {
+      "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+      "declared_path": "..\\Microsoft.PowerShell.Commands.Management\\Microsoft.PowerShell.Commands.Management.csproj",
+      "resolved_path": "src/Microsoft.PowerShell.Commands.Management/Microsoft.PowerShell.Commands.Management.csproj",
+      "conditions": [],
+      "sdk": null
+    },
+    {
+      "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+      "declared_path": "..\\Microsoft.PowerShell.Commands.Utility\\Microsoft.PowerShell.Commands.Utility.csproj",
+      "resolved_path": "src/Microsoft.PowerShell.Commands.Utility/Microsoft.PowerShell.Commands.Utility.csproj",
+      "conditions": [],
+      "sdk": null
+    },
+    {
+      "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+      "declared_path": "..\\Microsoft.PowerShell.ConsoleHost\\Microsoft.PowerShell.ConsoleHost.csproj",
+      "resolved_path": "src/Microsoft.PowerShell.ConsoleHost/Microsoft.PowerShell.ConsoleHost.csproj",
+      "conditions": [],
+      "sdk": null
+    },
+    {
+      "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+      "declared_path": "..\\Microsoft.PowerShell.Security\\Microsoft.PowerShell.Security.csproj",
+      "resolved_path": "src/Microsoft.PowerShell.Security/Microsoft.PowerShell.Security.csproj",
+      "conditions": [],
+      "sdk": null
+    },
+    {
+      "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+      "declared_path": "..\\System.Management.Automation\\System.Management.Automation.csproj",
+      "resolved_path": "src/System.Management.Automation/System.Management.Automation.csproj",
+      "conditions": [],
+      "sdk": null
+    },
+    {
+      "project": "src/Microsoft.PowerShell.Security/Microsoft.PowerShell.Security.csproj",
+      "declared_path": "..\\System.Management.Automation\\System.Management.Automation.csproj",
+      "resolved_path": "src/System.Management.Automation/System.Management.Automation.csproj",
+      "conditions": [],
+      "sdk": null
+    },
+    {
+      "project": "src/Microsoft.PowerShell.ConsoleHost/Microsoft.PowerShell.ConsoleHost.csproj",
+      "declared_path": "..\\System.Management.Automation\\System.Management.Automation.csproj",
+      "resolved_path": "src/System.Management.Automation/System.Management.Automation.csproj",
+      "conditions": [],
+      "sdk": null
+    },
+    {
+      "project": "src/Microsoft.PowerShell.Commands.Management/Microsoft.PowerShell.Commands.Management.csproj",
+      "declared_path": "..\\Microsoft.PowerShell.Security\\Microsoft.PowerShell.Security.csproj",
+      "resolved_path": "src/Microsoft.PowerShell.Security/Microsoft.PowerShell.Security.csproj",
+      "conditions": [],
+      "sdk": null
+    }
+  ],
+  "imports": [
+    {
+      "project": "src/Microsoft.PowerShell.LocalAccounts/Microsoft.PowerShell.LocalAccounts.csproj",
+      "declared_path": "..\\..\\PowerShell.Common.props",
+      "resolved_path": "PowerShell.Common.props",
+      "conditions": [],
+      "sdk": null
+    },
+    {
+      "project": "src/System.Management.Automation/System.Management.Automation.csproj",
+      "declared_path": "..\\..\\PowerShell.Common.props",
+      "resolved_path": "PowerShell.Common.props",
+      "conditions": [],
+      "sdk": null
+    },
+    {
+      "project": "src/Microsoft.PowerShell.CoreCLR.Eventing/Microsoft.PowerShell.CoreCLR.Eventing.csproj",
+      "declared_path": "..\\..\\PowerShell.Common.props",
+      "resolved_path": "PowerShell.Common.props",
+      "conditions": [],
+      "sdk": null
+    },
+    {
+      "project": "PowerShell.Common.props",
+      "declared_path": ".\\Analyzers.props",
+      "resolved_path": "Analyzers.props",
+      "conditions": [],
+      "sdk": null
+    },
+    {
+      "project": "src/powershell-win-core/powershell-win-core.csproj",
+      "declared_path": "..\\..\\PowerShell.Common.props",
+      "resolved_path": "PowerShell.Common.props",
+      "conditions": [],
+      "sdk": null
+    },
+    {
+      "project": "src/powershell-win-core/powershell-win-core.csproj",
+      "declared_path": "Sdk.props",
+      "resolved_path": "src/powershell-win-core/Sdk.props",
+      "conditions": [],
+      "sdk": "Microsoft.NET.Sdk"
+    },
+    {
+      "project": "src/powershell-win-core/powershell-win-core.csproj",
+      "declared_path": "Sdk.targets",
+      "resolved_path": "src/powershell-win-core/Sdk.targets",
+      "conditions": [],
+      "sdk": "Microsoft.NET.Sdk"
+    },
+    {
+      "project": "src/Microsoft.Management.UI.Internal/Microsoft.PowerShell.GraphicalHost.csproj",
+      "declared_path": "..\\..\\PowerShell.Common.props",
+      "resolved_path": "PowerShell.Common.props",
+      "conditions": [],
+      "sdk": null
+    },
+    {
+      "project": "src/Microsoft.PowerShell.Commands.Utility/Microsoft.PowerShell.Commands.Utility.csproj",
+      "declared_path": "..\\..\\PowerShell.Common.props",
+      "resolved_path": "PowerShell.Common.props",
+      "conditions": [],
+      "sdk": null
+    },
+    {
+      "project": "src/Microsoft.WSMan.Management/Microsoft.WSMan.Management.csproj",
+      "declared_path": "..\\..\\PowerShell.Common.props",
+      "resolved_path": "PowerShell.Common.props",
+      "conditions": [],
+      "sdk": null
+    },
+    {
+      "project": "src/Microsoft.WSMan.Runtime/Microsoft.WSMan.Runtime.csproj",
+      "declared_path": "..\\..\\PowerShell.Common.props",
+      "resolved_path": "PowerShell.Common.props",
+      "conditions": [],
+      "sdk": null
+    },
+    {
+      "project": "src/Microsoft.Management.Infrastructure.CimCmdlets/Microsoft.Management.Infrastructure.CimCmdlets.csproj",
+      "declared_path": "..\\..\\PowerShell.Common.props",
+      "resolved_path": "PowerShell.Common.props",
+      "conditions": [],
+      "sdk": null
+    },
+    {
+      "project": "src/Microsoft.PowerShell.Commands.Diagnostics/Microsoft.PowerShell.Commands.Diagnostics.csproj",
+      "declared_path": "..\\..\\PowerShell.Common.props",
+      "resolved_path": "PowerShell.Common.props",
+      "conditions": [],
+      "sdk": null
+    },
+    {
+      "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+      "declared_path": "..\\..\\PowerShell.Common.props",
+      "resolved_path": "PowerShell.Common.props",
+      "conditions": [],
+      "sdk": null
+    },
+    {
+      "project": "src/Microsoft.PowerShell.Security/Microsoft.PowerShell.Security.csproj",
+      "declared_path": "..\\..\\PowerShell.Common.props",
+      "resolved_path": "PowerShell.Common.props",
+      "conditions": [],
+      "sdk": null
+    },
+    {
+      "project": "src/Microsoft.PowerShell.ConsoleHost/Microsoft.PowerShell.ConsoleHost.csproj",
+      "declared_path": "..\\..\\PowerShell.Common.props",
+      "resolved_path": "PowerShell.Common.props",
+      "conditions": [],
+      "sdk": null
+    },
+    {
+      "project": "src/Microsoft.PowerShell.Commands.Management/Microsoft.PowerShell.Commands.Management.csproj",
+      "declared_path": "..\\..\\PowerShell.Common.props",
+      "resolved_path": "PowerShell.Common.props",
+      "conditions": [],
+      "sdk": null
+    }
+  ],
+  "framework_and_language_properties": {
+    "TargetFramework": [
+      {
+        "project": "src/Modules/PSGalleryModules.csproj",
+        "value": "net10.0",
+        "conditions": []
+      },
+      {
+        "project": "src/TypeCatalogGen/TypeCatalogGen.csproj",
+        "value": "net10.0",
+        "conditions": []
+      },
+      {
+        "project": "src/ResGen/ResGen.csproj",
+        "value": "net10.0",
+        "conditions": []
+      },
+      {
+        "project": "PowerShell.Common.props",
+        "value": "net10.0",
+        "conditions": []
+      },
+      {
+        "project": "src/System.Management.Automation/SourceGenerators/PSVersionInfoGenerator/PSVersionInfoGenerator.csproj",
+        "value": "netstandard2.0",
+        "conditions": []
+      }
+    ],
+    "LangVersion": [
+      {
+        "project": "PowerShell.Common.props",
+        "value": "13.0",
+        "conditions": []
+      },
+      {
+        "project": "src/System.Management.Automation/SourceGenerators/PSVersionInfoGenerator/PSVersionInfoGenerator.csproj",
+        "value": "13.0",
+        "conditions": []
+      }
+    ]
+  },
+  "original_project_sha256": {
+    "Analyzers.props": "9cf365c92cadf6fffa810fa2acf0de62d80384e044ca2f1ca9a8e820965f3864",
+    "PowerShell.Common.props": "8e959f5296217123ca46608eebb7be9ca934b3c797996098c18690f2a9ef4887",
+    "src/Microsoft.Management.Infrastructure.CimCmdlets/Microsoft.Management.Infrastructure.CimCmdlets.csproj": "4f421e8700c2cd7114c0f4a00a0ce3961aa1447fdb5d06ac56ff9bb0c6a35fe9",
+    "src/Microsoft.Management.UI.Internal/Microsoft.PowerShell.GraphicalHost.csproj": "1b4eb2c32615a2dfa44f6461f05c92618f500d73e39325ccff799d9b3caf0118",
+    "src/Microsoft.PowerShell.Commands.Diagnostics/Microsoft.PowerShell.Commands.Diagnostics.csproj": "c90f40effa13ae6552b88fd451be0fce7e92e8a751c5d831cea6d0926f7d61a3",
+    "src/Microsoft.PowerShell.Commands.Management/Microsoft.PowerShell.Commands.Management.csproj": "bcbdc98acd8a6370db1fc500991390321b707877a92dc6fc85376031d38b19b3",
+    "src/Microsoft.PowerShell.Commands.Utility/Microsoft.PowerShell.Commands.Utility.csproj": "4dfce5b4e0dbba5b3c09a3c44e6887267df638200e4b1c7760eacd8f2025fc0e",
+    "src/Microsoft.PowerShell.ConsoleHost/Microsoft.PowerShell.ConsoleHost.csproj": "554443870d161b64e4cd23f20fe7771f4ecba1628bd9a7e410bbb68c8b70f454",
+    "src/Microsoft.PowerShell.CoreCLR.Eventing/Microsoft.PowerShell.CoreCLR.Eventing.csproj": "c872cefc89fbad7596c8846f55cfa695dcafa0b83a80966c715c516000ea2108",
+    "src/Microsoft.PowerShell.LocalAccounts/Microsoft.PowerShell.LocalAccounts.csproj": "6ccb3d50ad130dea617bd0e13605b1ec730cc841262fbc6ac667d52e52bcda16",
+    "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj": "01b3fcd7d437ab679e863371cda82a8a0954dcdb05e127c6627da3e88e880b8c",
+    "src/Microsoft.PowerShell.Security/Microsoft.PowerShell.Security.csproj": "d31ec07a1f7652eaa70d8726a9a2afd574238e412895e444cba7369a3a320de6",
+    "src/Microsoft.WSMan.Management/Microsoft.WSMan.Management.csproj": "0d6fbf1bf67e3e7cb71e320f404f3cb349312c402651d9cac8a33d9da53e64dc",
+    "src/Microsoft.WSMan.Runtime/Microsoft.WSMan.Runtime.csproj": "02e56924c91cac3119e14fd5a1fb1565fc2bb56a06b54898abb2c165be797ac2",
+    "src/Modules/PSGalleryModules.csproj": "df9a7afa356b682fa28757bcfb922dc2a6f2a0546cda103009490d8d16b52cbf",
+    "src/ResGen/ResGen.csproj": "cce41d994883bb1afcd9ed98d3a2f1ab71f1d82567a730031b877d7bd4880f22",
+    "src/System.Management.Automation/SourceGenerators/PSVersionInfoGenerator/PSVersionInfoGenerator.csproj": "15ff9b5f5c83a85e36a9c9283c8bd7a5b6c36b9ff90bde421da36f9d2d89b5a4",
+    "src/System.Management.Automation/System.Management.Automation.csproj": "f6bcdf9f3fdcca6eea033af56e7ac81d7693c8f238631865ffea355b7d024629",
+    "src/TypeCatalogGen/TypeCatalogGen.csproj": "01102f73fdf7141da5168e26d63c71ea328330fff3457ee014e893805a94bd50",
+    "src/powershell-win-core/powershell-win-core.csproj": "221a3104dfad4f57acd1b169ebc38346f2faa9e7dd562fa48feda5bdbe5aac3e"
+  },
+  "packages": [
+    {
+      "id": "DotNetAnalyzers.DocumentationAnalyzers",
+      "requirements": [
+        {
+          "version": "1.0.0-beta.59",
+          "project": "Analyzers.props",
+          "conditions": [],
+          "private_assets": "all",
+          "kind": "build-analyzer"
+        }
+      ],
+      "declared_versions": [
+        "1.0.0-beta.59"
+      ],
+      "baseline_7_4_20_versions": [
+        "1.0.0-beta.59"
+      ],
+      "same_declared_version_as_baseline": true,
+      "all_literal_archives_in_7_4_source_lock": true,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "JsonSchema.Net",
+      "requirements": [
+        {
+          "version": "7.4.0",
+          "project": "src/Microsoft.PowerShell.Commands.Utility/Microsoft.PowerShell.Commands.Utility.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "7.4.0"
+      ],
+      "baseline_7_4_20_versions": [
+        "7.0.4"
+      ],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "Markdig.Signed",
+      "requirements": [
+        {
+          "version": "0.44.0",
+          "project": "src/Microsoft.PowerShell.Commands.Utility/Microsoft.PowerShell.Commands.Utility.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "0.44.0"
+      ],
+      "baseline_7_4_20_versions": [
+        "0.33.0"
+      ],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "Microsoft.ApplicationInsights",
+      "requirements": [
+        {
+          "version": "2.23.0",
+          "project": "src/System.Management.Automation/System.Management.Automation.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "2.23.0"
+      ],
+      "baseline_7_4_20_versions": [
+        "2.23.0"
+      ],
+      "same_declared_version_as_baseline": true,
+      "all_literal_archives_in_7_4_source_lock": true,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "Microsoft.Bcl.AsyncInterfaces",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [
+        "8.0.0"
+      ],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "Microsoft.CodeAnalysis.Analyzers",
+      "requirements": [
+        {
+          "version": "5.3.0",
+          "project": "src/System.Management.Automation/SourceGenerators/PSVersionInfoGenerator/PSVersionInfoGenerator.csproj",
+          "conditions": [],
+          "private_assets": "all",
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "5.3.0"
+      ],
+      "baseline_7_4_20_versions": [
+        "3.3.4"
+      ],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "Microsoft.CodeAnalysis.CSharp",
+      "requirements": [
+        {
+          "version": "5.0.0",
+          "project": "src/System.Management.Automation/SourceGenerators/PSVersionInfoGenerator/PSVersionInfoGenerator.csproj",
+          "conditions": [],
+          "private_assets": "all",
+          "kind": "declared-package"
+        },
+        {
+          "version": "5.0.0",
+          "project": "src/Microsoft.PowerShell.Commands.Utility/Microsoft.PowerShell.Commands.Utility.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "5.0.0"
+      ],
+      "baseline_7_4_20_versions": [
+        "4.9.2"
+      ],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "Microsoft.Extensions.ObjectPool",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [
+        "8.0.31"
+      ],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "Microsoft.Management.Infrastructure",
+      "requirements": [
+        {
+          "version": "3.0.0",
+          "project": "src/System.Management.Automation/System.Management.Automation.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "3.0.0"
+      ],
+      "baseline_7_4_20_versions": [
+        "3.0.0"
+      ],
+      "same_declared_version_as_baseline": true,
+      "all_literal_archives_in_7_4_source_lock": true,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "Microsoft.NETCore.Platforms",
+      "requirements": [
+        {
+          "version": "1.1.2",
+          "project": "src/System.Management.Automation/SourceGenerators/PSVersionInfoGenerator/PSVersionInfoGenerator.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "1.1.2"
+      ],
+      "baseline_7_4_20_versions": [
+        "1.1.2"
+      ],
+      "same_declared_version_as_baseline": true,
+      "all_literal_archives_in_7_4_source_lock": true,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "Microsoft.PowerShell.Archive",
+      "requirements": [
+        {
+          "version": "1.2.5",
+          "project": "src/Modules/PSGalleryModules.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "1.2.5"
+      ],
+      "baseline_7_4_20_versions": [
+        "1.2.6"
+      ],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "Microsoft.PowerShell.MarkdownRender",
+      "requirements": [
+        {
+          "version": "7.2.1",
+          "project": "src/Microsoft.PowerShell.Commands.Utility/Microsoft.PowerShell.Commands.Utility.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "7.2.1"
+      ],
+      "baseline_7_4_20_versions": [
+        "7.2.1"
+      ],
+      "same_declared_version_as_baseline": true,
+      "all_literal_archives_in_7_4_source_lock": true,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "Microsoft.PowerShell.Native",
+      "requirements": [
+        {
+          "version": "700.0.0-rc.1",
+          "project": "src/System.Management.Automation/System.Management.Automation.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "700.0.0-rc.1"
+      ],
+      "baseline_7_4_20_versions": [
+        "700.0.0"
+      ],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "Microsoft.PowerShell.PSResourceGet",
+      "requirements": [
+        {
+          "version": "1.2.0",
+          "project": "src/Modules/PSGalleryModules.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "1.2.0"
+      ],
+      "baseline_7_4_20_versions": [
+        "1.1.1"
+      ],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "Microsoft.PowerShell.ThreadJob",
+      "requirements": [
+        {
+          "version": "2.2.0",
+          "project": "src/Modules/PSGalleryModules.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "2.2.0"
+      ],
+      "baseline_7_4_20_versions": [],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "Microsoft.Security.Extensions",
+      "requirements": [
+        {
+          "version": "1.4.0",
+          "project": "src/System.Management.Automation/System.Management.Automation.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "1.4.0"
+      ],
+      "baseline_7_4_20_versions": [
+        "1.4.0"
+      ],
+      "same_declared_version_as_baseline": true,
+      "all_literal_archives_in_7_4_source_lock": true,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "Microsoft.Win32.Registry.AccessControl",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/System.Management.Automation/System.Management.Automation.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        },
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [
+        "8.0.0"
+      ],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "Microsoft.Win32.SystemEvents",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.Commands.Utility/Microsoft.PowerShell.Commands.Utility.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        },
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "Microsoft.Windows.Compatibility",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [
+        "8.0.31"
+      ],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "Newtonsoft.Json",
+      "requirements": [
+        {
+          "version": "13.0.4",
+          "project": "src/System.Management.Automation/System.Management.Automation.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "13.0.4"
+      ],
+      "baseline_7_4_20_versions": [
+        "13.0.4"
+      ],
+      "same_declared_version_as_baseline": true,
+      "all_literal_archives_in_7_4_source_lock": true,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "PSReadLine",
+      "requirements": [
+        {
+          "version": "2.4.5",
+          "project": "src/Modules/PSGalleryModules.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "2.4.5"
+      ],
+      "baseline_7_4_20_versions": [
+        "2.3.6"
+      ],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "PackageManagement",
+      "requirements": [
+        {
+          "version": "1.4.8.1",
+          "project": "src/Modules/PSGalleryModules.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "1.4.8.1"
+      ],
+      "baseline_7_4_20_versions": [
+        "1.4.8.1"
+      ],
+      "same_declared_version_as_baseline": true,
+      "all_literal_archives_in_7_4_source_lock": true,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "PowerShellGet",
+      "requirements": [
+        {
+          "version": "2.2.5",
+          "project": "src/Modules/PSGalleryModules.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "2.2.5"
+      ],
+      "baseline_7_4_20_versions": [
+        "2.2.5"
+      ],
+      "same_declared_version_as_baseline": true,
+      "all_literal_archives_in_7_4_source_lock": true,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "StyleCop.Analyzers",
+      "requirements": [
+        {
+          "version": "1.2.0-beta.556",
+          "project": "Analyzers.props",
+          "conditions": [],
+          "private_assets": "all",
+          "kind": "build-analyzer"
+        }
+      ],
+      "declared_versions": [
+        "1.2.0-beta.556"
+      ],
+      "baseline_7_4_20_versions": [
+        "1.2.0-beta.556"
+      ],
+      "same_declared_version_as_baseline": true,
+      "all_literal_archives_in_7_4_source_lock": true,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "System.Buffers",
+      "requirements": [
+        {
+          "version": "4.6.1",
+          "project": "src/System.Management.Automation/SourceGenerators/PSVersionInfoGenerator/PSVersionInfoGenerator.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "4.6.1"
+      ],
+      "baseline_7_4_20_versions": [],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "System.CodeDom",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/System.Management.Automation/System.Management.Automation.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        },
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "System.Collections.Immutable",
+      "requirements": [
+        {
+          "version": "9.0.14",
+          "project": "src/System.Management.Automation/SourceGenerators/PSVersionInfoGenerator/PSVersionInfoGenerator.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "9.0.14"
+      ],
+      "baseline_7_4_20_versions": [],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "System.ComponentModel.Composition",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "System.ComponentModel.Composition.Registration",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "System.Configuration.ConfigurationManager",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/System.Management.Automation/System.Management.Automation.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        },
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.Commands.Diagnostics/Microsoft.PowerShell.Commands.Diagnostics.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        },
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [
+        "8.0.1"
+      ],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "System.Data.Odbc",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "System.Data.OleDb",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "System.Data.SqlClient",
+      "requirements": [
+        {
+          "version": "4.9.1",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "4.9.1"
+      ],
+      "baseline_7_4_20_versions": [
+        "4.9.1"
+      ],
+      "same_declared_version_as_baseline": true,
+      "all_literal_archives_in_7_4_source_lock": true,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "System.Diagnostics.EventLog",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/System.Management.Automation/System.Management.Automation.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        },
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.CoreCLR.Eventing/Microsoft.PowerShell.CoreCLR.Eventing.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        },
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.WSMan.Management/Microsoft.WSMan.Management.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        },
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.Commands.Diagnostics/Microsoft.PowerShell.Commands.Diagnostics.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        },
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        },
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.Commands.Management/Microsoft.PowerShell.Commands.Management.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [
+        "8.0.2"
+      ],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "System.Diagnostics.PerformanceCounter",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.Commands.Diagnostics/Microsoft.PowerShell.Commands.Diagnostics.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        },
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [
+        "8.0.1"
+      ],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "System.DirectoryServices",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/System.Management.Automation/System.Management.Automation.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        },
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [
+        "8.0.0"
+      ],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "System.DirectoryServices.AccountManagement",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "System.DirectoryServices.Protocols",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [
+        "8.0.2"
+      ],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "System.Drawing.Common",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.Commands.Utility/Microsoft.PowerShell.Commands.Utility.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        },
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [
+        "8.0.31"
+      ],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "System.IO.Packaging",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [
+        "8.0.1"
+      ],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "System.IO.Ports",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "System.Management",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/System.Management.Automation/System.Management.Automation.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        },
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [
+        "8.0.0"
+      ],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "System.Memory",
+      "requirements": [
+        {
+          "version": "4.6.3",
+          "project": "src/System.Management.Automation/SourceGenerators/PSVersionInfoGenerator/PSVersionInfoGenerator.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "4.6.3"
+      ],
+      "baseline_7_4_20_versions": [],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "System.Net.Http.WinHttpHandler",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [
+        "8.0.3"
+      ],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "System.Numerics.Vectors",
+      "requirements": [
+        {
+          "version": "4.6.1",
+          "project": "src/System.Management.Automation/SourceGenerators/PSVersionInfoGenerator/PSVersionInfoGenerator.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "4.6.1"
+      ],
+      "baseline_7_4_20_versions": [],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "System.Reflection.Context",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "System.Reflection.Metadata",
+      "requirements": [
+        {
+          "version": "9.0.14",
+          "project": "src/System.Management.Automation/SourceGenerators/PSVersionInfoGenerator/PSVersionInfoGenerator.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "9.0.14"
+      ],
+      "baseline_7_4_20_versions": [],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "System.Runtime.Caching",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [
+        "8.0.1"
+      ],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "System.Runtime.CompilerServices.Unsafe",
+      "requirements": [
+        {
+          "version": "6.1.2",
+          "project": "src/System.Management.Automation/SourceGenerators/PSVersionInfoGenerator/PSVersionInfoGenerator.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "6.1.2"
+      ],
+      "baseline_7_4_20_versions": [],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "System.Security.Cryptography.Pkcs",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/System.Management.Automation/System.Management.Automation.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        },
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [
+        "8.0.1"
+      ],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "System.Security.Cryptography.ProtectedData",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/System.Management.Automation/System.Management.Automation.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        },
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.Commands.Diagnostics/Microsoft.PowerShell.Commands.Diagnostics.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        },
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "System.Security.Cryptography.Xml",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [
+        "8.0.4"
+      ],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "System.Security.Permissions",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/System.Management.Automation/System.Management.Automation.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        },
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [
+        "8.0.0"
+      ],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "System.ServiceModel.Http",
+      "requirements": [
+        {
+          "version": "10.0.652802",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.652802"
+      ],
+      "baseline_7_4_20_versions": [
+        "4.10.3"
+      ],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "System.ServiceModel.NetFramingBase",
+      "requirements": [
+        {
+          "version": "10.0.652802",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.652802"
+      ],
+      "baseline_7_4_20_versions": [],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "System.ServiceModel.NetTcp",
+      "requirements": [
+        {
+          "version": "10.0.652802",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.652802"
+      ],
+      "baseline_7_4_20_versions": [
+        "4.10.3"
+      ],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "System.ServiceModel.Primitives",
+      "requirements": [
+        {
+          "version": "10.0.652802",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.652802"
+      ],
+      "baseline_7_4_20_versions": [
+        "4.10.3"
+      ],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "System.ServiceModel.Syndication",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "System.ServiceProcess.ServiceController",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.WSMan.Management/Microsoft.WSMan.Management.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        },
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        },
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.Commands.Management/Microsoft.PowerShell.Commands.Management.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [
+        "8.0.1"
+      ],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "System.Speech",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "System.Threading.Tasks.Extensions",
+      "requirements": [
+        {
+          "version": "4.6.3",
+          "project": "src/System.Management.Automation/SourceGenerators/PSVersionInfoGenerator/PSVersionInfoGenerator.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "4.6.3"
+      ],
+      "baseline_7_4_20_versions": [],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "System.Windows.Extensions",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/System.Management.Automation/System.Management.Automation.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        },
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "runtime.android-arm.runtime.native.System.IO.Ports",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "runtime.android-arm64.runtime.native.System.IO.Ports",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "runtime.android-x64.runtime.native.System.IO.Ports",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "runtime.android-x86.runtime.native.System.IO.Ports",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "runtime.linux-arm.runtime.native.System.IO.Ports",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "runtime.linux-arm64.runtime.native.System.IO.Ports",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "runtime.linux-bionic-arm64.runtime.native.System.IO.Ports",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "runtime.linux-bionic-x64.runtime.native.System.IO.Ports",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "runtime.linux-musl-arm.runtime.native.System.IO.Ports",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "runtime.linux-musl-arm64.runtime.native.System.IO.Ports",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "runtime.linux-musl-x64.runtime.native.System.IO.Ports",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "runtime.linux-x64.runtime.native.System.IO.Ports",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "runtime.maccatalyst-arm64.runtime.native.System.IO.Ports",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "runtime.maccatalyst-x64.runtime.native.System.IO.Ports",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "runtime.native.System.IO.Ports",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "runtime.osx-arm64.runtime.native.System.IO.Ports",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    },
+    {
+      "id": "runtime.osx-x64.runtime.native.System.IO.Ports",
+      "requirements": [
+        {
+          "version": "10.0.5",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "conditions": [],
+          "private_assets": null,
+          "kind": "declared-package"
+        }
+      ],
+      "declared_versions": [
+        "10.0.5"
+      ],
+      "baseline_7_4_20_versions": [],
+      "same_declared_version_as_baseline": false,
+      "all_literal_archives_in_7_4_source_lock": false,
+      "source_package_and_runtime_verification_complete": false
+    }
+  ],
+  "declared_package_ids": 79,
+  "same_version_ids": 11,
+  "new_ids": [
+    "Microsoft.PowerShell.ThreadJob",
+    "Microsoft.Win32.SystemEvents",
+    "System.Buffers",
+    "System.CodeDom",
+    "System.Collections.Immutable",
+    "System.ComponentModel.Composition",
+    "System.ComponentModel.Composition.Registration",
+    "System.Data.Odbc",
+    "System.Data.OleDb",
+    "System.DirectoryServices.AccountManagement",
+    "System.IO.Ports",
+    "System.Memory",
+    "System.Numerics.Vectors",
+    "System.Reflection.Context",
+    "System.Reflection.Metadata",
+    "System.Runtime.CompilerServices.Unsafe",
+    "System.Security.Cryptography.ProtectedData",
+    "System.ServiceModel.NetFramingBase",
+    "System.ServiceModel.Syndication",
+    "System.Speech",
+    "System.Threading.Tasks.Extensions",
+    "System.Windows.Extensions",
+    "runtime.android-arm.runtime.native.System.IO.Ports",
+    "runtime.android-arm64.runtime.native.System.IO.Ports",
+    "runtime.android-x64.runtime.native.System.IO.Ports",
+    "runtime.android-x86.runtime.native.System.IO.Ports",
+    "runtime.linux-arm.runtime.native.System.IO.Ports",
+    "runtime.linux-arm64.runtime.native.System.IO.Ports",
+    "runtime.linux-bionic-arm64.runtime.native.System.IO.Ports",
+    "runtime.linux-bionic-x64.runtime.native.System.IO.Ports",
+    "runtime.linux-musl-arm.runtime.native.System.IO.Ports",
+    "runtime.linux-musl-arm64.runtime.native.System.IO.Ports",
+    "runtime.linux-musl-x64.runtime.native.System.IO.Ports",
+    "runtime.linux-x64.runtime.native.System.IO.Ports",
+    "runtime.maccatalyst-arm64.runtime.native.System.IO.Ports",
+    "runtime.maccatalyst-x64.runtime.native.System.IO.Ports",
+    "runtime.native.System.IO.Ports",
+    "runtime.osx-arm64.runtime.native.System.IO.Ports",
+    "runtime.osx-x64.runtime.native.System.IO.Ports"
+  ],
+  "removed_ids": [
+    "Json.More.Net",
+    "JsonPointer.Net",
+    "System.Diagnostics.DiagnosticSource",
+    "System.Formats.Asn1",
+    "System.Private.ServiceModel",
+    "System.Security.AccessControl",
+    "System.ServiceModel.Duplex",
+    "System.ServiceModel.Security",
+    "System.Text.Encoding.CodePages",
+    "System.Text.Encodings.Web",
+    "System.Threading.AccessControl",
+    "System.Web.Services.Description",
+    "ThreadJob"
+  ],
+  "exact_archive_matches_in_7_4_source_lock": 11,
+  "restored_transitive_closure_verified": false,
+  "source_sdk10_built": false,
+  "source_runtime10_built": false,
+  "full_dependency_goal_complete": false
+}

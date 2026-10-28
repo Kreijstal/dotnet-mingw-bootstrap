@@ -1,0 +1,141 @@
+{
+  "previous_goal_turn_classification": "progress",
+  "current_goal_turn_classification": "progress",
+  "date_utc": "2026-10-27",
+  "host": "win11",
+  "root": "/c/codex-dotnet10/c1.1BZ8KU",
+  "output": "reference10-2",
+  "runtime_version": "10.0.5",
+  "runtime_commit": "081d220c0a773ffb7c6bea6b48727833576a65ef",
+  "runtime_archive_sha256": "1692acae5e3adfd625452fbc9db4fd4e982c10e38189358ae245c74dd5514d7a",
+  "declared_runtime_assemblies": 172,
+  "excluded_private_implementation_assemblies": 5,
+  "public_reference_assemblies": 167,
+  "private_facade_stub_assemblies": 19,
+  "original_cs_inputs": 203,
+  "original_project_and_property_inputs": 286,
+  "private_project_clones_verified_against_pristine": 286,
+  "original_archive_selected_inputs_verified": 490,
+  "production_cs_changes": 0,
+  "all_original_source_inputs_match_pinned_archive": true,
+  "source_compiler": "unchanged source Roslyn5 through CompilerHost on source .NET8.0.31-3",
+  "bootstrap_sdk": "source SDK8.0.131-3",
+  "compiler_reference_mode": "nostdlib + refonly + only original graph dependency closure",
+  "reference_build_warning_lines": 44,
+  "reference_build_warning_codes": {
+    "CS8500": 31,
+    "CS8617": 13
+  },
+  "reference_build_warning_projects": {
+    "System.Runtime": 1,
+    "System.Linq.Expressions": 4,
+    "System.Net.Http": 4,
+    "System.Numerics.Vectors": 6,
+    "System.Text.Json": 5,
+    "System.Runtime.Intrinsics": 24
+  },
+  "original_zero_version_policy_assemblies": 22,
+  "original_stub_generation_target_executed": true,
+  "original_genfacades_task_inputs": {
+    "GenFacades-BuildTask.cs": {
+      "vmr_path": "src/arcade/src/Common/Internal/BuildTask.cs",
+      "vmr_commit": "12f41dd0da1a94621e039e27aef264179c1104b5",
+      "sha256": "62cc755b3bfc635db520c4bad47d14c72d04a1de3acc22ffe1b22e5bca407572"
+    },
+    "ClearAssemblyReferenceVersions.cs": {
+      "vmr_path": "src/arcade/src/Microsoft.DotNet.GenFacades/ClearAssemblyReferenceVersions.cs",
+      "vmr_commit": "12f41dd0da1a94621e039e27aef264179c1104b5",
+      "sha256": "946f05a407e5f919f55093a1ab7f532a4272a86d0e5cd8ca3a4bddcc4c45781b"
+    },
+    "GenFacades.Main.targets": {
+      "vmr_path": "src/arcade/src/Microsoft.DotNet.GenFacades/build/Microsoft.DotNet.GenFacades.targets",
+      "vmr_commit": "12f41dd0da1a94621e039e27aef264179c1104b5",
+      "sha256": "bc0c690ffcff3d77984678e492900eeac634c182584adbad9ba6e2bc5954efeb"
+    },
+    "GenFacades.ClearVersion.targets": {
+      "vmr_path": "src/arcade/src/Microsoft.DotNet.GenFacades/build/Microsoft.DotNet.GenFacades.ClearVersion.targets",
+      "vmr_commit": "12f41dd0da1a94621e039e27aef264179c1104b5",
+      "sha256": "56ca6f12848f16d8a749c4ec1c6e81ceb767e1953c097484bfef979eb4bd77c3"
+    }
+  },
+  "all_identities_keys_versions_markers_and_graph_references_match": true,
+  "visualbasic_core_identity_and_file_version": {
+    "version": "15.0.0.0",
+    "file_version": "15.0.526.11800",
+    "public_key_token": "b03f5f7f11d50a3a"
+  },
+  "commands": [
+    {
+      "command": "/usr/bin/python3 reference-workflow/prepare.py \"$ROOT\" \"$ROOT/reference10-2\"",
+      "exit_code": 0
+    },
+    {
+      "command": "bash reference-workflow/evaluate.sh \"$ROOT\" \"$ROOT/reference10-2\"",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 reference-workflow/build.py \"$ROOT\" \"$ROOT/reference10-2\" System.Runtime",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 reference-workflow/build.py \"$ROOT\" \"$ROOT/reference10-2\"",
+      "exit_code": 0,
+      "projects": 186
+    },
+    {
+      "command": "/usr/bin/python3 reference-workflow/validate.py \"$ROOT\" \"$ROOT/reference10-2\"",
+      "exit_code": 0
+    },
+    {
+      "command": "python3 tests/runtime10-reference/audit-pristine.py /tmp/runtime10-reference1/evidence /tmp/dotnet10-sources/runtime-10.0.5 /tmp/dotnet10-sources/runtime-v10.0.5.tar.gz",
+      "exit_code": 0
+    },
+    {
+      "command": "python3 -m py_compile tests/runtime10-reference/*.py",
+      "exit_code": 0
+    },
+    {
+      "command": "bash -n tests/runtime10-reference/evaluate.sh",
+      "exit_code": 0
+    }
+  ],
+  "net10_consumer_compile_exit_code": 0,
+  "net8_negative_control_compile_exit_code": 1,
+  "consumer_source_sha256": "b92f33fa38737a3e2fb0183dad3f589be008597a7fd121ab1349937ffb4c1a1d",
+  "consumer_apis": [
+    "System.Threading.Lock",
+    "Enumerable.Sequence<int>",
+    "AsyncEnumerable.Range",
+    "C#14 field-backed property"
+  ],
+  "consumer_executed": false,
+  "all_contract_outputs_metadata_verified": true,
+  "reference_pack_generators_complete": false,
+  "full_managed_framework10_built": false,
+  "full_sdk10_built": false,
+  "full_windowsdesktop10_built": false,
+  "powershell76_built": false,
+  "pacman_runtime10_or_targeting10_installed": false,
+  "full_dependency_goal_complete": false,
+  "dependency_artifact_counts_unchanged": {
+    "verified_direct": 50,
+    "total_direct": 53,
+    "verified_transitive": 52,
+    "including_experimental": 106
+  },
+  "evidence_archive_sha256": "b92d46a0c4dfe8ef413e22dcbe9dcbccb046b742b49a59232121fbfbe514bff8",
+  "supplemental_project_archive_sha256": "b76e3a1eab4347f4c480a888fb61c7765d721e7bd24937cc99807642e14980b2",
+  "local_evidence": "/tmp/runtime10-reference1/evidence",
+  "corrected_issues": [
+    "Restored original NetCoreAppLibrary.props import so original facade version policy evaluates correctly.",
+    "Recalculated VisualBasic15 file version with original Arcade task; only affected DLLs rebuilt.",
+    "Fixed final cache-status write so a mostly cached build still records the complete graph."
+  ],
+  "remaining": [
+    "Complete original targeting-pack source-generator bundle and its declared dependencies.",
+    "Formal targeting10 package layout, source/archive audits and installed-pack SDK consumer gate.",
+    "Complete managed/native .NET10 framework and SDK10.0.201.",
+    "WindowsDesktop10 and PowerShell7.6 full dependency/compatibility closure.",
+    "Previously recorded MMI3, SQL/native, Windows.Compatibility and broader runtime compatibility."
+  ]
+}

@@ -1,0 +1,52 @@
+[
+  {
+    "recipe": "mingw-w64-dotnet-markdig",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-markdig-0.33.0-1-any.pkg.tar.zst",
+    "sha256": "959a93ef45aad7df977e2ad9bc637c7a082e0ab070696519ee2131a914ff03fd",
+    "dependencies": []
+  },
+  {
+    "recipe": "mingw-w64-dotnet-powershell-markdownrender",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-powershell-markdownrender-7.2.1-1-any.pkg.tar.zst",
+    "sha256": "b953141ea42615ee8842b66df1dfa5881e4671282ec5921f40be009153d3816e",
+    "dependencies": [
+      "Markdig.Signed"
+    ]
+  },
+  {
+    "recipe": "mingw-w64-dotnet-humanizer",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-humanizer-2.14.1-1-any.pkg.tar.zst",
+    "sha256": "e789daabadb8dd40cae07941a02a24de5c849265c2561f3614f003d5ad7c331f",
+    "dependencies": []
+  },
+  {
+    "recipe": "mingw-w64-dotnet-json-more",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-json-more-2.0.2-1-any.pkg.tar.zst",
+    "sha256": "8c6fdd9ddec79cdc25b81c870b526f6b738bc3f90df0a38e83a45b9094f6d8cb",
+    "dependencies": []
+  },
+  {
+    "recipe": "mingw-w64-dotnet-jsonpointer",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-jsonpointer-5.0.2-1-any.pkg.tar.zst",
+    "sha256": "45ecd19dd7cc53cab199fd85fd751257e26b0e0f6fdcfce9f158e82b50e468e0",
+    "dependencies": [
+      "Humanizer.Core",
+      "Json.More.Net"
+    ]
+  },
+  {
+    "recipe": "mingw-w64-dotnet-jsonschema",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-jsonschema-7.0.4-1-any.pkg.tar.zst",
+    "sha256": "df5ed931548877de6a87ee983d0a152aea59dfbb7c69fe3c762385e22d294ad9",
+    "dependencies": [
+      "Json.More.Net",
+      "JsonPointer.Net"
+    ]
+  },
+  {
+    "recipe": "mingw-w64-dotnet-mmi",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-mmi-2.0.0.preview1-1-any.pkg.tar.zst",
+    "sha256": "dcb8ecb7a84c1478d5347a87b6928c127132a69817d7f6a673be294a851f90e5",
+    "dependencies": []
+  }
+]

@@ -1,0 +1,37 @@
+{
+  "previous_goal_turn_classification": "progress",
+  "current_goal_turn_classification": "progress",
+  "confirmed_installed_runtime_package": "8.0.31-2",
+  "red_probe_root": "/home/topkek/runtime-forwarder-check.dNaVb0",
+  "red_exit_code": 127,
+  "wrong_request": "System.Data.SqlClient8.0.0.0/cc7b13ffcd2ddd51",
+  "source_target": "System.Data.SqlClient4.6.1.6/b03f5f7f11d50a3a",
+  "cause": [
+    "stub key selection omitted the original stub project path",
+    "original GenFacadesForceZeroVersionSeeds postprocessor was omitted"
+  ],
+  "correction": [
+    "read original stub StrongNameKeyId",
+    "run unchanged pinned Arcade ClearAssemblyReferenceVersions task on22 original framework shim names"
+  ],
+  "original_task_source_sha256": "946f05a407e5f919f55093a1ab7f532a4272a86d0e5cd8ca3a4bddcc4c45781b",
+  "focused_sqlclient_green_exit_code": 0,
+  "all20_stub_key_and44_shim_identity_audit_exit_code": 0,
+  "six_forwarder_regression_exit_code": 0,
+  "private_fixed_layout": "/home/topkek/runtime8pkg2.ym1eaB/shim-fixed-layout",
+  "installed_files_patched_outside_package_manager": false,
+  "fresh_runtime_clean_build_root": "/home/topkek/runtime8pkg3.RGUgSb",
+  "fresh_runtime_clean_build_session": 9245,
+  "fresh_runtime_clean_build_command": "makepkg --cleanbuild --force --noconfirm",
+  "fresh_runtime_clean_build_status": "running",
+  "fresh_source_archive_sha256": "1901796a07f37c06c6a5423cce5ce67b98fd300a7201f9a055e998f30d062356",
+  "fresh_workflow_source_files": 49,
+  "stopped_defective_targeting_build_root": "/home/topkek/targeting8pkg1.vJR3VR",
+  "stopped_targeting_exit_code": 4,
+  "targeting_corrected_source_archive_sha256": "ea3a74e166369a9c17dba161a1198693d854c7bdcd9704e28783133453b257a8",
+  "targeting_corrected_source_files": 54,
+  "targeting_corrected_runtime_prerequisite": ">=8.0.31-3",
+  "installed_candidate3_or_full_goal_complete": false,
+  "corrected_targeting_prepared_root": "/home/topkek/targeting8pkg2.AAw8xI",
+  "corrected_targeting_source_verification_exit_code": 0
+}

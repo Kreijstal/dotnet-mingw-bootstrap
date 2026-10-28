@@ -1,0 +1,320 @@
+Runtime core package validation on win11 / MSYS2 CLANG64
+Root: /home/topkek/powershell-compatibility.UIIT7O
+Underlying source-built runtime remains 8.0.0; SDK package version is 8.0.131.
+All consumers use new caches and only the installed source-built feed.
+
+Each recipe:
+$ PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm
+Result: exit 0 in all three directories.
+
+Microsoft.Bcl.AsyncInterfaces 8.0.0
+==> Making package: mingw-w64-dotnet-asyncinterfaces8 8.0.0-1 (26 Oct 2026 18:17:32)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found runtime-v8.0.31.tar.gz
+  -> Found prepare.py
+  -> Found Open.pubkey.hex
+  -> Found check.cs
+  -> Found check.sh
+  -> Found README.md
+==> Validating source files with sha256sums...
+    runtime-v8.0.31.tar.gz ... Passed
+    prepare.py ... Passed
+    Open.pubkey.hex ... Passed
+    check.cs ... Passed
+    check.sh ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+==> Starting prepare()...
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-asyncinterfaces8\src\build\Library.csproj (in 82 ms).
+  Library -> E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-asyncinterfaces8\src\build\bin\Release\net8.0\Microsoft.Bcl.AsyncInterfaces.dll
+  The package Microsoft.Bcl.AsyncInterfaces.8.0.0 is missing a readme. Go to https://aka.ms/nuget/authoring-best-practices/readme to learn why package readmes are important.
+  Successfully created package 'E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-asyncinterfaces8\src\feed\Microsoft.Bcl.AsyncInterfaces.8.0.0.nupkg'.
+==> Starting check()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-asyncinterfaces8\src\check\check.csproj (in 201 ms).
+  check -> E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-asyncinterfaces8\src\check\bin\Release\net8.0\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.96
+PASS AsyncInterfaces 8: exact 11 forwarded types, source identity/location, real async enumeration/disposal/cancellation and inbox resolution
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-asyncinterfaces8"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-asyncinterfaces8 8.0.0-1 (26 Oct 2026 18:17:55)
+
+Newtonsoft.Json 13.0.4
+==> Making package: mingw-w64-dotnet-newtonsoft-json 13.0.4-1 (26 Oct 2026 18:14:08)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found newtonsoft-json-4e13299d4b0ec96bd4df9954ef646bd2d1b5bf2a.tar.gz
+  -> Found prepare.py
+  -> Found check.cs
+  -> Found Newtonsoft.pubkey.hex
+==> Validating source files with sha256sums...
+    newtonsoft-json-4e13299d4b0ec96bd4df9954ef646bd2d1b5bf2a.tar.gz ... Passed
+    prepare.py ... Passed
+    check.cs ... Passed
+    Newtonsoft.pubkey.hex ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+  -> Extracting newtonsoft-json-4e13299d4b0ec96bd4df9954ef646bd2d1b5bf2a.tar.gz with bsdtar
+==> Starting prepare()...
+Prepared original source project; removed 0 binary inputs and build-only package references ['Microsoft.CodeAnalysis.NetAnalyzers', 'Microsoft.SourceLink.GitHub']
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-newtonsoft-json\src\Newtonsoft.Json-4e13299d4b0ec96bd4df9954ef646bd2d1b5bf2a\Src\Newtonsoft.Json\Newtonsoft.Json.csproj (in 71 ms).
+  Newtonsoft.Json -> E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-newtonsoft-json\src\Newtonsoft.Json-4e13299d4b0ec96bd4df9954ef646bd2d1b5bf2a\Src\Newtonsoft.Json\bin\Release\net8.0\Newtonsoft.Json.dll
+  Successfully created package 'E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-newtonsoft-json\src\feed\Newtonsoft.Json.13.0.4.nupkg'.
+==> Starting check()...
+PASS Newtonsoft.Json typed/Unicode/dynamic/JSON-path/XML and original strong identity
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-newtonsoft-json"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-newtonsoft-json 13.0.4-1 (26 Oct 2026 18:14:34)
+
+Microsoft.ApplicationInsights 2.23.0
+==> Making package: mingw-w64-dotnet-applicationinsights 2.23.0-1 (26 Oct 2026 18:32:03)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found applicationinsights-2faa7e8b157a431daa2e71785d68abd5fa817b53.tar.gz
+  -> Found prepare.py
+  -> Found MicrosoftShared.pubkey.hex
+  -> Found Check.cs
+  -> Found CheckApi.cs
+  -> Found check.sh
+  -> Found README.md
+==> Validating source files with sha256sums...
+    applicationinsights-2faa7e8b157a431daa2e71785d68abd5fa817b53.tar.gz ... Passed
+    prepare.py ... Passed
+    MicrosoftShared.pubkey.hex ... Passed
+    Check.cs ... Passed
+    CheckApi.cs ... Passed
+    check.sh ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+==> Starting prepare()...
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-applicationinsights\src\build\Library.csproj (in 199 ms).
+  Library -> E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-applicationinsights\src\build\bin\Release\net8.0\Microsoft.ApplicationInsights.dll
+  The package Microsoft.ApplicationInsights.2.23.0 is missing a readme. Go to https://aka.ms/nuget/authoring-best-practices/readme to learn why package readmes are important.
+  Successfully created package 'E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-applicationinsights\src\feed\Microsoft.ApplicationInsights.2.23.0.nupkg'.
+==> Starting check()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-applicationinsights\src\consumer\check.csproj (in 292 ms).
+E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-applicationinsights\src\consumer\Check.cs(42,33): warning CS0618: 'TelemetryConfiguration.TelemetryConfiguration(string, ITelemetryChannel)' is obsolete: 'InstrumentationKey based global ingestion is being deprecated. Use the default constructor and manually set TelemetryConfiguration.ConnectionString. See https://github.com/microsoft/ApplicationInsights-dotnet/issues/2560 for more details.' [E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-applicationinsights\src\consumer\check.csproj]
+  check -> E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-applicationinsights\src\consumer\bin\Release\net8.0\check.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-applicationinsights\src\consumer\Check.cs(42,33): warning CS0618: 'TelemetryConfiguration.TelemetryConfiguration(string, ITelemetryChannel)' is obsolete: 'InstrumentationKey based global ingestion is being deprecated. Use the default constructor and manually set TelemetryConfiguration.ConnectionString. See https://github.com/microsoft/ApplicationInsights-dotnet/issues/2560 for more details.' [E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-applicationinsights\src\consumer\check.csproj]
+    1 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.13
+PASS: Microsoft.ApplicationInsights preserves all 1033 upstream public API declarations
+PASS ApplicationInsights identity/source/location; event/trace/exception/metric/request/dependency, correlation, initializer, clone, disable, flush and JSON/gzip; in-memory channel only
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-applicationinsights"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-applicationinsights 2.23.0-1 (26 Oct 2026 18:32:27)
+
+Installed validation:
+$ bash mingw-w64-dotnet-asyncinterfaces8/check.sh asyncinterfaces8-installed
+Result: exit 0
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-compatibility.UIIT7O\asyncinterfaces8-installed\check.csproj (in 218 ms).
+  check -> E:\msys64\home\topkek\powershell-compatibility.UIIT7O\asyncinterfaces8-installed\bin\Release\net8.0\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.54
+PASS AsyncInterfaces 8: exact 11 forwarded types, source identity/location, real async enumeration/disposal/cancellation and inbox resolution
+
+$ bash tests/powershell-deps/check-newtonsoft-installed.sh newtonsoft-installed
+Result: exit 0
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-compatibility.UIIT7O\newtonsoft-installed\check.csproj (in 240 ms).
+  check -> E:\msys64\home\topkek\powershell-compatibility.UIIT7O\newtonsoft-installed\bin\Release\net8.0\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.74
+PASS Newtonsoft installed source version/location, 144 exported types, DateOnly/BigInteger/ADO.NET/decimal/depth/async features
+PASS Newtonsoft.Json typed/Unicode/dynamic/JSON-path/XML and original strong identity
+
+$ bash mingw-w64-dotnet-applicationinsights/check.sh appinsights-installed
+Result: exit 0
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-compatibility.UIIT7O\appinsights-installed\check.csproj (in 345 ms).
+E:\msys64\home\topkek\powershell-compatibility.UIIT7O\appinsights-installed\Check.cs(42,33): warning CS0618: 'TelemetryConfiguration.TelemetryConfiguration(string, ITelemetryChannel)' is obsolete: 'InstrumentationKey based global ingestion is being deprecated. Use the default constructor and manually set TelemetryConfiguration.ConnectionString. See https://github.com/microsoft/ApplicationInsights-dotnet/issues/2560 for more details.' [E:\msys64\home\topkek\powershell-compatibility.UIIT7O\appinsights-installed\check.csproj]
+  check -> E:\msys64\home\topkek\powershell-compatibility.UIIT7O\appinsights-installed\bin\Release\net8.0\check.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\powershell-compatibility.UIIT7O\appinsights-installed\Check.cs(42,33): warning CS0618: 'TelemetryConfiguration.TelemetryConfiguration(string, ITelemetryChannel)' is obsolete: 'InstrumentationKey based global ingestion is being deprecated. Use the default constructor and manually set TelemetryConfiguration.ConnectionString. See https://github.com/microsoft/ApplicationInsights-dotnet/issues/2560 for more details.' [E:\msys64\home\topkek\powershell-compatibility.UIIT7O\appinsights-installed\check.csproj]
+    1 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.12
+PASS: Microsoft.ApplicationInsights preserves all 1033 upstream public API declarations
+PASS ApplicationInsights identity/source/location; event/trace/exception/metric/request/dependency, correlation, initializer, clone, disable, flush and JSON/gzip; in-memory channel only
+
+$ python3 tests/powershell-deps/audit-runtime-core-libraries.py tests/powershell-deps/runtime-core-libraries-artifacts-20261026.json
+Result: exit 0. Exact source checksums, licenses, pacman/NuGet dependencies and single lib/net8.0 implementation/facade payloads pass.
+
+Application Insights' published assembly identity was inspected only with PEReader/System.Reflection.Metadata.
+No published DLL was loaded, executed, compiled against or used as a build input/package payload.
+Application Insights tests used a recording channel exclusively and sent no telemetry externally.
+These checks do not establish every API behavior, telemetry network ingestion/retry/failover or full PowerShell integration.

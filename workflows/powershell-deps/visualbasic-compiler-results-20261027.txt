@@ -1,0 +1,300 @@
+Source-built Visual Basic command-line compiler4.9.2, 2026-10-27
+Host win11 / MSYS2 CLANG64; root /home/topkek/powershell-vbc49.DkJV1y
+All eleven original driver/shared files plus the two original private RazorCompiler
+helper files build from Roslyn9934fb9e3527e1c0c51314e57d4aab30f97e8f9e.
+All Common/VisualBasic DLLs and 26 satellites match separately audited source
+packages. Original SDK compiler remains byte-identical. Relative vbc49.cmd installs
+under compiler-packs/roslyn-vb-4.9.2, no SDK replacement or VBCSCompiler server.
+
+Clean makepkg build/check passed. The response-file test originally used C#'s
+/nostdlib+ flag, which VB ignored. Final check uses /nostdlib and command-line
+-noconfig, removing the ignored-option/implicit-library warnings. Only check.sh
+changed. Source verification, focused final check, repackage and fresh installed
+check pass; no production compiler rebuild was needed for that test-only fix.
+
+Installed checks cover version, Unicode/space CLI response paths, expected BC30512
+and error exit1, relocation, actual MSBuild analyzer/incremental VB generator,
+executed generated value42/compiler4.9 identity, expected VBC4901 analyzer error
+and corrected success. Package source/checksum/license/dependency/payload audit
+passes. This build tool is excluded from dependency artifact/direct-ID counts.
+Runtime still reports8.0.0; servicing and full PowerShell integration remain.
+
+All commands below exit0:
+
+$ PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm
+==> Making package: mingw-w64-dotnet-visualbasic-compiler 4.9.2-1 (27 Oct 2026 00:39:54)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found roslyn-4.9.2.tar.gz
+  -> Found prepare.py
+  -> Found build.sh
+  -> Found vbc49.cmd
+  -> Found Probe.cs
+  -> Found check.sh
+  -> Found README.md
+==> Validating source files with sha256sums...
+    roslyn-4.9.2.tar.gz ... Passed
+    prepare.py ... Passed
+    build.sh ... Passed
+    vbc49.cmd ... Passed
+    Probe.cs ... Passed
+    check.sh ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+  -> Extracting roslyn-4.9.2.tar.gz with bsdtar
+==> Starting prepare()...
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-vbc49.DkJV1y\src\prepared\vbc\Tool.csproj (in 271 ms).
+  Restored E:\msys64\home\topkek\powershell-vbc49.DkJV1y\src\prepared\Microsoft.CodeAnalysis.ExternalAccess.RazorCompiler\Tool.csproj (in 271 ms).
+  Tool -> E:\msys64\home\topkek\powershell-vbc49.DkJV1y\src\prepared\Microsoft.CodeAnalysis.ExternalAccess.RazorCompiler\bin\Release\net8.0\Microsoft.CodeAnalysis.ExternalAccess.RazorCompiler.dll
+  Tool -> E:\msys64\home\topkek\powershell-vbc49.DkJV1y\src\prepared\vbc\bin\Release\net8.0\vbc.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.29
+==> Starting check()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-vbc49.DkJV1y\src\check\probe\Probe.csproj (in 277 ms).
+  Probe -> E:\msys64\home\topkek\powershell-vbc49.DkJV1y\src\check\probe\bin\Release\net8.0\VbCompiler49Probe.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.93
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-vbc49.DkJV1y\src\check\consumer\Consumer.vbproj (in 71 ms).
+  Consumer -> E:\msys64\home\topkek\powershell-vbc49.DkJV1y\src\check\consumer\bin\Release\net8.0\Consumer.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.79
+PASS vbc49 generated value=42 compiler=4.9.0.0
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Consumer -> E:\msys64\home\topkek\powershell-vbc49.DkJV1y\src\check\consumer\bin\Release\net8.0\Consumer.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.37
+Microsoft (R) Visual Basic Compiler version 4.9.2 (9934fb9e)
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+vbc : warning BC2025: ignoring /noconfig option because it was specified in a response file
+vbc : warning BC2007: unrecognized option '/nostdlib+'; ignored
+vbc : warning BC40049: Could not find standard library 'System.dll'.
+PASS source vbc49 CLI/version/VisualBasic/Unicode-space RSP/error exit, relocated wrapper, actual MSBuild analyzer/incremental generator execution, and unchanged SDK compiler
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-visualbasic-compiler"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-visualbasic-compiler 4.9.2-1 (27 Oct 2026 00:41:02)
+
+$ bash check.sh check-final src/prepared/vbc/bin/Release/net8.0
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-vbc49.DkJV1y\check-final\probe\Probe.csproj (in 257 ms).
+  Probe -> E:\msys64\home\topkek\powershell-vbc49.DkJV1y\check-final\probe\bin\Release\net8.0\VbCompiler49Probe.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.61
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-vbc49.DkJV1y\check-final\consumer\Consumer.vbproj (in 66 ms).
+  Consumer -> E:\msys64\home\topkek\powershell-vbc49.DkJV1y\check-final\consumer\bin\Release\net8.0\Consumer.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.37
+PASS vbc49 generated value=42 compiler=4.9.0.0
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Consumer -> E:\msys64\home\topkek\powershell-vbc49.DkJV1y\check-final\consumer\bin\Release\net8.0\Consumer.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.39
+Microsoft (R) Visual Basic Compiler version 4.9.2 (9934fb9e)
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+PASS source vbc49 CLI/version/VisualBasic/Unicode-space RSP/error exit, relocated wrapper, actual MSBuild analyzer/incremental generator execution, and unchanged SDK compiler
+
+$ makepkg --verifysource --force
+==> Making package: mingw-w64-dotnet-visualbasic-compiler 4.9.2-1 (27 Oct 2026 00:43:33)
+==> Retrieving sources...
+  -> Found roslyn-4.9.2.tar.gz
+  -> Found prepare.py
+  -> Found build.sh
+  -> Found vbc49.cmd
+  -> Found Probe.cs
+  -> Found check.sh
+  -> Found README.md
+==> Validating source files with sha256sums...
+    roslyn-4.9.2.tar.gz ... Passed
+    prepare.py ... Passed
+    build.sh ... Passed
+    vbc49.cmd ... Passed
+    Probe.cs ... Passed
+    check.sh ... Passed
+    README.md ... Passed
+
+$ makepkg --repackage --force --noconfirm
+==> Making package: mingw-w64-dotnet-visualbasic-compiler 4.9.2-1 (27 Oct 2026 00:43:37)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Removing existing $pkgdir/ directory...
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-visualbasic-compiler"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-visualbasic-compiler 4.9.2-1 (27 Oct 2026 00:43:45)
+
+$ pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-visualbasic-compiler-4.9.2-1-any.pkg.tar.zst
+$ bash check.sh installed-check
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-dotnet-visualbasic-compiler-4.9.2-1
+
+Total Installed Size:  11.84 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+installing mingw-w64-clang-x86_64-dotnet-visualbasic-compiler...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-vbc49.DkJV1y\installed-check\probe\Probe.csproj (in 239 ms).
+  Probe -> E:\msys64\home\topkek\powershell-vbc49.DkJV1y\installed-check\probe\bin\Release\net8.0\VbCompiler49Probe.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.79
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-vbc49.DkJV1y\installed-check\consumer\Consumer.vbproj (in 51 ms).
+  Consumer -> E:\msys64\home\topkek\powershell-vbc49.DkJV1y\installed-check\consumer\bin\Release\net8.0\Consumer.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.61
+PASS vbc49 generated value=42 compiler=4.9.0.0
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Consumer -> E:\msys64\home\topkek\powershell-vbc49.DkJV1y\installed-check\consumer\bin\Release\net8.0\Consumer.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.26
+Microsoft (R) Visual Basic Compiler version 4.9.2 (9934fb9e)
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+PASS source vbc49 CLI/version/VisualBasic/Unicode-space RSP/error exit, relocated wrapper, actual MSBuild analyzer/incremental generator execution, and unchanged SDK compiler
+
+$ python3 tests/powershell-deps/audit-visualbasic-compiler.py
+VisualBasic compiler49: exact pinned source/checksums/licenses, complete driver/helper/satellites, relative launcher, runtime config and byte-identical source-built compiler dependencies PASS

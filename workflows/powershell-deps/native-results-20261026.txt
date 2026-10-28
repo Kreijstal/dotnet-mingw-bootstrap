@@ -1,0 +1,258 @@
+PowerShell native dependency packaging verification, 2026-10-26
+Host: win11, MSYS2 CLANG64, source-built SDK/runtime8.0.131-1 (runtime8.0.0).
+Targeting pack8.0.131-2. Native source v700.0.0, source-built EventTraceKit compiler.
+Full PowerShell/WinRM integration is not established.
+
+Clean manifest compiler package build
+Run in MSYSTEM=CLANG64 bash -lc:
+cd /home/topkek/powershell-native.O3Jvgl/mingw-w64-dotnet-event-manifest-compiler
+PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm
+result: exit 0
+
+==> Making package: mingw-w64-dotnet-event-manifest-compiler 1.0.0.git20201006.f919e38-1 (26 Oct 2026 15:28:18)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found event-trace-kit-f919e38bbf553f89058f98b5d1eeb3c4536a673b.tar.gz
+  -> Found prepare.py
+  -> Found Program.cs
+  -> Found build.sh
+  -> Found event-manifest-compiler.sh
+  -> Found README.md
+==> Validating source files with sha256sums...
+    event-trace-kit-f919e38bbf553f89058f98b5d1eeb3c4536a673b.tar.gz ... Passed
+    prepare.py ... Passed
+    Program.cs ... Passed
+    build.sh ... Passed
+    event-manifest-compiler.sh ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+  -> Extracting event-trace-kit-f919e38bbf553f89058f98b5d1eeb3c4536a673b.tar.gz with bsdtar
+==> Starting prepare()...
+==> Removing existing $pkgdir/ directory...
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj (in 88 ms).
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Collections\DuplicateItemException.cs(86,30): warning CS0672: Member 'DuplicateItemException.GetObjectData(SerializationInfo, StreamingContext)' overrides obsolete member 'Exception.GetObjectData(SerializationInfo, StreamingContext)'. Add the Obsolete attribute to 'DuplicateItemException.GetObjectData(SerializationInfo, StreamingContext)'. [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Support\InternalException.cs(91,30): warning CS0672: Member 'InternalException.GetObjectData(SerializationInfo, StreamingContext)' overrides obsolete member 'Exception.GetObjectData(SerializationInfo, StreamingContext)'. Add the Obsolete attribute to 'InternalException.GetObjectData(SerializationInfo, StreamingContext)'. [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Internal\Native\NativeMethods.cs(12,10): warning SYSLIB0004: 'ReliabilityContractAttribute' is obsolete: 'The Constrained Execution Region (CER) feature is not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0004) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Internal\Native\NativeMethods.cs(12,30): warning SYSLIB0004: 'Consistency' is obsolete: 'The Constrained Execution Region (CER) feature is not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0004) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Internal\Native\NativeMethods.cs(12,63): warning SYSLIB0004: 'Cer' is obsolete: 'The Constrained Execution Region (CER) feature is not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0004) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Schema\SchemaValidationException.cs(112,30): warning CS0672: Member 'SchemaValidationException.GetObjectData(SerializationInfo, StreamingContext)' overrides obsolete member 'Exception.GetObjectData(SerializationInfo, StreamingContext)'. Add the Obsolete attribute to 'SchemaValidationException.GetObjectData(SerializationInfo, StreamingContext)'. [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Internal\Native\SafeHandleZeroIsInvalid.cs(14,6): warning SYSLIB0003: 'SecurityPermissionAttribute' is obsolete: 'Code Access Security is not supported or honored by the runtime.' (https://aka.ms/dotnet-warnings/SYSLIB0003) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Internal\Native\SafeHandleZeroIsInvalid.cs(14,25): warning SYSLIB0003: 'SecurityAction' is obsolete: 'Code Access Security is not supported or honored by the runtime.' (https://aka.ms/dotnet-warnings/SYSLIB0003) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Internal\Native\SafeHandleZeroIsInvalid.cs(26,10): warning SYSLIB0004: 'ReliabilityContractAttribute' is obsolete: 'The Constrained Execution Region (CER) feature is not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0004) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Internal\Native\SafeHandleZeroIsInvalid.cs(26,30): warning SYSLIB0004: 'Consistency' is obsolete: 'The Constrained Execution Region (CER) feature is not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0004) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Internal\Native\SafeHandleZeroIsInvalid.cs(26,63): warning SYSLIB0004: 'Cer' is obsolete: 'The Constrained Execution Region (CER) feature is not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0004) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Support\UserException.cs(85,30): warning CS0672: Member 'UserException.GetObjectData(SerializationInfo, StreamingContext)' overrides obsolete member 'Exception.GetObjectData(SerializationInfo, StreamingContext)'. Add the Obsolete attribute to 'UserException.GetObjectData(SerializationInfo, StreamingContext)'. [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Internal\Native\SafeLocalMemHandle.cs(18,10): warning SYSLIB0003: 'SecurityPermissionAttribute' is obsolete: 'Code Access Security is not supported or honored by the runtime.' (https://aka.ms/dotnet-warnings/SYSLIB0003) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Internal\Native\SafeLocalMemHandle.cs(18,29): warning SYSLIB0003: 'SecurityAction' is obsolete: 'Code Access Security is not supported or honored by the runtime.' (https://aka.ms/dotnet-warnings/SYSLIB0003) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Internal\Native\UnsafeNativeMethods.cs(32,10): warning SYSLIB0004: 'ReliabilityContractAttribute' is obsolete: 'The Constrained Execution Region (CER) feature is not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0004) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Internal\Native\UnsafeNativeMethods.cs(32,30): warning SYSLIB0004: 'Consistency' is obsolete: 'The Constrained Execution Region (CER) feature is not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0004) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Internal\Native\UnsafeNativeMethods.cs(32,63): warning SYSLIB0004: 'Cer' is obsolete: 'The Constrained Execution Region (CER) feature is not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0004) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Support\UserException.cs(64,13): warning SYSLIB0051: 'Exception.Exception(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Support\UserException.cs(90,13): warning SYSLIB0051: 'Exception.GetObjectData(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Collections\DuplicateItemException.cs(66,13): warning SYSLIB0051: 'Exception.Exception(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Collections\DuplicateItemException.cs(91,13): warning SYSLIB0051: 'Exception.GetObjectData(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Support\InternalException.cs(70,13): warning SYSLIB0051: 'Exception.Exception(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Support\InternalException.cs(95,13): warning SYSLIB0051: 'Exception.GetObjectData(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Schema\SchemaValidationException.cs(83,13): warning SYSLIB0051: 'Exception.Exception(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Schema\SchemaValidationException.cs(117,13): warning SYSLIB0051: 'Exception.GetObjectData(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+  Compiler -> E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\bin\Release\net8.0\event-manifest-compiler.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Collections\DuplicateItemException.cs(86,30): warning CS0672: Member 'DuplicateItemException.GetObjectData(SerializationInfo, StreamingContext)' overrides obsolete member 'Exception.GetObjectData(SerializationInfo, StreamingContext)'. Add the Obsolete attribute to 'DuplicateItemException.GetObjectData(SerializationInfo, StreamingContext)'. [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Support\InternalException.cs(91,30): warning CS0672: Member 'InternalException.GetObjectData(SerializationInfo, StreamingContext)' overrides obsolete member 'Exception.GetObjectData(SerializationInfo, StreamingContext)'. Add the Obsolete attribute to 'InternalException.GetObjectData(SerializationInfo, StreamingContext)'. [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Internal\Native\NativeMethods.cs(12,10): warning SYSLIB0004: 'ReliabilityContractAttribute' is obsolete: 'The Constrained Execution Region (CER) feature is not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0004) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Internal\Native\NativeMethods.cs(12,30): warning SYSLIB0004: 'Consistency' is obsolete: 'The Constrained Execution Region (CER) feature is not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0004) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Internal\Native\NativeMethods.cs(12,63): warning SYSLIB0004: 'Cer' is obsolete: 'The Constrained Execution Region (CER) feature is not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0004) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Schema\SchemaValidationException.cs(112,30): warning CS0672: Member 'SchemaValidationException.GetObjectData(SerializationInfo, StreamingContext)' overrides obsolete member 'Exception.GetObjectData(SerializationInfo, StreamingContext)'. Add the Obsolete attribute to 'SchemaValidationException.GetObjectData(SerializationInfo, StreamingContext)'. [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Internal\Native\SafeHandleZeroIsInvalid.cs(14,6): warning SYSLIB0003: 'SecurityPermissionAttribute' is obsolete: 'Code Access Security is not supported or honored by the runtime.' (https://aka.ms/dotnet-warnings/SYSLIB0003) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Internal\Native\SafeHandleZeroIsInvalid.cs(14,25): warning SYSLIB0003: 'SecurityAction' is obsolete: 'Code Access Security is not supported or honored by the runtime.' (https://aka.ms/dotnet-warnings/SYSLIB0003) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Internal\Native\SafeHandleZeroIsInvalid.cs(26,10): warning SYSLIB0004: 'ReliabilityContractAttribute' is obsolete: 'The Constrained Execution Region (CER) feature is not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0004) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Internal\Native\SafeHandleZeroIsInvalid.cs(26,30): warning SYSLIB0004: 'Consistency' is obsolete: 'The Constrained Execution Region (CER) feature is not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0004) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Internal\Native\SafeHandleZeroIsInvalid.cs(26,63): warning SYSLIB0004: 'Cer' is obsolete: 'The Constrained Execution Region (CER) feature is not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0004) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Support\UserException.cs(85,30): warning CS0672: Member 'UserException.GetObjectData(SerializationInfo, StreamingContext)' overrides obsolete member 'Exception.GetObjectData(SerializationInfo, StreamingContext)'. Add the Obsolete attribute to 'UserException.GetObjectData(SerializationInfo, StreamingContext)'. [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Internal\Native\SafeLocalMemHandle.cs(18,10): warning SYSLIB0003: 'SecurityPermissionAttribute' is obsolete: 'Code Access Security is not supported or honored by the runtime.' (https://aka.ms/dotnet-warnings/SYSLIB0003) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Internal\Native\SafeLocalMemHandle.cs(18,29): warning SYSLIB0003: 'SecurityAction' is obsolete: 'Code Access Security is not supported or honored by the runtime.' (https://aka.ms/dotnet-warnings/SYSLIB0003) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Internal\Native\UnsafeNativeMethods.cs(32,10): warning SYSLIB0004: 'ReliabilityContractAttribute' is obsolete: 'The Constrained Execution Region (CER) feature is not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0004) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Internal\Native\UnsafeNativeMethods.cs(32,30): warning SYSLIB0004: 'Consistency' is obsolete: 'The Constrained Execution Region (CER) feature is not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0004) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Internal\Native\UnsafeNativeMethods.cs(32,63): warning SYSLIB0004: 'Cer' is obsolete: 'The Constrained Execution Region (CER) feature is not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0004) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Support\UserException.cs(64,13): warning SYSLIB0051: 'Exception.Exception(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Support\UserException.cs(90,13): warning SYSLIB0051: 'Exception.GetObjectData(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Collections\DuplicateItemException.cs(66,13): warning SYSLIB0051: 'Exception.Exception(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Collections\DuplicateItemException.cs(91,13): warning SYSLIB0051: 'Exception.GetObjectData(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Support\InternalException.cs(70,13): warning SYSLIB0051: 'Exception.Exception(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Support\InternalException.cs(95,13): warning SYSLIB0051: 'Exception.GetObjectData(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Schema\SchemaValidationException.cs(83,13): warning SYSLIB0051: 'Exception.Exception(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\EventTracing\Schema\SchemaValidationException.cs(117,13): warning SYSLIB0051: 'Exception.GetObjectData(SerializationInfo, StreamingContext)' is obsolete: 'This API supports obsolete formatter-based serialization. It should not be called or extended by application code.' (https://aka.ms/dotnet-warnings/SYSLIB0051) [E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-dotnet-event-manifest-compiler\src\compiler\Compiler.csproj]
+    25 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:06.49
+==> Starting check()...
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-event-manifest-compiler"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-event-manifest-compiler 1.0.0.git20201006.f919e38-1 (26 Oct 2026 15:28:42)
+
+Clean native package build
+Run in MSYSTEM=CLANG64 bash -lc:
+cd /home/topkek/powershell-native.O3Jvgl/mingw-w64-powershell-native
+PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm
+result: exit 0
+
+==> Making package: mingw-w64-powershell-native 700.0.0-1 (26 Oct 2026 15:28:10)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found native-700.0.0.tar.gz
+  -> Found eventman-2f767671802301cf043c717d66bf004ed7863487.xsd
+  -> Found winmeta-2f767671802301cf043c717d66bf004ed7863487.xml
+  -> Found prepare.py
+  -> Found prepare-manifest.py
+  -> Found expected-events.py
+  -> Found build-plugin.sh
+  -> Found build-instrumentation.sh
+  -> Found Native.csproj
+  -> Found check.sh
+  -> Found check-native.cpp
+  -> Found README.md
+==> Validating source files with sha256sums...
+    native-700.0.0.tar.gz ... Passed
+    eventman-2f767671802301cf043c717d66bf004ed7863487.xsd ... Passed
+    winmeta-2f767671802301cf043c717d66bf004ed7863487.xml ... Passed
+    prepare.py ... Passed
+    prepare-manifest.py ... Passed
+    expected-events.py ... Passed
+    build-plugin.sh ... Passed
+    build-instrumentation.sh ... Passed
+    Native.csproj ... Passed
+    check.sh ... Passed
+    check-native.cpp ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+  -> Extracting native-700.0.0.tar.gz with bsdtar
+==> Starting prepare()...
+==> Removing existing $pkgdir/ directory...
+==> Starting build()...
+Compiled event resources: PowerShell.Core.Instrumentation
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-powershell-native\src\Native.csproj (in 97 ms).
+  Native -> E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-powershell-native\src\bin\Release\net8.0\Native.dll
+  Successfully created package 'E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-powershell-native\src\feed\Microsoft.PowerShell.Native.700.0.0.nupkg'.
+==> Starting check()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-powershell-native\src\consumer\check.csproj (in 323 ms).
+  check -> E:\msys64\home\topkek\powershell-native.O3Jvgl\mingw-w64-powershell-native\src\consumer\bin\Release\net8.0\win-x64\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.81
+PASS: native versions, plugin loading, all 11 exports, invalid startup/null-context errors and messages
+PASS: Windows TDH loads all 194 event definitions (409 property occurrences) from built resources
+PASS: native component checks load no .NET Framework helper
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-powershell-native"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-powershell-native 700.0.0-1 (26 Oct 2026 15:28:51)
+
+Installed native package consumer
+Run in MSYSTEM=CLANG64 bash -lc:
+bash /home/topkek/powershell-native.O3Jvgl/mingw-w64-powershell-native/check.sh /home/topkek/powershell-native.O3Jvgl/installed-check
+result: exit 0
+
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-native.O3Jvgl\installed-check\check.csproj (in 377 ms).
+  check -> E:\msys64\home\topkek\powershell-native.O3Jvgl\installed-check\bin\Release\net8.0\win-x64\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.54
+PASS: native versions, plugin loading, all 11 exports, invalid startup/null-context errors and messages
+PASS: Windows TDH loads all 194 event definitions (409 property occurrences) from built resources
+PASS: native component checks load no .NET Framework helper
+
+Artifact audit
+$ python3 tests/powershell-deps/audit-native.py tests/powershell-deps/native-artifacts-20261026.json
+result: exit 0
+Checksums, license, package metadata, exact native NuGet payload, AMD64 native PE headers, resource-only DLL, exports/imports, and compiler project-only dependencies all pass.

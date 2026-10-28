@@ -1,0 +1,594 @@
+{
+  "powershell_version": "7.4.20",
+  "source_url": "https://github.com/PowerShell/PowerShell/tree/v7.4.20",
+  "source_archive_sha256": "3dac352752acd64a0502c1f002ecf65eca177d2919bea3bcefbf8856afedd9eb",
+  "scope": "Windows shipping project, conditional desktop graph, bundled modules, generators and analyzers",
+  "projects": [
+    "Analyzers.props",
+    "src/Microsoft.Management.Infrastructure.CimCmdlets/Microsoft.Management.Infrastructure.CimCmdlets.csproj",
+    "src/Microsoft.Management.UI.Internal/Microsoft.PowerShell.GraphicalHost.csproj",
+    "src/Microsoft.PowerShell.Commands.Diagnostics/Microsoft.PowerShell.Commands.Diagnostics.csproj",
+    "src/Microsoft.PowerShell.Commands.Management/Microsoft.PowerShell.Commands.Management.csproj",
+    "src/Microsoft.PowerShell.Commands.Utility/Microsoft.PowerShell.Commands.Utility.csproj",
+    "src/Microsoft.PowerShell.ConsoleHost/Microsoft.PowerShell.ConsoleHost.csproj",
+    "src/Microsoft.PowerShell.CoreCLR.Eventing/Microsoft.PowerShell.CoreCLR.Eventing.csproj",
+    "src/Microsoft.PowerShell.LocalAccounts/Microsoft.PowerShell.LocalAccounts.csproj",
+    "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+    "src/Microsoft.PowerShell.Security/Microsoft.PowerShell.Security.csproj",
+    "src/Microsoft.WSMan.Management/Microsoft.WSMan.Management.csproj",
+    "src/Microsoft.WSMan.Runtime/Microsoft.WSMan.Runtime.csproj",
+    "src/Modules/PSGalleryModules.csproj",
+    "src/ResGen/ResGen.csproj",
+    "src/System.Management.Automation/SourceGenerators/PSVersionInfoGenerator/PSVersionInfoGenerator.csproj",
+    "src/System.Management.Automation/System.Management.Automation.csproj",
+    "src/TypeCatalogGen/TypeCatalogGen.csproj",
+    "src/powershell-win-core/powershell-win-core.csproj"
+  ],
+  "packages": [
+    {
+      "id": "DotNetAnalyzers.DocumentationAnalyzers",
+      "requirements": [
+        {
+          "version": "1.0.0-beta.59",
+          "project": "Analyzers.props",
+          "kind": "build-optional-analyzer"
+        }
+      ]
+    },
+    {
+      "id": "Json.More.Net",
+      "requirements": [
+        {
+          "version": "2.0.2",
+          "project": "src/Microsoft.PowerShell.Commands.Utility/Microsoft.PowerShell.Commands.Utility.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "JsonPointer.Net",
+      "requirements": [
+        {
+          "version": "5.0.2",
+          "project": "src/Microsoft.PowerShell.Commands.Utility/Microsoft.PowerShell.Commands.Utility.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "JsonSchema.Net",
+      "requirements": [
+        {
+          "version": "7.0.4",
+          "project": "src/Microsoft.PowerShell.Commands.Utility/Microsoft.PowerShell.Commands.Utility.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "Markdig.Signed",
+      "requirements": [
+        {
+          "version": "0.33.0",
+          "project": "src/Microsoft.PowerShell.Commands.Utility/Microsoft.PowerShell.Commands.Utility.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "Microsoft.ApplicationInsights",
+      "requirements": [
+        {
+          "version": "2.23.0",
+          "project": "src/System.Management.Automation/System.Management.Automation.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "Microsoft.Bcl.AsyncInterfaces",
+      "requirements": [
+        {
+          "version": "8.0.0",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "Microsoft.CodeAnalysis.Analyzers",
+      "requirements": [
+        {
+          "version": "3.3.4",
+          "project": "src/System.Management.Automation/SourceGenerators/PSVersionInfoGenerator/PSVersionInfoGenerator.csproj",
+          "kind": "build"
+        }
+      ]
+    },
+    {
+      "id": "Microsoft.CodeAnalysis.CSharp",
+      "requirements": [
+        {
+          "version": "4.9.2",
+          "project": "src/System.Management.Automation/SourceGenerators/PSVersionInfoGenerator/PSVersionInfoGenerator.csproj",
+          "kind": "build"
+        },
+        {
+          "version": "4.9.2",
+          "project": "src/Microsoft.PowerShell.Commands.Utility/Microsoft.PowerShell.Commands.Utility.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "Microsoft.Extensions.ObjectPool",
+      "requirements": [
+        {
+          "version": "8.0.31",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "Microsoft.Management.Infrastructure",
+      "requirements": [
+        {
+          "version": "3.0.0",
+          "project": "src/System.Management.Automation/System.Management.Automation.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "Microsoft.NETCore.Platforms",
+      "requirements": [
+        {
+          "version": "1.1.2",
+          "project": "src/System.Management.Automation/SourceGenerators/PSVersionInfoGenerator/PSVersionInfoGenerator.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "Microsoft.PowerShell.Archive",
+      "requirements": [
+        {
+          "version": "1.2.6",
+          "project": "src/Modules/PSGalleryModules.csproj",
+          "kind": "module"
+        }
+      ]
+    },
+    {
+      "id": "Microsoft.PowerShell.MarkdownRender",
+      "requirements": [
+        {
+          "version": "7.2.1",
+          "project": "src/Microsoft.PowerShell.Commands.Utility/Microsoft.PowerShell.Commands.Utility.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "Microsoft.PowerShell.Native",
+      "requirements": [
+        {
+          "version": "700.0.0",
+          "project": "src/System.Management.Automation/System.Management.Automation.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "Microsoft.PowerShell.PSResourceGet",
+      "requirements": [
+        {
+          "version": "1.1.1",
+          "project": "src/Modules/PSGalleryModules.csproj",
+          "kind": "module"
+        }
+      ]
+    },
+    {
+      "id": "Microsoft.Security.Extensions",
+      "requirements": [
+        {
+          "version": "1.4.0",
+          "project": "src/System.Management.Automation/System.Management.Automation.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "Microsoft.Win32.Registry.AccessControl",
+      "requirements": [
+        {
+          "version": "8.0.0",
+          "project": "src/System.Management.Automation/System.Management.Automation.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "Microsoft.Windows.Compatibility",
+      "requirements": [
+        {
+          "version": "8.0.31",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "Newtonsoft.Json",
+      "requirements": [
+        {
+          "version": "13.0.4",
+          "project": "src/System.Management.Automation/System.Management.Automation.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "PSReadLine",
+      "requirements": [
+        {
+          "version": "2.3.6",
+          "project": "src/Modules/PSGalleryModules.csproj",
+          "kind": "module"
+        }
+      ]
+    },
+    {
+      "id": "PackageManagement",
+      "requirements": [
+        {
+          "version": "1.4.8.1",
+          "project": "src/Modules/PSGalleryModules.csproj",
+          "kind": "module"
+        }
+      ]
+    },
+    {
+      "id": "PowerShellGet",
+      "requirements": [
+        {
+          "version": "2.2.5",
+          "project": "src/Modules/PSGalleryModules.csproj",
+          "kind": "module"
+        }
+      ]
+    },
+    {
+      "id": "StyleCop.Analyzers",
+      "requirements": [
+        {
+          "version": "1.2.0-beta.556",
+          "project": "Analyzers.props",
+          "kind": "build-optional-analyzer"
+        }
+      ]
+    },
+    {
+      "id": "System.Configuration.ConfigurationManager",
+      "requirements": [
+        {
+          "version": "8.0.1",
+          "project": "src/System.Management.Automation/System.Management.Automation.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "System.Data.SqlClient",
+      "requirements": [
+        {
+          "version": "4.9.1",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "System.Diagnostics.DiagnosticSource",
+      "requirements": [
+        {
+          "version": "8.0.1",
+          "project": "src/System.Management.Automation/System.Management.Automation.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "System.Diagnostics.EventLog",
+      "requirements": [
+        {
+          "version": "8.0.2",
+          "project": "src/System.Management.Automation/System.Management.Automation.csproj",
+          "kind": "runtime"
+        },
+        {
+          "version": "8.0.2",
+          "project": "src/Microsoft.PowerShell.CoreCLR.Eventing/Microsoft.PowerShell.CoreCLR.Eventing.csproj",
+          "kind": "runtime"
+        },
+        {
+          "version": "8.0.2",
+          "project": "src/Microsoft.WSMan.Management/Microsoft.WSMan.Management.csproj",
+          "kind": "runtime"
+        },
+        {
+          "version": "8.0.2",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "kind": "runtime"
+        },
+        {
+          "version": "8.0.2",
+          "project": "src/Microsoft.PowerShell.Commands.Management/Microsoft.PowerShell.Commands.Management.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "System.Diagnostics.PerformanceCounter",
+      "requirements": [
+        {
+          "version": "8.0.1",
+          "project": "src/Microsoft.PowerShell.Commands.Diagnostics/Microsoft.PowerShell.Commands.Diagnostics.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "System.DirectoryServices",
+      "requirements": [
+        {
+          "version": "8.0.0",
+          "project": "src/System.Management.Automation/System.Management.Automation.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "System.DirectoryServices.Protocols",
+      "requirements": [
+        {
+          "version": "8.0.2",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "System.Drawing.Common",
+      "requirements": [
+        {
+          "version": "8.0.31",
+          "project": "src/Microsoft.PowerShell.Commands.Utility/Microsoft.PowerShell.Commands.Utility.csproj",
+          "kind": "runtime"
+        },
+        {
+          "version": "8.0.31",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "System.Formats.Asn1",
+      "requirements": [
+        {
+          "version": "8.0.2",
+          "project": "src/System.Management.Automation/System.Management.Automation.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "System.IO.Packaging",
+      "requirements": [
+        {
+          "version": "8.0.1",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "System.Management",
+      "requirements": [
+        {
+          "version": "8.0.0",
+          "project": "src/System.Management.Automation/System.Management.Automation.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "System.Net.Http.WinHttpHandler",
+      "requirements": [
+        {
+          "version": "8.0.3",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "System.Private.ServiceModel",
+      "requirements": [
+        {
+          "version": "4.10.3",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "System.Runtime.Caching",
+      "requirements": [
+        {
+          "version": "8.0.1",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "System.Security.AccessControl",
+      "requirements": [
+        {
+          "version": "6.0.1",
+          "project": "src/System.Management.Automation/System.Management.Automation.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "System.Security.Cryptography.Pkcs",
+      "requirements": [
+        {
+          "version": "8.0.1",
+          "project": "src/System.Management.Automation/System.Management.Automation.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "System.Security.Cryptography.Xml",
+      "requirements": [
+        {
+          "version": "8.0.4",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "System.Security.Permissions",
+      "requirements": [
+        {
+          "version": "8.0.0",
+          "project": "src/System.Management.Automation/System.Management.Automation.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "System.ServiceModel.Duplex",
+      "requirements": [
+        {
+          "version": "4.10.3",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "System.ServiceModel.Http",
+      "requirements": [
+        {
+          "version": "4.10.3",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "System.ServiceModel.NetTcp",
+      "requirements": [
+        {
+          "version": "4.10.3",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "System.ServiceModel.Primitives",
+      "requirements": [
+        {
+          "version": "4.10.3",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "System.ServiceModel.Security",
+      "requirements": [
+        {
+          "version": "4.10.3",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "System.ServiceProcess.ServiceController",
+      "requirements": [
+        {
+          "version": "8.0.1",
+          "project": "src/Microsoft.WSMan.Management/Microsoft.WSMan.Management.csproj",
+          "kind": "runtime"
+        },
+        {
+          "version": "8.0.1",
+          "project": "src/Microsoft.PowerShell.Commands.Management/Microsoft.PowerShell.Commands.Management.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "System.Text.Encoding.CodePages",
+      "requirements": [
+        {
+          "version": "8.0.0",
+          "project": "src/System.Management.Automation/System.Management.Automation.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "System.Text.Encodings.Web",
+      "requirements": [
+        {
+          "version": "8.0.0",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "System.Threading.AccessControl",
+      "requirements": [
+        {
+          "version": "8.0.0",
+          "project": "src/Microsoft.PowerShell.Commands.Utility/Microsoft.PowerShell.Commands.Utility.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "System.Web.Services.Description",
+      "requirements": [
+        {
+          "version": "4.10.3",
+          "project": "src/Microsoft.PowerShell.SDK/Microsoft.PowerShell.SDK.csproj",
+          "kind": "runtime"
+        }
+      ]
+    },
+    {
+      "id": "ThreadJob",
+      "requirements": [
+        {
+          "version": "2.0.3",
+          "project": "src/Modules/PSGalleryModules.csproj",
+          "kind": "module"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,827 @@
+{
+  "source_package_owners": {
+    "microsoft.extensions.objectpool.8.0.31.nupkg": {
+      "archive_sha256": "088562aa79cd3d7885eaa9f7201e910ef526aa000fc40e19483396bdd2ce6c18",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-objectpool"
+    },
+    "microsoft.win32.registry.accesscontrol.8.0.0.nupkg": {
+      "archive_sha256": "436d08daf759864bfc3f2009b5a3e2cbc8a91542a741046c216e7af8ba0c2b96",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-registry-accesscontrol"
+    },
+    "microsoft.win32.systemevents.8.0.0.nupkg": {
+      "archive_sha256": "02c9d90cfbf8c01d6a131fb6f9d7dd525bf7a4edba930086a9459f982e5d6792",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-systemevents"
+    },
+    "microsoft.windows.compatibility.8.0.31.nupkg": {
+      "archive_sha256": "d41596d54e6235e3aed9302482596b5595faf821e6a80af6c500944ffab3d891",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-windows-compatibility"
+    },
+    "system.codedom.8.0.0.nupkg": {
+      "archive_sha256": "ecc772f18d38e84706974ac2b38b019a60d8ea31689114ad85a0e2b018e59ccc",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-codedom"
+    },
+    "system.componentmodel.composition.8.0.0.nupkg": {
+      "archive_sha256": "70568fdd8c170c012fac35b678629bc38c2e2b2c9c9b3b3b1626bb720ec47df3",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-composition"
+    },
+    "system.componentmodel.composition.registration.8.0.0.nupkg": {
+      "archive_sha256": "3acb5f56c69f396254d32476dbb58212d3343387b50456bd938ae3d81cef931c",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-composition-registration"
+    },
+    "system.configuration.configurationmanager.8.0.1.nupkg": {
+      "archive_sha256": "f1606f721aff048d3df56fe408d3c53b55a42ff248d6a63f3f200133fb0893ed",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-configuration-manager"
+    },
+    "system.data.odbc.8.0.1.nupkg": {
+      "archive_sha256": "f83858578267bfc1de73e8ed9aad108bf56060433e8e5dcd09d35270ca221b13",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-odbc"
+    },
+    "system.data.oledb.8.0.1.nupkg": {
+      "archive_sha256": "7b7e9207859e5683adaa43d5f86ee4408d849ef1516403abb9fbcde55aa7e3fa",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-oledb"
+    },
+    "system.data.sqlclient.4.9.1.nupkg": {
+      "archive_sha256": "d07b0b1373b32b337f35046ab29f31b9317bd7ef7944f780b66a53185c8c6fab",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-sqlclient"
+    },
+    "system.diagnostics.eventlog.8.0.2.nupkg": {
+      "archive_sha256": "6a0df18e0ee598fdbbc8df554955358099c34d5029ca08c21887ea211dc5338e",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-eventlog"
+    },
+    "system.diagnostics.performancecounter.8.0.1.nupkg": {
+      "archive_sha256": "999908beb187910809b9a6345eac85684f0b12755ce49ddc590b3a8af6296c60",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-performancecounter"
+    },
+    "system.directoryservices.8.0.0.nupkg": {
+      "archive_sha256": "853f96cc7e02eaf4cf56db4c2732d82361e79e9b6cba5126ce3109cd793c3834",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-directoryservices"
+    },
+    "system.directoryservices.accountmanagement.8.0.1.nupkg": {
+      "archive_sha256": "fb6516c30e01642627572a363fc9d291588fb405ae557897ed21d30cec34653f",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-directoryservices-accountmanagement"
+    },
+    "system.directoryservices.protocols.8.0.2.nupkg": {
+      "archive_sha256": "aa5d2c958f79e38393dcf4cb490fd5a3b5e8ce9d5fdd925557a3e5c6f6599b5e",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-directoryservices-protocols"
+    },
+    "system.drawing.common.8.0.31.nupkg": {
+      "archive_sha256": "b347023afb10809a0c05c1005460b005aca6cd84c7667054d14cd3824f4d0ec0",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-drawing-common"
+    },
+    "system.formats.asn1.8.0.2.nupkg": {
+      "archive_sha256": "7015304ed9b5a1f3774bdb446434259e72ecf641bbe68e30caf37efb5b322721",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-formats-asn1"
+    },
+    "system.io.packaging.8.0.1.nupkg": {
+      "archive_sha256": "a4eabbd17308300a68e67ffa69d3575cedba1c3c665cc022c901948e36c536b3",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-io-packaging"
+    },
+    "system.io.ports.8.0.0.nupkg": {
+      "archive_sha256": "626c3929116ecf72446b72ba83c80357a52842648d20fdc02f308f2f49d7a9b8",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-io-ports"
+    },
+    "system.management.8.0.0.nupkg": {
+      "archive_sha256": "2d078f05b3069f21631c2cbd9a271d525c821711b4a4b428f848fe4fb989466b",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-management"
+    },
+    "system.private.servicemodel.4.10.3.nupkg": {
+      "archive_sha256": "b862f8badd0a26df03fa70d0001751cff4ab3a238ff6f11abda81b498930e561",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-private-servicemodel"
+    },
+    "system.reflection.context.8.0.0.nupkg": {
+      "archive_sha256": "574e286f6120e832943b95e649ac0598b496c0d271a19cfbf813052a4de67052",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-reflection-context"
+    },
+    "system.runtime.caching.8.0.1.nupkg": {
+      "archive_sha256": "85c444e5b2f6ca36d6f9723a863b0d51ef003ccd38389fcfa2b9967275d57faf",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-runtime-caching"
+    },
+    "system.security.cryptography.pkcs.8.0.1.nupkg": {
+      "archive_sha256": "ccd263f9019633293927af95a175e90fae48caabf70df01a3c75873c4c8df48e",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-cryptography-pkcs"
+    },
+    "system.security.cryptography.protecteddata.8.0.0.nupkg": {
+      "archive_sha256": "bcf01e73da045a9b0bf8f632969ec217d74c338fc75ae91cc5a69432e94a1034",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-protecteddata"
+    },
+    "system.security.cryptography.xml.8.0.4.nupkg": {
+      "archive_sha256": "92b5e733ecc684e8e1bc25c7904222f47e96112b11d9ebcefc64fe2db254cd99",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-cryptography-xml"
+    },
+    "system.security.permissions.8.0.0.nupkg": {
+      "archive_sha256": "b5fa8e1e708057f1a8f4c2c7d481b4b3d3b2ddd81bf906f59348e1ec8a083811",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-security-permissions"
+    },
+    "system.servicemodel.duplex.4.10.3.nupkg": {
+      "archive_sha256": "9d4c84aaab0b5723c098f0442e2d6d04cd76860b6e01896080dca31f8cefed91",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-servicemodel-duplex"
+    },
+    "system.servicemodel.http.4.10.3.nupkg": {
+      "archive_sha256": "4027ac59e36eaff6b2c0a0585649751b88de575bf04b841ffe4529608df7dd0b",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-servicemodel-http"
+    },
+    "system.servicemodel.nettcp.4.10.3.nupkg": {
+      "archive_sha256": "02085cb008329727d3abf728f35cd0f91afccab7bb36dcd847e11b68d7f5bdda",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-servicemodel-nettcp"
+    },
+    "system.servicemodel.primitives.4.10.3.nupkg": {
+      "archive_sha256": "5b928a833c8f3e93ee42b895bbcb39c025aa5d18469258632f005953ee1c3920",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-servicemodel-primitives"
+    },
+    "system.servicemodel.security.4.10.3.nupkg": {
+      "archive_sha256": "912c58cc23181bf08e10e5f773f71d1c6e959db4dc4c49d28d71e3b54a94c68c",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-servicemodel-security"
+    },
+    "system.servicemodel.syndication.8.0.0.nupkg": {
+      "archive_sha256": "76ca358e57242931bb44b6b13fff26e8a007b4824de34b43acd6ca1f07318d6f",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-syndication8"
+    },
+    "system.serviceprocess.servicecontroller.8.0.1.nupkg": {
+      "archive_sha256": "c624bb81488f6246cdb8455dbb6631c97fd0f804fc29237c031d31fb6ce637fb",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-servicecontroller"
+    },
+    "system.speech.8.0.0.nupkg": {
+      "archive_sha256": "3ca8bdef060cc892377cb0612c13ada8d7be315af3c460bda5cb343b63ff3b4c",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-speech"
+    },
+    "system.text.encoding.codepages.8.0.0.nupkg": {
+      "archive_sha256": "e185333f9f626d9324d83a580bd3a741265f9bbc3cc2c3abe3cfcfc2e996e345",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-encoding-codepages"
+    },
+    "system.threading.accesscontrol.8.0.0.nupkg": {
+      "archive_sha256": "f89cb6e048a665aa9ee5f47f3aa97c72bf92eafdc00af8ef32c5c9519d33dace",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-threading-accesscontrol"
+    },
+    "system.web.services.description.4.10.3.nupkg": {
+      "archive_sha256": "9e61ea7f0590a393977bf1cb740ba4c716add0e1b24e269a2da705c48d10d3a2",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-web-services-description"
+    },
+    "system.windows.extensions.8.0.0.nupkg": {
+      "archive_sha256": "00f24f90595ef056ca4a84b3f17ac1b57cb9656980591089b6c3491c374ee12b",
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-windows-extensions"
+    }
+  },
+  "consumer_dlls": {
+    "Microsoft.Extensions.ObjectPool.dll": {
+      "sha256": "2fa2f4005b52f845b052c4c98483e480d2045826989d9faae6f26eecc9cfb1e7",
+      "source_package_assets": [
+        {
+          "package": "microsoft.extensions.objectpool.8.0.31.nupkg",
+          "asset": "lib/net8.0/Microsoft.Extensions.ObjectPool.dll"
+        }
+      ]
+    },
+    "System.CodeDom.dll": {
+      "sha256": "6487c814ff3223e622bcaccc7ac2c0c48b0c9b2b56bab74d246cb46d411d3ba6",
+      "source_package_assets": [
+        {
+          "package": "system.codedom.8.0.0.nupkg",
+          "asset": "lib/net8.0/System.CodeDom.dll"
+        }
+      ]
+    },
+    "System.ComponentModel.Composition.dll": {
+      "sha256": "250c983fc28458a826ed2501fcb5ff5ea68387f95ec6621df94bf04d289f603c",
+      "source_package_assets": [
+        {
+          "package": "system.componentmodel.composition.8.0.0.nupkg",
+          "asset": "lib/net8.0/System.ComponentModel.Composition.dll"
+        }
+      ]
+    },
+    "System.ComponentModel.Composition.Registration.dll": {
+      "sha256": "f04c7e8c5ef796dd8d573dce1ed4f918f97ec23a4688c4f3c10db54be0dc9515",
+      "source_package_assets": [
+        {
+          "package": "system.componentmodel.composition.registration.8.0.0.nupkg",
+          "asset": "lib/net8.0/System.ComponentModel.Composition.Registration.dll"
+        }
+      ]
+    },
+    "System.Configuration.ConfigurationManager.dll": {
+      "sha256": "a58da7ee9f4055a91f0fae21f26bc8fc11ec78bcfd4b1e6145f997559038f07e",
+      "source_package_assets": [
+        {
+          "package": "system.configuration.configurationmanager.8.0.1.nupkg",
+          "asset": "lib/net8.0/System.Configuration.ConfigurationManager.dll"
+        }
+      ]
+    },
+    "System.Data.SqlClient.dll": {
+      "sha256": "d65a567bff95601d51a7a5950190ff99a331f65204b33c5ca91106e3c91888a1",
+      "source_package_assets": [
+        {
+          "package": "system.data.sqlclient.4.9.1.nupkg",
+          "asset": "lib/net8.0/System.Data.SqlClient.dll"
+        }
+      ]
+    },
+    "System.Formats.Asn1.dll": {
+      "sha256": "482383202bb846a7150a53976414e3e93bcd496315b0a040912e85175a806e5f",
+      "source_package_assets": [
+        {
+          "package": "system.formats.asn1.8.0.2.nupkg",
+          "asset": "lib/net8.0/System.Formats.Asn1.dll"
+        }
+      ]
+    },
+    "System.IO.Packaging.dll": {
+      "sha256": "93f951a4fc8279037158cfea451992622d79578020468e5428c5aab9fcff49ef",
+      "source_package_assets": [
+        {
+          "package": "system.io.packaging.8.0.1.nupkg",
+          "asset": "lib/net8.0/System.IO.Packaging.dll"
+        }
+      ]
+    },
+    "System.Private.ServiceModel.dll": {
+      "sha256": "40ad798aeca199d654e7053980b502f0b85e85c947cf5e4d3a8ac9842a362f1d",
+      "source_package_assets": [
+        {
+          "package": "system.private.servicemodel.4.10.3.nupkg",
+          "asset": "lib/net8.0/System.Private.ServiceModel.dll"
+        }
+      ]
+    },
+    "System.Reflection.Context.dll": {
+      "sha256": "0912063cebc8d6226b8a939b81ad18ab5fbae0bd8c77c1e544371c176a92d9ef",
+      "source_package_assets": [
+        {
+          "package": "system.reflection.context.8.0.0.nupkg",
+          "asset": "lib/net8.0/System.Reflection.Context.dll"
+        }
+      ]
+    },
+    "System.Security.Cryptography.ProtectedData.dll": {
+      "sha256": "896271c7f4ebe0c9a65d8af51e6624828f9eda18f7bbfc847a5f10ed44b56a17",
+      "source_package_assets": [
+        {
+          "package": "system.security.cryptography.protecteddata.8.0.0.nupkg",
+          "asset": "lib/net8.0/System.Security.Cryptography.ProtectedData.dll"
+        }
+      ]
+    },
+    "System.Security.Cryptography.Xml.dll": {
+      "sha256": "7e6b35ef2dabb884d7437a861cad0567ff8fb1ca3417a8aaadb6e5d30b2e0830",
+      "source_package_assets": [
+        {
+          "package": "system.security.cryptography.xml.8.0.4.nupkg",
+          "asset": "lib/net8.0/System.Security.Cryptography.Xml.dll"
+        }
+      ]
+    },
+    "System.Security.Permissions.dll": {
+      "sha256": "5374d24f1ac7c1d737cf39b675a08ed56d6bcfb74fee14b9d296708d81fbb98a",
+      "source_package_assets": [
+        {
+          "package": "system.security.permissions.8.0.0.nupkg",
+          "asset": "lib/net8.0/System.Security.Permissions.dll"
+        }
+      ]
+    },
+    "System.ServiceModel.dll": {
+      "sha256": "97de56c20607eb432998a391bbff6a91e64fdf04314259f4cd93987673e5b2ba",
+      "source_package_assets": [
+        {
+          "package": "system.servicemodel.primitives.4.10.3.nupkg",
+          "asset": "lib/net8.0/System.ServiceModel.dll"
+        }
+      ]
+    },
+    "System.ServiceModel.Duplex.dll": {
+      "sha256": "66b4033ab845a31fc9b7f7faa8155f730887d2020e9f8440ddbd8efb29f53b06",
+      "source_package_assets": [
+        {
+          "package": "system.servicemodel.duplex.4.10.3.nupkg",
+          "asset": "lib/net8.0/System.ServiceModel.Duplex.dll"
+        }
+      ]
+    },
+    "System.ServiceModel.Http.dll": {
+      "sha256": "0212538405e97921b8c6726950127d1e62725340a73023ff4db64643d5e341ff",
+      "source_package_assets": [
+        {
+          "package": "system.servicemodel.http.4.10.3.nupkg",
+          "asset": "lib/net8.0/System.ServiceModel.Http.dll"
+        }
+      ]
+    },
+    "System.ServiceModel.NetTcp.dll": {
+      "sha256": "7469f18d06b135267136d9791bf47d4fa542179f3e4d1619b5c061dc01055c51",
+      "source_package_assets": [
+        {
+          "package": "system.servicemodel.nettcp.4.10.3.nupkg",
+          "asset": "lib/net8.0/System.ServiceModel.NetTcp.dll"
+        }
+      ]
+    },
+    "System.ServiceModel.Primitives.dll": {
+      "sha256": "4b47cdee0dbb19d7e95b691255021a9aa183e9fc111a415fcd01c5e427eba5c1",
+      "source_package_assets": [
+        {
+          "package": "system.servicemodel.primitives.4.10.3.nupkg",
+          "asset": "lib/net8.0/System.ServiceModel.Primitives.dll"
+        }
+      ]
+    },
+    "System.ServiceModel.Security.dll": {
+      "sha256": "8c2c6332a39a3f890b885c7eca0a3ed441ea001aa09b3ccdf53500686bea616e",
+      "source_package_assets": [
+        {
+          "package": "system.servicemodel.security.4.10.3.nupkg",
+          "asset": "lib/net8.0/System.ServiceModel.Security.dll"
+        }
+      ]
+    },
+    "System.ServiceModel.Syndication.dll": {
+      "sha256": "3bbf68dd17ee0d91b2dbd1d1a5e6c63178dc697411da49602ea68b1f19639294",
+      "source_package_assets": [
+        {
+          "package": "system.servicemodel.syndication.8.0.0.nupkg",
+          "asset": "lib/net8.0/System.ServiceModel.Syndication.dll"
+        }
+      ]
+    },
+    "System.Web.Services.Description.dll": {
+      "sha256": "116cde9c4e49b97be19bc54ad54d177f0debb329c5f61e79e39dbb2c24e4c73b",
+      "source_package_assets": [
+        {
+          "package": "system.web.services.description.4.10.3.nupkg",
+          "asset": "lib/net8.0/System.Web.Services.Description.dll"
+        }
+      ]
+    },
+    "cs/System.Private.ServiceModel.resources.dll": {
+      "sha256": "c837b0cfdd30a0ba7b3ade6c0c4a49595e74b9f4e882a05b584942cd4c6ba6c7",
+      "source_package_assets": [
+        {
+          "package": "system.private.servicemodel.4.10.3.nupkg",
+          "asset": "lib/net8.0/cs/System.Private.ServiceModel.resources.dll"
+        }
+      ]
+    },
+    "cs/System.Web.Services.Description.resources.dll": {
+      "sha256": "23dd9850232fc100e319c870aa9e93616533d51ff1e9a6228ea420358df25d55",
+      "source_package_assets": [
+        {
+          "package": "system.web.services.description.4.10.3.nupkg",
+          "asset": "lib/net8.0/cs/System.Web.Services.Description.resources.dll"
+        }
+      ]
+    },
+    "de/System.Private.ServiceModel.resources.dll": {
+      "sha256": "6ab70012d2507c9916df5675a3fc59a1809893d2520d801014c5bcd69a9f288e",
+      "source_package_assets": [
+        {
+          "package": "system.private.servicemodel.4.10.3.nupkg",
+          "asset": "lib/net8.0/de/System.Private.ServiceModel.resources.dll"
+        }
+      ]
+    },
+    "de/System.Web.Services.Description.resources.dll": {
+      "sha256": "e493d38cd5bf698010e247e4ff4ee4b1cc4bc4a6b5e49077a1326a13f7e3df2f",
+      "source_package_assets": [
+        {
+          "package": "system.web.services.description.4.10.3.nupkg",
+          "asset": "lib/net8.0/de/System.Web.Services.Description.resources.dll"
+        }
+      ]
+    },
+    "es/System.Private.ServiceModel.resources.dll": {
+      "sha256": "a2fe86aadb97c8e0657ffc0b3766ed98227a57b5aaa108e7a01c83ca61e86623",
+      "source_package_assets": [
+        {
+          "package": "system.private.servicemodel.4.10.3.nupkg",
+          "asset": "lib/net8.0/es/System.Private.ServiceModel.resources.dll"
+        }
+      ]
+    },
+    "es/System.Web.Services.Description.resources.dll": {
+      "sha256": "c4974debf5dfdd67e251c5400ac6a05b58af417bc9780e67f3974a7c667481bb",
+      "source_package_assets": [
+        {
+          "package": "system.web.services.description.4.10.3.nupkg",
+          "asset": "lib/net8.0/es/System.Web.Services.Description.resources.dll"
+        }
+      ]
+    },
+    "fr/System.Private.ServiceModel.resources.dll": {
+      "sha256": "191336cb788f8d76fc4b074e7d8c70668bac504b17e74bb693eb32b6e8874229",
+      "source_package_assets": [
+        {
+          "package": "system.private.servicemodel.4.10.3.nupkg",
+          "asset": "lib/net8.0/fr/System.Private.ServiceModel.resources.dll"
+        }
+      ]
+    },
+    "fr/System.Web.Services.Description.resources.dll": {
+      "sha256": "d04a91a625178a908f3379a8ea683fe2521c829937baaf1552610b9d1d60b39e",
+      "source_package_assets": [
+        {
+          "package": "system.web.services.description.4.10.3.nupkg",
+          "asset": "lib/net8.0/fr/System.Web.Services.Description.resources.dll"
+        }
+      ]
+    },
+    "it/System.Private.ServiceModel.resources.dll": {
+      "sha256": "836d89ea4e75e512c0530fcdfc6393c86049900bba550976001b9332d936a2e0",
+      "source_package_assets": [
+        {
+          "package": "system.private.servicemodel.4.10.3.nupkg",
+          "asset": "lib/net8.0/it/System.Private.ServiceModel.resources.dll"
+        }
+      ]
+    },
+    "it/System.Web.Services.Description.resources.dll": {
+      "sha256": "5247f59a8185a3a4b5a047176dab1755af6fd82ccaa7111d47f48f078eb92332",
+      "source_package_assets": [
+        {
+          "package": "system.web.services.description.4.10.3.nupkg",
+          "asset": "lib/net8.0/it/System.Web.Services.Description.resources.dll"
+        }
+      ]
+    },
+    "ja/System.Private.ServiceModel.resources.dll": {
+      "sha256": "5a40d3811d3db04e252dd7e6875dcad211d8e6aecf5686e5e31bd5526559db44",
+      "source_package_assets": [
+        {
+          "package": "system.private.servicemodel.4.10.3.nupkg",
+          "asset": "lib/net8.0/ja/System.Private.ServiceModel.resources.dll"
+        }
+      ]
+    },
+    "ja/System.Web.Services.Description.resources.dll": {
+      "sha256": "f5a50d3a6b7739590f7826890e85430b511914c7804a257f5db1c8f1441f448e",
+      "source_package_assets": [
+        {
+          "package": "system.web.services.description.4.10.3.nupkg",
+          "asset": "lib/net8.0/ja/System.Web.Services.Description.resources.dll"
+        }
+      ]
+    },
+    "ko/System.Private.ServiceModel.resources.dll": {
+      "sha256": "4ec15bbdd2314805077085135c83c45ee9a972dce3111ed6dc1bf5f7ec3a201e",
+      "source_package_assets": [
+        {
+          "package": "system.private.servicemodel.4.10.3.nupkg",
+          "asset": "lib/net8.0/ko/System.Private.ServiceModel.resources.dll"
+        }
+      ]
+    },
+    "ko/System.Web.Services.Description.resources.dll": {
+      "sha256": "bb161f5d18fcea9f0cfd913bfc24530091eaed1e83dfe5fc048af8cad52eb9cb",
+      "source_package_assets": [
+        {
+          "package": "system.web.services.description.4.10.3.nupkg",
+          "asset": "lib/net8.0/ko/System.Web.Services.Description.resources.dll"
+        }
+      ]
+    },
+    "pl/System.Private.ServiceModel.resources.dll": {
+      "sha256": "d87b7898a0cf49f70cb8302c01e184a101e481d073794c5d054107f6cf27a455",
+      "source_package_assets": [
+        {
+          "package": "system.private.servicemodel.4.10.3.nupkg",
+          "asset": "lib/net8.0/pl/System.Private.ServiceModel.resources.dll"
+        }
+      ]
+    },
+    "pl/System.Web.Services.Description.resources.dll": {
+      "sha256": "d41c71262cdb30626875584479a9e63d127bc55f0f7da4cc033584cf97aac06b",
+      "source_package_assets": [
+        {
+          "package": "system.web.services.description.4.10.3.nupkg",
+          "asset": "lib/net8.0/pl/System.Web.Services.Description.resources.dll"
+        }
+      ]
+    },
+    "pt-BR/System.Private.ServiceModel.resources.dll": {
+      "sha256": "0b7293a2ba3e4ebccd5cf7e257e56c83619ffb118f632767bcbbef37498ab3d0",
+      "source_package_assets": [
+        {
+          "package": "system.private.servicemodel.4.10.3.nupkg",
+          "asset": "lib/net8.0/pt-BR/System.Private.ServiceModel.resources.dll"
+        }
+      ]
+    },
+    "pt-BR/System.Web.Services.Description.resources.dll": {
+      "sha256": "b654bca79ed242f3fada87ca8f9b17a9da68406aec000f96bcf38df1c1e4c893",
+      "source_package_assets": [
+        {
+          "package": "system.web.services.description.4.10.3.nupkg",
+          "asset": "lib/net8.0/pt-BR/System.Web.Services.Description.resources.dll"
+        }
+      ]
+    },
+    "ru/System.Private.ServiceModel.resources.dll": {
+      "sha256": "7995ef6113c112078c9e241176ffd39184af28247d14d9af29001a1938c07772",
+      "source_package_assets": [
+        {
+          "package": "system.private.servicemodel.4.10.3.nupkg",
+          "asset": "lib/net8.0/ru/System.Private.ServiceModel.resources.dll"
+        }
+      ]
+    },
+    "ru/System.Web.Services.Description.resources.dll": {
+      "sha256": "011cb5018628325ef6e4a30e96c4c5d81af2d09e36fc981e254d5bf2455a3429",
+      "source_package_assets": [
+        {
+          "package": "system.web.services.description.4.10.3.nupkg",
+          "asset": "lib/net8.0/ru/System.Web.Services.Description.resources.dll"
+        }
+      ]
+    },
+    "tr/System.Private.ServiceModel.resources.dll": {
+      "sha256": "7a955c7f7f22b71d4ede0bcbc20c2442d7dba8a78d85b720d8acc5fc5ff45520",
+      "source_package_assets": [
+        {
+          "package": "system.private.servicemodel.4.10.3.nupkg",
+          "asset": "lib/net8.0/tr/System.Private.ServiceModel.resources.dll"
+        }
+      ]
+    },
+    "tr/System.Web.Services.Description.resources.dll": {
+      "sha256": "cbb1683b17ff92457a4ad6a22576107b4548a38829af0537544bddb2be628c42",
+      "source_package_assets": [
+        {
+          "package": "system.web.services.description.4.10.3.nupkg",
+          "asset": "lib/net8.0/tr/System.Web.Services.Description.resources.dll"
+        }
+      ]
+    },
+    "zh-Hans/System.Private.ServiceModel.resources.dll": {
+      "sha256": "2a13672c22332817db3363033d6a1473150a7176f588a13532ba19b8b5a8f945",
+      "source_package_assets": [
+        {
+          "package": "system.private.servicemodel.4.10.3.nupkg",
+          "asset": "lib/net8.0/zh-Hans/System.Private.ServiceModel.resources.dll"
+        }
+      ]
+    },
+    "zh-Hans/System.Web.Services.Description.resources.dll": {
+      "sha256": "8bc6fbd0c2ca4af2837d84850e722b62c897d2e6c892a53e3d8df20290d0fe63",
+      "source_package_assets": [
+        {
+          "package": "system.web.services.description.4.10.3.nupkg",
+          "asset": "lib/net8.0/zh-Hans/System.Web.Services.Description.resources.dll"
+        }
+      ]
+    },
+    "zh-Hant/System.Private.ServiceModel.resources.dll": {
+      "sha256": "5f9387d2aa930b1f01139d209f3429a50cb63972420d88585a3a99819321fc25",
+      "source_package_assets": [
+        {
+          "package": "system.private.servicemodel.4.10.3.nupkg",
+          "asset": "lib/net8.0/zh-Hant/System.Private.ServiceModel.resources.dll"
+        }
+      ]
+    },
+    "zh-Hant/System.Web.Services.Description.resources.dll": {
+      "sha256": "cbf58b8d77ad84d75cf69200e5a4d60877721a90be60cba7a1e61c61ac683cb2",
+      "source_package_assets": [
+        {
+          "package": "system.web.services.description.4.10.3.nupkg",
+          "asset": "lib/net8.0/zh-Hant/System.Web.Services.Description.resources.dll"
+        }
+      ]
+    },
+    "runtimes/win/lib/net8.0/Microsoft.Win32.Registry.AccessControl.dll": {
+      "sha256": "cc58963cda11bcdeafc93c808175fcfed98f48446371a69fd9bacd2a93d15ddc",
+      "source_package_assets": [
+        {
+          "package": "microsoft.win32.registry.accesscontrol.8.0.0.nupkg",
+          "asset": "runtimes/win/lib/net8.0/Microsoft.Win32.Registry.AccessControl.dll"
+        }
+      ]
+    },
+    "runtimes/win/lib/net8.0/Microsoft.Win32.SystemEvents.dll": {
+      "sha256": "ff1e2c4d2eec0e76aa51eddf4e0ce3ef405132afddd2d79d90164191f1d562a5",
+      "source_package_assets": [
+        {
+          "package": "microsoft.win32.systemevents.8.0.0.nupkg",
+          "asset": "runtimes/win/lib/net8.0/Microsoft.Win32.SystemEvents.dll"
+        }
+      ]
+    },
+    "runtimes/win/lib/net8.0/System.Data.Odbc.dll": {
+      "sha256": "70c6e48befe3ed5859197f3d3cacf2a109e3ff9546eb420d01c2b70fbf9b3a88",
+      "source_package_assets": [
+        {
+          "package": "system.data.odbc.8.0.1.nupkg",
+          "asset": "runtimes/win/lib/net8.0/System.Data.Odbc.dll"
+        }
+      ]
+    },
+    "runtimes/win/lib/net8.0/System.Data.OleDb.dll": {
+      "sha256": "1290bc5921546c98722013eb07e01e5202955ded500ec5d0bffa1a7697be64cc",
+      "source_package_assets": [
+        {
+          "package": "system.data.oledb.8.0.1.nupkg",
+          "asset": "runtimes/win/lib/net8.0/System.Data.OleDb.dll"
+        }
+      ]
+    },
+    "runtimes/win/lib/net8.0/System.Data.SqlClient.dll": {
+      "sha256": "3a11b6a7fbd8793455e41c978abb1470cc59ede912922c459b2b4603d044d3d6",
+      "source_package_assets": [
+        {
+          "package": "system.data.sqlclient.4.9.1.nupkg",
+          "asset": "runtimes/win/lib/net8.0/System.Data.SqlClient.dll"
+        }
+      ]
+    },
+    "runtimes/win/lib/net8.0/System.Diagnostics.EventLog.dll": {
+      "sha256": "a7fbe8208efe3706e76cae929cf32521d0aa35e5b607bae203daf5866410a4fa",
+      "source_package_assets": [
+        {
+          "package": "system.diagnostics.eventlog.8.0.2.nupkg",
+          "asset": "runtimes/win/lib/net8.0/System.Diagnostics.EventLog.dll"
+        }
+      ]
+    },
+    "runtimes/win/lib/net8.0/System.Diagnostics.EventLog.Messages.dll": {
+      "sha256": "6ea28fb88f8d22e6b90c55cf168ab9068331ca2a5fca97e30cf1a65fd987893c",
+      "source_package_assets": [
+        {
+          "package": "system.diagnostics.eventlog.8.0.2.nupkg",
+          "asset": "runtimes/win/lib/net8.0/System.Diagnostics.EventLog.Messages.dll"
+        }
+      ]
+    },
+    "runtimes/win/lib/net8.0/System.Diagnostics.PerformanceCounter.dll": {
+      "sha256": "84d37a483581bdaa5ab28dd81eb5ba9e965b88367933cff534872f8e73fd953e",
+      "source_package_assets": [
+        {
+          "package": "system.diagnostics.performancecounter.8.0.1.nupkg",
+          "asset": "runtimes/win/lib/net8.0/System.Diagnostics.PerformanceCounter.dll"
+        }
+      ]
+    },
+    "runtimes/win/lib/net8.0/System.DirectoryServices.AccountManagement.dll": {
+      "sha256": "c829873a747f84b28cf48615918077b91ddfe87d12006026e582ab8ff2c3bb15",
+      "source_package_assets": [
+        {
+          "package": "system.directoryservices.accountmanagement.8.0.1.nupkg",
+          "asset": "runtimes/win/lib/net8.0/System.DirectoryServices.AccountManagement.dll"
+        }
+      ]
+    },
+    "runtimes/win/lib/net8.0/System.DirectoryServices.dll": {
+      "sha256": "c8a3ad011673cfbf8219c7fca9af2a55d12d13db6a64c1bfcbcab0ac150d852a",
+      "source_package_assets": [
+        {
+          "package": "system.directoryservices.8.0.0.nupkg",
+          "asset": "runtimes/win/lib/net8.0/System.DirectoryServices.dll"
+        }
+      ]
+    },
+    "runtimes/win/lib/net8.0/System.DirectoryServices.Protocols.dll": {
+      "sha256": "6818be728c9167e510dfa2ad5c93b8a6debe27867e6801140f04b8e6ffb98124",
+      "source_package_assets": [
+        {
+          "package": "system.directoryservices.protocols.8.0.2.nupkg",
+          "asset": "runtimes/win/lib/net8.0/System.DirectoryServices.Protocols.dll"
+        }
+      ]
+    },
+    "runtimes/win/lib/net8.0/System.Drawing.Common.dll": {
+      "sha256": "3e8ed39e2772a9cf04a220a1c0ef89846fd2e376300f173d4f3facea2067faae",
+      "source_package_assets": [
+        {
+          "package": "system.drawing.common.8.0.31.nupkg",
+          "asset": "runtimes/win/lib/net8.0/System.Drawing.Common.dll"
+        }
+      ]
+    },
+    "runtimes/win/lib/net8.0/System.IO.Ports.dll": {
+      "sha256": "689d4a6521e5a5bfef02d0fb0a3112af01d91fe734fb563c8961c43180133e72",
+      "source_package_assets": [
+        {
+          "package": "system.io.ports.8.0.0.nupkg",
+          "asset": "runtimes/win/lib/net8.0/System.IO.Ports.dll"
+        }
+      ]
+    },
+    "runtimes/win/lib/net8.0/System.Management.dll": {
+      "sha256": "7531483fb3aecfbc82bb66b97456e0e3fa2e0d0e38c914dd506bcf10f7c1adcc",
+      "source_package_assets": [
+        {
+          "package": "system.management.8.0.0.nupkg",
+          "asset": "runtimes/win/lib/net8.0/System.Management.dll"
+        }
+      ]
+    },
+    "runtimes/win/lib/net8.0/System.Runtime.Caching.dll": {
+      "sha256": "cb2d757ceccb36bce71bd0ed68959ddbb630fe1370ae424630ebf7585c1bc406",
+      "source_package_assets": [
+        {
+          "package": "system.runtime.caching.8.0.1.nupkg",
+          "asset": "runtimes/win/lib/net8.0/System.Runtime.Caching.dll"
+        }
+      ]
+    },
+    "runtimes/win/lib/net8.0/System.Security.Cryptography.Pkcs.dll": {
+      "sha256": "2f3d9ff004d688a237c2c19f81e57bbce273b76538377c8221435a7d50fe8e6d",
+      "source_package_assets": [
+        {
+          "package": "system.security.cryptography.pkcs.8.0.1.nupkg",
+          "asset": "runtimes/win/lib/net8.0/System.Security.Cryptography.Pkcs.dll"
+        }
+      ]
+    },
+    "runtimes/win/lib/net8.0/System.ServiceProcess.ServiceController.dll": {
+      "sha256": "c8dbd4a4e78aac725bb8d36c80424aa06a2a072a2df8041acf20ea4d7619a4b6",
+      "source_package_assets": [
+        {
+          "package": "system.serviceprocess.servicecontroller.8.0.1.nupkg",
+          "asset": "runtimes/win/lib/net8.0/System.ServiceProcess.ServiceController.dll"
+        }
+      ]
+    },
+    "runtimes/win/lib/net8.0/System.Speech.dll": {
+      "sha256": "9bb5b44dd287052763f3b931a2bad3e3bc237bd3d0a5c960c7d599574fd9dafe",
+      "source_package_assets": [
+        {
+          "package": "system.speech.8.0.0.nupkg",
+          "asset": "runtimes/win/lib/net8.0/System.Speech.dll"
+        }
+      ]
+    },
+    "runtimes/win/lib/net8.0/System.Text.Encoding.CodePages.dll": {
+      "sha256": "c9fe5309447b0ca12f88e37bd88dbccbcc11c31af13dc7e687208170375a685a",
+      "source_package_assets": [
+        {
+          "package": "system.text.encoding.codepages.8.0.0.nupkg",
+          "asset": "runtimes/win/lib/net8.0/System.Text.Encoding.CodePages.dll"
+        }
+      ]
+    },
+    "runtimes/win/lib/net8.0/System.Threading.AccessControl.dll": {
+      "sha256": "1fa559dacc9723bc2dedeccea53b4ae856c4b744a47c3ad9b899a1fb19bcd043",
+      "source_package_assets": [
+        {
+          "package": "system.threading.accesscontrol.8.0.0.nupkg",
+          "asset": "runtimes/win/lib/net8.0/System.Threading.AccessControl.dll"
+        }
+      ]
+    },
+    "runtimes/win/lib/net8.0/System.Windows.Extensions.dll": {
+      "sha256": "0062362613b192e2634df665857d90b850942aa1e6083a637b89670ceab9fe31",
+      "source_package_assets": [
+        {
+          "package": "system.windows.extensions.8.0.0.nupkg",
+          "asset": "runtimes/win/lib/net8.0/System.Windows.Extensions.dll"
+        }
+      ]
+    },
+    "runtimes/win-x64/native/msys-wmi-native.dll": {
+      "sha256": "a989bf39406be3e1234b5ea4f4f207f10d8e893861a3ce847d2b4dd65310edbe",
+      "source_package_assets": [
+        {
+          "package": "system.management.8.0.0.nupkg",
+          "asset": "runtimes/win-x64/native/msys-wmi-native.dll"
+        }
+      ]
+    }
+  },
+  "metapackage_net8_dependencies": {
+    "Microsoft.Win32.Registry.AccessControl": "8.0.0",
+    "Microsoft.Win32.SystemEvents": "8.0.0",
+    "System.CodeDom": "8.0.0",
+    "System.ComponentModel.Composition": "8.0.0",
+    "System.Configuration.ConfigurationManager": "8.0.1",
+    "System.Data.Odbc": "8.0.1",
+    "System.Data.OleDb": "8.0.1",
+    "System.Diagnostics.EventLog": "8.0.2",
+    "System.Diagnostics.PerformanceCounter": "8.0.1",
+    "System.DirectoryServices.AccountManagement": "8.0.1",
+    "System.DirectoryServices.Protocols": "8.0.2",
+    "System.DirectoryServices": "8.0.0",
+    "System.IO.Packaging": "8.0.1",
+    "System.IO.Ports": "8.0.0",
+    "System.Management": "8.0.0",
+    "System.Reflection.Context": "8.0.0",
+    "System.Runtime.Caching": "8.0.1",
+    "System.Security.Cryptography.Pkcs": "8.0.1",
+    "System.Security.Cryptography.ProtectedData": "8.0.0",
+    "System.Security.Cryptography.Xml": "8.0.4",
+    "System.Security.Permissions": "8.0.0",
+    "System.ServiceModel.Syndication": "8.0.0",
+    "System.ServiceProcess.ServiceController": "8.0.1",
+    "System.Speech": "8.0.0",
+    "System.Text.Encoding.CodePages": "8.0.0",
+    "System.Threading.AccessControl": "8.0.0",
+    "System.Drawing.Common": "8.0.31",
+    "System.Data.SqlClient": "4.9.0",
+    "System.ServiceModel.Duplex": "4.10.3",
+    "System.ServiceModel.Http": "4.10.3",
+    "System.ServiceModel.NetTcp": "4.10.3",
+    "System.ServiceModel.Primitives": "4.10.3",
+    "System.ServiceModel.Security": "4.10.3",
+    "System.Web.Services.Description": "4.10.3",
+    "System.ComponentModel.Composition.Registration": "8.0.0"
+  },
+  "all_restored_archives_match_source_feed": true,
+  "all_consumer_dlls_match_source_packages": true,
+  "full_dependency_goal_complete": false
+}

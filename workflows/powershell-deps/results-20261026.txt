@@ -1,0 +1,73 @@
+Windows host: win11
+Build root: /home/topkek/powershell-deps.jbM65x
+Each recipe: makepkg --cleanbuild --force --noconfirm; exit 0
+Packaging-only updates: makepkg --repackage --force --noconfirm; exit 0
+Integration: bash /home/topkek/powershell-deps.jbM65x/tests/powershell-deps/check-installed.sh /home/topkek/powershell-deps.jbM65x/installed-check; exit 0
+Payload audit: python tests/powershell-deps/audit-packages.py tests/powershell-deps/artifacts-20261026.json; exit 0
+
+mingw-w64-dotnet-markdig: PASS: Markdig HTML, escaping, tables, AST and signing identity
+mingw-w64-dotnet-powershell-markdownrender: PASS: PowerShell MarkdownRender HTML, terminal escapes, AST and signing identity
+mingw-w64-dotnet-humanizer: PASS: Humanizer casing, inflection, words, resources and signing identity
+mingw-w64-dotnet-json-more: PASS: Json.More object/numeric equivalence, hashing, negatives and node round-trip
+mingw-w64-dotnet-jsonpointer: PASS: JsonPointer escaping, arrays, missing paths, invalid input, Humanizer and JSON round-trip
+mingw-w64-dotnet-jsonschema: PASS: JsonSchema 2020-12 local refs, types, ranges, arrays, required and additional properties
+
+Installed integration output:
+warning: mingw-w64-clang-x86_64-dotnet-markdig-0.33.0-1 is up to date -- reinstalling
+warning: mingw-w64-clang-x86_64-dotnet-powershell-markdownrender-7.2.1-1 is up to date -- reinstalling
+warning: mingw-w64-clang-x86_64-dotnet-humanizer-2.14.1-1 is up to date -- reinstalling
+warning: mingw-w64-clang-x86_64-dotnet-json-more-2.0.2-1 is up to date -- reinstalling
+warning: mingw-w64-clang-x86_64-dotnet-jsonpointer-5.0.2-1 is up to date -- reinstalling
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (6) mingw-w64-clang-x86_64-dotnet-humanizer-2.14.1-1  mingw-w64-clang-x86_64-dotnet-json-more-2.0.2-1  mingw-w64-clang-x86_64-dotnet-jsonpointer-5.0.2-1  mingw-w64-clang-x86_64-dotnet-jsonschema-7.0.4-1  mingw-w64-clang-x86_64-dotnet-markdig-0.33.0-1  mingw-w64-clang-x86_64-dotnet-powershell-markdownrender-7.2.1-1
+
+Total Installed Size:  0.84 MiB
+Net Upgrade Size:      0.17 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+reinstalling mingw-w64-clang-x86_64-dotnet-markdig...
+reinstalling mingw-w64-clang-x86_64-dotnet-powershell-markdownrender...
+reinstalling mingw-w64-clang-x86_64-dotnet-humanizer...
+reinstalling mingw-w64-clang-x86_64-dotnet-json-more...
+reinstalling mingw-w64-clang-x86_64-dotnet-jsonpointer...
+installing mingw-w64-clang-x86_64-dotnet-jsonschema...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-deps.jbM65x\installed-check\check-installed.csproj (in 369 ms).
+  check-installed -> E:\msys64\home\topkek\powershell-deps.jbM65x\installed-check\bin\Release\net8.0\check-installed.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.85
+Markdig.Signed, Version=0.33.0.0, Culture=neutral, PublicKeyToken=870da25a133885f8; types=380
+Microsoft.PowerShell.MarkdownRender, Version=7.2.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35; types=19
+Json.More, Version=2.0.0.0, Culture=neutral, PublicKeyToken=17ed63f672b0e278; types=41
+JsonPointer.Net, Version=5.0.0.0, Culture=neutral, PublicKeyToken=17ed63f672b0e278; types=16
+JsonSchema.Net, Version=7.0.0.0, Culture=neutral, PublicKeyToken=17ed63f672b0e278; types=306
+Humanizer, Version=2.14.0.0, Culture=neutral, PublicKeyToken=979442b78dfc278e; types=285
+PASS: six installed source-built PowerShell dependencies restore offline, load all types and interoperate
+

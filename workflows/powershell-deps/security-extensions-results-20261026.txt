@@ -1,0 +1,508 @@
+Microsoft.Security.Extensions 1.4.0 source replacement, 2026-10-26
+Host: win11, MSYS2 CLANG64; SDK package 8.0.131, running core runtime 8.0.0.
+Remote root: /home/topkek/powershell-signatures.JF3nq5
+
+The production NuGet contains only source-built getfilesiginforedistwrapper.dll
+and msys-file-signature.dll, not the proprietary Microsoft implementation.
+Published binaries were used for metadata-only contract comparison.
+Every installed consumer uses a new output directory, empty NuGet cache and
+only /clang64/lib/dotnet/library-packs. Keys/certificates are temporary test
+fixtures; no certificates are added to any Windows trust store.
+
+Both managed and native implementations were built with the source toolchain.
+The first package check exposed disposed-stream validation and was fixed to
+throw ObjectDisposedException. Final checks also authenticate the open handle
+when its pathname is replaced by a trusted Windows executable. Calls from STA,
+MTA, parallel independent streams and one shared stream are exercised.
+
+This is local source-port evidence, not full PowerShell/application or complete
+vendor-private-behavior equivalence. Enterprise trust policy, revoked/distrusted/
+expired chains, multiple signatures and wider provider/format coverage remain.
+The entire PowerShell dependency/servicing graph is not complete.
+
+
+Directory: /home/topkek/powershell-signatures.JF3nq5/mingw-w64-osslsigncode
+$ PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm
+==> Making package: mingw-w64-osslsigncode 2.14-1 (26 Oct 2026 20:37:37)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found osslsigncode-2.14.tar.gz
+  -> Found 0001-use-portable-windows-library-names.patch
+  -> Found check.sh
+==> Validating source files with sha256sums...
+    osslsigncode-2.14.tar.gz ... Passed
+    0001-use-portable-windows-library-names.patch ... Passed
+    check.sh ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+  -> Extracting osslsigncode-2.14.tar.gz with bsdtar
+==> Starting prepare()...
+patching file CMakeLists.txt
+==> Removing existing $pkgdir/ directory...
+==> Starting build()...
+-- The C compiler identification is Clang 23.1.3
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: E:/msys64/clang64/bin/clang.exe - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Found OpenSSL: E:/msys64/clang64/lib/libcrypto.dll.a (found version "3.6.5")
+-- Found ZLIB: E:/msys64/clang64/lib/libz.dll.a (found version "1.3.2")
+-- Using bash completions dir /usr/share/bash-completion/completions
+-- Looking for windows.h
+-- Looking for windows.h - found
+-- Found Python3: E:/msys64/clang64/bin/python3.14.exe (found version "3.14.8") found components: Interpreter
+-- Using python3-cryptography version 50.0.2
+-- Configuring done (18.4s)
+-- Generating done (0.0s)
+CMake Warning (unused-cli):
+  Manually-specified variables were not used by the project:
+
+    BUILD_TESTING
+
+
+-- Build files have been written to: E:/msys64/home/topkek/powershell-signatures.JF3nq5/mingw-w64-osslsigncode/src/build
+[1/13] Building C object CMakeFiles/osslsigncode.dir/utf.c.obj
+[2/13] Building C object CMakeFiles/osslsigncode.dir/cab.c.obj
+[3/13] Building C object CMakeFiles/osslsigncode.dir/helpers.c.obj
+[4/13] Building C object CMakeFiles/osslsigncode.dir/pe.c.obj
+[5/13] Building C object CMakeFiles/osslsigncode.dir/cat.c.obj
+[6/13] Building C object CMakeFiles/osslsigncode.dir/applink.c.obj
+[7/13] Building C object CMakeFiles/osslsigncode.dir/msi.c.obj
+[8/13] Building C object CMakeFiles/osslsigncode.dir/osslsigncode.c.obj
+[9/13] Building C object CMakeFiles/osslsigncode.dir/script.c.obj
+[10/13] CMakeDoc: generating HTML documentation
+[11/13] Building C object CMakeFiles/osslsigncode.dir/appx.c.obj
+[12/13] CMakeDoc: generating man page
+[13/13] Linking C executable osslsigncode.exe
+==> Starting check()...
+Succeeded
+PE checksum   : 00004668
+
+Signature Index: 0  (Primary Signature)
+
+Message digest algorithm  : SHA256
+Current message digest    : BBFFA147990EA461D1914C4D5761F150701BDD6AB7380D99B21BD0FA196E4D41 
+Calculated message digest : BBFFA147990EA461D1914C4D5761F150701BDD6AB7380D99B21BD0FA196E4D41 
+
+Signer's certificate:
+	------------------
+	Signer #0:
+		Subject: CN=MSYS2 source signing tool fixture
+		Issuer : CN=MSYS2 source signing tool fixture
+		Serial : 78952DCB8C9425B4306B7BFC3F0EFB3D04BF3777
+		Certificate expiration date:
+			notBefore : Oct 26 19:38:06 2026 GMT
+			notAfter : Oct 28 19:38:06 2026 GMT
+
+Message digest algorithm: SHA256
+
+Authenticated attributes:
+	Signing time: Oct 26 19:38:06 2026 GMT
+	Microsoft Individual Code Signing purpose
+	Message digest: B5D371F0930CA8EBEA3DD05975555F7916BAA50BE9CA7F6935FC4D4CD29135D0 
+
+CAfile: signer.crt
+
+Timestamp is not available
+
+Signing certificate chain verified using:
+	------------------
+	Signer #0:
+		Subject: CN=MSYS2 source signing tool fixture
+		Issuer : CN=MSYS2 source signing tool fixture
+		Serial : 78952DCB8C9425B4306B7BFC3F0EFB3D04BF3777
+		Certificate expiration date:
+			notBefore : Oct 26 19:38:06 2026 GMT
+			notAfter : Oct 28 19:38:06 2026 GMT
+
+Signature verification: ok
+
+Number of verified signatures: 1
+Succeeded
+PASS source signing tool creates and verifies an owned PE Authenticode fixture; no trust-store changes
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Stripping unneeded symbols from binaries and libraries...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-osslsigncode"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-osslsigncode 2.14-1 (26 Oct 2026 20:38:12)
+Result: exit 0
+
+Directory: /home/topkek/powershell-signatures.JF3nq5/mingw-w64-dotnet-security-extensions
+$ PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm
+==> Making package: mingw-w64-dotnet-security-extensions 1.4.0-1 (26 Oct 2026 20:48:57)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found FileSignatureInfo.cs
+  -> Found signature-native.c
+  -> Found signature-native.h
+  -> Found prepare.py
+  -> Found MicrosoftShared.pubkey.hex
+  -> Found Check.cs
+  -> Found ExpectedApi.json
+  -> Found InspectApi.cs
+  -> Found check.sh
+  -> Found check-api.sh
+  -> Found generate-fixtures.sh
+  -> Found README.md
+  -> Found LICENSE
+  -> Found source-provenance.json
+==> Validating source files with sha256sums...
+    FileSignatureInfo.cs ... Passed
+    signature-native.c ... Passed
+    signature-native.h ... Passed
+    prepare.py ... Passed
+    MicrosoftShared.pubkey.hex ... Passed
+    Check.cs ... Passed
+    ExpectedApi.json ... Passed
+    InspectApi.cs ... Passed
+    check.sh ... Passed
+    check-api.sh ... Passed
+    generate-fixtures.sh ... Passed
+    README.md ... Passed
+    LICENSE ... Passed
+    source-provenance.json ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+==> Starting prepare()...
+==> Removing existing $pkgdir/ directory...
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-signatures.JF3nq5\mingw-w64-dotnet-security-extensions\src\prepared\Library.csproj (in 57 ms).
+  Library -> E:\msys64\home\topkek\powershell-signatures.JF3nq5\mingw-w64-dotnet-security-extensions\src\prepared\bin\Release\net8.0\getfilesiginforedistwrapper.dll
+  Successfully created package 'E:\msys64\home\topkek\powershell-signatures.JF3nq5\mingw-w64-dotnet-security-extensions\src\feed\Microsoft.Security.Extensions.1.4.0.nupkg'.
+==> Starting check()...
+Succeeded
+Succeeded
+Script file format: .ps1
+Signature position: 0
+Succeeded
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-signatures.JF3nq5\mingw-w64-dotnet-security-extensions\src\check\Check.csproj (in 196 ms).
+  Check -> E:\msys64\home\topkek\powershell-signatures.JF3nq5\mingw-w64-dotnet-security-extensions\src\check\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.83
+fixture.exe: Unsigned / NoSignerCert / None OS=False timestamp=False
+signed.exe: SignedAndNotTrusted / UntrustedRoot / Embedded OS=False timestamp=False
+timestamped.exe: SignedAndNotTrusted / UntrustedRoot / Embedded OS=False timestamp=True
+tampered.exe: Invalid / BadDigest / Embedded OS=False timestamp=False
+signed.ps1: SignedAndNotTrusted / UntrustedRoot / Embedded OS=False timestamp=False
+unsigned.ps1: Unsigned / NoSignerCert / None OS=False timestamp=False
+kernel32.dll: SignedAndTrusted / Catalog OS=True
+notepad.exe: SignedAndTrusted / Catalog OS=True
+PASS source identity, native unsigned/catalog/embedded/timestamp/corruption/trust results, certificate ownership, positions, concurrency, rename/handle streams and validation
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-signatures.JF3nq5\mingw-w64-dotnet-security-extensions\src\check-api\Inspect.csproj (in 281 ms).
+  Inspect -> E:\msys64\home\topkek\powershell-signatures.JF3nq5\mingw-w64-dotnet-security-extensions\src\check-api\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.43
+PASS all 29 published Microsoft.Security.Extensions public/protected declarations and exact assembly identity
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-security-extensions"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-security-extensions 1.4.0-1 (26 Oct 2026 20:49:30)
+Result: exit 0
+
+Installed fixture tool check:
+$ bash mingw-w64-osslsigncode/check.sh /clang64/bin/osslsigncode.exe installed-tool-check
+Succeeded
+PE checksum   : 00011B19
+
+Signature Index: 0  (Primary Signature)
+
+Message digest algorithm  : SHA256
+Current message digest    : C0B9747FA95144565723C469C191E4BA41820476B3D25EEA14D1A1069A421403 
+Calculated message digest : C0B9747FA95144565723C469C191E4BA41820476B3D25EEA14D1A1069A421403 
+
+Signer's certificate:
+	------------------
+	Signer #0:
+		Subject: CN=MSYS2 source signing tool fixture
+		Issuer : CN=MSYS2 source signing tool fixture
+		Serial : 40C4693A75FAA4A898EBA7323CBC8634B10153B6
+		Certificate expiration date:
+			notBefore : Oct 26 19:47:17 2026 GMT
+			notAfter : Oct 28 19:47:17 2026 GMT
+
+Message digest algorithm: SHA256
+
+Authenticated attributes:
+	Signing time: Oct 26 19:47:17 2026 GMT
+	Microsoft Individual Code Signing purpose
+	Message digest: 89908D0BD3C539A9BB2F5091A52741281D58DDF9CBB5F1E2C3D23D616AE59DC7 
+
+CAfile: signer.crt
+
+Timestamp is not available
+
+Signing certificate chain verified using:
+	------------------
+	Signer #0:
+		Subject: CN=MSYS2 source signing tool fixture
+		Issuer : CN=MSYS2 source signing tool fixture
+		Serial : 40C4693A75FAA4A898EBA7323CBC8634B10153B6
+		Certificate expiration date:
+			notBefore : Oct 26 19:47:17 2026 GMT
+			notAfter : Oct 28 19:47:17 2026 GMT
+
+Signature verification: ok
+
+Number of verified signatures: 1
+Succeeded
+PASS source signing tool creates and verifies an owned PE Authenticode fixture; no trust-store changes
+Result: exit 0
+
+Final installed security extension checks:
+$ pacman -U --noconfirm mingw-w64-dotnet-security-extensions/mingw-w64-clang-x86_64-dotnet-security-extensions-1.4.0-1-any.pkg.tar.zst
+warning: mingw-w64-clang-x86_64-dotnet-security-extensions-1.4.0-1 is up to date -- reinstalling
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-dotnet-security-extensions-1.4.0-1
+
+Total Installed Size:  0.02 MiB
+Net Upgrade Size:      0.00 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+reinstalling mingw-w64-clang-x86_64-dotnet-security-extensions...
+Result: exit 0
+$ bash mingw-w64-dotnet-security-extensions/check.sh installed-security-consumer-final
+Succeeded
+Succeeded
+Script file format: .ps1
+Signature position: 0
+Succeeded
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-signatures.JF3nq5\installed-security-consumer-final\Check.csproj (in 196 ms).
+  Check -> E:\msys64\home\topkek\powershell-signatures.JF3nq5\installed-security-consumer-final\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.52
+fixture.exe: Unsigned / NoSignerCert / None OS=False timestamp=False
+signed.exe: SignedAndNotTrusted / UntrustedRoot / Embedded OS=False timestamp=False
+timestamped.exe: SignedAndNotTrusted / UntrustedRoot / Embedded OS=False timestamp=True
+tampered.exe: Invalid / BadDigest / Embedded OS=False timestamp=False
+signed.ps1: SignedAndNotTrusted / UntrustedRoot / Embedded OS=False timestamp=False
+unsigned.ps1: Unsigned / NoSignerCert / None OS=False timestamp=False
+kernel32.dll: SignedAndTrusted / Catalog OS=True
+notepad.exe: SignedAndTrusted / Catalog OS=True
+PASS source identity, native unsigned/catalog/embedded/timestamp/corruption/trust results, certificate ownership, positions, concurrency, rename/handle streams and validation
+Result: exit 0
+$ bash mingw-w64-dotnet-security-extensions/check-api.sh installed-security-consumer-final installed-security-api-final
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-signatures.JF3nq5\installed-security-api-final\Inspect.csproj (in 314 ms).
+  Inspect -> E:\msys64\home\topkek\powershell-signatures.JF3nq5\installed-security-api-final\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.59
+PASS all 29 published Microsoft.Security.Extensions public/protected declarations and exact assembly identity
+Result: exit 0
+
+License-only fixture-tool packaging change: include full GPL COPYING alongside LICENSE and its OpenSSL exception.
+$ PATH=/usr/bin:/clang64/bin:$PATH makepkg --repackage --force --noconfirm
+==> Making package: mingw-w64-osslsigncode 2.14-1 (26 Oct 2026 20:50:56)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Removing existing $pkgdir/ directory...
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Stripping unneeded symbols from binaries and libraries...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-osslsigncode"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-osslsigncode 2.14-1 (26 Oct 2026 20:51:06)
+Result: exit 0
+Executable bytes differed after repackaging; the final installed tool is tested again below.
+$ pacman -U --noconfirm mingw-w64-osslsigncode/mingw-w64-clang-x86_64-osslsigncode-2.14-1-any.pkg.tar.zst
+warning: mingw-w64-clang-x86_64-osslsigncode-2.14-1 is up to date -- reinstalling
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-osslsigncode-2.14-1
+
+Total Installed Size:  0.23 MiB
+Net Upgrade Size:      0.00 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+reinstalling mingw-w64-clang-x86_64-osslsigncode...
+Result: exit 0
+
+$ sha256sum installed-security-consumer-final/bin/Release/net8.0/getfilesiginforedistwrapper.dll installed-security-consumer-final/bin/Release/net8.0/runtimes/win-x64/native/msys-file-signature.dll
+d543c3abaab14ec7836fa7095a05ee9373a28c8f3f11a4b399aac7ad9ba21972 *installed-security-consumer-final/bin/Release/net8.0/getfilesiginforedistwrapper.dll
+672545cd9f7f702795a1d4718bcb4467eb3a90934b959fe2d4a40e94e2b9f57e *installed-security-consumer-final/bin/Release/net8.0/runtimes/win-x64/native/msys-file-signature.dll
+PASS installed consumer implementation bytes match audited package managed/native assets
+
+$ bash mingw-w64-osslsigncode/check.sh /clang64/bin/osslsigncode.exe installed-tool-check-final
+Succeeded
+PE checksum   : 0000DDC9
+
+Signature Index: 0  (Primary Signature)
+
+Message digest algorithm  : SHA256
+Current message digest    : 53F4FF1BEC7CEA49FD999030874B37B0BC3F912A8EE903FA85CBB02C4EA7C4CB 
+Calculated message digest : 53F4FF1BEC7CEA49FD999030874B37B0BC3F912A8EE903FA85CBB02C4EA7C4CB 
+
+Signer's certificate:
+	------------------
+	Signer #0:
+		Subject: CN=MSYS2 source signing tool fixture
+		Issuer : CN=MSYS2 source signing tool fixture
+		Serial : 040A696CCB2F039528F4518BBD47B0ECDB78E3
+		Certificate expiration date:
+			notBefore : Oct 26 19:52:37 2026 GMT
+			notAfter : Oct 28 19:52:37 2026 GMT
+
+Message digest algorithm: SHA256
+
+Authenticated attributes:
+	Signing time: Oct 26 19:52:37 2026 GMT
+	Microsoft Individual Code Signing purpose
+	Message digest: 93C2454AD2E958B3473E93ECF6521B4B97CA67ACCEADFEE2B091D6AFA5310E7B 
+
+CAfile: signer.crt
+
+Timestamp is not available
+
+Signing certificate chain verified using:
+	------------------
+	Signer #0:
+		Subject: CN=MSYS2 source signing tool fixture
+		Issuer : CN=MSYS2 source signing tool fixture
+		Serial : 040A696CCB2F039528F4518BBD47B0ECDB78E3
+		Certificate expiration date:
+			notBefore : Oct 26 19:52:37 2026 GMT
+			notAfter : Oct 28 19:52:37 2026 GMT
+
+Signature verification: ok
+
+Number of verified signatures: 1
+Succeeded
+PASS source signing tool creates and verifies an owned PE Authenticode fixture; no trust-store changes
+Result: exit 0
+
+$ python3 tests/powershell-deps/audit-security-extensions.py
+Microsoft.Security.Extensions: exact source checksums, identity baseline, licenses, sole managed/native NuGet payload and three native exports PASS
+osslsigncode: pinned source/checksums, native Windows executable, dependency metadata, license and install prefix PASS
+Result: exit 0

@@ -1,0 +1,24 @@
+{
+  "artifact": "mingw-w64-clang-x86_64-powershell-packagemanagement-1.4.8.1-1-any.pkg.tar.zst",
+  "sha256": "c4202847fe9dad3aad2bb15ad5c8538c547c6e0dd75906147350c1bf6a79faa4",
+  "nuget_sha256": "582696506e4f251638055010809bc98de632dc41dc66beb4dc3d47780ff67eca",
+  "pinned_inputs": 19,
+  "original_compiled_cs": 277,
+  "generated_resource_classes": 5,
+  "resource_strings": 295,
+  "public_api_entries": 2205,
+  "source_assemblies": 6,
+  "module_files": 21,
+  "public_signing_token": "31bf3856ad364e35",
+  "source_overlays": 3,
+  "build_configuration": "original published Debug flavor",
+  "loose_nuget_bytes_equal": true,
+  "source_dll_sha256": {
+    "Microsoft.PackageManagement.ArchiverProviders.dll": "3bf291260fef8947fad6ec4b77f6424ad1c1ae7c3f8e991f97738042b967ba7b",
+    "Microsoft.PackageManagement.CoreProviders.dll": "f75cca1f02cb65604cd540e54bb5acad13726cf0682c7d58ab912392322c34cf",
+    "Microsoft.PackageManagement.MetaProvider.PowerShell.dll": "37d797f15a83f9a917d63eb4723d34d8fc950882eec4a7406d7b9cb4c9b0c746",
+    "Microsoft.PackageManagement.NuGetProvider.dll": "5d62edac840baf513eb11b8222abc72db981ba7f0285c876b94f52a4456ace57",
+    "Microsoft.PackageManagement.dll": "acb09620049d66af3d71662b29d1291e4c51f39cd436fcc5254f30ad9835bd4a",
+    "Microsoft.PowerShell.PackageManagement.dll": "04bd6226a64d96fa693bb8d37de70c7373694fcd316a21b2a93a4a26578270b5"
+  }
+}

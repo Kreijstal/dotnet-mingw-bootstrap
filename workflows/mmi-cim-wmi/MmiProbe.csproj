@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <UseAppHost>false</UseAppHost>
+    <EnableNETAnalyzers>false</EnableNETAnalyzers>
+    <NuGetAudit>false</NuGetAudit>
+    <EnableDefaultItems>false</EnableDefaultItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="MmiProbe.cs" />
+    <Compile Include="MmiPortChecks.cs" />
+    <Compile Include="MmiCredentialChecks.cs" />
+    <Compile Include="MmiExtendedCallbackChecks.cs" />
+    <Compile Include="MmiStreamChecks.cs" />
+    <None Include="mmi-stream-driver.dll" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="mmi-callback-driver.dll" CopyToOutputDirectory="PreserveNewest" />
+    <Compile Include="NativeDependencies.cs" />
+    <ProjectReference Include="mmi/Mmi.csproj" />
+  </ItemGroup>
+</Project>

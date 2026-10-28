@@ -1,0 +1,74 @@
+[
+  {
+    "recipe": "mingw-w64-dotnet-event-manifest-compiler",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-event-manifest-compiler-1.0.0.git20201006.f919e38-1-any.pkg.tar.zst",
+    "sha256": "020d54d91c905476eea0946ba5e79bd8f6500479f0ca0b13b9d62a75d87f9c1f",
+    "source_checksums": {
+      "event-trace-kit-f919e38bbf553f89058f98b5d1eeb3c4536a673b.tar.gz::https://codeload.github.com/gix/event-trace-kit/tar.gz/f919e38bbf553f89058f98b5d1eeb3c4536a673b": "02c4f0cf88ccd5049b549ac7b4419cc5fda6e0ea724104b415f0004a71de3fa3",
+      "prepare.py": "c8afb495c86808adfa2e3d948db17c02095a7ad634459b89b952fef287211a78",
+      "Program.cs": "259573eeda33c8b237d4485c895503ad13d71b8ede4a28d07aa78a9ffcd7154f",
+      "build.sh": "6e5f2492f27a0676503e70e75a678561e5116d02c0384ba7aa3a7716d68963f3",
+      "event-manifest-compiler.sh": "6d02a02b716f2c9bb001e67589f19a65b5ec7d742a32523e154f3edaa2736bdc",
+      "README.md": "f396b66a3db4478ed8ae3f8ea035450692ee3fb177f95a6474a423b525fa4178"
+    }
+  },
+  {
+    "recipe": "mingw-w64-powershell-native",
+    "artifact": "mingw-w64-clang-x86_64-powershell-native-700.0.0-1-any.pkg.tar.zst",
+    "sha256": "9799fd496366cd3f6495ceb7f0c219e09a60cee89b7569e67fb1ee829c3fea76",
+    "source_checksums": {
+      "native-700.0.0.tar.gz::https://codeload.github.com/PowerShell/PowerShell-Native/tar.gz/refs/tags/v700.0.0": "a3fd1e53f1de8699f3a34a587524edffb5d5d6f862dcb9ed862cdc746da2eff9",
+      "eventman-2f767671802301cf043c717d66bf004ed7863487.xsd::https://raw.githubusercontent.com/microsoft/win32metadata/2f767671802301cf043c717d66bf004ed7863487/generation/WinSDK/RecompiledIdlHeaders/um/eventman.xsd": "cc4e30e4c30504568cb3e83279b2b3692228ee4a7a0019656e3f5c33d0027407",
+      "winmeta-2f767671802301cf043c717d66bf004ed7863487.xml::https://raw.githubusercontent.com/microsoft/win32metadata/2f767671802301cf043c717d66bf004ed7863487/generation/WinSDK/RecompiledIdlHeaders/um/winmeta.xml": "8d6b92db90b7c45202267fe06e81be16960bc6511f79294ee35fb86c25177e14",
+      "prepare.py": "e5b1319b84b6f2483dfe34e0e9b69d9e67a723b4af95e8aae8dac386fad7a00c",
+      "prepare-manifest.py": "94a6dee3db771aae5620eb9efeff21cd84af756c77f33104276236d00f3a0b8d",
+      "expected-events.py": "ad5c5f017e7a4e06f52d9bfa6c970aecca6bf170a6d45265d8fa593cb6fe2cd5",
+      "build-plugin.sh": "cac9eb7b2dfb50926a7175acd81ee65123bb7fae8f988d02a493bf986c59d2b5",
+      "build-instrumentation.sh": "5e111214b2d96f1fb6b78f4c692be1e2d808ffa9125b6d879ec1abcb78ddfaf3",
+      "Native.csproj": "e7b11499b3db1a630066e90cfdeb52ef168d60d18337a45b9bc3926e61d97e8d",
+      "check.sh": "7d06250dec406fddccac3f6bafa1d62730bbcfb0521128a478f85b6079074060",
+      "check-native.cpp": "3c5b37ee952545cc42c220e5f553e16f0441590ddaf69b10967f5c968f93a4a9",
+      "README.md": "8237a200fb9829e7b90045cccbbcb67d57b8c8e21f47c1a0865c942bde90c8f4"
+    },
+    "nuget_id": "Microsoft.PowerShell.Native",
+    "nuget_version": "700.0.0",
+    "native": {
+      "PowerShell.Core.Instrumentation.dll": {
+        "machine": "AMD64",
+        "entry_point": 0,
+        "exports": [],
+        "imports": []
+      },
+      "pwrshplugin.dll": {
+        "machine": "AMD64",
+        "entry_point": 4832,
+        "exports": [
+          "GetCLRVersionForPSVersion",
+          "WSManPluginCommand",
+          "WSManPluginConnect",
+          "WSManPluginReceive",
+          "WSManPluginReleaseCommandContext",
+          "WSManPluginReleaseShellContext",
+          "WSManPluginSend",
+          "WSManPluginShell",
+          "WSManPluginShutdown",
+          "WSManPluginSignal",
+          "WSManPluginStartup"
+        ],
+        "imports": [
+          "WsmSvc.DLL",
+          "ADVAPI32.dll",
+          "ole32.dll",
+          "USER32.dll",
+          "libc++.dll",
+          "api-ms-win-crt-private-l1-1-0.dll",
+          "api-ms-win-crt-stdio-l1-1-0.dll",
+          "api-ms-win-crt-convert-l1-1-0.dll",
+          "api-ms-win-crt-runtime-l1-1-0.dll",
+          "api-ms-win-crt-string-l1-1-0.dll",
+          "KERNEL32.dll"
+        ]
+      }
+    }
+  }
+]

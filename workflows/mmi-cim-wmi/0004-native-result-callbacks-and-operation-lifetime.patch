@@ -1,0 +1,1061 @@
+--- a/CimClass.cs
++++ b/CimClass.cs
+@@ -185,18 +185,15 @@
+         /// </summary>
+         private void Dispose(bool disposing)
+         {
+-            if (_disposed)
+-            {
+-                return;
+-            }
+-
+-            if (disposing)
+-            {
+-                this._classHandle.Delete();
+-                this._classHandle = null;
+-            }
+-
++            if (_disposed) return;
+             _disposed = true;
++            MI_Class handle = this._classHandle;
++            this._classHandle = null;
++            if (handle != null)
++            {
++                try { if (!handle.IsNull) handle.Delete(); }
++                finally { handle.Dispose(); }
++            }
+         }
+ 
+         internal void AssertNotDisposed()
+--- a/CimInstance.cs
++++ b/CimInstance.cs
+@@ -62,7 +62,7 @@
+ 
+         ~CimInstance()
+         {
+-            this.Dispose(false);
++            try { this.Dispose(false); } catch { }
+         }
+         
+         internal CimInstance(MI_Instance handle)
+@@ -370,30 +370,12 @@
+         /// </summary>
+         private void Dispose(bool disposing)
+         {
+-            // This doesn't actually do anything right now
+-            // The original implementation relied on explicit disposes
+-            // because it was trying to internally ref-count a handle
+-            // We now always clone the MI_Instance and rely
+-            // on the Finalizer to clean up the actual memory
+-            if (_disposed)
+-            {
+-                return;
+-            }
+-
+-            if (disposing)
+-            {
+-                // Still prevent the caller from double-Disposing the object
+-                _disposed = true;
+-            }
+-            else
+-            {
+-                if (this.InstanceHandle != null && !this.InstanceHandle.IsNull)
+-                {
+-                    using (this.InstanceHandle)
+-                    {
+-                        this.InstanceHandle.Delete();
+-                    }
+-                }
++            if (_disposed) return;
++            _disposed = true;
++            if (nativeInstance != null)
++            {
++                try { if (!nativeInstance.IsNull) nativeInstance.Delete(); }
++                finally { nativeInstance.Dispose(); }
+             }
+         }
+ 
+--- a/CimSession.cs
++++ b/CimSession.cs
+@@ -234,16 +234,12 @@
+         {
+             lock (this._disposeThreadSafetyLock)
+             {
+-                if (this._disposed)
+-                {
+-                    return;
+-                }
++                if (this._disposed) return;
+                 this._disposed = true;
+             }
+-
+-            // TODO: Implement next function
+-            //MI_Result result = this._handle.ReleaseHandleSynchronously();
+-            //CimException.ThrowIfMiResultFailure(result);
++            MI_Result result = this._handle.Close(IntPtr.Zero, null);
++            CimException.ThrowIfMiResultFailure(result);
++            this._handle.Dispose();
+         }
+ 
+         /// <summary>
+@@ -257,36 +253,12 @@
+         /// <returns></returns>
+         public CimAsyncStatus CloseAsync()
+         {
+-            IObservable<object> observable = new CimAsyncDelegatedObservable<object>(
+-                delegate (IObserver<object> observer)
+-                    {
+-                        Debug.Assert(observer != null, "Caller should verify observer != null");
+-
+-                        bool alreadyDisposed;
+-                        lock (this._disposeThreadSafetyLock)
+-                        {
+-                            alreadyDisposed = this._disposed;
+-                            this._disposed = true;
+-                        }
+-                        if (alreadyDisposed)
+-                        {
+-                            observer.OnCompleted();
+-                        }
+-                        else
+-                        {
+-                            // TODO: Implement
+-                            //CloseAsyncImpersonationWorker worker = new CloseAsyncImpersonationWorker(observer);
+-                            //
+-                            //MI_Result result = this._handle.ReleaseHandleAsynchronously(worker.OnCompleted); // native API only reports completion (i.e. no equivalent to IObserver.OnError)
+-                            //CimException exception = CimException.GetExceptionIfMiResultFailure(result, null, null);
+-                            //if (exception != null)
+-                            //{
+-                            //    observer.OnError(exception);
+-                            //    worker.Dispose();
+-                            //}
+-                        }
+-                    });
+-
++            IObservable<object> observable = new CimAsyncDelegatedObservable<object>(observer =>
++            {
++                try { this.Close(); }
++                catch (Exception error) { observer.OnError(error); return; }
++                observer.OnCompleted();
++            });
+             return new CimAsyncStatus(observable);
+         }
+ 
+@@ -363,20 +335,7 @@
+         /// </summary>
+         protected virtual void Dispose(bool disposing)
+         {
+-            lock (_disposeThreadSafetyLock)
+-            {
+-                if (_disposed)
+-                {
+-                    return;
+-                }
+-                _disposed = true;
+-            }
+-
+-            if (disposing)
+-            {
+-                // TODO: Implement and Call ReleaseHandleAsynchronously
+-                //this._handle.Dispose();
+-            }
++            if (disposing) this.Close();
+         }
+ 
+         internal void AssertNotDisposed()
+--- a/Internal/Operations/CimAsyncCallbacksReceiverBase.cs
++++ b/Internal/Operations/CimAsyncCallbacksReceiverBase.cs
+@@ -205,9 +205,8 @@
+ 
+         public virtual void RegisterAcceptedAsyncCallbacks(MI_OperationCallbacks operationCallbacks, CimOperationOptions operationOptions)
+         {
+-            // TODO: Uncomment and fix two lines below
+-            //operationCallbacks.InternalErrorCallback = this.ReportInternalErrorCore;
+-            //operationCallbacks.ManagedOperationContext = this;
++            operationCallbacks.InternalErrorCallback = this.ReportInternalErrorCore;
++            operationCallbacks.ManagedOperationContext = this;
+         }
+ 
+         #endregion Dealing with async callbacks
+--- a/Internal/Operations/CimAsyncCancellationDisposable.cs
++++ b/Internal/Operations/CimAsyncCancellationDisposable.cs
+@@ -54,6 +54,8 @@
+                 callback: _ => this._operation.Cancel(CancellationMode.SilentlyStopProducingResults),
+                 state: null);
+             this._securityContext.Dispose();
++#else
++            this._operation.Cancel(CancellationMode.SilentlyStopProducingResults);
+ #endif
+         }
+ 
+--- a/Internal/Operations/CimAsyncClassObserverProxy.cs
++++ b/Internal/Operations/CimAsyncClassObserverProxy.cs
+@@ -36,10 +36,7 @@
+             CimClass currentItem = null;
+             if ((ClassHandle != null) && (!ClassHandle.IsNull))
+             {
+-                if (!_shortenLifetimeOfResults)
+-                {
+-                    ClassHandle = ClassHandle.Clone();
+-                }
++                ClassHandle = ClassHandle.Clone();
+                 currentItem = new CimClass(ClassHandle);
+             }
+ 
+@@ -63,7 +60,8 @@
+         {
+             base.RegisterAcceptedAsyncCallbacks(operationCallbacks, operationOptions);
+             // TODO: Uncomment and fix below
+-            //operationCallbacks.classResult = this.ClassCallback;
++            operationCallbacks.classResult = (operation, context, instance, more, result, message, error, acknowledgement) =>
++                this.ClassCallback((CimOperationCallbackProcessingContext)context, operation, instance, more, result, message, error);
+         }
+     }
+ }
+--- a/Internal/Operations/CimAsyncIndicationObserverProxy.cs
++++ b/Internal/Operations/CimAsyncIndicationObserverProxy.cs
+@@ -38,10 +38,7 @@
+             CimSubscriptionResult currentItem = null;
+             if ((instanceHandle != null) && (!instanceHandle.IsNull))
+             {
+-                if (!_shortenLifetimeOfResults)
+-                {
+-                    instanceHandle = instanceHandle.Clone();
+-                }
++                instanceHandle = instanceHandle.Clone();
+                 currentItem = new CimSubscriptionResult(instanceHandle, bookMark, machineID);
+             }
+ 
+@@ -65,7 +62,8 @@
+         {
+             base.RegisterAcceptedAsyncCallbacks(operationCallbacks, operationOptions);
+             // TODO: Uncomment and fix below
+-            //operationCallbacks.indicationResult = this.IndicationResultCallback;
++            operationCallbacks.indicationResult = (operation, context, instance, bookmark, machine, more, result, message, error, acknowledgement) =>
++                this.IndicationResultCallback((CimOperationCallbackProcessingContext)context, operation, instance, bookmark, machine, more, result, message, error);
+         }
+     }
+ }
+--- a/Internal/Operations/CimAsyncInstanceObserverProxy.cs
++++ b/Internal/Operations/CimAsyncInstanceObserverProxy.cs
+@@ -43,10 +43,7 @@
+             CimInstance currentItem = null;
+             if ((instanceHandle != null) && (!instanceHandle.IsNull))
+             {
+-                if (!_shortenLifetimeOfResults)
+-                {
+-                    instanceHandle = instanceHandle.Clone();
+-                }
++                instanceHandle = instanceHandle.Clone();
+                 currentItem = new CimInstance(instanceHandle);
+                 currentItem.SetCimSessionComputerName(this._CimSessionComputerName);
+                 currentItem.SetCimSessionInstanceId(this._CimSessionInstanceID);
+@@ -72,7 +69,8 @@
+         {
+             base.RegisterAcceptedAsyncCallbacks(operationCallbacks, operationOptions);
+             // TODO: Uncomment and fix below
+-            //operationCallbacks.instanceResult = this.InstanceResultCallback;
++            operationCallbacks.instanceResult = (operation, context, instance, more, result, message, error, acknowledgement) =>
++                this.InstanceResultCallback((CimOperationCallbackProcessingContext)context, operation, instance, more, result, message, error);
+         }
+     }
+ }
+--- a/Internal/Operations/CimAsyncMethodResultObserverProxy.cs
++++ b/Internal/Operations/CimAsyncMethodResultObserverProxy.cs
+@@ -43,10 +43,7 @@
+             CimMethodResult currentItem = null;
+             if ((instanceHandle != null) && (!instanceHandle.IsNull))
+             {
+-                if (!_shortenLifetimeOfResults)
+-                {
+-                    instanceHandle = instanceHandle.Clone();
+-                }
++                instanceHandle = instanceHandle.Clone();
+                 var backingInstance = new CimInstance(instanceHandle);
+                 backingInstance.SetCimSessionComputerName(this._CimSessionComputerName);
+                 backingInstance.SetCimSessionInstanceId(this._CimSessionInstanceID);
+@@ -73,11 +70,12 @@
+         {
+             base.RegisterAcceptedAsyncCallbacks(operationCallbacks, operationOptions);
+             // TODO: Uncomment and fix below
+-            //operationCallbacks.instanceResult = this.InstanceResultCallback;
++            operationCallbacks.instanceResult = (operation, context, instance, more, result, message, error, acknowledgement) =>
++                this.InstanceResultCallback((CimOperationCallbackProcessingContext)context, operation, instance, more, result, message, error);
+             if ((operationOptions != null) && (operationOptions.EnableMethodResultStreaming))
+             {
+                 // TODO: Uncomment and fix below
+-                //operationCallbacks.streamedParameterResult = this.StreamedParameterCallback;
++                throw new NotSupportedException("Streamed MI method parameters are not yet ported.");
+             }
+         }
+     }
+--- a/Internal/Operations/CimOperation.cs
++++ b/Internal/Operations/CimOperation.cs
+@@ -57,20 +57,13 @@
+ 
+         internal void Cancel(CancellationMode cancellationMode)
+         {
+-            Debug.Assert(cancellationMode != CancellationMode.NoCancellationOccured, "Caller should verify the right cancellation mode is used");
+-            Debug.Assert(cancellationMode != CancellationMode.IgnoreCancellationRequests, "Caller should verify the right cancellation mode is used");
+             lock (this._cancellationModeLock)
+             {
+-                if (this._cancellationMode == CancellationMode.IgnoreCancellationRequests)
+-                {
+-                    return;
+-                }
++                if (_disposed || this._cancellationMode == CancellationMode.IgnoreCancellationRequests) return;
+                 this._cancellationMode = cancellationMode;
++                MI_Result result = this._handle.Cancel(MI_CancellationReason.MI_REASON_NONE);
++                CimException.ThrowIfMiResultFailure(result);
+             }
+-
+-            MI_Result result = this._handle.Cancel(MI_CancellationReason.MI_REASON_NONE);
+-            CimException.ThrowIfMiResultFailure(result);
+-
+             this.Cancelled.SafeInvoke(this, EventArgs.Empty);
+         }
+ 
+@@ -91,8 +84,8 @@
+         {
+             get
+             {
++                this.AssertNotDisposed();
+                 this._handle.AssertValidInternalState();
+-                this.AssertNotDisposed();
+                 return this._handle;
+             }
+         }
+@@ -113,24 +106,38 @@
+         /// </summary>
+         protected virtual void Dispose(bool disposing)
+         {
+-            if (_disposed)
++            MI_Operation handle;
++            IDisposable registration;
++            lock (this._cancellationModeLock)
+             {
+-                return;
++                if (_disposed) return;
++                _disposed = true;
++                if (this._cancellationMode == CancellationMode.NoCancellationOccured)
++                    this._cancellationMode = CancellationMode.IgnoreCancellationRequests;
++                handle = this._handle;
++                this._handle = null;
++                registration = this._cancellationTokenRegistration;
++                this._cancellationTokenRegistration = null;
+             }
+-
+-            if (disposing)
++            registration?.Dispose();
++            Action close = () =>
+             {
+-                // TODO: do we need to call Delete/Dispose here? Looks like it is freed on destruction in MI_Operation
+-                //this._handle.Delete();
+-
+-                if (this._cancellationTokenRegistration != null)
++                try
+                 {
+-                    this._cancellationTokenRegistration.Dispose();
+-                    this._cancellationTokenRegistration = null;
++                    MI_Result result = handle.Close();
++                    if (result != MI_Result.MI_RESULT_OK)
++                        throw new InvalidOperationException("Native MI_Operation_Close failed: " + result);
++                    handle.Dispose();
+                 }
+-            }
+-
+-            _disposed = true;
++                catch
++                {
++                    System.Threading.Interlocked.Increment(ref MI_OperationCallbackBridge.CleanupFailures);
++                    // Do not release callback roots if the native operation did not close.
++                }
++            };
++            // Never block the native completion callback waiting for itself to return.
++            if (handle.HasCallbacks) ThreadPool.QueueUserWorkItem(_ => close());
++            else close();
+         }
+ 
+         internal void AssertNotDisposed()
+--- a/Internal/Operations/CimSyncClassEnumerator.cs
++++ b/Internal/Operations/CimSyncClassEnumerator.cs
+@@ -38,10 +38,7 @@
+ 
+             if ((classHandle != null) && !classHandle.IsNull)
+             {
+-                if (!this.ShortenLifetimeOfResults)
+-                {
+-                    classHandle = classHandle.Clone();
+-                }
++                classHandle = classHandle.Clone();
+                 currentItem = new CimClass(classHandle);
+             }
+ 
+--- a/Internal/Operations/CimSyncInstanceEnumerator.cs
++++ b/Internal/Operations/CimSyncInstanceEnumerator.cs
+@@ -45,10 +45,7 @@
+ 
+             if ((instanceHandle != null) && !instanceHandle.IsNull)
+             {
+-                if (!this.ShortenLifetimeOfResults)
+-                {
+-                    instanceHandle = instanceHandle.Clone();
+-                }
++                instanceHandle = instanceHandle.Clone();
+                 currentItem = new CimInstance(instanceHandle);
+                 currentItem.SetCimSessionComputerName(this._CimSessionComputerName);
+                 currentItem.SetCimSessionInstanceId(this._CimSessionInstanceID);
+--- a/Native/MI_Operation.cs
++++ b/Native/MI_Operation.cs
+@@ -58,9 +58,20 @@
+         
+         internal static MI_Operation Null { get { return null; } }
+ 
++        private MI_OperationCallbackBridge callbacks;
++        internal bool HasCallbacks => callbacks != null;
++        internal IntPtr SetCallbacks(MI_OperationCallbacks source)
++        {
++            if (source == null || !source.HasCallbacks) return IntPtr.Zero;
++            callbacks = new MI_OperationCallbackBridge(this, source);
++            return callbacks.Pointer;
++        }
++
+         internal MI_Result Close()
+         {
+-            return this.ft.Close(this);
++            MI_Result result = this.ft.Close(this);
++            if (result == MI_Result.MI_RESULT_OK) this.callbacks?.Dispose();
++            return result;
+         }
+ 
+         internal MI_Result Cancel(
+--- /dev/null
++++ b/Native/MI_OperationCallbackBridge.cs
+@@ -0,0 +1,117 @@
++// Copyright (c) Microsoft Corporation and MSYS2 port contributors.
++// Licensed under the MIT license; see LICENSE.
++using System;
++using System.Runtime.InteropServices;
++using System.Threading;
++using Microsoft.Management.Infrastructure.Internal;
++
++namespace Microsoft.Management.Infrastructure.Native
++{
++    // Own native callback storage and managed delegate roots until MI_Operation_Close
++    // has returned. The native ABI uses raw pointers and one-byte MI_Boolean.
++    internal sealed class MI_OperationCallbackBridge : IDisposable
++    {
++        private readonly MI_Operation owner;
++        private readonly MI_OperationCallbacks callbacks;
++        private readonly Delegate resultDelegate;
++        private GCHandle root;
++        internal IntPtr Pointer { get; private set; }
++        internal static int ActiveCount;
++        internal static int CleanupFailures;
++
++        [UnmanagedFunctionPointer(MI_PlatformSpecific.MiCallConvention)]
++        private delegate void InstanceCallback(IntPtr operation, IntPtr context, IntPtr instance,
++            byte moreResults, MI_Result result, IntPtr message, IntPtr error, IntPtr acknowledgement);
++        [UnmanagedFunctionPointer(MI_PlatformSpecific.MiCallConvention)]
++        private delegate void IndicationCallback(IntPtr operation, IntPtr context, IntPtr instance,
++            IntPtr bookmark, IntPtr machine, byte moreResults, MI_Result result,
++            IntPtr message, IntPtr error, IntPtr acknowledgement);
++        [UnmanagedFunctionPointer(MI_PlatformSpecific.MiCallConvention)]
++        private delegate MI_Result Acknowledge(IntPtr operation);
++
++        internal MI_OperationCallbackBridge(MI_Operation owner, MI_OperationCallbacks callbacks)
++        {
++            if (callbacks.promptUser != null || callbacks.writeError != null || callbacks.writeMessage != null ||
++                callbacks.writeProgress != null || callbacks.streamedParameterResult != null)
++                throw new NotSupportedException("Extended MI semantics and streamed parameters are not yet ported.");
++            this.owner = owner;
++            this.callbacks = callbacks;
++            int slot;
++            if (callbacks.instanceResult != null)
++            {
++                resultDelegate = new InstanceCallback(InstanceResult);
++                slot = 5;
++            }
++            else if (callbacks.classResult != null)
++            {
++                resultDelegate = new InstanceCallback(ClassResult);
++                slot = 7;
++            }
++            else if (callbacks.indicationResult != null)
++            {
++                resultDelegate = new IndicationCallback(IndicationResult);
++                slot = 6;
++            }
++            else throw new NotSupportedException("An asynchronous MI result callback is required.");
++            Pointer = Marshal.AllocHGlobal(IntPtr.Size * 9);
++            for (int i = 0; i < 9; i++) Marshal.WriteIntPtr(Pointer, i * IntPtr.Size, IntPtr.Zero);
++            Marshal.WriteIntPtr(Pointer, slot * IntPtr.Size, Marshal.GetFunctionPointerForDelegate(resultDelegate));
++            root = GCHandle.Alloc(this);
++            Interlocked.Increment(ref ActiveCount);
++        }
++
++        private void Invoke(IntPtr operation, IntPtr acknowledgement, Action<CimOperationCallbackProcessingContext> action)
++        {
++            var context = new CimOperationCallbackProcessingContext(callbacks.ManagedOperationContext);
++            try { action(context); }
++            catch (Exception error)
++            {
++                // A managed exception must never unwind through an unmanaged callback.
++                try { callbacks.InternalErrorCallback?.Invoke(context, error); } catch { }
++            }
++            finally
++            {
++                if (acknowledgement != IntPtr.Zero)
++                    Marshal.GetDelegateForFunctionPointer<Acknowledge>(acknowledgement)(operation);
++                GC.KeepAlive(this);
++            }
++        }
++
++        private static MI_Instance Instance(IntPtr pointer) => pointer == IntPtr.Zero ? null : MI_Instance.NewFromDirectPtr(pointer);
++        private static MI_Class Class(IntPtr pointer) => pointer == IntPtr.Zero ? null : MI_Class.NewFromDirectPtr(pointer);
++
++        private void InstanceResult(IntPtr operation, IntPtr context, IntPtr instance, byte moreResults,
++            MI_Result result, IntPtr message, IntPtr error, IntPtr acknowledgement)
++        {
++            using (var value = Instance(instance))
++            using (var details = Instance(error))
++                Invoke(operation, acknowledgement, processing => callbacks.instanceResult(owner, processing,
++                    value, moreResults != 0, result, MI_PlatformSpecific.PtrToString(message), details, null));
++        }
++        private void ClassResult(IntPtr operation, IntPtr context, IntPtr cls, byte moreResults,
++            MI_Result result, IntPtr message, IntPtr error, IntPtr acknowledgement)
++        {
++            using (var value = Class(cls))
++            using (var details = Instance(error))
++                Invoke(operation, acknowledgement, processing => callbacks.classResult(owner, processing,
++                    value, moreResults != 0, result, MI_PlatformSpecific.PtrToString(message), details, null));
++        }
++        private void IndicationResult(IntPtr operation, IntPtr context, IntPtr instance, IntPtr bookmark,
++            IntPtr machine, byte moreResults, MI_Result result, IntPtr message, IntPtr error, IntPtr acknowledgement)
++        {
++            using (var value = Instance(instance))
++            using (var details = Instance(error))
++                Invoke(operation, acknowledgement, processing => callbacks.indicationResult(owner, processing,
++                    value, MI_PlatformSpecific.PtrToString(bookmark), MI_PlatformSpecific.PtrToString(machine),
++                    moreResults != 0, result, MI_PlatformSpecific.PtrToString(message), details, null));
++        }
++        public void Dispose()
++        {
++            if (Pointer == IntPtr.Zero) return;
++            Marshal.FreeHGlobal(Pointer);
++            Pointer = IntPtr.Zero;
++            if (root.IsAllocated) root.Free();
++            Interlocked.Decrement(ref ActiveCount);
++        }
++    }
++}
+--- a/Native/MI_Session.cs
++++ b/Native/MI_Session.cs
+@@ -35,19 +35,15 @@
+             out MI_Operation operation
+             )
+         {
+-            if (callbacks != null && callbacks.HasCallbacks)
+-            {
+-                throw new NotImplementedException();
+-            }
+-
+-            MI_Operation operationLocal = MI_Operation.NewDirectPtr();
++            MI_Operation operationLocal = MI_Operation.NewDirectPtr();
++            IntPtr callbackPointer = operationLocal.SetCallbacks(callbacks);
+ 
+             this.ft.GetInstance(this,
+                 flags,
+                 options,
+                 namespaceName,
+                 inboundInstance,
+-                null,
++                callbackPointer,
+                 operationLocal);
+ 
+             operation = operationLocal;
+@@ -62,19 +58,15 @@
+             out MI_Operation operation
+             )
+         {
+-            if (callbacks != null && callbacks.HasCallbacks)
+-            {
+-                throw new NotImplementedException();
+-            }
+-
+-            MI_Operation operationLocal = MI_Operation.NewDirectPtr();
++            MI_Operation operationLocal = MI_Operation.NewDirectPtr();
++            IntPtr callbackPointer = operationLocal.SetCallbacks(callbacks);
+ 
+             this.ft.ModifyInstance(this,
+                 flags,
+                 options,
+                 namespaceName,
+                 inboundInstance,
+-                null,
++                callbackPointer,
+                 operationLocal);
+ 
+             operation = operationLocal;
+@@ -89,19 +81,15 @@
+             out MI_Operation operation
+             )
+         {
+-            if (callbacks != null && callbacks.HasCallbacks)
+-            {
+-                throw new NotImplementedException();
+-            }
+-
+-            MI_Operation operationLocal = MI_Operation.NewDirectPtr();
++            MI_Operation operationLocal = MI_Operation.NewDirectPtr();
++            IntPtr callbackPointer = operationLocal.SetCallbacks(callbacks);
+ 
+             this.ft.CreateInstance(this,
+                 flags,
+                 options,
+                 namespaceName,
+                 inboundInstance,
+-                null,
++                callbackPointer,
+                 operationLocal);
+ 
+             operation = operationLocal;
+@@ -116,19 +104,15 @@
+             out MI_Operation operation
+             )
+         {
+-            if (callbacks != null && callbacks.HasCallbacks)
+-            {
+-                throw new NotImplementedException();
+-            }
+-
+-            MI_Operation operationLocal = MI_Operation.NewDirectPtr();
++            MI_Operation operationLocal = MI_Operation.NewDirectPtr();
++            IntPtr callbackPointer = operationLocal.SetCallbacks(callbacks);
+ 
+             this.ft.DeleteInstance(this,
+                 flags,
+                 options,
+                 namespaceName,
+                 inboundInstance,
+-                null,
++                callbackPointer,
+                 operationLocal);
+ 
+             operation = operationLocal;
+@@ -146,12 +130,8 @@
+             out MI_Operation operation
+             )
+         {
+-            if (callbacks != null && callbacks.HasCallbacks)
+-            {
+-                throw new NotImplementedException();
+-            }
+-
+-            MI_Operation operationLocal = MI_Operation.NewDirectPtr();
++            MI_Operation operationLocal = MI_Operation.NewDirectPtr();
++            IntPtr callbackPointer = operationLocal.SetCallbacks(callbacks);
+ 
+             this.ft.Invoke(this,
+                 flags,
+@@ -161,7 +141,7 @@
+                 methodName,
+                 inboundInstance,
+                 inboundProperties,
+-                null,
++                callbackPointer,
+                 operationLocal);
+ 
+             operation = operationLocal;
+@@ -177,12 +157,8 @@
+             out MI_Operation operation
+             )
+         {
+-            if (callbacks != null && callbacks.HasCallbacks)
+-            {
+-                throw new NotImplementedException();
+-            }
+-
+-            MI_Operation operationLocal = MI_Operation.NewDirectPtr();
++            MI_Operation operationLocal = MI_Operation.NewDirectPtr();
++            IntPtr callbackPointer = operationLocal.SetCallbacks(callbacks);
+ 
+             this.ft.EnumerateInstances(this,
+                 flags,
+@@ -190,7 +166,7 @@
+                 namespaceName,
+                 className,
+                 keysOnly,
+-                null,
++                callbackPointer,
+                 operationLocal);
+ 
+             operation = operationLocal;
+@@ -206,12 +182,8 @@
+             out MI_Operation operation
+             )
+         {
+-            if (callbacks != null && callbacks.HasCallbacks)
+-            {
+-                throw new NotImplementedException();
+-            }
+-
+-            MI_Operation operationLocal = MI_Operation.NewDirectPtr();
++            MI_Operation operationLocal = MI_Operation.NewDirectPtr();
++            IntPtr callbackPointer = operationLocal.SetCallbacks(callbacks);
+ 
+             this.ft.QueryInstances(this,
+                 flags,
+@@ -219,7 +191,7 @@
+                 namespaceName,
+                 queryDialect,
+                 queryExpression,
+-                null,
++                callbackPointer,
+                 operationLocal);
+ 
+             operation = operationLocal;
+@@ -239,12 +211,8 @@
+             out MI_Operation operation
+             )
+         {
+-            if (callbacks != null && callbacks.HasCallbacks)
+-            {
+-                throw new NotImplementedException();
+-            }
+-
+-            MI_Operation operationLocal = MI_Operation.NewDirectPtr();
++            MI_Operation operationLocal = MI_Operation.NewDirectPtr();
++            IntPtr callbackPointer = operationLocal.SetCallbacks(callbacks);
+ 
+             this.ft.AssociatorInstances(this,
+                 flags,
+@@ -256,7 +224,7 @@
+                 role,
+                 resultRole,
+                 keysOnly,
+-                null,
++                callbackPointer,
+                 operationLocal);
+ 
+             operation = operationLocal;
+@@ -274,12 +242,8 @@
+             out MI_Operation operation
+             )
+         {
+-            if (callbacks != null && callbacks.HasCallbacks)
+-            {
+-                throw new NotImplementedException();
+-            }
+-
+-            MI_Operation operationLocal = MI_Operation.NewDirectPtr();
++            MI_Operation operationLocal = MI_Operation.NewDirectPtr();
++            IntPtr callbackPointer = operationLocal.SetCallbacks(callbacks);
+ 
+             this.ft.ReferenceInstances(this,
+                 flags,
+@@ -289,7 +253,7 @@
+                 resultClass,
+                 role,
+                 keysOnly,
+-                null,
++                callbackPointer,
+                 operationLocal);
+ 
+             operation = operationLocal;
+@@ -306,12 +270,8 @@
+             out MI_Operation operation
+             )
+         {
+-            if (callbacks != null && callbacks.HasCallbacks)
+-            {
+-                throw new NotImplementedException();
+-            }
+-
+-            MI_Operation operationLocal = MI_Operation.NewDirectPtr();
++            MI_Operation operationLocal = MI_Operation.NewDirectPtr();
++            IntPtr callbackPointer = operationLocal.SetCallbacks(callbacks);
+ 
+             this.ft.Subscribe(this,
+                 flags,
+@@ -320,7 +280,7 @@
+                 queryDialect,
+                 queryExpression,
+                 deliverOptions,
+-                null,
++                callbackPointer,
+                 operationLocal);
+ 
+             operation = operationLocal;
+@@ -335,19 +295,15 @@
+             out MI_Operation operation
+             )
+         {
+-            if (callbacks != null && callbacks.HasCallbacks)
+-            {
+-                throw new NotImplementedException();
+-            }
+-
+-            MI_Operation operationLocal = MI_Operation.NewDirectPtr();
++            MI_Operation operationLocal = MI_Operation.NewDirectPtr();
++            IntPtr callbackPointer = operationLocal.SetCallbacks(callbacks);
+ 
+             this.ft.GetClass(this,
+                 flags,
+                 options,
+                 namespaceName,
+                 className,
+-                null,
++                callbackPointer,
+                 operationLocal);
+ 
+             operation = operationLocal;
+@@ -363,12 +319,8 @@
+             out MI_Operation operation
+             )
+         {
+-            if (callbacks != null && callbacks.HasCallbacks)
+-            {
+-                throw new NotImplementedException();
+-            }
+-
+-            MI_Operation operationLocal = MI_Operation.NewDirectPtr();
++            MI_Operation operationLocal = MI_Operation.NewDirectPtr();
++            IntPtr callbackPointer = operationLocal.SetCallbacks(callbacks);
+ 
+             this.ft.EnumerateClasses(this,
+                 flags,
+@@ -376,7 +328,7 @@
+                 namespaceName,
+                 className,
+                 classNamesOnly,
+-                null,
++                callbackPointer,
+                 operationLocal);
+ 
+             operation = operationLocal;
+@@ -388,16 +340,12 @@
+             out MI_Operation operation
+             )
+         {
+-            if (callbacks != null && callbacks.HasCallbacks)
+-            {
+-                throw new NotImplementedException();
+-            }
+-
+-            MI_Operation operationLocal = MI_Operation.NewDirectPtr();
++            MI_Operation operationLocal = MI_Operation.NewDirectPtr();
++            IntPtr callbackPointer = operationLocal.SetCallbacks(callbacks);
+ 
+             this.ft.TestConnection(this,
+                 flags,
+-                null,
++                callbackPointer,
+                 operationLocal);
+ 
+             operation = operationLocal;
+@@ -494,7 +442,7 @@
+                 [In, Out] MI_OperationOptions.DirectPtr options,
+                 string namespaceName,
+                 [In, Out] MI_Instance.DirectPtr inboundInstance,
+-                MI_OperationCallbacks.MI_OperationCallbacksNative callbacks,
++                IntPtr callbacks,
+                 [In, Out] MI_Operation.DirectPtr operation
+                 );
+ 
+@@ -505,7 +453,7 @@
+                 [In, Out] MI_OperationOptions.DirectPtr options,
+                 string namespaceName,
+                 [In, Out] MI_Instance.DirectPtr inboundInstance,
+-                MI_OperationCallbacks.MI_OperationCallbacksNative callbacks,
++                IntPtr callbacks,
+                 [In, Out] MI_Operation.DirectPtr operation
+                 );
+ 
+@@ -516,7 +464,7 @@
+                 [In, Out] MI_OperationOptions.DirectPtr options,
+                 string namespaceName,
+                 [In, Out] MI_Instance.DirectPtr inboundInstance,
+-                MI_OperationCallbacks.MI_OperationCallbacksNative callbacks,
++                IntPtr callbacks,
+                 [In, Out] MI_Operation.DirectPtr operation
+                 );
+ 
+@@ -527,7 +475,7 @@
+                 [In, Out] MI_OperationOptions.DirectPtr options,
+                 string namespaceName,
+                 [In, Out] MI_Instance.DirectPtr inboundInstance,
+-                MI_OperationCallbacks.MI_OperationCallbacksNative callbacks,
++                IntPtr callbacks,
+                 [In, Out] MI_Operation.DirectPtr operation
+                 );
+ 
+@@ -541,7 +489,7 @@
+                 string methodName,
+                 [In, Out] MI_Instance.DirectPtr inboundInstance,
+                 [In, Out] MI_Instance.DirectPtr inboundProperties,
+-                MI_OperationCallbacks.MI_OperationCallbacksNative callbacks,
++                IntPtr callbacks,
+                 [In, Out] MI_Operation.DirectPtr operation
+                 );
+ 
+@@ -553,7 +501,7 @@
+                 string namespaceName,
+                 string className,
+                 [MarshalAs(UnmanagedType.U1)] bool keysOnly,
+-                MI_OperationCallbacks.MI_OperationCallbacksNative callbacks,
++                IntPtr callbacks,
+                 [In, Out] MI_Operation.DirectPtr operation
+                 );
+ 
+@@ -565,7 +513,7 @@
+                 string namespaceName,
+                 string queryDialect,
+                 string queryExpression,
+-                MI_OperationCallbacks.MI_OperationCallbacksNative callbacks,
++                IntPtr callbacks,
+                 [In, Out] MI_Operation.DirectPtr operation
+                 );
+ 
+@@ -581,7 +529,7 @@
+                 string role,
+                 string resultRole,
+                 [MarshalAs(UnmanagedType.U1)] bool keysOnly,
+-                MI_OperationCallbacks.MI_OperationCallbacksNative callbacks,
++                IntPtr callbacks,
+                 [In, Out] MI_Operation.DirectPtr operation
+                 );
+ 
+@@ -595,7 +543,7 @@
+                 string resultClass,
+                 string role,
+                 [MarshalAs(UnmanagedType.U1)] bool keysOnly,
+-                MI_OperationCallbacks.MI_OperationCallbacksNative callbacks,
++                IntPtr callbacks,
+                 [In, Out] MI_Operation.DirectPtr operation
+                 );
+ 
+@@ -608,7 +556,7 @@
+                 string queryDialect,
+                 string queryExpression,
+                 [In, Out] MI_SubscriptionDeliveryOptions.DirectPtr deliverOptions,
+-                MI_OperationCallbacks.MI_OperationCallbacksNative callbacks,
++                IntPtr callbacks,
+                 [In, Out] MI_Operation.DirectPtr operation
+                 );
+ 
+@@ -619,7 +567,7 @@
+                 [In, Out] MI_OperationOptions.DirectPtr options,
+                 string namespaceName,
+                 string className,
+-                MI_OperationCallbacks.MI_OperationCallbacksNative callbacks,
++                IntPtr callbacks,
+                 [In, Out] MI_Operation.DirectPtr operation
+                 );
+ 
+@@ -631,7 +579,7 @@
+                 string namespaceName,
+                 string className,
+                 [MarshalAs(UnmanagedType.U1)] bool classNamesOnly,
+-                MI_OperationCallbacks.MI_OperationCallbacksNative callbacks,
++                IntPtr callbacks,
+                 [In, Out] MI_Operation.DirectPtr operation
+                 );
+ 
+@@ -639,7 +587,7 @@
+             internal delegate void MI_Session_TestConnection(
+                 DirectPtr session,
+                 MI_OperationFlags flags,
+-                MI_OperationCallbacks.MI_OperationCallbacksNative callbacks,
++                IntPtr callbacks,
+                 [In, Out] MI_Operation.DirectPtr operation
+                 );
+ 
+--- a/Native/Structures/MI_OperationCallbacks.cs
++++ b/Native/Structures/MI_OperationCallbacks.cs
+@@ -29,6 +29,9 @@
+ 
+             internal MI_OperationCallback_StreamedParameterNative streamedParameterResult;
+         }
++
++        internal object ManagedOperationContext;
++        internal Action<Microsoft.Management.Infrastructure.Internal.CimOperationCallbackProcessingContext, Exception> InternalErrorCallback;
+ 
+         internal bool HasCallbacks => promptUser != null || writeError != null ||
+             writeMessage != null || writeProgress != null || instanceResult != null ||
+--- a/Options/Internal/CimOperationOptions.cs
++++ b/Options/Internal/CimOperationOptions.cs
+@@ -52,6 +52,9 @@
+                 return null;
+             }
+         }
++
++        internal bool HasExtendedSemantics => _writeMessageCallback != null || _writeProgressCallback != null ||
++            _writeErrorCallback != null || _promptUserCallback != null;
+ 
+         private readonly MI_OperationCallbacks _operationCallback;
+ 
+@@ -863,6 +866,8 @@
+     {
+         static internal MI_OperationCallbacks GetOperationCallbacks(this CimOperationOptions operationOptions)
+         {
++            if (operationOptions != null && operationOptions.HasExtendedSemantics)
++                throw new NotSupportedException("Extended MI semantic callbacks are not yet ported.");
+             var operationCallbacks = new MI_OperationCallbacks();
+             if (operationOptions != null)
+             {
+--- /dev/null
++++ b/Strings.resx
+@@ -0,0 +1,52 @@
++<?xml version='1.0' encoding='utf-8'?>
++<root>
++  <!--English resources reconstructed from the upstream Strings.Designer.cs documentation; MIT license.-->
++  <resheader name="resmimetype">
++    <value>text/microsoft-resx</value>
++  </resheader>
++  <resheader name="version">
++    <value>2.0</value>
++  </resheader>
++  <resheader name="reader">
++    <value>System.Resources.ResXResourceReader, System.Windows.Forms</value>
++  </resheader>
++  <resheader name="writer">
++    <value>System.Resources.ResXResourceWriter, System.Windows.Forms</value>
++  </resheader>
++  <data name="AppDomainIsBeingUnloaded" xml:space="preserve">
++    <value>Operation is not valid during the process of unloading the AppDomain</value>
++  </data>
++  <data name="ArrayCannotContainNullElements" xml:space="preserve">
++    <value>CIM array cannot contain null elements.</value>
++  </data>
++  <data name="CimClassToString" xml:space="preserve">
++    <value>{0}:{1}</value>
++  </data>
++  <data name="CimInstanceNamespaceIsNull" xml:space="preserve">
++    <value>CimInstance doesn't have an associated namespace</value>
++  </data>
++  <data name="CimInstanceToStringFullData" xml:space="preserve">
++    <value>{0}: {2} ({1})</value>
++  </data>
++  <data name="CimInstanceToStringNoCaption" xml:space="preserve">
++    <value>{0} ({1})</value>
++  </data>
++  <data name="CimInstanceToStringNoKeys" xml:space="preserve">
++    <value>{0}: {1}</value>
++  </data>
++  <data name="CimNameAndValueToString" xml:space="preserve">
++    <value>{0} = {1}</value>
++  </data>
++  <data name="CimSessionToString" xml:space="preserve">
++    <value>CimSession: {0}</value>
++  </data>
++  <data name="DotNetValueToCimTypeConversionNotPossible" xml:space="preserve">
++    <value>Could not infer CimType from the provided .NET object.</value>
++  </data>
++  <data name="UnknownError" xml:space="preserve">
++    <value>Unknown error.</value>
++  </data>
++  <data name="UnrecognizedProtocolName" xml:space="preserve">
++    <value>CimSessionOptions instance is invalid: unsupported protocol or unrecognized custom option.  Verify parameter passed to the CimSessionOptions(string) constructor and/or parameters passed to the CimSessionOptions.SetCustomOption(string, string) or CimSessionOptions.SetCustomOption(string, int) method.</value>
++  </data>
++</root>

@@ -1,0 +1,146 @@
+[
+  {
+    "recipe": "mingw-w64-dotnet-wcf",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-private-servicemodel-4.10.3-1-any.pkg.tar.zst",
+    "sha256": "bb0bbac107aab992dce1eaed57f963e2b44e5df460ed75e5ea3e2d9538dd9d2c",
+    "nuget_id": "System.Private.ServiceModel",
+    "nuget_version": "4.10.3",
+    "dependencies": {
+      "Microsoft.Extensions.ObjectPool": "8.0.31",
+      "System.Security.Cryptography.Xml": "8.0.4"
+    },
+    "assets": [
+      "lib/net8.0/System.Private.ServiceModel.dll",
+      "ref/net8.0/_._",
+      "lib/net8.0/cs/System.Private.ServiceModel.resources.dll",
+      "lib/net8.0/de/System.Private.ServiceModel.resources.dll",
+      "lib/net8.0/es/System.Private.ServiceModel.resources.dll",
+      "lib/net8.0/fr/System.Private.ServiceModel.resources.dll",
+      "lib/net8.0/it/System.Private.ServiceModel.resources.dll",
+      "lib/net8.0/ja/System.Private.ServiceModel.resources.dll",
+      "lib/net8.0/ko/System.Private.ServiceModel.resources.dll",
+      "lib/net8.0/pl/System.Private.ServiceModel.resources.dll",
+      "lib/net8.0/pt-BR/System.Private.ServiceModel.resources.dll",
+      "lib/net8.0/ru/System.Private.ServiceModel.resources.dll",
+      "lib/net8.0/tr/System.Private.ServiceModel.resources.dll",
+      "lib/net8.0/zh-Hans/System.Private.ServiceModel.resources.dll",
+      "lib/net8.0/zh-Hant/System.Private.ServiceModel.resources.dll"
+    ],
+    "source_commit": "6c05fa33450ee3960f0763948e91327f049b302b",
+    "source_sha256": "fd4a9c4500f811ec600e1570f94672db25aa5fa8129c1aa0704643290b41e8ae"
+  },
+  {
+    "recipe": "mingw-w64-dotnet-wcf",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-web-services-description-4.10.3-1-any.pkg.tar.zst",
+    "sha256": "83c88d420b5f06410531be9b7e3973fed42983c57cb279e16fbbff1ee1218148",
+    "nuget_id": "System.Web.Services.Description",
+    "nuget_version": "4.10.3",
+    "dependencies": {},
+    "assets": [
+      "lib/net8.0/System.Web.Services.Description.dll",
+      "ref/net8.0/System.Web.Services.Description.dll",
+      "lib/net8.0/cs/System.Web.Services.Description.resources.dll",
+      "lib/net8.0/de/System.Web.Services.Description.resources.dll",
+      "lib/net8.0/es/System.Web.Services.Description.resources.dll",
+      "lib/net8.0/fr/System.Web.Services.Description.resources.dll",
+      "lib/net8.0/it/System.Web.Services.Description.resources.dll",
+      "lib/net8.0/ja/System.Web.Services.Description.resources.dll",
+      "lib/net8.0/ko/System.Web.Services.Description.resources.dll",
+      "lib/net8.0/pl/System.Web.Services.Description.resources.dll",
+      "lib/net8.0/pt-BR/System.Web.Services.Description.resources.dll",
+      "lib/net8.0/ru/System.Web.Services.Description.resources.dll",
+      "lib/net8.0/tr/System.Web.Services.Description.resources.dll",
+      "lib/net8.0/zh-Hans/System.Web.Services.Description.resources.dll",
+      "lib/net8.0/zh-Hant/System.Web.Services.Description.resources.dll"
+    ],
+    "source_commit": "6c05fa33450ee3960f0763948e91327f049b302b",
+    "source_sha256": "fd4a9c4500f811ec600e1570f94672db25aa5fa8129c1aa0704643290b41e8ae"
+  },
+  {
+    "recipe": "mingw-w64-dotnet-wcf",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-servicemodel-primitives-4.10.3-1-any.pkg.tar.zst",
+    "sha256": "736dd9c4a469087793b714c53e9886d307b9554b98bb94f48ee20bf5ff7ae949",
+    "nuget_id": "System.ServiceModel.Primitives",
+    "nuget_version": "4.10.3",
+    "dependencies": {
+      "System.Private.ServiceModel": "4.10.3",
+      "System.ServiceModel.Syndication": "8.0.0"
+    },
+    "assets": [
+      "lib/net8.0/System.ServiceModel.Primitives.dll",
+      "ref/net8.0/System.ServiceModel.Primitives.dll",
+      "lib/net8.0/System.ServiceModel.dll",
+      "ref/net8.0/System.ServiceModel.dll"
+    ],
+    "source_commit": "6c05fa33450ee3960f0763948e91327f049b302b",
+    "source_sha256": "fd4a9c4500f811ec600e1570f94672db25aa5fa8129c1aa0704643290b41e8ae"
+  },
+  {
+    "recipe": "mingw-w64-dotnet-wcf",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-servicemodel-duplex-4.10.3-1-any.pkg.tar.zst",
+    "sha256": "def2a3f99044f7a47b746e21aea5c963b692797f665ad489f40edba1ada3a053",
+    "nuget_id": "System.ServiceModel.Duplex",
+    "nuget_version": "4.10.3",
+    "dependencies": {
+      "System.Private.ServiceModel": "4.10.3",
+      "System.ServiceModel.Primitives": "4.10.3"
+    },
+    "assets": [
+      "lib/net8.0/System.ServiceModel.Duplex.dll",
+      "ref/net8.0/System.ServiceModel.Duplex.dll"
+    ],
+    "source_commit": "6c05fa33450ee3960f0763948e91327f049b302b",
+    "source_sha256": "fd4a9c4500f811ec600e1570f94672db25aa5fa8129c1aa0704643290b41e8ae"
+  },
+  {
+    "recipe": "mingw-w64-dotnet-wcf",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-servicemodel-security-4.10.3-1-any.pkg.tar.zst",
+    "sha256": "5f7fe99b7735d4baefcae64c5d1ac0ebd9040b28442deaa82ece7f4371f54d24",
+    "nuget_id": "System.ServiceModel.Security",
+    "nuget_version": "4.10.3",
+    "dependencies": {
+      "System.Private.ServiceModel": "4.10.3",
+      "System.ServiceModel.Primitives": "4.10.3"
+    },
+    "assets": [
+      "lib/net8.0/System.ServiceModel.Security.dll",
+      "ref/net8.0/System.ServiceModel.Security.dll"
+    ],
+    "source_commit": "6c05fa33450ee3960f0763948e91327f049b302b",
+    "source_sha256": "fd4a9c4500f811ec600e1570f94672db25aa5fa8129c1aa0704643290b41e8ae"
+  },
+  {
+    "recipe": "mingw-w64-dotnet-wcf",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-servicemodel-http-4.10.3-1-any.pkg.tar.zst",
+    "sha256": "c96d2403cc71750120af2f32d544cce33111c071aaa9ff92ad59ce78da996598",
+    "nuget_id": "System.ServiceModel.Http",
+    "nuget_version": "4.10.3",
+    "dependencies": {
+      "System.Private.ServiceModel": "4.10.3",
+      "System.ServiceModel.Primitives": "4.10.3"
+    },
+    "assets": [
+      "lib/net8.0/System.ServiceModel.Http.dll",
+      "ref/net8.0/System.ServiceModel.Http.dll"
+    ],
+    "source_commit": "6c05fa33450ee3960f0763948e91327f049b302b",
+    "source_sha256": "fd4a9c4500f811ec600e1570f94672db25aa5fa8129c1aa0704643290b41e8ae"
+  },
+  {
+    "recipe": "mingw-w64-dotnet-wcf",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-servicemodel-nettcp-4.10.3-1-any.pkg.tar.zst",
+    "sha256": "81d014fa8d2adef516284ddb6802870455c9b06cc1b6a893ef6bdcb8093e7558",
+    "nuget_id": "System.ServiceModel.NetTcp",
+    "nuget_version": "4.10.3",
+    "dependencies": {
+      "System.Private.ServiceModel": "4.10.3",
+      "System.ServiceModel.Primitives": "4.10.3"
+    },
+    "assets": [
+      "lib/net8.0/System.ServiceModel.NetTcp.dll",
+      "ref/net8.0/System.ServiceModel.NetTcp.dll"
+    ],
+    "source_commit": "6c05fa33450ee3960f0763948e91327f049b302b",
+    "source_sha256": "fd4a9c4500f811ec600e1570f94672db25aa5fa8129c1aa0704643290b41e8ae"
+  }
+]

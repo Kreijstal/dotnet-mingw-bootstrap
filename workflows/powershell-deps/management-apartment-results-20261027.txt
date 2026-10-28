@@ -1,0 +1,301 @@
+Source System.Management apartment security fix — 2026-10-27
+
+{
+  "previous_goal_turn_classification": "progress",
+  "current_goal_turn_classification": "progress",
+  "host": "win11",
+  "build_root": "/home/topkek/wmipkg2.ekw1jp",
+  "native_package": "mingw-w64-clang-x86_64-dotnet-management 8.0.0-2",
+  "package_command": "PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm",
+  "package_exit_code": 0,
+  "artifact_audit_command": "/usr/bin/python3 audit-management.py . artifact.json",
+  "artifact_audit_exit_code": 0,
+  "install_command": "pacman -U --noconfirm \"$PWD/mingw-w64-clang-x86_64-dotnet-management-8.0.0-2-any.pkg.tar.zst\"",
+  "install_exit_code": 0,
+  "installed_check_command": "bash check-installed.sh installed-check /clang64/share/doc/dotnet-management/localization.json",
+  "installed_check_exit_code": 0,
+  "managed_api_signatures": 819,
+  "native_exports": 65,
+  "neutral_resource_strings": 79,
+  "source_nuget_sha256": "03812e82e09b8d407082e9b3e53f5c0a19b9e05e3c9a5952b3dafd6bd8924895",
+  "source_archive_and_consumer_asset_byte_checks": true,
+  "apartment_cases": [
+    "STA/MTA local process query/GetOwner/class metadata",
+    "MTA-created scope consumed from STA",
+    "STA-created scope consumed from MTA",
+    "EnablePrivileges false and true; original thread token restored"
+  ],
+  "original_async_events_metadata_native_checks_passed": true,
+  "public_managed_api_unchanged": true,
+  "private_native_exports_added": 16,
+  "native_abi_version": 1,
+  "caller_credentials_borrowed_per_native_call": true,
+  "process_com_security_defaults_changed": false,
+  "machine_policy_changed": false,
+  "first_formal_check_failure": "New fixture selected ProcessId without an instance path before GetOwner; SELECT * correction and exact new-feed source mapping applied; clean rebuild passed",
+  "powershell_updated_bundle_verification_pending": false,
+  "full_dependency_goal_complete": false,
+  "remaining": [
+    "broader remote credentials/delegation/providers and callback/ownership compatibility",
+    "MMI3 and SqlClient broader parity",
+    "PowerShell7.6/.NET10 complete graph"
+  ],
+  "powershell_updated_bundle_evidence": "tests/powershell-full-sdk/native-package2-results-20261027.txt",
+  "sta_full_suite_command": "bash sta-harness/tests/mmi-cim-wmi/check-source-wmi-sta.sh sta-full-check2",
+  "sta_full_suite_exit_code": 0,
+  "sta_full_suite_cases": [
+    "metadata/methods/GetOwner",
+    "async query completion and compacting GC",
+    "owned child process event/cancellation",
+    "EnablePrivileges and native temporary token setup/reset",
+    "native ABI/error-info/module ownership"
+  ]
+}
+
+makepkg.log
+==> Making package: mingw-w64-dotnet-management 8.0.0-2 (27 Oct 2026 20:49:44)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found runtime-v8.0.31.tar.gz
+  -> Found prepare.py
+  -> Found libraries.json
+  -> Found Microsoft.pubkey.hex
+  -> Found 0001-use-source-built-wmi-backend.patch
+  -> Found wmi-native.cpp
+  -> Found service-security.inc
+  -> Found 0002-secure-service-calls-in-calling-apartment.patch
+  -> Found build-native.sh
+  -> Found check-native.py
+  -> Found native-exports.json
+  -> Found LICENSE.port
+  -> Found Probe.cs
+  -> Found PortChecks.cs
+  -> Found ApartmentChecks.cs
+  -> Found NativeDependencies.cs
+  -> Found CheckAssets.cs
+  -> Found check-installed.sh
+  -> Found check-api.cs
+  -> Found check-api.sh
+  -> Found README.md
+==> Validating source files with sha256sums...
+    runtime-v8.0.31.tar.gz ... Passed
+    prepare.py ... Passed
+    libraries.json ... Passed
+    Microsoft.pubkey.hex ... Passed
+    0001-use-source-built-wmi-backend.patch ... Passed
+    wmi-native.cpp ... Passed
+    service-security.inc ... Passed
+    0002-secure-service-calls-in-calling-apartment.patch ... Passed
+    build-native.sh ... Passed
+    check-native.py ... Passed
+    native-exports.json ... Passed
+    LICENSE.port ... Passed
+    Probe.cs ... Passed
+    PortChecks.cs ... Passed
+    ApartmentChecks.cs ... Passed
+    NativeDependencies.cs ... Passed
+    CheckAssets.cs ... Passed
+    check-installed.sh ... Passed
+    check-api.cs ... Passed
+    check-api.sh ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+==> Starting prepare()...
+patching file src/libraries/System.Management/src/System/Management/ManagementScope.cs
+patching file src/libraries/System.Management/src/System/Management/ManagementScope.cs
+==> Removing existing $pkgdir/ directory...
+==> Starting build()...
+PASS WMI native backend: all 65 exact exports, AMD64, Windows/UCRT imports only
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\wmipkg2.ekw1jp\src\prepared\System.Management\contract\Contract.csproj (in 303 ms).
+  Contract -> E:\msys64\home\topkek\wmipkg2.ekw1jp\src\prepared\System.Management\contract\bin\Release\net8.0\System.Management.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.99
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\wmipkg2.ekw1jp\src\prepared\System.Management\Library.csproj (in 276 ms).
+E:\msys64\home\topkek\wmipkg2.ekw1jp\src\runtime-8.0.31\src\libraries\System.Management\src\System\Management\ManagementScope.cs(512,17): warning CS0162: Unreachable code detected [E:\msys64\home\topkek\wmipkg2.ekw1jp\src\prepared\System.Management\Library.csproj]
+  Library -> E:\msys64\home\topkek\wmipkg2.ekw1jp\src\prepared\System.Management\bin\Release\net8.0-windows\System.Management.dll
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Sdks\NuGet.Build.Tasks.Pack\build\NuGet.Build.Tasks.Pack.targets(221,5): warning NU5131: References were found in the nuspec, but some reference assemblies were not found in both the nuspec and ref folder. Add the following reference assemblies: [E:\msys64\home\topkek\wmipkg2.ekw1jp\src\prepared\System.Management\Library.csproj]
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Sdks\NuGet.Build.Tasks.Pack\build\NuGet.Build.Tasks.Pack.targets(221,5): warning NU5131: - Add System.Management.dll to the net8.0 reference group in the nuspec [E:\msys64\home\topkek\wmipkg2.ekw1jp\src\prepared\System.Management\Library.csproj]
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Sdks\NuGet.Build.Tasks.Pack\build\NuGet.Build.Tasks.Pack.targets(221,5): warning NU5131:  [E:\msys64\home\topkek\wmipkg2.ekw1jp\src\prepared\System.Management\Library.csproj]
+  The package System.Management.8.0.0 is missing a readme. Go to https://aka.ms/nuget/authoring-best-practices/readme to learn why package readmes are important.
+  Successfully created package 'E:\msys64\home\topkek\wmipkg2.ekw1jp\src\feed\System.Management.8.0.0.nupkg'.
+==> Starting check()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\wmipkg2.ekw1jp\src\check\check.csproj (in 386 ms).
+  check -> E:\msys64\home\topkek\wmipkg2.ekw1jp\src\check\bin\Release\net8.0\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:06.24
+PASS consumer restored exact candidate/installed source archive and loads its exact managed/native asset bytes
+Runtime: .NET 8.0.31
+WMI: System.Management, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS WMI identity/source/location, exported types and 79 resource strings
+WMI OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+WMI process: dotnet.exe; PID matches current source-built runtime
+WMI invalid class: correctly returned InvalidClass
+WMI OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+WMI process: dotnet.exe; PID matches current source-built runtime
+WMI invalid class: correctly returned InvalidClass
+PASS WMI metadata/types/origins, qualifier and method enumeration, clone/compare/MOF, in-memory class/property/method/qualifier edits; no repository writes
+PASS WMI native GetOwner method invocation and independent enumerator clones
+PASS WMI native asynchronous sink delivery/completion and compacting GC
+PASS WMI native process event callback, owned child PID and subscription cancellation
+PASS WMI EnablePrivileges query and restored thread identity
+Source-built WMI backend: E:\msys64\home\topkek\wmipkg2.ekw1jp\src\check\bin\Release\net8.0\runtimes\win-x64\native\msys-wmi-native.dll
+PASS native WMI ABI/null-pointer validation and temporary privilege token setup/reset
+PASS STA/MTA local queries/GetOwner/class metadata, scopes shared in both directions and temporary thread-token restoration
+PASS: source-built System.Management local WMI queries, errors, disposal and reopen
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\wmipkg2.ekw1jp\src\check-api\check-api.csproj (in 75 ms).
+  check-api -> E:\msys64\home\topkek\wmipkg2.ekw1jp\src\check-api\bin\Release\net8.0\check-api.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.08
+PASS: System.Management implements all 819 upstream public/protected type/member signatures
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-management"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-management 8.0.0-2 (27 Oct 2026 20:50:57)
+
+installed-check.log
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\wmipkg2.ekw1jp\installed-check\check.csproj (in 314 ms).
+  check -> E:\msys64\home\topkek\wmipkg2.ekw1jp\installed-check\bin\Release\net8.0\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.39
+PASS consumer restored exact candidate/installed source archive and loads its exact managed/native asset bytes
+Runtime: .NET 8.0.31
+WMI: System.Management, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS WMI identity/source/location, exported types and 79 resource strings
+WMI OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+WMI process: dotnet.exe; PID matches current source-built runtime
+WMI invalid class: correctly returned InvalidClass
+WMI OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+WMI process: dotnet.exe; PID matches current source-built runtime
+WMI invalid class: correctly returned InvalidClass
+PASS WMI metadata/types/origins, qualifier and method enumeration, clone/compare/MOF, in-memory class/property/method/qualifier edits; no repository writes
+PASS WMI native GetOwner method invocation and independent enumerator clones
+PASS WMI native asynchronous sink delivery/completion and compacting GC
+PASS WMI native process event callback, owned child PID and subscription cancellation
+PASS WMI EnablePrivileges query and restored thread identity
+Source-built WMI backend: E:\msys64\home\topkek\wmipkg2.ekw1jp\installed-check\bin\Release\net8.0\runtimes\win-x64\native\msys-wmi-native.dll
+PASS native WMI ABI/null-pointer validation and temporary privilege token setup/reset
+PASS STA/MTA local queries/GetOwner/class metadata, scopes shared in both directions and temporary thread-token restoration
+PASS: source-built System.Management local WMI queries, errors, disposal and reopen
+
+sta-full-check2.log
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\wmipkg2.ekw1jp\sta-full-check2\check.csproj (in 353 ms).
+  check -> E:\msys64\home\topkek\wmipkg2.ekw1jp\sta-full-check2\bin\Release\net8.0\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.63
+PASS exact installed source archive and managed/native asset bytes
+PASS WMI metadata/types/origins, qualifier and method enumeration, clone/compare/MOF, in-memory class/property/method/qualifier edits; no repository writes
+PASS WMI native GetOwner method invocation and independent enumerator clones
+PASS WMI native asynchronous sink delivery/completion and compacting GC
+PASS WMI native process event callback, owned child PID and subscription cancellation
+PASS WMI EnablePrivileges query and restored thread identity
+Source-built WMI backend: E:\msys64\home\topkek\wmipkg2.ekw1jp\sta-full-check2\bin\Release\net8.0\runtimes\win-x64\native\msys-wmi-native.dll
+PASS native WMI ABI/null-pointer validation and temporary privilege token setup/reset
+PASS full source WMI metadata/method/async/event/privilege/native suite from STA caller

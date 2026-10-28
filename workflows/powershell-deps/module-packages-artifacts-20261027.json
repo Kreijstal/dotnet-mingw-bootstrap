@@ -1,0 +1,29 @@
+{
+  "tool": {
+    "artifact": "mingw-w64-clang-x86_64-powershell-module-test-host-7.4.20-3-any.pkg.tar.zst",
+    "sha256": "5657a2a2d0cc9ead7fadd3df6b0f32147b3b854990fc1c884649a8b0d42a07c9",
+    "pinned_inputs": 22,
+    "original_production_sources": 1001,
+    "original_source_generators": 3,
+    "child_autoload_manifest_files": 5,
+    "original_console_entry_sources": 1,
+    "source_native_apphost": true,
+    "dll_assets": 292,
+    "source_reference_assemblies": 163,
+    "source_pester_files": 116,
+    "source_gherkin_cs_files": 54
+  },
+  "archive": {
+    "artifact": "mingw-w64-clang-x86_64-powershell-archive-1.2.6-1-any.pkg.tar.zst",
+    "sha256": "bd6a7de620aa14bb7edb8d9ffaa51362e1a7a47aef163f5fd8175dc824fa25f3",
+    "pinned_inputs": 10,
+    "nuget_id": "Microsoft.PowerShell.Archive",
+    "nuget_version": "1.2.6",
+    "source_commit": "87428e309898a728fb0287eab31b5cd214ceb9ba",
+    "source_files": 3,
+    "source_corrections": [
+      "fallback reserved-device warning string"
+    ],
+    "compression_extraction_algorithms_unchanged": true
+  }
+}

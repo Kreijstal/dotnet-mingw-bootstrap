@@ -1,0 +1,78 @@
+{
+  "previous_goal_turn_classification": "progress",
+  "current_goal_turn_classification": "progress",
+  "reason": "Reproduced a real servicing bypass by older private JSON; rebuilt exact pinned upstream version task; corrected all native/managed/reference file-version generation; same-consumer binding regression and private serviced SDK/MSBuild/generator execution pass.",
+  "runtime_version": "8.0.31",
+  "original_arcade_version_task": {
+    "arcade_source_commit": "444c2ef3c414558e2e409ee346f1faebb19687eb",
+    "original_task_sha256": "e0bc140b716fb1c43b4609e877a357b422cdd4b213021bd919df04e963c8a02f",
+    "runtime_source_date_utc": "2026-08-20T20:38:34+00:00",
+    "build_number": "20260820.0",
+    "build_number_origin": "Pinned runtime archive commit date; reproducible source build, not an official Microsoft build number",
+    "version_prefix": "8.0.31",
+    "file_version": "8.0.3126.42000",
+    "upstream_task_vectors_checked": 3,
+    "private_build_only_task": true
+  },
+  "json_binding_baseline": {
+    "command": "bash harness/check-json-binding.sh runtime-layout1 json-binding1",
+    "exit_code": 127,
+    "loaded_private_file_version": "8.0.1024.46610",
+    "loaded_private_source": "8.0.10+81cabf2857a01351e5ab578947c7403a5b128ad1",
+    "result": "Confirmed older private JSON overrides the serviced framework with old simplified8.0.31.0 file version"
+  },
+  "json_binding_repaired": {
+    "consumer_unchanged": true,
+    "private_package_files_unchanged": true,
+    "command": "json-repaired-layout1/dotnet.exe exec --fx-version 8.0.31 json-binding1/bin/Release/net8.0/Check.dll \"$(cygpath -am json-repaired-layout1/shared/Microsoft.NETCore.App/8.0.31)\"",
+    "exit_code": 0,
+    "loaded_file_version": "8.0.3126.42000",
+    "loaded_source": "8.0.31+1219a42122cf5190c7f512850557e38c422430dc",
+    "scope": "Isolated binding regression with rebuilt JSON and matching deps metadata; not a complete newly normalized package"
+  },
+  "sdk_check": {
+    "command": "bash harness/check-sdk.sh json-repaired-layout1 sdk-check1",
+    "exit_code": 0,
+    "warnings": 0,
+    "errors": 0,
+    "actual_msbuild_runtime": "8.0.31",
+    "actual_consumer_runtime": "8.0.31",
+    "generated_source_files": 8,
+    "generators": [
+      "LibraryImport",
+      "Regex",
+      "JsonSourceGenerator"
+    ],
+    "scope": "Private copy of installed source SDK/old targeting pack on the isolated serviced runtime; fresh fully normalized package/installed SDK checks remain open"
+  },
+  "superseded_formal_build": {
+    "root": "/home/topkek/runtime8pkg.9aqCTE",
+    "exec_session": 68508,
+    "status": "deliberately terminated for confirmed servicing metadata defect",
+    "package_produced": false,
+    "package_installed": false,
+    "note": "The SSH wrapper returned0 after forced termination; that is not a successful makepkg result. Orphan build descendants were subsequently stopped by exact scoped process tree."
+  },
+  "corrected_formal_build": {
+    "root": "/home/topkek/runtime8pkg2.ym1eaB",
+    "package_release": "8.0.31-2",
+    "command": "makepkg --cleanbuild --force --noconfirm",
+    "exec_session": 49034,
+    "status": "running",
+    "package_completed": false,
+    "source_archive_sha256": "cbbc10f667fb922c387c78d17b1bf235f30895ea1aa4007eaade7c97372a0b9c",
+    "last_verified_live_utc": "2026-10-27 15:52:26 UTC",
+    "remote_makepkg_pid": 1642720,
+    "stage": "all183 references/stubs built/audited; framework libraries live with no recorded failures",
+    "remote_library_helper_pid": 1676519
+  },
+  "complete": false,
+  "full_dependency_goal_complete": false,
+  "fresh_native_pe_version_validation": {
+    "evidence": "tests/runtime-servicing/native-pe-versions-20261027.json",
+    "exit_code": 0,
+    "actual_file_version": "8.0.3126.42000",
+    "versioned_outputs": 10,
+    "unversioned_apphost_upstream_design": true
+  }
+}

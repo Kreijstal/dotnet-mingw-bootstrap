@@ -1,0 +1,68 @@
+[
+  {
+    "recipe": "mingw-w64-dotnet-roslyn",
+    "package_suffix": "dotnet-codeanalysis-common",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-codeanalysis-common-4.9.2-1-any.pkg.tar.zst",
+    "sha256": "469640728fdc4cb79c22f27dc262244ad0fa7d00c96792d8a6533f35c0c74065",
+    "nuget_id": "Microsoft.CodeAnalysis.Common",
+    "nuget_version": "4.9.2",
+    "framework": "net8.0",
+    "source_commit": "9934fb9e3527e1c0c51314e57d4aab30f97e8f9e",
+    "source_sha256": "e01ea67aaec6408de51a0a4c18a7e15b2a527ca7a853c9a0a7742cb5680aeb30",
+    "dependencies": {},
+    "removed_binary_count": 151,
+    "regenerated_source_count": 5,
+    "upstream_api_declarations": 4189,
+    "satellite_cultures": [
+      "cs",
+      "de",
+      "es",
+      "fr",
+      "it",
+      "ja",
+      "ko",
+      "pl",
+      "pt-BR",
+      "ru",
+      "tr",
+      "zh-Hans",
+      "zh-Hant"
+    ],
+    "localized_resource_sets": 26,
+    "localized_resource_strings": 3185
+  },
+  {
+    "recipe": "mingw-w64-dotnet-roslyn",
+    "package_suffix": "dotnet-codeanalysis-csharp",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-codeanalysis-csharp-4.9.2-1-any.pkg.tar.zst",
+    "sha256": "17b939a670955684110a3ace204b4e89081f4833746e5f95fc9da6731fc02cb0",
+    "nuget_id": "Microsoft.CodeAnalysis.CSharp",
+    "nuget_version": "4.9.2",
+    "framework": "net8.0",
+    "source_commit": "9934fb9e3527e1c0c51314e57d4aab30f97e8f9e",
+    "source_sha256": "e01ea67aaec6408de51a0a4c18a7e15b2a527ca7a853c9a0a7742cb5680aeb30",
+    "dependencies": {
+      "Microsoft.CodeAnalysis.Common": "[4.9.2]"
+    },
+    "removed_binary_count": 151,
+    "regenerated_source_count": 5,
+    "upstream_api_declarations": 6110,
+    "satellite_cultures": [
+      "cs",
+      "de",
+      "es",
+      "fr",
+      "it",
+      "ja",
+      "ko",
+      "pl",
+      "pt-BR",
+      "ru",
+      "tr",
+      "zh-Hans",
+      "zh-Hant"
+    ],
+    "localized_resource_sets": 13,
+    "localized_resource_strings": 32565
+  }
+]

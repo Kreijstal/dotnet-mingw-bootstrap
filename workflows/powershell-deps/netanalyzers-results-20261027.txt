@@ -1,0 +1,909 @@
+Complete source SDK .NET analyzers and PowerShell integration,2026-10-27
+Host win11 / CLANG64; source SDK8.0.131, actual source runtime8.0.0
+Remote root /home/topkek/na.nyPQ4c
+Recipe mingw-w64-dotnet-netanalyzers
+Packages dotnet-netanalyzers and dotnet-sdk-netanalyzers8.0.0.preview26274.2-1
+NuGet Microsoft.CodeAnalysis.NetAnalyzers8.0.0-preview.26274.2
+Source commit0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4
+Archive SHA2561e4434f9401670f8b0e53116edecbb3a5db60c056dab5ac2c28a88966d9861e0
+This exact source/version is selected by SDK v8.0.131/eng/Version.Details.xml.
+The matching published package is metadata/text baseline only, never executed,
+compiled against for production or used as a generator input.
+
+All722 Core/122 CSharp/107 VB original production inputs (951) and all15 original
+configuration/documentation generator inputs build. Four explicit source overlays
+qualify four original Order helper calls in three files against .NET8's added
+extension, and retain CSharp argument-node types for the newer SyntaxGenerator API.
+They preserve original algorithms. Newer reference annotations, historical crypto
+type recognition and one VB argument-list narrowing conversion produce recorded
+upstream warnings. No production source subset is substituted or removed.
+Original shared projects/resources/release files/XLF data and every production
+hash are independently audited against the archive and shipped with provenance.
+
+All3 original assembly/file8.0.14.27402/31bf identities,3471 public/protected
+API declarations,293 analyzer/189 fixer/232 ID inventories and neutral resources
+match independent published metadata. All42 resource sets/15260 original/XLF
+strings and506 declared analyzer/language combinations pass. Upstream compatibility
+scaffolding remains exact:22 exported analyzers and75 fixers have empty behavior
+matching53 explicitly checked original base declarations. We do not claim these
+original empty compatibility exports implement active rules/actions.
+
+All922 selected upstream cases and16 owned CSharp/VB character-overload regressions
+pass. Actual iterative actions execute from20 fixer providers, with diagnostic
+counts/spans and normalized fixed text. Compiler-error markup is distinguished
+from analyzer markup. Original legacy API-precondition cases in EnvironmentMembers,
+SpecifyStringComparison and the missing-CompositeFormat test use source Mono4.7.2
+reference metadata only; runtime/default callbacks and owned cases use source.NET8.
+Unsupported helpers/options/reference profiles/multi-document/script/key/original
+compiler-diagnostic/xUnit assertions remain explicit; this is not the full IDE
+or xUnit suite. The initial harness treated fixed-text-equal-source cases as
+mandatory fixes and applied only one action; corrected iteration/profile handling
+reproduces the selected original expectations without production changes.
+
+All609 outputs of the original configuration/documentation generator match every
+independent published text exactly after line-ending normalization. Two original
+docs bring the text gate to611. All30 NuGet main/satellite DLL assets match16
+runtime-tested DLLs; shared copies and SDK payloads match exactly. Original props,
+targets, configs, scripts, MIT license/notices, sources and explicit overlays ship.
+No vendor implementations/signatures/private keys/compiler/workspace binaries ship
+inside the analyzer NuGet package.
+
+Clean makepkg source/library/generator/pack phases succeeded. Its first check()
+failed on a stale test-harness NuGet filename. After correcting that filename,
+the focused full package check succeeded, then makepkg --repackage staged both
+packages successfully from those same source-built and runtime-tested outputs.
+Fresh installed-feed-only checks and independent artifact audit pass. Actual CSharp
+and VB NuGet/SDK MSBuild select exactly2 proper source DLLs, reject CA1822 and
+build static/Shared corrections. SDK default compiler selection uses source
+csc49/vbc49 while respecting explicit caller compiler choices. Original five SDK
+compiler DLLs remain byte-identical to the retained source stage2 output.
+
+The original SDK owned two empty import stubs. SDK8.0.131-2 now keeps ownership
+of those files and conditionally forwards to the separate provider, which owns
+real source DLLs/configs/imports. Generated provider props/targets are unmodified;
+NuGet-only disabling props are omitted from the SDK. The focused SDK package-only
+rebuild uses retained original source stage2 output; no compiler/runtime/native
+rebuild is claimed. Helper validation covers placeholder conversion, idempotence
+and retaining real non-placeholder imports. Packaging/install/pacman ownership and
+all41 source/checksum declarations pass without package overwrite flags.
+
+PowerShell source root /home/topkek/powershell-core.af76rh now retains both
+EnableNETAnalyzers=true and EnforceCodeStyleInBuild=true. Original697 SMA/9 Eventing/
+35 CimCmdlets inputs and original generators remain byte-identical. Two real SDK
+.NET analyzer DLLs and four CodeStyle DLLs are captured per production project,
+alongside all explicit source Documentation/StyleCop/CodeAnalysis analyzers.
+Original PowerShell core and real local CIM/WMI module/class/GetOwner/native errors/
+serialization/GC pass, with no Framework implementation. All27 application DLLs
+match rebuilt original projects or installed source NuGet assets. The net8.0-hosted
+original PSVersionInfoGenerator has three non-fatal CA1846 AsSpan suggestions;
+there are no errors. Those suggestions are retained rather than hidden by turning
+off the newly enabled analysis gate.
+
+This closes the implicit.NET analyzer implementation gap for this source SDK.
+These two analyzer packages are build tooling; the SDK update is package-only.
+Dependency counts remain44/53 direct IDs,29 verified transitive packages,75
+artifacts including two experimental MMI ports. Full pwsh/application/modules,
+remaining dependencies/native behavior/remote compatibility and source runtime
+servicing remain open. Overall goal complete=false.
+
+Exact commands and evidence follow. The initial clean makepkg log retains its
+stale-harness failure; subsequent focused checks and repackages exit0.
+
+$ PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm
+==> Making package: mingw-w64-dotnet-netanalyzers 8.0.0.preview26274.2-1 (Tue Oct 27 02:55:28 2026)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4.tar.gz
+  -> Found prepare.py
+  -> Found build-libraries.sh
+  -> Found generate-config.sh
+  -> Found build.sh
+  -> Found pack.py
+  -> Found check.sh
+  -> Found check-api.sh
+  -> Found check-msbuild.sh
+  -> Found verify-generated.py
+  -> Found Check.cs
+  -> Found ExtractFixtures.cs
+  -> Found InspectApi.cs
+  -> Found InspectInventory.cs
+  -> Found InspectMetadata.cs
+  -> Found MicrosoftShared.pubkey.hex
+  -> Found ExpectedAssemblies.json
+  -> Found ExpectedLegacyEmpty.json
+  -> Found ExpectedGeneratedAssets.json
+  -> Found UpstreamFixtures.json
+  -> Found published-metadata-provenance.json
+  -> Found SourceBuild.NetAnalyzers.props
+  -> Found README.md
+==> Validating source files with sha256sums...
+    roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4.tar.gz ... Passed
+    prepare.py ... Passed
+    build-libraries.sh ... Passed
+    generate-config.sh ... Passed
+    build.sh ... Passed
+    pack.py ... Passed
+    check.sh ... Passed
+    check-api.sh ... Passed
+    check-msbuild.sh ... Passed
+    verify-generated.py ... Passed
+    Check.cs ... Passed
+    ExtractFixtures.cs ... Passed
+    InspectApi.cs ... Passed
+    InspectInventory.cs ... Passed
+    InspectMetadata.cs ... Passed
+    MicrosoftShared.pubkey.hex ... Passed
+    ExpectedAssemblies.json ... Passed
+    ExpectedLegacyEmpty.json ... Passed
+    ExpectedGeneratedAssets.json ... Passed
+    UpstreamFixtures.json ... Passed
+    published-metadata-provenance.json ... Passed
+    SourceBuild.NetAnalyzers.props ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+  -> Extracting roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4.tar.gz with bsdtar
+==> Starting prepare()...
+Prepared complete original .NET analyzer inputs: {'Microsoft.CodeAnalysis.NetAnalyzers': 722, 'Microsoft.CodeAnalysis.CSharp.NetAnalyzers': 122, 'Microsoft.CodeAnalysis.VisualBasic.NetAnalyzers': 107, 'config-generator': 15}
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj (in 301 ms).
+  Restored E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.CSharp.NetAnalyzers\Library.csproj (in 301 ms).
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Analysis\PropertySetAnalysis\ConstructorMapper.cs(108,30): warning CS8765: Nullability of type of parameter 'obj' doesn't match overridden member (possibly because of nullability attributes). [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Analysis\PropertySetAnalysis\HazardousUsageEvaluator.cs(127,30): warning CS8765: Nullability of type of parameter 'obj' doesn't match overridden member (possibly because of nullability attributes). [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Analysis\PropertySetAnalysis\PropertyMapper.cs(126,30): warning CS8765: Nullability of type of parameter 'obj' doesn't match overridden member (possibly because of nullability attributes). [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\InteropServices\PlatformCompatibilityAnalyzer.Value.cs(177,53): warning CS8769: Nullability of reference types in type of parameter 'other' doesn't match implemented member 'bool IEquatable<IAbstractAnalysisValue>.Equals(IAbstractAnalysisValue? other)' (possibly because of nullability attributes). [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\InteropServices\PlatformCompatibilityAnalyzer.Value.cs(166,34): warning CS8765: Nullability of type of parameter 'obj' doesn't match overridden member (possibly because of nullability attributes). [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Framework\DataFlow\ConversionInference.cs(53,39): warning CS8765: Nullability of type of parameter 'obj' doesn't match overridden member (possibly because of nullability attributes). [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Framework\DataFlow\InterproceduralCaptureId.cs(29,30): warning CS8765: Nullability of type of parameter 'obj' doesn't match overridden member (possibly because of nullability attributes). [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Analysis\TaintedDataAnalysis\SanitizerInfo.cs(93,30): warning CS8765: Nullability of type of parameter 'obj' doesn't match overridden member (possibly because of nullability attributes). [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Analysis\TaintedDataAnalysis\SanitizerInfo.cs(98,21): warning CS8767: Nullability of reference types in type of parameter 'other' of 'bool SanitizerInfo.Equals(SanitizerInfo other)' doesn't match implicitly implemented member 'bool IEquatable<SanitizerInfo>.Equals(SanitizerInfo? other)' (possibly because of nullability attributes). [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Analysis\TaintedDataAnalysis\SinkInfo.cs(83,30): warning CS8765: Nullability of type of parameter 'obj' doesn't match overridden member (possibly because of nullability attributes). [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Analysis\TaintedDataAnalysis\SinkInfo.cs(88,21): warning CS8767: Nullability of reference types in type of parameter 'other' of 'bool SinkInfo.Equals(SinkInfo other)' doesn't match implicitly implemented member 'bool IEquatable<SinkInfo>.Equals(SinkInfo? other)' (possibly because of nullability attributes). [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Analysis\TaintedDataAnalysis\SourceInfo.cs(208,30): warning CS8765: Nullability of type of parameter 'obj' doesn't match overridden member (possibly because of nullability attributes). [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Analysis\TaintedDataAnalysis\SourceInfo.cs(213,21): warning CS8767: Nullability of reference types in type of parameter 'other' of 'bool SourceInfo.Equals(SourceInfo other)' doesn't match implicitly implemented member 'bool IEquatable<SourceInfo>.Equals(SourceInfo? other)' (possibly because of nullability attributes). [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Framework\DataFlow\ThrownExceptionInfo.cs(102,30): warning CS8765: Nullability of type of parameter 'obj' doesn't match overridden member (possibly because of nullability attributes). [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Framework\DataFlow\InterproceduralAnalysisConfiguration.cs(121,39): warning CS8765: Nullability of type of parameter 'obj' doesn't match overridden member (possibly because of nullability attributes). [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Analysis\TaintedDataAnalysis\TaintedDataSymbolMap.cs(160,30): warning CS8765: Nullability of type of parameter 'obj' doesn't match overridden member (possibly because of nullability attributes). [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\SingleThreadedConcurrentDictionary.cs(30,60): warning CS8714: The type 'TKey' cannot be used as type parameter 'TKey' in the generic type or method 'ConcurrentDictionary<TKey, TValue>'. Nullability of type argument 'TKey' doesn't match 'notnull' constraint. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Security\Helpers\ObjectGraphOptions.cs(107,30): warning CS8765: Nullability of type of parameter 'obj' doesn't match overridden member (possibly because of nullability attributes). [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\Workspaces\SyntaxGeneratorExtensions.cs(434,21): warning CS8604: Possible null reference argument for parameter 'typeSymbol' in 'SyntaxNode SyntaxGenerator.TypeExpression(ITypeSymbol typeSymbol)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\QualityGuidelines\UseLiteralsWhereAppropriate.Fixer.cs(33,27): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\QualityGuidelines\UseLiteralsWhereAppropriate.Fixer.cs(34,56): warning CS8604: Possible null reference argument for parameter 'syntaxNode' in 'SyntaxNode? UseLiteralsWhereAppropriateFixer.GetFieldDeclaration(SyntaxNode syntaxNode)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetFramework.Analyzers\DoNotUseInsecureXSLTScriptExecution.cs(163,84): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\Maintainability\AvoidUnusedPrivateFields.Fixer.cs(53,20): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\Maintainability\AvoidUnusedPrivateFields.Fixer.cs(54,31): warning CS8604: Possible null reference argument for parameter 'node' in 'void SyntaxEditor.RemoveNode(SyntaxNode node)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\InteropServices\UseValidPlatformString.cs(245,70): warning CS8601: Possible null reference assignment. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\QualityGuidelines\RemoveEmptyFinalizers.Fixer.cs(46,20): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\QualityGuidelines\RemoveEmptyFinalizers.Fixer.cs(47,31): warning CS8604: Possible null reference argument for parameter 'node' in 'void SyntaxEditor.RemoveNode(SyntaxNode node)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\InteropServices\DynamicInterfaceCastableImplementation.Fixer.cs(33,38): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\UriParametersShouldNotBeStrings.Fixer.cs(103,73): warning CS8604: Possible null reference argument for parameter 'node' in 'SyntaxNode SyntaxGenerator.ReplaceNode(SyntaxNode root, SyntaxNode node, SyntaxNode? newDeclaration)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\InteropServices\ProvidePublicParameterlessSafeHandleConstructor.Fixer.cs(32,38): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\ConstantExpectedAnalyzer.UnmanagedHelper.cs(199,95): warning CS8604: Possible null reference argument for parameter 'minText' in 'Diagnostic ConstantExpectedParameter.CreateConstantOutOfBoundsRuleDiagnostic(IArgumentOperation argument, string minText, string maxText)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\ConstantExpectedAnalyzer.UnmanagedHelper.cs(199,111): warning CS8604: Possible null reference argument for parameter 'maxText' in 'Diagnostic ConstantExpectedParameter.CreateConstantOutOfBoundsRuleDiagnostic(IArgumentOperation argument, string minText, string maxText)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\ConstantExpectedAnalyzer.UnmanagedHelper.cs(218,99): warning CS8604: Possible null reference argument for parameter 'minText' in 'Diagnostic ConstantExpectedParameter.CreateConstantOutOfBoundsRuleDiagnostic(IArgumentOperation argument, string minText, string maxText)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\ConstantExpectedAnalyzer.UnmanagedHelper.cs(218,115): warning CS8604: Possible null reference argument for parameter 'maxText' in 'Diagnostic ConstantExpectedParameter.CreateConstantOutOfBoundsRuleDiagnostic(IArgumentOperation argument, string minText, string maxText)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\ConstantExpectedAnalyzer.UnmanagedHelper.cs(113,102): warning CS8604: Possible null reference argument for parameter 'typeMinValue' in 'ImmutableArray<Diagnostic> DiagnosticHelper.GetError(ErrorKind errorFlags, IParameterSymbol parameterSymbol, SyntaxNode attributeSyntax, string typeMinValue, string typeMaxValue)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\ConstantExpectedAnalyzer.UnmanagedHelper.cs(113,122): warning CS8604: Possible null reference argument for parameter 'typeMaxValue' in 'ImmutableArray<Diagnostic> DiagnosticHelper.GetError(ErrorKind errorFlags, IParameterSymbol parameterSymbol, SyntaxNode attributeSyntax, string typeMinValue, string typeMaxValue)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\TypesThatOwnDisposableFieldsShouldBeDisposable.Fixer.cs(31,27): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\TypesThatOwnDisposableFieldsShouldBeDisposable.Fixer.cs(52,65): warning CS8604: Possible null reference argument for parameter 'typeSymbol' in 'SyntaxNode SyntaxGenerator.TypeExpression(ITypeSymbol typeSymbol)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\TypesThatOwnDisposableFieldsShouldBeDisposable.Fixer.cs(61,34): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\TypesThatOwnDisposableFieldsShouldBeDisposable.Fixer.cs(62,94): warning CS8604: Possible null reference argument for parameter 'declaration' in 'SyntaxNode? SyntaxGenerator.AsPublicInterfaceImplementation(SyntaxNode declaration, SyntaxNode interfaceType)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\TypesThatOwnDisposableFieldsShouldBeDisposable.Fixer.cs(62,36): warning CS8604: Possible null reference argument for parameter 'node' in 'void SyntaxEditor.ReplaceNode(SyntaxNode node, SyntaxNode newNode)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\TypesThatOwnDisposableFieldsShouldBeDisposable.Fixer.cs(62,52): warning CS8604: Possible null reference argument for parameter 'newNode' in 'void SyntaxEditor.ReplaceNode(SyntaxNode node, SyntaxNode newNode)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\TypesThatOwnDisposableFieldsShouldBeDisposable.Fixer.cs(66,105): warning CS8604: Possible null reference argument for parameter 'type' in 'SyntaxNode SyntaxGenerator.ObjectCreationExpression(ITypeSymbol type, params SyntaxNode[] arguments)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\TypesThatOwnDisposableFieldsShouldBeDisposable.Fixer.cs(68,26): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Framework\DataFlow\DataFlowOperationVisitor.cs(1204,80): warning CS8601: Possible null reference assignment. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Framework\DataFlow\DataFlowOperationVisitor.cs(2035,65): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Security\UseRSAWithSufficientKeySize.cs(132,58): warning CS8604: Possible null reference argument for parameter 'item' in 'bool ImmutableHashSet<string>.Contains(string item)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Security\UseRSAWithSufficientKeySize.cs(149,58): warning CS8604: Possible null reference argument for parameter 'item' in 'bool ImmutableHashSet<string>.Contains(string item)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Analysis\TaintedDataAnalysis\TaintedDataConfig.cs(115,66): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Analysis\TaintedDataAnalysis\TaintedDataConfig.cs(126,72): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\InteropServices\PlatformCompatibilityAnalyzer.cs(1765,66): warning CS8601: Possible null reference assignment. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\InteropServices\PlatformCompatibilityAnalyzer.cs(2091,17): warning CS8762: Parameter 'stringArgument' must have a non-null value when exiting with 'true'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Analysis\DisposeAnalysis\DisposeAnalysisHelper.cs(182,69): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\UseConcreteTypeAnalyzer.Collector.cs(61,72): warning CS8714: The type 'T' cannot be used as type parameter 'TKey' in the generic type or method 'ConcurrentDictionary<TKey, TValue>'. Nullability of type argument 'T' doesn't match 'notnull' constraint. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\OverrideGetHashCodeOnOverridingEquals.Fixer.cs(29,31): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\OverrideEqualsOnOverloadingOperatorEquals.Fixer.cs(29,31): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\OverloadOperatorEqualsOnOverridingValueTypeEquals.Fixer.cs(30,27): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\OverrideMethodsOnComparableTypes.Fixer.cs(27,27): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\OverrideEqualsAndOperatorEqualsOnValueTypes.Fixer.cs(35,38): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\OperatorOverloadsHaveNamedAlternates.cs(113,44): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\OperatorOverloadsHaveNamedAlternates.cs(157,53): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\InteropServices\PlatformCompatibilityAnalyzer.Value.cs(79,64): warning CS8604: Possible null reference argument for parameter 'osString' in 'bool PlatformCompatibilityAnalyzer.TryParsePlatformNameAndVersion(string osString, out string osPlatformName, out Version? version)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\InteropServices\PlatformCompatibilityAnalyzer.Value.cs(89,68): warning CS8604: Possible null reference argument for parameter 'platformPropertyName' in 'PlatformMethodValue.PlatformMethodValue(string platformPropertyName, Version version, bool negated)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\InterfaceMethodsShouldBeCallableByChildTypes.Fixer.cs(48,38): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\InterfaceMethodsShouldBeCallableByChildTypes.Fixer.cs(109,47): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\ImplementStandardExceptionConstructors.Fixer.cs(62,37): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\ImplementStandardExceptionConstructors.Fixer.cs(63,41): warning CS8604: Possible null reference argument for parameter 'declaration' in 'ISymbol? ModelExtensions.GetDeclaredSymbol(SemanticModel semanticModel, SyntaxNode declaration, CancellationToken cancellationToken = default(CancellationToken))'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\ImplementStandardExceptionConstructors.Fixer.cs(70,201): warning CS8604: Possible null reference argument for parameter 'value' in 'object Enum.Parse(Type enumType, string value)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\ImplementStandardExceptionConstructors.Fixer.cs(101,127): warning CS8604: Possible null reference argument for parameter 'typeSymbol' in 'SyntaxNode SyntaxGenerator.TypeExpression(ITypeSymbol typeSymbol)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\OperatorOverloadsHaveNamedAlternates.Fixer.cs(55,52): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\OperatorOverloadsHaveNamedAlternates.Fixer.cs(56,97): warning CS8604: Possible null reference argument for parameter 'declaration' in 'ISymbol? ModelExtensions.GetDeclaredSymbol(SemanticModel semanticModel, SyntaxNode declaration, CancellationToken cancellationToken = default(CancellationToken))'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\OperatorOverloadsHaveNamedAlternates.Fixer.cs(62,50): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\OperatorOverloadsHaveNamedAlternates.Fixer.cs(110,74): warning CS8604: Possible null reference argument for parameter 'declaration' in 'SyntaxNode SyntaxGenerator.AddMembers(SyntaxNode declaration, params SyntaxNode[] members)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\OperatorOverloadsHaveNamedAlternates.Fixer.cs(113,52): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\OperatorOverloadsHaveNamedAlternates.Fixer.cs(114,83): warning CS8604: Possible null reference argument for parameter 'declaration' in 'ISymbol? ModelExtensions.GetDeclaredSymbol(SemanticModel semanticModel, SyntaxNode declaration, CancellationToken cancellationToken = default(CancellationToken))'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Analysis\PropertySetAnalysis\PropertySetAnalysis.PropertySetDataFlowOperationVisitor.cs(243,37): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\UseConcreteTypeAnalyzer.Collector.cs(536,48): warning CS8602: Dereference of a possibly null reference. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\UseConcreteTypeAnalyzer.Collector.cs(549,48): warning CS8602: Dereference of a possibly null reference. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\UseConcreteTypeAnalyzer.Collector.cs(564,47): warning CS8602: Dereference of a possibly null reference. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\UseConcreteTypeAnalyzer.Collector.cs(578,46): warning CS8602: Dereference of a possibly null reference. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\UseConcreteTypeAnalyzer.Collector.cs(591,46): warning CS8602: Dereference of a possibly null reference. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\UseConcreteTypeAnalyzer.Collector.cs(606,50): warning CS8602: Dereference of a possibly null reference. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\UseConcreteTypeAnalyzer.Collector.cs(620,46): warning CS8602: Dereference of a possibly null reference. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\InterfaceMethodsShouldBeCallableByChildTypes.Fixer.cs(173,90): warning CS8604: Possible null reference argument for parameter 'declaration' in 'SyntaxNode? SyntaxGenerator.AsPublicInterfaceImplementation(SyntaxNode declaration, SyntaxNode interfaceType)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\InterfaceMethodsShouldBeCallableByChildTypes.Fixer.cs(173,38): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\InterfaceMethodsShouldBeCallableByChildTypes.Fixer.cs(176,52): warning CS8604: Possible null reference argument for parameter 'newNode' in 'void SyntaxEditor.ReplaceNode(SyntaxNode node, SyntaxNode newNode)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\EquatableAnalyzer.Fixer.cs(39,27): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Analysis\PropertySetAnalysis\PropertySetAnalysis.PropertySetDataFlowOperationVisitor.cs(375,49): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\EnumsShouldHaveZeroValue.Fixer.cs(86,46): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\EnumStorageShouldBeInt32.Fixer.cs(56,44): warning CS8604: Possible null reference argument for parameter 'node' in 'SyntaxNode? EnumStorageShouldBeInt32Fixer.GetTargetNode(SyntaxNode node)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\DoNotRaiseExceptionsInUnexpectedLocations.cs(87,53): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\EquatableAnalyzer.Fixer.cs(158,53): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Security\SetViewStateUserKey.cs(61,88): warning CS8604: Possible null reference argument for parameter 'methodSymbol' in 'bool SetViewStateUserKeyCorrectly(IMethodSymbol methodSymbol)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Security\SetViewStateUserKey.cs(66,91): warning CS8604: Possible null reference argument for parameter 'methodSymbol' in 'bool SetViewStateUserKeyCorrectly(IMethodSymbol methodSymbol)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\PreferHashDataOverComputeHash.cs(357,24): warning SYSLIB0021: 'SHA1Managed' is obsolete: 'Derived cryptographic types are obsolete. Use the Create method on the base type instead.' (https://aka.ms/dotnet-warnings/SYSLIB0021) [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\PreferHashDataOverComputeHash.cs(358,24): warning SYSLIB0021: 'SHA256Managed' is obsolete: 'Derived cryptographic types are obsolete. Use the Create method on the base type instead.' (https://aka.ms/dotnet-warnings/SYSLIB0021) [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\PreferHashDataOverComputeHash.cs(359,24): warning SYSLIB0021: 'SHA384Managed' is obsolete: 'Derived cryptographic types are obsolete. Use the Create method on the base type instead.' (https://aka.ms/dotnet-warnings/SYSLIB0021) [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\PreferHashDataOverComputeHash.cs(360,24): warning SYSLIB0021: 'SHA512Managed' is obsolete: 'Derived cryptographic types are obsolete. Use the Create method on the base type instead.' (https://aka.ms/dotnet-warnings/SYSLIB0021) [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\PreferHashDataOverComputeHash.cs(361,24): warning SYSLIB0021: 'MD5CryptoServiceProvider' is obsolete: 'Derived cryptographic types are obsolete. Use the Create method on the base type instead.' (https://aka.ms/dotnet-warnings/SYSLIB0021) [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\PreferHashDataOverComputeHash.cs(362,24): warning SYSLIB0021: 'SHA1CryptoServiceProvider' is obsolete: 'Derived cryptographic types are obsolete. Use the Create method on the base type instead.' (https://aka.ms/dotnet-warnings/SYSLIB0021) [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\PreferHashDataOverComputeHash.cs(363,24): warning SYSLIB0021: 'SHA256CryptoServiceProvider' is obsolete: 'Derived cryptographic types are obsolete. Use the Create method on the base type instead.' (https://aka.ms/dotnet-warnings/SYSLIB0021) [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\PreferHashDataOverComputeHash.cs(364,24): warning SYSLIB0021: 'SHA384CryptoServiceProvider' is obsolete: 'Derived cryptographic types are obsolete. Use the Create method on the base type instead.' (https://aka.ms/dotnet-warnings/SYSLIB0021) [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\PreferHashDataOverComputeHash.cs(365,24): warning SYSLIB0021: 'SHA512CryptoServiceProvider' is obsolete: 'Derived cryptographic types are obsolete. Use the Create method on the base type instead.' (https://aka.ms/dotnet-warnings/SYSLIB0021) [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\DefineAccessorsForAttributeArguments.Fixer.cs(36,52): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\DefineAccessorsForAttributeArguments.Fixer.cs(49,51): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\ImplementIDisposableCorrectly.cs(403,20): warning CS8603: Possible null reference return. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\ImplementIDisposableCorrectly.cs(441,24): warning CS8603: Possible null reference return. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\PreferHashDataOverComputeHash.Fixer.cs(167,69): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\DefineAccessorsForAttributeArguments.cs(145,72): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\DefineAccessorsForAttributeArguments.Fixer.cs(103,134): warning CS8625: Cannot convert null literal to non-nullable reference type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\DefineAccessorsForAttributeArguments.Fixer.cs(136,37): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Analysis\PropertySetAnalysis\PropertySetAnalysis.PropertySetDataFlowOperationVisitor.TrackedAssignmentData.cs(64,33): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Security\DoNotUseDSA.cs(134,58): warning CS8604: Possible null reference argument for parameter 'item' in 'bool ImmutableHashSet<string>.Contains(string item)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Security\DoNotUseDSA.cs(150,58): warning CS8604: Possible null reference argument for parameter 'item' in 'bool ImmutableHashSet<string>.Contains(string item)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Runtime\AvoidUnsealedAttributes.Fixer.cs(27,38): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Runtime\AvoidConstArrays.cs(92,54): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Runtime\AvoidConstArrays.Fixer.cs(66,42): warning CS8604: Possible null reference argument for parameter 'typeSymbol' in 'SyntaxNode SyntaxGenerator.TypeExpression(ITypeSymbol typeSymbol)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Runtime\AvoidConstArrays.Fixer.cs(86,40): warning CS8604: Possible null reference argument for parameter 'node' in 'void SyntaxEditor.InsertAfter(SyntaxNode node, SyntaxNode newNode)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Runtime\MarkISerializableTypesWithSerializable.Fixer.cs(29,20): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Runtime\MarkISerializableTypesWithSerializable.Fixer.cs(46,17): warning CS8604: Possible null reference argument for parameter 'typeSymbol' in 'SyntaxNode SyntaxGenerator.TypeExpression(ITypeSymbol typeSymbol)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Runtime\InstantiateArgumentExceptionsCorrectly.Fixer.cs(83,77): warning CS8604: Possible null reference argument for parameter 'type' in 'SyntaxNode SyntaxGenerator.ObjectCreationExpression(ITypeSymbol type, params SyntaxNode[] arguments)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Runtime\InstantiateArgumentExceptionsCorrectly.Fixer.cs(87,77): warning CS8604: Possible null reference argument for parameter 'type' in 'SyntaxNode SyntaxGenerator.ObjectCreationExpression(ITypeSymbol type, params SyntaxNode[] arguments)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Runtime\InstantiateArgumentExceptionsCorrectly.Fixer.cs(95,77): warning CS8604: Possible null reference argument for parameter 'type' in 'SyntaxNode SyntaxGenerator.ObjectCreationExpression(ITypeSymbol type, params SyntaxNode[] arguments)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Runtime\InstantiateArgumentExceptionsCorrectly.Fixer.cs(99,77): warning CS8604: Possible null reference argument for parameter 'type' in 'SyntaxNode SyntaxGenerator.ObjectCreationExpression(ITypeSymbol type, params SyntaxNode[] arguments)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Runtime\MarkAllNonSerializableFields.Fixer.cs(58,17): warning CS8604: Possible null reference argument for parameter 'typeSymbol' in 'SyntaxNode SyntaxGenerator.TypeExpression(ITypeSymbol typeSymbol)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Runtime\InstantiateArgumentExceptionsCorrectly.Fixer.cs(111,80): warning CS8604: Possible null reference argument for parameter 'type' in 'SyntaxNode SyntaxGenerator.ObjectCreationExpression(ITypeSymbol type, params SyntaxNode[] arguments)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Runtime\MarkAllNonSerializableFields.Fixer.cs(69,21): warning CS8604: Possible null reference argument for parameter 'typeSymbol' in 'SyntaxNode SyntaxGenerator.TypeExpression(ITypeSymbol typeSymbol)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Runtime\InstantiateArgumentExceptionsCorrectly.Fixer.cs(121,76): warning CS8604: Possible null reference argument for parameter 'identifier' in 'SyntaxNode SyntaxGenerator.IdentifierName(string identifier)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Runtime\PreferConstCharOverConstUnitStringAnalyzer.cs(48,52): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Framework\DataFlow\AnalysisEntityFactory.cs(402,63): warning CS8601: Possible null reference assignment. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Framework\DataFlow\AnalysisEntityFactory.cs(405,66): warning CS8601: Possible null reference assignment. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Framework\DataFlow\AnalysisEntityFactory.cs(418,30): warning CS8604: Possible null reference argument for parameter 'source' in 'IOperation Enumerable.Last<IOperation>(IEnumerable<IOperation> source)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Runtime\PreventNumericIntPtrUIntPtrBehavioralChanges.cs(142,32): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Runtime\PreventNumericIntPtrUIntPtrBehavioralChanges.cs(147,35): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Framework\DataFlow\DataFlowAnalysis.cs(373,108): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+  Library -> E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\bin\Release\net8.0\Microsoft.CodeAnalysis.NetAnalyzers.dll
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\CSharp\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\CSharpStaticHolderTypes.Fixer.cs(55,58): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.CSharp.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\CSharp\Microsoft.NetCore.Analyzers\InteropServices\CSharpSpecifyMarshalingForPInvokeStringArguments.Fixer.cs(26,20): warning CS8603: Possible null reference return. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.CSharp.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\CSharp\Microsoft.NetCore.Analyzers\InteropServices\CSharpDisableRuntimeMarshalling.FixAllProvider.cs(48,67): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.CSharp.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\CSharp\Microsoft.NetCore.Analyzers\InteropServices\CSharpDynamicInterfaceCastableImplementation.Fixer.cs(49,50): warning CS8604: Possible null reference argument for parameter 'item' in 'void List<SyntaxNode>.Add(SyntaxNode item)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.CSharp.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\CSharp\Microsoft.NetCore.Analyzers\InteropServices\CSharpDynamicInterfaceCastableImplementation.Fixer.cs(164,77): warning CS8604: Possible null reference argument for parameter 'declaration' in 'SyntaxNode SyntaxGenerator.WithStatements(SyntaxNode declaration, IEnumerable<SyntaxNode> statements)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.CSharp.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\CSharp\Microsoft.NetCore.Analyzers\InteropServices\CSharpDynamicInterfaceCastableImplementation.Fixer.cs(165,77): warning CS8604: Possible null reference argument for parameter 'declaration' in 'SyntaxNode SyntaxGenerator.WithStatements(SyntaxNode declaration, IEnumerable<SyntaxNode> statements)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.CSharp.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\CSharp\Microsoft.NetCore.Analyzers\InteropServices\CSharpDisableRuntimeMarshalling.Fixer.cs(214,80): warning CS8604: Possible null reference argument for parameter 'declaration' in 'DeclarationModifiers SyntaxGenerator.GetModifiers(SyntaxNode declaration)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.CSharp.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\CSharp\Microsoft.NetCore.Analyzers\Performance\CSharpPreferDictionaryTryMethodsOverContainsKeyGuardFixer.cs(128,95): warning CS8604: Possible null reference argument for parameter 'arguments' in 'SyntaxNode SyntaxGenerator.InvocationExpression(SyntaxNode expression, params SyntaxNode[] arguments)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.CSharp.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\CSharp\Microsoft.NetCore.Analyzers\Performance\CSharpPreferDictionaryTryMethodsOverContainsKeyGuardFixer.cs(135,101): warning CS8604: Possible null reference argument for parameter 'right' in 'SyntaxNode SyntaxGenerator.AssignmentStatement(SyntaxNode left, SyntaxNode right)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.CSharp.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\CSharp\Microsoft.NetCore.Analyzers\Performance\CSharpPreferHashDataOverComputeHash.Fixer.cs(65,41): warning CS8604: Possible null reference argument for parameter 'item' in 'bool List<ArgumentSyntax>.Remove(ArgumentSyntax item)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.CSharp.NetAnalyzers\Library.csproj]
+  Library -> E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.CSharp.NetAnalyzers\bin\Release\net8.0\Microsoft.CodeAnalysis.CSharp.NetAnalyzers.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Analysis\PropertySetAnalysis\ConstructorMapper.cs(108,30): warning CS8765: Nullability of type of parameter 'obj' doesn't match overridden member (possibly because of nullability attributes). [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Analysis\PropertySetAnalysis\HazardousUsageEvaluator.cs(127,30): warning CS8765: Nullability of type of parameter 'obj' doesn't match overridden member (possibly because of nullability attributes). [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Analysis\PropertySetAnalysis\PropertyMapper.cs(126,30): warning CS8765: Nullability of type of parameter 'obj' doesn't match overridden member (possibly because of nullability attributes). [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\InteropServices\PlatformCompatibilityAnalyzer.Value.cs(177,53): warning CS8769: Nullability of reference types in type of parameter 'other' doesn't match implemented member 'bool IEquatable<IAbstractAnalysisValue>.Equals(IAbstractAnalysisValue? other)' (possibly because of nullability attributes). [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\InteropServices\PlatformCompatibilityAnalyzer.Value.cs(166,34): warning CS8765: Nullability of type of parameter 'obj' doesn't match overridden member (possibly because of nullability attributes). [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Framework\DataFlow\ConversionInference.cs(53,39): warning CS8765: Nullability of type of parameter 'obj' doesn't match overridden member (possibly because of nullability attributes). [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Framework\DataFlow\InterproceduralCaptureId.cs(29,30): warning CS8765: Nullability of type of parameter 'obj' doesn't match overridden member (possibly because of nullability attributes). [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Analysis\TaintedDataAnalysis\SanitizerInfo.cs(93,30): warning CS8765: Nullability of type of parameter 'obj' doesn't match overridden member (possibly because of nullability attributes). [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Analysis\TaintedDataAnalysis\SanitizerInfo.cs(98,21): warning CS8767: Nullability of reference types in type of parameter 'other' of 'bool SanitizerInfo.Equals(SanitizerInfo other)' doesn't match implicitly implemented member 'bool IEquatable<SanitizerInfo>.Equals(SanitizerInfo? other)' (possibly because of nullability attributes). [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Analysis\TaintedDataAnalysis\SinkInfo.cs(83,30): warning CS8765: Nullability of type of parameter 'obj' doesn't match overridden member (possibly because of nullability attributes). [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Analysis\TaintedDataAnalysis\SinkInfo.cs(88,21): warning CS8767: Nullability of reference types in type of parameter 'other' of 'bool SinkInfo.Equals(SinkInfo other)' doesn't match implicitly implemented member 'bool IEquatable<SinkInfo>.Equals(SinkInfo? other)' (possibly because of nullability attributes). [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Analysis\TaintedDataAnalysis\SourceInfo.cs(208,30): warning CS8765: Nullability of type of parameter 'obj' doesn't match overridden member (possibly because of nullability attributes). [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Analysis\TaintedDataAnalysis\SourceInfo.cs(213,21): warning CS8767: Nullability of reference types in type of parameter 'other' of 'bool SourceInfo.Equals(SourceInfo other)' doesn't match implicitly implemented member 'bool IEquatable<SourceInfo>.Equals(SourceInfo? other)' (possibly because of nullability attributes). [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Framework\DataFlow\ThrownExceptionInfo.cs(102,30): warning CS8765: Nullability of type of parameter 'obj' doesn't match overridden member (possibly because of nullability attributes). [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Framework\DataFlow\InterproceduralAnalysisConfiguration.cs(121,39): warning CS8765: Nullability of type of parameter 'obj' doesn't match overridden member (possibly because of nullability attributes). [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Analysis\TaintedDataAnalysis\TaintedDataSymbolMap.cs(160,30): warning CS8765: Nullability of type of parameter 'obj' doesn't match overridden member (possibly because of nullability attributes). [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\SingleThreadedConcurrentDictionary.cs(30,60): warning CS8714: The type 'TKey' cannot be used as type parameter 'TKey' in the generic type or method 'ConcurrentDictionary<TKey, TValue>'. Nullability of type argument 'TKey' doesn't match 'notnull' constraint. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Security\Helpers\ObjectGraphOptions.cs(107,30): warning CS8765: Nullability of type of parameter 'obj' doesn't match overridden member (possibly because of nullability attributes). [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\Workspaces\SyntaxGeneratorExtensions.cs(434,21): warning CS8604: Possible null reference argument for parameter 'typeSymbol' in 'SyntaxNode SyntaxGenerator.TypeExpression(ITypeSymbol typeSymbol)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\QualityGuidelines\UseLiteralsWhereAppropriate.Fixer.cs(33,27): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\QualityGuidelines\UseLiteralsWhereAppropriate.Fixer.cs(34,56): warning CS8604: Possible null reference argument for parameter 'syntaxNode' in 'SyntaxNode? UseLiteralsWhereAppropriateFixer.GetFieldDeclaration(SyntaxNode syntaxNode)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetFramework.Analyzers\DoNotUseInsecureXSLTScriptExecution.cs(163,84): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\Maintainability\AvoidUnusedPrivateFields.Fixer.cs(53,20): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\Maintainability\AvoidUnusedPrivateFields.Fixer.cs(54,31): warning CS8604: Possible null reference argument for parameter 'node' in 'void SyntaxEditor.RemoveNode(SyntaxNode node)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\InteropServices\UseValidPlatformString.cs(245,70): warning CS8601: Possible null reference assignment. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\QualityGuidelines\RemoveEmptyFinalizers.Fixer.cs(46,20): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\QualityGuidelines\RemoveEmptyFinalizers.Fixer.cs(47,31): warning CS8604: Possible null reference argument for parameter 'node' in 'void SyntaxEditor.RemoveNode(SyntaxNode node)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\InteropServices\DynamicInterfaceCastableImplementation.Fixer.cs(33,38): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\UriParametersShouldNotBeStrings.Fixer.cs(103,73): warning CS8604: Possible null reference argument for parameter 'node' in 'SyntaxNode SyntaxGenerator.ReplaceNode(SyntaxNode root, SyntaxNode node, SyntaxNode? newDeclaration)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\InteropServices\ProvidePublicParameterlessSafeHandleConstructor.Fixer.cs(32,38): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\ConstantExpectedAnalyzer.UnmanagedHelper.cs(199,95): warning CS8604: Possible null reference argument for parameter 'minText' in 'Diagnostic ConstantExpectedParameter.CreateConstantOutOfBoundsRuleDiagnostic(IArgumentOperation argument, string minText, string maxText)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\ConstantExpectedAnalyzer.UnmanagedHelper.cs(199,111): warning CS8604: Possible null reference argument for parameter 'maxText' in 'Diagnostic ConstantExpectedParameter.CreateConstantOutOfBoundsRuleDiagnostic(IArgumentOperation argument, string minText, string maxText)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\ConstantExpectedAnalyzer.UnmanagedHelper.cs(218,99): warning CS8604: Possible null reference argument for parameter 'minText' in 'Diagnostic ConstantExpectedParameter.CreateConstantOutOfBoundsRuleDiagnostic(IArgumentOperation argument, string minText, string maxText)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\ConstantExpectedAnalyzer.UnmanagedHelper.cs(218,115): warning CS8604: Possible null reference argument for parameter 'maxText' in 'Diagnostic ConstantExpectedParameter.CreateConstantOutOfBoundsRuleDiagnostic(IArgumentOperation argument, string minText, string maxText)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\ConstantExpectedAnalyzer.UnmanagedHelper.cs(113,102): warning CS8604: Possible null reference argument for parameter 'typeMinValue' in 'ImmutableArray<Diagnostic> DiagnosticHelper.GetError(ErrorKind errorFlags, IParameterSymbol parameterSymbol, SyntaxNode attributeSyntax, string typeMinValue, string typeMaxValue)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\ConstantExpectedAnalyzer.UnmanagedHelper.cs(113,122): warning CS8604: Possible null reference argument for parameter 'typeMaxValue' in 'ImmutableArray<Diagnostic> DiagnosticHelper.GetError(ErrorKind errorFlags, IParameterSymbol parameterSymbol, SyntaxNode attributeSyntax, string typeMinValue, string typeMaxValue)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\TypesThatOwnDisposableFieldsShouldBeDisposable.Fixer.cs(31,27): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\TypesThatOwnDisposableFieldsShouldBeDisposable.Fixer.cs(52,65): warning CS8604: Possible null reference argument for parameter 'typeSymbol' in 'SyntaxNode SyntaxGenerator.TypeExpression(ITypeSymbol typeSymbol)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\TypesThatOwnDisposableFieldsShouldBeDisposable.Fixer.cs(61,34): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\TypesThatOwnDisposableFieldsShouldBeDisposable.Fixer.cs(62,94): warning CS8604: Possible null reference argument for parameter 'declaration' in 'SyntaxNode? SyntaxGenerator.AsPublicInterfaceImplementation(SyntaxNode declaration, SyntaxNode interfaceType)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\TypesThatOwnDisposableFieldsShouldBeDisposable.Fixer.cs(62,36): warning CS8604: Possible null reference argument for parameter 'node' in 'void SyntaxEditor.ReplaceNode(SyntaxNode node, SyntaxNode newNode)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\TypesThatOwnDisposableFieldsShouldBeDisposable.Fixer.cs(62,52): warning CS8604: Possible null reference argument for parameter 'newNode' in 'void SyntaxEditor.ReplaceNode(SyntaxNode node, SyntaxNode newNode)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\TypesThatOwnDisposableFieldsShouldBeDisposable.Fixer.cs(66,105): warning CS8604: Possible null reference argument for parameter 'type' in 'SyntaxNode SyntaxGenerator.ObjectCreationExpression(ITypeSymbol type, params SyntaxNode[] arguments)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\TypesThatOwnDisposableFieldsShouldBeDisposable.Fixer.cs(68,26): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Framework\DataFlow\DataFlowOperationVisitor.cs(1204,80): warning CS8601: Possible null reference assignment. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Framework\DataFlow\DataFlowOperationVisitor.cs(2035,65): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Security\UseRSAWithSufficientKeySize.cs(132,58): warning CS8604: Possible null reference argument for parameter 'item' in 'bool ImmutableHashSet<string>.Contains(string item)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Security\UseRSAWithSufficientKeySize.cs(149,58): warning CS8604: Possible null reference argument for parameter 'item' in 'bool ImmutableHashSet<string>.Contains(string item)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Analysis\TaintedDataAnalysis\TaintedDataConfig.cs(115,66): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Analysis\TaintedDataAnalysis\TaintedDataConfig.cs(126,72): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\InteropServices\PlatformCompatibilityAnalyzer.cs(1765,66): warning CS8601: Possible null reference assignment. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\InteropServices\PlatformCompatibilityAnalyzer.cs(2091,17): warning CS8762: Parameter 'stringArgument' must have a non-null value when exiting with 'true'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Analysis\DisposeAnalysis\DisposeAnalysisHelper.cs(182,69): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\UseConcreteTypeAnalyzer.Collector.cs(61,72): warning CS8714: The type 'T' cannot be used as type parameter 'TKey' in the generic type or method 'ConcurrentDictionary<TKey, TValue>'. Nullability of type argument 'T' doesn't match 'notnull' constraint. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\OverrideGetHashCodeOnOverridingEquals.Fixer.cs(29,31): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\OverrideEqualsOnOverloadingOperatorEquals.Fixer.cs(29,31): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\OverloadOperatorEqualsOnOverridingValueTypeEquals.Fixer.cs(30,27): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\OverrideMethodsOnComparableTypes.Fixer.cs(27,27): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\OverrideEqualsAndOperatorEqualsOnValueTypes.Fixer.cs(35,38): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\OperatorOverloadsHaveNamedAlternates.cs(113,44): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\OperatorOverloadsHaveNamedAlternates.cs(157,53): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\InteropServices\PlatformCompatibilityAnalyzer.Value.cs(79,64): warning CS8604: Possible null reference argument for parameter 'osString' in 'bool PlatformCompatibilityAnalyzer.TryParsePlatformNameAndVersion(string osString, out string osPlatformName, out Version? version)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\InteropServices\PlatformCompatibilityAnalyzer.Value.cs(89,68): warning CS8604: Possible null reference argument for parameter 'platformPropertyName' in 'PlatformMethodValue.PlatformMethodValue(string platformPropertyName, Version version, bool negated)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\InterfaceMethodsShouldBeCallableByChildTypes.Fixer.cs(48,38): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\InterfaceMethodsShouldBeCallableByChildTypes.Fixer.cs(109,47): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\ImplementStandardExceptionConstructors.Fixer.cs(62,37): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\ImplementStandardExceptionConstructors.Fixer.cs(63,41): warning CS8604: Possible null reference argument for parameter 'declaration' in 'ISymbol? ModelExtensions.GetDeclaredSymbol(SemanticModel semanticModel, SyntaxNode declaration, CancellationToken cancellationToken = default(CancellationToken))'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\ImplementStandardExceptionConstructors.Fixer.cs(70,201): warning CS8604: Possible null reference argument for parameter 'value' in 'object Enum.Parse(Type enumType, string value)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\ImplementStandardExceptionConstructors.Fixer.cs(101,127): warning CS8604: Possible null reference argument for parameter 'typeSymbol' in 'SyntaxNode SyntaxGenerator.TypeExpression(ITypeSymbol typeSymbol)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\OperatorOverloadsHaveNamedAlternates.Fixer.cs(55,52): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\OperatorOverloadsHaveNamedAlternates.Fixer.cs(56,97): warning CS8604: Possible null reference argument for parameter 'declaration' in 'ISymbol? ModelExtensions.GetDeclaredSymbol(SemanticModel semanticModel, SyntaxNode declaration, CancellationToken cancellationToken = default(CancellationToken))'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\OperatorOverloadsHaveNamedAlternates.Fixer.cs(62,50): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\OperatorOverloadsHaveNamedAlternates.Fixer.cs(110,74): warning CS8604: Possible null reference argument for parameter 'declaration' in 'SyntaxNode SyntaxGenerator.AddMembers(SyntaxNode declaration, params SyntaxNode[] members)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\OperatorOverloadsHaveNamedAlternates.Fixer.cs(113,52): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\OperatorOverloadsHaveNamedAlternates.Fixer.cs(114,83): warning CS8604: Possible null reference argument for parameter 'declaration' in 'ISymbol? ModelExtensions.GetDeclaredSymbol(SemanticModel semanticModel, SyntaxNode declaration, CancellationToken cancellationToken = default(CancellationToken))'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Analysis\PropertySetAnalysis\PropertySetAnalysis.PropertySetDataFlowOperationVisitor.cs(243,37): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\UseConcreteTypeAnalyzer.Collector.cs(536,48): warning CS8602: Dereference of a possibly null reference. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\UseConcreteTypeAnalyzer.Collector.cs(549,48): warning CS8602: Dereference of a possibly null reference. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\UseConcreteTypeAnalyzer.Collector.cs(564,47): warning CS8602: Dereference of a possibly null reference. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\UseConcreteTypeAnalyzer.Collector.cs(578,46): warning CS8602: Dereference of a possibly null reference. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\UseConcreteTypeAnalyzer.Collector.cs(591,46): warning CS8602: Dereference of a possibly null reference. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\UseConcreteTypeAnalyzer.Collector.cs(606,50): warning CS8602: Dereference of a possibly null reference. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\UseConcreteTypeAnalyzer.Collector.cs(620,46): warning CS8602: Dereference of a possibly null reference. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\InterfaceMethodsShouldBeCallableByChildTypes.Fixer.cs(173,90): warning CS8604: Possible null reference argument for parameter 'declaration' in 'SyntaxNode? SyntaxGenerator.AsPublicInterfaceImplementation(SyntaxNode declaration, SyntaxNode interfaceType)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\InterfaceMethodsShouldBeCallableByChildTypes.Fixer.cs(173,38): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\InterfaceMethodsShouldBeCallableByChildTypes.Fixer.cs(176,52): warning CS8604: Possible null reference argument for parameter 'newNode' in 'void SyntaxEditor.ReplaceNode(SyntaxNode node, SyntaxNode newNode)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\EquatableAnalyzer.Fixer.cs(39,27): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Analysis\PropertySetAnalysis\PropertySetAnalysis.PropertySetDataFlowOperationVisitor.cs(375,49): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\EnumsShouldHaveZeroValue.Fixer.cs(86,46): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\EnumStorageShouldBeInt32.Fixer.cs(56,44): warning CS8604: Possible null reference argument for parameter 'node' in 'SyntaxNode? EnumStorageShouldBeInt32Fixer.GetTargetNode(SyntaxNode node)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\DoNotRaiseExceptionsInUnexpectedLocations.cs(87,53): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\EquatableAnalyzer.Fixer.cs(158,53): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Security\SetViewStateUserKey.cs(61,88): warning CS8604: Possible null reference argument for parameter 'methodSymbol' in 'bool SetViewStateUserKeyCorrectly(IMethodSymbol methodSymbol)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Security\SetViewStateUserKey.cs(66,91): warning CS8604: Possible null reference argument for parameter 'methodSymbol' in 'bool SetViewStateUserKeyCorrectly(IMethodSymbol methodSymbol)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\PreferHashDataOverComputeHash.cs(357,24): warning SYSLIB0021: 'SHA1Managed' is obsolete: 'Derived cryptographic types are obsolete. Use the Create method on the base type instead.' (https://aka.ms/dotnet-warnings/SYSLIB0021) [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\PreferHashDataOverComputeHash.cs(358,24): warning SYSLIB0021: 'SHA256Managed' is obsolete: 'Derived cryptographic types are obsolete. Use the Create method on the base type instead.' (https://aka.ms/dotnet-warnings/SYSLIB0021) [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\PreferHashDataOverComputeHash.cs(359,24): warning SYSLIB0021: 'SHA384Managed' is obsolete: 'Derived cryptographic types are obsolete. Use the Create method on the base type instead.' (https://aka.ms/dotnet-warnings/SYSLIB0021) [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\PreferHashDataOverComputeHash.cs(360,24): warning SYSLIB0021: 'SHA512Managed' is obsolete: 'Derived cryptographic types are obsolete. Use the Create method on the base type instead.' (https://aka.ms/dotnet-warnings/SYSLIB0021) [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\PreferHashDataOverComputeHash.cs(361,24): warning SYSLIB0021: 'MD5CryptoServiceProvider' is obsolete: 'Derived cryptographic types are obsolete. Use the Create method on the base type instead.' (https://aka.ms/dotnet-warnings/SYSLIB0021) [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\PreferHashDataOverComputeHash.cs(362,24): warning SYSLIB0021: 'SHA1CryptoServiceProvider' is obsolete: 'Derived cryptographic types are obsolete. Use the Create method on the base type instead.' (https://aka.ms/dotnet-warnings/SYSLIB0021) [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\PreferHashDataOverComputeHash.cs(363,24): warning SYSLIB0021: 'SHA256CryptoServiceProvider' is obsolete: 'Derived cryptographic types are obsolete. Use the Create method on the base type instead.' (https://aka.ms/dotnet-warnings/SYSLIB0021) [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\PreferHashDataOverComputeHash.cs(364,24): warning SYSLIB0021: 'SHA384CryptoServiceProvider' is obsolete: 'Derived cryptographic types are obsolete. Use the Create method on the base type instead.' (https://aka.ms/dotnet-warnings/SYSLIB0021) [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\PreferHashDataOverComputeHash.cs(365,24): warning SYSLIB0021: 'SHA512CryptoServiceProvider' is obsolete: 'Derived cryptographic types are obsolete. Use the Create method on the base type instead.' (https://aka.ms/dotnet-warnings/SYSLIB0021) [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\DefineAccessorsForAttributeArguments.Fixer.cs(36,52): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\DefineAccessorsForAttributeArguments.Fixer.cs(49,51): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\ImplementIDisposableCorrectly.cs(403,20): warning CS8603: Possible null reference return. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\ImplementIDisposableCorrectly.cs(441,24): warning CS8603: Possible null reference return. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Performance\PreferHashDataOverComputeHash.Fixer.cs(167,69): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\DefineAccessorsForAttributeArguments.cs(145,72): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\DefineAccessorsForAttributeArguments.Fixer.cs(103,134): warning CS8625: Cannot convert null literal to non-nullable reference type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\DefineAccessorsForAttributeArguments.Fixer.cs(136,37): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Analysis\PropertySetAnalysis\PropertySetAnalysis.PropertySetDataFlowOperationVisitor.TrackedAssignmentData.cs(64,33): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Security\DoNotUseDSA.cs(134,58): warning CS8604: Possible null reference argument for parameter 'item' in 'bool ImmutableHashSet<string>.Contains(string item)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Security\DoNotUseDSA.cs(150,58): warning CS8604: Possible null reference argument for parameter 'item' in 'bool ImmutableHashSet<string>.Contains(string item)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Runtime\AvoidUnsealedAttributes.Fixer.cs(27,38): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Runtime\AvoidConstArrays.cs(92,54): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Runtime\AvoidConstArrays.Fixer.cs(66,42): warning CS8604: Possible null reference argument for parameter 'typeSymbol' in 'SyntaxNode SyntaxGenerator.TypeExpression(ITypeSymbol typeSymbol)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Runtime\AvoidConstArrays.Fixer.cs(86,40): warning CS8604: Possible null reference argument for parameter 'node' in 'void SyntaxEditor.InsertAfter(SyntaxNode node, SyntaxNode newNode)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Runtime\MarkISerializableTypesWithSerializable.Fixer.cs(29,20): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Runtime\MarkISerializableTypesWithSerializable.Fixer.cs(46,17): warning CS8604: Possible null reference argument for parameter 'typeSymbol' in 'SyntaxNode SyntaxGenerator.TypeExpression(ITypeSymbol typeSymbol)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Runtime\InstantiateArgumentExceptionsCorrectly.Fixer.cs(83,77): warning CS8604: Possible null reference argument for parameter 'type' in 'SyntaxNode SyntaxGenerator.ObjectCreationExpression(ITypeSymbol type, params SyntaxNode[] arguments)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Runtime\InstantiateArgumentExceptionsCorrectly.Fixer.cs(87,77): warning CS8604: Possible null reference argument for parameter 'type' in 'SyntaxNode SyntaxGenerator.ObjectCreationExpression(ITypeSymbol type, params SyntaxNode[] arguments)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Runtime\InstantiateArgumentExceptionsCorrectly.Fixer.cs(95,77): warning CS8604: Possible null reference argument for parameter 'type' in 'SyntaxNode SyntaxGenerator.ObjectCreationExpression(ITypeSymbol type, params SyntaxNode[] arguments)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Runtime\InstantiateArgumentExceptionsCorrectly.Fixer.cs(99,77): warning CS8604: Possible null reference argument for parameter 'type' in 'SyntaxNode SyntaxGenerator.ObjectCreationExpression(ITypeSymbol type, params SyntaxNode[] arguments)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Runtime\MarkAllNonSerializableFields.Fixer.cs(58,17): warning CS8604: Possible null reference argument for parameter 'typeSymbol' in 'SyntaxNode SyntaxGenerator.TypeExpression(ITypeSymbol typeSymbol)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Runtime\InstantiateArgumentExceptionsCorrectly.Fixer.cs(111,80): warning CS8604: Possible null reference argument for parameter 'type' in 'SyntaxNode SyntaxGenerator.ObjectCreationExpression(ITypeSymbol type, params SyntaxNode[] arguments)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Runtime\MarkAllNonSerializableFields.Fixer.cs(69,21): warning CS8604: Possible null reference argument for parameter 'typeSymbol' in 'SyntaxNode SyntaxGenerator.TypeExpression(ITypeSymbol typeSymbol)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Runtime\InstantiateArgumentExceptionsCorrectly.Fixer.cs(121,76): warning CS8604: Possible null reference argument for parameter 'identifier' in 'SyntaxNode SyntaxGenerator.IdentifierName(string identifier)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Runtime\PreferConstCharOverConstUnitStringAnalyzer.cs(48,52): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Framework\DataFlow\AnalysisEntityFactory.cs(402,63): warning CS8601: Possible null reference assignment. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Framework\DataFlow\AnalysisEntityFactory.cs(405,66): warning CS8601: Possible null reference assignment. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Framework\DataFlow\AnalysisEntityFactory.cs(418,30): warning CS8604: Possible null reference argument for parameter 'source' in 'IOperation Enumerable.Last<IOperation>(IEnumerable<IOperation> source)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Runtime\PreventNumericIntPtrUIntPtrBehavioralChanges.cs(142,32): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\Core\Microsoft.NetCore.Analyzers\Runtime\PreventNumericIntPtrUIntPtrBehavioralChanges.cs(147,35): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\Utilities\FlowAnalysis\FlowAnalysis\Framework\DataFlow\DataFlowAnalysis.cs(373,108): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\CSharp\Microsoft.CodeQuality.Analyzers\ApiDesignGuidelines\CSharpStaticHolderTypes.Fixer.cs(55,58): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.CSharp.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\CSharp\Microsoft.NetCore.Analyzers\InteropServices\CSharpSpecifyMarshalingForPInvokeStringArguments.Fixer.cs(26,20): warning CS8603: Possible null reference return. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.CSharp.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\CSharp\Microsoft.NetCore.Analyzers\InteropServices\CSharpDisableRuntimeMarshalling.FixAllProvider.cs(48,67): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.CSharp.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\CSharp\Microsoft.NetCore.Analyzers\InteropServices\CSharpDynamicInterfaceCastableImplementation.Fixer.cs(49,50): warning CS8604: Possible null reference argument for parameter 'item' in 'void List<SyntaxNode>.Add(SyntaxNode item)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.CSharp.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\CSharp\Microsoft.NetCore.Analyzers\InteropServices\CSharpDynamicInterfaceCastableImplementation.Fixer.cs(164,77): warning CS8604: Possible null reference argument for parameter 'declaration' in 'SyntaxNode SyntaxGenerator.WithStatements(SyntaxNode declaration, IEnumerable<SyntaxNode> statements)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.CSharp.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\CSharp\Microsoft.NetCore.Analyzers\InteropServices\CSharpDynamicInterfaceCastableImplementation.Fixer.cs(165,77): warning CS8604: Possible null reference argument for parameter 'declaration' in 'SyntaxNode SyntaxGenerator.WithStatements(SyntaxNode declaration, IEnumerable<SyntaxNode> statements)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.CSharp.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\CSharp\Microsoft.NetCore.Analyzers\InteropServices\CSharpDisableRuntimeMarshalling.Fixer.cs(214,80): warning CS8604: Possible null reference argument for parameter 'declaration' in 'DeclarationModifiers SyntaxGenerator.GetModifiers(SyntaxNode declaration)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.CSharp.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\CSharp\Microsoft.NetCore.Analyzers\Performance\CSharpPreferDictionaryTryMethodsOverContainsKeyGuardFixer.cs(128,95): warning CS8604: Possible null reference argument for parameter 'arguments' in 'SyntaxNode SyntaxGenerator.InvocationExpression(SyntaxNode expression, params SyntaxNode[] arguments)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.CSharp.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\CSharp\Microsoft.NetCore.Analyzers\Performance\CSharpPreferDictionaryTryMethodsOverContainsKeyGuardFixer.cs(135,101): warning CS8604: Possible null reference argument for parameter 'right' in 'SyntaxNode SyntaxGenerator.AssignmentStatement(SyntaxNode left, SyntaxNode right)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.CSharp.NetAnalyzers\Library.csproj]
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\CSharp\Microsoft.NetCore.Analyzers\Performance\CSharpPreferHashDataOverComputeHash.Fixer.cs(65,41): warning CS8604: Possible null reference argument for parameter 'item' in 'bool List<ArgumentSyntax>.Remove(ArgumentSyntax item)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.CSharp.NetAnalyzers\Library.csproj]
+    145 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:28.74
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.VisualBasic.NetAnalyzers\Library.vbproj (in 222 ms).
+  1 of 2 projects are up-to-date for restore.
+  Library -> E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.NetAnalyzers\bin\Release\net8.0\Microsoft.CodeAnalysis.NetAnalyzers.dll
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\VisualBasic\Microsoft.NetCore.Analyzers\Performance\BasicUseStringMethodCharOverloadWithSingleCharacters.Fixer.vb(72,67): warning BC42016: Implicit conversion from 'SeparatedSyntaxList(Of SyntaxNode)' to 'SeparatedSyntaxList(Of ArgumentSyntax)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.VisualBasic.NetAnalyzers\Library.vbproj]
+  Library -> E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.VisualBasic.NetAnalyzers\bin\Release\net8.0\Microsoft.CodeAnalysis.VisualBasic.NetAnalyzers.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\na.nyPQ4c\src\roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4\src\NetAnalyzers\VisualBasic\Microsoft.NetCore.Analyzers\Performance\BasicUseStringMethodCharOverloadWithSingleCharacters.Fixer.vb(72,67): warning BC42016: Implicit conversion from 'SeparatedSyntaxList(Of SyntaxNode)' to 'SeparatedSyntaxList(Of ArgumentSyntax)'. [E:\msys64\home\topkek\na.nyPQ4c\src\prepared\Microsoft.CodeAnalysis.VisualBasic.NetAnalyzers\Library.vbproj]
+    1 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.45
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\na.nyPQ4c\src\prepared\config-tool\Tool.csproj (in 126 ms).
+  Tool -> E:\msys64\home\topkek\na.nyPQ4c\src\prepared\config-tool\bin\Release\net8.0\Tool.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.16
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\na.nyPQ4c\src\prepared\extract\Tool.csproj (in 119 ms).
+  Tool -> E:\msys64\home\topkek\na.nyPQ4c\src\prepared\extract\bin\Release\net8.0\Tool.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.89
+PASS all611 generated/static configuration and documentation assets match independent published text
+Staged full source NetAnalyzers package, original generated text and complete build/source provenance
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\na.nyPQ4c\src\prepared\package\Package.csproj (in 63 ms).
+  Package -> E:\msys64\home\topkek\na.nyPQ4c\src\prepared\package\bin\Release\net8.0\Package.dll
+  Successfully created package 'E:\msys64\home\topkek\na.nyPQ4c\src\feed\Microsoft.CodeAnalysis.NetAnalyzers.8.0.0-preview.26274.2.nupkg'.
+==> Starting check()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\na.nyPQ4c\src\check\Check.csproj (in 1.96 sec).
+Traceback (most recent call last):
+  File "<stdin>", line 4, in <module>
+  File "/usr/lib/python3.12/zipfile/__init__.py", line 1378, in __init__
+    self.fp = io.open(file, filemode)
+              ^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/topkek/na.nyPQ4c/src/check/empty-packages/microsoft.codeanalysis.netanalyzers/8.0.0-preview.26274.2/microsoft.codeanalysis.analyzers.3.3.4.nupkg'
+==> ERROR: A failure occurred in check().
+    Aborting...
+
+exit4
+
+$ bash check.sh check-fixed src/feed src/prepared/package/payload/source-build
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\na.nyPQ4c\check-fixed\Check.csproj (in 1.77 sec).
+PASS30 NuGet DLL assets, identical shared copies and all611 published configuration/documentation assets
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Check -> E:\msys64\home\topkek\na.nyPQ4c\check-fixed\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.76
+PASS original empty compatibility analyzer exports: 22
+PASS original empty compatibility fixer exports: 75
+PASS all293 analyzers/189 fixers activated, original identities, live descriptors and 42 resource sets/15260 strings
+PASS every analyzer callback, 506 declared language combinations
+PASS all938 selected upstream/owned cases with actual actions from 20 code-fix providers
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\na.nyPQ4c\check-fixed\metadata-check\Api\Tool.csproj (in 313 ms).
+  Tool -> E:\msys64\home\topkek\na.nyPQ4c\check-fixed\metadata-check\Api\bin\Release\net8.0\Tool.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.93
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\na.nyPQ4c\check-fixed\metadata-check\Inventory\Tool.csproj (in 110 ms).
+  Tool -> E:\msys64\home\topkek\na.nyPQ4c\check-fixed\metadata-check\Inventory\bin\Release\net8.0\Tool.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.52
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\na.nyPQ4c\check-fixed\metadata-check\Metadata\Tool.csproj (in 121 ms).
+  Tool -> E:\msys64\home\topkek\na.nyPQ4c\check-fixed\metadata-check\Metadata\bin\Release\net8.0\Tool.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.82
+PASS all3 original identities,3471 public/protected API declarations,293 analyzer/189 fixer/232 ID constant entries and neutral resource metadata
+PASS CSharp nuget selects exactly2 source analyzer DLLs; CA1822 negative rejected and static/Shared correction builds through source compiler
+PASS VisualBasic nuget selects exactly2 source analyzer DLLs; CA1822 negative rejected and static/Shared correction builds through source compiler
+
+exit0
+
+$ PATH=/usr/bin:/clang64/bin:$PATH makepkg --repackage --force --noconfirm
+==> Making package: mingw-w64-dotnet-netanalyzers 8.0.0.preview26274.2-1 (Tue Oct 27 03:07:43 2026)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Removing existing $pkgdir/ directory...
+==> Starting package_mingw-w64-clang-x86_64-dotnet-netanalyzers()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-netanalyzers"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Starting package_mingw-w64-clang-x86_64-dotnet-sdk-netanalyzers()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-sdk-netanalyzers"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-netanalyzers 8.0.0.preview26274.2-1 (Tue Oct 27 03:07:58 2026)
+
+exit0
+
+$ pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-netanalyzers-8.0.0.preview26274.2-1-any.pkg.tar.zst mingw-w64-clang-x86_64-dotnet-sdk-netanalyzers-8.0.0.preview26274.2-1-any.pkg.tar.zst
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (2) mingw-w64-clang-x86_64-dotnet-netanalyzers-8.0.0.preview26274.2-1  mingw-w64-clang-x86_64-dotnet-sdk-netanalyzers-8.0.0.preview26274.2-1
+
+Total Installed Size:  28.27 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+installing mingw-w64-clang-x86_64-dotnet-netanalyzers...
+installing mingw-w64-clang-x86_64-dotnet-sdk-netanalyzers...
+
+exit0
+
+$ bash check.sh installed-check
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\na.nyPQ4c\installed-check\Check.csproj (in 1.97 sec).
+PASS30 NuGet DLL assets, identical shared copies and all611 published configuration/documentation assets
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Check -> E:\msys64\home\topkek\na.nyPQ4c\installed-check\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.95
+PASS original empty compatibility analyzer exports: 22
+PASS original empty compatibility fixer exports: 75
+PASS all293 analyzers/189 fixers activated, original identities, live descriptors and 42 resource sets/15260 strings
+PASS every analyzer callback, 506 declared language combinations
+PASS all938 selected upstream/owned cases with actual actions from 20 code-fix providers
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\na.nyPQ4c\installed-check\metadata-check\Api\Tool.csproj (in 251 ms).
+  Tool -> E:\msys64\home\topkek\na.nyPQ4c\installed-check\metadata-check\Api\bin\Release\net8.0\Tool.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.82
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\na.nyPQ4c\installed-check\metadata-check\Inventory\Tool.csproj (in 140 ms).
+  Tool -> E:\msys64\home\topkek\na.nyPQ4c\installed-check\metadata-check\Inventory\bin\Release\net8.0\Tool.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.60
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\na.nyPQ4c\installed-check\metadata-check\Metadata\Tool.csproj (in 137 ms).
+  Tool -> E:\msys64\home\topkek\na.nyPQ4c\installed-check\metadata-check\Metadata\bin\Release\net8.0\Tool.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.86
+PASS all3 original identities,3471 public/protected API declarations,293 analyzer/189 fixer/232 ID constant entries and neutral resource metadata
+PASS CSharp nuget selects exactly2 source analyzer DLLs; CA1822 negative rejected and static/Shared correction builds through source compiler
+PASS VisualBasic nuget selects exactly2 source analyzer DLLs; CA1822 negative rejected and static/Shared correction builds through source compiler
+
+exit0
+
+$ bash check-msbuild.sh installed-check sdk
+PASS CSharp sdk selects exactly2 source analyzer DLLs; CA1822 negative rejected and static/Shared correction builds through source compiler
+PASS VisualBasic sdk selects exactly2 source analyzer DLLs; CA1822 negative rejected and static/Shared correction builds through source compiler
+
+exit0
+
+SDK bootstrap package root:/home/topkek/dotnetboot/packages/mingw-w64-dotnet-bootstrap
+
+$ makepkg -p PKGBUILD.sdk-netanalyzers --repackage --force --noconfirm
+==> Making package: mingw-w64-dotnet-bootstrap 8.0.131-2 (Tue Oct 27 02:59:47 2026)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Removing existing $pkgdir/ directory...
+==> Starting package_mingw-w64-clang-x86_64-dotnet-sdk()...
+Forward bootstrap analyzer import: Microsoft.CodeAnalysis.NetAnalyzers.props -> SourceBuild.NetAnalyzers.props
+Forward bootstrap analyzer import: Microsoft.CodeAnalysis.NetAnalyzers.targets -> SourceBuild.NetAnalyzers.targets
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-sdk"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-bootstrap 8.0.131-2 (Tue Oct 27 03:00:07 2026)
+
+exit0
+
+$ pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-sdk-8.0.131-2-any.pkg.tar.zst
+warning: mingw-w64-clang-x86_64-dotnet-sdk-8.0.131-2 is up to date -- reinstalling
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-dotnet-sdk-8.0.131-2
+
+Total Installed Size:  145.07 MiB
+Net Upgrade Size:        0.00 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+reinstalling mingw-w64-clang-x86_64-dotnet-sdk...
+
+exit0
+
+$ bash /home/topkek/na.nyPQ4c/check-netanalyzers-sdk-imports.sh
+PASS SDK imports after SDK reinstall; real analyzer version, automatic csc49, explicit caller compiler preserved, original five SDK compiler DLLs unchanged
+/clang64/lib/dotnet/sdk/8.0.131/Sdks/Microsoft.NET.Sdk/analyzers/build/Microsoft.CodeAnalysis.NetAnalyzers.props is owned by mingw-w64-clang-x86_64-dotnet-sdk 8.0.131-2
+/clang64/lib/dotnet/sdk/8.0.131/Sdks/Microsoft.NET.Sdk/analyzers/build/SourceBuild.NetAnalyzers.props is owned by mingw-w64-clang-x86_64-dotnet-sdk-netanalyzers 8.0.0.preview26274.2-1
+
+exit0
+
+PowerShell build root:/home/topkek/powershell-core.af76rh
+Enabled real source SDK .NET analyzers alongside CodeStyle and retained all explicit analyzer packages
+
+$ bash build-core.sh .
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\System.Management.Automation.csproj (in 200 ms).
+  Restored E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj (in 200 ms).
+  Restored E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\Microsoft.PowerShell.CoreCLR.Eventing\Microsoft.PowerShell.CoreCLR.Eventing.csproj (in 200 ms).
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.cs(123,25): warning CA1846: Prefer 'AsSpan' over 'Substring' when span-based overloads are available (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1846) [E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj]
+E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.cs(124,25): warning CA1846: Prefer 'AsSpan' over 'Substring' when span-based overloads are available (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1846) [E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj]
+E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.cs(125,25): warning CA1846: Prefer 'AsSpan' over 'Substring' when span-based overloads are available (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1846) [E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj]
+  PSVersionInfoGenerator -> E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\bin\Release\net8.0\SMA.Generator.dll
+  Microsoft.PowerShell.CoreCLR.Eventing -> E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\Microsoft.PowerShell.CoreCLR.Eventing\bin\Release\net8.0\Microsoft.PowerShell.CoreCLR.Eventing.dll
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  PSVersionInfoGenerator -> E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\bin\Release\net8.0\SMA.Generator.dll
+  Microsoft.PowerShell.CoreCLR.Eventing -> E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\Microsoft.PowerShell.CoreCLR.Eventing\bin\Release\net8.0\Microsoft.PowerShell.CoreCLR.Eventing.dll
+  System.Management.Automation -> E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\bin\Release\net8.0\System.Management.Automation.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:57.74
+
+exit0
+
+$ bash check-cim.sh . cim-netanalyzers-check
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-core.af76rh\cim-netanalyzers-check\Check.csproj (in 455 ms).
+  Restored E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj (in 1.4 sec).
+  Restored E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\System.Management.Automation.csproj (in 1.46 sec).
+  Restored E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\Microsoft.PowerShell.CoreCLR.Eventing\Microsoft.PowerShell.CoreCLR.Eventing.csproj (in 1.46 sec).
+  Restored E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\Microsoft.Management.Infrastructure.CimCmdlets\Microsoft.Management.Infrastructure.CimCmdlets.csproj (in 977 ms).
+E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.cs(123,25): warning CA1846: Prefer 'AsSpan' over 'Substring' when span-based overloads are available (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1846) [E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj]
+E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.cs(124,25): warning CA1846: Prefer 'AsSpan' over 'Substring' when span-based overloads are available (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1846) [E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj]
+E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.cs(125,25): warning CA1846: Prefer 'AsSpan' over 'Substring' when span-based overloads are available (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1846) [E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj]
+  PSVersionInfoGenerator -> E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\bin\Release\net8.0\SMA.Generator.dll
+  Microsoft.PowerShell.CoreCLR.Eventing -> E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\Microsoft.PowerShell.CoreCLR.Eventing\bin\Release\net8.0\Microsoft.PowerShell.CoreCLR.Eventing.dll
+  System.Management.Automation -> E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\bin\Release\net8.0\System.Management.Automation.dll
+  Microsoft.Management.Infrastructure.CimCmdlets -> E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\Microsoft.Management.Infrastructure.CimCmdlets\bin\Release\net8.0\Microsoft.Management.Infrastructure.CimCmdlets.dll
+  Check -> E:\msys64\home\topkek\powershell-core.af76rh\cim-netanalyzers-check\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.cs(123,25): warning CA1846: Prefer 'AsSpan' over 'Substring' when span-based overloads are available (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1846) [E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj]
+E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.cs(124,25): warning CA1846: Prefer 'AsSpan' over 'Substring' when span-based overloads are available (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1846) [E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj]
+E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.cs(125,25): warning CA1846: Prefer 'AsSpan' over 'Substring' when span-based overloads are available (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1846) [E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj]
+    3 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:01:08.52
+PASS invocation Import-Module 'E:\msys64\home\topkek\powershell-core.af76rh\cim-netanalyzers-check\bin\Release\net8.0\Microsoft.Management.Infrastructure.CimCmdlets.dll' -ErrorAction Stop
+PASS invocation Get-Command Get-CimInstance
+PASS invocation $script:OwnedOs = Get-CimInstance -Namespace root/cimv2 -ClassName Win32_OperatingSystem -ErrorAction Stop; $script:OwnedOs
+PASS invocation Get-CimClass -Namespace root/cimv2 -ClassName Win32_Process -ErrorAction Stop
+PASS invocation Get-CimInstance -Namespace root/cimv2 -ClassName Win32_Process -Filter 'ProcessId = 6244' -ErrorAction Stop
+PASS invocation $p=Get-CimInstance -ClassName Win32_Process -Filter 'ProcessId = 6244'; Invoke-CimMethod -InputObject $p -MethodName GetOwner -ErrorAction Stop
+PASS invocation try { Get-CimInstance -ClassName Missing_Source_Port_Class -ErrorAction Stop; 'missed' } catch { $_.Exception.GetType().FullName }
+PASS invocation $xml=[System.Management.Automation.PSSerializer]::Serialize($script:OwnedOs); $copy=[System.Management.Automation.PSSerializer]::Deserialize($xml); $copy.BuildNumber
+PASS invocation $s=[System.Management.ManagementObjectSearcher]::new('SELECT BuildNumber FROM Win32_OperatingSystem'); try { foreach($o in $s.Get()) { $o.BuildNumber } } finally { $s.Dispose() }
+PASS invocation $script:OwnedOs.BuildNumber
+PASS actual source PowerShell7.4.20/CimCmdlets with experimental MMI3: module import, local OS/process queries, class metadata, GetOwner, native errors, CIM serialization, shared WMI/CIM OS build 26200, GC and no Framework implementation
+
+exit0
+
+$ python3 audit-source.py .
+PASS exact original Windows source inventories/hashes, documented exclusions, fresh generators and retained explicit source analyzers: {'System.Management.Automation': (697, 77), 'Microsoft.PowerShell.CoreCLR.Eventing': (9, 3), 'PSVersionInfoGenerator': (1, 2), 'Microsoft.Management.Infrastructure.CimCmdlets': (35, 3), 'ResGen': (1, 2), 'TypeCatalogGen': (1, 2)}
+
+exit0
+
+$ python3 audit-payload.py . cim-netanalyzers-check
+PASS every one of 27 consumer DLLs matches rebuilt project bytes or an installed source-built NuGet payload
+
+exit0
+
+$ python3 tests/powershell-deps/audit-netanalyzers.py tests/powershell-deps/netanalyzers-artifacts-20261027.json
+PASS NetAnalyzers exact source/checksums/licenses,951+15 original inputs/four overlays,3471 API/293 analyzer/189 fixer inventory,30 DLL assets,611 text assets, SDK provider and separate bootstrap import ownership
+exit0

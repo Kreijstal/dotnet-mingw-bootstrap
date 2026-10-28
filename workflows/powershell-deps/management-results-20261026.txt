@@ -1,0 +1,283 @@
+System.Management source backend validation, win11 / MSYS2 CLANG64
+Root: /home/topkek/powershell-compatibility.UIIT7O
+Source: dotnet/runtime v8.0.31, SHA-256 b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070
+NuGet/assembly: System.Management 8.0.0/8.0.0.0, b03f5f7f11d50a3a public signing.
+Native backend: locally compiled msys-wmi-native.dll, ABI 1; no Framework helper fallback.
+Source patch disables the obsolete unsafe private IManagementObject QI bridge and binds every required native entry point.
+No published implementation DLL used as build input or package payload. Windows native COM/WMI/UCRT APIs are OS dependencies.
+
+In mingw-w64-dotnet-management:
+$ PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm
+Result: exit 0; native -Wall -Wextra -Werror build, exact export/import audit, managed contract/implementation builds and all check() gates passed.
+==> Making package: mingw-w64-dotnet-management 8.0.0-1 (26 Oct 2026 17:58:40)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found runtime-v8.0.31.tar.gz
+  -> Found prepare.py
+  -> Found libraries.json
+  -> Found Microsoft.pubkey.hex
+  -> Found 0001-use-source-built-wmi-backend.patch
+  -> Found wmi-native.cpp
+  -> Found build-native.sh
+  -> Found check-native.py
+  -> Found native-exports.json
+  -> Found LICENSE.port
+  -> Found Probe.cs
+  -> Found PortChecks.cs
+  -> Found NativeDependencies.cs
+  -> Found CheckAssets.cs
+  -> Found check-installed.sh
+  -> Found check-api.cs
+  -> Found check-api.sh
+  -> Found README.md
+==> Validating source files with sha256sums...
+    runtime-v8.0.31.tar.gz ... Passed
+    prepare.py ... Passed
+    libraries.json ... Passed
+    Microsoft.pubkey.hex ... Passed
+    0001-use-source-built-wmi-backend.patch ... Passed
+    wmi-native.cpp ... Passed
+    build-native.sh ... Passed
+    check-native.py ... Passed
+    native-exports.json ... Passed
+    LICENSE.port ... Passed
+    Probe.cs ... Passed
+    PortChecks.cs ... Passed
+    NativeDependencies.cs ... Passed
+    CheckAssets.cs ... Passed
+    check-installed.sh ... Passed
+    check-api.cs ... Passed
+    check-api.sh ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+==> Starting prepare()...
+patching file src/libraries/System.Management/src/System/Management/ManagementScope.cs
+==> Starting build()...
+PASS WMI native backend: all 49 exact exports, AMD64, Windows/UCRT imports only
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-management\src\prepared\System.Management\contract\Contract.csproj (in 309 ms).
+  Contract -> E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-management\src\prepared\System.Management\contract\bin\Release\net8.0\System.Management.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.40
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-management\src\prepared\System.Management\Library.csproj (in 145 ms).
+E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-management\src\runtime-8.0.31\src\libraries\System.Management\src\System\Management\ManagementScope.cs(461,17): warning CS0162: Unreachable code detected [E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-management\src\prepared\System.Management\Library.csproj]
+  Library -> E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-management\src\prepared\System.Management\bin\Release\net8.0-windows\System.Management.dll
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Sdks\NuGet.Build.Tasks.Pack\build\NuGet.Build.Tasks.Pack.targets(221,5): warning NU5131: References were found in the nuspec, but some reference assemblies were not found in both the nuspec and ref folder. Add the following reference assemblies: [E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-management\src\prepared\System.Management\Library.csproj]
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Sdks\NuGet.Build.Tasks.Pack\build\NuGet.Build.Tasks.Pack.targets(221,5): warning NU5131: - Add System.Management.dll to the net8.0 reference group in the nuspec [E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-management\src\prepared\System.Management\Library.csproj]
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Sdks\NuGet.Build.Tasks.Pack\build\NuGet.Build.Tasks.Pack.targets(221,5): warning NU5131:  [E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-management\src\prepared\System.Management\Library.csproj]
+  The package System.Management.8.0.0 is missing a readme. Go to https://aka.ms/nuget/authoring-best-practices/readme to learn why package readmes are important.
+  Successfully created package 'E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-management\src\feed\System.Management.8.0.0.nupkg'.
+==> Starting check()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-management\src\check\check.csproj (in 388 ms).
+  check -> E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-management\src\check\bin\Release\net8.0\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.77
+Runtime: .NET 8.0.0
+WMI: System.Management, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS WMI identity/source/location, exported types and 79 resource strings
+WMI OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+WMI process: dotnet.exe; PID matches current source-built runtime
+WMI invalid class: correctly returned InvalidClass
+WMI OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+WMI process: dotnet.exe; PID matches current source-built runtime
+WMI invalid class: correctly returned InvalidClass
+PASS WMI metadata/types/origins, qualifier and method enumeration, clone/compare/MOF, in-memory class/property/method/qualifier edits; no repository writes
+PASS WMI native GetOwner method invocation and independent enumerator clones
+PASS WMI native asynchronous sink delivery/completion and compacting GC
+PASS WMI native process event callback, owned child PID and subscription cancellation
+PASS WMI EnablePrivileges query and restored thread identity
+Source-built WMI backend: E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-management\src\check\bin\Release\net8.0\runtimes\win-x64\native\msys-wmi-native.dll
+PASS native WMI ABI/null-pointer validation and temporary privilege token setup/reset
+PASS: source-built System.Management local WMI queries, errors, disposal and reopen
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-management\src\check-api\check-api.csproj (in 120 ms).
+  check-api -> E:\msys64\home\topkek\powershell-compatibility.UIIT7O\mingw-w64-dotnet-management\src\check-api\bin\Release\net8.0\check-api.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.54
+PASS: System.Management implements all 819 upstream public/protected type/member signatures
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-management"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-management 8.0.0-1 (26 Oct 2026 17:59:37)
+
+$ /usr/bin/pacman -U --noconfirm mingw-w64-dotnet-management/*.pkg.tar.zst
+Result: exit 0
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-dotnet-management-8.0.0-1
+
+Total Installed Size:  0.37 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+installing mingw-w64-clang-x86_64-dotnet-management...
+
+$ bash mingw-w64-dotnet-management/check-installed.sh wmi-installed /clang64/share/doc/dotnet-management/localization.json
+Result: exit 0, new cache/output, installed source-built feed only
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-compatibility.UIIT7O\wmi-installed\check.csproj (in 205 ms).
+  check -> E:\msys64\home\topkek\powershell-compatibility.UIIT7O\wmi-installed\bin\Release\net8.0\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.25
+Runtime: .NET 8.0.0
+WMI: System.Management, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS WMI identity/source/location, exported types and 79 resource strings
+WMI OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+WMI process: dotnet.exe; PID matches current source-built runtime
+WMI invalid class: correctly returned InvalidClass
+WMI OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+WMI process: dotnet.exe; PID matches current source-built runtime
+WMI invalid class: correctly returned InvalidClass
+PASS WMI metadata/types/origins, qualifier and method enumeration, clone/compare/MOF, in-memory class/property/method/qualifier edits; no repository writes
+PASS WMI native GetOwner method invocation and independent enumerator clones
+PASS WMI native asynchronous sink delivery/completion and compacting GC
+PASS WMI native process event callback, owned child PID and subscription cancellation
+PASS WMI EnablePrivileges query and restored thread identity
+Source-built WMI backend: E:\msys64\home\topkek\powershell-compatibility.UIIT7O\wmi-installed\bin\Release\net8.0\runtimes\win-x64\native\msys-wmi-native.dll
+PASS native WMI ABI/null-pointer validation and temporary privilege token setup/reset
+PASS: source-built System.Management local WMI queries, errors, disposal and reopen
+
+$ bash tests/mmi-cim-wmi/check-wmi.sh wmi-entrypoint-check
+Result: exit 0; updated public WMI test entrypoint uses the installed source backend
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-compatibility.UIIT7O\wmi-entrypoint-check\check.csproj (in 215 ms).
+  check -> E:\msys64\home\topkek\powershell-compatibility.UIIT7O\wmi-entrypoint-check\bin\Release\net8.0\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.53
+Runtime: .NET 8.0.0
+WMI: System.Management, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS WMI identity/source/location, exported types and 79 resource strings
+WMI OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+WMI process: dotnet.exe; PID matches current source-built runtime
+WMI invalid class: correctly returned InvalidClass
+WMI OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+WMI process: dotnet.exe; PID matches current source-built runtime
+WMI invalid class: correctly returned InvalidClass
+PASS WMI metadata/types/origins, qualifier and method enumeration, clone/compare/MOF, in-memory class/property/method/qualifier edits; no repository writes
+PASS WMI native GetOwner method invocation and independent enumerator clones
+PASS WMI native asynchronous sink delivery/completion and compacting GC
+PASS WMI native process event callback, owned child PID and subscription cancellation
+PASS WMI EnablePrivileges query and restored thread identity
+Source-built WMI backend: E:\msys64\home\topkek\powershell-compatibility.UIIT7O\wmi-entrypoint-check\bin\Release\net8.0\runtimes\win-x64\native\msys-wmi-native.dll
+PASS native WMI ABI/null-pointer validation and temporary privilege token setup/reset
+PASS: source-built System.Management local WMI queries, errors, disposal and reopen
+
+$ python3 tests/powershell-deps/audit-management.py tests/powershell-deps/management-artifact-20261026.json
+Result: exit 0; source checksums, licenses/notices, exact dependency metadata, exact three-DLL ref/runtime/native payload,
+49 exports, AMD64, no CLR header, Windows/UCRT imports only and exact source-port patch match.
+
+819 API signatures and 79 resource strings passed. Native bounds, error-info ownership and token setup/reset passed.
+Live WMI queries, metadata, in-memory edits, method calls, enumerator clones, asynchronous delivery/completion, compacting GC,
+owned-child process events and cancellation passed. No WMI repository writes, registry, accounts, firewall or certificate-store changes.
+Still unverified: persistent writes/call-result semantics, remote credentials/domain/delegation/providers, full native ABI/ownership/races and PowerShell integration.

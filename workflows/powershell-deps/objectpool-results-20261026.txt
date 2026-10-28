@@ -1,0 +1,129 @@
+ObjectPool dependency package verification, 2026-10-26
+Host: win11, MSYS2 CLANG64, source-built SDK8.0.131-1/runtime8.0.0.
+
+Clean ObjectPool package
+In MSYSTEM=CLANG64 bash -lc, working directory /home/topkek/powershell-wcf.d3ETGX:
+cd /home/topkek/powershell-wcf.d3ETGX/mingw-w64-dotnet-objectpool
+PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm
+result: exit 0
+
+==> Making package: mingw-w64-dotnet-objectpool 8.0.31-1 (26 Oct 2026 16:11:27)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found aspnetcore-v8.0.31.tar.gz
+  -> Found prepare.py
+  -> Found AspNetCore.pubkey.hex
+  -> Found Check.cs
+  -> Found CheckApi.cs
+  -> Found check.sh
+  -> Found README.md
+==> Validating source files with sha256sums...
+    aspnetcore-v8.0.31.tar.gz ... Passed
+    prepare.py ... Passed
+    AspNetCore.pubkey.hex ... Passed
+    Check.cs ... Passed
+    CheckApi.cs ... Passed
+    check.sh ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+==> Starting prepare()...
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-wcf.d3ETGX\mingw-w64-dotnet-objectpool\src\build\Library.csproj (in 58 ms).
+  Library -> E:\msys64\home\topkek\powershell-wcf.d3ETGX\mingw-w64-dotnet-objectpool\src\build\bin\Release\net8.0\Microsoft.Extensions.ObjectPool.dll
+  The package Microsoft.Extensions.ObjectPool.8.0.31 is missing a readme. Go to https://aka.ms/nuget/authoring-best-practices/readme to learn why package readmes are important.
+  Successfully created package 'E:\msys64\home\topkek\powershell-wcf.d3ETGX\mingw-w64-dotnet-objectpool\src\feed\Microsoft.Extensions.ObjectPool.8.0.31.nupkg'.
+==> Starting check()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-wcf.d3ETGX\mingw-w64-dotnet-objectpool\src\consumer\check.csproj (in 319 ms).
+  check -> E:\msys64\home\topkek\powershell-wcf.d3ETGX\mingw-w64-dotnet-objectpool\src\consumer\bin\Release\net8.0\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.89
+PASS: object reuse/reset/rejection and StringBuilder clearing/capacity policy
+PASS: bounded retention, excess/retained/late disposal and disposed-state rejection
+PASS: 20,000 concurrent leases preserve independent ownership
+PASS: Microsoft.Extensions.ObjectPool preserves all 51 upstream public API declarations
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-objectpool"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-objectpool 8.0.31-1 (26 Oct 2026 16:11:48)
+
+Installed ObjectPool consumer
+In MSYSTEM=CLANG64 bash -lc, working directory /home/topkek/powershell-wcf.d3ETGX:
+bash /home/topkek/powershell-wcf.d3ETGX/mingw-w64-dotnet-objectpool/check.sh /home/topkek/powershell-wcf.d3ETGX/objectpool-installed
+result: exit 0
+
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-wcf.d3ETGX\objectpool-installed\check.csproj (in 287 ms).
+  check -> E:\msys64\home\topkek\powershell-wcf.d3ETGX\objectpool-installed\bin\Release\net8.0\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.80
+PASS: object reuse/reset/rejection and StringBuilder clearing/capacity policy
+PASS: bounded retention, excess/retained/late disposal and disposed-state rejection
+PASS: 20,000 concurrent leases preserve independent ownership
+PASS: Microsoft.Extensions.ObjectPool preserves all 51 upstream public API declarations
+
+Artifact audit
+$ python3 tests/powershell-deps/audit-objectpool.py tests/powershell-deps/objectpool-artifact-20261026.json
+result: exit 0
+Checksums, license/notices, package dependency metadata, 51 API declarations and exact NuGet payload pass.

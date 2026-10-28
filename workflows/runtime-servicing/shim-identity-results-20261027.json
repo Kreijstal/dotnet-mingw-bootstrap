@@ -1,0 +1,1190 @@
+{
+  "stub_count": 20,
+  "stub_identities": {
+    "Microsoft.Win32.SystemEvents": {
+      "original_project_sha256": "62eeed5209b602249e096d65a019b4c94c63f6c3a1cf66f3fc0a04d084d074a3",
+      "public_key_token": "cc7b13ffcd2ddd51",
+      "sha256": "5c5e1d3e641108df53a94fe209a0846fa6d7dc67544886bbf0473048a552c12b"
+    },
+    "System.CodeDom": {
+      "original_project_sha256": "2f6d2e3bee3550015d049f49fd4daab34491335a0dc11eb140ee6e755dc1726a",
+      "public_key_token": "cc7b13ffcd2ddd51",
+      "sha256": "51dbf0d4cfcea074fd427cce973bb4f3e0e1877d092328755234f6d6c273ae4a"
+    },
+    "System.Configuration.ConfigurationManager": {
+      "original_project_sha256": "97d4f29e91b6e0517341a5b8794874e287813a81e70221ad1e9d491866d5443f",
+      "public_key_token": "cc7b13ffcd2ddd51",
+      "sha256": "648ceed360abd6794d058f86cdfd6f8736704d2b7372d320d2c5d3d5d2c2eeee"
+    },
+    "System.Diagnostics.EventLog": {
+      "original_project_sha256": "e9c0a9ee81ef33bd692dc43dc51766e05259577cbd24493ce94e8449c4fae6f3",
+      "public_key_token": "cc7b13ffcd2ddd51",
+      "sha256": "8802c20a914f377ddc627d49cf090ae6393a72cbfefe8c637b6ed10501bf51c8"
+    },
+    "System.Diagnostics.PerformanceCounter": {
+      "original_project_sha256": "e1c39b3ec05e303317fa653c8398d29801854d02a1e99da3fff06988d608a57e",
+      "public_key_token": "cc7b13ffcd2ddd51",
+      "sha256": "ba3ff870239b6c0cecf5b32b4059b77633c8833236f1d03b5e56d8911a99db2e"
+    },
+    "System.IO.Ports": {
+      "original_project_sha256": "853d8553786892b4ad57edfe689868700227dfd1036fb4d2b4f0ea91a95e4bcd",
+      "public_key_token": "cc7b13ffcd2ddd51",
+      "sha256": "08413167bbcd5b3cf1c22021fdbf7d068c18b69012d3e85252f99896fd375059"
+    },
+    "System.Security.Permissions": {
+      "original_project_sha256": "ba533670b7e46b158e46a849ed9287175bf079944fd58bd9cb08d74c88b3ceae",
+      "public_key_token": "cc7b13ffcd2ddd51",
+      "sha256": "77da6c63daf0a85c94c29f769790b731091c7e25b1a7cdc391734a7f8cc10a85"
+    },
+    "System.Threading.AccessControl": {
+      "original_project_sha256": "f2f8f74a99835ba3546e07dc927a44aeb79d82de97d6c14601089a7df5c268a6",
+      "public_key_token": "b03f5f7f11d50a3a",
+      "sha256": "447995abb2a791ec5a08186893981c5606fcf826a735f001c7f1eadfc27602a4"
+    },
+    "System.Windows.Extensions": {
+      "original_project_sha256": "093d39a67be95e37cda7ebc1f9d5417185976ddbb9169080d1eb39f46d59ce8a",
+      "public_key_token": "cc7b13ffcd2ddd51",
+      "sha256": "048a4267b27b6851fb6b93e753ae16d7cca1602bc48367c424d6341740204cc4"
+    },
+    "System.Data.Odbc": {
+      "original_project_sha256": "9a4cc404173e10260c8bd5dd9de4ed30707be75245df9b623c9a1e7e6f738e6d",
+      "public_key_token": "cc7b13ffcd2ddd51",
+      "sha256": "c620e9f465aadd80b3170f1ae823d637c2fa5cb891c5f79634d35768bc7fb3bc"
+    },
+    "System.Data.OleDb": {
+      "original_project_sha256": "0336e415b12ada6b4bcd524e97518622c65a64233df429b2ce7037732a690e91",
+      "public_key_token": "cc7b13ffcd2ddd51",
+      "sha256": "9fcdd711cb0ccc3346d83fe34fe7d45588892acf66defbbee4543a2932cf2813"
+    },
+    "System.Data.SqlClient": {
+      "original_project_sha256": "2b74ef8c8c3c58a05dc6bfaab236e4744693a0c30b223789683c40742804aca9",
+      "public_key_token": "b03f5f7f11d50a3a",
+      "sha256": "aed1358fa23e4bd71aac05f1505a62d826ecb737359453f73f5eb439c9da55f5"
+    },
+    "System.Drawing.Common": {
+      "original_project_sha256": "033b7234409c165c314db851e39767e741b6b12161ac025fc2f2b38ecb50ff83",
+      "public_key_token": "cc7b13ffcd2ddd51",
+      "sha256": "9c68c797bad1c201d2a59bcf90da3f155791bebb5ec69f495ab181b2f1a68fd5"
+    },
+    "System.IO.Packaging": {
+      "original_project_sha256": "ad1d8062587a3cd010113ac91e9c72f9c23021043d5c0a2e458475d26a2b3b57",
+      "public_key_token": "b03f5f7f11d50a3a",
+      "sha256": "54628f01d46dbfa32029835bcf326db2341b7fb08c97e704a66ead5424b2e069"
+    },
+    "System.Runtime.Serialization.Schema": {
+      "original_project_sha256": "f800c04444a8bbbf9db9c69a2bf10f0c3afce7b01649892a37395a694885c42c",
+      "public_key_token": "b03f5f7f11d50a3a",
+      "sha256": "b681a93c56b917dcbf5c4dda6e98c6135ed9f3ae83653ac96db235cc3c5cf6a5"
+    },
+    "System.Security.Cryptography.Pkcs": {
+      "original_project_sha256": "b5f7ad3adc3ef0c7abc2f9de0722df01106bec6d839713b0b667de792f905705",
+      "public_key_token": "b03f5f7f11d50a3a",
+      "sha256": "7838447ed556bf797467712afc9c2b986fdb5036f1988b281b00f2b463782800"
+    },
+    "System.Security.Cryptography.ProtectedData": {
+      "original_project_sha256": "d6ad05910d14da4e630f8b11f698930ddfc30107ae81352bd19263d5b0743b6f",
+      "public_key_token": "b03f5f7f11d50a3a",
+      "sha256": "f66f3f446bc78cfbcab5492902d5bb46dd3ca511ccfefef68e4abd190a19cdd0"
+    },
+    "System.Security.Cryptography.Xml": {
+      "original_project_sha256": "a02629b37553fbcc86f8806736df82ad87071816809d19f38e71c7df681ad91f",
+      "public_key_token": "cc7b13ffcd2ddd51",
+      "sha256": "423d1bffd46ff4d440a6a57963e45180f79939bb8c6a82a41c29d0be33e25159"
+    },
+    "System.ServiceModel.Syndication": {
+      "original_project_sha256": "ec75aef040f30095d72f26a9885cd701e974fe3801b67925a09f78e90631a87f",
+      "public_key_token": "cc7b13ffcd2ddd51",
+      "sha256": "722ad8895a8532a8c6ed4ac39659e9115de7fdbdd4f7650337407242e8c1eb23"
+    },
+    "System.ServiceProcess.ServiceController": {
+      "original_project_sha256": "809728109c91fe00b483f4a2049bc2bb1122f6b747eef281aa75fc0d72661b17",
+      "public_key_token": "b03f5f7f11d50a3a",
+      "sha256": "292f9f8632656f707d890680ab4dcbcc681371d52f61496d6a606439c61c6384"
+    }
+  },
+  "framework_shim_names": [
+    "Microsoft.VisualBasic",
+    "System",
+    "System.ComponentModel.DataAnnotations",
+    "System.Configuration",
+    "System.Core",
+    "System.Data",
+    "System.Drawing",
+    "System.IO.Compression.FileSystem",
+    "System.Net",
+    "System.Numerics",
+    "System.Runtime.Serialization",
+    "System.Security",
+    "System.ServiceModel.Web",
+    "System.ServiceProcess",
+    "System.Transactions",
+    "System.Web",
+    "System.Windows",
+    "System.Xml",
+    "System.Xml.Linq",
+    "System.Xml.Serialization",
+    "WindowsBase",
+    "mscorlib"
+  ],
+  "zero_reference_version_shims": {
+    "m/build/refpack-8.0.31/out/Microsoft.VisualBasic.dll": {
+      "sha256": "778f9ecca09e48a10ce7c03c4c8456735125bd424a6260c60dbda9179513328e",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/netcoreapp-8.0.31-coreclr/lib/Microsoft.VisualBasic.dll": {
+      "sha256": "778f9ecca09e48a10ce7c03c4c8456735125bd424a6260c60dbda9179513328e",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/System.dll": {
+      "sha256": "a940b1fe660b98cfe04ef7176d84a3d3ade4f6627c30093fa6aa8f33d3b860d4",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/netcoreapp-8.0.31-coreclr/lib/System.dll": {
+      "sha256": "af0b57e90cfd004d96d000b8aa43e1d642e28b0627437df6b5e5aac68d609d13",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/System.ComponentModel.DataAnnotations.dll": {
+      "sha256": "43d185cbb7ba0a427c08177299066545d5ed013cd5b41bc214f142adee770dd9",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/netcoreapp-8.0.31-coreclr/lib/System.ComponentModel.DataAnnotations.dll": {
+      "sha256": "43d185cbb7ba0a427c08177299066545d5ed013cd5b41bc214f142adee770dd9",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/System.Configuration.dll": {
+      "sha256": "e57bd99b2bbdea91356e9a6b008b582bcf170aaa185980e4b875deba49d916d7",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/netcoreapp-8.0.31-coreclr/lib/System.Configuration.dll": {
+      "sha256": "e57bd99b2bbdea91356e9a6b008b582bcf170aaa185980e4b875deba49d916d7",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/System.Core.dll": {
+      "sha256": "0d0e9e7d3956ca31a758ba2c37b41f2c0234ff34d9b3efdfb018ff5eae1b6f06",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/netcoreapp-8.0.31-coreclr/lib/System.Core.dll": {
+      "sha256": "0d0e9e7d3956ca31a758ba2c37b41f2c0234ff34d9b3efdfb018ff5eae1b6f06",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/System.Data.dll": {
+      "sha256": "40ea77340e20e32e2010f6b21df22f63a0ac20ee1384848e104434a85f056725",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/netcoreapp-8.0.31-coreclr/lib/System.Data.dll": {
+      "sha256": "229ce0e8389d60562815ec6579393d96a41c82264d71f5ceb997e738f09620ac",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/System.Drawing.dll": {
+      "sha256": "9af67a8e9f7bc0fa932f4cfbfdbfdb63512b958c423139fcc2df57da6a4f1b69",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/netcoreapp-8.0.31-coreclr/lib/System.Drawing.dll": {
+      "sha256": "9af67a8e9f7bc0fa932f4cfbfdbfdb63512b958c423139fcc2df57da6a4f1b69",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/System.IO.Compression.FileSystem.dll": {
+      "sha256": "d0842aa0315ba30ec976f239c6e7821cf473fc7a2a02963ea0d49543791895d5",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/netcoreapp-8.0.31-coreclr/lib/System.IO.Compression.FileSystem.dll": {
+      "sha256": "d0842aa0315ba30ec976f239c6e7821cf473fc7a2a02963ea0d49543791895d5",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/System.Net.dll": {
+      "sha256": "149abb3f39fccf796194f9be7379d8916eaf0ab64700294b77c9569b21287d69",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/netcoreapp-8.0.31-coreclr/lib/System.Net.dll": {
+      "sha256": "149abb3f39fccf796194f9be7379d8916eaf0ab64700294b77c9569b21287d69",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/System.Numerics.dll": {
+      "sha256": "9ad9655a26e899bc0ce85df592be84a039475c8fcf7d8cf2b454411bf13dd6f9",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/netcoreapp-8.0.31-coreclr/lib/System.Numerics.dll": {
+      "sha256": "9ad9655a26e899bc0ce85df592be84a039475c8fcf7d8cf2b454411bf13dd6f9",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/System.Runtime.Serialization.dll": {
+      "sha256": "63a62733e6bc7013b91b8e8cf7f3c3f8bd7537870e0cb08d8d8674b1dcc35ceb",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/netcoreapp-8.0.31-coreclr/lib/System.Runtime.Serialization.dll": {
+      "sha256": "63a62733e6bc7013b91b8e8cf7f3c3f8bd7537870e0cb08d8d8674b1dcc35ceb",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/System.Security.dll": {
+      "sha256": "0d0e4b645d62b1694c215d12c57c4bbb2439f207293d713a9a5d907ea3f1831f",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/netcoreapp-8.0.31-coreclr/lib/System.Security.dll": {
+      "sha256": "0d0e4b645d62b1694c215d12c57c4bbb2439f207293d713a9a5d907ea3f1831f",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/System.ServiceModel.Web.dll": {
+      "sha256": "8f58eabdec4799dc031bcebdf6683847842d2515e9951e8341c7cad84f5eeda0",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/netcoreapp-8.0.31-coreclr/lib/System.ServiceModel.Web.dll": {
+      "sha256": "8f58eabdec4799dc031bcebdf6683847842d2515e9951e8341c7cad84f5eeda0",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/System.ServiceProcess.dll": {
+      "sha256": "abf040053e18567a73c795c8be80583a5235c1b2da633b596b2ba9f763494656",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/netcoreapp-8.0.31-coreclr/lib/System.ServiceProcess.dll": {
+      "sha256": "abf040053e18567a73c795c8be80583a5235c1b2da633b596b2ba9f763494656",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/System.Transactions.dll": {
+      "sha256": "d896fad4e2d2ac69b08aa260df01f1a84638cb5d54a2ebbdf9e13079bab3a26a",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/netcoreapp-8.0.31-coreclr/lib/System.Transactions.dll": {
+      "sha256": "d896fad4e2d2ac69b08aa260df01f1a84638cb5d54a2ebbdf9e13079bab3a26a",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/System.Web.dll": {
+      "sha256": "644e9c7388e13fe62c6bf5352895b98d5bde83a82480a264d9d3389f48655536",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/netcoreapp-8.0.31-coreclr/lib/System.Web.dll": {
+      "sha256": "644e9c7388e13fe62c6bf5352895b98d5bde83a82480a264d9d3389f48655536",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/System.Windows.dll": {
+      "sha256": "46ea121fcd1dc63cd9511865e53313677406b7b9367f97802b5009bf72f3c585",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/netcoreapp-8.0.31-coreclr/lib/System.Windows.dll": {
+      "sha256": "46ea121fcd1dc63cd9511865e53313677406b7b9367f97802b5009bf72f3c585",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/System.Xml.dll": {
+      "sha256": "5d5540ed852cc911ed531fcd2b85ddb4093cf0c92a55cfdd9675c9e01b0eb2e5",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/netcoreapp-8.0.31-coreclr/lib/System.Xml.dll": {
+      "sha256": "5d5540ed852cc911ed531fcd2b85ddb4093cf0c92a55cfdd9675c9e01b0eb2e5",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/System.Xml.Linq.dll": {
+      "sha256": "ed7ab8d42a810239d85347455619994ec7279bbf3fa0a744e81f60cecda3b122",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/netcoreapp-8.0.31-coreclr/lib/System.Xml.Linq.dll": {
+      "sha256": "ed7ab8d42a810239d85347455619994ec7279bbf3fa0a744e81f60cecda3b122",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/System.Xml.Serialization.dll": {
+      "sha256": "e340770d7f268a340b569f3cc626ced87eac672a36b71027a6e7dd53ad7109b2",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/netcoreapp-8.0.31-coreclr/lib/System.Xml.Serialization.dll": {
+      "sha256": "e340770d7f268a340b569f3cc626ced87eac672a36b71027a6e7dd53ad7109b2",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/WindowsBase.dll": {
+      "sha256": "3f8587742a1bc32cd46055f6138045792d69f5e7b48316518faf5053b111a50c",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/netcoreapp-8.0.31-coreclr/lib/WindowsBase.dll": {
+      "sha256": "3f8587742a1bc32cd46055f6138045792d69f5e7b48316518faf5053b111a50c",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/mscorlib.dll": {
+      "sha256": "1fc155445c316644eed670a6a7c57f328e871f8e67f3ccc63a935dd798859340",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/netcoreapp-8.0.31-coreclr/lib/mscorlib.dll": {
+      "sha256": "cd93369c5b096a0373054b80101d8c752afcf9ef0f948f4b588de73b9df4deb9",
+      "reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    }
+  },
+  "original_arcade_task_audit": {
+    "m/build/refpack-8.0.31/out/System.Data.dll": {
+      "before_sha256": "911cd8eb49fe5523191f06fdf409e2352ca4a48527a80e21e3899360eac81b7c",
+      "after_sha256": "40ea77340e20e32e2010f6b21df22f63a0ac20ee1384848e104434a85f056725",
+      "original_task_inputs": {
+        "GenFacades-BuildTask.cs": "62cc755b3bfc635db520c4bad47d14c72d04a1de3acc22ffe1b22e5bca407572",
+        "ClearAssemblyReferenceVersions.cs": "946f05a407e5f919f55093a1ab7f532a4272a86d0e5cd8ca3a4bddcc4c45781b",
+        "GenFacades.ClearVersion.targets": "56ca6f12848f16d8a749c4ec1c6e81ceb767e1953c097484bfef979eb4bd77c3"
+      },
+      "assembly_reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/libraries-8.0.31/obj/System.Data/System.Data.dll": {
+      "before_sha256": "93c22e30c886da54e96c7f022ebb6c3d4da1cff86468a43da2f7ecfe1f6e8a94",
+      "after_sha256": "229ce0e8389d60562815ec6579393d96a41c82264d71f5ceb997e738f09620ac",
+      "original_task_inputs": {
+        "GenFacades-BuildTask.cs": "62cc755b3bfc635db520c4bad47d14c72d04a1de3acc22ffe1b22e5bca407572",
+        "ClearAssemblyReferenceVersions.cs": "946f05a407e5f919f55093a1ab7f532a4272a86d0e5cd8ca3a4bddcc4c45781b",
+        "GenFacades.ClearVersion.targets": "56ca6f12848f16d8a749c4ec1c6e81ceb767e1953c097484bfef979eb4bd77c3"
+      },
+      "assembly_reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/System.dll": {
+      "before_sha256": "521dcdcd84625a13577ffb314fe094085448cf7e2b4daf2ac5e1206b88e5e48c",
+      "after_sha256": "a940b1fe660b98cfe04ef7176d84a3d3ade4f6627c30093fa6aa8f33d3b860d4",
+      "original_task_inputs": {
+        "GenFacades-BuildTask.cs": "62cc755b3bfc635db520c4bad47d14c72d04a1de3acc22ffe1b22e5bca407572",
+        "ClearAssemblyReferenceVersions.cs": "946f05a407e5f919f55093a1ab7f532a4272a86d0e5cd8ca3a4bddcc4c45781b",
+        "GenFacades.ClearVersion.targets": "56ca6f12848f16d8a749c4ec1c6e81ceb767e1953c097484bfef979eb4bd77c3"
+      },
+      "assembly_reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/mscorlib.dll": {
+      "before_sha256": "4c15d386d927f0ba97ebfb7d442a95aaf617c157c269e74a61c2478a7a380d96",
+      "after_sha256": "1fc155445c316644eed670a6a7c57f328e871f8e67f3ccc63a935dd798859340",
+      "original_task_inputs": {
+        "GenFacades-BuildTask.cs": "62cc755b3bfc635db520c4bad47d14c72d04a1de3acc22ffe1b22e5bca407572",
+        "ClearAssemblyReferenceVersions.cs": "946f05a407e5f919f55093a1ab7f532a4272a86d0e5cd8ca3a4bddcc4c45781b",
+        "GenFacades.ClearVersion.targets": "56ca6f12848f16d8a749c4ec1c6e81ceb767e1953c097484bfef979eb4bd77c3"
+      },
+      "assembly_reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/Microsoft.VisualBasic.dll": {
+      "before_sha256": "79e064f66da9d2288c001dce9234a97baf5ead8b710723ee112cf2ae441fc310",
+      "after_sha256": "778f9ecca09e48a10ce7c03c4c8456735125bd424a6260c60dbda9179513328e",
+      "original_task_inputs": {
+        "GenFacades-BuildTask.cs": "62cc755b3bfc635db520c4bad47d14c72d04a1de3acc22ffe1b22e5bca407572",
+        "ClearAssemblyReferenceVersions.cs": "946f05a407e5f919f55093a1ab7f532a4272a86d0e5cd8ca3a4bddcc4c45781b",
+        "GenFacades.ClearVersion.targets": "56ca6f12848f16d8a749c4ec1c6e81ceb767e1953c097484bfef979eb4bd77c3"
+      },
+      "assembly_reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/System.ComponentModel.DataAnnotations.dll": {
+      "before_sha256": "290d10b1f246e0b84b9a43cd4e3833d8eccb0ba6479afe91cafa619a8b8f89e4",
+      "after_sha256": "43d185cbb7ba0a427c08177299066545d5ed013cd5b41bc214f142adee770dd9",
+      "original_task_inputs": {
+        "GenFacades-BuildTask.cs": "62cc755b3bfc635db520c4bad47d14c72d04a1de3acc22ffe1b22e5bca407572",
+        "ClearAssemblyReferenceVersions.cs": "946f05a407e5f919f55093a1ab7f532a4272a86d0e5cd8ca3a4bddcc4c45781b",
+        "GenFacades.ClearVersion.targets": "56ca6f12848f16d8a749c4ec1c6e81ceb767e1953c097484bfef979eb4bd77c3"
+      },
+      "assembly_reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/System.Configuration.dll": {
+      "before_sha256": "c278e5ae1d96a6fcad5a6ad8984870c6a13d2fda745c734fceadad2c39ecd2c2",
+      "after_sha256": "e57bd99b2bbdea91356e9a6b008b582bcf170aaa185980e4b875deba49d916d7",
+      "original_task_inputs": {
+        "GenFacades-BuildTask.cs": "62cc755b3bfc635db520c4bad47d14c72d04a1de3acc22ffe1b22e5bca407572",
+        "ClearAssemblyReferenceVersions.cs": "946f05a407e5f919f55093a1ab7f532a4272a86d0e5cd8ca3a4bddcc4c45781b",
+        "GenFacades.ClearVersion.targets": "56ca6f12848f16d8a749c4ec1c6e81ceb767e1953c097484bfef979eb4bd77c3"
+      },
+      "assembly_reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/System.Core.dll": {
+      "before_sha256": "2c9b121ab5c480e886de4fc25f9da79244837961ac79a67566945a236a0703a6",
+      "after_sha256": "0d0e9e7d3956ca31a758ba2c37b41f2c0234ff34d9b3efdfb018ff5eae1b6f06",
+      "original_task_inputs": {
+        "GenFacades-BuildTask.cs": "62cc755b3bfc635db520c4bad47d14c72d04a1de3acc22ffe1b22e5bca407572",
+        "ClearAssemblyReferenceVersions.cs": "946f05a407e5f919f55093a1ab7f532a4272a86d0e5cd8ca3a4bddcc4c45781b",
+        "GenFacades.ClearVersion.targets": "56ca6f12848f16d8a749c4ec1c6e81ceb767e1953c097484bfef979eb4bd77c3"
+      },
+      "assembly_reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/System.Drawing.dll": {
+      "before_sha256": "c9caf8558994e8f384d170cdedc575ec7ebdb36af9738f534f8c154c15419400",
+      "after_sha256": "9af67a8e9f7bc0fa932f4cfbfdbfdb63512b958c423139fcc2df57da6a4f1b69",
+      "original_task_inputs": {
+        "GenFacades-BuildTask.cs": "62cc755b3bfc635db520c4bad47d14c72d04a1de3acc22ffe1b22e5bca407572",
+        "ClearAssemblyReferenceVersions.cs": "946f05a407e5f919f55093a1ab7f532a4272a86d0e5cd8ca3a4bddcc4c45781b",
+        "GenFacades.ClearVersion.targets": "56ca6f12848f16d8a749c4ec1c6e81ceb767e1953c097484bfef979eb4bd77c3"
+      },
+      "assembly_reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/System.IO.Compression.FileSystem.dll": {
+      "before_sha256": "2a426c194f101172feaa3f1f33b13d270e4e12367d64233cee11ed8c32e8506f",
+      "after_sha256": "d0842aa0315ba30ec976f239c6e7821cf473fc7a2a02963ea0d49543791895d5",
+      "original_task_inputs": {
+        "GenFacades-BuildTask.cs": "62cc755b3bfc635db520c4bad47d14c72d04a1de3acc22ffe1b22e5bca407572",
+        "ClearAssemblyReferenceVersions.cs": "946f05a407e5f919f55093a1ab7f532a4272a86d0e5cd8ca3a4bddcc4c45781b",
+        "GenFacades.ClearVersion.targets": "56ca6f12848f16d8a749c4ec1c6e81ceb767e1953c097484bfef979eb4bd77c3"
+      },
+      "assembly_reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/System.Net.dll": {
+      "before_sha256": "b0de680c30fd05a299ce266dd345449cc02e90723e91e08c61a85c60c59867f4",
+      "after_sha256": "149abb3f39fccf796194f9be7379d8916eaf0ab64700294b77c9569b21287d69",
+      "original_task_inputs": {
+        "GenFacades-BuildTask.cs": "62cc755b3bfc635db520c4bad47d14c72d04a1de3acc22ffe1b22e5bca407572",
+        "ClearAssemblyReferenceVersions.cs": "946f05a407e5f919f55093a1ab7f532a4272a86d0e5cd8ca3a4bddcc4c45781b",
+        "GenFacades.ClearVersion.targets": "56ca6f12848f16d8a749c4ec1c6e81ceb767e1953c097484bfef979eb4bd77c3"
+      },
+      "assembly_reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/System.Numerics.dll": {
+      "before_sha256": "5c644d3c27b393c3a530e1a55b7c43eebb10e38fff610da356dfc2740849c87c",
+      "after_sha256": "9ad9655a26e899bc0ce85df592be84a039475c8fcf7d8cf2b454411bf13dd6f9",
+      "original_task_inputs": {
+        "GenFacades-BuildTask.cs": "62cc755b3bfc635db520c4bad47d14c72d04a1de3acc22ffe1b22e5bca407572",
+        "ClearAssemblyReferenceVersions.cs": "946f05a407e5f919f55093a1ab7f532a4272a86d0e5cd8ca3a4bddcc4c45781b",
+        "GenFacades.ClearVersion.targets": "56ca6f12848f16d8a749c4ec1c6e81ceb767e1953c097484bfef979eb4bd77c3"
+      },
+      "assembly_reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/System.Runtime.Serialization.dll": {
+      "before_sha256": "a55a2d4ecfc8fefc26683c2b01134e04eac5029572e98c32d344157e73291614",
+      "after_sha256": "63a62733e6bc7013b91b8e8cf7f3c3f8bd7537870e0cb08d8d8674b1dcc35ceb",
+      "original_task_inputs": {
+        "GenFacades-BuildTask.cs": "62cc755b3bfc635db520c4bad47d14c72d04a1de3acc22ffe1b22e5bca407572",
+        "ClearAssemblyReferenceVersions.cs": "946f05a407e5f919f55093a1ab7f532a4272a86d0e5cd8ca3a4bddcc4c45781b",
+        "GenFacades.ClearVersion.targets": "56ca6f12848f16d8a749c4ec1c6e81ceb767e1953c097484bfef979eb4bd77c3"
+      },
+      "assembly_reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/System.Security.dll": {
+      "before_sha256": "87a784d1cd348783b15f0b43ca976bcc23241c2f9f54a0a6cbd070d5d98a7f46",
+      "after_sha256": "0d0e4b645d62b1694c215d12c57c4bbb2439f207293d713a9a5d907ea3f1831f",
+      "original_task_inputs": {
+        "GenFacades-BuildTask.cs": "62cc755b3bfc635db520c4bad47d14c72d04a1de3acc22ffe1b22e5bca407572",
+        "ClearAssemblyReferenceVersions.cs": "946f05a407e5f919f55093a1ab7f532a4272a86d0e5cd8ca3a4bddcc4c45781b",
+        "GenFacades.ClearVersion.targets": "56ca6f12848f16d8a749c4ec1c6e81ceb767e1953c097484bfef979eb4bd77c3"
+      },
+      "assembly_reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/System.ServiceModel.Web.dll": {
+      "before_sha256": "0e227744d5ed0b53565b2d877b90762546a7a1ee79c190f06e3387b85b6ee4e1",
+      "after_sha256": "8f58eabdec4799dc031bcebdf6683847842d2515e9951e8341c7cad84f5eeda0",
+      "original_task_inputs": {
+        "GenFacades-BuildTask.cs": "62cc755b3bfc635db520c4bad47d14c72d04a1de3acc22ffe1b22e5bca407572",
+        "ClearAssemblyReferenceVersions.cs": "946f05a407e5f919f55093a1ab7f532a4272a86d0e5cd8ca3a4bddcc4c45781b",
+        "GenFacades.ClearVersion.targets": "56ca6f12848f16d8a749c4ec1c6e81ceb767e1953c097484bfef979eb4bd77c3"
+      },
+      "assembly_reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/System.ServiceProcess.dll": {
+      "before_sha256": "a339ecddacacc45d1ba609d58a865887a253ded65099b4ef2a3b38386be82209",
+      "after_sha256": "abf040053e18567a73c795c8be80583a5235c1b2da633b596b2ba9f763494656",
+      "original_task_inputs": {
+        "GenFacades-BuildTask.cs": "62cc755b3bfc635db520c4bad47d14c72d04a1de3acc22ffe1b22e5bca407572",
+        "ClearAssemblyReferenceVersions.cs": "946f05a407e5f919f55093a1ab7f532a4272a86d0e5cd8ca3a4bddcc4c45781b",
+        "GenFacades.ClearVersion.targets": "56ca6f12848f16d8a749c4ec1c6e81ceb767e1953c097484bfef979eb4bd77c3"
+      },
+      "assembly_reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/System.Transactions.dll": {
+      "before_sha256": "c34f240b4c21336f87b37016db3da48e9048e1b84d7299ce04ddfadd0edadf9c",
+      "after_sha256": "d896fad4e2d2ac69b08aa260df01f1a84638cb5d54a2ebbdf9e13079bab3a26a",
+      "original_task_inputs": {
+        "GenFacades-BuildTask.cs": "62cc755b3bfc635db520c4bad47d14c72d04a1de3acc22ffe1b22e5bca407572",
+        "ClearAssemblyReferenceVersions.cs": "946f05a407e5f919f55093a1ab7f532a4272a86d0e5cd8ca3a4bddcc4c45781b",
+        "GenFacades.ClearVersion.targets": "56ca6f12848f16d8a749c4ec1c6e81ceb767e1953c097484bfef979eb4bd77c3"
+      },
+      "assembly_reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/System.Web.dll": {
+      "before_sha256": "0477bdfd2d7129f85bdd32907754b96c3b446124f9064ad3b40758c5fc333a97",
+      "after_sha256": "644e9c7388e13fe62c6bf5352895b98d5bde83a82480a264d9d3389f48655536",
+      "original_task_inputs": {
+        "GenFacades-BuildTask.cs": "62cc755b3bfc635db520c4bad47d14c72d04a1de3acc22ffe1b22e5bca407572",
+        "ClearAssemblyReferenceVersions.cs": "946f05a407e5f919f55093a1ab7f532a4272a86d0e5cd8ca3a4bddcc4c45781b",
+        "GenFacades.ClearVersion.targets": "56ca6f12848f16d8a749c4ec1c6e81ceb767e1953c097484bfef979eb4bd77c3"
+      },
+      "assembly_reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/System.Windows.dll": {
+      "before_sha256": "ec6e441f36bca5b03af7f982f5204edb23a0d2bb11e881dfbd46bf1f382e9d58",
+      "after_sha256": "46ea121fcd1dc63cd9511865e53313677406b7b9367f97802b5009bf72f3c585",
+      "original_task_inputs": {
+        "GenFacades-BuildTask.cs": "62cc755b3bfc635db520c4bad47d14c72d04a1de3acc22ffe1b22e5bca407572",
+        "ClearAssemblyReferenceVersions.cs": "946f05a407e5f919f55093a1ab7f532a4272a86d0e5cd8ca3a4bddcc4c45781b",
+        "GenFacades.ClearVersion.targets": "56ca6f12848f16d8a749c4ec1c6e81ceb767e1953c097484bfef979eb4bd77c3"
+      },
+      "assembly_reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/System.Xml.dll": {
+      "before_sha256": "bab569c582fa6851a0ba3cb2b5f0db578a7495dab61014a8df3512e784455fbe",
+      "after_sha256": "5d5540ed852cc911ed531fcd2b85ddb4093cf0c92a55cfdd9675c9e01b0eb2e5",
+      "original_task_inputs": {
+        "GenFacades-BuildTask.cs": "62cc755b3bfc635db520c4bad47d14c72d04a1de3acc22ffe1b22e5bca407572",
+        "ClearAssemblyReferenceVersions.cs": "946f05a407e5f919f55093a1ab7f532a4272a86d0e5cd8ca3a4bddcc4c45781b",
+        "GenFacades.ClearVersion.targets": "56ca6f12848f16d8a749c4ec1c6e81ceb767e1953c097484bfef979eb4bd77c3"
+      },
+      "assembly_reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/System.Xml.Linq.dll": {
+      "before_sha256": "ebd3e747183c2ba2903195cf53be5b75c07cce0f0b0fea6147e2e0fd3f45a232",
+      "after_sha256": "ed7ab8d42a810239d85347455619994ec7279bbf3fa0a744e81f60cecda3b122",
+      "original_task_inputs": {
+        "GenFacades-BuildTask.cs": "62cc755b3bfc635db520c4bad47d14c72d04a1de3acc22ffe1b22e5bca407572",
+        "ClearAssemblyReferenceVersions.cs": "946f05a407e5f919f55093a1ab7f532a4272a86d0e5cd8ca3a4bddcc4c45781b",
+        "GenFacades.ClearVersion.targets": "56ca6f12848f16d8a749c4ec1c6e81ceb767e1953c097484bfef979eb4bd77c3"
+      },
+      "assembly_reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/System.Xml.Serialization.dll": {
+      "before_sha256": "f15aa859d78303d5cc4ae29b1c07ad50379092bb9d40dcf067a35c631e7417be",
+      "after_sha256": "e340770d7f268a340b569f3cc626ced87eac672a36b71027a6e7dd53ad7109b2",
+      "original_task_inputs": {
+        "GenFacades-BuildTask.cs": "62cc755b3bfc635db520c4bad47d14c72d04a1de3acc22ffe1b22e5bca407572",
+        "ClearAssemblyReferenceVersions.cs": "946f05a407e5f919f55093a1ab7f532a4272a86d0e5cd8ca3a4bddcc4c45781b",
+        "GenFacades.ClearVersion.targets": "56ca6f12848f16d8a749c4ec1c6e81ceb767e1953c097484bfef979eb4bd77c3"
+      },
+      "assembly_reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/refpack-8.0.31/out/WindowsBase.dll": {
+      "before_sha256": "c52b6410d5e785a8c3e1813ca8f96b04620e056f50d50fe6bfdd6f42f165879c",
+      "after_sha256": "3f8587742a1bc32cd46055f6138045792d69f5e7b48316518faf5053b111a50c",
+      "original_task_inputs": {
+        "GenFacades-BuildTask.cs": "62cc755b3bfc635db520c4bad47d14c72d04a1de3acc22ffe1b22e5bca407572",
+        "ClearAssemblyReferenceVersions.cs": "946f05a407e5f919f55093a1ab7f532a4272a86d0e5cd8ca3a4bddcc4c45781b",
+        "GenFacades.ClearVersion.targets": "56ca6f12848f16d8a749c4ec1c6e81ceb767e1953c097484bfef979eb4bd77c3"
+      },
+      "assembly_reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/libraries-8.0.31/obj/System/System.dll": {
+      "before_sha256": "7ca7adf43795b43050251393ea8b24421373467b00929eb7df4c94ca4a050ac0",
+      "after_sha256": "af0b57e90cfd004d96d000b8aa43e1d642e28b0627437df6b5e5aac68d609d13",
+      "original_task_inputs": {
+        "GenFacades-BuildTask.cs": "62cc755b3bfc635db520c4bad47d14c72d04a1de3acc22ffe1b22e5bca407572",
+        "ClearAssemblyReferenceVersions.cs": "946f05a407e5f919f55093a1ab7f532a4272a86d0e5cd8ca3a4bddcc4c45781b",
+        "GenFacades.ClearVersion.targets": "56ca6f12848f16d8a749c4ec1c6e81ceb767e1953c097484bfef979eb4bd77c3"
+      },
+      "assembly_reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    },
+    "m/build/libraries-8.0.31/obj/mscorlib/mscorlib.dll": {
+      "before_sha256": "3ef564c11b0c0f0d694018fd400ddc7b7d4cd2f4fc586197446ceabe5aaaf4c9",
+      "after_sha256": "cd93369c5b096a0373054b80101d8c752afcf9ef0f948f4b588de73b9df4deb9",
+      "original_task_inputs": {
+        "GenFacades-BuildTask.cs": "62cc755b3bfc635db520c4bad47d14c72d04a1de3acc22ffe1b22e5bca407572",
+        "ClearAssemblyReferenceVersions.cs": "946f05a407e5f919f55093a1ab7f532a4272a86d0e5cd8ca3a4bddcc4c45781b",
+        "GenFacades.ClearVersion.targets": "56ca6f12848f16d8a749c4ec1c6e81ceb767e1953c097484bfef979eb4bd77c3"
+      },
+      "assembly_reference_versions": [
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0",
+        "0.0.0.0"
+      ]
+    }
+  }
+}

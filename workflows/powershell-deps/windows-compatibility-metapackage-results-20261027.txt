@@ -1,0 +1,303 @@
+Microsoft.Windows.Compatibility8.0.31 source metapackage native build/install
+Previous goal turn:progress. Current goal turn:progress. Full objective incomplete.
+Host: win11/MSYS2 CLANG64. Actual installed runtime8.0.31 (candidate2).
+Native root: /home/topkek/windows-compatibility-pkg.lTzYm2
+Pinned windowsdesktop337963009d48a3016b50172b451b4e80f78791a7, archive
+SHA256e5f9b43643a3dfdf1afae7e2f3f54d5e140513191c82dadcc56301b9cb494b94.
+
+Original NoTargets project has no library payload. Metadata evaluation removes
+only its SDK import and retains all original properties, references/conditions.
+All five framework groups and191 dependencies match source and published nuspec.
+The source NuGet.Packaging6.9.1 library creates the package. No vendor IL used.
+Source readme is LF; published readme has identical text with CRLF line endings.
+Icon is byte-identical to source Arcade/published data. Original licenses included.
+Metadata-only published baseline archive has no implementation DLL/executable.
+
+Initial prototype had two build-host issues, both corrected before clean build:
+1. Source Directory.Build.props names a THIRD-PARTY-NOTICES file absent from the
+   actual archive. No third-party implementation payload exists; preserve actual
+   original source licenses rather than invent the missing file.
+2. Empty root file target produced an empty zip entry path in source NuGet6.9.
+   Explicit source-to-same-filename mappings yield the intended root assets.
+All production dependency metadata remains unchanged.
+
+Native artifact: mingw-w64-clang-x86_64-dotnet-windows-compatibility-8.0.31-1-any.pkg.tar.zst
+SHA256: b99748fb9d201c936642473b41a2f33e890934e002ae68bfda408eff4131dbe2
+$ makepkg --cleanbuild --force --noconfirm
+==> Making package: mingw-w64-dotnet-windows-compatibility 8.0.31-1 (27 Oct 2026 18:11:29)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found windowsdesktop-8.0.31.tar.gz
+  -> Found arcade-444c2ef3c414558e2e409ee346f1faebb19687eb.tar.gz
+  -> Found prepare.py
+  -> Found build.py
+  -> Found Pack.cs
+  -> Found audit.py
+  -> Found published.nuspec
+  -> Found Check.cs
+  -> Found check.sh
+  -> Found verify-consumer.py
+  -> Found check-installed.sh
+  -> Found README.md
+==> Validating source files with sha256sums...
+    windowsdesktop-8.0.31.tar.gz ... Passed
+    arcade-444c2ef3c414558e2e409ee346f1faebb19687eb.tar.gz ... Passed
+    prepare.py ... Passed
+    build.py ... Passed
+    Pack.cs ... Passed
+    audit.py ... Passed
+    published.nuspec ... Passed
+    Check.cs ... Passed
+    check.sh ... Passed
+    verify-consumer.py ... Passed
+    check-installed.sh ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+==> Starting prepare()...
+PASS pinned complete metapackage project/version/readme/license inputs and source Arcade icon; no implementation binaries extracted
+==> Starting build()...
+PASS package generated by source NuGet.Packaging 6.9.1.3
+PASS source NuGet.Packaging produced complete five-framework metapackage: 191 dependency entries; source dependency closure/consumer checks remain required
+==> Starting check()...
+PASS complete original/published five-framework191 dependency entries, exact source readme/icon/licenses and zero implementation libraries
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\windows-compatibility-pkg.lTzYm2\src\consumer\Check.csproj (in 735 ms).
+E:\msys64\home\topkek\windows-compatibility-pkg.lTzYm2\src\consumer\Program.cs(47,15): warning CS0618: 'SqlConnectionStringBuilder' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\windows-compatibility-pkg.lTzYm2\src\consumer\Check.csproj]
+  Check -> E:\msys64\home\topkek\windows-compatibility-pkg.lTzYm2\src\consumer\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\windows-compatibility-pkg.lTzYm2\src\consumer\Program.cs(47,15): warning CS0618: 'SqlConnectionStringBuilder' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\windows-compatibility-pkg.lTzYm2\src\consumer\Check.csproj]
+    1 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:07.17
+Runtime: 8.0.31
+LOAD Microsoft.Win32.Registry.AccessControl 8.0.0.0 types=1
+LOAD Microsoft.Win32.SystemEvents 8.0.0.0 types=19
+LOAD System.CodeDom 8.0.0.0 types=105
+LOAD System.ComponentModel.Composition 8.0.0.0 types=62
+LOAD System.Configuration.ConfigurationManager 8.0.0.0 types=164
+LOAD System.Data.Odbc 8.0.0.0 types=24
+LOAD System.Data.OleDb 8.0.0.0 types=25
+LOAD System.Diagnostics.EventLog 8.0.0.0 types=44
+LOAD System.Diagnostics.PerformanceCounter 8.0.0.0 types=20
+LOAD System.DirectoryServices.AccountManagement 8.0.0.0 types=26
+LOAD System.DirectoryServices.Protocols 8.0.0.0 types=84
+LOAD System.DirectoryServices 8.0.0.0 types=136
+LOAD System.IO.Packaging 8.0.0.0 types=15
+LOAD System.IO.Ports 8.0.0.0 types=13
+LOAD System.Management 8.0.0.0 types=59
+LOAD System.Reflection.Context 8.0.0.0 types=1
+LOAD System.Runtime.Caching 8.0.0.0 types=19
+LOAD System.Security.Cryptography.Pkcs 8.0.0.0 types=48
+LOAD System.Security.Cryptography.ProtectedData 8.0.0.0 types=2
+LOAD System.Security.Cryptography.Xml 8.0.0.0 types=41
+LOAD System.Security.Permissions 8.0.0.0 types=181
+LOAD System.ServiceModel.Syndication 8.0.0.0 types=39
+LOAD System.ServiceProcess.ServiceController 8.0.0.0 types=10
+LOAD System.Speech 8.0.0.0 types=104
+LOAD System.Text.Encoding.CodePages 8.0.0.0 types=1
+LOAD System.Threading.AccessControl 8.0.0.0 types=16
+LOAD System.Drawing.Common 8.0.0.0 types=158
+LOAD System.Data.SqlClient 4.6.1.6 types=51
+LOAD System.ServiceModel.Duplex 4.10.3.0 types=0
+LOAD System.ServiceModel.Http 4.10.3.0 types=0
+LOAD System.ServiceModel.NetTcp 4.10.3.0 types=0
+LOAD System.ServiceModel.Primitives 4.10.3.0 types=0
+LOAD System.ServiceModel.Security 4.10.3.0 types=0
+LOAD System.Web.Services.Description 4.10.3.0 types=70
+LOAD System.ComponentModel.Composition.Registration 8.0.0.0 types=6
+PASS whole metapackage dependency load, owned cache/bitmap, local WMI, codepages/CodeDom, SQL metadata and WCF/Syndication; no Framework fallback
+PASS full fresh net8 source closure: 40 package archives and 69 consumer DLLs; all35 original direct dependency edges selected
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-windows-compatibility"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-windows-compatibility 8.0.31-1 (27 Oct 2026 18:13:52)
+
+RESULT:exit0 (durable makepkg.exit also0)
+
+$ /usr/bin/python3 audit-native.py mingw-w64-clang-x86_64-dotnet-windows-compatibility-8.0.31-1-any.pkg.tar.zst src --output artifact-proof.json
+PASS exact native metapackage/provenance/license bytes and all39 source owner dependencies;191 metadata entries and fresh source closure; installed check remains required
+RESULT:exit0
+
+$ pacman -U --noconfirm ./mingw-w64-clang-x86_64-dotnet-windows-compatibility-8.0.31-1-any.pkg.tar.zst
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-dotnet-windows-compatibility-8.0.31-1
+
+Total Installed Size:  0.04 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+installing mingw-w64-clang-x86_64-dotnet-windows-compatibility...
+RESULT:exit0
+
+$ bash check-installed.sh installed-check1
+mingw-w64-clang-x86_64-dotnet-windows-compatibility 8.0.31-1
+PASS installed source metapackage bytes and native feed ownership
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\windows-compatibility-pkg.lTzYm2\installed-check1\Check.csproj (in 580 ms).
+E:\msys64\home\topkek\windows-compatibility-pkg.lTzYm2\installed-check1\Program.cs(47,15): warning CS0618: 'SqlConnectionStringBuilder' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\windows-compatibility-pkg.lTzYm2\installed-check1\Check.csproj]
+  Check -> E:\msys64\home\topkek\windows-compatibility-pkg.lTzYm2\installed-check1\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\windows-compatibility-pkg.lTzYm2\installed-check1\Program.cs(47,15): warning CS0618: 'SqlConnectionStringBuilder' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\windows-compatibility-pkg.lTzYm2\installed-check1\Check.csproj]
+    1 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:06.57
+Runtime: 8.0.31
+LOAD Microsoft.Win32.Registry.AccessControl 8.0.0.0 types=1
+LOAD Microsoft.Win32.SystemEvents 8.0.0.0 types=19
+LOAD System.CodeDom 8.0.0.0 types=105
+LOAD System.ComponentModel.Composition 8.0.0.0 types=62
+LOAD System.Configuration.ConfigurationManager 8.0.0.0 types=164
+LOAD System.Data.Odbc 8.0.0.0 types=24
+LOAD System.Data.OleDb 8.0.0.0 types=25
+LOAD System.Diagnostics.EventLog 8.0.0.0 types=44
+LOAD System.Diagnostics.PerformanceCounter 8.0.0.0 types=20
+LOAD System.DirectoryServices.AccountManagement 8.0.0.0 types=26
+LOAD System.DirectoryServices.Protocols 8.0.0.0 types=84
+LOAD System.DirectoryServices 8.0.0.0 types=136
+LOAD System.IO.Packaging 8.0.0.0 types=15
+LOAD System.IO.Ports 8.0.0.0 types=13
+LOAD System.Management 8.0.0.0 types=59
+LOAD System.Reflection.Context 8.0.0.0 types=1
+LOAD System.Runtime.Caching 8.0.0.0 types=19
+LOAD System.Security.Cryptography.Pkcs 8.0.0.0 types=48
+LOAD System.Security.Cryptography.ProtectedData 8.0.0.0 types=2
+LOAD System.Security.Cryptography.Xml 8.0.0.0 types=41
+LOAD System.Security.Permissions 8.0.0.0 types=181
+LOAD System.ServiceModel.Syndication 8.0.0.0 types=39
+LOAD System.ServiceProcess.ServiceController 8.0.0.0 types=10
+LOAD System.Speech 8.0.0.0 types=104
+LOAD System.Text.Encoding.CodePages 8.0.0.0 types=1
+LOAD System.Threading.AccessControl 8.0.0.0 types=16
+LOAD System.Drawing.Common 8.0.0.0 types=158
+LOAD System.Data.SqlClient 4.6.1.6 types=51
+LOAD System.ServiceModel.Duplex 4.10.3.0 types=0
+LOAD System.ServiceModel.Http 4.10.3.0 types=0
+LOAD System.ServiceModel.NetTcp 4.10.3.0 types=0
+LOAD System.ServiceModel.Primitives 4.10.3.0 types=0
+LOAD System.ServiceModel.Security 4.10.3.0 types=0
+LOAD System.Web.Services.Description 4.10.3.0 types=70
+LOAD System.ComponentModel.Composition.Registration 8.0.0.0 types=6
+PASS whole metapackage dependency load, owned cache/bitmap, local WMI, codepages/CodeDom, SQL metadata and WCF/Syndication; no Framework fallback
+PASS full fresh net8 source closure: 40 package archives and 69 consumer DLLs; all35 original direct dependency edges selected
+RESULT:exit0
+
+All35 original net8 dependency edges,40 fresh restored source archives and69
+consumer DLLs match installed source-owned package bytes. All35 assemblies load;
+owned memory cache/bitmap, local WMI, codepages/CodeDom, SQL connection-string
+metadata and WCF/Syndication execute without Framework fallback. This is source
+closure/local integration coverage, not proof of full SqlClient or all provider
+behavior. Count this artifact under experimental dependency coverage; verified
+direct IDs remain50/53, transitive52, experimental artifacts4,total106.
+Runtime3 corrective forwarding build and complete PowerShell/.NET10 remain open.

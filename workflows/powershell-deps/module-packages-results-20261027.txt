@@ -1,0 +1,642 @@
+Source PowerShell module test host and Microsoft.PowerShell.Archive1.2.6, 2026-10-27
+Host: win11, Windows11 build26200 / MSYS2 CLANG64
+Source-built SDK8.0.131-2, compiler4.9.2, actual runtime.NET8.0.0
+Host package root: /home/topkek/module-host-package.FgiIz5/mingw-w64-powershell-module-test-host
+Archive package root: /home/topkek/archive-package.TBlCbT/mingw-w64-powershell-archive
+
+Final artifacts:
+- mingw-w64-clang-x86_64-powershell-module-test-host-7.4.20-1-any.pkg.tar.zst
+- mingw-w64-clang-x86_64-powershell-archive-1.2.6-1-any.pkg.tar.zst
+All final commands below exit0. Artifact hashes are independently recorded in
+module-packages-artifacts-20261027.json.
+
+The test host is a build tool, not a completed pwsh application/SDK dependency.
+It builds ten complete original PowerShell Windows production projects:1001
+original C# inputs, three original one-file generators, explicit source analyzers
+and both SDK analyzer sets. All original production C# algorithms are unchanged.
+The payload audit matches all291 DLL assets, including163 source reference
+assemblies. Pester4 Core includes116 original source/data files plus Gherkin5.1
+rebuilt from all54 C# inputs with original.NETStandard source branches and
+source Newtonsoft.Json13.0.4. Vendor implementation DLLs and Desktop CLR binaries
+are excluded. Original module manifests are retained; the driver imports them
+explicitly and sets execution policy only in its process/runspace. Relocated and
+installed-host assertions/parser/Add-Type and terminating-failure checks pass.
+
+The first full host clean build passed. A subsequent owned-driver-only rebuild
+adds the culture selector before runspace initialization; no original production
+C# changed. Its payload audit, relocated checks, repackage and installed check
+also passed. The clean build emits three distinct CA1846 suggestions in the
+retargeted original version generator, repeated across phases, plus MSB3101
+reference-cache write warnings (four log occurrences). No compiler errors occur.
+
+Archive source commit:87428e309898a728fb0287eab31b5cd214ceb9ba.
+All three module source files match the published1.2.6 source after excluding
+BOM/line-ending/signing material. Only pinned GitHub source is production input.
+One correction adds the reserved-device warning to the inline fallback data,
+where upstream omitted it; compression/extraction algorithms are unchanged.
+The PSM1 BOM/line endings are normalized for the explicit zero-fuzz source patch.
+Module manifest/en-US resource bytes remain original. No vendor signature block
+is copied. The dependency-free NuGet module and loose module copies match.
+
+The complete original Pester suite runs in en-GB and en-US. Two fixture-only
+changes use an owned TestDrive root instead of fixed system-drive SourceDir and
+restore a missing test-data comma so all31 intended reserved-device cases execute.
+Each build/installed culture run has99 total cases,98 passed,0 failed,0 skipped,
+1 original upstream pending culture test,0 inconclusive. The explicit en-GB run
+also verifies fallback localization. Native fresh runspaces discover exact module
+byte copies. No persistent registry/service/trust-store changes are performed.
+
+Earlier prototypes, retained under /home/topkek/powershell-core.af76rh:
+- Initial script execution required setting the test process/runspace policy;
+  no user/machine policy was changed.
+- Add-Type required source reference metadata under the test host's ref directory.
+- Gherkin's original.NETStandard conditional branch needed an explicit symbol
+  when targeting.NET8; all54 original C# algorithm files remain unchanged.
+- First Archive run:63 passed,11 failed,1 pending. Four nested-runspace cases
+  needed the original Diagnostics/ConsoleHost/WSMan projects. Seven reserved-device
+  warnings exposed the missing upstream fallback string under en-GB.
+- After adding the stock projects, fallback string, owned-path fixture and test
+  comma:98 passed,0 failed,1 pending. This led to the package checks below.
+- The independent local artifact audit initially waited on unconsumed zstd tar
+  padding. Process wait channels confirmed pipe-write/wait deadlock; the owned
+  audit processes were terminated, the reader was corrected to drain padding,
+  and the focused audit then exited0. No package implementation changed.
+
+Full pwsh/SDK catalog, other modules/native ports, MMI3 broader compatibility and
+runtime servicing remain open. Actual runtime8.0.0 is not serviced by package
+labels or8.0.31 directory aliases. Only Archive adds one verified direct ID;
+this test-host tool adds zero. Current totals:45/53 direct,29 verified transitive,
+76 dependency artifacts including the two experimental MMI packages.
+
+
+$ Host clean build: cd /home/topkek/module-host-package.FgiIz5/mingw-w64-powershell-module-test-host && makepkg --cleanbuild --force --noconfirm
+==> Making package: mingw-w64-powershell-module-test-host 7.4.20-1 (27 Oct 2026 04:24:28)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found powershell-7.4.20.tar.gz
+  -> Found pester-4.10.1.tar.gz
+  -> Found gherkin-5.1.0.tar.gz
+  -> Found prepare-core.py
+  -> Found build-core-tools.sh
+  -> Found build-core.sh
+  -> Found prepare-host.py
+  -> Found build-host.sh
+  -> Found ModuleHost.cs
+  -> Found stage-runtime.py
+  -> Found prepare-gherkin.py
+  -> Found stage-pester.py
+  -> Found audit-source.py
+  -> Found audit-payload.py
+  -> Found check.sh
+  -> Found Smoke.ps1
+  -> Found PesterSmoke.ps1
+  -> Found powershell-module-test-host
+  -> Found powershell-module-test-host.cmd
+  -> Found README.md
+==> Validating source files with sha256sums...
+    powershell-7.4.20.tar.gz ... Passed
+    pester-4.10.1.tar.gz ... Passed
+    gherkin-5.1.0.tar.gz ... Passed
+    prepare-core.py ... Passed
+    build-core-tools.sh ... Passed
+    build-core.sh ... Passed
+    prepare-host.py ... Passed
+    build-host.sh ... Passed
+    ModuleHost.cs ... Passed
+    stage-runtime.py ... Passed
+    prepare-gherkin.py ... Passed
+    stage-pester.py ... Passed
+    audit-source.py ... Passed
+    audit-payload.py ... Passed
+    check.sh ... Passed
+    Smoke.ps1 ... Passed
+    PesterSmoke.ps1 ... Passed
+    powershell-module-test-host ... Passed
+    powershell-module-test-host.cmd ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+  -> Extracting powershell-7.4.20.tar.gz with bsdtar
+  -> Extracting pester-4.10.1.tar.gz with bsdtar
+  -> Extracting gherkin-5.1.0.tar.gz with bsdtar
+==> Starting prepare()...
+Prepared complete original Windows core projects, original source generators and installed-source-only feed
+Staged all 54 original Gherkin C# files; source Newtonsoft.Json13.0.4 replaces the old10.0.3 build reference
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\ResGen\ResGen.csproj (in 60 ms).
+E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\ResGen\Program.cs(12,18): warning CA1052: Type 'Program' is a static holder type but is neither static nor NotInheritable (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1052) [E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\ResGen\ResGen.csproj]
+  ResGen -> E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\ResGen\bin\Release\net8.0\resgen.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\ResGen\Program.cs(12,18): warning CA1052: Type 'Program' is a static holder type but is neither static nor NotInheritable (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1052) [E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\ResGen\ResGen.csproj]
+    1 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.62
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\TypeCatalogGen\TypeCatalogGen.csproj (in 111 ms).
+  TypeCatalogGen -> E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\TypeCatalogGen\bin\Release\net8.0\TypeCatalogGen.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.34
+ResGen for ..\Microsoft.Management.Infrastructure.CimCmdlets\gen\CimCmdletStrings.cs
+ResGen for ..\Microsoft.Management.UI.Internal\gen\GraphicalHostResources.cs
+ResGen for ..\Microsoft.Management.UI.Internal\gen\HelpWindowResources.cs
+ResGen for ..\Microsoft.Management.UI.Internal\gen\InvariantResources.cs
+ResGen for ..\Microsoft.Management.UI.Internal\gen\ShowCommandResources.cs
+ResGen for ..\Microsoft.Management.UI.Internal\gen\UICultureResources.cs
+ResGen for ..\Microsoft.Management.UI.Internal\gen\XamlLocalizableResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Diagnostics\gen\GetEventResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Management\gen\ClearRecycleBinResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Management\gen\ClipboardResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Management\gen\CmdletizationResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Management\gen\ComputerInfoResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Management\gen\ComputerResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Management\gen\ControlPanelResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Management\gen\EventlogResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Management\gen\HotFixResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Management\gen\ManagementMshSnapInResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Management\gen\NavigationResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Management\gen\ProcessCommandHelpResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Management\gen\ProcessResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Management\gen\ServiceResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Management\gen\TestConnectionResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Management\gen\TestPathResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Management\gen\TimeZoneResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Management\gen\TransactionResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Management\gen\WebServiceResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Management\gen\WmiResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\AddMember.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\AddTypeStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\AliasCommandStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\ConvertFromStringData.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\ConvertFromStringResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\ConvertHTMLStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\ConvertMarkdownStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\ConvertStringResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\CsvCommandStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\Debugger.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\EventingStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\FlashExtractStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\FormatAndOut_out_gridview.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\GetMember.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\GetRandomCommandStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\GetUptimeStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\HostStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\HttpCommandStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\ImmutableStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\ImplicitRemotingStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\ImportLocalizedDataStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\MatchStringStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\MeasureObjectStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\NewObjectStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\OutPrinterDisplayStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\SelectObjectStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\SendMailMessageStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\SortObjectStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\StartSleepStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\TestJsonCmdletStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\TraceCommandStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\UnblockFileStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\UpdateDataStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\UpdateListStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\UtilityCommonStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\UtilityMshSnapinResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\VariableCommandStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\WebCmdletStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\WriteErrorStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\WriteProgressResourceStrings.cs
+ResGen for ..\Microsoft.PowerShell.ConsoleHost\gen\CommandLineParameterParserStrings.cs
+ResGen for ..\Microsoft.PowerShell.ConsoleHost\gen\ConsoleControlStrings.cs
+ResGen for ..\Microsoft.PowerShell.ConsoleHost\gen\ConsoleHostRawUserInterfaceStrings.cs
+ResGen for ..\Microsoft.PowerShell.ConsoleHost\gen\ConsoleHostStrings.cs
+ResGen for ..\Microsoft.PowerShell.ConsoleHost\gen\ConsoleHostUserInterfaceSecurityResources.cs
+ResGen for ..\Microsoft.PowerShell.ConsoleHost\gen\ConsoleHostUserInterfaceStrings.cs
+ResGen for ..\Microsoft.PowerShell.ConsoleHost\gen\HostMshSnapinResources.cs
+ResGen for ..\Microsoft.PowerShell.ConsoleHost\gen\ManagedEntranceStrings.cs
+ResGen for ..\Microsoft.PowerShell.ConsoleHost\gen\ProgressNodeStrings.cs
+ResGen for ..\Microsoft.PowerShell.ConsoleHost\gen\TranscriptStrings.cs
+ResGen for ..\Microsoft.PowerShell.CoreCLR.Eventing\gen\DotNetEventingStrings.cs
+ResGen for ..\Microsoft.PowerShell.LocalAccounts\gen\Microsoft.PowerShell.LocalAccounts.Strings.cs
+ResGen for ..\Microsoft.PowerShell.ScheduledJob\gen\ScheduledJobErrorStrings.cs
+ResGen for ..\Microsoft.PowerShell.Security\gen\CertificateCommands.cs
+ResGen for ..\Microsoft.PowerShell.Security\gen\CertificateProviderStrings.cs
+ResGen for ..\Microsoft.PowerShell.Security\gen\CmsCommands.cs
+ResGen for ..\Microsoft.PowerShell.Security\gen\ExecutionPolicyCommands.cs
+ResGen for ..\Microsoft.PowerShell.Security\gen\SecureStringCommands.cs
+ResGen for ..\Microsoft.PowerShell.Security\gen\SecurityMshSnapinResources.cs
+ResGen for ..\Microsoft.PowerShell.Security\gen\SignatureCommands.cs
+ResGen for ..\Microsoft.PowerShell.Security\gen\UtilsStrings.cs
+ResGen for ..\Microsoft.WSMan.Management\gen\WsManResources.cs
+ResGen for ..\System.Management.Automation\gen\Authenticode.cs
+ResGen for ..\System.Management.Automation\gen\AuthorizationManagerBase.cs
+ResGen for ..\System.Management.Automation\gen\AutomationExceptions.cs
+ResGen for ..\System.Management.Automation\gen\CatalogStrings.cs
+ResGen for ..\System.Management.Automation\gen\CimInstanceTypeAdapterResources.cs
+ResGen for ..\System.Management.Automation\gen\CmdletizationCoreResources.cs
+ResGen for ..\System.Management.Automation\gen\CommandBaseStrings.cs
+ResGen for ..\System.Management.Automation\gen\ConsoleInfoErrorStrings.cs
+ResGen for ..\System.Management.Automation\gen\CoreClrStubResources.cs
+ResGen for ..\System.Management.Automation\gen\CoreMshSnapinResources.cs
+ResGen for ..\System.Management.Automation\gen\Credential.cs
+ResGen for ..\System.Management.Automation\gen\CredentialAttributeStrings.cs
+ResGen for ..\System.Management.Automation\gen\CredUI.cs
+ResGen for ..\System.Management.Automation\gen\DebuggerStrings.cs
+ResGen for ..\System.Management.Automation\gen\DescriptionsStrings.cs
+ResGen for ..\System.Management.Automation\gen\DiscoveryExceptions.cs
+ResGen for ..\System.Management.Automation\gen\EnumExpressionEvaluatorStrings.cs
+ResGen for ..\System.Management.Automation\gen\ErrorCategoryStrings.cs
+ResGen for ..\System.Management.Automation\gen\ErrorPackage.cs
+ResGen for ..\System.Management.Automation\gen\ErrorPackageRemoting.cs
+ResGen for ..\System.Management.Automation\gen\EtwLoggingStrings.cs
+ResGen for ..\System.Management.Automation\gen\EventingResources.cs
+ResGen for ..\System.Management.Automation\gen\EventResource.cs
+ResGen for ..\System.Management.Automation\gen\ExperimentalFeatureStrings.cs
+ResGen for ..\System.Management.Automation\gen\ExtendedTypeSystem.cs
+ResGen for ..\System.Management.Automation\gen\FileSystemProviderStrings.cs
+ResGen for ..\System.Management.Automation\gen\FormatAndOutXmlLoadingStrings.cs
+ResGen for ..\System.Management.Automation\gen\FormatAndOut_format_xxx.cs
+ResGen for ..\System.Management.Automation\gen\FormatAndOut_MshParameter.cs
+ResGen for ..\System.Management.Automation\gen\FormatAndOut_out_xxx.cs
+ResGen for ..\System.Management.Automation\gen\GetErrorText.cs
+ResGen for ..\System.Management.Automation\gen\HelpDisplayStrings.cs
+ResGen for ..\System.Management.Automation\gen\HelpErrors.cs
+ResGen for ..\System.Management.Automation\gen\HistoryStrings.cs
+ResGen for ..\System.Management.Automation\gen\HostInterfaceExceptionsStrings.cs
+ResGen for ..\System.Management.Automation\gen\InternalCommandStrings.cs
+ResGen for ..\System.Management.Automation\gen\InternalHostStrings.cs
+ResGen for ..\System.Management.Automation\gen\InternalHostUserInterfaceStrings.cs
+ResGen for ..\System.Management.Automation\gen\Logging.cs
+ResGen for ..\System.Management.Automation\gen\Metadata.cs
+ResGen for ..\System.Management.Automation\gen\MiniShellErrors.cs
+ResGen for ..\System.Management.Automation\gen\Modules.cs
+ResGen for ..\System.Management.Automation\gen\MshHostRawUserInterfaceStrings.cs
+ResGen for ..\System.Management.Automation\gen\MshSignature.cs
+ResGen for ..\System.Management.Automation\gen\MshSnapInCmdletResources.cs
+ResGen for ..\System.Management.Automation\gen\MshSnapinInfo.cs
+ResGen for ..\System.Management.Automation\gen\NativeCP.cs
+ResGen for ..\System.Management.Automation\gen\ParameterBinderStrings.cs
+ResGen for ..\System.Management.Automation\gen\ParserStrings.cs
+ResGen for ..\System.Management.Automation\gen\PathUtilsStrings.cs
+ResGen for ..\System.Management.Automation\gen\PipelineStrings.cs
+ResGen for ..\System.Management.Automation\gen\PowerShellStrings.cs
+ResGen for ..\System.Management.Automation\gen\ProgressRecordStrings.cs
+ResGen for ..\System.Management.Automation\gen\ProviderBaseSecurity.cs
+ResGen for ..\System.Management.Automation\gen\ProxyCommandStrings.cs
+ResGen for ..\System.Management.Automation\gen\PSCommandStrings.cs
+ResGen for ..\System.Management.Automation\gen\PSConfigurationStrings.cs
+ResGen for ..\System.Management.Automation\gen\PSDataBufferStrings.cs
+ResGen for ..\System.Management.Automation\gen\PSListModifierStrings.cs
+ResGen for ..\System.Management.Automation\gen\PSStyleStrings.cs
+ResGen for ..\System.Management.Automation\gen\RegistryProviderStrings.cs
+ResGen for ..\System.Management.Automation\gen\RemotingErrorIdStrings.cs
+ResGen for ..\System.Management.Automation\gen\RunspaceInit.cs
+ResGen for ..\System.Management.Automation\gen\RunspacePoolStrings.cs
+ResGen for ..\System.Management.Automation\gen\RunspaceStrings.cs
+ResGen for ..\System.Management.Automation\gen\SecuritySupportStrings.cs
+ResGen for ..\System.Management.Automation\gen\Serialization.cs
+ResGen for ..\System.Management.Automation\gen\SessionStateProviderBaseStrings.cs
+ResGen for ..\System.Management.Automation\gen\SessionStateStrings.cs
+ResGen for ..\System.Management.Automation\gen\StringDecoratedStrings.cs
+ResGen for ..\System.Management.Automation\gen\SubsystemStrings.cs
+ResGen for ..\System.Management.Automation\gen\SuggestionStrings.cs
+ResGen for ..\System.Management.Automation\gen\TabCompletionStrings.cs
+ResGen for ..\System.Management.Automation\gen\TransactionStrings.cs
+ResGen for ..\System.Management.Automation\gen\TypesXmlStrings.cs
+ResGen for ..\System.Management.Automation\gen\VerbDescriptionStrings.cs
+ResGen for ..\System.Management.Automation\gen\WildcardPatternStrings.cs
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\Microsoft.PowerShell.CoreCLR.Eventing\Microsoft.PowerShell.CoreCLR.Eventing.csproj (in 1.5 sec).
+  Restored E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\System.Management.Automation.csproj (in 1.5 sec).
+  Restored E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj (in 1.5 sec).
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.cs(123,25): warning CA1846: Prefer 'AsSpan' over 'Substring' when span-based overloads are available (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1846) [E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj]
+E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.cs(124,25): warning CA1846: Prefer 'AsSpan' over 'Substring' when span-based overloads are available (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1846) [E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj]
+E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.cs(125,25): warning CA1846: Prefer 'AsSpan' over 'Substring' when span-based overloads are available (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1846) [E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj]
+  PSVersionInfoGenerator -> E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\bin\Release\net8.0\SMA.Generator.dll
+  Microsoft.PowerShell.CoreCLR.Eventing -> E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\Microsoft.PowerShell.CoreCLR.Eventing\bin\Release\net8.0\Microsoft.PowerShell.CoreCLR.Eventing.dll
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Microsoft.Common.CurrentVersion.targets(2382,5): warning MSB3101: Could not write state file "obj\Release\net8.0\PSVersionInfoGenerator.csproj.AssemblyReference.cache". The file 'E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\obj\Release\net8.0\PSVersionInfoGenerator.csproj.AssemblyReference.cache' already exists. [E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj]
+E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.cs(123,25): warning CA1846: Prefer 'AsSpan' over 'Substring' when span-based overloads are available (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1846) [E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj]
+E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.cs(124,25): warning CA1846: Prefer 'AsSpan' over 'Substring' when span-based overloads are available (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1846) [E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj]
+E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.cs(125,25): warning CA1846: Prefer 'AsSpan' over 'Substring' when span-based overloads are available (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1846) [E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj]
+  PSVersionInfoGenerator -> E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\bin\Release\net8.0\SMA.Generator.dll
+  Microsoft.PowerShell.CoreCLR.Eventing -> E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\Microsoft.PowerShell.CoreCLR.Eventing\bin\Release\net8.0\Microsoft.PowerShell.CoreCLR.Eventing.dll
+  System.Management.Automation -> E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\bin\Release\net8.0\System.Management.Automation.dll
+
+Build succeeded.
+
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Microsoft.Common.CurrentVersion.targets(2382,5): warning MSB3101: Could not write state file "obj\Release\net8.0\PSVersionInfoGenerator.csproj.AssemblyReference.cache". The file 'E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\obj\Release\net8.0\PSVersionInfoGenerator.csproj.AssemblyReference.cache' already exists. [E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj]
+E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.cs(123,25): warning CA1846: Prefer 'AsSpan' over 'Substring' when span-based overloads are available (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1846) [E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj]
+E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.cs(124,25): warning CA1846: Prefer 'AsSpan' over 'Substring' when span-based overloads are available (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1846) [E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj]
+E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.cs(125,25): warning CA1846: Prefer 'AsSpan' over 'Substring' when span-based overloads are available (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1846) [E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj]
+    4 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:01:00.08
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\Microsoft.PowerShell.ConsoleHost\Microsoft.PowerShell.ConsoleHost.csproj (in 211 ms).
+  Restored E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\Microsoft.PowerShell.Security\Microsoft.PowerShell.Security.csproj (in 211 ms).
+  Restored E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\Microsoft.WSMan.Management\Microsoft.WSMan.Management.csproj (in 211 ms).
+  Restored E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\Microsoft.PowerShell.Commands.Utility\Microsoft.PowerShell.Commands.Utility.csproj (in 183 ms).
+  Restored E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\Microsoft.PowerShell.Commands.Management\Microsoft.PowerShell.Commands.Management.csproj (in 2 ms).
+  Restored E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\Microsoft.WSMan.Runtime\Microsoft.WSMan.Runtime.csproj (in 2 ms).
+  Restored E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\Microsoft.Management.Infrastructure.CimCmdlets\Microsoft.Management.Infrastructure.CimCmdlets.csproj (in 4 ms).
+  Restored E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\Microsoft.PowerShell.Commands.Diagnostics\Microsoft.PowerShell.Commands.Diagnostics.csproj (in 18 ms).
+  Restored E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\host\ModuleHost.csproj (in 12 ms).
+  3 of 12 projects are up-to-date for restore.
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Microsoft.Common.CurrentVersion.targets(2382,5): warning MSB3101: Could not write state file "obj\Release\net8.0\PSVersionInfoGenerator.csproj.AssemblyReference.cache". The file 'E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\obj\Release\net8.0\PSVersionInfoGenerator.csproj.AssemblyReference.cache' already exists. [E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj]
+E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.cs(123,25): warning CA1846: Prefer 'AsSpan' over 'Substring' when span-based overloads are available (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1846) [E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj]
+E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.cs(124,25): warning CA1846: Prefer 'AsSpan' over 'Substring' when span-based overloads are available (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1846) [E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj]
+E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.cs(125,25): warning CA1846: Prefer 'AsSpan' over 'Substring' when span-based overloads are available (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1846) [E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj]
+  PSVersionInfoGenerator -> E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\bin\Release\net8.0\SMA.Generator.dll
+  Microsoft.WSMan.Runtime -> E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\Microsoft.WSMan.Runtime\bin\Release\net8.0\Microsoft.WSMan.Runtime.dll
+  Microsoft.PowerShell.CoreCLR.Eventing -> E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\Microsoft.PowerShell.CoreCLR.Eventing\bin\Release\net8.0\Microsoft.PowerShell.CoreCLR.Eventing.dll
+  System.Management.Automation -> E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\bin\Release\net8.0\System.Management.Automation.dll
+  Microsoft.PowerShell.ConsoleHost -> E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\Microsoft.PowerShell.ConsoleHost\bin\Release\net8.0\Microsoft.PowerShell.ConsoleHost.dll
+  Microsoft.WSMan.Management -> E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\Microsoft.WSMan.Management\bin\Release\net8.0\Microsoft.WSMan.Management.dll
+  Microsoft.Management.Infrastructure.CimCmdlets -> E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\Microsoft.Management.Infrastructure.CimCmdlets\bin\Release\net8.0\Microsoft.Management.Infrastructure.CimCmdlets.dll
+  Microsoft.PowerShell.Commands.Diagnostics -> E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\Microsoft.PowerShell.Commands.Diagnostics\bin\Release\net8.0\Microsoft.PowerShell.Commands.Diagnostics.dll
+  Microsoft.PowerShell.Commands.Utility -> E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\Microsoft.PowerShell.Commands.Utility\bin\Release\net8.0\Microsoft.PowerShell.Commands.Utility.dll
+  Microsoft.PowerShell.Security -> E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\Microsoft.PowerShell.Security\bin\Release\net8.0\Microsoft.PowerShell.Security.dll
+  Microsoft.PowerShell.Commands.Management -> E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\Microsoft.PowerShell.Commands.Management\bin\Release\net8.0\Microsoft.PowerShell.Commands.Management.dll
+  ModuleHost -> E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\host\bin\Release\net8.0\SourcePowerShell.ModuleHost.dll
+
+Build succeeded.
+
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Microsoft.Common.CurrentVersion.targets(2382,5): warning MSB3101: Could not write state file "obj\Release\net8.0\PSVersionInfoGenerator.csproj.AssemblyReference.cache". The file 'E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\obj\Release\net8.0\PSVersionInfoGenerator.csproj.AssemblyReference.cache' already exists. [E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj]
+E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.cs(123,25): warning CA1846: Prefer 'AsSpan' over 'Substring' when span-based overloads are available (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1846) [E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj]
+E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.cs(124,25): warning CA1846: Prefer 'AsSpan' over 'Substring' when span-based overloads are available (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1846) [E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj]
+E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.cs(125,25): warning CA1846: Prefer 'AsSpan' over 'Substring' when span-based overloads are available (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1846) [E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\prepared\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj]
+    4 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:01:35.67
+Staged original module manifests and 163 source reference assemblies
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\gherkin\Gherkin.csproj (in 119 ms).
+  Gherkin -> E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\gherkin\bin\Release\net8.0\Gherkin.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.74
+Staged 116 original Pester Core source/data files and source-built Gherkin; no vendor implementation binaries
+PASS exact original Windows source inventories/hashes, documented exclusions, fresh generators and retained explicit source analyzers: {'System.Management.Automation': (697, 77), 'Microsoft.PowerShell.CoreCLR.Eventing': (9, 3), 'PSVersionInfoGenerator': (1, 2), 'Microsoft.Management.Infrastructure.CimCmdlets': (35, 3), 'ResGen': (1, 2), 'TypeCatalogGen': (1, 2), 'Microsoft.PowerShell.Security': (11, 9), 'Microsoft.PowerShell.Commands.Management': (60, 15), 'Microsoft.PowerShell.Commands.Utility': (142, 37), 'Microsoft.PowerShell.ConsoleHost': (27, 11), 'Microsoft.PowerShell.Commands.Diagnostics': (8, 3), 'Microsoft.WSMan.Management': (11, 3), 'Microsoft.WSMan.Runtime': (1, 2)}
+PASS every tool DLL matches one of ten original projects, the owned host, source Gherkin, source reference metadata or installed source NuGet payloads: 291 assets
+==> Starting check()...
+PASS source PowerShell engine, original Utility/Management/Security/CIM cmdlet modules and Add-Type compiler
+PASS original source Pester4 assertions, source Gherkin parser and original Add-Type
+PASS relocated module host: original engine/cmdlets/compiler, source Pester/Gherkin and propagated terminating script failure
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-powershell-module-test-host"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-powershell-module-test-host 7.4.20-1 (27 Oct 2026 04:28:14)
+
+RESULT exit0
+
+$ Host driver-only rebuild: dotnet.exe build src/host/ModuleHost.csproj -c Release --no-restore -p:BuildProjectReferences=false -p:UseSharedCompilation=false -v:minimal
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  ModuleHost -> E:\msys64\home\topkek\module-host-package.FgiIz5\mingw-w64-powershell-module-test-host\src\host\bin\Release\net8.0\SourcePowerShell.ModuleHost.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.62
+
+RESULT exit0
+
+$ Host final payload audit: /usr/bin/python3 audit-payload.py src/prepared src/host/bin/Release/net8.0 src/gherkin/bin/Release/net8.0/Gherkin.dll
+PASS every tool DLL matches one of ten original projects, the owned host, source Gherkin, source reference metadata or installed source NuGet payloads: 291 assets
+
+RESULT exit0
+
+$ Host culture/relocation check: SOURCE_POWERSHELL_TEST_CULTURE=en-US bash check.sh src/check-culture src/host/bin/Release/net8.0
+PASS source PowerShell engine, original Utility/Management/Security/CIM cmdlet modules and Add-Type compiler
+PASS original source Pester4 assertions, source Gherkin parser and original Add-Type
+PASS relocated module host: original engine/cmdlets/compiler, source Pester/Gherkin and propagated terminating script failure
+
+RESULT exit0
+
+$ Host repackage: makepkg --repackage --force --noconfirm
+==> Making package: mingw-w64-powershell-module-test-host 7.4.20-1 (27 Oct 2026 04:33:35)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Removing existing $pkgdir/ directory...
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-powershell-module-test-host"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-powershell-module-test-host 7.4.20-1 (27 Oct 2026 04:33:48)
+
+RESULT exit0
+
+$ Host install: pacman -U --noconfirm mingw-w64-clang-x86_64-powershell-module-test-host-7.4.20-1-any.pkg.tar.zst
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-powershell-module-test-host-7.4.20-1
+
+Total Installed Size:  47.06 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+installing mingw-w64-clang-x86_64-powershell-module-test-host...
+
+RESULT exit0
+
+$ Host installed check: bash check.sh src/installed-check
+PASS source PowerShell engine, original Utility/Management/Security/CIM cmdlet modules and Add-Type compiler
+PASS original source Pester4 assertions, source Gherkin parser and original Add-Type
+PASS relocated module host: original engine/cmdlets/compiler, source Pester/Gherkin and propagated terminating script failure
+
+RESULT exit0
+
+$ Archive clean build: cd /home/topkek/archive-package.TBlCbT/mingw-w64-powershell-archive && makepkg --cleanbuild --force --noconfirm
+==> Making package: mingw-w64-powershell-archive 1.2.6-1 (27 Oct 2026 04:35:28)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found archive-1.2.6.tar.gz
+  -> Found prepare.py
+  -> Found pack.py
+  -> Found check.sh
+  -> Found prepare-tests.py
+  -> Found RunUpstream.ps1
+  -> Found verify-restored.py
+  -> Found 0001-preserve-reserved-device-warning-in-fallback-data.patch
+  -> Found published-source-provenance.json
+  -> Found README.md
+==> Validating source files with sha256sums...
+    archive-1.2.6.tar.gz ... Passed
+    prepare.py ... Passed
+    pack.py ... Passed
+    check.sh ... Passed
+    prepare-tests.py ... Passed
+    RunUpstream.ps1 ... Passed
+    verify-restored.py ... Passed
+    0001-preserve-reserved-device-warning-in-fallback-data.patch ... Passed
+    published-source-provenance.json ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+  -> Extracting archive-1.2.6.tar.gz with bsdtar
+==> Starting prepare()...
+patching file Microsoft.PowerShell.Archive.psm1
+==> Starting build()...
+Packed source-only PSModule1.2.6: /home/topkek/archive-package.TBlCbT/mingw-w64-powershell-archive/src/feed/microsoft.powershell.archive.1.2.6.nupkg
+==> Starting check()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\archive-package.TBlCbT\mingw-w64-powershell-archive\src\check\Restore.csproj (in 177 ms).
+PASS exact dependency-free source PSModule assets, hashes and absence of vendor signatures/binaries
+Staged complete upstream suite, owned TestDrive root fixture and all31 intended reserved-device cases
+PASS original archive suite against the exact explicitly imported module: 98 passed, 0 skipped, 1 pending
+WARNING The names of some imported commands from the module 'Pester.Commands.Cmdlets.Archive.Tests' include unapproved verbs that might make them less discoverable. To find the commands with unapproved verbs, run the Import-Module command again with the Verbose parameter. For a list of approved verbs, type Get-Verb.
+Staged complete upstream suite, owned TestDrive root fixture and all31 intended reserved-device cases
+PASS original archive suite against the exact explicitly imported module: 98 passed, 0 skipped, 1 pending
+WARNING The names of some imported commands from the module 'Pester.Commands.Cmdlets.Archive.Tests' include unapproved verbs that might make them less discoverable. To find the commands with unapproved verbs, run the Import-Module command again with the Verbose parameter. For a list of approved verbs, type Get-Verb.
+PASS source-only NuGet restore and both complete Archive upstream culture runs
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-powershell-archive"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-powershell-archive 1.2.6-1 (27 Oct 2026 04:36:12)
+
+RESULT exit0
+
+$ Archive install: pacman -U --noconfirm mingw-w64-clang-x86_64-powershell-archive-1.2.6-1-any.pkg.tar.zst
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-powershell-archive-1.2.6-1
+
+Total Installed Size:  0.09 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+installing mingw-w64-clang-x86_64-powershell-archive...
+
+RESULT exit0
+
+$ Archive installed check: bash check.sh /home/topkek/archive-installed-check-20261027 E:/msys64/home/topkek/powershell-core.af76rh/Microsoft.PowerShell.Archive-87428e309898a728fb0287eab31b5cd214ceb9ba
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\archive-installed-check-20261027\Restore.csproj (in 157 ms).
+PASS restored installed NuGet source bytes equal installed loose module bytes
+PASS exact dependency-free source PSModule assets, hashes and absence of vendor signatures/binaries
+Staged complete upstream suite, owned TestDrive root fixture and all31 intended reserved-device cases
+PASS original archive suite against the exact explicitly imported module: 98 passed, 0 skipped, 1 pending
+WARNING The names of some imported commands from the module 'Pester.Commands.Cmdlets.Archive.Tests' include unapproved verbs that might make them less discoverable. To find the commands with unapproved verbs, run the Import-Module command again with the Verbose parameter. For a list of approved verbs, type Get-Verb.
+Staged complete upstream suite, owned TestDrive root fixture and all31 intended reserved-device cases
+PASS original archive suite against the exact explicitly imported module: 98 passed, 0 skipped, 1 pending
+WARNING The names of some imported commands from the module 'Pester.Commands.Cmdlets.Archive.Tests' include unapproved verbs that might make them less discoverable. To find the commands with unapproved verbs, run the Import-Module command again with the Verbose parameter. For a list of approved verbs, type Get-Verb.
+PASS source-only NuGet restore and both complete Archive upstream culture runs
+
+RESULT exit0
+
+$ python3 tests/powershell-deps/audit-module-packages.py
+PASS module packages: all pinned inputs,1001 original production sources/three generators,291 DLL assets, full source Pester/Gherkin inventory, Archive source patch/NuGet/loose-file parity and licenses
+RESULT exit0

@@ -1,0 +1,205 @@
+PowerShell7.4.20-2 source package and STA/MTA WMI fix — 2026-10-27
+
+{
+  "previous_goal_turn_classification": "progress",
+  "current_goal_turn_classification": "progress",
+  "host": "win11",
+  "build_root": "/home/topkek/pspkg3.1nO7uT",
+  "package_version": "7.4.20-2",
+  "recipe": "mingw-w64-powershell/PKGBUILD",
+  "clean_build_command": "makepkg --cleanbuild --force --noconfirm",
+  "clean_build_exit_code": 0,
+  "all_final_source_inputs_clean_rebuilt": true,
+  "workflow_archive_sha256": "756314e4ab0a1b3d5b7eac5dccb4707654de3d885a64396220f17de9d439c878",
+  "workflow_files": 30,
+  "source_management_package": "8.0.0-2",
+  "source_management_nuget_sha256": "03812e82e09b8d407082e9b3e53f5c0a19b9e05e3c9a5952b3dafd6bd8924895",
+  "source_sdk_package": "8.0.131-3",
+  "source_targeting_package": "8.0.31-2",
+  "source_runtime_package": "8.0.31-3",
+  "artifact_audit_command": "/usr/bin/python3 audit-native-package.py mingw-w64-clang-x86_64-powershell-7.4.20-2-any.pkg.tar.zst artifact-audit.json",
+  "artifact_audit_exit_code": 0,
+  "install_command": "pacman -U --noconfirm \"$PWD/mingw-w64-clang-x86_64-powershell-7.4.20-2-any.pkg.tar.zst\"",
+  "install_exit_code": 0,
+  "installed_check_command": "bash /clang64/share/doc/powershell/checks/check-package.sh /clang64 installed-check /clang64/share/doc/powershell/checks",
+  "installed_check_exit_code": 0,
+  "installed_mmi_cim_wmi_mta_exit_code": 0,
+  "installed_mmi_cim_wmi_sta_exit_code": 0,
+  "installed_standalone_wmi_sta_exit_code": 0,
+  "previous_sta_access_denied_fixed": true,
+  "system_management_upstream_api_entries": 819,
+  "native_wmi_exports": 65,
+  "source_credential_scope_and_thread_token_semantics_preserved_in_regressions": true,
+  "original_project_dlls": 14,
+  "application_files": 596,
+  "distribution_files": 826,
+  "source_binary_assets": 372,
+  "source_references": 163,
+  "gallery_modules": 6,
+  "source_nuget_archives": 93,
+  "pinned_build_packages": 100,
+  "license_owners": 78,
+  "license_files": 208,
+  "localaccounts_public_protected_entries": 459,
+  "original_catalog_source_references": 213,
+  "graphicalhost_cs_inputs": 165,
+  "compiled_baml_pages": 16,
+  "original_graphics_assets": 12,
+  "desktop_visible_pixels": 133905,
+  "artifact_sha256": "f254901ff79aa6b4b61c43aeae2f68f901f1edc850e02ef9e59b79f1a6ec437c",
+  "local_artifact": "/tmp/powershell-native-package3/evidence/mingw-w64-clang-x86_64-powershell-7.4.20-2-any.pkg.tar.zst",
+  "full_dependency_goal_complete": false,
+  "remaining": [
+    "MMI3 remote authentication/provider streaming/ownership parity",
+    "SqlClient real database/native/LocalDB/shared-memory/FILESTREAM parity",
+    "full Windows.Compatibility behavior",
+    "broader WPF/native and WinForms8 compatibility",
+    "COM/R2R/NativeAOT/debugger/DAC and broader runtime compatibility",
+    "PowerShell7.6/.NET10 runtime/SDK/complete transitive graph; declared79-ID source inventory now frozen"
+  ]
+}
+
+This release is a full clean rebuild with the final30-file workflow, source System.Management8.0.0-2 and new STA/MTA gates. It supersedes the release1 STA failure; original failure evidence is retained.
+
+makepkg.log
+==> Making package: mingw-w64-powershell 7.4.20-2 (27 Oct 2026 20:52:30)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found powershell-7.4.20.tar.gz
+  -> Found powershell-source-workflow-4.tar.gz
+==> Validating source files with sha256sums...
+    powershell-7.4.20.tar.gz ... Passed
+    powershell-source-workflow-4.tar.gz ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+  -> Extracting powershell-source-workflow-4.tar.gz with bsdtar
+==> Starting prepare()...
+Prepared complete original Windows core projects, original source generators and installed-source-only feed
+PASS exact LocalAccounts analyzer adaptations: 22 files; all original sources retained
+PASS full original SDK/project graph retained; original catalog generation target selected
+==> Starting build()...
+PASS full original SDK/catalog, original Windows console project and original LocalAccounts source builds; source/runtime/shipping checks remain required
+PASS original GraphicalHost and conditional Windows desktop console builds; original GraphicalHost analyzer setting retained; desktop/shipping compatibility remains open
+PASS exact original Windows source inventories/hashes, documented exclusions, fresh generators and retained explicit source analyzers: {'System.Management.Automation': (697, 77), 'Microsoft.PowerShell.CoreCLR.Eventing': (9, 3), 'PSVersionInfoGenerator': (1, 2), 'Microsoft.Management.Infrastructure.CimCmdlets': (35, 3), 'ResGen': (1, 2), 'TypeCatalogGen': (1, 2), 'Microsoft.PowerShell.Security': (11, 9), 'Microsoft.PowerShell.Commands.Management': (60, 15), 'Microsoft.PowerShell.Commands.Utility': (142, 37), 'Microsoft.PowerShell.ConsoleHost': (27, 11), 'Microsoft.PowerShell.Commands.Diagnostics': (8, 3), 'Microsoft.WSMan.Management': (11, 3), 'Microsoft.WSMan.Runtime': (1, 2)}
+PASS original full SDK/core/console/LocalAccounts source hashes, generator paths and source analyzer coverage: {'System.Management.Automation': 697, 'Microsoft.PowerShell.CoreCLR.Eventing': 9, 'PSVersionInfoGenerator': 1, 'Microsoft.Management.Infrastructure.CimCmdlets': 35, 'ResGen': 1, 'TypeCatalogGen': 1, 'Microsoft.PowerShell.Security': 11, 'Microsoft.PowerShell.Commands.Management': 60, 'Microsoft.PowerShell.Commands.Utility': 142, 'Microsoft.PowerShell.ConsoleHost': 27, 'Microsoft.PowerShell.Commands.Diagnostics': 8, 'Microsoft.WSMan.Management': 11, 'Microsoft.WSMan.Runtime': 1, 'Microsoft.PowerShell.LocalAccounts': 26, 'pwsh': 1, 'Microsoft.PowerShell.SDK': 0}
+PASS original full SDK catalog: 213 source-owned references; all required dependency types, original MMI exclusion and exact independent regeneration
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\pspkg3.1nO7uT\src\build\graphical-source-check\Inspect.csproj (in 109 ms).
+  Inspect -> E:\msys64\home\topkek\pspkg3.1nO7uT\src\build\graphical-source-check\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:06.15
+PASS original GraphicalHost: 165 C# inputs, 16 XAML/compiled BAML entries and 12 byte-exact original resources; upstream project/analyzer setting retained
+
+PASS original project native pwsh.exe exactly matches unchanged source SDK task replay using freshly source-built8.0.31 apphost and original assembly resources
+PASS original console output, LocalAccounts,163 source references and all six source-built gallery modules staged: /home/topkek/pspkg3.1nO7uT/src/build/app
+PASS all 596 staged files, 372 source binary assets, 14 original project DLLs,163 reference assemblies and six source gallery modules; source archive/native owners recorded
+PASS 93 source NuGet archive mappings, 78 bundled/native framework owners and 207 complete license/notice files; exact build versions recorded
+PASS exact source archive hashes/owners and pinned build package versions
+PASS staged native PowerShell distribution: 596 application files, 208 licenses and complete source/package provenance
+==> Starting check()...
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\pspkg3.1nO7uT\src\build\localaccounts-api-check\Check.csproj (in 375 ms).
+  Check -> E:\msys64\home\topkek\pspkg3.1nO7uT\src\build\localaccounts-api-check\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.42
+PASS all 459 original LocalAccounts public/protected entries and attributes; actual emitted declarations/identity/public key;17 serialization annotations; no unpatched assembly emitted
+PASS complete source distribution file hashes and every declared source/native-owner license
+PASS native launcher Unicode/quotes/empty/trailing-backslash arguments, source engine/runtime/root, process-only environment and exact child exit status
+CATALOG System.Data.SqlClient.SqlConnection -> System.Data.SqlClient
+CATALOG System.ServiceModel.BasicHttpBinding -> System.Private.ServiceModel
+CATALOG System.ServiceModel.NetTcpBinding -> System.Private.ServiceModel
+CATALOG System.IO.Packaging.Package -> System.IO.Packaging
+CATALOG System.Speech.Synthesis.SpeechSynthesizer -> System.Speech
+CATALOG System.Drawing.Bitmap -> System.Drawing.Common
+CATALOG System.Management.ManagementObjectSearcher -> System.Management
+PASS original full SDK catalog/console, module discovery, CIM/GetOwner/serialization, JSON/Add-Type/Authenticode, LocalAccounts and no Framework implementations
+PASS packaged MMI direct local query/disposal, original CIM cmdlets and source System.Management WMI OS/GetOwner/disposal
+PASS original native console starts actual source pwsh.exe child, Unicode CLIXML, original source engine, serviced runtime and live CIM
+PASS original GraphicalHost compiled BAML/Show-Command control,STA layout and source WPF raster: 133905 visible pixels; 1 visual children
+PASS packaged MMI direct local query/disposal, original CIM cmdlets and source System.Management WMI OS/GetOwner/disposal
+PASS source WMI local enumeration in STA
+MODULE ThreadJob 2.0.3 E:\msys64\home\topkek\pspkg3.1nO7uT\src\build\distribution\lib\powershell\7\Modules\ThreadJob
+MODULE Microsoft.PowerShell.PSResourceGet 1.1.1 E:\msys64\home\topkek\pspkg3.1nO7uT\src\build\distribution\lib\powershell\7\Modules\Microsoft.PowerShell.PSResourceGet
+MODULE PowerShellGet 2.2.5 E:\msys64\home\topkek\pspkg3.1nO7uT\src\build\distribution\lib\powershell\7\Modules\PowerShellGet
+MODULE Microsoft.PowerShell.Archive 1.2.6 E:\msys64\home\topkek\pspkg3.1nO7uT\src\build\distribution\lib\powershell\7\Modules\Microsoft.PowerShell.Archive
+MODULE PackageManagement 1.4.8.1 E:\msys64\home\topkek\pspkg3.1nO7uT\src\build\distribution\lib\powershell\7\Modules\PackageManagement
+MODULE PSReadLine 2.3.6 E:\msys64\home\topkek\pspkg3.1nO7uT\src\build\distribution\lib\powershell\7\Modules\PSReadLine
+PASS six source gallery modules in original console, source NuGet provider, PSReadLine options, Unicode archive round trip and real ThreadJob/CIM/Unicode execution
+PASS packaged native launcher/full SDK/STA+MTA MMI+CIM+WMI/LocalAccounts/source gallery/native child/source desktop rendering and license closure
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> WARNING: Package contains reference to $srcdir
+clang64/share/doc/powershell/full-sdk-catalog-audit.json
+==> Creating package "mingw-w64-clang-x86_64-powershell"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-powershell 7.4.20-2 (27 Oct 2026 20:57:46)
+
+install.log
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-powershell-7.4.20-2
+
+Total Installed Size:  73.32 MiB
+Net Upgrade Size:       0.02 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+upgrading mingw-w64-clang-x86_64-powershell...
+
+installed-check.log
+PASS complete source distribution file hashes and every declared source/native-owner license
+PASS native launcher Unicode/quotes/empty/trailing-backslash arguments, source engine/runtime/root, process-only environment and exact child exit status
+CATALOG System.Data.SqlClient.SqlConnection -> System.Data.SqlClient
+CATALOG System.ServiceModel.BasicHttpBinding -> System.Private.ServiceModel
+CATALOG System.ServiceModel.NetTcpBinding -> System.Private.ServiceModel
+CATALOG System.IO.Packaging.Package -> System.IO.Packaging
+CATALOG System.Speech.Synthesis.SpeechSynthesizer -> System.Speech
+CATALOG System.Drawing.Bitmap -> System.Drawing.Common
+CATALOG System.Management.ManagementObjectSearcher -> System.Management
+PASS original full SDK catalog/console, module discovery, CIM/GetOwner/serialization, JSON/Add-Type/Authenticode, LocalAccounts and no Framework implementations
+PASS packaged MMI direct local query/disposal, original CIM cmdlets and source System.Management WMI OS/GetOwner/disposal
+PASS original native console starts actual source pwsh.exe child, Unicode CLIXML, original source engine, serviced runtime and live CIM
+PASS original GraphicalHost compiled BAML/Show-Command control,STA layout and source WPF raster: 133905 visible pixels; 1 visual children
+PASS packaged MMI direct local query/disposal, original CIM cmdlets and source System.Management WMI OS/GetOwner/disposal
+PASS source WMI local enumeration in STA
+MODULE Microsoft.PowerShell.PSResourceGet 1.1.1 E:\msys64\clang64\lib\powershell\7\Modules\Microsoft.PowerShell.PSResourceGet
+MODULE ThreadJob 2.0.3 E:\msys64\clang64\lib\powershell\7\Modules\ThreadJob
+MODULE PackageManagement 1.4.8.1 E:\msys64\clang64\lib\powershell\7\Modules\PackageManagement
+MODULE PowerShellGet 2.2.5 E:\msys64\clang64\lib\powershell\7\Modules\PowerShellGet
+MODULE PSReadLine 2.3.6 E:\msys64\clang64\lib\powershell\7\Modules\PSReadLine
+MODULE Microsoft.PowerShell.Archive 1.2.6 E:\msys64\clang64\lib\powershell\7\Modules\Microsoft.PowerShell.Archive
+PASS six source gallery modules in original console, source NuGet provider, PSReadLine options, Unicode archive round trip and real ThreadJob/CIM/Unicode execution
+PASS packaged native launcher/full SDK/STA+MTA MMI+CIM+WMI/LocalAccounts/source gallery/native child/source desktop rendering and license closure

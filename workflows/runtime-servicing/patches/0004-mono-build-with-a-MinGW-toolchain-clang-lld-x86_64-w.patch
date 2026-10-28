@@ -1,0 +1,162 @@
+From 13ae39f7403664783f6d55b3d03e9741d9787468 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Fri, 9 Oct 2026 10:29:52 +0200
+Subject: [PATCH 4/7] mono: build with a MinGW toolchain (clang/lld,
+ x86_64-w64-mingw32)
+
+The Windows branch of src/mono assumes MSVC: it adds cl/link options
+unconditionally, assembles win64.asm with MASM, links "*.lib" names and
+uses __declspec(thread).  With a GNU-style driver (MSYS2 CLANG64):
+
+- CMakeLists.txt: the /W4 /WX /EHsc /FC /Oi /GF /Zi /GL and /LTCG /DEBUG
+  /OPT:* /STACK options only with MSVC; MinGW gets -Wl,--stack,0x800000,
+  -static (no libwinpthread/libunwind DLLs, like the static CRT of the
+  MSVC build) and no 'lib' prefix (coreclr.dll).
+- MONO_KEYWORD_THREAD is __thread with MinGW: clang implements it with
+  native PE TLS (.tls/_tls_index), as MSVC does __declspec(thread).
+- eglib: G_GNUC_NORETURN/G_GNUC_UNUSED for GNU compilers on Windows too.
+  Clang reports __GNUC_MINOR__ 2, so eg_unreachable() is empty and
+  g_assert_not_reached() needs the noreturn mono_assertion_message_* for
+  -Werror=return-type.
+- utils: win64.asm (MONO_CONTEXT_GET_CURRENT, __builtin_unwind_init) is
+  only for MSVC, which has no x64 inline asm; GNU compilers already use
+  the inline-asm versions (mono-context.h, mono-threads-coop.c).
+- mini: OS_LIBS as plain library names (+ole32/oleaut32), --icf=none for
+  /OPT:NOICF, the MSVC /wd options on zlib only with MSVC.
+---
+ src/mono/CMakeLists.txt            | 55 ++++++++++++++++++++----------
+ src/mono/mono/mini/CMakeLists.txt  |  8 +++--
+ src/mono/mono/utils/CMakeLists.txt |  5 ++-
+ 3 files changed, 47 insertions(+), 21 deletions(-)
+
+diff --git a/src/mono/CMakeLists.txt b/src/mono/CMakeLists.txt
+index 0576621..dca0505 100644
+--- a/src/mono/CMakeLists.txt
++++ b/src/mono/CMakeLists.txt
+@@ -268,27 +268,41 @@ elseif(CLR_CMAKE_HOST_OS STREQUAL "windows")
+   set(HOST_WIN32 1)
+   set(EXE_SUFFIX ".exe")
+   set(HOST_NO_SYMLINKS 1)
+-  set(MONO_KEYWORD_THREAD "__declspec (thread)")
+   set(MONO_ZERO_LEN_ARRAY 1)
+   set(INTERNAL_ZLIB 1)
+-  set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>") # statically link VC runtime library
+-  add_compile_options(/W4)   # set warning level 4
+-  add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:/WX>) # treat warnings as errors
+-  add_compile_options(/EHsc) # set exception handling behavior
+-  add_compile_options(/FC)   # use full pathnames in diagnostics
+-  add_link_options(/STACK:0x800000)  # set stack size to 8MB (default is 1MB)
+-  if(CMAKE_BUILD_TYPE STREQUAL "Release")
+-    add_compile_options(/Oi)   # enable intrinsics
+-    add_compile_options(/GF)   # enable string pooling
+-    add_compile_options(/Zi)   # enable debugging information
+-    add_compile_options(/GL)   # whole program optimization
+-    add_link_options(/LTCG)    # link-time code generation
+-    add_link_options(/DEBUG)   # enable debugging information
+-    add_link_options(/DEBUGTYPE:CV,FIXUP)   # enable fixup debug information
+-    add_link_options(/OPT:REF) # optimize: remove unreferenced functions & data
+-    add_link_options(/OPT:ICF) # optimize: enable COMDAT folding
+-    # the combination of /Zi compiler flag and /DEBUG /OPT:REF /OPT:ICF
+-    # linker flags is needed to create .pdb output on release builds
++  if(NOT MSVC)
++    # MinGW (GNU-style driver, e.g. MSYS2 CLANG64 clang/lld, x86_64-w64-mingw32).
++    # clang implements __thread there with native PE TLS (.tls, _tls_index),
++    # the mechanism MSVC uses for __declspec(thread).
++    set(MONO_KEYWORD_THREAD "__thread")
++    add_link_options(-Wl,--stack,0x800000)  # set stack size to 8MB (default is 1MB)
++    # Self-contained binaries, like the MSVC build with the static CRT: no
++    # libwinpthread/libunwind/libc++ DLLs next to coreclr.dll.
++    add_link_options(-static)
++    # Windows names: coreclr.dll, not libcoreclr.dll.
++    set(CMAKE_SHARED_LIBRARY_PREFIX "")
++    set(CMAKE_IMPORT_LIBRARY_PREFIX "")
++  else()
++    set(MONO_KEYWORD_THREAD "__declspec (thread)")
++    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>") # statically link VC runtime library
++    add_compile_options(/W4)   # set warning level 4
++    add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:/WX>) # treat warnings as errors
++    add_compile_options(/EHsc) # set exception handling behavior
++    add_compile_options(/FC)   # use full pathnames in diagnostics
++    add_link_options(/STACK:0x800000)  # set stack size to 8MB (default is 1MB)
++    if(CMAKE_BUILD_TYPE STREQUAL "Release")
++      add_compile_options(/Oi)   # enable intrinsics
++      add_compile_options(/GF)   # enable string pooling
++      add_compile_options(/Zi)   # enable debugging information
++      add_compile_options(/GL)   # whole program optimization
++      add_link_options(/LTCG)    # link-time code generation
++      add_link_options(/DEBUG)   # enable debugging information
++      add_link_options(/DEBUGTYPE:CV,FIXUP)   # enable fixup debug information
++      add_link_options(/OPT:REF) # optimize: remove unreferenced functions & data
++      add_link_options(/OPT:ICF) # optimize: enable COMDAT folding
++      # the combination of /Zi compiler flag and /DEBUG /OPT:REF /OPT:ICF
++      # linker flags is needed to create .pdb output on release builds
++    endif()
+   endif()
+ elseif(CLR_CMAKE_HOST_OS STREQUAL "sunos")
+   set(HOST_SOLARIS 1)
+@@ -809,6 +823,11 @@ if(HOST_WIN32)
+   else()
+     set(EGLIB_GSIZE_FORMAT "\"u\"")
+   endif()
++  if(GCC)
++    # MinGW: clang/gcc know these (MSVC gets eg_unreachable() via __assume).
++    set(EGLIB_GNUC_UNUSED "__attribute__((__unused__))")
++    set(EGLIB_GNUC_NORETURN "__attribute__((__noreturn__))")
++  endif()
+ else()
+   set(EGLIB_BREAKPOINT "G_STMT_START { raise(SIGTRAP); } G_STMT_END")
+   if(GCC)
+diff --git a/src/mono/mono/mini/CMakeLists.txt b/src/mono/mono/mini/CMakeLists.txt
+index 5d6ef3d..d08f791 100644
+--- a/src/mono/mono/mini/CMakeLists.txt
++++ b/src/mono/mono/mini/CMakeLists.txt
+@@ -25,6 +25,8 @@ elseif(HOST_ANDROID)
+ set(OS_LIBS m dl log)
+ elseif(HOST_LINUX)
+ set(OS_LIBS pthread m dl)
++elseif(HOST_WIN32 AND NOT MSVC)
++set(OS_LIBS bcrypt mswsock ws2_32 psapi version advapi32 winmm kernel32 ole32 oleaut32)
+ elseif(HOST_WIN32)
+ set(OS_LIBS bcrypt.lib Mswsock.lib ws2_32.lib psapi.lib version.lib advapi32.lib winmm.lib kernel32.lib)
+ elseif(HOST_SOLARIS)
+@@ -38,9 +40,11 @@ endif()
+ #
+ include(../component/CMakeLists.txt)
+ 
+-if(HOST_WIN32)
++if(HOST_WIN32 AND MSVC)
+   # /OPT:ICF merges idential functions breaking mono_lookup_icall_symbol ()
+   add_link_options(/OPT:NOICF)
++elseif(HOST_WIN32)
++  add_link_options(-Wl,--icf=none)
+ endif()
+ 
+ # ICU
+@@ -363,7 +367,7 @@ elseif(NOT HOST_BROWSER AND NOT HOST_WASI)
+ set(mini_sources "${mini_sources};${VERSION_FILE_PATH}") # this is generated by GenerateNativeVersionFile in Arcade
+ endif()
+ 
+-if(HOST_WIN32)
++if(HOST_WIN32 AND MSVC)
+ set_source_files_properties(${ZLIB_SOURCES} PROPERTIES COMPILE_OPTIONS "/wd4005;/wd4127;/wd4131;/wd4244")
+ endif()
+ 
+diff --git a/src/mono/mono/utils/CMakeLists.txt b/src/mono/mono/utils/CMakeLists.txt
+index 0932797..b149d11 100644
+--- a/src/mono/mono/utils/CMakeLists.txt
++++ b/src/mono/mono/utils/CMakeLists.txt
+@@ -7,7 +7,10 @@ set(utils_win32_sources
+     os-event-win32.c
+     w32subset.h)
+ 
+-if(HOST_WIN32 AND HOST_AMD64)
++# win64.asm implements MONO_CONTEXT_GET_CURRENT and __builtin_unwind_init for
++# MSVC, which has no x64 inline assembly; GNU-style compilers (MinGW clang/gcc)
++# use the inline-asm versions in mono-context.h / mono-threads-coop.c instead.
++if(HOST_WIN32 AND HOST_AMD64 AND MSVC)
+     enable_language(ASM_MASM)
+     set(CMAKE_ASM_MASM_COMPILE_OPTIONS_MSVC_RUNTIME_LIBRARY_MultiThreaded         "")
+     set(CMAKE_ASM_MASM_COMPILE_OPTIONS_MSVC_RUNTIME_LIBRARY_MultiThreadedDLL      "")
+-- 
+2.55.0
+

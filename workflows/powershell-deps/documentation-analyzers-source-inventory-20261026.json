@@ -1,0 +1,72 @@
+{
+  "DocumentationAnalyzers": {
+    "analyzers": [
+      "DocumentationAnalyzers.PortabilityRules.DOC200UseXmlDocumentationSyntax",
+      "DocumentationAnalyzers.PortabilityRules.DOC201ItemShouldHaveDescription",
+      "DocumentationAnalyzers.PortabilityRules.DOC202UseSectionElementsCorrectly",
+      "DocumentationAnalyzers.PortabilityRules.DOC203UseBlockElementsCorrectly",
+      "DocumentationAnalyzers.PortabilityRules.DOC204UseInlineElementsCorrectly",
+      "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "DocumentationAnalyzers.PortabilityRules.DOC209UseSeeHrefCorrectly",
+      "DocumentationAnalyzers.RefactoringRules.DOC900RenderAsMarkdown",
+      "DocumentationAnalyzers.RefactoringRules.DOC901ConvertToDocumentationComment",
+      "DocumentationAnalyzers.StyleRules.DOC100PlaceTextInParagraphs",
+      "DocumentationAnalyzers.StyleRules.DOC101UseChildBlocksConsistently",
+      "DocumentationAnalyzers.StyleRules.DOC102UseChildBlocksConsistentlyAcrossElementsOfTheSameKind",
+      "DocumentationAnalyzers.StyleRules.DOC103UseUnicodeCharacters",
+      "DocumentationAnalyzers.StyleRules.DOC104UseSeeLangword",
+      "DocumentationAnalyzers.StyleRules.DOC105UseParamref",
+      "DocumentationAnalyzers.StyleRules.DOC106UseTypeparamref",
+      "DocumentationAnalyzers.StyleRules.DOC107UseSeeCref",
+      "DocumentationAnalyzers.StyleRules.DOC108AvoidEmptyParagraphs"
+    ],
+    "code_fixes": [],
+    "diagnostic_ids": {
+      "DocumentationAnalyzers.PortabilityRules.DOC200UseXmlDocumentationSyntax": "DOC200",
+      "DocumentationAnalyzers.PortabilityRules.DOC201ItemShouldHaveDescription": "DOC201",
+      "DocumentationAnalyzers.PortabilityRules.DOC202UseSectionElementsCorrectly": "DOC202",
+      "DocumentationAnalyzers.PortabilityRules.DOC203UseBlockElementsCorrectly": "DOC203",
+      "DocumentationAnalyzers.PortabilityRules.DOC204UseInlineElementsCorrectly": "DOC204",
+      "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly": "DOC207",
+      "DocumentationAnalyzers.PortabilityRules.DOC209UseSeeHrefCorrectly": "DOC209",
+      "DocumentationAnalyzers.RefactoringRules.DOC900RenderAsMarkdown": "DOC900",
+      "DocumentationAnalyzers.RefactoringRules.DOC901ConvertToDocumentationComment": "DOC901",
+      "DocumentationAnalyzers.StyleRules.DOC100PlaceTextInParagraphs": "DOC100",
+      "DocumentationAnalyzers.StyleRules.DOC101UseChildBlocksConsistently": "DOC101",
+      "DocumentationAnalyzers.StyleRules.DOC102UseChildBlocksConsistentlyAcrossElementsOfTheSameKind": "DOC102",
+      "DocumentationAnalyzers.StyleRules.DOC103UseUnicodeCharacters": "DOC103",
+      "DocumentationAnalyzers.StyleRules.DOC104UseSeeLangword": "DOC104",
+      "DocumentationAnalyzers.StyleRules.DOC105UseParamref": "DOC105",
+      "DocumentationAnalyzers.StyleRules.DOC106UseTypeparamref": "DOC106",
+      "DocumentationAnalyzers.StyleRules.DOC107UseSeeCref": "DOC107",
+      "DocumentationAnalyzers.StyleRules.DOC108AvoidEmptyParagraphs": "DOC108"
+    },
+    "resources": [
+      "DocumentationAnalyzers.Helpers.HelpersResources.resources",
+      "DocumentationAnalyzers.PortabilityRules.PortabilityResources.resources",
+      "DocumentationAnalyzers.RefactoringRules.RefactoringResources.resources",
+      "DocumentationAnalyzers.StyleRules.StyleResources.resources"
+    ]
+  },
+  "DocumentationAnalyzers.CodeFixes": {
+    "analyzers": [],
+    "code_fixes": [
+      "DocumentationAnalyzers.PortabilityRules.DOC200CodeFixProvider",
+      "DocumentationAnalyzers.PortabilityRules.DOC201CodeFixProvider",
+      "DocumentationAnalyzers.PortabilityRules.DOC202CodeFixProvider",
+      "DocumentationAnalyzers.PortabilityRules.DOC203CodeFixProvider",
+      "DocumentationAnalyzers.PortabilityRules.DOC204CodeFixProvider",
+      "DocumentationAnalyzers.RefactoringRules.DOC900CodeFixProvider",
+      "DocumentationAnalyzers.RefactoringRules.DOC901CodeFixProvider",
+      "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "DocumentationAnalyzers.StyleRules.DOC103CodeFixProvider",
+      "DocumentationAnalyzers.StyleRules.DOC104CodeFixProvider",
+      "DocumentationAnalyzers.StyleRules.DOC105CodeFixProvider",
+      "DocumentationAnalyzers.StyleRules.DOC106CodeFixProvider",
+      "DocumentationAnalyzers.StyleRules.DOC107CodeFixProvider",
+      "DocumentationAnalyzers.StyleRules.DOC108CodeFixProvider"
+    ],
+    "diagnostic_ids": {},
+    "resources": []
+  }
+}

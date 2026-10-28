@@ -1,0 +1,1861 @@
+{
+  "version": "1.1.1",
+  "source_commit": "44697aed1740126153a8d9dd0ef368261b2fe45c",
+  "source_archive_sha256": "4819dc0283c6a28979aa5a26aa70ad41468de1a2a52e0729a61062086c08bc03",
+  "published_package_sha256": "28ff7ce5e1ed455a0cc2857eb2bb13e674157b8180d48f1d07f65045101bed97",
+  "declared_packages": {
+    "NuGet.Commands": "6.9.1",
+    "NuGet.Common": "6.9.1",
+    "NuGet.Configuration": "6.9.1",
+    "NuGet.Packaging": "6.9.1",
+    "NuGet.ProjectModel": "6.9.1",
+    "NuGet.Protocol": "6.9.1",
+    "PowerShellStandard.Library": "7.0.0-preview.1",
+    "System.Net.Http": "4.3.4",
+    "System.Text.Json": "8.0.5",
+    "Microsoft.CSharp": "4.7.0",
+    "Azure.Identity": "1.11.4"
+  },
+  "original_src_inputs": {
+    "src/Microsoft.PowerShell.PSResourceGet.psd1": "05985b18049d269e9f522ad21b0962c0fb9b661925d2eec5678cec4a45d05f08",
+    "src/PSResourceRepository.admx": "8f533be452c4b70172969d4e74f5fa59f6008abb61ed0d7bcb5a370c66e940e8",
+    "src/PSGet.Format.ps1xml": "76e0d45828be4fc7495f6744ec7534f4a21c17656b0a3b8e41d817f894094ef8",
+    "src/Microsoft.PowerShell.PSResourceGet.psm1": "4a93ed771e58c79b84920e87d1f62f3764b2b22e749b4d5dffcc2ee1dfbb9dea",
+    "src/InstallPSResourceGetPolicyDefinitions.ps1": "880540857d3630f55ebf7ba337eeb8bdc2050babb1c878bc1f2f8503cf8d3b12",
+    "src/PSResourceRepository.adml": "2935599beae54c97ba77693949b923d3cd33056a5a50671ae6e1c70268d306de",
+    "src/code/SavePSResource.cs": "a63b5305805f72aff16e23ea072eef5079d51a71e75661bea1d84328a65d71c4",
+    "src/code/ServerFactory.cs": "1624bda92dfec57479014d405e4f797647906c038f85020935c39719b24ec808",
+    "src/code/ContainerRegistryServerAPICalls.cs": "e0882f69ac04ec863863864b5424946956891910c69f634c61be6e4ed9feffa1",
+    "src/code/V3ServerAPICalls.cs": "2c5c37867a9bce133d503749de223cb7084036a5ec283808c88593d148fc4507",
+    "src/code/ResponseUtil.cs": "cfeb6517ac8cd714c1df36ec9f3506c0bebcc655982dc56399d6cbc342a39478",
+    "src/code/PSScriptRequires.cs": "4bff7485b35739339381a6f8de7149eb37e3395c58e98981e53d8f172ec40bf0",
+    "src/code/NewPSScriptFile.cs": "ce9e005073d333b12c920b5f1236ffd130ad0933dee935254ad7e2e21f275ede",
+    "src/code/FindHelper.cs": "c25c4f6f69fd51ec36e823e92a4460c1ceca5d824803ef77bf8086e328dfca2f",
+    "src/code/UpdatePSResource.cs": "b7ce16928c6eb727d25b4c2b11eadbe97eceec3be1cc6df7f58fac3f11254294",
+    "src/code/FindResults.cs": "a29bde8fed7ec46068d8966768ec2cc80ab9d20f66e10647371c788820abb9a4",
+    "src/code/V2ServerAPICalls.cs": "c7637f9ee808d7b54e84b81d8b3627c84c96d07a3f306d2e0c063b882dc06abe",
+    "src/code/GetInstalledPSResource.cs": "a91a9970523a78d3d8fe773558f5d81a952c75e08facfbb2bf0a0af78fd6559e",
+    "src/code/ResponseUtilFactory.cs": "d01166c4615e764f059de0ad39b4261b02b4059e8479f03bef4c736b2c8c0098",
+    "src/code/InternalHooks.cs": "020669a040754b752b5a164df20ca08c8048de68994c849d99e219bc634e4779",
+    "src/code/UnregisterPSResourceRepository.cs": "d07fed60d1ba1d099dd33ab325dbd2b18c02cce379f6862c37714b7976800cb1",
+    "src/code/GetHelper.cs": "67a6e6ed8df1de5d7eea07d80558c44403babe01965c651712c93ae18cb5d783",
+    "src/code/LocalServerApiCalls.cs": "6dd7d87adc77d923a7344fdbcfb078ab7c384320ebd04c79bed32533f7a006f7",
+    "src/code/PSScriptContents.cs": "eba4bc2c8d523ecc27d811598d3da0aa84b70dd75909dab1b9b196840192123c",
+    "src/code/InstallHelper.cs": "8c0b1456a662cfe6297f00258929ba3d56ed75c9212a27d569426532a332937d",
+    "src/code/PSScriptMetadata.cs": "400d6fcf513ab8e5b947743cc5958a3786dece280330d6b0c049dfdec887dede",
+    "src/code/PSScriptHelp.cs": "01b3dee6f5112bd25f06bc905ab33e27f6e49979e0104bf27ed49b884e93ad59",
+    "src/code/PSCredentialInfo.cs": "ce97dcecde24eea139b87e9658532047b50f9478352e85a712ac354399acaa98",
+    "src/code/ModuleInitAndCleanup.cs": "c1a66ecb8b9a3c8e058aec60ce2b175472ed34df736c882c7ba150d85322ad89",
+    "src/code/UpdatePSScriptFileInfo.cs": "92125c386a9afcf5d57cb701314a5915d5cd62e1dfc7e9aafa3f1ab707ccd0c7",
+    "src/code/LocalResponseUtil.cs": "482950ea93ce77070d8f7849a0e47594f6196c078a996cfd338e57b05521271e",
+    "src/code/V3ResponseUtil.cs": "5a60886a7d27841bd87f6a76ce7324c0f4737d6b6eef2ec670f11a3f2a1222db",
+    "src/code/GroupPolicyRepositoryEnforcement.cs": "e29630abf166dc0d363eb5216b9cd263503f29afc06f589d2c15c04fd6b303f8",
+    "src/code/PublishPSResource.cs": "da3d12a9752d4a90097012a0fba37dafd5bd4a0432b30cb8f3d5315ff164585d",
+    "src/code/ArgumentCompleter.cs": "c80d596b727c5cb3b5f13087c1ad896f2aef989b412a31d6492dc1f212bed4b6",
+    "src/code/RepositorySettings.cs": "3834f05a5c411e762ccb510a2c84da8063f7496c5b43d9827ee3d89cf74ad737",
+    "src/code/InstallPSResource.cs": "32678c1f46f9e58b5e64a0b6061c6a56f0dd29e2034752702f0aed1d8f3688e9",
+    "src/code/ServerApiCall.cs": "400ec5f2ec74f9054bc475a921d9ba5a2ace64b0c0e9e58229c410e24548b6c8",
+    "src/code/Utils.cs": "f9fd06c2322823be91a54db338b55a4690582a24968363dd0c3aa0c52bef568a",
+    "src/code/V2QueryBuilder.cs": "c5684526c381c2f3753fdc59362487e89ae7b119675e765316c4f4f18d3957f1",
+    "src/code/V2ResponseUtil.cs": "a370ecc4a11f376a730d0d1fd7dca2d3b817cc183b804dfd60edc07e83dca4a2",
+    "src/code/PSGetException.cs": "74d67810b30236f19dfb34765c37caa3c1ba5dbf733ff16efb484dd464fcadaa",
+    "src/code/InstallPkgParams.cs": "e226edeec376a57b1d8251a32d9afbdb65d89acbb8f5a38b61c8f30cd3bae28f",
+    "src/code/TestPSScriptFile.cs": "ce119e2cbfbe80ac4c5d7170193384065215ca84d7739841e19fa271fef5f041",
+    "src/code/UpdateModuleManifest.cs": "109a82e5b98dc84c11a06af9f636f674e8052584412bf27b4ffc18248f61fd17",
+    "src/code/NuGetServerAPICalls.cs": "cbf5eb4c3933f6563a0e9053a644779558587fcb97259a2b372ee1eeb5b5ec99",
+    "src/code/FindPSResource.cs": "ffc7729f6d13c7eac9aecc308e609e001f04d5d3da7712a0f802249a492c299f",
+    "src/code/SetPSResourceRepository.cs": "a36113a0cd822193971da4233c5b04e7ab6e370ab99a539cf8bffe111246200c",
+    "src/code/PSRepositoryInfo.cs": "570a930b6aaa694c51ede6bb819107a1e258aba60c1b3ab4d04d681c37b402e4",
+    "src/code/RegisterPSResourceRepository.cs": "dfc42e95c1851481f54fc0b0ca9d5f8f0154448228de0449a51f1143add159b1",
+    "src/code/NuGetServerResponseUtil.cs": "972b279d81ef9f755967d2da7146c5aa6ccceb1a0570607107f34d22ed689ff7",
+    "src/code/PublishHelper.cs": "c9d856f80f82eab68a7aebcdb2cc1b452fcb009c4bf4f22d2b9108195eae63f8",
+    "src/code/ContainerRegistryInfo.cs": "7546308626161b9a7df9e1e5df2cc6a84b2500a2c3fdb0f8c5e9bc269e0b863d",
+    "src/code/PSResourceInfo.cs": "4d237e5e8694245b128831e2742603fed4e78741c3f4b09b2b679241bd9e1e6a",
+    "src/code/GetPSResourceRepository.cs": "682912876b1671e0e02957d513210e3adc08e0dbfb8d48916dbae318e7203b55",
+    "src/code/CompressPSResource.cs": "76cf8c1a9c7b3d893dc3035d2faf48abce73fc56c274c95bea5e6faec433382f",
+    "src/code/ContainerRegistryResponseUtil.cs": "8759520f53b2bf3594e64b986bd520a2ac9fd8f724b85d8801d8b69290deecbc",
+    "src/code/GetPSScriptFileInfo.cs": "3e9abe270654700c54d376cb19e53eb36a82e2a826149470556c4039a1129b73",
+    "src/code/Microsoft.PowerShell.PSResourceGet.csproj": "9382d6370d5275fc1ed69491aa3979785c7f66f6a018258408431c9e70631352",
+    "src/code/IServerAPICalls.cs": "cf5aac28cfc34649af5910d02adcb1cd5fbc0151a5375f247df550a461e65908",
+    "src/code/PSScriptFileInfo.cs": "b3c86f2900dfa3c3fbc4cd2901da569e54cf824b745ebc134032abe9c0de4439",
+    "src/code/PSResourceResult.cs": "1b2c4b060abcb3aa9d71a3cc5868b910b555cdb3a36d324cd9afdb6c1ecca65c",
+    "src/code/UninstallPSResource.cs": "735a7dfbcd21977e85f8852ed4ff6a5702f51a28ccb943fc3c70e11518b62a31",
+    "src/code/.vs/Microsoft.PowerShell.PSResourceGet/v17/.suo": "4862bdc1e13c42a05c107e86645f83217edaa5e7ff1bf9c9f7988f5707454417"
+  },
+  "original_csharp_files": 56,
+  "published_assembly_metadata": [
+    {
+      "file": "E:/msys64/home/topkek/psresourceget-source-map.oSG9Iz/published-dlls/Azure.Core.dll",
+      "sha256": "dfaf0994f7e329274052cc74baf18013a4940103b8374e7d5f2d9779e641bd6a",
+      "name": "Azure.Core",
+      "version": "1.38.0.0",
+      "public_key": "0024000004800000940000000602000000240000525341310004000001000100097ad52abbeaa2e1a1982747cc0106534f65cfea6707eaed696a3a63daea80de2512746801a7e47f88e7781e71af960d89ba2e25561f70b0e2dbc93319e0af1961a719ccf5a4d28709b2b57a5d29b7c09dc8d269a490ebe2651c4b6e6738c27c5fb2c02469fe9757f0a3479ac310d6588a50a28d7dd431b907fd325e18b9e8ed",
+      "public_key_token": "92742159e12e44c8",
+      "attributes": {
+        "AssemblyFileVersionAttribute": "1.3800.24.12602",
+        "AssemblyInformationalVersionAttribute": "1.38.0+dae9516a40d0661a3351c3f6ddf0e0eb85ea2f6b"
+      },
+      "exported_types": 0,
+      "references": [
+        {
+          "name": "Microsoft.Bcl.AsyncInterfaces",
+          "version": "1.0.0.0",
+          "public_key_or_token": "cc7b13ffcd2ddd51"
+        },
+        {
+          "name": "mscorlib",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Buffers",
+          "version": "4.0.3.0",
+          "public_key_or_token": "cc7b13ffcd2ddd51"
+        },
+        {
+          "name": "System.ClientModel",
+          "version": "1.0.0.0",
+          "public_key_or_token": "92742159e12e44c8"
+        },
+        {
+          "name": "System.Core",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Diagnostics.DiagnosticSource",
+          "version": "6.0.0.1",
+          "public_key_or_token": "cc7b13ffcd2ddd51"
+        },
+        {
+          "name": "System.Memory",
+          "version": "4.0.1.1",
+          "public_key_or_token": "cc7b13ffcd2ddd51"
+        },
+        {
+          "name": "System.Memory.Data",
+          "version": "1.0.2.0",
+          "public_key_or_token": "cc7b13ffcd2ddd51"
+        },
+        {
+          "name": "System.Net.Http",
+          "version": "4.2.0.0",
+          "public_key_or_token": "b03f5f7f11d50a3a"
+        },
+        {
+          "name": "System.Text.Json",
+          "version": "4.0.1.2",
+          "public_key_or_token": "cc7b13ffcd2ddd51"
+        },
+        {
+          "name": "System.Threading.Tasks.Extensions",
+          "version": "4.2.0.1",
+          "public_key_or_token": "cc7b13ffcd2ddd51"
+        }
+      ]
+    },
+    {
+      "file": "E:/msys64/home/topkek/psresourceget-source-map.oSG9Iz/published-dlls/Azure.Identity.dll",
+      "sha256": "0e3cf5c43e12c0f319ab58592fd6c438b0a5feda166cc540231dfa75c439d681",
+      "name": "Azure.Identity",
+      "version": "1.11.4.0",
+      "public_key": "0024000004800000940000000602000000240000525341310004000001000100097ad52abbeaa2e1a1982747cc0106534f65cfea6707eaed696a3a63daea80de2512746801a7e47f88e7781e71af960d89ba2e25561f70b0e2dbc93319e0af1961a719ccf5a4d28709b2b57a5d29b7c09dc8d269a490ebe2651c4b6e6738c27c5fb2c02469fe9757f0a3479ac310d6588a50a28d7dd431b907fd325e18b9e8ed",
+      "public_key_token": "92742159e12e44c8",
+      "attributes": {
+        "AssemblyFileVersionAttribute": "1.1100.424.31005",
+        "AssemblyInformationalVersionAttribute": "1.11.4+2856f9a00d6cb96f71b724d29b1ce8ce271c4137"
+      },
+      "exported_types": 0,
+      "references": [
+        {
+          "name": "Azure.Core",
+          "version": "1.38.0.0",
+          "public_key_or_token": "92742159e12e44c8"
+        },
+        {
+          "name": "Microsoft.Bcl.AsyncInterfaces",
+          "version": "1.0.0.0",
+          "public_key_or_token": "cc7b13ffcd2ddd51"
+        },
+        {
+          "name": "Microsoft.Identity.Client",
+          "version": "4.61.3.0",
+          "public_key_or_token": "0a613f4dd989e8ae"
+        },
+        {
+          "name": "Microsoft.Identity.Client.Extensions.Msal",
+          "version": "4.61.3.0",
+          "public_key_or_token": "0a613f4dd989e8ae"
+        },
+        {
+          "name": "netstandard",
+          "version": "2.0.0.0",
+          "public_key_or_token": "cc7b13ffcd2ddd51"
+        },
+        {
+          "name": "System.Buffers",
+          "version": "4.0.2.0",
+          "public_key_or_token": "cc7b13ffcd2ddd51"
+        },
+        {
+          "name": "System.Diagnostics.DiagnosticSource",
+          "version": "6.0.0.0",
+          "public_key_or_token": "cc7b13ffcd2ddd51"
+        },
+        {
+          "name": "System.Memory",
+          "version": "4.0.1.1",
+          "public_key_or_token": "cc7b13ffcd2ddd51"
+        },
+        {
+          "name": "System.Memory.Data",
+          "version": "1.0.2.0",
+          "public_key_or_token": "cc7b13ffcd2ddd51"
+        },
+        {
+          "name": "System.Security.Cryptography.ProtectedData",
+          "version": "4.0.5.0",
+          "public_key_or_token": "b03f5f7f11d50a3a"
+        },
+        {
+          "name": "System.Text.Encodings.Web",
+          "version": "4.0.5.1",
+          "public_key_or_token": "cc7b13ffcd2ddd51"
+        },
+        {
+          "name": "System.Text.Json",
+          "version": "4.0.1.2",
+          "public_key_or_token": "cc7b13ffcd2ddd51"
+        },
+        {
+          "name": "System.Threading.Tasks.Extensions",
+          "version": "4.2.0.1",
+          "public_key_or_token": "cc7b13ffcd2ddd51"
+        }
+      ]
+    },
+    {
+      "file": "E:/msys64/home/topkek/psresourceget-source-map.oSG9Iz/published-dlls/Microsoft.Bcl.AsyncInterfaces.dll",
+      "sha256": "957ce47be5eb3fe87596548c7763159c211ad70ac05d628cbad358694889b31a",
+      "name": "Microsoft.Bcl.AsyncInterfaces",
+      "version": "8.0.0.0",
+      "public_key": "00240000048000009400000006020000002400005253413100040000010001004b86c4cb78549b34bab61a3b1800e23bfeb5b3ec390074041536a7e3cbd97f5f04cf0f857155a8928eaa29ebfd11cfbbad3ba70efea7bda3226c6a8d370a4cd303f714486b6ebc225985a638471e6ef571cc92a4613c00b8fa65d61ccee0cbe5f36330c9a01f4183559f1bef24cc2917c6d913e3a541333a1d05d9bed22b38cb",
+      "public_key_token": "cc7b13ffcd2ddd51",
+      "attributes": {
+        "AssemblyFileVersionAttribute": "8.0.23.53103",
+        "AssemblyInformationalVersionAttribute": "8.0.0+5535e31a712343a63f5d7d796cd874e563e5ac14"
+      },
+      "exported_types": 0,
+      "references": [
+        {
+          "name": "mscorlib",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Threading.Tasks.Extensions",
+          "version": "4.2.0.1",
+          "public_key_or_token": "cc7b13ffcd2ddd51"
+        }
+      ]
+    },
+    {
+      "file": "E:/msys64/home/topkek/psresourceget-source-map.oSG9Iz/published-dlls/Microsoft.Extensions.FileProviders.Abstractions.dll",
+      "sha256": "36881dbb7dbadd2205d1fdb9bf1c1a93fe33202ac132f0bfe8c9be591581801d",
+      "name": "Microsoft.Extensions.FileProviders.Abstractions",
+      "version": "6.0.0.0",
+      "public_key": "0024000004800000940000000602000000240000525341310004000001000100f33a29044fa9d740c9b3213a93e57c84b472c84e0b8a0e1ae48e67a9f8f6de9d5f7f3d52ac23e48ac51801f1dc950abe901da34d2a9e3baadb141a17c77ef3c565dd5ee5054b91cf63bb3c6ab83f72ab3aafe93d0fc3c2348b764fafb0b1c0733de51459aeab46580384bf9d74c4e28164b7cde247f891ba07891c9d872ad2bb",
+      "public_key_token": "adb9793829ddae60",
+      "attributes": {
+        "AssemblyFileVersionAttribute": "6.0.21.52210",
+        "AssemblyInformationalVersionAttribute": "6.0.0+4822e3c3aa77eb82b2fb33c9321f923cf11ddde6"
+      },
+      "exported_types": 0,
+      "references": [
+        {
+          "name": "Microsoft.Extensions.Primitives",
+          "version": "6.0.0.0",
+          "public_key_or_token": "adb9793829ddae60"
+        },
+        {
+          "name": "mscorlib",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Core",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        }
+      ]
+    },
+    {
+      "file": "E:/msys64/home/topkek/psresourceget-source-map.oSG9Iz/published-dlls/Microsoft.Extensions.FileSystemGlobbing.dll",
+      "sha256": "4d721cba125b09bc47f1bedad14bc3b96daa79fd8bab8c815b5111d168fd950e",
+      "name": "Microsoft.Extensions.FileSystemGlobbing",
+      "version": "6.0.0.0",
+      "public_key": "0024000004800000940000000602000000240000525341310004000001000100f33a29044fa9d740c9b3213a93e57c84b472c84e0b8a0e1ae48e67a9f8f6de9d5f7f3d52ac23e48ac51801f1dc950abe901da34d2a9e3baadb141a17c77ef3c565dd5ee5054b91cf63bb3c6ab83f72ab3aafe93d0fc3c2348b764fafb0b1c0733de51459aeab46580384bf9d74c4e28164b7cde247f891ba07891c9d872ad2bb",
+      "public_key_token": "adb9793829ddae60",
+      "attributes": {
+        "AssemblyFileVersionAttribute": "6.0.21.52210",
+        "AssemblyInformationalVersionAttribute": "6.0.0+4822e3c3aa77eb82b2fb33c9321f923cf11ddde6"
+      },
+      "exported_types": 0,
+      "references": [
+        {
+          "name": "mscorlib",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Core",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        }
+      ]
+    },
+    {
+      "file": "E:/msys64/home/topkek/psresourceget-source-map.oSG9Iz/published-dlls/Microsoft.Extensions.Primitives.dll",
+      "sha256": "6baac0ec89742f6af548f956009d2fea2eb53f8314ba715a2016cc546279aea3",
+      "name": "Microsoft.Extensions.Primitives",
+      "version": "6.0.0.0",
+      "public_key": "0024000004800000940000000602000000240000525341310004000001000100f33a29044fa9d740c9b3213a93e57c84b472c84e0b8a0e1ae48e67a9f8f6de9d5f7f3d52ac23e48ac51801f1dc950abe901da34d2a9e3baadb141a17c77ef3c565dd5ee5054b91cf63bb3c6ab83f72ab3aafe93d0fc3c2348b764fafb0b1c0733de51459aeab46580384bf9d74c4e28164b7cde247f891ba07891c9d872ad2bb",
+      "public_key_token": "adb9793829ddae60",
+      "attributes": {
+        "AssemblyFileVersionAttribute": "6.0.21.52210",
+        "AssemblyInformationalVersionAttribute": "6.0.0+4822e3c3aa77eb82b2fb33c9321f923cf11ddde6"
+      },
+      "exported_types": 0,
+      "references": [
+        {
+          "name": "mscorlib",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Buffers",
+          "version": "4.0.3.0",
+          "public_key_or_token": "cc7b13ffcd2ddd51"
+        },
+        {
+          "name": "System.Memory",
+          "version": "4.0.1.1",
+          "public_key_or_token": "cc7b13ffcd2ddd51"
+        },
+        {
+          "name": "System.Runtime.CompilerServices.Unsafe",
+          "version": "6.0.0.0",
+          "public_key_or_token": "b03f5f7f11d50a3a"
+        }
+      ]
+    },
+    {
+      "file": "E:/msys64/home/topkek/psresourceget-source-map.oSG9Iz/published-dlls/Microsoft.Identity.Client.dll",
+      "sha256": "fa33b05ef30341b339993486dc44b252fcf8ca61349a425f6df5e71b7dedbe96",
+      "name": "Microsoft.Identity.Client",
+      "version": "4.61.3.0",
+      "public_key": "00240000048000009400000006020000002400005253413100040000010001002d96616729b54f6d013d71559a017f50aa4861487226c523959d1579b93f3fdf71c08b980fd3130062b03d3de115c4b84e7ac46aef5e192a40e7457d5f3a08f66ceab71143807f2c3cb0da5e23b38f0559769978406f6e5d30ceadd7985fc73a5a609a8b74a1df0a29399074a003a226c943d480fec96dbec7106a87896539ad",
+      "public_key_token": "0a613f4dd989e8ae",
+      "attributes": {
+        "AssemblyFileVersionAttribute": "4.61.3.0",
+        "AssemblyInformationalVersionAttribute": "4.61.3+88df64013795d4e3716e1f677600f8164ffdb542"
+      },
+      "exported_types": 0,
+      "references": [
+        {
+          "name": "Microsoft.IdentityModel.Abstractions",
+          "version": "6.35.0.0",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "mscorlib",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Core",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Data",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Diagnostics.DiagnosticSource",
+          "version": "6.0.0.1",
+          "public_key_or_token": "cc7b13ffcd2ddd51"
+        },
+        {
+          "name": "System.Drawing",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b03f5f7f11d50a3a"
+        },
+        {
+          "name": "System.Net.Http",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b03f5f7f11d50a3a"
+        },
+        {
+          "name": "System.Numerics",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Runtime.Serialization",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Windows.Forms",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Xml",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Xml.Linq",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        }
+      ]
+    },
+    {
+      "file": "E:/msys64/home/topkek/psresourceget-source-map.oSG9Iz/published-dlls/Microsoft.Identity.Client.Extensions.Msal.dll",
+      "sha256": "61230c70bfaf727982f61f7865bb389039f92ef45c7191e3d1d110361921555d",
+      "name": "Microsoft.Identity.Client.Extensions.Msal",
+      "version": "4.61.3.0",
+      "public_key": "00240000048000009400000006020000002400005253413100040000010001002d96616729b54f6d013d71559a017f50aa4861487226c523959d1579b93f3fdf71c08b980fd3130062b03d3de115c4b84e7ac46aef5e192a40e7457d5f3a08f66ceab71143807f2c3cb0da5e23b38f0559769978406f6e5d30ceadd7985fc73a5a609a8b74a1df0a29399074a003a226c943d480fec96dbec7106a87896539ad",
+      "public_key_token": "0a613f4dd989e8ae",
+      "attributes": {
+        "AssemblyFileVersionAttribute": "4.61.3.0",
+        "AssemblyInformationalVersionAttribute": "4.61.3+88df64013795d4e3716e1f677600f8164ffdb542"
+      },
+      "exported_types": 0,
+      "references": [
+        {
+          "name": "Microsoft.Identity.Client",
+          "version": "4.61.3.0",
+          "public_key_or_token": "0a613f4dd989e8ae"
+        },
+        {
+          "name": "netstandard",
+          "version": "2.0.0.0",
+          "public_key_or_token": "cc7b13ffcd2ddd51"
+        },
+        {
+          "name": "System.IO.FileSystem.AccessControl",
+          "version": "5.0.0.0",
+          "public_key_or_token": "b03f5f7f11d50a3a"
+        },
+        {
+          "name": "System.Security.AccessControl",
+          "version": "5.0.0.0",
+          "public_key_or_token": "b03f5f7f11d50a3a"
+        },
+        {
+          "name": "System.Security.Cryptography.ProtectedData",
+          "version": "4.0.3.0",
+          "public_key_or_token": "b03f5f7f11d50a3a"
+        },
+        {
+          "name": "System.Security.Principal.Windows",
+          "version": "5.0.0.0",
+          "public_key_or_token": "b03f5f7f11d50a3a"
+        }
+      ]
+    },
+    {
+      "file": "E:/msys64/home/topkek/psresourceget-source-map.oSG9Iz/published-dlls/Microsoft.IdentityModel.Abstractions.dll",
+      "sha256": "3de69dc6aefd48db63d84d225ab2eaa54ebd9285322f372c136ffd04c94028ec",
+      "name": "Microsoft.IdentityModel.Abstractions",
+      "version": "6.35.0.0",
+      "public_key": "0024000004800000940000000602000000240000525341310004000001000100b5fc90e7027f67871e773a8fde8938c81dd402ba65b9201d60593e96c492651e889cc13f1415ebb53fac1131ae0bd333c5ee6021672d9718ea31a8aebd0da0072f25d87dba6fc90ffd598ed4da35e44c398c454307e8e33b8426143daec9f596836f97c8f74750e5975c64e2189f45def46b2a2b1247adc3652bf5c308055da9",
+      "public_key_token": "31bf3856ad364e35",
+      "attributes": {
+        "AssemblyFileVersionAttribute": "6.35.0.41201",
+        "AssemblyInformationalVersionAttribute": "6.35.0.41201040912.c94c7fc235501d478221e979062bd8837a55575b"
+      },
+      "exported_types": 0,
+      "references": [
+        {
+          "name": "mscorlib",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        }
+      ]
+    },
+    {
+      "file": "E:/msys64/home/topkek/psresourceget-source-map.oSG9Iz/published-dlls/Microsoft.PowerShell.PSResourceGet.dll",
+      "sha256": "9afd8148fa3ce410290b49bfe801d58e391aa360dc005c30ec3276696def6629",
+      "name": "Microsoft.PowerShell.PSResourceGet",
+      "version": "1.1.0.1",
+      "public_key": "",
+      "public_key_token": "null",
+      "attributes": {
+        "AssemblyFileVersionAttribute": "1.1.0.1",
+        "AssemblyInformationalVersionAttribute": "1.1.0.1+44697aed1740126153a8d9dd0ef368261b2fe45c"
+      },
+      "exported_types": 0,
+      "references": [
+        {
+          "name": "Azure.Core",
+          "version": "1.38.0.0",
+          "public_key_or_token": "92742159e12e44c8"
+        },
+        {
+          "name": "Azure.Identity",
+          "version": "1.11.4.0",
+          "public_key_or_token": "92742159e12e44c8"
+        },
+        {
+          "name": "mscorlib",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "Newtonsoft.Json",
+          "version": "13.0.0.0",
+          "public_key_or_token": "30ad4fe6b2a6aeed"
+        },
+        {
+          "name": "NuGet.Commands",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "NuGet.Common",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "NuGet.Configuration",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "NuGet.Packaging",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "NuGet.Protocol",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "NuGet.Versioning",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "System",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Core",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.IO.Compression",
+          "version": "4.2.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.IO.Compression.FileSystem",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Management.Automation",
+          "version": "1.0.0.0",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "System.Net.Http",
+          "version": "4.2.0.0",
+          "public_key_or_token": "b03f5f7f11d50a3a"
+        },
+        {
+          "name": "System.Text.Json",
+          "version": "8.0.0.5",
+          "public_key_or_token": "cc7b13ffcd2ddd51"
+        },
+        {
+          "name": "System.Threading.Tasks.Extensions",
+          "version": "4.2.0.1",
+          "public_key_or_token": "cc7b13ffcd2ddd51"
+        },
+        {
+          "name": "System.Web",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b03f5f7f11d50a3a"
+        },
+        {
+          "name": "System.Xml",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Xml.Linq",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        }
+      ]
+    },
+    {
+      "file": "E:/msys64/home/topkek/psresourceget-source-map.oSG9Iz/published-dlls/Newtonsoft.Json.dll",
+      "sha256": "f82ee1def1450282c2f47b96af064ee0ab44c2eda44e99c3fa7fc36d0cf7e06b",
+      "name": "Newtonsoft.Json",
+      "version": "13.0.0.0",
+      "public_key": "0024000004800000940000000602000000240000525341310004000001000100f561df277c6c0b497d629032b410cdcf286e537c054724f7ffa0164345f62b3e642029d7a80cc351918955328c4adc8a048823ef90b0cf38ea7db0d729caf2b633c3babe08b0310198c1081995c19029bc675193744eab9d7345b8a67258ec17d112cebdbbb2a281487dceeafb9d83aa930f32103fbe1d2911425bc5744002c7",
+      "public_key_token": "30ad4fe6b2a6aeed",
+      "attributes": {
+        "AssemblyFileVersionAttribute": "13.0.3.27908",
+        "AssemblyInformationalVersionAttribute": "13.0.3+0a2e291c0d9c0c7675d445703e51750363a549ef"
+      },
+      "exported_types": 0,
+      "references": [
+        {
+          "name": "mscorlib",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Core",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Data",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Numerics",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Runtime.Serialization",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Xml",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Xml.Linq",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        }
+      ]
+    },
+    {
+      "file": "E:/msys64/home/topkek/psresourceget-source-map.oSG9Iz/published-dlls/NuGet.Commands.dll",
+      "sha256": "762988b531247a8ac282b85e0bc81004fa9d02b9118a24c3b18b3a97f1dade48",
+      "name": "NuGet.Commands",
+      "version": "6.9.1.3",
+      "public_key": "0024000004800000940000000602000000240000525341310004000001000100b5fc90e7027f67871e773a8fde8938c81dd402ba65b9201d60593e96c492651e889cc13f1415ebb53fac1131ae0bd333c5ee6021672d9718ea31a8aebd0da0072f25d87dba6fc90ffd598ed4da35e44c398c454307e8e33b8426143daec9f596836f97c8f74750e5975c64e2189f45def46b2a2b1247adc3652bf5c308055da9",
+      "public_key_token": "31bf3856ad364e35",
+      "attributes": {
+        "AssemblyFileVersionAttribute": "6.9.1.3",
+        "AssemblyInformationalVersionAttribute": "6.9.1+623fde83a3cd73cb479ec7fa03866c6116894dbf.623fde83a3cd73cb479ec7fa03866c6116894dbf"
+      },
+      "exported_types": 0,
+      "references": [
+        {
+          "name": "Microsoft.Extensions.FileProviders.Abstractions",
+          "version": "6.0.0.0",
+          "public_key_or_token": "adb9793829ddae60"
+        },
+        {
+          "name": "Microsoft.Extensions.FileSystemGlobbing",
+          "version": "6.0.0.0",
+          "public_key_or_token": "adb9793829ddae60"
+        },
+        {
+          "name": "Microsoft.Extensions.Primitives",
+          "version": "6.0.0.0",
+          "public_key_or_token": "adb9793829ddae60"
+        },
+        {
+          "name": "mscorlib",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "NuGet.Common",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "NuGet.Configuration",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "NuGet.DependencyResolver.Core",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "NuGet.Frameworks",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "NuGet.LibraryModel",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "NuGet.Packaging",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "NuGet.ProjectModel",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "NuGet.Protocol",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "NuGet.Versioning",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "System",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Core",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Memory",
+          "version": "4.0.1.2",
+          "public_key_or_token": "cc7b13ffcd2ddd51"
+        },
+        {
+          "name": "System.Security",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b03f5f7f11d50a3a"
+        },
+        {
+          "name": "System.Xml",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Xml.Linq",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        }
+      ]
+    },
+    {
+      "file": "E:/msys64/home/topkek/psresourceget-source-map.oSG9Iz/published-dlls/NuGet.Common.dll",
+      "sha256": "e8932ac0c5d7e306551bc4b585f582baef7651f21c88d4976445c0bfdf29f227",
+      "name": "NuGet.Common",
+      "version": "6.9.1.3",
+      "public_key": "0024000004800000940000000602000000240000525341310004000001000100b5fc90e7027f67871e773a8fde8938c81dd402ba65b9201d60593e96c492651e889cc13f1415ebb53fac1131ae0bd333c5ee6021672d9718ea31a8aebd0da0072f25d87dba6fc90ffd598ed4da35e44c398c454307e8e33b8426143daec9f596836f97c8f74750e5975c64e2189f45def46b2a2b1247adc3652bf5c308055da9",
+      "public_key_token": "31bf3856ad364e35",
+      "attributes": {
+        "AssemblyFileVersionAttribute": "6.9.1.3",
+        "AssemblyInformationalVersionAttribute": "6.9.1+623fde83a3cd73cb479ec7fa03866c6116894dbf.623fde83a3cd73cb479ec7fa03866c6116894dbf"
+      },
+      "exported_types": 0,
+      "references": [
+        {
+          "name": "mscorlib",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "NuGet.Frameworks",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "System",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Core",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.IO.Compression",
+          "version": "4.2.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Xml",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Xml.Linq",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        }
+      ]
+    },
+    {
+      "file": "E:/msys64/home/topkek/psresourceget-source-map.oSG9Iz/published-dlls/NuGet.Configuration.dll",
+      "sha256": "0bb37c45575cbcccc279a4250fb7f0d87de5c0a3ddc16565542a6ed0e5682c6b",
+      "name": "NuGet.Configuration",
+      "version": "6.9.1.3",
+      "public_key": "0024000004800000940000000602000000240000525341310004000001000100b5fc90e7027f67871e773a8fde8938c81dd402ba65b9201d60593e96c492651e889cc13f1415ebb53fac1131ae0bd333c5ee6021672d9718ea31a8aebd0da0072f25d87dba6fc90ffd598ed4da35e44c398c454307e8e33b8426143daec9f596836f97c8f74750e5975c64e2189f45def46b2a2b1247adc3652bf5c308055da9",
+      "public_key_token": "31bf3856ad364e35",
+      "attributes": {
+        "AssemblyFileVersionAttribute": "6.9.1.3",
+        "AssemblyInformationalVersionAttribute": "6.9.1+623fde83a3cd73cb479ec7fa03866c6116894dbf.623fde83a3cd73cb479ec7fa03866c6116894dbf"
+      },
+      "exported_types": 0,
+      "references": [
+        {
+          "name": "mscorlib",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "NuGet.Common",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "System",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Core",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Security",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b03f5f7f11d50a3a"
+        },
+        {
+          "name": "System.Xml",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Xml.Linq",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        }
+      ]
+    },
+    {
+      "file": "E:/msys64/home/topkek/psresourceget-source-map.oSG9Iz/published-dlls/NuGet.Credentials.dll",
+      "sha256": "e5f44ddc086a8f40989c70460e22e25095d75ac402faf6ff436e6a08c9cec71f",
+      "name": "NuGet.Credentials",
+      "version": "6.9.1.3",
+      "public_key": "0024000004800000940000000602000000240000525341310004000001000100b5fc90e7027f67871e773a8fde8938c81dd402ba65b9201d60593e96c492651e889cc13f1415ebb53fac1131ae0bd333c5ee6021672d9718ea31a8aebd0da0072f25d87dba6fc90ffd598ed4da35e44c398c454307e8e33b8426143daec9f596836f97c8f74750e5975c64e2189f45def46b2a2b1247adc3652bf5c308055da9",
+      "public_key_token": "31bf3856ad364e35",
+      "attributes": {
+        "AssemblyFileVersionAttribute": "6.9.1.3",
+        "AssemblyInformationalVersionAttribute": "6.9.1+623fde83a3cd73cb479ec7fa03866c6116894dbf.623fde83a3cd73cb479ec7fa03866c6116894dbf"
+      },
+      "exported_types": 0,
+      "references": [
+        {
+          "name": "mscorlib",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "Newtonsoft.Json",
+          "version": "13.0.0.0",
+          "public_key_or_token": "30ad4fe6b2a6aeed"
+        },
+        {
+          "name": "NuGet.Common",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "NuGet.Configuration",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "NuGet.Protocol",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "System",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Core",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Xml",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Xml.Linq",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        }
+      ]
+    },
+    {
+      "file": "E:/msys64/home/topkek/psresourceget-source-map.oSG9Iz/published-dlls/NuGet.DependencyResolver.Core.dll",
+      "sha256": "077951fea107ed42180aa5eaaa0be047070a0eff32a62999a8280535cb5d4f3d",
+      "name": "NuGet.DependencyResolver.Core",
+      "version": "6.9.1.3",
+      "public_key": "0024000004800000940000000602000000240000525341310004000001000100b5fc90e7027f67871e773a8fde8938c81dd402ba65b9201d60593e96c492651e889cc13f1415ebb53fac1131ae0bd333c5ee6021672d9718ea31a8aebd0da0072f25d87dba6fc90ffd598ed4da35e44c398c454307e8e33b8426143daec9f596836f97c8f74750e5975c64e2189f45def46b2a2b1247adc3652bf5c308055da9",
+      "public_key_token": "31bf3856ad364e35",
+      "attributes": {
+        "AssemblyFileVersionAttribute": "6.9.1.3",
+        "AssemblyInformationalVersionAttribute": "6.9.1+623fde83a3cd73cb479ec7fa03866c6116894dbf.623fde83a3cd73cb479ec7fa03866c6116894dbf"
+      },
+      "exported_types": 0,
+      "references": [
+        {
+          "name": "mscorlib",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "NuGet.Common",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "NuGet.Configuration",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "NuGet.Frameworks",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "NuGet.LibraryModel",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "NuGet.Packaging",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "NuGet.Protocol",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "NuGet.Versioning",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "System",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Core",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Threading.Tasks.Extensions",
+          "version": "4.2.0.1",
+          "public_key_or_token": "cc7b13ffcd2ddd51"
+        },
+        {
+          "name": "System.Xml",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Xml.Linq",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        }
+      ]
+    },
+    {
+      "file": "E:/msys64/home/topkek/psresourceget-source-map.oSG9Iz/published-dlls/NuGet.Frameworks.dll",
+      "sha256": "c79e07959989fe7e99f31171ef712f9665474e652b4c16bc729160114697f8d4",
+      "name": "NuGet.Frameworks",
+      "version": "6.9.1.3",
+      "public_key": "0024000004800000940000000602000000240000525341310004000001000100b5fc90e7027f67871e773a8fde8938c81dd402ba65b9201d60593e96c492651e889cc13f1415ebb53fac1131ae0bd333c5ee6021672d9718ea31a8aebd0da0072f25d87dba6fc90ffd598ed4da35e44c398c454307e8e33b8426143daec9f596836f97c8f74750e5975c64e2189f45def46b2a2b1247adc3652bf5c308055da9",
+      "public_key_token": "31bf3856ad364e35",
+      "attributes": {
+        "AssemblyFileVersionAttribute": "6.9.1.3",
+        "AssemblyInformationalVersionAttribute": "6.9.1+623fde83a3cd73cb479ec7fa03866c6116894dbf.623fde83a3cd73cb479ec7fa03866c6116894dbf"
+      },
+      "exported_types": 0,
+      "references": [
+        {
+          "name": "mscorlib",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Core",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Xml",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Xml.Linq",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        }
+      ]
+    },
+    {
+      "file": "E:/msys64/home/topkek/psresourceget-source-map.oSG9Iz/published-dlls/NuGet.LibraryModel.dll",
+      "sha256": "eaf71d1d5dd771dac1510c8779c2fdc98d539c8c07934ee114679d453fa60c21",
+      "name": "NuGet.LibraryModel",
+      "version": "6.9.1.3",
+      "public_key": "0024000004800000940000000602000000240000525341310004000001000100b5fc90e7027f67871e773a8fde8938c81dd402ba65b9201d60593e96c492651e889cc13f1415ebb53fac1131ae0bd333c5ee6021672d9718ea31a8aebd0da0072f25d87dba6fc90ffd598ed4da35e44c398c454307e8e33b8426143daec9f596836f97c8f74750e5975c64e2189f45def46b2a2b1247adc3652bf5c308055da9",
+      "public_key_token": "31bf3856ad364e35",
+      "attributes": {
+        "AssemblyFileVersionAttribute": "6.9.1.3",
+        "AssemblyInformationalVersionAttribute": "6.9.1+623fde83a3cd73cb479ec7fa03866c6116894dbf.623fde83a3cd73cb479ec7fa03866c6116894dbf"
+      },
+      "exported_types": 0,
+      "references": [
+        {
+          "name": "mscorlib",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "NuGet.Common",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "NuGet.Frameworks",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "NuGet.Versioning",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "System",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Core",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Xml",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Xml.Linq",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        }
+      ]
+    },
+    {
+      "file": "E:/msys64/home/topkek/psresourceget-source-map.oSG9Iz/published-dlls/NuGet.Packaging.dll",
+      "sha256": "877e82582d7802aca0b2fd53d34175b42d01bcf713a77d6d0a9e8a73c47ee2a4",
+      "name": "NuGet.Packaging",
+      "version": "6.9.1.3",
+      "public_key": "0024000004800000940000000602000000240000525341310004000001000100b5fc90e7027f67871e773a8fde8938c81dd402ba65b9201d60593e96c492651e889cc13f1415ebb53fac1131ae0bd333c5ee6021672d9718ea31a8aebd0da0072f25d87dba6fc90ffd598ed4da35e44c398c454307e8e33b8426143daec9f596836f97c8f74750e5975c64e2189f45def46b2a2b1247adc3652bf5c308055da9",
+      "public_key_token": "31bf3856ad364e35",
+      "attributes": {
+        "AssemblyFileVersionAttribute": "6.9.1.3",
+        "AssemblyInformationalVersionAttribute": "6.9.1+623fde83a3cd73cb479ec7fa03866c6116894dbf.623fde83a3cd73cb479ec7fa03866c6116894dbf"
+      },
+      "exported_types": 0,
+      "references": [
+        {
+          "name": "mscorlib",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "Newtonsoft.Json",
+          "version": "13.0.0.0",
+          "public_key_or_token": "30ad4fe6b2a6aeed"
+        },
+        {
+          "name": "NuGet.Common",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "NuGet.Configuration",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "NuGet.Frameworks",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "NuGet.Versioning",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "System",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Core",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.IO.Compression",
+          "version": "4.2.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Numerics",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Security",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b03f5f7f11d50a3a"
+        },
+        {
+          "name": "System.Xml",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Xml.Linq",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        }
+      ]
+    },
+    {
+      "file": "E:/msys64/home/topkek/psresourceget-source-map.oSG9Iz/published-dlls/NuGet.ProjectModel.dll",
+      "sha256": "275a531de109d62f71d745db656d295511dd53cf0fd141cc0153ad357bfc8163",
+      "name": "NuGet.ProjectModel",
+      "version": "6.9.1.3",
+      "public_key": "0024000004800000940000000602000000240000525341310004000001000100b5fc90e7027f67871e773a8fde8938c81dd402ba65b9201d60593e96c492651e889cc13f1415ebb53fac1131ae0bd333c5ee6021672d9718ea31a8aebd0da0072f25d87dba6fc90ffd598ed4da35e44c398c454307e8e33b8426143daec9f596836f97c8f74750e5975c64e2189f45def46b2a2b1247adc3652bf5c308055da9",
+      "public_key_token": "31bf3856ad364e35",
+      "attributes": {
+        "AssemblyFileVersionAttribute": "6.9.1.3",
+        "AssemblyInformationalVersionAttribute": "6.9.1+623fde83a3cd73cb479ec7fa03866c6116894dbf.623fde83a3cd73cb479ec7fa03866c6116894dbf"
+      },
+      "exported_types": 0,
+      "references": [
+        {
+          "name": "mscorlib",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "Newtonsoft.Json",
+          "version": "13.0.0.0",
+          "public_key_or_token": "30ad4fe6b2a6aeed"
+        },
+        {
+          "name": "NuGet.Common",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "NuGet.Configuration",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "NuGet.DependencyResolver.Core",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "NuGet.Frameworks",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "NuGet.LibraryModel",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "NuGet.Packaging",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "NuGet.Versioning",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "System",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Core",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Xml",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Xml.Linq",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        }
+      ]
+    },
+    {
+      "file": "E:/msys64/home/topkek/psresourceget-source-map.oSG9Iz/published-dlls/NuGet.Protocol.dll",
+      "sha256": "ab3fcf87aba83ac429fb040d5c36a4b7e9af334c923f8f27041c93046d2af9cb",
+      "name": "NuGet.Protocol",
+      "version": "6.9.1.3",
+      "public_key": "0024000004800000940000000602000000240000525341310004000001000100b5fc90e7027f67871e773a8fde8938c81dd402ba65b9201d60593e96c492651e889cc13f1415ebb53fac1131ae0bd333c5ee6021672d9718ea31a8aebd0da0072f25d87dba6fc90ffd598ed4da35e44c398c454307e8e33b8426143daec9f596836f97c8f74750e5975c64e2189f45def46b2a2b1247adc3652bf5c308055da9",
+      "public_key_token": "31bf3856ad364e35",
+      "attributes": {
+        "AssemblyFileVersionAttribute": "6.9.1.3",
+        "AssemblyInformationalVersionAttribute": "6.9.1+623fde83a3cd73cb479ec7fa03866c6116894dbf.623fde83a3cd73cb479ec7fa03866c6116894dbf"
+      },
+      "exported_types": 0,
+      "references": [
+        {
+          "name": "mscorlib",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "Newtonsoft.Json",
+          "version": "13.0.0.0",
+          "public_key_or_token": "30ad4fe6b2a6aeed"
+        },
+        {
+          "name": "NuGet.Common",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "NuGet.Configuration",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "NuGet.Frameworks",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "NuGet.Packaging",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "NuGet.Versioning",
+          "version": "6.9.1.3",
+          "public_key_or_token": "31bf3856ad364e35"
+        },
+        {
+          "name": "System",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Core",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.IdentityModel",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.IO.Compression",
+          "version": "4.2.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Net.Http",
+          "version": "4.2.0.0",
+          "public_key_or_token": "b03f5f7f11d50a3a"
+        },
+        {
+          "name": "System.ServiceModel",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Text.Json",
+          "version": "7.0.0.3",
+          "public_key_or_token": "cc7b13ffcd2ddd51"
+        },
+        {
+          "name": "System.Threading.Tasks.Extensions",
+          "version": "4.2.0.1",
+          "public_key_or_token": "cc7b13ffcd2ddd51"
+        },
+        {
+          "name": "System.Xml",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Xml.Linq",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        }
+      ]
+    },
+    {
+      "file": "E:/msys64/home/topkek/psresourceget-source-map.oSG9Iz/published-dlls/NuGet.Versioning.dll",
+      "sha256": "77b3fad9d3d369538f765035dd142d3d91785ce1308c40c5ca13bf84c9e78ecd",
+      "name": "NuGet.Versioning",
+      "version": "6.9.1.3",
+      "public_key": "0024000004800000940000000602000000240000525341310004000001000100b5fc90e7027f67871e773a8fde8938c81dd402ba65b9201d60593e96c492651e889cc13f1415ebb53fac1131ae0bd333c5ee6021672d9718ea31a8aebd0da0072f25d87dba6fc90ffd598ed4da35e44c398c454307e8e33b8426143daec9f596836f97c8f74750e5975c64e2189f45def46b2a2b1247adc3652bf5c308055da9",
+      "public_key_token": "31bf3856ad364e35",
+      "attributes": {
+        "AssemblyFileVersionAttribute": "6.9.1.3",
+        "AssemblyInformationalVersionAttribute": "6.9.1+623fde83a3cd73cb479ec7fa03866c6116894dbf.623fde83a3cd73cb479ec7fa03866c6116894dbf"
+      },
+      "exported_types": 0,
+      "references": [
+        {
+          "name": "mscorlib",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Core",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Xml",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Xml.Linq",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        }
+      ]
+    },
+    {
+      "file": "E:/msys64/home/topkek/psresourceget-source-map.oSG9Iz/published-dlls/System.Buffers.dll",
+      "sha256": "62b76b9f5bae57029950811189d4d174c248012ddd3760dab6f162ac1707ef60",
+      "name": "System.Buffers",
+      "version": "4.0.3.0",
+      "public_key": "00240000048000009400000006020000002400005253413100040000010001004b86c4cb78549b34bab61a3b1800e23bfeb5b3ec390074041536a7e3cbd97f5f04cf0f857155a8928eaa29ebfd11cfbbad3ba70efea7bda3226c6a8d370a4cd303f714486b6ebc225985a638471e6ef571cc92a4613c00b8fa65d61ccee0cbe5f36330c9a01f4183559f1bef24cc2917c6d913e3a541333a1d05d9bed22b38cb",
+      "public_key_token": "cc7b13ffcd2ddd51",
+      "attributes": {
+        "AssemblyFileVersionAttribute": "4.6.28619.01",
+        "AssemblyInformationalVersionAttribute": "4.6.28619.01 @BuiltBy: dlab14-DDVSOWINAGE069 @Branch: release/2.1 @SrcCode: https://github.com/dotnet/corefx/tree/7601f4f6225089ffb291dc7d58293c7bbf5c5d4f"
+      },
+      "exported_types": 0,
+      "references": [
+        {
+          "name": "mscorlib",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        }
+      ]
+    },
+    {
+      "file": "E:/msys64/home/topkek/psresourceget-source-map.oSG9Iz/published-dlls/System.Diagnostics.DiagnosticSource.dll",
+      "sha256": "19ba42737c1c0500373736968f3d15cb7897cb195049fd5f492e6fe1629daaab",
+      "name": "System.Diagnostics.DiagnosticSource",
+      "version": "6.0.0.1",
+      "public_key": "00240000048000009400000006020000002400005253413100040000010001004b86c4cb78549b34bab61a3b1800e23bfeb5b3ec390074041536a7e3cbd97f5f04cf0f857155a8928eaa29ebfd11cfbbad3ba70efea7bda3226c6a8d370a4cd303f714486b6ebc225985a638471e6ef571cc92a4613c00b8fa65d61ccee0cbe5f36330c9a01f4183559f1bef24cc2917c6d913e3a541333a1d05d9bed22b38cb",
+      "public_key_token": "cc7b13ffcd2ddd51",
+      "attributes": {
+        "AssemblyFileVersionAttribute": "6.0.1523.11507",
+        "AssemblyInformationalVersionAttribute": "6.0.15+5edef4b20babd4c3ddac7460e536f86fd0f2d724"
+      },
+      "exported_types": 0,
+      "references": [
+        {
+          "name": "mscorlib",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Memory",
+          "version": "4.0.1.1",
+          "public_key_or_token": "cc7b13ffcd2ddd51"
+        },
+        {
+          "name": "System.Runtime.CompilerServices.Unsafe",
+          "version": "6.0.0.0",
+          "public_key_or_token": "b03f5f7f11d50a3a"
+        }
+      ]
+    },
+    {
+      "file": "E:/msys64/home/topkek/psresourceget-source-map.oSG9Iz/published-dlls/System.IO.FileSystem.AccessControl.dll",
+      "sha256": "e6026501ad4056ff2f1655b0afdfe8923bc6e8fbad67e1e9ef56e3002f49fbb9",
+      "name": "System.IO.FileSystem.AccessControl",
+      "version": "5.0.0.0",
+      "public_key": "002400000480000094000000060200000024000052534131000400000100010007d1fa57c4aed9f0a32e84aa0faefd0de9e8fd6aec8f87fb03766c834c99921eb23be79ad9d5dcc1dd9ad236132102900b723cf980957fc4e177108fc607774f29e8320e92ea05ece4e821c0a5efe8f1645c4c0c93c1ab99285d622caa652c1dfad63d745d6f2de5f17e5eaf0fc4963d261c8a12436518206dc093344d5ad293",
+      "public_key_token": "b03f5f7f11d50a3a",
+      "attributes": {
+        "AssemblyFileVersionAttribute": "5.0.20.51904",
+        "AssemblyInformationalVersionAttribute": "5.0.0+cf258a14b70ad9069470a108f13765e0e5988f51"
+      },
+      "exported_types": 7,
+      "references": [
+        {
+          "name": "mscorlib",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        }
+      ]
+    },
+    {
+      "file": "E:/msys64/home/topkek/psresourceget-source-map.oSG9Iz/published-dlls/System.Memory.Data.dll",
+      "sha256": "c96801b5f4b0a69186b780fc325bc26c4437f72611eb2d5a14083e776c343ded",
+      "name": "System.Memory.Data",
+      "version": "1.0.2.0",
+      "public_key": "00240000048000009400000006020000002400005253413100040000010001004b86c4cb78549b34bab61a3b1800e23bfeb5b3ec390074041536a7e3cbd97f5f04cf0f857155a8928eaa29ebfd11cfbbad3ba70efea7bda3226c6a8d370a4cd303f714486b6ebc225985a638471e6ef571cc92a4613c00b8fa65d61ccee0cbe5f36330c9a01f4183559f1bef24cc2917c6d913e3a541333a1d05d9bed22b38cb",
+      "public_key_token": "cc7b13ffcd2ddd51",
+      "attributes": {
+        "AssemblyFileVersionAttribute": "1.0.221.20802",
+        "AssemblyInformationalVersionAttribute": "1.0.2+7e3cf643977591e9041f4c628fd4d28237398e0b"
+      },
+      "exported_types": 0,
+      "references": [
+        {
+          "name": "mscorlib",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Memory",
+          "version": "4.0.1.1",
+          "public_key_or_token": "cc7b13ffcd2ddd51"
+        },
+        {
+          "name": "System.Text.Json",
+          "version": "4.0.0.0",
+          "public_key_or_token": "cc7b13ffcd2ddd51"
+        }
+      ]
+    },
+    {
+      "file": "E:/msys64/home/topkek/psresourceget-source-map.oSG9Iz/published-dlls/System.Memory.dll",
+      "sha256": "4e7201d6125a2334d0a2113d9e8e8968ef12471f769972752c843290e1ed07be",
+      "name": "System.Memory",
+      "version": "4.0.1.2",
+      "public_key": "00240000048000009400000006020000002400005253413100040000010001004b86c4cb78549b34bab61a3b1800e23bfeb5b3ec390074041536a7e3cbd97f5f04cf0f857155a8928eaa29ebfd11cfbbad3ba70efea7bda3226c6a8d370a4cd303f714486b6ebc225985a638471e6ef571cc92a4613c00b8fa65d61ccee0cbe5f36330c9a01f4183559f1bef24cc2917c6d913e3a541333a1d05d9bed22b38cb",
+      "public_key_token": "cc7b13ffcd2ddd51",
+      "attributes": {
+        "AssemblyFileVersionAttribute": "4.6.31308.01",
+        "AssemblyInformationalVersionAttribute": "4.6.31308.01 @BuiltBy: cloudtest-841353dfc000000 @Branch: release/2.1-MSRC @SrcCode: https://github.com/dotnet/corefx/tree/32b491939fbd125f304031c35038b1e14b4e3958"
+      },
+      "exported_types": 0,
+      "references": [
+        {
+          "name": "mscorlib",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Buffers",
+          "version": "4.0.3.0",
+          "public_key_or_token": "cc7b13ffcd2ddd51"
+        },
+        {
+          "name": "System.Numerics.Vectors",
+          "version": "4.1.4.0",
+          "public_key_or_token": "b03f5f7f11d50a3a"
+        },
+        {
+          "name": "System.Runtime.CompilerServices.Unsafe",
+          "version": "4.0.4.1",
+          "public_key_or_token": "b03f5f7f11d50a3a"
+        }
+      ]
+    },
+    {
+      "file": "E:/msys64/home/topkek/psresourceget-source-map.oSG9Iz/published-dlls/System.Numerics.Vectors.dll",
+      "sha256": "11b5bc7b17f6a1e9a79c91185cf3b75188e16463f0ef91730de9f7f29033f345",
+      "name": "System.Numerics.Vectors",
+      "version": "4.1.4.0",
+      "public_key": "002400000480000094000000060200000024000052534131000400000100010007d1fa57c4aed9f0a32e84aa0faefd0de9e8fd6aec8f87fb03766c834c99921eb23be79ad9d5dcc1dd9ad236132102900b723cf980957fc4e177108fc607774f29e8320e92ea05ece4e821c0a5efe8f1645c4c0c93c1ab99285d622caa652c1dfad63d745d6f2de5f17e5eaf0fc4963d261c8a12436518206dc093344d5ad293",
+      "public_key_token": "b03f5f7f11d50a3a",
+      "attributes": {
+        "AssemblyFileVersionAttribute": "4.6.26515.06",
+        "AssemblyInformationalVersionAttribute": "4.6.26515.06 @BuiltBy: dlab-DDVSOWINAGE059 @Branch: release/2.1 @SrcCode: https://github.com/dotnet/corefx/tree/30ab651fcb4354552bd4891619a0bdd81e0ebdbf"
+      },
+      "exported_types": 7,
+      "references": [
+        {
+          "name": "mscorlib",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Numerics",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        }
+      ]
+    },
+    {
+      "file": "E:/msys64/home/topkek/psresourceget-source-map.oSG9Iz/published-dlls/System.Runtime.CompilerServices.Unsafe.dll",
+      "sha256": "a2ba7ec04c487af02aad583946793b0b3db37d8ecfa95c4c7408a94517e43e15",
+      "name": "System.Runtime.CompilerServices.Unsafe",
+      "version": "6.0.0.0",
+      "public_key": "002400000480000094000000060200000024000052534131000400000100010007d1fa57c4aed9f0a32e84aa0faefd0de9e8fd6aec8f87fb03766c834c99921eb23be79ad9d5dcc1dd9ad236132102900b723cf980957fc4e177108fc607774f29e8320e92ea05ece4e821c0a5efe8f1645c4c0c93c1ab99285d622caa652c1dfad63d745d6f2de5f17e5eaf0fc4963d261c8a12436518206dc093344d5ad293",
+      "public_key_token": "b03f5f7f11d50a3a",
+      "attributes": {
+        "AssemblyFileVersionAttribute": "6.0.21.52210",
+        "AssemblyInformationalVersionAttribute": "6.0.0"
+      },
+      "exported_types": 0,
+      "references": [
+        {
+          "name": "mscorlib",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        }
+      ]
+    },
+    {
+      "file": "E:/msys64/home/topkek/psresourceget-source-map.oSG9Iz/published-dlls/System.Security.AccessControl.dll",
+      "sha256": "1fda491eebdb19ea0a83cf6c16ab5dd004a1bfdfc845ede017ebe0945beb927f",
+      "name": "System.Security.AccessControl",
+      "version": "5.0.0.0",
+      "public_key": "002400000480000094000000060200000024000052534131000400000100010007d1fa57c4aed9f0a32e84aa0faefd0de9e8fd6aec8f87fb03766c834c99921eb23be79ad9d5dcc1dd9ad236132102900b723cf980957fc4e177108fc607774f29e8320e92ea05ece4e821c0a5efe8f1645c4c0c93c1ab99285d622caa652c1dfad63d745d6f2de5f17e5eaf0fc4963d261c8a12436518206dc093344d5ad293",
+      "public_key_token": "b03f5f7f11d50a3a",
+      "attributes": {
+        "AssemblyFileVersionAttribute": "5.0.20.51904",
+        "AssemblyInformationalVersionAttribute": "5.0.0+cf258a14b70ad9069470a108f13765e0e5988f51"
+      },
+      "exported_types": 45,
+      "references": [
+        {
+          "name": "mscorlib",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        }
+      ]
+    },
+    {
+      "file": "E:/msys64/home/topkek/psresourceget-source-map.oSG9Iz/published-dlls/System.Security.Cryptography.ProtectedData.dll",
+      "sha256": "cd96124e4295ebf667624c8598b1cb30e0c7461e238bb6d0e76a83e22f19c148",
+      "name": "System.Security.Cryptography.ProtectedData",
+      "version": "4.0.5.0",
+      "public_key": "002400000480000094000000060200000024000052534131000400000100010007d1fa57c4aed9f0a32e84aa0faefd0de9e8fd6aec8f87fb03766c834c99921eb23be79ad9d5dcc1dd9ad236132102900b723cf980957fc4e177108fc607774f29e8320e92ea05ece4e821c0a5efe8f1645c4c0c93c1ab99285d622caa652c1dfad63d745d6f2de5f17e5eaf0fc4963d261c8a12436518206dc093344d5ad293",
+      "public_key_token": "b03f5f7f11d50a3a",
+      "attributes": {
+        "AssemblyFileVersionAttribute": "4.700.19.56404",
+        "AssemblyInformationalVersionAttribute": "3.1.0+0f7f38c4fd323b26da10cce95f857f77f0f09b48"
+      },
+      "exported_types": 2,
+      "references": [
+        {
+          "name": "mscorlib",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Security",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b03f5f7f11d50a3a"
+        }
+      ]
+    },
+    {
+      "file": "E:/msys64/home/topkek/psresourceget-source-map.oSG9Iz/published-dlls/System.Security.Principal.Windows.dll",
+      "sha256": "b4d8e15adc235d0e858e39b5133e5d00a4baa8c94f4f39e3b5e791b0f9c0c806",
+      "name": "System.Security.Principal.Windows",
+      "version": "5.0.0.0",
+      "public_key": "002400000480000094000000060200000024000052534131000400000100010007d1fa57c4aed9f0a32e84aa0faefd0de9e8fd6aec8f87fb03766c834c99921eb23be79ad9d5dcc1dd9ad236132102900b723cf980957fc4e177108fc607774f29e8320e92ea05ece4e821c0a5efe8f1645c4c0c93c1ab99285d622caa652c1dfad63d745d6f2de5f17e5eaf0fc4963d261c8a12436518206dc093344d5ad293",
+      "public_key_token": "b03f5f7f11d50a3a",
+      "attributes": {
+        "AssemblyFileVersionAttribute": "5.0.20.51904",
+        "AssemblyInformationalVersionAttribute": "5.0.0+cf258a14b70ad9069470a108f13765e0e5988f51"
+      },
+      "exported_types": 12,
+      "references": [
+        {
+          "name": "mscorlib",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        }
+      ]
+    },
+    {
+      "file": "E:/msys64/home/topkek/psresourceget-source-map.oSG9Iz/published-dlls/System.Text.Encodings.Web.dll",
+      "sha256": "e341029159ce9c2745b6e059cc01674d0ad52403ae37d22c92cd289d0e288314",
+      "name": "System.Text.Encodings.Web",
+      "version": "8.0.0.0",
+      "public_key": "00240000048000009400000006020000002400005253413100040000010001004b86c4cb78549b34bab61a3b1800e23bfeb5b3ec390074041536a7e3cbd97f5f04cf0f857155a8928eaa29ebfd11cfbbad3ba70efea7bda3226c6a8d370a4cd303f714486b6ebc225985a638471e6ef571cc92a4613c00b8fa65d61ccee0cbe5f36330c9a01f4183559f1bef24cc2917c6d913e3a541333a1d05d9bed22b38cb",
+      "public_key_token": "cc7b13ffcd2ddd51",
+      "attributes": {
+        "AssemblyFileVersionAttribute": "8.0.23.53103",
+        "AssemblyInformationalVersionAttribute": "8.0.0+5535e31a712343a63f5d7d796cd874e563e5ac14"
+      },
+      "exported_types": 0,
+      "references": [
+        {
+          "name": "mscorlib",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Buffers",
+          "version": "4.0.3.0",
+          "public_key_or_token": "cc7b13ffcd2ddd51"
+        },
+        {
+          "name": "System.Core",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Memory",
+          "version": "4.0.1.2",
+          "public_key_or_token": "cc7b13ffcd2ddd51"
+        },
+        {
+          "name": "System.Runtime.CompilerServices.Unsafe",
+          "version": "6.0.0.0",
+          "public_key_or_token": "b03f5f7f11d50a3a"
+        }
+      ]
+    },
+    {
+      "file": "E:/msys64/home/topkek/psresourceget-source-map.oSG9Iz/published-dlls/System.Text.Json.dll",
+      "sha256": "86c3f263ae9b4469ab1266c80471087082447eb4a38e6b97bf5e84de15c07a1d",
+      "name": "System.Text.Json",
+      "version": "8.0.0.5",
+      "public_key": "00240000048000009400000006020000002400005253413100040000010001004b86c4cb78549b34bab61a3b1800e23bfeb5b3ec390074041536a7e3cbd97f5f04cf0f857155a8928eaa29ebfd11cfbbad3ba70efea7bda3226c6a8d370a4cd303f714486b6ebc225985a638471e6ef571cc92a4613c00b8fa65d61ccee0cbe5f36330c9a01f4183559f1bef24cc2917c6d913e3a541333a1d05d9bed22b38cb",
+      "public_key_token": "cc7b13ffcd2ddd51",
+      "attributes": {
+        "AssemblyFileVersionAttribute": "8.0.1024.46610",
+        "AssemblyInformationalVersionAttribute": "8.0.10+81cabf2857a01351e5ab578947c7403a5b128ad1"
+      },
+      "exported_types": 0,
+      "references": [
+        {
+          "name": "Microsoft.Bcl.AsyncInterfaces",
+          "version": "8.0.0.0",
+          "public_key_or_token": "cc7b13ffcd2ddd51"
+        },
+        {
+          "name": "mscorlib",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Buffers",
+          "version": "4.0.3.0",
+          "public_key_or_token": "cc7b13ffcd2ddd51"
+        },
+        {
+          "name": "System.Core",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Memory",
+          "version": "4.0.1.2",
+          "public_key_or_token": "cc7b13ffcd2ddd51"
+        },
+        {
+          "name": "System.Numerics.Vectors",
+          "version": "4.1.4.0",
+          "public_key_or_token": "b03f5f7f11d50a3a"
+        },
+        {
+          "name": "System.Runtime.CompilerServices.Unsafe",
+          "version": "6.0.0.0",
+          "public_key_or_token": "b03f5f7f11d50a3a"
+        },
+        {
+          "name": "System.Text.Encodings.Web",
+          "version": "8.0.0.0",
+          "public_key_or_token": "cc7b13ffcd2ddd51"
+        },
+        {
+          "name": "System.Threading.Tasks.Extensions",
+          "version": "4.2.0.1",
+          "public_key_or_token": "cc7b13ffcd2ddd51"
+        },
+        {
+          "name": "System.ValueTuple",
+          "version": "4.0.3.0",
+          "public_key_or_token": "cc7b13ffcd2ddd51"
+        }
+      ]
+    },
+    {
+      "file": "E:/msys64/home/topkek/psresourceget-source-map.oSG9Iz/published-dlls/System.Threading.Tasks.Extensions.dll",
+      "sha256": "4f81ffd0dc7204db75afc35ea4291769b07c440592f28894260eea76626a23c6",
+      "name": "System.Threading.Tasks.Extensions",
+      "version": "4.2.0.1",
+      "public_key": "00240000048000009400000006020000002400005253413100040000010001004b86c4cb78549b34bab61a3b1800e23bfeb5b3ec390074041536a7e3cbd97f5f04cf0f857155a8928eaa29ebfd11cfbbad3ba70efea7bda3226c6a8d370a4cd303f714486b6ebc225985a638471e6ef571cc92a4613c00b8fa65d61ccee0cbe5f36330c9a01f4183559f1bef24cc2917c6d913e3a541333a1d05d9bed22b38cb",
+      "public_key_token": "cc7b13ffcd2ddd51",
+      "attributes": {
+        "AssemblyFileVersionAttribute": "4.6.28619.01",
+        "AssemblyInformationalVersionAttribute": "4.6.28619.01 @BuiltBy: dlab14-DDVSOWINAGE069 @Branch: release/2.1 @SrcCode: https://github.com/dotnet/corefx/tree/7601f4f6225089ffb291dc7d58293c7bbf5c5d4f"
+      },
+      "exported_types": 0,
+      "references": [
+        {
+          "name": "mscorlib",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        },
+        {
+          "name": "System.Runtime.CompilerServices.Unsafe",
+          "version": "4.0.4.1",
+          "public_key_or_token": "b03f5f7f11d50a3a"
+        }
+      ]
+    },
+    {
+      "file": "E:/msys64/home/topkek/psresourceget-source-map.oSG9Iz/published-dlls/System.ValueTuple.dll",
+      "sha256": "e905d102585b22c6df04f219af5cbdbfa7bc165979e9788b62df6dcc165e10f4",
+      "name": "System.ValueTuple",
+      "version": "4.0.3.0",
+      "public_key": "00240000048000009400000006020000002400005253413100040000010001004b86c4cb78549b34bab61a3b1800e23bfeb5b3ec390074041536a7e3cbd97f5f04cf0f857155a8928eaa29ebfd11cfbbad3ba70efea7bda3226c6a8d370a4cd303f714486b6ebc225985a638471e6ef571cc92a4613c00b8fa65d61ccee0cbe5f36330c9a01f4183559f1bef24cc2917c6d913e3a541333a1d05d9bed22b38cb",
+      "public_key_token": "cc7b13ffcd2ddd51",
+      "attributes": {
+        "AssemblyFileVersionAttribute": "4.6.26515.06",
+        "AssemblyInformationalVersionAttribute": "4.6.26515.06 @BuiltBy: dlab-DDVSOWINAGE059 @Branch: release/2.1 @SrcCode: https://github.com/dotnet/corefx/tree/30ab651fcb4354552bd4891619a0bdd81e0ebdbf"
+      },
+      "exported_types": 11,
+      "references": [
+        {
+          "name": "mscorlib",
+          "version": "4.0.0.0",
+          "public_key_or_token": "b77a5c561934e089"
+        }
+      ]
+    }
+  ],
+  "status": "source-module-packaged-and-installed-local-and-owned-http-integration-passed",
+  "notes": [
+    "Published DLLs inspected only as PE metadata, never executed or build references.",
+    "Azure.Core1.38.0 references System.ClientModel1.0.0, absent from published module bundle; full source dependency closure must include it.",
+    "NuGet6.9.1 original source623fde83a3cd73cb479ec7fa03866c6116894dbf requires original Extensions6 prerequisites."
+  ],
+  "source_closure_manifest": "tests/powershell-deps/psresourceget-source-closure-1.1.1.json",
+  "module_evidence": "tests/powershell-deps/psresourceget-results-20261027.txt",
+  "module_private_source_dependencies": 26,
+  "remaining_integration": [
+    "real remote/cloud repository and authentication service matrices",
+    "runtime servicing and full shipping PowerShell/SDK"
+  ]
+}

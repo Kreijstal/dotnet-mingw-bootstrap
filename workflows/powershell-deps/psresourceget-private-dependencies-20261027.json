@@ -1,0 +1,329 @@
+{
+  "Azure.Core.dll": {
+    "package": "Azure.Core/1.38.0",
+    "asset": "lib/net8.0/Azure.Core.dll",
+    "sha256": "d1190f5ddc34214ccd4f540948aa3d6fcba1c6b1d2993343f819420164b7c1ee",
+    "nuget_sha256": "42afea71e62f5f371139784f5c3fa84188ffc4196a785004dee18b5318a25313",
+    "licenses": [
+      "LICENSE.txt"
+    ],
+    "native_license_owner": null,
+    "native_license_assets": []
+  },
+  "Azure.Identity.dll": {
+    "package": "Azure.Identity/1.11.4",
+    "asset": "lib/net8.0/Azure.Identity.dll",
+    "sha256": "bbdc292690bda37db3ce7195df80a13f95484a82e1fca0d52d27e9e7f0d34752",
+    "nuget_sha256": "65eb9127ef4f1b445f7e05996a6ab1a9bc5d54c971ca216292fa1a804aa353dd",
+    "licenses": [
+      "LICENSE.txt"
+    ],
+    "native_license_owner": null,
+    "native_license_assets": []
+  },
+  "Microsoft.Extensions.FileProviders.Abstractions.dll": {
+    "package": "Microsoft.Extensions.FileProviders.Abstractions/6.0.0",
+    "asset": "lib/net8.0/Microsoft.Extensions.FileProviders.Abstractions.dll",
+    "sha256": "0ea6931be619ef09b0ead37fce88965e22b0fd9e7403e69a1329d6d3ec939d55",
+    "nuget_sha256": "96e9756e8e6805a488aa6437f895f656de1e4cb46522bca27c5a9628ecd2c04a",
+    "licenses": [
+      "LICENSE.TXT"
+    ],
+    "native_license_owner": null,
+    "native_license_assets": []
+  },
+  "Microsoft.Extensions.FileSystemGlobbing.dll": {
+    "package": "Microsoft.Extensions.FileSystemGlobbing/6.0.0",
+    "asset": "lib/net8.0/Microsoft.Extensions.FileSystemGlobbing.dll",
+    "sha256": "5b7cf65d95b830bc606715cc41c6d0062f2845bfc10438b19049236646aa9953",
+    "nuget_sha256": "18a3a2cffc4b44e17ecac89260ccf9d7de2867c90859e1a66f1782eafdc97d85",
+    "licenses": [
+      "LICENSE.TXT"
+    ],
+    "native_license_owner": null,
+    "native_license_assets": []
+  },
+  "Microsoft.Extensions.Primitives.dll": {
+    "package": "Microsoft.Extensions.Primitives/6.0.0",
+    "asset": "lib/net8.0/Microsoft.Extensions.Primitives.dll",
+    "sha256": "4f3576424629d209be7b43ac729db0c05dffc668fa791ff99ad4e50f2d112759",
+    "nuget_sha256": "5d69892750b7c74b32738e1edc1fc635445e407ea61726e0c373a3a7dca2b3e6",
+    "licenses": [
+      "LICENSE.TXT"
+    ],
+    "native_license_owner": null,
+    "native_license_assets": []
+  },
+  "Microsoft.Identity.Client.dll": {
+    "package": "Microsoft.Identity.Client/4.61.3",
+    "asset": "lib/net8.0/Microsoft.Identity.Client.dll",
+    "sha256": "c3a31e75f314dbe3aa69b9ff9a976c54e3eddb922d0a5c3f2d98e1efe8d3fa93",
+    "nuget_sha256": "8f5ce8552d29a1d0669147426e25a6532c4bffbb8e525288a9101e1e7580752b",
+    "licenses": [
+      "LICENSE.txt",
+      "ThirdPartyNotice.txt"
+    ],
+    "native_license_owner": null,
+    "native_license_assets": []
+  },
+  "Microsoft.Identity.Client.Extensions.Msal.dll": {
+    "package": "Microsoft.Identity.Client.Extensions.Msal/4.61.3",
+    "asset": "lib/net8.0/Microsoft.Identity.Client.Extensions.Msal.dll",
+    "sha256": "f2d1e1b63f60bc6a5aff8e905f78d06475352813561e3cf6944bd3082e1e68da",
+    "nuget_sha256": "fd9fe8c7de97403b7ae9be002e384a655df46feeb3b587deacd3e8e74fcc5010",
+    "licenses": [
+      "LICENSE.txt",
+      "ThirdPartyNotice.txt"
+    ],
+    "native_license_owner": null,
+    "native_license_assets": []
+  },
+  "Microsoft.IdentityModel.Abstractions.dll": {
+    "package": "Microsoft.IdentityModel.Abstractions/6.35.0",
+    "asset": "lib/net8.0/Microsoft.IdentityModel.Abstractions.dll",
+    "sha256": "3afcbdc1b1c0695f2afb8b24226fd810d101d65a7c3fc584d73ffe41086f0e66",
+    "nuget_sha256": "6d99a71fb97fb94769556df027e8dd0d885c902670b2c53c91e17fecef2b9c2e",
+    "licenses": [
+      "LICENSE.txt"
+    ],
+    "native_license_owner": null,
+    "native_license_assets": []
+  },
+  "Newtonsoft.Json.dll": {
+    "package": "Newtonsoft.Json/13.0.4",
+    "asset": "lib/net8.0/Newtonsoft.Json.dll",
+    "sha256": "dbd632f1e37926c74e8b40d4672af029a85fcd878d4a7c95e6c401516f14a1e7",
+    "nuget_sha256": "94044f9727ea93f1f9aa94261c5416b6adea47e9b859a899d7621fdc8a23e0c5",
+    "licenses": [
+      "LICENSE.md"
+    ],
+    "native_license_owner": null,
+    "native_license_assets": []
+  },
+  "NuGet.Commands.dll": {
+    "package": "NuGet.Commands/6.9.1",
+    "asset": "lib/net8.0/NuGet.Commands.dll",
+    "sha256": "58ae9cab77393925c29fb7ab87f5d1f0e472787df62e34a16e2c00730abfa874",
+    "nuget_sha256": "bfb7377394612599981621d5832db4d5c30c5af9910b5497a47cfd57249867a5",
+    "licenses": [
+      "LICENSE.txt",
+      "NOTICES.txt"
+    ],
+    "native_license_owner": null,
+    "native_license_assets": []
+  },
+  "NuGet.Common.dll": {
+    "package": "NuGet.Common/6.9.1",
+    "asset": "lib/net8.0/NuGet.Common.dll",
+    "sha256": "08ae13f1f3e96b8d4bd1d0250025de64965e3514b2e113a9cb3504be4debd16f",
+    "nuget_sha256": "05dfee464f41f48c1bdd3381f14f490347291e5d19ec0f54ccfaa5d4ca0a7075",
+    "licenses": [
+      "LICENSE.txt",
+      "NOTICES.txt"
+    ],
+    "native_license_owner": null,
+    "native_license_assets": []
+  },
+  "NuGet.Configuration.dll": {
+    "package": "NuGet.Configuration/6.9.1",
+    "asset": "lib/net8.0/NuGet.Configuration.dll",
+    "sha256": "1b99a452c1eebe0d6dedc34dde7f965f3a0557c41f57d4cac14563c94befdb46",
+    "nuget_sha256": "3f08d56a9904f978d9ecc1e62ccd91b18909dba9b9d32fc02d92dbc9baa28403",
+    "licenses": [
+      "LICENSE.txt",
+      "NOTICES.txt"
+    ],
+    "native_license_owner": null,
+    "native_license_assets": []
+  },
+  "NuGet.Credentials.dll": {
+    "package": "NuGet.Credentials/6.9.1",
+    "asset": "lib/net8.0/NuGet.Credentials.dll",
+    "sha256": "c72c6930d3212fa71fc4eb968a4ec3b9612d1d6e3049ab0fb27a4f8be232f750",
+    "nuget_sha256": "6b99bb4f8a801af6eafb4e3c5ed610e70f78f212070dc75a2565c58ee9072655",
+    "licenses": [
+      "LICENSE.txt",
+      "NOTICES.txt"
+    ],
+    "native_license_owner": null,
+    "native_license_assets": []
+  },
+  "NuGet.DependencyResolver.Core.dll": {
+    "package": "NuGet.DependencyResolver.Core/6.9.1",
+    "asset": "lib/net8.0/NuGet.DependencyResolver.Core.dll",
+    "sha256": "98138790ef49cee5d3af718e74a2375096c94c7a40bf6535a2e6ce075b0fb1e9",
+    "nuget_sha256": "77ae02c6f6df68a8dbfadba144fc4d13283bfcc0d74878e9d4404e0b47af0554",
+    "licenses": [
+      "LICENSE.txt",
+      "NOTICES.txt"
+    ],
+    "native_license_owner": null,
+    "native_license_assets": []
+  },
+  "NuGet.Frameworks.dll": {
+    "package": "NuGet.Frameworks/6.9.1",
+    "asset": "lib/net8.0/NuGet.Frameworks.dll",
+    "sha256": "c6caac9f82fe754c42390fc75ae9cf6a9b080ca0202d27e1a29985f0044c3826",
+    "nuget_sha256": "c2ed5b8dc021e28afc60e5ec6747809749b06239640b6733f981e7af6a36cb81",
+    "licenses": [
+      "LICENSE.txt",
+      "NOTICES.txt"
+    ],
+    "native_license_owner": null,
+    "native_license_assets": []
+  },
+  "NuGet.LibraryModel.dll": {
+    "package": "NuGet.LibraryModel/6.9.1",
+    "asset": "lib/net8.0/NuGet.LibraryModel.dll",
+    "sha256": "a4e02e7045eedf112f29ca0a619e94ae5b6a92a5fbb9904430924a1644136bb9",
+    "nuget_sha256": "5fccb684ce25769aa1a3166c02fc04ea1d23e11d59d2bea40b037929afe79f9b",
+    "licenses": [
+      "LICENSE.txt",
+      "NOTICES.txt"
+    ],
+    "native_license_owner": null,
+    "native_license_assets": []
+  },
+  "NuGet.Packaging.dll": {
+    "package": "NuGet.Packaging/6.9.1",
+    "asset": "lib/net8.0/NuGet.Packaging.dll",
+    "sha256": "841054f0f773a84beb9ae342fb9498f41d526923ea5af0c4c66e754e06949713",
+    "nuget_sha256": "1a3047703991b144fed4d9d59d00b1d47ef31b3932bca100f09ccb910b84fe07",
+    "licenses": [
+      "LICENSE.txt",
+      "NOTICES.txt"
+    ],
+    "native_license_owner": null,
+    "native_license_assets": []
+  },
+  "NuGet.ProjectModel.dll": {
+    "package": "NuGet.ProjectModel/6.9.1",
+    "asset": "lib/net8.0/NuGet.ProjectModel.dll",
+    "sha256": "d9f5266ebbaefcfe2dcb227fa10786b701b2cfb519d6fb78e25f21d387fe2da6",
+    "nuget_sha256": "03e8ce041439926d49f78a506af28c28e9edaf39fc433959b4eca9b3310f3859",
+    "licenses": [
+      "LICENSE.txt",
+      "NOTICES.txt"
+    ],
+    "native_license_owner": null,
+    "native_license_assets": []
+  },
+  "NuGet.Protocol.dll": {
+    "package": "NuGet.Protocol/6.9.1",
+    "asset": "lib/net8.0/NuGet.Protocol.dll",
+    "sha256": "de94e021a37d9156dcbdf8ce1eb8d3bf0c9191439bbdb6cd027f1d18a697dc71",
+    "nuget_sha256": "79334fef5888868aaa03135f6e90f5ec36743c09b1d031b7e85c2983a2114d21",
+    "licenses": [
+      "LICENSE.txt",
+      "NOTICES.txt"
+    ],
+    "native_license_owner": null,
+    "native_license_assets": []
+  },
+  "NuGet.Versioning.dll": {
+    "package": "NuGet.Versioning/6.9.1",
+    "asset": "lib/net8.0/NuGet.Versioning.dll",
+    "sha256": "a1fc7d0f0486b7e86ec6e73a3a401a3f405c77422f66cf8733b7341619aafeba",
+    "nuget_sha256": "e8743ca99bbb863f61f28f741fc15761f7e187db8d59a6c3d6e1e21176445686",
+    "licenses": [
+      "LICENSE.txt",
+      "NOTICES.txt"
+    ],
+    "native_license_owner": null,
+    "native_license_assets": []
+  },
+  "System.ClientModel.dll": {
+    "package": "System.ClientModel/1.0.0",
+    "asset": "lib/net8.0/System.ClientModel.dll",
+    "sha256": "e8686bc21ff33f939e0cddb08b524b613fd6425da2d969d7917fa7aa490da992",
+    "nuget_sha256": "99c5641ff0b5db15f115b4221a9ded3feeff70d6bc6e25d18f7b2e625cdf9a22",
+    "licenses": [
+      "LICENSE.txt"
+    ],
+    "native_license_owner": null,
+    "native_license_assets": []
+  },
+  "System.Formats.Asn1.dll": {
+    "package": "System.Formats.Asn1/8.0.2",
+    "asset": "lib/net8.0/System.Formats.Asn1.dll",
+    "sha256": "482383202bb846a7150a53976414e3e93bcd496315b0a040912e85175a806e5f",
+    "nuget_sha256": "7015304ed9b5a1f3774bdb446434259e72ecf641bbe68e30caf37efb5b322721",
+    "licenses": [],
+    "native_license_owner": "mingw-w64-clang-x86_64-dotnet-formats-asn1",
+    "native_license_assets": [
+      {
+        "source": "/clang64/share/licenses/dotnet-formats-asn1/LICENSE",
+        "target": "licenses/system.formats.asn1/8.0.2/native/dotnet-formats-asn1/LICENSE",
+        "sha256": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310"
+      },
+      {
+        "source": "/clang64/share/licenses/dotnet-formats-asn1/THIRD-PARTY-NOTICES",
+        "target": "licenses/system.formats.asn1/8.0.2/native/dotnet-formats-asn1/THIRD-PARTY-NOTICES",
+        "sha256": "97c1a7b3da6a4c6ad516448719f45114b41a4d4c5aa300a944476e2e4f5da438"
+      }
+    ]
+  },
+  "System.Memory.Data.dll": {
+    "package": "System.Memory.Data/1.0.2",
+    "asset": "lib/net8.0/System.Memory.Data.dll",
+    "sha256": "b816c21e953efe4cdf1d10f9cbee54432c3e2120d074b662547b8739ab16bd9d",
+    "nuget_sha256": "0c125261560a6604313e1ad966d7c8835dacce421890940119e3f7e8a8e9d1a1",
+    "licenses": [
+      "LICENSE.txt"
+    ],
+    "native_license_owner": null,
+    "native_license_assets": []
+  },
+  "System.Security.Cryptography.Pkcs.dll": {
+    "package": "System.Security.Cryptography.Pkcs/8.0.1",
+    "asset": "runtimes/win/lib/net8.0/System.Security.Cryptography.Pkcs.dll",
+    "sha256": "2f3d9ff004d688a237c2c19f81e57bbce273b76538377c8221435a7d50fe8e6d",
+    "nuget_sha256": "ccd263f9019633293927af95a175e90fae48caabf70df01a3c75873c4c8df48e",
+    "licenses": [],
+    "native_license_owner": "mingw-w64-clang-x86_64-dotnet-cryptography-pkcs",
+    "native_license_assets": [
+      {
+        "source": "/clang64/share/licenses/dotnet-cryptography-pkcs/LICENSE",
+        "target": "licenses/system.security.cryptography.pkcs/8.0.1/native/dotnet-cryptography-pkcs/LICENSE",
+        "sha256": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310"
+      },
+      {
+        "source": "/clang64/share/licenses/dotnet-cryptography-pkcs/THIRD-PARTY-NOTICES",
+        "target": "licenses/system.security.cryptography.pkcs/8.0.1/native/dotnet-cryptography-pkcs/THIRD-PARTY-NOTICES",
+        "sha256": "97c1a7b3da6a4c6ad516448719f45114b41a4d4c5aa300a944476e2e4f5da438"
+      }
+    ]
+  },
+  "System.Security.Cryptography.ProtectedData.dll": {
+    "package": "System.Security.Cryptography.ProtectedData/8.0.0",
+    "asset": "lib/net8.0/System.Security.Cryptography.ProtectedData.dll",
+    "sha256": "896271c7f4ebe0c9a65d8af51e6624828f9eda18f7bbfc847a5f10ed44b56a17",
+    "nuget_sha256": "bcf01e73da045a9b0bf8f632969ec217d74c338fc75ae91cc5a69432e94a1034",
+    "licenses": [],
+    "native_license_owner": "mingw-w64-clang-x86_64-dotnet-protecteddata",
+    "native_license_assets": [
+      {
+        "source": "/clang64/share/licenses/dotnet-protecteddata/LICENSE",
+        "target": "licenses/system.security.cryptography.protecteddata/8.0.0/native/dotnet-protecteddata/LICENSE",
+        "sha256": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310"
+      },
+      {
+        "source": "/clang64/share/licenses/dotnet-protecteddata/THIRD-PARTY-NOTICES",
+        "target": "licenses/system.security.cryptography.protecteddata/8.0.0/native/dotnet-protecteddata/THIRD-PARTY-NOTICES",
+        "sha256": "97c1a7b3da6a4c6ad516448719f45114b41a4d4c5aa300a944476e2e4f5da438"
+      }
+    ]
+  },
+  "System.Text.Json.dll": {
+    "package": "System.Text.Json/8.0.5",
+    "asset": "lib/net8.0/System.Text.Json.dll",
+    "sha256": "84c58b6e58fdb11720503bb5056c6ed405885a2c5ed25224965df9daffba5765",
+    "nuget_sha256": "c84690dc2e49a6eda100ba487edbc6a4eaedfb198fa720f6605e56f3e1a68b6e",
+    "licenses": [
+      "LICENSE.TXT",
+      "THIRD-PARTY-NOTICES.TXT"
+    ],
+    "native_license_owner": null,
+    "native_license_assets": []
+  }
+}

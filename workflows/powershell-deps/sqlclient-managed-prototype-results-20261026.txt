@@ -1,0 +1,51 @@
+Upstream Windows managed SNI Debug-path prototype, win11 / CLANG64
+Root: /home/topkek/powershell-compatibility.UIIT7O
+Source: System.Data.SqlClient 4.9.1, exact maintenance-packages commit 84b081710c66cc560b77d4de38cee493c3a38e9d.
+$ bash mingw-w64-dotnet-sqlclient/probe-managed.sh sql-build sql-managed-probe
+Result: exit 0
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-build\implementation\build.csproj (in 94 ms).
+  build -> E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-build\implementation\bin\Debug\net8.0-windows\System.Data.SqlClient.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:07.98
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-managed-probe\probe.csproj (in 78 ms).
+E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-managed-probe\ManagedTdsProbe.cs(74,38): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-managed-probe\probe.csproj]
+  probe -> E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-managed-probe\bin\Release\net8.0\probe.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-managed-probe\ManagedTdsProbe.cs(74,38): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-managed-probe\probe.csproj]
+    1 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.51
+PASS upstream Windows managed SNI debug path: TCP prelogin/LOGIN7, sync scalar, async reader/schema/DONE; no sni.dll
+Prototype only: native feature parity, TLS, auth, MARS, named pipes, LocalDB, FILESTREAM and database interoperability remain open.
+
+This builds the unmodified upstream implementation in Debug and enables its Windows managed-SNI environment test switch.
+It does not modify/package the Release factory, which still selects missing native SNI.
+The independent private loopback peer exercises prelogin, LOGIN7, sync scalar and async reader/schema/DONE.
+This is not a real SQL Server interoperability result or proof of feature parity.
+TLS, integrated auth, MARS, named pipes, LocalDB, FILESTREAM and native transport compatibility remain open.
+SqlClient is still not counted as a completed package.

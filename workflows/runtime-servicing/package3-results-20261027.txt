@@ -1,0 +1,1077 @@
+Corrected source runtime8.0.31-3 clean build, independent audits and installed gates
+Host: win11/MSYS2 CLANG64. Build root: /home/topkek/runtime8pkg3.RGUgSb
+Full objective remains incomplete.
+Artifact SHA256: e19144001583aab220047b20b68f88d7e63242d8d84d9da83f6e40be807dcb94
+
+Exact commands and exit results:
+{
+  "previous_goal_turn_classification": "progress",
+  "current_goal_turn_classification": "progress",
+  "runtime_package_release": "8.0.31-3",
+  "build_root": "/home/topkek/runtime8pkg3.RGUgSb",
+  "artifact": "mingw-w64-clang-x86_64-dotnet-runtime8-servicing-8.0.31-3-any.pkg.tar.zst",
+  "artifact_sha256": "e19144001583aab220047b20b68f88d7e63242d8d84d9da83f6e40be807dcb94",
+  "build_command": "makepkg --cleanbuild --force --noconfirm",
+  "build_exit_code": 0,
+  "artifact_audit_exit_code": 0,
+  "pe_version_audit_exit_code": 0,
+  "install_command": "pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-runtime8-servicing-8.0.31-3-any.pkg.tar.zst",
+  "install_exit_code": 0,
+  "installed_check_command": "bash check-installed.sh installed-check3",
+  "installed_check_exit_code": 0,
+  "extra_installed_runner": "bash extra-installed3.sh",
+  "extra_installed_results": {
+    "installed-json3": 0,
+    "mmi3-installed3": 0,
+    "wmi-installed3": 0,
+    "combined-installed3": 0
+  },
+  "installed_payload_byte_gates": 176,
+  "managed_framework_assemblies": 168,
+  "reference_and_stub_outputs": 183,
+  "actual_versioned_pe_outputs": 178,
+  "unversioned_upstream_apphost_template": true,
+  "original_stub_signing_keys": 20,
+  "framework_shims_zero_version_reference_and_runtime": 44,
+  "actual_installed_runtime": "8.0.31",
+  "original_system_data_sqlclient_forwarder_defect_resolved": true,
+  "full_dependency_goal_complete": false,
+  "remaining": [
+    "serviced targeting package artifact/ownership installation",
+    "serviced SDK host/runtime-pack integration",
+    "broader native/API/resource and remote/provider compatibility",
+    "complete shipping PowerShell including conditional GraphicalHost",
+    "PowerShell7.6/.NET10"
+  ]
+}
+
+Recorded makepkg.log:
+==> Making package: mingw-w64-dotnet-runtime8-servicing 8.0.31-3 (27 Oct 2026 17:50:51)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found runtime-v8.0.31.tar.gz
+  -> Found dotnet-bootstrap-3cbf21078968e2290a54ab093392b4dfeb1c6f1f.tar.gz
+  -> Found dotnet-runtime8-servicing-source-3.tar.gz
+  -> Found README.md
+==> Validating source files with sha256sums...
+    runtime-v8.0.31.tar.gz ... Passed
+    dotnet-bootstrap-3cbf21078968e2290a54ab093392b4dfeb1c6f1f.tar.gz ... Passed
+    dotnet-runtime8-servicing-source-3.tar.gz ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+  -> Extracting dotnet-runtime8-servicing-source-3.tar.gz with bsdtar
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+==> Starting build()...
+PASS isolated complete runtime8.0.31/pinned bootstrap source,17 zero-fuzz patches and binary-input removal; runtime build/managed framework/integration remain open
+PASS exact original Arcade version task and three upstream vectors: 20260820.0 -> 8.0.3126.42000
+PASS original native/CoreLib/C#/VB/reference helpers retain product8.0.31 and use calculated file8.0.3126.42000
+PASS isolated native host/CoreCLR8.0.31 build and EHa shim check; matching managed framework and full runtime validation remain open
+PASS complete original servicing generator source selections/resources and original build-only runtime-root task: {'Microsoft.Interop.SourceGeneration': 86, 'Microsoft.Interop.LibraryImportGenerator': 27, 'Microsoft.Interop.ComInterfaceGenerator': 47, 'System.Private.CoreLib.Generators': 7, 'System.Text.RegularExpressions.Generator': 32, 'RuntimeBuildTools': 1}
+PASS rebuilt full original servicing generators and private runtime-root build task
+PASS CoreLib helper uses source SDK/new runtime-root task and all freshly rebuilt servicing generators; original metadata tool staged
+PASS matching CoreLib8.0.31 built from original sources and rebuilt generators; full shared framework/runtime integration remains open
+PASS original build helpers select serviced sources/CoreCLR, retain assembly kinds in the dependency plan, fail on every compile error, and use installed source VB compiler
+PASS requested serviced framework build step: all; runtime/layout/integration verification remains required
+deflate level 6: 200000 -> 5461 -> 200000 bytes
+deflate level 1: 200000 -> 5461 -> 200000 bytes
+deflate level 9: 200000 -> 5007 -> 200000 bytes
+crc32("123456789") = cbf43926 (expect cbf43926)
+brotli: 200000 -> 3597 -> 200000 bytes
+OK
+PASS source8.0.31 native compression zlib/CRC/brotli round trips
+PASS exact serviced source hashes,17 independent zero-fuzz patch replays, full generator compiler/reference inventories,1803 CoreLib inputs/generated metadata and native/CoreLib output hashes; complete serviced framework/integration remain open
+PASS complete original framework manifest, independently reconstructed helper overlays, 183 reference/stub outputs and 167 library compiler-input/output hashes; runtime integration and packaging remain required
+PASS all20 original stub signing keys and all22 framework shim zero-version identities: 44 reference/runtime DLLs
+PASS isolated new layout: 168 source managed assemblies and 6 source native framework DLLs; /home/topkek/runtime8pkg3.RGUgSb/src/runtime-layout
+==> Starting check()...
+PASS runtime execution fixture compiled against new servicing references
+
+Host:
+  Version:      8.0.31
+  Architecture: x64
+  Commit:       1219a42122
+  RID:          win-x64
+
+.NET SDKs installed:
+  No SDKs were found.
+
+.NET runtimes installed:
+  Microsoft.NETCore.App 8.0.31 [E:\msys64\home\topkek\runtime8pkg3.RGUgSb\src\runtime-layout\shared\Microsoft.NETCore.App]
+
+Other architectures found:
+  None
+
+Environment variables:
+  DOTNET_ROOT       [E:/msys64/home/topkek/runtime8pkg3.RGUgSb/src/runtime-layout]
+  DOTNET_ROOT_X64   [E:/msys64/home/topkek/runtime8pkg3.RGUgSb/src/runtime-layout]
+
+global.json file:
+  Not found
+
+Learn more:
+  https://aka.ms/dotnet/info
+
+Download .NET:
+  https://aka.ms/dotnet/download
+Runtime: .NET 8.0.31
+LOAD Microsoft.CSharp 8.0.0.0
+LOAD Microsoft.VisualBasic 10.0.0.0
+LOAD Microsoft.VisualBasic.Core 13.0.0.0
+LOAD Microsoft.Win32.Primitives 8.0.0.0
+LOAD Microsoft.Win32.Registry 8.0.0.0
+LOAD System 4.0.0.0
+LOAD System.AppContext 8.0.0.0
+LOAD System.Buffers 8.0.0.0
+LOAD System.Collections 8.0.0.0
+LOAD System.Collections.Concurrent 8.0.0.0
+LOAD System.Collections.Immutable 8.0.0.0
+LOAD System.Collections.NonGeneric 8.0.0.0
+LOAD System.Collections.Specialized 8.0.0.0
+LOAD System.ComponentModel 8.0.0.0
+LOAD System.ComponentModel.Annotations 8.0.0.0
+LOAD System.ComponentModel.DataAnnotations 4.0.0.0
+LOAD System.ComponentModel.EventBasedAsync 8.0.0.0
+LOAD System.ComponentModel.Primitives 8.0.0.0
+LOAD System.ComponentModel.TypeConverter 8.0.0.0
+LOAD System.Configuration 4.0.0.0
+LOAD System.Console 8.0.0.0
+LOAD System.Core 4.0.0.0
+LOAD System.Data 4.0.0.0
+LOAD System.Data.Common 8.0.0.0
+LOAD System.Data.DataSetExtensions 8.0.0.0
+LOAD System.Diagnostics.Contracts 8.0.0.0
+LOAD System.Diagnostics.Debug 8.0.0.0
+LOAD System.Diagnostics.DiagnosticSource 8.0.0.0
+LOAD System.Diagnostics.FileVersionInfo 8.0.0.0
+LOAD System.Diagnostics.Process 8.0.0.0
+LOAD System.Diagnostics.StackTrace 8.0.0.0
+LOAD System.Diagnostics.TextWriterTraceListener 8.0.0.0
+LOAD System.Diagnostics.Tools 8.0.0.0
+LOAD System.Diagnostics.TraceSource 8.0.0.0
+LOAD System.Diagnostics.Tracing 8.0.0.0
+LOAD System.Drawing 4.0.0.0
+LOAD System.Drawing.Primitives 8.0.0.0
+LOAD System.Dynamic.Runtime 8.0.0.0
+LOAD System.Formats.Asn1 8.0.0.0
+LOAD System.Formats.Tar 8.0.0.0
+LOAD System.Globalization 8.0.0.0
+LOAD System.Globalization.Calendars 8.0.0.0
+LOAD System.Globalization.Extensions 8.0.0.0
+LOAD System.IO 8.0.0.0
+LOAD System.IO.Compression 8.0.0.0
+LOAD System.IO.Compression.Brotli 8.0.0.0
+LOAD System.IO.Compression.FileSystem 4.0.0.0
+LOAD System.IO.Compression.ZipFile 8.0.0.0
+LOAD System.IO.FileSystem 8.0.0.0
+LOAD System.IO.FileSystem.AccessControl 8.0.0.0
+LOAD System.IO.FileSystem.DriveInfo 8.0.0.0
+LOAD System.IO.FileSystem.Primitives 8.0.0.0
+LOAD System.IO.FileSystem.Watcher 8.0.0.0
+LOAD System.IO.IsolatedStorage 8.0.0.0
+LOAD System.IO.MemoryMappedFiles 8.0.0.0
+LOAD System.IO.Pipes 8.0.0.0
+LOAD System.IO.Pipes.AccessControl 8.0.0.0
+LOAD System.IO.UnmanagedMemoryStream 8.0.0.0
+LOAD System.Linq 8.0.0.0
+LOAD System.Linq.Expressions 8.0.0.0
+LOAD System.Linq.Parallel 8.0.0.0
+LOAD System.Linq.Queryable 8.0.0.0
+LOAD System.Memory 8.0.0.0
+LOAD System.Net 4.0.0.0
+LOAD System.Net.Http 8.0.0.0
+LOAD System.Net.Http.Json 8.0.0.0
+LOAD System.Net.HttpListener 8.0.0.0
+LOAD System.Net.Mail 8.0.0.0
+LOAD System.Net.NameResolution 8.0.0.0
+LOAD System.Net.NetworkInformation 8.0.0.0
+LOAD System.Net.Ping 8.0.0.0
+LOAD System.Net.Primitives 8.0.0.0
+LOAD System.Net.Quic 8.0.0.0
+LOAD System.Net.Requests 8.0.0.0
+LOAD System.Net.Security 8.0.0.0
+LOAD System.Net.ServicePoint 8.0.0.0
+LOAD System.Net.Sockets 8.0.0.0
+LOAD System.Net.WebClient 8.0.0.0
+LOAD System.Net.WebHeaderCollection 8.0.0.0
+LOAD System.Net.WebProxy 8.0.0.0
+LOAD System.Net.WebSockets 8.0.0.0
+LOAD System.Net.WebSockets.Client 8.0.0.0
+LOAD System.Numerics 4.0.0.0
+LOAD System.Numerics.Vectors 8.0.0.0
+LOAD System.ObjectModel 8.0.0.0
+LOAD System.Private.CoreLib 8.0.0.0
+LOAD System.Private.DataContractSerialization 8.0.0.0
+LOAD System.Private.Uri 8.0.0.0
+LOAD System.Private.Xml 8.0.0.0
+LOAD System.Private.Xml.Linq 8.0.0.0
+LOAD System.Reflection 8.0.0.0
+LOAD System.Reflection.DispatchProxy 8.0.0.0
+LOAD System.Reflection.Emit 8.0.0.0
+LOAD System.Reflection.Emit.ILGeneration 8.0.0.0
+LOAD System.Reflection.Emit.Lightweight 8.0.0.0
+LOAD System.Reflection.Extensions 8.0.0.0
+LOAD System.Reflection.Metadata 8.0.0.0
+LOAD System.Reflection.Primitives 8.0.0.0
+LOAD System.Reflection.TypeExtensions 8.0.0.0
+LOAD System.Resources.Reader 8.0.0.0
+LOAD System.Resources.ResourceManager 8.0.0.0
+LOAD System.Resources.Writer 8.0.0.0
+LOAD System.Runtime 8.0.0.0
+LOAD System.Runtime.CompilerServices.Unsafe 8.0.0.0
+LOAD System.Runtime.CompilerServices.VisualC 8.0.0.0
+LOAD System.Runtime.Extensions 8.0.0.0
+LOAD System.Runtime.Handles 8.0.0.0
+LOAD System.Runtime.InteropServices 8.0.0.0
+LOAD System.Runtime.InteropServices.JavaScript 8.0.0.0
+LOAD System.Runtime.InteropServices.RuntimeInformation 8.0.0.0
+LOAD System.Runtime.Intrinsics 8.0.0.0
+LOAD System.Runtime.Loader 8.0.0.0
+LOAD System.Runtime.Numerics 8.0.0.0
+LOAD System.Runtime.Serialization 4.0.0.0
+LOAD System.Runtime.Serialization.Formatters 8.0.0.0
+LOAD System.Runtime.Serialization.Json 8.0.0.0
+LOAD System.Runtime.Serialization.Primitives 8.0.0.0
+LOAD System.Runtime.Serialization.Xml 8.0.0.0
+LOAD System.Security 4.0.0.0
+LOAD System.Security.AccessControl 8.0.0.0
+LOAD System.Security.Claims 8.0.0.0
+LOAD System.Security.Cryptography 8.0.0.0
+LOAD System.Security.Cryptography.Algorithms 8.0.0.0
+LOAD System.Security.Cryptography.Cng 8.0.0.0
+LOAD System.Security.Cryptography.Csp 8.0.0.0
+LOAD System.Security.Cryptography.Encoding 8.0.0.0
+LOAD System.Security.Cryptography.OpenSsl 8.0.0.0
+LOAD System.Security.Cryptography.Primitives 8.0.0.0
+LOAD System.Security.Cryptography.X509Certificates 8.0.0.0
+LOAD System.Security.Principal 8.0.0.0
+LOAD System.Security.Principal.Windows 8.0.0.0
+LOAD System.Security.SecureString 8.0.0.0
+LOAD System.ServiceModel.Web 4.0.0.0
+LOAD System.ServiceProcess 4.0.0.0
+LOAD System.Text.Encoding 8.0.0.0
+LOAD System.Text.Encoding.CodePages 8.0.0.0
+LOAD System.Text.Encoding.Extensions 8.0.0.0
+LOAD System.Text.Encodings.Web 8.0.0.0
+LOAD System.Text.Json 8.0.0.0
+LOAD System.Text.RegularExpressions 8.0.0.0
+LOAD System.Threading 8.0.0.0
+LOAD System.Threading.Channels 8.0.0.0
+LOAD System.Threading.Overlapped 8.0.0.0
+LOAD System.Threading.Tasks 8.0.0.0
+LOAD System.Threading.Tasks.Dataflow 8.0.0.0
+LOAD System.Threading.Tasks.Extensions 8.0.0.0
+LOAD System.Threading.Tasks.Parallel 8.0.0.0
+LOAD System.Threading.Thread 8.0.0.0
+LOAD System.Threading.ThreadPool 8.0.0.0
+LOAD System.Threading.Timer 8.0.0.0
+LOAD System.Transactions 4.0.0.0
+LOAD System.Transactions.Local 8.0.0.0
+LOAD System.ValueTuple 8.0.0.0
+LOAD System.Web 4.0.0.0
+LOAD System.Web.HttpUtility 8.0.0.0
+LOAD System.Windows 4.0.0.0
+LOAD System.Xml 4.0.0.0
+LOAD System.Xml.Linq 4.0.0.0
+LOAD System.Xml.ReaderWriter 8.0.0.0
+LOAD System.Xml.Serialization 4.0.0.0
+LOAD System.Xml.XDocument 8.0.0.0
+LOAD System.Xml.XPath 8.0.0.0
+LOAD System.Xml.XPath.XDocument 8.0.0.0
+LOAD System.Xml.XmlDocument 8.0.0.0
+LOAD System.Xml.XmlSerializer 8.0.0.0
+LOAD WindowsBase 4.0.0.0
+LOAD mscorlib 4.0.0.0
+LOAD netstandard 2.1.0.0
+PASS complete framework loads and actual serviced CoreLib identity/source: 8.0.31+1219a42122cf5190c7f512850557e38c422430dc
+PASS CLR exception/filter/finally, tasks/GC, dynamic compilation, compiled regex and VB
+PASS native globalization, serviced JSON and XML
+PASS source native compression through managed gzip/deflate/Brotli/ZIP APIs
+PASS SHA256 vector, native RSA/AES-GCM, ephemeral certificate and owned loopback TLS/HTTP
+PASS async Unicode file I/O and native FileSystemWatcher
+NATIVE E:\msys64\home\topkek\runtime8pkg3.RGUgSb\src\runtime-layout\shared\Microsoft.NETCore.App\8.0.31\hostpolicy.dll
+NATIVE E:\msys64\home\topkek\runtime8pkg3.RGUgSb\src\runtime-layout\shared\Microsoft.NETCore.App\8.0.31\coreclr.dll
+NATIVE E:\msys64\home\topkek\runtime8pkg3.RGUgSb\src\runtime-layout\shared\Microsoft.NETCore.App\8.0.31\clrjit.dll
+NATIVE E:\msys64\home\topkek\runtime8pkg3.RGUgSb\src\runtime-layout\shared\Microsoft.NETCore.App\8.0.31\System.IO.Compression.Native.dll
+PASS isolated actual .NET8.0.31 runtime execution; broader compatibility and packaging remain required
+Runtime: .NET 8.0.31
+LOAD Microsoft.CSharp 8.0.0.0
+LOAD Microsoft.VisualBasic 10.0.0.0
+LOAD Microsoft.VisualBasic.Core 13.0.0.0
+LOAD Microsoft.Win32.Primitives 8.0.0.0
+LOAD Microsoft.Win32.Registry 8.0.0.0
+LOAD System 4.0.0.0
+LOAD System.AppContext 8.0.0.0
+LOAD System.Buffers 8.0.0.0
+LOAD System.Collections 8.0.0.0
+LOAD System.Collections.Concurrent 8.0.0.0
+LOAD System.Collections.Immutable 8.0.0.0
+LOAD System.Collections.NonGeneric 8.0.0.0
+LOAD System.Collections.Specialized 8.0.0.0
+LOAD System.ComponentModel 8.0.0.0
+LOAD System.ComponentModel.Annotations 8.0.0.0
+LOAD System.ComponentModel.DataAnnotations 4.0.0.0
+LOAD System.ComponentModel.EventBasedAsync 8.0.0.0
+LOAD System.ComponentModel.Primitives 8.0.0.0
+LOAD System.ComponentModel.TypeConverter 8.0.0.0
+LOAD System.Configuration 4.0.0.0
+LOAD System.Console 8.0.0.0
+LOAD System.Core 4.0.0.0
+LOAD System.Data 4.0.0.0
+LOAD System.Data.Common 8.0.0.0
+LOAD System.Data.DataSetExtensions 8.0.0.0
+LOAD System.Diagnostics.Contracts 8.0.0.0
+LOAD System.Diagnostics.Debug 8.0.0.0
+LOAD System.Diagnostics.DiagnosticSource 8.0.0.0
+LOAD System.Diagnostics.FileVersionInfo 8.0.0.0
+LOAD System.Diagnostics.Process 8.0.0.0
+LOAD System.Diagnostics.StackTrace 8.0.0.0
+LOAD System.Diagnostics.TextWriterTraceListener 8.0.0.0
+LOAD System.Diagnostics.Tools 8.0.0.0
+LOAD System.Diagnostics.TraceSource 8.0.0.0
+LOAD System.Diagnostics.Tracing 8.0.0.0
+LOAD System.Drawing 4.0.0.0
+LOAD System.Drawing.Primitives 8.0.0.0
+LOAD System.Dynamic.Runtime 8.0.0.0
+LOAD System.Formats.Asn1 8.0.0.0
+LOAD System.Formats.Tar 8.0.0.0
+LOAD System.Globalization 8.0.0.0
+LOAD System.Globalization.Calendars 8.0.0.0
+LOAD System.Globalization.Extensions 8.0.0.0
+LOAD System.IO 8.0.0.0
+LOAD System.IO.Compression 8.0.0.0
+LOAD System.IO.Compression.Brotli 8.0.0.0
+LOAD System.IO.Compression.FileSystem 4.0.0.0
+LOAD System.IO.Compression.ZipFile 8.0.0.0
+LOAD System.IO.FileSystem 8.0.0.0
+LOAD System.IO.FileSystem.AccessControl 8.0.0.0
+LOAD System.IO.FileSystem.DriveInfo 8.0.0.0
+LOAD System.IO.FileSystem.Primitives 8.0.0.0
+LOAD System.IO.FileSystem.Watcher 8.0.0.0
+LOAD System.IO.IsolatedStorage 8.0.0.0
+LOAD System.IO.MemoryMappedFiles 8.0.0.0
+LOAD System.IO.Pipes 8.0.0.0
+LOAD System.IO.Pipes.AccessControl 8.0.0.0
+LOAD System.IO.UnmanagedMemoryStream 8.0.0.0
+LOAD System.Linq 8.0.0.0
+LOAD System.Linq.Expressions 8.0.0.0
+LOAD System.Linq.Parallel 8.0.0.0
+LOAD System.Linq.Queryable 8.0.0.0
+LOAD System.Memory 8.0.0.0
+LOAD System.Net 4.0.0.0
+LOAD System.Net.Http 8.0.0.0
+LOAD System.Net.Http.Json 8.0.0.0
+LOAD System.Net.HttpListener 8.0.0.0
+LOAD System.Net.Mail 8.0.0.0
+LOAD System.Net.NameResolution 8.0.0.0
+LOAD System.Net.NetworkInformation 8.0.0.0
+LOAD System.Net.Ping 8.0.0.0
+LOAD System.Net.Primitives 8.0.0.0
+LOAD System.Net.Quic 8.0.0.0
+LOAD System.Net.Requests 8.0.0.0
+LOAD System.Net.Security 8.0.0.0
+LOAD System.Net.ServicePoint 8.0.0.0
+LOAD System.Net.Sockets 8.0.0.0
+LOAD System.Net.WebClient 8.0.0.0
+LOAD System.Net.WebHeaderCollection 8.0.0.0
+LOAD System.Net.WebProxy 8.0.0.0
+LOAD System.Net.WebSockets 8.0.0.0
+LOAD System.Net.WebSockets.Client 8.0.0.0
+LOAD System.Numerics 4.0.0.0
+LOAD System.Numerics.Vectors 8.0.0.0
+LOAD System.ObjectModel 8.0.0.0
+LOAD System.Private.CoreLib 8.0.0.0
+LOAD System.Private.DataContractSerialization 8.0.0.0
+LOAD System.Private.Uri 8.0.0.0
+LOAD System.Private.Xml 8.0.0.0
+LOAD System.Private.Xml.Linq 8.0.0.0
+LOAD System.Reflection 8.0.0.0
+LOAD System.Reflection.DispatchProxy 8.0.0.0
+LOAD System.Reflection.Emit 8.0.0.0
+LOAD System.Reflection.Emit.ILGeneration 8.0.0.0
+LOAD System.Reflection.Emit.Lightweight 8.0.0.0
+LOAD System.Reflection.Extensions 8.0.0.0
+LOAD System.Reflection.Metadata 8.0.0.0
+LOAD System.Reflection.Primitives 8.0.0.0
+LOAD System.Reflection.TypeExtensions 8.0.0.0
+LOAD System.Resources.Reader 8.0.0.0
+LOAD System.Resources.ResourceManager 8.0.0.0
+LOAD System.Resources.Writer 8.0.0.0
+LOAD System.Runtime 8.0.0.0
+LOAD System.Runtime.CompilerServices.Unsafe 8.0.0.0
+LOAD System.Runtime.CompilerServices.VisualC 8.0.0.0
+LOAD System.Runtime.Extensions 8.0.0.0
+LOAD System.Runtime.Handles 8.0.0.0
+LOAD System.Runtime.InteropServices 8.0.0.0
+LOAD System.Runtime.InteropServices.JavaScript 8.0.0.0
+LOAD System.Runtime.InteropServices.RuntimeInformation 8.0.0.0
+LOAD System.Runtime.Intrinsics 8.0.0.0
+LOAD System.Runtime.Loader 8.0.0.0
+LOAD System.Runtime.Numerics 8.0.0.0
+LOAD System.Runtime.Serialization 4.0.0.0
+LOAD System.Runtime.Serialization.Formatters 8.0.0.0
+LOAD System.Runtime.Serialization.Json 8.0.0.0
+LOAD System.Runtime.Serialization.Primitives 8.0.0.0
+LOAD System.Runtime.Serialization.Xml 8.0.0.0
+LOAD System.Security 4.0.0.0
+LOAD System.Security.AccessControl 8.0.0.0
+LOAD System.Security.Claims 8.0.0.0
+LOAD System.Security.Cryptography 8.0.0.0
+LOAD System.Security.Cryptography.Algorithms 8.0.0.0
+LOAD System.Security.Cryptography.Cng 8.0.0.0
+LOAD System.Security.Cryptography.Csp 8.0.0.0
+LOAD System.Security.Cryptography.Encoding 8.0.0.0
+LOAD System.Security.Cryptography.OpenSsl 8.0.0.0
+LOAD System.Security.Cryptography.Primitives 8.0.0.0
+LOAD System.Security.Cryptography.X509Certificates 8.0.0.0
+LOAD System.Security.Principal 8.0.0.0
+LOAD System.Security.Principal.Windows 8.0.0.0
+LOAD System.Security.SecureString 8.0.0.0
+LOAD System.ServiceModel.Web 4.0.0.0
+LOAD System.ServiceProcess 4.0.0.0
+LOAD System.Text.Encoding 8.0.0.0
+LOAD System.Text.Encoding.CodePages 8.0.0.0
+LOAD System.Text.Encoding.Extensions 8.0.0.0
+LOAD System.Text.Encodings.Web 8.0.0.0
+LOAD System.Text.Json 8.0.0.0
+LOAD System.Text.RegularExpressions 8.0.0.0
+LOAD System.Threading 8.0.0.0
+LOAD System.Threading.Channels 8.0.0.0
+LOAD System.Threading.Overlapped 8.0.0.0
+LOAD System.Threading.Tasks 8.0.0.0
+LOAD System.Threading.Tasks.Dataflow 8.0.0.0
+LOAD System.Threading.Tasks.Extensions 8.0.0.0
+LOAD System.Threading.Tasks.Parallel 8.0.0.0
+LOAD System.Threading.Thread 8.0.0.0
+LOAD System.Threading.ThreadPool 8.0.0.0
+LOAD System.Threading.Timer 8.0.0.0
+LOAD System.Transactions 4.0.0.0
+LOAD System.Transactions.Local 8.0.0.0
+LOAD System.ValueTuple 8.0.0.0
+LOAD System.Web 4.0.0.0
+LOAD System.Web.HttpUtility 8.0.0.0
+LOAD System.Windows 4.0.0.0
+LOAD System.Xml 4.0.0.0
+LOAD System.Xml.Linq 4.0.0.0
+LOAD System.Xml.ReaderWriter 8.0.0.0
+LOAD System.Xml.Serialization 4.0.0.0
+LOAD System.Xml.XDocument 8.0.0.0
+LOAD System.Xml.XPath 8.0.0.0
+LOAD System.Xml.XPath.XDocument 8.0.0.0
+LOAD System.Xml.XmlDocument 8.0.0.0
+LOAD System.Xml.XmlSerializer 8.0.0.0
+LOAD WindowsBase 4.0.0.0
+LOAD mscorlib 4.0.0.0
+LOAD netstandard 2.1.0.0
+PASS complete framework loads and actual serviced CoreLib identity/source: 8.0.31+1219a42122cf5190c7f512850557e38c422430dc
+PASS CLR exception/filter/finally, tasks/GC, dynamic compilation, compiled regex and VB
+PASS native globalization, serviced JSON and XML
+PASS source native compression through managed gzip/deflate/Brotli/ZIP APIs
+PASS SHA256 vector, native RSA/AES-GCM, ephemeral certificate and owned loopback TLS/HTTP
+PASS async Unicode file I/O and native FileSystemWatcher
+NATIVE E:\msys64\home\topkek\runtime8pkg3.RGUgSb\src\existing-muxer-layout\shared\Microsoft.NETCore.App\8.0.31\hostpolicy.dll
+NATIVE E:\msys64\home\topkek\runtime8pkg3.RGUgSb\src\existing-muxer-layout\shared\Microsoft.NETCore.App\8.0.31\coreclr.dll
+NATIVE E:\msys64\home\topkek\runtime8pkg3.RGUgSb\src\existing-muxer-layout\shared\Microsoft.NETCore.App\8.0.31\clrjit.dll
+NATIVE E:\msys64\home\topkek\runtime8pkg3.RGUgSb\src\existing-muxer-layout\shared\Microsoft.NETCore.App\8.0.31\System.IO.Compression.Native.dll
+PASS isolated actual .NET8.0.31 runtime execution; broader compatibility and packaging remain required
+PASS actual source PowerShell on .NET8.0.31: CIM/WMI, source Add-Type, Unicode JSON, trusted Windows Authenticode, native ACL read and CIM serialization
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\runtime8pkg3.RGUgSb\src\json-binding-check\Check.csproj (in 1.42 sec).
+  Check -> E:\msys64\home\topkek\runtime8pkg3.RGUgSb\src\json-binding-check\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:14.62
+Runtime: 8.0.31
+JSON path: E:\msys64\home\topkek\runtime8pkg3.RGUgSb\src\existing-muxer-layout\shared\Microsoft.NETCore.App\8.0.31\System.Text.Json.dll
+JSON file version: 8.0.3126.42000
+JSON source: 8.0.31+1219a42122cf5190c7f512850557e38c422430dc
+PASS source NuGet consumer selects actual serviced framework JSON implementation
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\runtime8pkg3.RGUgSb\src\forwarder-check\Check.csproj (in 539 ms).
+E:\msys64\home\topkek\runtime8pkg3.RGUgSb\src\forwarder-check\Program.cs(13,37): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\runtime8pkg3.RGUgSb\src\forwarder-check\Check.csproj]
+  Check -> E:\msys64\home\topkek\runtime8pkg3.RGUgSb\src\forwarder-check\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\runtime8pkg3.RGUgSb\src\forwarder-check\Program.cs(13,37): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\runtime8pkg3.RGUgSb\src\forwarder-check\Check.csproj]
+    1 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:13.18
+Runtime: 8.0.31
+PASS System.Data -> System.Data.SqlClient.SqlConnection, System.Data.SqlClient, Version=4.6.1.6, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS WindowsBase -> System.IO.Packaging.Package, System.IO.Packaging, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS System.Security -> System.Security.Cryptography.Pkcs.ContentInfo, System.Security.Cryptography.Pkcs, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS System.Security -> System.Security.Cryptography.ProtectedData, System.Security.Cryptography.ProtectedData, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS System.ServiceProcess -> System.ServiceProcess.ServiceController, System.ServiceProcess.ServiceController, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS mscorlib -> System.Security.AccessControl.EventWaitHandleSecurity, System.Threading.AccessControl, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS six original framework facades resolve to actual source-built NuGet types, including lower-version SqlClient
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> WARNING: Package contains reference to $srcdir
+clang64/lib/dotnet/shared/Microsoft.NETCore.App/8.0.31/clrjit.dll
+clang64/lib/dotnet/shared/Microsoft.NETCore.App/8.0.31/coreclr.dll
+clang64/share/doc/dotnet-runtime8-servicing/build-audit.json
+==> Creating package "mingw-w64-clang-x86_64-dotnet-runtime8-servicing"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-runtime8-servicing 8.0.31-3 (27 Oct 2026 18:43:56)
+
+Recorded artifact-audit3.log:
+PASS exact versioned runtime/hostfxr payload, all168 managed assemblies, source-audit/license bytes, dependency metadata and no unlisted files; fresh install/SDK integration remain required
+
+Recorded pe-version-audit3.log:
+PASS actual PE fixed file versions8.0.3126.42000 for 178 built native/managed outputs and upstream unversioned apphost template; metadata read only
+
+Recorded install3.log:
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-dotnet-runtime8-servicing-8.0.31-3
+
+Total Installed Size:  46.89 MiB
+Net Upgrade Size:       0.06 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+upgrading mingw-w64-clang-x86_64-dotnet-runtime8-servicing...
+
+Recorded installed-check3.log:
+mingw-w64-clang-x86_64-dotnet-runtime8-servicing 8.0.31-3
+PASS all176 installed versioned runtime/hostfxr payload files match audited source-build bytes
+.NET SDK:
+ Version:           8.0.131
+ Commit:            8514954698
+ Workload version:  8.0.100-manifests.e3b0c442
+
+Runtime Environment:
+ OS Name:     Windows
+ OS Version:  10.0.26200
+ OS Platform: Windows
+ RID:         win-x64
+ Base Path:   E:\msys64\clang64\lib\dotnet\sdk\8.0.131\
+
+.NET workloads installed:
+ Workload version: 8.0.100-manifests.e3b0c442
+There are no installed workloads to display.
+
+Host:
+  Version:      8.0.31
+  Architecture: x64
+  Commit:       1219a42122
+
+.NET SDKs installed:
+  8.0.131 [E:\msys64\clang64\lib\dotnet\sdk]
+
+.NET runtimes installed:
+  Microsoft.NETCore.App 8.0.0 [E:\msys64\clang64\lib\dotnet\shared\Microsoft.NETCore.App]
+  Microsoft.NETCore.App 8.0.31 [E:\msys64\clang64\lib\dotnet\shared\Microsoft.NETCore.App]
+  Microsoft.WindowsDesktop.App 8.0.0-bootstrap.7.0.20 [E:\msys64\clang64\lib\dotnet\shared\Microsoft.WindowsDesktop.App]
+  Microsoft.WindowsDesktop.App 8.0.0-bootstrap.wpf.8.0.0 [E:\msys64\clang64\lib\dotnet\shared\Microsoft.WindowsDesktop.App]
+
+Other architectures found:
+  None
+
+Environment variables:
+  DOTNET_ROOT       [E:/msys64/clang64/lib/dotnet]
+  DOTNET_ROOT_X64   [E:/msys64/clang64/lib/dotnet]
+
+global.json file:
+  Not found
+
+Learn more:
+  https://aka.ms/dotnet/info
+
+Download .NET:
+  https://aka.ms/dotnet/download
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\runtime8pkg3.RGUgSb\installed-check3\Check.csproj (in 130 ms).
+  Check -> E:\msys64\home\topkek\runtime8pkg3.RGUgSb\installed-check3\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:08.53
+Runtime: .NET 8.0.31
+LOAD Microsoft.CSharp 8.0.0.0
+LOAD Microsoft.VisualBasic 10.0.0.0
+LOAD Microsoft.VisualBasic.Core 13.0.0.0
+LOAD Microsoft.Win32.Primitives 8.0.0.0
+LOAD Microsoft.Win32.Registry 8.0.0.0
+LOAD System 4.0.0.0
+LOAD System.AppContext 8.0.0.0
+LOAD System.Buffers 8.0.0.0
+LOAD System.Collections 8.0.0.0
+LOAD System.Collections.Concurrent 8.0.0.0
+LOAD System.Collections.Immutable 8.0.0.0
+LOAD System.Collections.NonGeneric 8.0.0.0
+LOAD System.Collections.Specialized 8.0.0.0
+LOAD System.ComponentModel 8.0.0.0
+LOAD System.ComponentModel.Annotations 8.0.0.0
+LOAD System.ComponentModel.DataAnnotations 4.0.0.0
+LOAD System.ComponentModel.EventBasedAsync 8.0.0.0
+LOAD System.ComponentModel.Primitives 8.0.0.0
+LOAD System.ComponentModel.TypeConverter 8.0.0.0
+LOAD System.Configuration 4.0.0.0
+LOAD System.Console 8.0.0.0
+LOAD System.Core 4.0.0.0
+LOAD System.Data 4.0.0.0
+LOAD System.Data.Common 8.0.0.0
+LOAD System.Data.DataSetExtensions 8.0.0.0
+LOAD System.Diagnostics.Contracts 8.0.0.0
+LOAD System.Diagnostics.Debug 8.0.0.0
+LOAD System.Diagnostics.DiagnosticSource 8.0.0.0
+LOAD System.Diagnostics.FileVersionInfo 8.0.0.0
+LOAD System.Diagnostics.Process 8.0.0.0
+LOAD System.Diagnostics.StackTrace 8.0.0.0
+LOAD System.Diagnostics.TextWriterTraceListener 8.0.0.0
+LOAD System.Diagnostics.Tools 8.0.0.0
+LOAD System.Diagnostics.TraceSource 8.0.0.0
+LOAD System.Diagnostics.Tracing 8.0.0.0
+LOAD System.Drawing 4.0.0.0
+LOAD System.Drawing.Primitives 8.0.0.0
+LOAD System.Dynamic.Runtime 8.0.0.0
+LOAD System.Formats.Asn1 8.0.0.0
+LOAD System.Formats.Tar 8.0.0.0
+LOAD System.Globalization 8.0.0.0
+LOAD System.Globalization.Calendars 8.0.0.0
+LOAD System.Globalization.Extensions 8.0.0.0
+LOAD System.IO 8.0.0.0
+LOAD System.IO.Compression 8.0.0.0
+LOAD System.IO.Compression.Brotli 8.0.0.0
+LOAD System.IO.Compression.FileSystem 4.0.0.0
+LOAD System.IO.Compression.ZipFile 8.0.0.0
+LOAD System.IO.FileSystem 8.0.0.0
+LOAD System.IO.FileSystem.AccessControl 8.0.0.0
+LOAD System.IO.FileSystem.DriveInfo 8.0.0.0
+LOAD System.IO.FileSystem.Primitives 8.0.0.0
+LOAD System.IO.FileSystem.Watcher 8.0.0.0
+LOAD System.IO.IsolatedStorage 8.0.0.0
+LOAD System.IO.MemoryMappedFiles 8.0.0.0
+LOAD System.IO.Pipes 8.0.0.0
+LOAD System.IO.Pipes.AccessControl 8.0.0.0
+LOAD System.IO.UnmanagedMemoryStream 8.0.0.0
+LOAD System.Linq 8.0.0.0
+LOAD System.Linq.Expressions 8.0.0.0
+LOAD System.Linq.Parallel 8.0.0.0
+LOAD System.Linq.Queryable 8.0.0.0
+LOAD System.Memory 8.0.0.0
+LOAD System.Net 4.0.0.0
+LOAD System.Net.Http 8.0.0.0
+LOAD System.Net.Http.Json 8.0.0.0
+LOAD System.Net.HttpListener 8.0.0.0
+LOAD System.Net.Mail 8.0.0.0
+LOAD System.Net.NameResolution 8.0.0.0
+LOAD System.Net.NetworkInformation 8.0.0.0
+LOAD System.Net.Ping 8.0.0.0
+LOAD System.Net.Primitives 8.0.0.0
+LOAD System.Net.Quic 8.0.0.0
+LOAD System.Net.Requests 8.0.0.0
+LOAD System.Net.Security 8.0.0.0
+LOAD System.Net.ServicePoint 8.0.0.0
+LOAD System.Net.Sockets 8.0.0.0
+LOAD System.Net.WebClient 8.0.0.0
+LOAD System.Net.WebHeaderCollection 8.0.0.0
+LOAD System.Net.WebProxy 8.0.0.0
+LOAD System.Net.WebSockets 8.0.0.0
+LOAD System.Net.WebSockets.Client 8.0.0.0
+LOAD System.Numerics 4.0.0.0
+LOAD System.Numerics.Vectors 8.0.0.0
+LOAD System.ObjectModel 8.0.0.0
+LOAD System.Private.CoreLib 8.0.0.0
+LOAD System.Private.DataContractSerialization 8.0.0.0
+LOAD System.Private.Uri 8.0.0.0
+LOAD System.Private.Xml 8.0.0.0
+LOAD System.Private.Xml.Linq 8.0.0.0
+LOAD System.Reflection 8.0.0.0
+LOAD System.Reflection.DispatchProxy 8.0.0.0
+LOAD System.Reflection.Emit 8.0.0.0
+LOAD System.Reflection.Emit.ILGeneration 8.0.0.0
+LOAD System.Reflection.Emit.Lightweight 8.0.0.0
+LOAD System.Reflection.Extensions 8.0.0.0
+LOAD System.Reflection.Metadata 8.0.0.0
+LOAD System.Reflection.Primitives 8.0.0.0
+LOAD System.Reflection.TypeExtensions 8.0.0.0
+LOAD System.Resources.Reader 8.0.0.0
+LOAD System.Resources.ResourceManager 8.0.0.0
+LOAD System.Resources.Writer 8.0.0.0
+LOAD System.Runtime 8.0.0.0
+LOAD System.Runtime.CompilerServices.Unsafe 8.0.0.0
+LOAD System.Runtime.CompilerServices.VisualC 8.0.0.0
+LOAD System.Runtime.Extensions 8.0.0.0
+LOAD System.Runtime.Handles 8.0.0.0
+LOAD System.Runtime.InteropServices 8.0.0.0
+LOAD System.Runtime.InteropServices.JavaScript 8.0.0.0
+LOAD System.Runtime.InteropServices.RuntimeInformation 8.0.0.0
+LOAD System.Runtime.Intrinsics 8.0.0.0
+LOAD System.Runtime.Loader 8.0.0.0
+LOAD System.Runtime.Numerics 8.0.0.0
+LOAD System.Runtime.Serialization 4.0.0.0
+LOAD System.Runtime.Serialization.Formatters 8.0.0.0
+LOAD System.Runtime.Serialization.Json 8.0.0.0
+LOAD System.Runtime.Serialization.Primitives 8.0.0.0
+LOAD System.Runtime.Serialization.Xml 8.0.0.0
+LOAD System.Security 4.0.0.0
+LOAD System.Security.AccessControl 8.0.0.0
+LOAD System.Security.Claims 8.0.0.0
+LOAD System.Security.Cryptography 8.0.0.0
+LOAD System.Security.Cryptography.Algorithms 8.0.0.0
+LOAD System.Security.Cryptography.Cng 8.0.0.0
+LOAD System.Security.Cryptography.Csp 8.0.0.0
+LOAD System.Security.Cryptography.Encoding 8.0.0.0
+LOAD System.Security.Cryptography.OpenSsl 8.0.0.0
+LOAD System.Security.Cryptography.Primitives 8.0.0.0
+LOAD System.Security.Cryptography.X509Certificates 8.0.0.0
+LOAD System.Security.Principal 8.0.0.0
+LOAD System.Security.Principal.Windows 8.0.0.0
+LOAD System.Security.SecureString 8.0.0.0
+LOAD System.ServiceModel.Web 4.0.0.0
+LOAD System.ServiceProcess 4.0.0.0
+LOAD System.Text.Encoding 8.0.0.0
+LOAD System.Text.Encoding.CodePages 8.0.0.0
+LOAD System.Text.Encoding.Extensions 8.0.0.0
+LOAD System.Text.Encodings.Web 8.0.0.0
+LOAD System.Text.Json 8.0.0.0
+LOAD System.Text.RegularExpressions 8.0.0.0
+LOAD System.Threading 8.0.0.0
+LOAD System.Threading.Channels 8.0.0.0
+LOAD System.Threading.Overlapped 8.0.0.0
+LOAD System.Threading.Tasks 8.0.0.0
+LOAD System.Threading.Tasks.Dataflow 8.0.0.0
+LOAD System.Threading.Tasks.Extensions 8.0.0.0
+LOAD System.Threading.Tasks.Parallel 8.0.0.0
+LOAD System.Threading.Thread 8.0.0.0
+LOAD System.Threading.ThreadPool 8.0.0.0
+LOAD System.Threading.Timer 8.0.0.0
+LOAD System.Transactions 4.0.0.0
+LOAD System.Transactions.Local 8.0.0.0
+LOAD System.ValueTuple 8.0.0.0
+LOAD System.Web 4.0.0.0
+LOAD System.Web.HttpUtility 8.0.0.0
+LOAD System.Windows 4.0.0.0
+LOAD System.Xml 4.0.0.0
+LOAD System.Xml.Linq 4.0.0.0
+LOAD System.Xml.ReaderWriter 8.0.0.0
+LOAD System.Xml.Serialization 4.0.0.0
+LOAD System.Xml.XDocument 8.0.0.0
+LOAD System.Xml.XPath 8.0.0.0
+LOAD System.Xml.XPath.XDocument 8.0.0.0
+LOAD System.Xml.XmlDocument 8.0.0.0
+LOAD System.Xml.XmlSerializer 8.0.0.0
+LOAD WindowsBase 4.0.0.0
+LOAD mscorlib 4.0.0.0
+LOAD netstandard 2.1.0.0
+PASS complete framework loads and actual serviced CoreLib identity/source: 8.0.31+1219a42122cf5190c7f512850557e38c422430dc
+PASS CLR exception/filter/finally, tasks/GC, dynamic compilation, compiled regex and VB
+PASS native globalization, serviced JSON and XML
+PASS source native compression through managed gzip/deflate/Brotli/ZIP APIs
+PASS SHA256 vector, native RSA/AES-GCM, ephemeral certificate and owned loopback TLS/HTTP
+PASS async Unicode file I/O and native FileSystemWatcher
+NATIVE E:\msys64\clang64\lib\dotnet\shared\Microsoft.NETCore.App\8.0.31\hostpolicy.dll
+NATIVE E:\msys64\clang64\lib\dotnet\shared\Microsoft.NETCore.App\8.0.31\coreclr.dll
+NATIVE E:\msys64\clang64\lib\dotnet\shared\Microsoft.NETCore.App\8.0.31\clrjit.dll
+NATIVE E:\msys64\clang64\lib\dotnet\shared\Microsoft.NETCore.App\8.0.31\System.IO.Compression.Native.dll
+PASS isolated actual .NET8.0.31 runtime execution; broader compatibility and packaging remain required
+PASS actual source PowerShell on .NET8.0.31: CIM/WMI, source Add-Type, Unicode JSON, trusted Windows Authenticode, native ACL read and CIM serialization
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\runtime8pkg3.RGUgSb\installed-check3\forwarder-check\Check.csproj (in 372 ms).
+E:\msys64\home\topkek\runtime8pkg3.RGUgSb\installed-check3\forwarder-check\Program.cs(13,37): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\runtime8pkg3.RGUgSb\installed-check3\forwarder-check\Check.csproj]
+  Check -> E:\msys64\home\topkek\runtime8pkg3.RGUgSb\installed-check3\forwarder-check\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\runtime8pkg3.RGUgSb\installed-check3\forwarder-check\Program.cs(13,37): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\runtime8pkg3.RGUgSb\installed-check3\forwarder-check\Check.csproj]
+    1 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:07.61
+Runtime: 8.0.31
+PASS System.Data -> System.Data.SqlClient.SqlConnection, System.Data.SqlClient, Version=4.6.1.6, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS WindowsBase -> System.IO.Packaging.Package, System.IO.Packaging, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS System.Security -> System.Security.Cryptography.Pkcs.ContentInfo, System.Security.Cryptography.Pkcs, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS System.Security -> System.Security.Cryptography.ProtectedData, System.Security.Cryptography.ProtectedData, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS System.ServiceProcess -> System.ServiceProcess.ServiceController, System.ServiceProcess.ServiceController, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS mscorlib -> System.Security.AccessControl.EventWaitHandleSecurity, System.Threading.AccessControl, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS six original framework facades resolve to actual source-built NuGet types, including lower-version SqlClient
+PASS fresh installed serviced runtime, default SDK build/run and original source PowerShell integration
+
+Recorded extra-installed3.sh:
+cd /home/topkek/runtime8pkg3.RGUgSb
+status=0
+run() {
+ local name=$1; shift
+ printf '\n$ '; printf '%q ' "$@"; printf '\n'
+ "$@" > "$name.log" 2>&1
+ local result=$?; cat "$name.log"; printf 'RESULT %s: exit %s\n' "$name" "$result"
+ if ((result != 0)); then status=1; fi
+}
+run installed-json3 bash src/servicing/check-json-binding.sh /clang64/lib/dotnet installed-json3
+run mmi3-installed3 bash /home/topkek/mmi-cim-wmi-user-test.zXg1Ef/mingw-w64-dotnet-mmi3/check.sh mmi3-installed3
+run wmi-installed3 bash /home/topkek/mmi-cim-wmi-user-test.zXg1Ef/tests/mmi-cim-wmi/check-wmi.sh wmi-installed3
+run combined-installed3 bash /home/topkek/mmi-cim-wmi-user-test.zXg1Ef/tests/mmi-cim-wmi/check-mmi3-combined.sh combined-installed3
+printf '%s\n' "$status" > extra-installed3.exit
+exit "$status"
+
+Recorded extra-installed3.log:
+
+$ bash src/servicing/check-json-binding.sh /clang64/lib/dotnet installed-json3 
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\runtime8pkg3.RGUgSb\installed-json3\Check.csproj (in 2.94 sec).
+  Check -> E:\msys64\home\topkek\runtime8pkg3.RGUgSb\installed-json3\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:29.38
+Runtime: 8.0.31
+JSON path: E:\msys64\clang64\lib\dotnet\shared\Microsoft.NETCore.App\8.0.31\System.Text.Json.dll
+JSON file version: 8.0.3126.42000
+JSON source: 8.0.31+1219a42122cf5190c7f512850557e38c422430dc
+PASS source NuGet consumer selects actual serviced framework JSON implementation
+RESULT installed-json3: exit 0
+
+$ bash /home/topkek/mmi-cim-wmi-user-test.zXg1Ef/mingw-w64-dotnet-mmi3/check.sh mmi3-installed3 
+PASS native mi.h credential size=32 union-offset=8; native round trips; DCOM Default=0 NegoNoCreds=7 empty-Default-query=1
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\runtime8pkg3.RGUgSb\mmi3-installed3\friend-sma\Friend.csproj (in 1.26 sec).
+  Restored E:\msys64\home\topkek\runtime8pkg3.RGUgSb\mmi3-installed3\Check.csproj (in 1.27 sec).
+  Restored E:\msys64\home\topkek\runtime8pkg3.RGUgSb\mmi3-installed3\friend-cim\Friend.csproj (in 1.27 sec).
+  Friend -> E:\msys64\home\topkek\runtime8pkg3.RGUgSb\mmi3-installed3\friend-sma\bin\Release\net8.0\System.Management.Automation.dll
+  Friend -> E:\msys64\home\topkek\runtime8pkg3.RGUgSb\mmi3-installed3\friend-cim\bin\Release\net8.0\Microsoft.Management.Infrastructure.CimCmdlets.dll
+  Check -> E:\msys64\home\topkek\runtime8pkg3.RGUgSb\mmi3-installed3\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:35.53
+PASS MMI3 source-port identity/version/location, corrected enum contracts and signed friend access used by PowerShell sources
+Runtime: .NET 8.0.31
+MMI: Microsoft.Management.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+CIM OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+CIM process: dotnet.exe; PID matches current source-built runtime
+CIM invalid class: correctly returned InvalidClass
+CIM OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+CIM process: dotnet.exe; PID matches current source-built runtime
+CIM invalid class: correctly returned InvalidClass
+Native dependency: C:\WINDOWS\SYSTEM32\mi.dll
+PASS: source-built MMI local DCOM/default queries, errors, disposal and reopen
+PASS MMI3 source-port identity/version/location, corrected enum contracts and signed friend access used by PowerShell sources
+Runtime: .NET 8.0.31
+MMI: Microsoft.Management.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+Streaming mode 0
+Streaming mode 1
+Streaming mode 2
+Streaming mode 3
+Streaming mode 4
+Streaming mode 5
+Streaming mode 6
+PASS native stream ABI for all 32 MI types, scalar/chunk flattening, Unicode/null/empty values, clone lifetimes/session metadata, shortening, errors/ack failures, regular final result and GC/root cleanup
+Native original interval=0 count=2
+Native option result=0 type=12 flags=0
+Native option result=0 type=21 flags=0
+Native interval clone probe (before/after MI_Result): 606
+PASS mi.h native prompt/error/message/progress callback table, Unicode values, cloned error instance, reply values/exactly-once replies, managed/reply exceptions, compacting GC, options clone and root cleanup
+PASS native credential union ABI, all destination/proxy authentication forms, Unicode user/domain/password, independent SecureString copy, native clone after source disposal, validation and native DCOM transport error propagation
+PASS: native operation/session timeouts, microseconds, infinity, negatives and timed query
+PASS: native MI_XML instance/class round-trips, offsets, Unicode, arrays, intervals, capacity, cached classes, errors and disposal
+PASS: native asynchronous instances/classes/methods/errors, observer exceptions, compacting GC, independent result lifetime, unsubscribe, CancellationToken, callback-root cleanup and session close
+Native dependency: C:\WINDOWS\SYSTEM32\mi.dll
+PASS: MMI timeout and serialization port checks
+PASS MMI3 source-port identity/version/location, corrected enum contracts and signed friend access used by PowerShell sources
+Runtime: .NET 8.0.31
+MMI: Microsoft.Management.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+CAPABILITY operation timeout: PASS
+CAPABILITY class metadata: PASS
+CAPABILITY instance serialization: PASS
+CAPABILITY asynchronous query: PASS
+RESULT mmi3-installed3: exit 0
+
+$ bash /home/topkek/mmi-cim-wmi-user-test.zXg1Ef/tests/mmi-cim-wmi/check-wmi.sh wmi-installed3 
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\runtime8pkg3.RGUgSb\wmi-installed3\check.csproj (in 385 ms).
+  check -> E:\msys64\home\topkek\runtime8pkg3.RGUgSb\wmi-installed3\bin\Release\net8.0\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:10.17
+Runtime: .NET 8.0.31
+WMI: System.Management, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+PASS WMI identity/source/location, exported types and 79 resource strings
+WMI OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+WMI process: dotnet.exe; PID matches current source-built runtime
+WMI invalid class: correctly returned InvalidClass
+WMI OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+WMI process: dotnet.exe; PID matches current source-built runtime
+WMI invalid class: correctly returned InvalidClass
+PASS WMI metadata/types/origins, qualifier and method enumeration, clone/compare/MOF, in-memory class/property/method/qualifier edits; no repository writes
+PASS WMI native GetOwner method invocation and independent enumerator clones
+PASS WMI native asynchronous sink delivery/completion and compacting GC
+PASS WMI native process event callback, owned child PID and subscription cancellation
+PASS WMI EnablePrivileges query and restored thread identity
+Source-built WMI backend: E:\msys64\home\topkek\runtime8pkg3.RGUgSb\wmi-installed3\bin\Release\net8.0\runtimes\win-x64\native\msys-wmi-native.dll
+PASS native WMI ABI/null-pointer validation and temporary privilege token setup/reset
+PASS: source-built System.Management local WMI queries, errors, disposal and reopen
+RESULT wmi-installed3: exit 0
+
+$ bash /home/topkek/mmi-cim-wmi-user-test.zXg1Ef/tests/mmi-cim-wmi/check-mmi3-combined.sh combined-installed3 
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\runtime8pkg3.RGUgSb\combined-installed3\check.csproj (in 493 ms).
+  check -> E:\msys64\home\topkek\runtime8pkg3.RGUgSb\combined-installed3\bin\Release\net8.0\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:07.85
+Runtime: .NET 8.0.31
+MMI: Microsoft.Management.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+WMI: System.Management, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+Native dependency: C:\WINDOWS\SYSTEM32\mi.dll
+PASS installed source-built CIM/MMI and WMI share one process, agree on OS build 26200, survive GC and load no Framework implementations
+This uses the experimental MMI3 contract port; full PowerShell/remote/ownership compatibility remains open.
+RESULT combined-installed3: exit 0
+

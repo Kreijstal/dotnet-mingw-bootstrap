@@ -1,0 +1,12 @@
+{
+  "artifact": "mingw-w64-clang-x86_64-powershell-powershellget-2.2.5-1-any.pkg.tar.zst",
+  "sha256": "a4e13839d0f876225eb27e5d76b791ea596cb4e780424e28b50554734b42af15",
+  "pinned_inputs": 11,
+  "source_commit": "22a87ee00bc461fe49068c9e8e1b079bfdc6c3f8",
+  "original_module_and_dsc_files": 166,
+  "module_files": 16,
+  "source_changes": [],
+  "published_normalized_script_characters": 654574,
+  "nuget_id": "PowerShellGet",
+  "nuget_version": "2.2.5"
+}

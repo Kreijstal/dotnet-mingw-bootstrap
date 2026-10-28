@@ -1,0 +1,58 @@
+[
+  {
+    "recipe": "mingw-w64-dotnet-documentation-analyzers",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-documentation-analyzers-1.0.0.beta59-1-any.pkg.tar.zst",
+    "sha256": "77b0d8db07b2f23f6595482c4da244d296ec8f7d1444e93342fc1c4e21a014c3",
+    "nuget_id": "DotNetAnalyzers.DocumentationAnalyzers",
+    "nuget_version": "1.0.0-beta.59",
+    "nuget_dependencies": {
+      "DotNetAnalyzers.DocumentationAnalyzers.Unstable": "[1.0.0.59]"
+    },
+    "source_commit": "489c06575beee224030ffdc9e91ce43569f32a79",
+    "source_sha256": "28249640f14e82a53702994be7c651eb7ac3559c922452e57770301f7f9b9605",
+    "managed_payload_sha256": {},
+    "analyzer_classes": 18,
+    "codefix_classes": 14,
+    "diagnostic_ids": 18,
+    "resource_sets": 4,
+    "resource_strings": 71,
+    "upstream_vectors": 295,
+    "owned_vectors": 1,
+    "source_files": [
+      35,
+      21
+    ],
+    "assembly_version": "1.0.0.59",
+    "public_key_token": "2bc5e20c3ad68793",
+    "source_build_configuration": "upstream DEVELOPMENT_KEY, public-only signing"
+  },
+  {
+    "recipe": "mingw-w64-dotnet-documentation-analyzers",
+    "artifact": "mingw-w64-clang-x86_64-dotnet-documentation-analyzers-unstable-1.0.0.beta59-1-any.pkg.tar.zst",
+    "sha256": "93b04c757ad3a24e1b347588207f8b4f323f946884b92266459f8808673abc56",
+    "nuget_id": "DotNetAnalyzers.DocumentationAnalyzers.Unstable",
+    "nuget_version": "1.0.0.59",
+    "nuget_dependencies": {},
+    "source_commit": "489c06575beee224030ffdc9e91ce43569f32a79",
+    "source_sha256": "28249640f14e82a53702994be7c651eb7ac3559c922452e57770301f7f9b9605",
+    "managed_payload_sha256": {
+      "analyzers/dotnet/cs/CommonMark.dll": "e4bebe583ade128271a16bf7dfd6bfc66642b185b45b460c43d1688b20f53d84",
+      "analyzers/dotnet/cs/DocumentationAnalyzers.CodeFixes.dll": "7fae573d54dcc0c2cfa1a9e9c6819c66c3cad59a6c39dd4ed76afa53bf17b6a3",
+      "analyzers/dotnet/cs/DocumentationAnalyzers.dll": "0f551ea79d2f177cc42e30bd10448f4081afcd36f4d285fa190182445ef35503"
+    },
+    "analyzer_classes": 18,
+    "codefix_classes": 14,
+    "diagnostic_ids": 18,
+    "resource_sets": 4,
+    "resource_strings": 71,
+    "upstream_vectors": 295,
+    "owned_vectors": 1,
+    "source_files": [
+      35,
+      21
+    ],
+    "assembly_version": "1.0.0.59",
+    "public_key_token": "2bc5e20c3ad68793",
+    "source_build_configuration": "upstream DEVELOPMENT_KEY, public-only signing"
+  }
+]

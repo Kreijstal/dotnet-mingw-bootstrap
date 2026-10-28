@@ -1,0 +1,8 @@
+{
+  "artifact": "mingw-w64-clang-x86_64-dotnet-targeting-pack-8.0.131-2-any.pkg.tar.zst",
+  "sha256": "42a6469723b4dcace4d5869107ccbf3bbf7d705f901ab0df08757b0d76c494fe",
+  "unchanged_dll_count": 169,
+  "dll_payload_sha256": "a03d35e28c987df8d6f099aa6de3854defd8d492182753a64fb9662361793d9b",
+  "managed_entry_count": 163,
+  "corrected_entries": 107
+}

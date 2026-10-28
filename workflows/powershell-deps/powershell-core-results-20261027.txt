@@ -1,0 +1,365 @@
+Original PowerShell7.4.20 core and CimCmdlets source integration, 2026-10-27
+Host win11 / MSYS2 CLANG64; SDK8.0.131 label, actual source runtime8.0.0
+Build root /home/topkek/powershell-core.af76rh
+Source commit013edf910bbe781f503c27370941ce54d02d3f33
+Source archive SHA2563dac352752acd64a0502c1f002ecf65eca177d2919bea3bcefbf8856afedd9eb
+
+All697 original Windows SMA,9 Eventing,35 CimCmdlets and the original one-source
+ResGen, TypeCatalogGen and PSVersionInfoGenerator inputs match the archive bytes.
+Original Compile exclusions are retained. Original resource/type/version generation
+runs with explicit source Documentation/StyleCop/CodeAnalysis analyzer packages.
+Assembly7.4.6.500/file7.4.20.500/31bf identity is retained via public signing.
+The full source inventories, generated paths and analyzer lists are recorded in
+powershell-core-source-inventory-20261027.json. Every one of27 consumer DLLs
+matches the rebuilt original projects or installed source NuGet assets exactly;
+see powershell-core-payload-20261027.json.
+
+The core consumer opens a real runspace and passes version identity, functions,
+loops, pipelines, XML type resolution, classes, parser/AST and error handling.
+The original CimCmdlets binary module imports, returns real CimInstance/CimClass,
+queries the OS and current process, invokes read-only GetOwner, surfaces a caught
+CimException, serializes/deserializes a CIM instance through real PSSerializer,
+queries source WMI in the same runspace and preserves a CIM object across GC.
+Both native backends agree on Windows build26200. No Framework implementation
+modules are loaded. Restores use fresh consumer caches and installed feed only.
+Telemetry is opted out and no persistent WMI/configuration writes are performed.
+
+The initial payload audit caught unintended Check.resources.dll satellites from
+SDK resource globs traversing cached source-package attachments. Final consumers
+turn off default SDK items and explicitly compile only Program.cs, then rebuild
+and run from fresh caches. This was a harness fix, with no production C# changes.
+The intentionally caught cmdlet error may set PowerShell.HadErrors; the negative
+case also requires completed invocation, the expected CimException and no unhandled
+error-stream records. Unexpected invocation errors fail the check.
+
+Build adjustments/limits are explicit in powershell-core-build-inputs-20261027.json:
+source SDK selection; archive-pinned release identity; version-generator net8.0
+host retarget; public signing; original generator cleanup plus persisted-output
+Compile exclusion; framework-dependent IL without apphost/R2R downloads.
+Implicit SDK .NET/CodeStyle analysis is deferred: this source SDK lacks those
+implementation DLLs and CSharp.CodeStyle.targets. Explicit analyzer packages stay
+enabled. The generated catalog uses the complete SMA core reference set excluding
+MMI as upstream does; it is not the full SDK catalog, whose graph remains open.
+
+This is an integration prototype, not a complete pwsh package or a completed MMI3
+port. Full application/modules, SqlClient/WindowsCompatibility, source SDK analyzer
+tooling, remote/auth/provider-stream/MOF/events/full ownership compatibility and
+runtime servicing remain open. Counts stay44/53 direct IDs,29 transitive packages,
+75 dependency artifacts including the two experimental MMI ports; complete=false.
+
+Exact final consumer/audit commands below run in the remote build root and exit0.
+Both consumer builds finish with0 warnings and0 errors.
+
+$ bash check.sh . core-check4
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-core.af76rh\core-check4\Check.csproj (in 430 ms).
+  Restored E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\Microsoft.PowerShell.CoreCLR.Eventing\Microsoft.PowerShell.CoreCLR.Eventing.csproj (in 1.33 sec).
+  Restored E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\System.Management.Automation.csproj (in 1.33 sec).
+  Restored E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj (in 1.37 sec).
+  PSVersionInfoGenerator -> E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\bin\Release\net8.0\SMA.Generator.dll
+  Microsoft.PowerShell.CoreCLR.Eventing -> E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\Microsoft.PowerShell.CoreCLR.Eventing\bin\Release\net8.0\Microsoft.PowerShell.CoreCLR.Eventing.dll
+  System.Management.Automation -> E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\bin\Release\net8.0\System.Management.Automation.dll
+  Check -> E:\msys64\home\topkek\powershell-core.af76rh\core-check4\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:35.45
+PASS source-built PowerShell7.4.20 core identity/version generator, real runspace, parser/AST/compiler, functions/loops, pipelines, XML type resolution, classes, errors and no Framework implementations
+
+exit0
+
+$ bash check-cim.sh . cim-check3
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-core.af76rh\cim-check3\Check.csproj (in 433 ms).
+  Restored E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj (in 1.41 sec).
+  Restored E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\Microsoft.PowerShell.CoreCLR.Eventing\Microsoft.PowerShell.CoreCLR.Eventing.csproj (in 975 ms).
+  Restored E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\Microsoft.Management.Infrastructure.CimCmdlets\Microsoft.Management.Infrastructure.CimCmdlets.csproj (in 1.45 sec).
+  Restored E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\System.Management.Automation.csproj (in 1.45 sec).
+  PSVersionInfoGenerator -> E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\bin\Release\net8.0\SMA.Generator.dll
+  Microsoft.PowerShell.CoreCLR.Eventing -> E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\Microsoft.PowerShell.CoreCLR.Eventing\bin\Release\net8.0\Microsoft.PowerShell.CoreCLR.Eventing.dll
+  System.Management.Automation -> E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\bin\Release\net8.0\System.Management.Automation.dll
+  Microsoft.Management.Infrastructure.CimCmdlets -> E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\Microsoft.Management.Infrastructure.CimCmdlets\bin\Release\net8.0\Microsoft.Management.Infrastructure.CimCmdlets.dll
+  Check -> E:\msys64\home\topkek\powershell-core.af76rh\cim-check3\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:41.58
+PASS invocation Import-Module 'E:\msys64\home\topkek\powershell-core.af76rh\cim-check3\bin\Release\net8.0\Microsoft.Management.Infrastructure.CimCmdlets.dll' -ErrorAction Stop
+PASS invocation Get-Command Get-CimInstance
+PASS invocation $script:OwnedOs = Get-CimInstance -Namespace root/cimv2 -ClassName Win32_OperatingSystem -ErrorAction Stop; $script:OwnedOs
+PASS invocation Get-CimClass -Namespace root/cimv2 -ClassName Win32_Process -ErrorAction Stop
+PASS invocation Get-CimInstance -Namespace root/cimv2 -ClassName Win32_Process -Filter 'ProcessId = 7296' -ErrorAction Stop
+PASS invocation $p=Get-CimInstance -ClassName Win32_Process -Filter 'ProcessId = 7296'; Invoke-CimMethod -InputObject $p -MethodName GetOwner -ErrorAction Stop
+PASS invocation try { Get-CimInstance -ClassName Missing_Source_Port_Class -ErrorAction Stop; 'missed' } catch { $_.Exception.GetType().FullName }
+PASS invocation $xml=[System.Management.Automation.PSSerializer]::Serialize($script:OwnedOs); $copy=[System.Management.Automation.PSSerializer]::Deserialize($xml); $copy.BuildNumber
+PASS invocation $s=[System.Management.ManagementObjectSearcher]::new('SELECT BuildNumber FROM Win32_OperatingSystem'); try { foreach($o in $s.Get()) { $o.BuildNumber } } finally { $s.Dispose() }
+PASS invocation $script:OwnedOs.BuildNumber
+PASS actual source PowerShell7.4.20/CimCmdlets with experimental MMI3: module import, local OS/process queries, class metadata, GetOwner, native errors, CIM serialization, shared WMI/CIM OS build 26200, GC and no Framework implementation
+
+exit0
+
+$ python3 audit-source.py .
+PASS exact original Windows source inventories/hashes, documented exclusions, fresh generators and retained explicit source analyzers: {'System.Management.Automation': (697, 77), 'Microsoft.PowerShell.CoreCLR.Eventing': (9, 3), 'PSVersionInfoGenerator': (1, 2), 'Microsoft.Management.Infrastructure.CimCmdlets': (35, 3), 'ResGen': (1, 2), 'TypeCatalogGen': (1, 2)}
+
+exit0
+
+$ python3 audit-payload.py . cim-check3
+PASS every one of 27 consumer DLLs matches rebuilt project bytes or an installed source-built NuGet payload
+
+exit0
+
+$ cd /home/topkek && bash powershell-core.af76rh/build.sh /home/topkek/powershell-core.af76rh
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  ResGen -> E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\ResGen\bin\Release\net8.0\resgen.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.82
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  TypeCatalogGen -> E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\TypeCatalogGen\bin\Release\net8.0\TypeCatalogGen.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.38
+ResGen for ..\Microsoft.Management.Infrastructure.CimCmdlets\gen\CimCmdletStrings.cs
+ResGen for ..\Microsoft.Management.UI.Internal\gen\GraphicalHostResources.cs
+ResGen for ..\Microsoft.Management.UI.Internal\gen\HelpWindowResources.cs
+ResGen for ..\Microsoft.Management.UI.Internal\gen\InvariantResources.cs
+ResGen for ..\Microsoft.Management.UI.Internal\gen\ShowCommandResources.cs
+ResGen for ..\Microsoft.Management.UI.Internal\gen\UICultureResources.cs
+ResGen for ..\Microsoft.Management.UI.Internal\gen\XamlLocalizableResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Diagnostics\gen\GetEventResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Management\gen\ClearRecycleBinResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Management\gen\ClipboardResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Management\gen\CmdletizationResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Management\gen\ComputerInfoResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Management\gen\ComputerResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Management\gen\ControlPanelResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Management\gen\EventlogResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Management\gen\HotFixResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Management\gen\ManagementMshSnapInResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Management\gen\NavigationResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Management\gen\ProcessCommandHelpResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Management\gen\ProcessResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Management\gen\ServiceResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Management\gen\TestConnectionResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Management\gen\TestPathResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Management\gen\TimeZoneResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Management\gen\TransactionResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Management\gen\WebServiceResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Management\gen\WmiResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\AddMember.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\AddTypeStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\AliasCommandStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\ConvertFromStringData.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\ConvertFromStringResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\ConvertHTMLStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\ConvertMarkdownStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\ConvertStringResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\CsvCommandStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\Debugger.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\EventingStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\FlashExtractStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\FormatAndOut_out_gridview.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\GetMember.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\GetRandomCommandStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\GetUptimeStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\HostStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\HttpCommandStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\ImmutableStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\ImplicitRemotingStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\ImportLocalizedDataStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\MatchStringStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\MeasureObjectStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\NewObjectStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\OutPrinterDisplayStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\SelectObjectStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\SendMailMessageStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\SortObjectStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\StartSleepStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\TestJsonCmdletStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\TraceCommandStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\UnblockFileStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\UpdateDataStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\UpdateListStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\UtilityCommonStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\UtilityMshSnapinResources.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\VariableCommandStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\WebCmdletStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\WriteErrorStrings.cs
+ResGen for ..\Microsoft.PowerShell.Commands.Utility\gen\WriteProgressResourceStrings.cs
+ResGen for ..\Microsoft.PowerShell.ConsoleHost\gen\CommandLineParameterParserStrings.cs
+ResGen for ..\Microsoft.PowerShell.ConsoleHost\gen\ConsoleControlStrings.cs
+ResGen for ..\Microsoft.PowerShell.ConsoleHost\gen\ConsoleHostRawUserInterfaceStrings.cs
+ResGen for ..\Microsoft.PowerShell.ConsoleHost\gen\ConsoleHostStrings.cs
+ResGen for ..\Microsoft.PowerShell.ConsoleHost\gen\ConsoleHostUserInterfaceSecurityResources.cs
+ResGen for ..\Microsoft.PowerShell.ConsoleHost\gen\ConsoleHostUserInterfaceStrings.cs
+ResGen for ..\Microsoft.PowerShell.ConsoleHost\gen\HostMshSnapinResources.cs
+ResGen for ..\Microsoft.PowerShell.ConsoleHost\gen\ManagedEntranceStrings.cs
+ResGen for ..\Microsoft.PowerShell.ConsoleHost\gen\ProgressNodeStrings.cs
+ResGen for ..\Microsoft.PowerShell.ConsoleHost\gen\TranscriptStrings.cs
+ResGen for ..\Microsoft.PowerShell.CoreCLR.Eventing\gen\DotNetEventingStrings.cs
+ResGen for ..\Microsoft.PowerShell.LocalAccounts\gen\Microsoft.PowerShell.LocalAccounts.Strings.cs
+ResGen for ..\Microsoft.PowerShell.ScheduledJob\gen\ScheduledJobErrorStrings.cs
+ResGen for ..\Microsoft.PowerShell.Security\gen\CertificateCommands.cs
+ResGen for ..\Microsoft.PowerShell.Security\gen\CertificateProviderStrings.cs
+ResGen for ..\Microsoft.PowerShell.Security\gen\CmsCommands.cs
+ResGen for ..\Microsoft.PowerShell.Security\gen\ExecutionPolicyCommands.cs
+ResGen for ..\Microsoft.PowerShell.Security\gen\SecureStringCommands.cs
+ResGen for ..\Microsoft.PowerShell.Security\gen\SecurityMshSnapinResources.cs
+ResGen for ..\Microsoft.PowerShell.Security\gen\SignatureCommands.cs
+ResGen for ..\Microsoft.PowerShell.Security\gen\UtilsStrings.cs
+ResGen for ..\Microsoft.WSMan.Management\gen\WsManResources.cs
+ResGen for ..\System.Management.Automation\gen\Authenticode.cs
+ResGen for ..\System.Management.Automation\gen\AuthorizationManagerBase.cs
+ResGen for ..\System.Management.Automation\gen\AutomationExceptions.cs
+ResGen for ..\System.Management.Automation\gen\CatalogStrings.cs
+ResGen for ..\System.Management.Automation\gen\CimInstanceTypeAdapterResources.cs
+ResGen for ..\System.Management.Automation\gen\CmdletizationCoreResources.cs
+ResGen for ..\System.Management.Automation\gen\CommandBaseStrings.cs
+ResGen for ..\System.Management.Automation\gen\ConsoleInfoErrorStrings.cs
+ResGen for ..\System.Management.Automation\gen\CoreClrStubResources.cs
+ResGen for ..\System.Management.Automation\gen\CoreMshSnapinResources.cs
+ResGen for ..\System.Management.Automation\gen\Credential.cs
+ResGen for ..\System.Management.Automation\gen\CredentialAttributeStrings.cs
+ResGen for ..\System.Management.Automation\gen\CredUI.cs
+ResGen for ..\System.Management.Automation\gen\DebuggerStrings.cs
+ResGen for ..\System.Management.Automation\gen\DescriptionsStrings.cs
+ResGen for ..\System.Management.Automation\gen\DiscoveryExceptions.cs
+ResGen for ..\System.Management.Automation\gen\EnumExpressionEvaluatorStrings.cs
+ResGen for ..\System.Management.Automation\gen\ErrorCategoryStrings.cs
+ResGen for ..\System.Management.Automation\gen\ErrorPackage.cs
+ResGen for ..\System.Management.Automation\gen\ErrorPackageRemoting.cs
+ResGen for ..\System.Management.Automation\gen\EtwLoggingStrings.cs
+ResGen for ..\System.Management.Automation\gen\EventingResources.cs
+ResGen for ..\System.Management.Automation\gen\EventResource.cs
+ResGen for ..\System.Management.Automation\gen\ExperimentalFeatureStrings.cs
+ResGen for ..\System.Management.Automation\gen\ExtendedTypeSystem.cs
+ResGen for ..\System.Management.Automation\gen\FileSystemProviderStrings.cs
+ResGen for ..\System.Management.Automation\gen\FormatAndOutXmlLoadingStrings.cs
+ResGen for ..\System.Management.Automation\gen\FormatAndOut_format_xxx.cs
+ResGen for ..\System.Management.Automation\gen\FormatAndOut_MshParameter.cs
+ResGen for ..\System.Management.Automation\gen\FormatAndOut_out_xxx.cs
+ResGen for ..\System.Management.Automation\gen\GetErrorText.cs
+ResGen for ..\System.Management.Automation\gen\HelpDisplayStrings.cs
+ResGen for ..\System.Management.Automation\gen\HelpErrors.cs
+ResGen for ..\System.Management.Automation\gen\HistoryStrings.cs
+ResGen for ..\System.Management.Automation\gen\HostInterfaceExceptionsStrings.cs
+ResGen for ..\System.Management.Automation\gen\InternalCommandStrings.cs
+ResGen for ..\System.Management.Automation\gen\InternalHostStrings.cs
+ResGen for ..\System.Management.Automation\gen\InternalHostUserInterfaceStrings.cs
+ResGen for ..\System.Management.Automation\gen\Logging.cs
+ResGen for ..\System.Management.Automation\gen\Metadata.cs
+ResGen for ..\System.Management.Automation\gen\MiniShellErrors.cs
+ResGen for ..\System.Management.Automation\gen\Modules.cs
+ResGen for ..\System.Management.Automation\gen\MshHostRawUserInterfaceStrings.cs
+ResGen for ..\System.Management.Automation\gen\MshSignature.cs
+ResGen for ..\System.Management.Automation\gen\MshSnapInCmdletResources.cs
+ResGen for ..\System.Management.Automation\gen\MshSnapinInfo.cs
+ResGen for ..\System.Management.Automation\gen\NativeCP.cs
+ResGen for ..\System.Management.Automation\gen\ParameterBinderStrings.cs
+ResGen for ..\System.Management.Automation\gen\ParserStrings.cs
+ResGen for ..\System.Management.Automation\gen\PathUtilsStrings.cs
+ResGen for ..\System.Management.Automation\gen\PipelineStrings.cs
+ResGen for ..\System.Management.Automation\gen\PowerShellStrings.cs
+ResGen for ..\System.Management.Automation\gen\ProgressRecordStrings.cs
+ResGen for ..\System.Management.Automation\gen\ProviderBaseSecurity.cs
+ResGen for ..\System.Management.Automation\gen\ProxyCommandStrings.cs
+ResGen for ..\System.Management.Automation\gen\PSCommandStrings.cs
+ResGen for ..\System.Management.Automation\gen\PSConfigurationStrings.cs
+ResGen for ..\System.Management.Automation\gen\PSDataBufferStrings.cs
+ResGen for ..\System.Management.Automation\gen\PSListModifierStrings.cs
+ResGen for ..\System.Management.Automation\gen\PSStyleStrings.cs
+ResGen for ..\System.Management.Automation\gen\RegistryProviderStrings.cs
+ResGen for ..\System.Management.Automation\gen\RemotingErrorIdStrings.cs
+ResGen for ..\System.Management.Automation\gen\RunspaceInit.cs
+ResGen for ..\System.Management.Automation\gen\RunspacePoolStrings.cs
+ResGen for ..\System.Management.Automation\gen\RunspaceStrings.cs
+ResGen for ..\System.Management.Automation\gen\SecuritySupportStrings.cs
+ResGen for ..\System.Management.Automation\gen\Serialization.cs
+ResGen for ..\System.Management.Automation\gen\SessionStateProviderBaseStrings.cs
+ResGen for ..\System.Management.Automation\gen\SessionStateStrings.cs
+ResGen for ..\System.Management.Automation\gen\StringDecoratedStrings.cs
+ResGen for ..\System.Management.Automation\gen\SubsystemStrings.cs
+ResGen for ..\System.Management.Automation\gen\SuggestionStrings.cs
+ResGen for ..\System.Management.Automation\gen\TabCompletionStrings.cs
+ResGen for ..\System.Management.Automation\gen\TransactionStrings.cs
+ResGen for ..\System.Management.Automation\gen\TypesXmlStrings.cs
+ResGen for ..\System.Management.Automation\gen\VerbDescriptionStrings.cs
+ResGen for ..\System.Management.Automation\gen\WildcardPatternStrings.cs
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\Microsoft.PowerShell.CoreCLR.Eventing\Microsoft.PowerShell.CoreCLR.Eventing.csproj (in 133 ms).
+  Restored E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\PSVersionInfoGenerator.csproj (in 133 ms).
+  Restored E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\System.Management.Automation.csproj (in 133 ms).
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  PSVersionInfoGenerator -> E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\bin\Release\net8.0\SMA.Generator.dll
+  Microsoft.PowerShell.CoreCLR.Eventing -> E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\Microsoft.PowerShell.CoreCLR.Eventing\bin\Release\net8.0\Microsoft.PowerShell.CoreCLR.Eventing.dll
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  PSVersionInfoGenerator -> E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\SourceGenerators\PSVersionInfoGenerator\bin\Release\net8.0\SMA.Generator.dll
+  Microsoft.PowerShell.CoreCLR.Eventing -> E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\Microsoft.PowerShell.CoreCLR.Eventing\bin\Release\net8.0\Microsoft.PowerShell.CoreCLR.Eventing.dll
+  System.Management.Automation -> E:\msys64\home\topkek\powershell-core.af76rh\PowerShell-7.4.20\src\System.Management.Automation\bin\Release\net8.0\System.Management.Automation.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:27.80
+
+exit0
+
+After final generator/core rebuild:
+$ python3 audit-source.py .
+PASS exact original Windows source inventories/hashes, documented exclusions, fresh generators and retained explicit source analyzers: {'System.Management.Automation': (697, 77), 'Microsoft.PowerShell.CoreCLR.Eventing': (9, 3), 'PSVersionInfoGenerator': (1, 2), 'Microsoft.Management.Infrastructure.CimCmdlets': (35, 3), 'ResGen': (1, 2), 'TypeCatalogGen': (1, 2)}
+
+exit0
+
+After final generator/core rebuild:
+$ python3 audit-payload.py . cim-check3
+PASS every one of 27 consumer DLLs matches rebuilt project bytes or an installed source-built NuGet payload
+
+exit0

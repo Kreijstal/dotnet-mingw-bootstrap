@@ -1,0 +1,232 @@
+{
+  "previous_goal_turn_classification": "progress",
+  "current_goal_turn_classification": "progress",
+  "date_utc": "2026-10-27",
+  "host": "win11",
+  "root": "/c/codex-dotnet10/c1.1BZ8KU",
+  "tool_output": "illink10-4",
+  "runtime_version": "10.0.5",
+  "runtime_commit": "081d220c0a773ffb7c6bea6b48727833576a65ef",
+  "runtime_archive_sha256": "1692acae5e3adfd625452fbc9db4fd4e982c10e38189358ae245c74dd5514d7a",
+  "cecil_declared_package_version": "0.11.5-alpha.26116.108",
+  "commands": [
+    {
+      "command": "/usr/bin/python3 illink-workflow/prepare.py \"$ROOT\" \"$ROOT/cecil-27abc572.tar.gz\" \"$ROOT/illink10-4\"",
+      "exit_code": 0
+    },
+    {
+      "command": "bash illink-workflow/build.sh \"$ROOT\" \"$ROOT/illink10-4\"",
+      "exit_code": 0,
+      "warnings": 479,
+      "errors": 0
+    },
+    {
+      "command": "/usr/bin/python3 illink-workflow/audit-source.py \"$ROOT\" \"$ROOT/illink10-4\"",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 illink-workflow/rewrite-corelib.py \"$ROOT\" \"$ROOT/illink10-4\" \"$ROOT/illink10-4/corelib-rewrite2\"",
+      "exit_code": 0,
+      "linker_warnings": 0
+    },
+    {
+      "command": "/usr/bin/python3 illink-workflow/validate-corelib.py \"$ROOT\" \"$ROOT/illink10-4\" \"$ROOT/illink10-4/corelib-rewrite2\"",
+      "exit_code": 0
+    },
+    {
+      "command": "python3 -m py_compile tests/runtime10-illink/*.py",
+      "exit_code": 0
+    },
+    {
+      "command": "bash -n tests/runtime10-illink/build.sh",
+      "exit_code": 0
+    }
+  ],
+  "source_audit": {
+    "all_original_sources_match": true,
+    "original_cs_by_project": {
+      "Mono.Cecil": 137,
+      "Mono.Cecil.Rocks": 12,
+      "Mono.Cecil.Pdb": 36,
+      "Mono.Cecil.Mdb": 9,
+      "System.Collections.Immutable": 130,
+      "System.Reflection.Metadata": 229,
+      "illink": 219
+    },
+    "cecil_exact_vmr_inputs": 197,
+    "removed_binary_inputs": 134,
+    "source_archive_sha256": "3d82d4708f93dabd7442bcdb6f2667489fdd3ee2162d821b96d8aad62c33d019",
+    "private_bootstrap_framework": "net8.0",
+    "full_sdk10_built": false,
+    "full_dependency_goal_complete": false
+  },
+  "source_built_tool_dll_sha256": {
+    "Mono.Cecil.dll": "1abec01cee1624c44a740a86c65b721b7f1e56e6e94386583595e49b23ac8fc2",
+    "Mono.Cecil.Mdb.dll": "42c78e9334ce0e50458e9987d40c2114d271c780ca6085c9c7fd7bed7151206e",
+    "Mono.Cecil.Rocks.dll": "6d2403094b0c85da0a99da02c0ef2dc5b51dfeff170db61864a569598cbc960b",
+    "System.Reflection.Metadata.dll": "ead0f8326145c4f843c12c3e9c8e834bfe614b9fdb2f0f40593fe06df75ff730",
+    "illink.dll": "102ab28b497e597c5b9b0caa3016666c5f21b6782c049e601521b661b593ece8",
+    "System.Collections.Immutable.dll": "531b114641a65081d22c5a0ae33b0289a126f88f228320d8e2ed4a35444eeb8d",
+    "Mono.Cecil.Pdb.dll": "4969b6043b3fb520cfe0fdb83f621ff1759c69c3e5c25ed05904b947ec8dda15"
+  },
+  "original_library_rewrite": {
+    "command": [
+      "/clang64/lib/dotnet/dotnet.exe",
+      "C:/codex-dotnet10/c1.1BZ8KU/illink10-4/illink/bin/Release/net8.0/illink.dll",
+      "@C:/codex-dotnet10/c1.1BZ8KU/illink10-4/corelib-rewrite2/illink.rsp"
+    ],
+    "arguments": [
+      "-a",
+      "C:/codex-dotnet10/c1.1BZ8KU/illink10-4/corelib-rewrite2/PreTrim/System.Private.CoreLib.dll",
+      "library",
+      "-out",
+      "C:/codex-dotnet10/c1.1BZ8KU/illink10-4/corelib-rewrite2/linked",
+      "--ignore-link-attributes",
+      "true",
+      "--skip-unresolved",
+      "true",
+      "--trim-mode",
+      "skip",
+      "--action",
+      "skip",
+      "--action",
+      "link",
+      "System.Private.CoreLib",
+      "-b",
+      "true",
+      "-x",
+      "C:/codex-dotnet10/c1.1BZ8KU/r/src/libraries/System.Private.CoreLib/src/ILLink/ILLink.Descriptors.LibraryBuild.xml",
+      "--link-attributes",
+      "C:/codex-dotnet10/c1.1BZ8KU/r/src/libraries/System.Private.CoreLib/src/ILLink/ILLink.Suppressions.LibraryBuild.xml",
+      "--link-attributes",
+      "C:/codex-dotnet10/c1.1BZ8KU/r/src/coreclr/System.Private.CoreLib/src/ILLink/ILLink.Suppressions.LibraryBuild.xml",
+      "--nowarn",
+      "IL2008;IL2009;IL2121;IL2025;IL2035"
+    ],
+    "raw_corelib_sha256": "ece5bdf9a112c696187298513cb763acb5339779d1c51a1a881765e4ae447bc0",
+    "linker_sha256": "102ab28b497e597c5b9b0caa3016666c5f21b6782c049e601521b661b593ece8",
+    "upstream_targets_sha256": "a1f43573cf47b25e2d1a0cbc3eae3d1757a7cead1fd9712da8bce260ba7c0ae4",
+    "library_build_xml_sha256": {
+      "src/libraries/System.Private.CoreLib/src/ILLink/ILLink.Descriptors.LibraryBuild.xml": "71cca8ee641401df93b93fbbd80f5fc88d7fc089288a374016dfb8e12c92a7f7",
+      "src/libraries/System.Private.CoreLib/src/ILLink/ILLink.Suppressions.LibraryBuild.xml": "e3ba234ef6f0c717c38516e98086f56dcfeffaea6926beb4fa97c25ffb6dc5ff",
+      "src/coreclr/System.Private.CoreLib/src/ILLink/ILLink.Suppressions.LibraryBuild.xml": "304e57c6b4fded930a6284219d5258e9b3685748f6e45ae18ec4a6c21993fc47"
+    },
+    "original_library_policy": true,
+    "fcall_helper_used": false,
+    "full_dependency_goal_complete": false,
+    "rewrite_exit_code": 0,
+    "linked_corelib_sha256": "ccdee0b231b7a164a5c7d17113625dcd9a467e1dddebdb651b62d2bca27c2e25",
+    "full_original_illink_rewrite_completed": true
+  },
+  "validation": {
+    "api_audit": {
+      "identity": "System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e",
+      "public_api_entries": 31189,
+      "public_api_unchanged": true,
+      "raw_types": 2957,
+      "linked_types": 2897,
+      "raw_methods": 43227,
+      "linked_methods": 42365,
+      "internal_calls": 208,
+      "internal_calls_with_body": 0,
+      "original_embedded_resources_unchanged": [
+        "System.Private.CoreLib.Strings.resources",
+        "ILLink.Descriptors.xml",
+        "ILLink.Substitutions.xml",
+        "ILLink.LinkAttributes.xml"
+      ],
+      "original_pdb_read_successfully": true,
+      "assembly_references": 0
+    },
+    "managed_results": {
+      "native_layout": "C:/codex-dotnet10/c1.1BZ8KU/illink10-4/corelib-rewrite2/managed-check/native CLR10 \u03bb",
+      "cases": {
+        "basic": {
+          "command": [
+            "C:\\codex-dotnet10\\c1.1BZ8KU\\illink10-4\\corelib-rewrite2\\managed-check\\native CLR10 \u03bb\\corerun.exe",
+            "-c",
+            "C:\\codex-dotnet10\\c1.1BZ8KU\\illink10-4\\corelib-rewrite2\\managed-check\\native CLR10 \u03bb",
+            "C:\\codex-dotnet10\\c1.1BZ8KU\\illink10-4\\corelib-rewrite2\\managed-check\\native CLR10 \u03bb\\ManagedProbe.dll",
+            "basic"
+          ],
+          "exit_code": 0
+        },
+        "gc": {
+          "command": [
+            "C:\\codex-dotnet10\\c1.1BZ8KU\\illink10-4\\corelib-rewrite2\\managed-check\\native CLR10 \u03bb\\corerun.exe",
+            "-c",
+            "C:\\codex-dotnet10\\c1.1BZ8KU\\illink10-4\\corelib-rewrite2\\managed-check\\native CLR10 \u03bb",
+            "C:\\codex-dotnet10\\c1.1BZ8KU\\illink10-4\\corelib-rewrite2\\managed-check\\native CLR10 \u03bb\\ManagedProbe.dll",
+            "gc"
+          ],
+          "exit_code": 0
+        },
+        "exceptions": {
+          "command": [
+            "C:\\codex-dotnet10\\c1.1BZ8KU\\illink10-4\\corelib-rewrite2\\managed-check\\native CLR10 \u03bb\\corerun.exe",
+            "-c",
+            "C:\\codex-dotnet10\\c1.1BZ8KU\\illink10-4\\corelib-rewrite2\\managed-check\\native CLR10 \u03bb",
+            "C:\\codex-dotnet10\\c1.1BZ8KU\\illink10-4\\corelib-rewrite2\\managed-check\\native CLR10 \u03bb\\ManagedProbe.dll",
+            "exceptions"
+          ],
+          "exit_code": 0
+        },
+        "thread": {
+          "command": [
+            "C:\\codex-dotnet10\\c1.1BZ8KU\\illink10-4\\corelib-rewrite2\\managed-check\\native CLR10 \u03bb\\corerun.exe",
+            "-c",
+            "C:\\codex-dotnet10\\c1.1BZ8KU\\illink10-4\\corelib-rewrite2\\managed-check\\native CLR10 \u03bb",
+            "C:\\codex-dotnet10\\c1.1BZ8KU\\illink10-4\\corelib-rewrite2\\managed-check\\native CLR10 \u03bb\\ManagedProbe.dll",
+            "thread"
+          ],
+          "exit_code": 0
+        }
+      },
+      "full_runtime10_built": false,
+      "full_sdk10_built": false,
+      "full_dependency_goal_complete": false,
+      "all_four_managed_cases_passed": true,
+      "tested_files_sha256": {
+        "clretwrc.dll": "d7bb676a08b4f7ee41efa900b05b9f25b55ea4895f1447be7c0960c9ba844020",
+        "clrjit.dll": "f18629b740576fb3105f53e668b262ab84b363139ca487724ac7f7f2bf2ba1b7",
+        "coreclr.dll": "0324a98b41b07a2325623998fb8b96d7a4f332f0b0e93c93e40ba2cc797f3328",
+        "corerun.exe": "ffa574d022e17ccf83f8b153da9a744ca3e43f940c23e7902f53bc6ad3e95e47",
+        "ManagedProbe.dll": "bc843605b92a9a142f7763afd1bf51d380a17187e641232cdcdfdbc954dfd1e7",
+        "mscorrc.dll": "688d10837cc6af99df77213f60dd96833bb5d6509d622e46af8791a98531958a",
+        "System.Private.CoreLib.dll": "ccdee0b231b7a164a5c7d17113625dcd9a467e1dddebdb651b62d2bca27c2e25"
+      }
+    },
+    "original_illink_output_executed_without_modification": true,
+    "full_original_illink_rewrite_completed": true,
+    "full_runtime10_built": false,
+    "full_sdk10_built": false,
+    "full_dependency_goal_complete": false
+  },
+  "private_bootstrap_host": "source SDK8.0.131-3/runtime8.0.31-3 with unchanged source Roslyn5 via CompilerHost",
+  "private_library_framework": "net8.0 (both original BCL projects support this target)",
+  "bcl_bootstrap_references": "source Collections.Immutable10 and Reflection.Metadata10, not replacement parsers",
+  "private_dependency_file_versions_populated_from_actual_pe_files": 13,
+  "source_csharp_production_changes": 0,
+  "full_managed_framework10_built": false,
+  "full_reference_pack10_built": false,
+  "full_sdk10_built": false,
+  "full_windowsdesktop10_built": false,
+  "powershell76_built": false,
+  "pacman_runtime10_or_illink_installed": false,
+  "dependency_artifact_counts_unchanged": {
+    "verified_direct": 50,
+    "total_direct": 53,
+    "verified_transitive": 52,
+    "including_experimental": 106
+  },
+  "full_dependency_goal_complete": false,
+  "evidence_archive_sha256": "098e7c90d34176b5e81f219c312b28f6590107024ef13f32530654f875013d4a",
+  "local_evidence": "/tmp/runtime10-illink1/evidence",
+  "initial_failures_resolved": [
+    "Missing newer TypeName APIs: build complete original supported-net8 Immutable/Metadata source projects.",
+    "Framework/reference duplicates: remove SDK8 duplicate framework compiler references in private wrappers.",
+    "SDK8 empty project asset versions selected framework8: fill dependency metadata from actual source-built PEs.",
+    "Descriptor before assembly root skipped library XML: match original LinkTask root-first ordering, final rewrite has no warnings.",
+    "MSYS converted /noconfig to E:/msys64/noconfig: use compiler-supported -noconfig; all four probes then pass."
+  ]
+}

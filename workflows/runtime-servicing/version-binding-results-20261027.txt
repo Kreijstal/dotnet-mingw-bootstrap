@@ -1,0 +1,186 @@
+Servicing binding repair and SDK execution,2026-10-27 UTC
+Previous goal turn: progress. Current goal turn: progress.
+Installed runtime is still8.0.0; no runtime/SDK package installed or replaced.
+
+The initial source-runtime execution passes did not cover consumers carrying a
+private older framework implementation. A new fresh source-feed JSON8.0.5 consumer
+proved that simplified FileVersion8.0.31.0 loses to older private8.0.1024.46610.
+This is a real servicing bypass. The first candidate clean build was deliberately
+stopped, including remaining scoped descendants. It produced no native package.
+Its wrapper exit0 after forced termination is not a successful makepkg result.
+
+The original Arcade CalculateAssemblyAndFileVersions.cs is pinned to the exact
+commit declared in runtime8.0.31's eng/Version.Details.xml:
+444c2ef3c414558e2e409ee346f1faebb19687eb
+SHA256:e0bc140b716fb1c43b4609e877a357b422cdd4b213021bd919df04e963c8a02f
+It is compiled unchanged into a private build-only task and executed under MSBuild.
+Three original upstream task vectors pass. Reproducible BuildNumber20260820.0
+comes from the pinned runtime archive's UTC commit date; it is not an official
+Microsoft build number. FileVersion is8.0.3126.42000; product remains8.0.31 and
+all existing per-assembly versions/signing identities remain unchanged.
+
+The same compiled consumer and private package bytes now select the new source
+framework JSON with correct version metadata. No consumer policy/loader override.
+Native/CoreLib/C#/VB/reference helper overlays all use the calculated version.
+The next package check requires all168 framework and six native file versions,
+the actual source hashes and a fresh source NuGet JSON binding regression.
+
+Exact narrow validations and results:
+/usr/bin/python3 harness/prepare-version.py prepared                 exit0 (3 original vectors;0 compile warnings/errors)
+/usr/bin/python3 harness/prepare-file-version.py prepared            exit0
+/usr/bin/python3 harness/prepare-framework.py prepared               exit0
+ONLY=System.Text.Json REBUILD=1 bash harness/build-framework.sh prepared build  exit0 (JSON and original VB step)
+bash harness/build-runtime-check.sh prepared runtime-check-build3   exit0
+bash harness/check-sdk.sh json-repaired-layout1 sdk-check1            exit0 (0 warnings,0 errors)
+The SDK script copies SDK/packs/compiler-packs into a private prefix, restores only
+from the source feed using a fresh cache, probes actual runtime inside MSBuild,
+compiles/executes native LibraryImport+Regex+JSON generators and checks their eight
+generated source files. This uses the prior targeting pack; full serviced targeting/
+runtime-pack integration and installed SDK validation remain open.
+
+Corrected candidate8.0.31-2 full clean build is running:
+root:/home/topkek/runtime8pkg2.ym1eaB
+command:makepkg --cleanbuild --force --noconfirm > makepkg2.log 2>&1
+exec session:49034
+All four input checksums, source preparation/17 patches, original version task and
+native host stages passed at the checkpoint. CoreCLR compilation is ongoing.
+Artifact audit, installed checks and full completion remain unproven.
+
+
+Initial binding regression,exit127
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\runtime-servicing.8KDIjx\json-binding1\Check.csproj (in 1.46 sec).
+  Check -> E:\msys64\home\topkek\runtime-servicing.8KDIjx\json-binding1\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:19.84
+Runtime: 8.0.31
+JSON path: E:\msys64\home\topkek\runtime-servicing.8KDIjx\json-binding1\bin\Release\net8.0\System.Text.Json.dll
+JSON file version: 8.0.1024.46610
+JSON source: 8.0.10+81cabf2857a01351e5ab578947c7403a5b128ad1
+Unhandled exception. System.Exception: Older private JSON overrides the serviced framework bytes
+   at Program.Main(String[] args) in E:\msys64\home\topkek\runtime-servicing.8KDIjx\json-binding1\Program.cs:line 19
+
+
+Original task and vectors,exit0
+PASS exact original Arcade version task and three upstream vectors: 20260820.0 -> 8.0.3126.42000
+
+
+Repaired same consumer,exit0
+Runtime: 8.0.31
+JSON path: E:\msys64\home\topkek\runtime-servicing.8KDIjx\json-repaired-layout1\shared\Microsoft.NETCore.App\8.0.31\System.Text.Json.dll
+JSON file version: 8.0.3126.42000
+JSON source: 8.0.31+1219a42122cf5190c7f512850557e38c422430dc
+PASS source NuGet consumer selects actual serviced framework JSON implementation
+
+
+Updated strict runtime fixture compilation,exit0
+PASS runtime execution fixture compiled against new servicing references
+
+
+Private actual serviced SDK/MSBuild/source generators,exit0
+.NET SDK:
+ Version:           8.0.131
+ Commit:            8514954698
+ Workload version:  8.0.100-manifests.e3b0c442
+
+Runtime Environment:
+ OS Name:     Windows
+ OS Version:  10.0.26200
+ OS Platform: Windows
+ RID:         win-x64
+ Base Path:   E:\msys64\home\topkek\runtime-servicing.8KDIjx\sdk-check1\sdk-root\sdk\8.0.131\
+
+.NET workloads installed:
+ Workload version: 8.0.100-manifests.e3b0c442
+There are no installed workloads to display.
+
+Host:
+  Version:      8.0.31
+  Architecture: x64
+  Commit:       1219a42122
+
+.NET SDKs installed:
+  8.0.131 [E:\msys64\home\topkek\runtime-servicing.8KDIjx\sdk-check1\sdk-root\sdk]
+
+.NET runtimes installed:
+  Microsoft.NETCore.App 8.0.31 [E:\msys64\home\topkek\runtime-servicing.8KDIjx\sdk-check1\sdk-root\shared\Microsoft.NETCore.App]
+
+Other architectures found:
+  None
+
+Environment variables:
+  DOTNET_ROOT       [E:/msys64/home/topkek/runtime-servicing.8KDIjx/sdk-check1/sdk-root]
+  DOTNET_ROOT_X64   [E:/msys64/home/topkek/runtime-servicing.8KDIjx/sdk-check1/sdk-root]
+
+global.json file:
+  Not found
+
+Learn more:
+  https://aka.ms/dotnet/info
+
+Download .NET:
+  https://aka.ms/dotnet/download
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\runtime-servicing.8KDIjx\sdk-check1\consumer\Check.csproj (in 147 ms).
+  MSBUILD RUNTIME 8.0.31 CORELIB E:\msys64\home\topkek\runtime-servicing.8KDIjx\sdk-check1\sdk-root\shared\Microsoft.NETCore.App\8.0.31\System.Private.CoreLib.dll
+  Check -> E:\msys64\home\topkek\runtime-servicing.8KDIjx\sdk-check1\consumer\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:11.46
+SDK CONSUMER RUNTIME 8.0.31
+SDK CONSUMER CORELIB E:\msys64\home\topkek\runtime-servicing.8KDIjx\sdk-check1\sdk-root\shared\Microsoft.NETCore.App\8.0.31\System.Private.CoreLib.dll
+SDK CONSUMER JSON 8.0.3126.42000
+PASS source SDK compiler and original LibraryImport/Regex/JSON generators execute on serviced runtime
+PASS real compiler-generated LibraryImport, Regex and JSON output files: 8
+
+
+Clean-build checkpoint 2026-10-27 14:58:49 UTC: makepkg PID1642720 confirmed live. Corrected native host/CoreCLR and original EHa/SEH shim tests (200000 rounds) passed. All five full generator builds passed. Original CoreLib tool preparation passed and CoreLib build is running. Continue exec session49034 and inspect /home/topkek/runtime8pkg2.ym1eaB/makepkg2.log plus src/prepared/corelib.log. No package/install/full objective completion claimed.
+
+Next-turn validation: previous goal turn was progress. This turn added an independent
+Windows PE fixed-version reader and validated the real freshly built native/CoreLib
+outputs. The first audit attempts rejected the apphost template's absent version
+resource; inspecting original pinned apphost/standalone/CMakeLists.txt proved its
+explicit SKIP_VERSIONING1 design. The verifier now asserts that original source
+choice and WinError1813 for apphost only; every other expected output must have
+exact fixed version8.0.3126.42000. No runtime/source build gate was relaxed.
+Exact command: /clang64/bin/python.exe audit-pe-versions.py src/prepared --stage native --output native-pe-versions.json
+Result: exit0;10 versioned native/CoreLib outputs plus1 intentionally unversioned
+upstream apphost template, metadata read only. Full per-file hashes are retained in
+native-pe-versions-20261027.json. CoreLib compiled with0 errors. At15:07:18UTC,
+makepkg PID1642720/refpack PID1647637 were confirmed live; refs continued compiling
+with0 errors. Continue session49034. Full package/install/goal remain incomplete.

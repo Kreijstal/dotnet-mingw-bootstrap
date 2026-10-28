@@ -1,0 +1,87 @@
+MMI/CIM/WMI retest, 2026-10-26
+Host: win11, MSYS2 CLANG64.
+Installed SDK/runtime: 8.0.131-1 (runtime reports .NET 8.0.0).
+Installed targeting pack: 8.0.131-2; experimental MMI: 2.0.0.preview1-1.
+MMI consumer restored offline into a new cache/output directory.
+WMI consumer rebuilt against the existing source-built System.Management 8.0.0.
+The two scripts and four C# fixture files matched local SHA-256 hashes.
+PowerShell requires MMI 3.0.0; compatibility remains unverified.
+
+Installed MMI/CIM consumer
+$ MSYSTEM=CLANG64 bash -lc "bash /home/topkek/mmi-port.iKfuzV/tests/mmi-cim-wmi/check-installed.sh /home/topkek/mmi-port.iKfuzV/installed-retest-20261026a"
+result: exit 0
+
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\mmi-port.iKfuzV\installed-retest-20261026a\check.csproj (in 234 ms).
+  check -> E:\msys64\home\topkek\mmi-port.iKfuzV\installed-retest-20261026a\bin\Release\net8.0\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.10
+Runtime: .NET 8.0.0
+MMI: Microsoft.Management.Infrastructure, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+CIM OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+CIM process: dotnet.exe; PID matches current source-built runtime
+CIM invalid class: correctly returned InvalidClass
+CIM OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+CIM process: dotnet.exe; PID matches current source-built runtime
+CIM invalid class: correctly returned InvalidClass
+Native dependency: C:\WINDOWS\SYSTEM32\mi.dll
+PASS: source-built MMI local DCOM/default queries, errors, disposal and reopen
+Runtime: .NET 8.0.0
+MMI: Microsoft.Management.Infrastructure, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+PASS: native operation/session timeouts, microseconds, infinity, negatives and timed query
+PASS: native MI_XML instance/class round-trips, offsets, Unicode, arrays, intervals, capacity, cached classes, errors and disposal
+PASS: native asynchronous instances/classes/methods/errors, observer exceptions, compacting GC, independent result lifetime, unsubscribe, CancellationToken, callback-root cleanup and session close
+Native dependency: C:\WINDOWS\SYSTEM32\mi.dll
+PASS: MMI timeout and serialization port checks
+Runtime: .NET 8.0.0
+MMI: Microsoft.Management.Infrastructure, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+CAPABILITY operation timeout: PASS
+CAPABILITY class metadata: PASS
+CAPABILITY instance serialization: PASS
+CAPABILITY asynchronous query: PASS
+
+Source-built System.Management WMI consumer
+$ MSYSTEM=CLANG64 bash -lc "bash /home/topkek/mmi-port.iKfuzV/tests/mmi-cim-wmi/check-wmi.sh /home/topkek/mmi-cim-wmi-probe-20261026/wmi-repro"
+result: exit 2
+
+Runtime: .NET 8.0.0
+WMI: System.Management, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+WMI OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+WMI process: dotnet.exe; PID matches current source-built runtime
+WMI invalid class: correctly returned InvalidClass
+WMI OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+WMI process: dotnet.exe; PID matches current source-built runtime
+WMI invalid class: correctly returned InvalidClass
+Native dependency: C:\Windows\Microsoft.NET\Framework64\v4.0.30319\wminet_utils.dll
+LIMITATION: queries passed but require a Microsoft .NET Framework native binary
+
+WMI consumer build log
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  WmiProbe -> E:\msys64\home\topkek\mmi-cim-wmi-probe-20261026\wmi-repro\bin-wmi\net8.0\WmiProbe.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.71

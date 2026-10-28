@@ -1,0 +1,13 @@
+{
+  "artifact": "mingw-w64-clang-x86_64-dotnet-identitymodel-abstractions-6.35.0-1-any.pkg.tar.zst",
+  "sha256": "e4cafb5f49e501f279e40597e64681cbe030115df2072e5de628b13c2be8b0ac",
+  "source_commit": "c94c7fc235501d478221e979062bd8837a55575b",
+  "original_compiler_items": 9,
+  "unchanged_implementation_files": 8,
+  "ci_version_metadata_only_files": 1,
+  "public_protected_api_declarations": 52,
+  "upstream_telemetry_cases": 6,
+  "implementation_sha256": "3afcbdc1b1c0695f2afb8b24226fd810d101d65a7c3fc584d73ffe41086f0e66",
+  "reference_sha256": "cf4f09824cb5c5ca780a3f62964ae9e083db4a91b62a05df41ec3357cc9e39e7",
+  "production_algorithm_changes": []
+}

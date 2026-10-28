@@ -1,0 +1,160 @@
+Targeting-pack metadata repair, 2026-10-26
+Old runtime implementations were 8.0.0.0 while targeting metadata claimed directory alias8.0.31.0.
+The generator patch distinguishes forwarding shims; packaging reads every actual runtime PE file version.
+{
+  "artifact": "mingw-w64-clang-x86_64-dotnet-targeting-pack-8.0.131-2-any.pkg.tar.zst",
+  "sha256": "42a6469723b4dcace4d5869107ccbf3bbf7d705f901ab0df08757b0d76c494fe",
+  "unchanged_dll_count": 169,
+  "dll_payload_sha256": "a03d35e28c987df8d6f099aa6de3854defd8d492182753a64fb9662361793d9b",
+  "managed_entry_count": 163,
+  "corrected_entries": 107
+}
+
+Patch validation: patch --batch --fuzz=0 -p1 against the pinned bootstrap refpack.sh; bash -n; both exit0.
+Generator prediction check: all163 generated managed versions match actual runtime PE metadata.
+
+All source input checksums
+$ makepkg --verifysource --noconfirm
+Result: exit0
+
+==> Making package: mingw-w64-dotnet-bootstrap 8.0.131-2 (26 Oct 2026 14:50:42)
+==> Retrieving sources...
+  -> Found dotnet-bootstrap-3cbf21078968e2290a54ab093392b4dfeb1c6f1f.tar.gz
+  -> Found launcher.c
+  -> Found 0001-package-build-inputs-and-stage-boundary.patch
+  -> Found roslyn-4.0.1.tar.gz
+  -> Found roslyn-4.4.0.tar.gz
+  -> Found roslyn-4.6.0.tar.gz
+  -> Found roslyn-4.8.0.tar.gz
+  -> Found roslyn-4.10.0.tar.gz
+  -> Found roslyn-4.11.0.tar.gz
+  -> Found roslyn-4.12.0.tar.gz
+  -> Found roslyn-4.13.0.tar.gz
+  -> Found roslyn-5.0.0-p4.tar.gz
+  -> Found roslyn-5.0.0.tar.gz
+  -> Found maintenance-packages-2025.03.19.tar.gz
+  -> Found runtime-8.0.0.tar.gz
+  -> Found msbuild-17.8.49.tar.gz
+  -> Found nuget-6.8.2.3.tar.gz
+  -> Found sdk-8.0.131.tar.gz
+  -> Found newtonsoft.json-13.0.3.tar.gz
+  -> Found xdt-3.2.12.tar.gz
+  -> Found applicationinsights-2.21.0.tar.gz
+  -> Found templating-8.0.131.tar.gz
+  -> Found sourcelink-8.0.0.tar.gz
+  -> Found wcwidth-1.0.0.tar.gz
+  -> Found deployment-tools-5255d40e228ea1d4b624781b5b97ec16484a3b4b.tar.gz
+  -> Found command-line-api-02fe27cd.tar.gz
+  -> Found cecil-45dd3a73.tar.gz
+  -> Found arcade-7945b1b660dff1927e4d71aca0a11e5d067ba4a5.tar.gz
+  -> Found sbrp-5aeee2738338530a92d7f6caa2c7d5f569fed3c4.tar.gz
+  -> Found xliff-tasks-73f0850939d96131c28cf6ea6ee5aacb4da0083a.tar.gz
+  -> Found xdt-9a1c3e1b7f0c8763d4c96e593961a61a72679a7b.tar.gz
+  -> Found LICENSE.launcher
+  -> Found check-launcher.py
+  -> Found relocate-bootstrap-tools.py
+  -> Found check-bootstrap-tools.py
+  -> Found check-native-devel.py
+  -> Found dotnet.sh
+  -> Found short-build-root.py
+  -> Found 0002-use-runtime-file-versions-in-targeting-metadata.patch
+  -> Found normalize-targeting-metadata.py
+==> Validating source files with sha256sums...
+    dotnet-bootstrap-3cbf21078968e2290a54ab093392b4dfeb1c6f1f.tar.gz ... Passed
+    launcher.c ... Passed
+    0001-package-build-inputs-and-stage-boundary.patch ... Passed
+    roslyn-4.0.1.tar.gz ... Passed
+    roslyn-4.4.0.tar.gz ... Passed
+    roslyn-4.6.0.tar.gz ... Passed
+    roslyn-4.8.0.tar.gz ... Passed
+    roslyn-4.10.0.tar.gz ... Passed
+    roslyn-4.11.0.tar.gz ... Passed
+    roslyn-4.12.0.tar.gz ... Passed
+    roslyn-4.13.0.tar.gz ... Passed
+    roslyn-5.0.0-p4.tar.gz ... Passed
+    roslyn-5.0.0.tar.gz ... Passed
+    maintenance-packages-2025.03.19.tar.gz ... Passed
+    runtime-8.0.0.tar.gz ... Passed
+    msbuild-17.8.49.tar.gz ... Passed
+    nuget-6.8.2.3.tar.gz ... Passed
+    sdk-8.0.131.tar.gz ... Passed
+    newtonsoft.json-13.0.3.tar.gz ... Passed
+    xdt-3.2.12.tar.gz ... Passed
+    applicationinsights-2.21.0.tar.gz ... Passed
+    templating-8.0.131.tar.gz ... Passed
+    sourcelink-8.0.0.tar.gz ... Passed
+    wcwidth-1.0.0.tar.gz ... Passed
+    deployment-tools-5255d40e228ea1d4b624781b5b97ec16484a3b4b.tar.gz ... Passed
+    command-line-api-02fe27cd.tar.gz ... Passed
+    cecil-45dd3a73.tar.gz ... Passed
+    arcade-7945b1b660dff1927e4d71aca0a11e5d067ba4a5.tar.gz ... Passed
+    sbrp-5aeee2738338530a92d7f6caa2c7d5f569fed3c4.tar.gz ... Passed
+    xliff-tasks-73f0850939d96131c28cf6ea6ee5aacb4da0083a.tar.gz ... Passed
+    xdt-9a1c3e1b7f0c8763d4c96e593961a61a72679a7b.tar.gz ... Passed
+    LICENSE.launcher ... Passed
+    check-launcher.py ... Passed
+    relocate-bootstrap-tools.py ... Passed
+    check-bootstrap-tools.py ... Passed
+    check-native-devel.py ... Passed
+    dotnet.sh ... Passed
+    short-build-root.py ... Passed
+    0002-use-runtime-file-versions-in-targeting-metadata.patch ... Passed
+    normalize-targeting-metadata.py ... Passed
+
+
+Focused repackaging of cached source-built targeting pack
+$ makepkg -p PKGBUILD.targeting --repackage --force --noconfirm
+# PKGBUILD.targeting sources the main PKGBUILD and selects only the targeting-pack split package.
+Result: exit0
+
+==> Making package: mingw-w64-dotnet-bootstrap 8.0.131-2 (26 Oct 2026 14:51:17)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Removing existing $pkgdir/ directory...
+==> Starting package_mingw-w64-clang-x86_64-dotnet-targeting-pack()...
+8.0.31: verified 163 managed file versions against runtime PE metadata; corrected 107
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-targeting-pack"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-bootstrap 8.0.131-2 (26 Oct 2026 14:51:26)
+
+
+Installed metadata/runtime consistency
+$ bash /home/topkek/powershell-crypto.hYsmex/check-targeting-metadata.sh /home/topkek/powershell-crypto.hYsmex/targeting-metadata-check
+Result: exit0
+
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-crypto.hYsmex\targeting-metadata-check\check.csproj (in 68 ms).
+  check -> E:\msys64\home\topkek\powershell-crypto.hYsmex\targeting-metadata-check\bin\Release\net8.0\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.79
+PASS: FrameworkList and PlatformManifest match actual runtime PE file versions for all 163 managed assemblies
+
+
+Regression: the original consumer loaded shared8.0.0 System.Formats.Asn1; the fresh consumer after the repair loaded all six package DLLs from its output tree and passed native/functional tests.
+Runtime files themselves were not modified. No servicing upgrade of the entire runtime is claimed.

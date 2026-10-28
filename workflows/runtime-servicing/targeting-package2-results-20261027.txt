@@ -1,0 +1,322 @@
+Corrected source targeting8.0.31-2 native package and installed ownership milestone
+{
+  "previous_goal_turn_classification": "progress",
+  "current_goal_turn_classification": "progress",
+  "build_root": "/home/topkek/targeting8pkg2.AAw8xI",
+  "native_package_release": "8.0.31-2",
+  "artifact": "mingw-w64-clang-x86_64-dotnet-targeting8-servicing-8.0.31-2-any.pkg.tar.zst",
+  "artifact_sha256": "39dac9a55cd3a701db6fcfc1608d536e52d70968a2c804722382d484823bb187",
+  "build_command": "makepkg --cleanbuild --force --noconfirm",
+  "build_exit_code": 0,
+  "artifact_audit_command": "/usr/bin/python3 audit-targeting-package.py mingw-w64-clang-x86_64-dotnet-targeting8-servicing-8.0.31-2-any.pkg.tar.zst src/targeting-pack src/targeting-licenses --output artifact-audit2.json",
+  "artifact_audit_exit_code": 0,
+  "install_command": "pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-targeting8-servicing-8.0.31-2-any.pkg.tar.zst",
+  "install_exit_code": 0,
+  "installed_check_command": "bash check-installed.sh installed-check3",
+  "installed_check_exit_code": 0,
+  "source_reference_dlls": 163,
+  "source_generator_and_resource_dlls": 99,
+  "total_source_dll_assets": 595,
+  "platform_manifest_entries": 371,
+  "platform_manifest_unique_names": 342,
+  "support_source_packages": 11,
+  "support_license_files": 23,
+  "default_source_compiler": "4.9.2",
+  "default_source_generator_selection": 6,
+  "full_dependency_goal_complete": false,
+  "remaining": [
+    "historical/netstandard generator hosts and browser invocation",
+    "serviced SDK host/runtime native package completion",
+    "broader native/API compatibility",
+    "complete PowerShell including conditional GraphicalHost",
+    "PowerShell7.6/.NET10"
+  ]
+}
+
+Initial validation failures retained:
+The first install used --ask=4, which inverted the conflict answer and made no changes.
+The normal --noconfirm transaction then removed the old package and installed its declared provider.
+The initial installed checker queried the provided name with pacman -Q and mistook provider lookup for the old package still being present.
+The corrected checker reads exact installed names using pacman -Qq and verifies actual file ownership. No package overwrite or dependency bypass was used.
+
+Recorded makepkg.log:
+==> Making package: mingw-w64-dotnet-targeting8-servicing 8.0.31-2 (27 Oct 2026 18:46:36)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found runtime-v8.0.31.tar.gz
+  -> Found dotnet-bootstrap-3cbf21078968e2290a54ab093392b4dfeb1c6f1f.tar.gz
+  -> Found dotnet-targeting8-servicing-source-2.tar.gz
+  -> Found README.md
+==> Validating source files with sha256sums...
+    runtime-v8.0.31.tar.gz ... Passed
+    dotnet-bootstrap-3cbf21078968e2290a54ab093392b4dfeb1c6f1f.tar.gz ... Passed
+    dotnet-targeting8-servicing-source-2.tar.gz ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+  -> Extracting dotnet-targeting8-servicing-source-2.tar.gz with bsdtar
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+==> Starting build()...
+PASS isolated complete runtime8.0.31/pinned bootstrap source,17 zero-fuzz patches and binary-input removal; runtime build/managed framework/integration remain open
+PASS exact original Arcade version task and three upstream vectors: 20260820.0 -> 8.0.3126.42000
+PASS original native/CoreLib/C#/VB/reference helpers retain product8.0.31 and use calculated file8.0.3126.42000
+PASS original build helpers select serviced sources/CoreCLR, retain assembly kinds in the dependency plan, fail on every compile error, and use installed source VB compiler
+PASS requested serviced framework build step: refs; runtime/layout/integration verification remains required
+PASS complete original framework manifest, independently reconstructed helper overlays, 183 reference/stub outputs and 0 library compiler-input/output hashes; runtime integration and packaging remain required
+PASS all20 original stub signing keys and all22 framework shim zero-version identities: 22 reference/runtime DLLs
+PASS complete original servicing generator source selections/resources and original build-only runtime-root task: {'Microsoft.Interop.SourceGeneration': 86, 'Microsoft.Interop.LibraryImportGenerator': 27, 'Microsoft.Interop.ComInterfaceGenerator': 47, 'System.Private.CoreLib.Generators': 7, 'System.Text.RegularExpressions.Generator': 32, 'RuntimeBuildTools': 1}
+PASS original JS/JSON generator selections and neutral/XLF resources: {'JSImport': 35, 'Json3.11': 55, 'Json4.0': 65, 'Json4.4': 57}
+PASS original complete interop/Regex compiler inputs, neutral/XLF resources and matching signed8.0.0.0 helper identities
+PASS requested original targeting generator builds
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\targeting8pkg2.AAw8xI\src\prepared\targeting-generators\metadata-tool\Inspect.csproj (in 76 ms).
+  Inspect -> E:\msys64\home\topkek\targeting8pkg2.AAw8xI\src\prepared\targeting-generators\metadata-tool\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.48
+PASS full original JS/JSON compiler inputs and actual source references, exact neutral/XLF PE strings, signing/version identities and all99 outputs; serviced targeting package/legacy host compatibility remain open
+PASS staged163 source references,99 audited generator outputs and byte-verified source package dependency closure: 595 DLL assets; normal SDK selection and packaging checks remain required
+PASS exact original Arcade template task: 371 entries, 342 unique names; all163 reference identities and private/native fallback rules verified
+PASS11 source NuGet/native-package owner mappings, 23 full native license/notice files and original runtime source licenses; no installed files changed
+PASS original-source references/generators, complete platform manifest and source license closure; SDK/native package checks remain required
+==> Starting check()...
+.NET SDK:
+ Version:           8.0.131
+ Commit:            8514954698
+ Workload version:  8.0.100-manifests.e3b0c442
+
+Runtime Environment:
+ OS Name:     Windows
+ OS Version:  10.0.26200
+ OS Platform: Windows
+ RID:         win-x64
+ Base Path:   E:\msys64\home\topkek\targeting8pkg2.AAw8xI\src\sdk-check\sdk-root\sdk\8.0.131\
+
+.NET workloads installed:
+ Workload version: 8.0.100-manifests.e3b0c442
+There are no installed workloads to display.
+
+Host:
+  Version:      8.0.31
+  Architecture: x64
+  Commit:       1219a42122
+
+.NET SDKs installed:
+  8.0.131 [E:\msys64\home\topkek\targeting8pkg2.AAw8xI\src\sdk-check\sdk-root\sdk]
+
+.NET runtimes installed:
+  Microsoft.NETCore.App 8.0.0 [E:\msys64\home\topkek\targeting8pkg2.AAw8xI\src\sdk-check\sdk-root\shared\Microsoft.NETCore.App]
+  Microsoft.NETCore.App 8.0.31 [E:\msys64\home\topkek\targeting8pkg2.AAw8xI\src\sdk-check\sdk-root\shared\Microsoft.NETCore.App]
+  Microsoft.WindowsDesktop.App 8.0.0-bootstrap.7.0.20 [E:\msys64\home\topkek\targeting8pkg2.AAw8xI\src\sdk-check\sdk-root\shared\Microsoft.WindowsDesktop.App]
+  Microsoft.WindowsDesktop.App 8.0.0-bootstrap.wpf.8.0.0 [E:\msys64\home\topkek\targeting8pkg2.AAw8xI\src\sdk-check\sdk-root\shared\Microsoft.WindowsDesktop.App]
+
+Other architectures found:
+  None
+
+Environment variables:
+  DOTNET_ROOT       [E:/msys64/home/topkek/targeting8pkg2.AAw8xI/src/sdk-check/sdk-root]
+  DOTNET_ROOT_X64   [E:/msys64/home/topkek/targeting8pkg2.AAw8xI/src/sdk-check/sdk-root]
+
+global.json file:
+  Not found
+
+Learn more:
+  https://aka.ms/dotnet/info
+
+Download .NET:
+  https://aka.ms/dotnet/download
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\targeting8pkg2.AAw8xI\src\sdk-check\consumer\Check.csproj (in 88 ms).
+  MSBUILD RUNTIME 8.0.31 CORELIB E:\msys64\home\topkek\targeting8pkg2.AAw8xI\src\sdk-check\sdk-root\shared\Microsoft.NETCore.App\8.0.31\System.Private.CoreLib.dll
+  Check -> E:\msys64\home\topkek\targeting8pkg2.AAw8xI\src\sdk-check\consumer\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:07.18
+SDK CONSUMER RUNTIME 8.0.31
+SDK CONSUMER CORELIB E:\msys64\home\topkek\targeting8pkg2.AAw8xI\src\sdk-check\sdk-root\shared\Microsoft.NETCore.App\8.0.31\System.Private.CoreLib.dll
+SDK CONSUMER JSON 8.0.3126.42000
+PASS source SDK compiler and original LibraryImport/COM/Regex/JSON generators execute on serviced runtime
+PASS real compiler-generated LibraryImport, Regex and JSON output files: 10
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\targeting8pkg2.AAw8xI\src\pack-check\consumer\Check.csproj (in 83 ms).
+  Check -> E:\msys64\home\topkek\targeting8pkg2.AAw8xI\src\pack-check\consumer\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.62
+SDK CONSUMER RUNTIME 8.0.31
+SDK CONSUMER CORELIB E:\msys64\home\topkek\targeting8pkg2.AAw8xI\src\sdk-check\sdk-root\shared\Microsoft.NETCore.App\8.0.31\System.Private.CoreLib.dll
+SDK CONSUMER JSON 8.0.3126.42000
+PASS source SDK compiler and original LibraryImport/COM/Regex/JSON generators execute on serviced runtime
+PASS SDK selects all163 actual serviced source refs and six rebuilt signed analyzers via normal targeting-pack metadata; no Analyzer injection
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.47
+SDK CONSUMER RUNTIME 8.0.31
+SDK CONSUMER CORELIB E:\msys64\home\topkek\targeting8pkg2.AAw8xI\src\sdk-check\sdk-root\shared\Microsoft.NETCore.App\8.0.31\System.Private.CoreLib.dll
+SDK CONSUMER JSON 8.0.3126.42000
+PASS source SDK compiler and original LibraryImport/COM/Regex/JSON generators execute on serviced runtime
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.55
+SDK CONSUMER RUNTIME 8.0.31
+SDK CONSUMER CORELIB E:\msys64\home\topkek\targeting8pkg2.AAw8xI\src\sdk-check\sdk-root\shared\Microsoft.NETCore.App\8.0.31\System.Private.CoreLib.dll
+SDK CONSUMER JSON 8.0.3126.42000
+PASS source SDK compiler and original LibraryImport/COM/Regex/JSON generators execute on serviced runtime
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:06.36
+SDK CONSUMER RUNTIME 8.0.31
+SDK CONSUMER CORELIB E:\msys64\home\topkek\targeting8pkg2.AAw8xI\src\sdk-check\sdk-root\shared\Microsoft.NETCore.App\8.0.31\System.Private.CoreLib.dll
+SDK CONSUMER JSON 8.0.3126.42000
+PASS source SDK compiler and original LibraryImport/COM/Regex/JSON generators execute on serviced runtime
+  Restored E:\msys64\home\topkek\targeting8pkg2.AAw8xI\src\generator-check\JSImport\Check.csproj (in 118 ms).
+  Check -> E:\msys64\home\topkek\targeting8pkg2.AAw8xI\src\generator-check\JSImport\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:07.07
+PASS generated JS import compiled on serviced runtime; browser invocation remains platform-specific
+PASS new signed interop/COM/Regex/JSON analyzer selection, native COM vtable execution, all JSON variants with reflection disabled and JS import compilation; historical/browser runtime compatibility remain open
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> WARNING: Package contains reference to $srcdir
+clang64/share/doc/dotnet-targeting8-servicing/generators-pe-metadata.json
+==> Creating package "mingw-w64-clang-x86_64-dotnet-targeting8-servicing"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-targeting8-servicing 8.0.31-2 (27 Oct 2026 19:13:27)
+
+Recorded artifact-audit2.log:
+PASS native targeting package: exact595 DLLs, all manifest/provenance/license bytes, SDK role and replacement conflict metadata; installed ownership checks remain required
+
+Recorded install2.log:
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+:: mingw-w64-clang-x86_64-dotnet-targeting8-servicing-8.0.31-2 and mingw-w64-clang-x86_64-dotnet-targeting-pack-8.0.131-2 are in conflict. Remove mingw-w64-clang-x86_64-dotnet-targeting-pack? [Y/n] error: unresolvable package conflicts detected
+error: failed to prepare transaction (conflicting dependencies)
+
+:: mingw-w64-clang-x86_64-dotnet-targeting8-servicing-8.0.31-2 and mingw-w64-clang-x86_64-dotnet-targeting-pack-8.0.131-2 are in conflict
+
+Recorded install2b.log:
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+:: mingw-w64-clang-x86_64-dotnet-targeting8-servicing-8.0.31-2 and mingw-w64-clang-x86_64-dotnet-targeting-pack-8.0.131-2 are in conflict. Remove mingw-w64-clang-x86_64-dotnet-targeting-pack? [Y/n] 
+
+Packages (2) mingw-w64-clang-x86_64-dotnet-targeting-pack-8.0.131-2 [removal]  mingw-w64-clang-x86_64-dotnet-targeting8-servicing-8.0.31-2
+
+Total Installed Size:  88.93 MiB
+Net Upgrade Size:      83.86 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+removing mingw-w64-clang-x86_64-dotnet-targeting-pack...
+installing mingw-w64-clang-x86_64-dotnet-targeting8-servicing...
+
+Recorded installed-check2.log:
+mingw-w64-clang-x86_64-dotnet-targeting8-servicing 8.0.31-2
+Old targeting package still owns the replacement paths
+
+Recorded installed-check3.log:
+mingw-w64-clang-x86_64-dotnet-targeting8-servicing 8.0.31-2
+PASS installed595 DLL payload bytes, complete manifest and replacement native-package ownership
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\targeting8pkg2.AAw8xI\installed-check3\Check.csproj (in 66 ms).
+  Check -> E:\msys64\home\topkek\targeting8pkg2.AAw8xI\installed-check3\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.23
+SDK CONSUMER RUNTIME 8.0.31
+SDK CONSUMER CORELIB E:\msys64\clang64\lib\dotnet\shared\Microsoft.NETCore.App\8.0.31\System.Private.CoreLib.dll
+SDK CONSUMER JSON 8.0.3126.42000
+PASS source SDK compiler and original LibraryImport/COM/Regex/JSON generators execute on serviced runtime
+PASS installed source SDK selects163 serviced references and six generators normally; default compiler4.9, COM/PInvoke/Regex/JSON execution
+

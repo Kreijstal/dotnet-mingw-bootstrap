@@ -1,0 +1,43 @@
+Source PowerShell MMI/CIM/WMI runtime checks — 2026-10-27
+
+{
+  "date_utc": "2026-10-27",
+  "host": "win11",
+  "build_root": "/home/topkek/powershell-shipping3.DfekoG",
+  "powershell": "7.4.20",
+  "runtime": "8.0.31",
+  "sdk_package": "8.0.131-3",
+  "targeting_package": "8.0.31-2",
+  "runtime_package": "8.0.31-3",
+  "combined_mmi_cim_wmi_command": "timeout 90 distribution1/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -MTA -ExecutionPolicy Bypass -File \"$(cygpath -am tests/powershell-full-sdk/CimWmiSmoke.ps1)\"",
+  "combined_mmi_cim_wmi_exit_code": 0,
+  "sta_wmi_command": "timeout 60 distribution1/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File \"$(cygpath -am tests/powershell-full-sdk/WmiStaProbe.ps1)\"",
+  "sta_wmi_exit_code": 1,
+  "sta_wmi_error": "Access denied during source System.Management enumeration",
+  "fixture_fixes": [
+    "CLR null string uses NullString.Value rather than an empty string",
+    "explicitly dispose the synchronous MMI query enumerator before session disposal",
+    "validate the original runtime-specific System.Management asset path"
+  ],
+  "fixture_sha256": {
+    "CimWmiSmoke.ps1": "c0b097b623ea100984f3ff90e92751f2f8daad4a6c1b0814aecef0e2fea10683",
+    "WmiStaProbe.ps1": "9c47a1eb65e8cc44e1e1d5ebf3868dad1a61708ecb23d31aaecaedc42937aa4b"
+  },
+  "private_sta_experiments": {
+    "preserve_queried_authentication_default": 1,
+    "secure_enumerator_in_current_apartment": 1
+  },
+  "private_experiments_shipped": false,
+  "full_mmi_wmi_compatibility_complete": false,
+  "full_dependency_goal_complete": false
+}
+
+cim-wmi-mta4.log
+PASS packaged MMI direct local query/disposal, original CIM cmdlets and source System.Management WMI OS/GetOwner/disposal
+
+wmi-sta-probe.log
+[31;1mParentContainsErrorRecordException: [0mE:\msys64\home\topkek\powershell-shipping3.DfekoG\tests\powershell-full-sdk\WmiStaProbe.ps1:11[0m
+[31;1m[0m[36;1mLine |[0m
+[31;1m[0m[36;1m[36;1m  11 | [0m                    [36;1m~~~~~~~~~~~~~~~~[0m
+[31;1m[0m[36;1m[36;1m[0m[36;1m[0m[36;1m     | [31;1m                    ~~~~~~~~~~~~~~~~[0m
+[31;1m[0m[36;1m[36;1m[0m[36;1m[0m[36;1m[31;1m[31;1m[36;1m     | [31;1mException calling "MoveNext" with "0" argument(s): "Access denied "[0m

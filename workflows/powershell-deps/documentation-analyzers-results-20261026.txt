@@ -1,0 +1,299 @@
+DocumentationAnalyzers beta.59 final source packages, 2026-10-26
+Host: win11, MSYS2 CLANG64
+Root: /home/topkek/powershell-documentation.6HrASX
+SDK8.0.131 with explicit installed csc4.9.2; core runtime servicing still open.
+
+The requested meta-package DotNetAnalyzers.DocumentationAnalyzers 1.0.0-beta.59
+and implementation DotNetAnalyzers.DocumentationAnalyzers.Unstable 1.0.0.59 are
+built from pinned source 489c06575beee224030ffdc9e91ce43569f32a79. Both analyzer
+and code-fix assemblies preserve 1.0.0.59/2bc5e20c3ad68793 with upstream unstable
+DEVELOPMENT_KEY configuration and public-only signing. No private key is shipped.
+The implementation bundles only its two source-built assemblies and a CommonMark
+DLL byte-identical to the separately built/installed CommonMark.NET0.15.1 package.
+Original scripts, all 35/21 source files, licenses and notices are included.
+The payload audit caught a wildcard that omitted source attachments; the final
+packer lists each file explicitly and the final clean build/audit verifies them.
+
+Published binaries are read only as metadata, never executed or compiled against.
+Their public type surface is empty, so the meaningful metadata gate is the exact
+inventory of 18 analyzers, 14 code-fix providers, 18 diagnostic constants and four
+resources. Runtime checks instantiate all providers and inspect every descriptor,
+then compare all 71 source resource strings and assembly identity/provenance.
+
+The fixture extractor regenerates inputs and expected fixes from unmodified
+upstream test sources with source-built Roslyn4.9. It handles literals, InlineData
+and keyword MemberData. 295 upstream vectors plus one owned empty-langword
+negative pass, with actual code-fix actions from all14 providers and all18 analyzer
+classes, including CommonMark-backed Markdown conversion. Fixed text is exact
+except Windows CR removal. A new keyword-enum entry with no text spelling is
+excluded from the positive keyword provider and covered by the owned negative.
+Configured fixtures check resulting fixed text, not all original test-framework
+compiler-warning span assertions; this does not claim the original xUnit suite.
+An idempotent earlier action is skipped so later diagnostics can still be fixed.
+
+The installed test uses new output/cache and only the installed source feed.
+A separate real SDK project references only the requested meta-package. Through
+explicit installed csc49.cmd it requires DOC103 for a negative XML-doc fixture
+and success for its correction. No SDK/compiler is replaced. Candidate inventories
+match the independent metadata baseline and all consumer DLL hashes match the
+package. Full PowerShell source/application integration and servicing remain.
+
+Directory: /home/topkek/powershell-documentation.6HrASX/mingw-w64-dotnet-documentation-analyzers
+$ PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm
+==> Making package: mingw-w64-dotnet-documentation-analyzers 1.0.0.beta59-1 (26 Oct 2026 22:22:35)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found documentation-1.0.0.beta59.tar.gz
+  -> Found prepare.py
+  -> Found pack.py
+  -> Found build.sh
+  -> Found Check.cs
+  -> Found check.sh
+  -> Found ExtractFixtures.cs
+  -> Found InspectInventory.cs
+  -> Found ExpectedInventory.json
+  -> Found UpstreamFixtures.json
+  -> Found published-metadata-provenance.json
+  -> Found README.md
+==> Validating source files with sha256sums...
+    documentation-1.0.0.beta59.tar.gz ... Passed
+    prepare.py ... Passed
+    pack.py ... Passed
+    build.sh ... Passed
+    Check.cs ... Passed
+    check.sh ... Passed
+    ExtractFixtures.cs ... Passed
+    InspectInventory.cs ... Passed
+    ExpectedInventory.json ... Passed
+    UpstreamFixtures.json ... Passed
+    published-metadata-provenance.json ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+  -> Extracting documentation-1.0.0.beta59.tar.gz with bsdtar
+==> Starting prepare()...
+==> Removing existing $pkgdir/ directory...
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-documentation.6HrASX\mingw-w64-dotnet-documentation-analyzers\src\prepared\DocumentationAnalyzers.CodeFixes\Library.csproj (in 348 ms).
+  Restored E:\msys64\home\topkek\powershell-documentation.6HrASX\mingw-w64-dotnet-documentation-analyzers\src\prepared\DocumentationAnalyzers\Library.csproj (in 348 ms).
+  Library -> E:\msys64\home\topkek\powershell-documentation.6HrASX\mingw-w64-dotnet-documentation-analyzers\src\prepared\DocumentationAnalyzers\bin\Release\net8.0\DocumentationAnalyzers.dll
+  Library -> E:\msys64\home\topkek\powershell-documentation.6HrASX\mingw-w64-dotnet-documentation-analyzers\src\prepared\DocumentationAnalyzers.CodeFixes\bin\Release\net8.0\DocumentationAnalyzers.CodeFixes.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.19
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-documentation.6HrASX\mingw-w64-dotnet-documentation-analyzers\src\prepared\fixture-tool\Tool.csproj (in 132 ms).
+  Tool -> E:\msys64\home\topkek\powershell-documentation.6HrASX\mingw-w64-dotnet-documentation-analyzers\src\prepared\fixture-tool\bin\Release\net8.0\Tool.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.66
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-documentation.6HrASX\mingw-w64-dotnet-documentation-analyzers\src\prepared\inventory-tool\Tool.csproj (in 62 ms).
+  Tool -> E:\msys64\home\topkek\powershell-documentation.6HrASX\mingw-w64-dotnet-documentation-analyzers\src\prepared\inventory-tool\bin\Release\net8.0\Tool.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.61
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-documentation.6HrASX\mingw-w64-dotnet-documentation-analyzers\src\prepared\packages\implementation\Package.csproj (in 74 ms).
+  Package -> E:\msys64\home\topkek\powershell-documentation.6HrASX\mingw-w64-dotnet-documentation-analyzers\src\prepared\packages\implementation\bin\Release\net8.0\Package.dll
+  Successfully created package 'E:\msys64\home\topkek\powershell-documentation.6HrASX\mingw-w64-dotnet-documentation-analyzers\src\feed\DotNetAnalyzers.DocumentationAnalyzers.Unstable.1.0.0.59.nupkg'.
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-documentation.6HrASX\mingw-w64-dotnet-documentation-analyzers\src\prepared\packages\meta\Package.csproj (in 53 ms).
+  Package -> E:\msys64\home\topkek\powershell-documentation.6HrASX\mingw-w64-dotnet-documentation-analyzers\src\prepared\packages\meta\bin\Release\net8.0\Package.dll
+  Successfully created package 'E:\msys64\home\topkek\powershell-documentation.6HrASX\mingw-w64-dotnet-documentation-analyzers\src\feed\DotNetAnalyzers.DocumentationAnalyzers.1.0.0-beta.59.nupkg'.
+==> Starting check()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-documentation.6HrASX\mingw-w64-dotnet-documentation-analyzers\src\check\Check.csproj (in 371 ms).
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Check -> E:\msys64\home\topkek\powershell-documentation.6HrASX\mingw-w64-dotnet-documentation-analyzers\src\check\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.42
+PASS published 18 analyzer/14 fixer/18 ID inventories, live descriptors and 4 resource sets/71 strings
+Upstream vectors passed=296 failed=0; analyzer coverage=18/18 code-fix action coverage=14/14
+PASS all extracted upstream diagnostic/code-fix vectors, including CommonMark-backed Markdown conversion, and no Framework implementations
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-documentation.6HrASX\mingw-w64-dotnet-documentation-analyzers\src\check\inventory\Tool.csproj (in 60 ms).
+  Tool -> E:\msys64\home\topkek\powershell-documentation.6HrASX\mingw-w64-dotnet-documentation-analyzers\src\check\inventory\bin\Release\net8.0\Tool.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.68
+PASS exact metadata-only published analyzer/fixer/ID/resource inventories and all 296 vectors/all provider coverage
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Sample -> E:\msys64\home\topkek\powershell-documentation.6HrASX\mingw-w64-dotnet-documentation-analyzers\src\check\sample\bin\Release\net8.0\Sample.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.48
+PASS exact meta/implementation asset selection in actual MSBuild: expected DOC103 failure then corrected success through installed source compiler49
+==> Starting package_mingw-w64-clang-x86_64-dotnet-documentation-analyzers()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-documentation-analyzers"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Starting package_mingw-w64-clang-x86_64-dotnet-documentation-analyzers-unstable()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-documentation-analyzers-unstable"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-documentation-analyzers 1.0.0.beta59-1 (26 Oct 2026 22:23:39)
+Result: exit 0
+
+Fresh installed checks:
+$ pacman -U --noconfirm mingw-w64-dotnet-documentation-analyzers/mingw-w64-clang-x86_64-dotnet-documentation-analyzers-1.0.0.beta59-1-any.pkg.tar.zst mingw-w64-dotnet-documentation-analyzers/mingw-w64-clang-x86_64-dotnet-documentation-analyzers-unstable-1.0.0.beta59-1-any.pkg.tar.zst
+warning: mingw-w64-clang-x86_64-dotnet-documentation-analyzers-1.0.0.beta59-1 is up to date -- reinstalling
+warning: mingw-w64-clang-x86_64-dotnet-documentation-analyzers-unstable-1.0.0.beta59-1 is up to date -- reinstalling
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (2) mingw-w64-clang-x86_64-dotnet-documentation-analyzers-1.0.0.beta59-1  mingw-w64-clang-x86_64-dotnet-documentation-analyzers-unstable-1.0.0.beta59-1
+
+Total Installed Size:  0.92 MiB
+Net Upgrade Size:      0.08 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+reinstalling mingw-w64-clang-x86_64-dotnet-documentation-analyzers-unstable...
+reinstalling mingw-w64-clang-x86_64-dotnet-documentation-analyzers...
+Result: exit 0
+$ bash mingw-w64-dotnet-documentation-analyzers/check.sh installed-check-final
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-documentation.6HrASX\installed-check-final\Check.csproj (in 380 ms).
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Check -> E:\msys64\home\topkek\powershell-documentation.6HrASX\installed-check-final\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.12
+PASS published 18 analyzer/14 fixer/18 ID inventories, live descriptors and 4 resource sets/71 strings
+Upstream vectors passed=296 failed=0; analyzer coverage=18/18 code-fix action coverage=14/14
+PASS all extracted upstream diagnostic/code-fix vectors, including CommonMark-backed Markdown conversion, and no Framework implementations
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-documentation.6HrASX\installed-check-final\inventory\Tool.csproj (in 61 ms).
+  Tool -> E:\msys64\home\topkek\powershell-documentation.6HrASX\installed-check-final\inventory\bin\Release\net8.0\Tool.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.37
+PASS exact metadata-only published analyzer/fixer/ID/resource inventories and all 296 vectors/all provider coverage
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Sample -> E:\msys64\home\topkek\powershell-documentation.6HrASX\installed-check-final\sample\bin\Release\net8.0\Sample.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.83
+PASS exact meta/implementation asset selection in actual MSBuild: expected DOC103 failure then corrected success through installed source compiler49
+Result: exit 0
+
+$ sha256sum installed-check-final/bin/Release/net8.0/CommonMark.dll installed-check-final/bin/Release/net8.0/DocumentationAnalyzers.dll installed-check-final/bin/Release/net8.0/DocumentationAnalyzers.CodeFixes.dll
+e4bebe583ade128271a16bf7dfd6bfc66642b185b45b460c43d1688b20f53d84 *installed-check-final/bin/Release/net8.0/CommonMark.dll
+0f551ea79d2f177cc42e30bd10448f4081afcd36f4d285fa190182445ef35503 *installed-check-final/bin/Release/net8.0/DocumentationAnalyzers.dll
+7fae573d54dcc0c2cfa1a9e9c6819c66c3cad59a6c39dd4ed76afa53bf17b6a3 *installed-check-final/bin/Release/net8.0/DocumentationAnalyzers.CodeFixes.dll
+PASS all consumer implementation hashes match audited package DLLs
+
+$ python3 tests/powershell-deps/audit-documentation-analyzers.py
+DocumentationAnalyzers: exact source/licenses/dependencies, both meta/implementation payloads, all 18/14/18 inventories, 4/71 resources, 296 regenerated vectors, all source files and byte-identical separately built CommonMark PASS
+Result: exit 0

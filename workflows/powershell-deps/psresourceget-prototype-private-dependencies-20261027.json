@@ -1,0 +1,127 @@
+{
+  "Azure.Core.dll": {
+    "package": "Azure.Core/1.38.0",
+    "asset": "lib/net8.0/Azure.Core.dll",
+    "sha256": "d1190f5ddc34214ccd4f540948aa3d6fcba1c6b1d2993343f819420164b7c1ee"
+  },
+  "Azure.Identity.dll": {
+    "package": "Azure.Identity/1.11.4",
+    "asset": "lib/net8.0/Azure.Identity.dll",
+    "sha256": "bbdc292690bda37db3ce7195df80a13f95484a82e1fca0d52d27e9e7f0d34752"
+  },
+  "Microsoft.Extensions.FileProviders.Abstractions.dll": {
+    "package": "Microsoft.Extensions.FileProviders.Abstractions/6.0.0",
+    "asset": "lib/net8.0/Microsoft.Extensions.FileProviders.Abstractions.dll",
+    "sha256": "0ea6931be619ef09b0ead37fce88965e22b0fd9e7403e69a1329d6d3ec939d55"
+  },
+  "Microsoft.Extensions.FileSystemGlobbing.dll": {
+    "package": "Microsoft.Extensions.FileSystemGlobbing/6.0.0",
+    "asset": "lib/net8.0/Microsoft.Extensions.FileSystemGlobbing.dll",
+    "sha256": "5b7cf65d95b830bc606715cc41c6d0062f2845bfc10438b19049236646aa9953"
+  },
+  "Microsoft.Extensions.Primitives.dll": {
+    "package": "Microsoft.Extensions.Primitives/6.0.0",
+    "asset": "lib/net8.0/Microsoft.Extensions.Primitives.dll",
+    "sha256": "4f3576424629d209be7b43ac729db0c05dffc668fa791ff99ad4e50f2d112759"
+  },
+  "Microsoft.Identity.Client.dll": {
+    "package": "Microsoft.Identity.Client/4.61.3",
+    "asset": "lib/net8.0/Microsoft.Identity.Client.dll",
+    "sha256": "c3a31e75f314dbe3aa69b9ff9a976c54e3eddb922d0a5c3f2d98e1efe8d3fa93"
+  },
+  "Microsoft.Identity.Client.Extensions.Msal.dll": {
+    "package": "Microsoft.Identity.Client.Extensions.Msal/4.61.3",
+    "asset": "lib/net8.0/Microsoft.Identity.Client.Extensions.Msal.dll",
+    "sha256": "f2d1e1b63f60bc6a5aff8e905f78d06475352813561e3cf6944bd3082e1e68da"
+  },
+  "Microsoft.IdentityModel.Abstractions.dll": {
+    "package": "Microsoft.IdentityModel.Abstractions/6.35.0",
+    "asset": "lib/net8.0/Microsoft.IdentityModel.Abstractions.dll",
+    "sha256": "3afcbdc1b1c0695f2afb8b24226fd810d101d65a7c3fc584d73ffe41086f0e66"
+  },
+  "Newtonsoft.Json.dll": {
+    "package": "Newtonsoft.Json/13.0.4",
+    "asset": "lib/net8.0/Newtonsoft.Json.dll",
+    "sha256": "dbd632f1e37926c74e8b40d4672af029a85fcd878d4a7c95e6c401516f14a1e7"
+  },
+  "NuGet.Commands.dll": {
+    "package": "NuGet.Commands/6.9.1",
+    "asset": "lib/net8.0/NuGet.Commands.dll",
+    "sha256": "58ae9cab77393925c29fb7ab87f5d1f0e472787df62e34a16e2c00730abfa874"
+  },
+  "NuGet.Common.dll": {
+    "package": "NuGet.Common/6.9.1",
+    "asset": "lib/net8.0/NuGet.Common.dll",
+    "sha256": "08ae13f1f3e96b8d4bd1d0250025de64965e3514b2e113a9cb3504be4debd16f"
+  },
+  "NuGet.Configuration.dll": {
+    "package": "NuGet.Configuration/6.9.1",
+    "asset": "lib/net8.0/NuGet.Configuration.dll",
+    "sha256": "1b99a452c1eebe0d6dedc34dde7f965f3a0557c41f57d4cac14563c94befdb46"
+  },
+  "NuGet.Credentials.dll": {
+    "package": "NuGet.Credentials/6.9.1",
+    "asset": "lib/net8.0/NuGet.Credentials.dll",
+    "sha256": "c72c6930d3212fa71fc4eb968a4ec3b9612d1d6e3049ab0fb27a4f8be232f750"
+  },
+  "NuGet.DependencyResolver.Core.dll": {
+    "package": "NuGet.DependencyResolver.Core/6.9.1",
+    "asset": "lib/net8.0/NuGet.DependencyResolver.Core.dll",
+    "sha256": "98138790ef49cee5d3af718e74a2375096c94c7a40bf6535a2e6ce075b0fb1e9"
+  },
+  "NuGet.Frameworks.dll": {
+    "package": "NuGet.Frameworks/6.9.1",
+    "asset": "lib/net8.0/NuGet.Frameworks.dll",
+    "sha256": "c6caac9f82fe754c42390fc75ae9cf6a9b080ca0202d27e1a29985f0044c3826"
+  },
+  "NuGet.LibraryModel.dll": {
+    "package": "NuGet.LibraryModel/6.9.1",
+    "asset": "lib/net8.0/NuGet.LibraryModel.dll",
+    "sha256": "a4e02e7045eedf112f29ca0a619e94ae5b6a92a5fbb9904430924a1644136bb9"
+  },
+  "NuGet.Packaging.dll": {
+    "package": "NuGet.Packaging/6.9.1",
+    "asset": "lib/net8.0/NuGet.Packaging.dll",
+    "sha256": "841054f0f773a84beb9ae342fb9498f41d526923ea5af0c4c66e754e06949713"
+  },
+  "NuGet.ProjectModel.dll": {
+    "package": "NuGet.ProjectModel/6.9.1",
+    "asset": "lib/net8.0/NuGet.ProjectModel.dll",
+    "sha256": "d9f5266ebbaefcfe2dcb227fa10786b701b2cfb519d6fb78e25f21d387fe2da6"
+  },
+  "NuGet.Protocol.dll": {
+    "package": "NuGet.Protocol/6.9.1",
+    "asset": "lib/net8.0/NuGet.Protocol.dll",
+    "sha256": "de94e021a37d9156dcbdf8ce1eb8d3bf0c9191439bbdb6cd027f1d18a697dc71"
+  },
+  "NuGet.Versioning.dll": {
+    "package": "NuGet.Versioning/6.9.1",
+    "asset": "lib/net8.0/NuGet.Versioning.dll",
+    "sha256": "a1fc7d0f0486b7e86ec6e73a3a401a3f405c77422f66cf8733b7341619aafeba"
+  },
+  "System.ClientModel.dll": {
+    "package": "System.ClientModel/1.0.0",
+    "asset": "lib/net8.0/System.ClientModel.dll",
+    "sha256": "e8686bc21ff33f939e0cddb08b524b613fd6425da2d969d7917fa7aa490da992"
+  },
+  "System.Formats.Asn1.dll": {
+    "package": "System.Formats.Asn1/8.0.2",
+    "asset": "lib/net8.0/System.Formats.Asn1.dll",
+    "sha256": "482383202bb846a7150a53976414e3e93bcd496315b0a040912e85175a806e5f"
+  },
+  "System.Memory.Data.dll": {
+    "package": "System.Memory.Data/1.0.2",
+    "asset": "lib/net8.0/System.Memory.Data.dll",
+    "sha256": "b816c21e953efe4cdf1d10f9cbee54432c3e2120d074b662547b8739ab16bd9d"
+  },
+  "System.Security.Cryptography.ProtectedData.dll": {
+    "package": "System.Security.Cryptography.ProtectedData/8.0.0",
+    "asset": "lib/net8.0/System.Security.Cryptography.ProtectedData.dll",
+    "sha256": "896271c7f4ebe0c9a65d8af51e6624828f9eda18f7bbfc847a5f10ed44b56a17"
+  },
+  "System.Text.Json.dll": {
+    "package": "System.Text.Json/8.0.5",
+    "asset": "lib/net8.0/System.Text.Json.dll",
+    "sha256": "84c58b6e58fdb11720503bb5056c6ed405885a2c5ed25224965df9daffba5765"
+  }
+}

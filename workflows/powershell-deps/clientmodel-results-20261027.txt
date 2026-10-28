@@ -1,0 +1,231 @@
+System.ClientModel1.0.0 complete source package validation
+Host: win11, CLANG64, actual CLR8.0.0
+Source commit: 8ffa7d7f26bb2c5e3dadf74b2aa9c9ba9c9d9208
+Formal build: /home/topkek/clientmodel-package.4PCf4n
+Fresh installed consumer: /home/topkek/clientmodel-installed.n56iYY/check
+
+$ MSYSTEM=CLANG64 bash -lc 'PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm'
+RESULT: exit0; library/consumers/tools0warnings/errors
+$ pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-clientmodel-1.0.0-1-any.pkg.tar.zst
+RESULT: exit0
+$ bash /home/topkek/clientmodel-package.4PCf4n/src/check.sh /home/topkek/clientmodel-installed.n56iYY/check
+RESULT: exit0; installed source feed and new cache only
+$ python3 tests/powershell-deps/audit-clientmodel.py
+RESULT: exit0; all15 pinned inputs, full source archive/project/compiler hashes, both source dependency references, implementation/ref/XML, native/NuGet dependencies and licenses
+$ /usr/bin/python3 /home/topkek/clientmodel-package.4PCf4n/postinstall.py
+RESULT: exit0; builtNuGet=installedfeed=freshcache, original license/inventory bytes
+
+No production C# changes. Complete12-file src tree,11originalC# compiler items,
+2generatedSDK metadata files. All21published API declarations and frozen release/
+public-signing identities match. Generic/object JSON persistence, large pooled
+buffer lifetime/GC/reuse, Unicode, private constructors/proxies, wire/custom formats,
+unsupported/null/malformed errors and source ClientModel/BinaryData/JSON loaded
+hashes pass. Actual compiler ref/runtime NuGet asset selection is independently
+checked for all three dependencies. Vendor implementation is metadata-only input.
+Broader upstream/framework/trimming/AOT, Azure/MSAL/PSResourceGet integration and
+actual runtime servicing remain open. The full goal is not complete.
+
+Full makepkg1.log:
+==> Making package: mingw-w64-dotnet-clientmodel 1.0.0-1 (27 Oct 2026 11:26:46)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found azure-sdk-8ffa7d7f26bb2c5e3dadf74b2aa9c9ba9c9d9208.tar.gz
+  -> Found extract.py
+  -> Found prepare.py
+  -> Found verify-build.py
+  -> Found pack.py
+  -> Found Check.cs
+  -> Found check.sh
+  -> Found check-payload.py
+  -> Found compare.py
+  -> Found InspectApi.cs
+  -> Found InspectAssemblyMetadata.cs
+  -> Found source-inputs.json
+  -> Found published-api.json
+  -> Found published-metadata.json
+  -> Found README.md
+==> Validating source files with sha256sums...
+    azure-sdk-8ffa7d7f26bb2c5e3dadf74b2aa9c9ba9c9d9208.tar.gz ... Passed
+    extract.py ... Passed
+    prepare.py ... Passed
+    verify-build.py ... Passed
+    pack.py ... Passed
+    Check.cs ... Passed
+    check.sh ... Passed
+    check-payload.py ... Passed
+    compare.py ... Passed
+    InspectApi.cs ... Passed
+    InspectAssemblyMetadata.cs ... Passed
+    source-inputs.json ... Passed
+    published-api.json ... Passed
+    published-metadata.json ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+==> Starting prepare()...
+PASS full pinned Azure archive and complete ClientModel component/build metadata extraction
+PASS complete original ClientModel project/tree,11 unchanged C# inputs and original Azure client public-key identity
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\clientmodel-package.4PCf4n\src\prepared\Library.csproj (in 379 ms).
+  Library -> E:\msys64\home\topkek\clientmodel-package.4PCf4n\src\prepared\bin\Release\net8.0\System.ClientModel.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:06.09
+PASS all11 original compiler items, two SDK metadata files, exact source dependency references and library/ref/XML outputs
+PASS gated source implementation/reference/XML, original license and source/compiler/reference metadata
+==> Starting check()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\clientmodel-package.4PCf4n\src\check\Check.csproj (in 336 ms).
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Check -> E:\msys64\home\topkek\clientmodel-package.4PCf4n\src\check\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.24
+PASS original ClientModel generic/object JSON persistence, large pooled-buffer lifetime, private construction/proxy activation, wire/custom format dispatch, Unicode, unsupported/null/malformed errors with source BinaryData/JSON and exact loaded hashes
+PASS all three source implementation/reference hashes and actual compiler/runtime asset selection
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\clientmodel-package.4PCf4n\src\check\Api\Inspect.csproj (in 419 ms).
+  Inspect -> E:\msys64\home\topkek\clientmodel-package.4PCf4n\src\check\Api\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:07.88
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\clientmodel-package.4PCf4n\src\check\Pe\Inspect.csproj (in 228 ms).
+  Inspect -> E:\msys64\home\topkek\clientmodel-package.4PCf4n\src\check\Pe\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:07.68
+PASS all21 exact published API declarations and release/signing identities
+PASS fresh source ClientModel consumer, owned model/JSON behavior, exact API/identity/payload gates
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-clientmodel"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-clientmodel 1.0.0-1 (27 Oct 2026 11:28:41)
+
+Full install.log:
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-dotnet-clientmodel-1.0.0-1
+
+Total Installed Size:  0.07 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+installing mingw-w64-clang-x86_64-dotnet-clientmodel...
+
+Full installed-check.log:
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\clientmodel-installed.n56iYY\check\Check.csproj (in 472 ms).
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Check -> E:\msys64\home\topkek\clientmodel-installed.n56iYY\check\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:06.11
+PASS original ClientModel generic/object JSON persistence, large pooled-buffer lifetime, private construction/proxy activation, wire/custom format dispatch, Unicode, unsupported/null/malformed errors with source BinaryData/JSON and exact loaded hashes
+PASS all three source implementation/reference hashes and actual compiler/runtime asset selection
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\clientmodel-installed.n56iYY\check\Api\Inspect.csproj (in 616 ms).
+  Inspect -> E:\msys64\home\topkek\clientmodel-installed.n56iYY\check\Api\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:11.67
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\clientmodel-installed.n56iYY\check\Pe\Inspect.csproj (in 168 ms).
+  Inspect -> E:\msys64\home\topkek\clientmodel-installed.n56iYY\check\Pe\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:10.13
+PASS all21 exact published API declarations and release/signing identities
+PASS fresh source ClientModel consumer, owned model/JSON behavior, exact API/identity/payload gates
+
+Full postinstall.log:
+PASS built NuGet = installed source feed = fresh installed cache; original license and source inventory bytes match
+NuGet SHA256: 99c5641ff0b5db15f115b4221a9ded3feeff70d6bc6e25d18f7b2e625cdf9a22

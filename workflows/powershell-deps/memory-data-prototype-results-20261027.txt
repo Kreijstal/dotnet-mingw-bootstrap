@@ -1,0 +1,80 @@
+System.Memory.Data1.0.2 source prototype,2026-10-27
+Host:win11 / MSYS2 CLANG64
+Root:/home/topkek/memory-data-source.ttVAen
+Source commit7e3cf643977591e9041f4c628fd4d28237398e0b, exact nuspec source revision.
+Full source archiveSHA256:a6cb4b058f24a49b8c62594723d171f8b782026fce5d7d0274c0282472189317
+The complete four-file original src directory has matching Git blob/SHA256 hashes
+and independently matches the now-completed full archive. Both C# implementations unchanged.
+
+MSYSTEM=CLANG64 bash -lc "bash /home/topkek/memory-data-source.ttVAen/build-memory-data-prototype.sh"
+  exit0;source build3 nullable warnings/0 errors;owned consumer0 warnings/0 errors.
+Original project wrapper/source.NET8/source JSON8.0.5/frozen original identity selected.
+All20 API declarations/assembly identity compare exactly to published netstandard2.0 metadata.
+Original Open.snk public blob derived and compared; no signing/trust policy changes.
+Both actual original compiler items +two SDK metadata inputs and output DLL hashes gated.
+
+Owned behavior:byte/string/borrow/copy/Unicode contracts;read-only stream seek/EOF,
+disposal/cancellation and independent BinaryData lifetime;seekable/nonseekable short reads,
+caller stream ownership;actual source JSON round trip/malformed errors. Runtime location and
+JSON file version guard against implementation substitution. No vendor build/runtime DLLs.
+
+Formal NuGet/MSYS2 package/metadata/payload/license/ref/XML layout,install/fresh installed
+consumer and ClientModel/Azure/PSResourceGet integration remain. No verified count added.
+Actual CLR8.0.0 servicing remains open.
+
+PASS complete original BinaryData src tree Git blob/SHA256 hashes and both unchanged source files
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\memory-data-source.ttVAen\prepared\Library.csproj (in 5.58 sec).
+E:\msys64\home\topkek\memory-data-source.ttVAen\source\sdk\core\System.Memory.Data\src\BinaryData.cs(209,48): warning CS8604: Possible null reference argument for parameter 'bytes' in 'string Encoding.GetString(byte[] bytes, int index, int count)'. [E:\msys64\home\topkek\memory-data-source.ttVAen\prepared\Library.csproj]
+E:\msys64\home\topkek\memory-data-source.ttVAen\source\sdk\core\System.Memory.Data\src\BinaryData.cs(247,20): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\memory-data-source.ttVAen\prepared\Library.csproj]
+E:\msys64\home\topkek\memory-data-source.ttVAen\source\sdk\core\System.Memory.Data\src\BinaryData.cs(247,20): warning CS8603: Possible null reference return. [E:\msys64\home\topkek\memory-data-source.ttVAen\prepared\Library.csproj]
+  Library -> E:\msys64\home\topkek\memory-data-source.ttVAen\prepared\bin\Release\net8.0\System.Memory.Data.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\memory-data-source.ttVAen\source\sdk\core\System.Memory.Data\src\BinaryData.cs(209,48): warning CS8604: Possible null reference argument for parameter 'bytes' in 'string Encoding.GetString(byte[] bytes, int index, int count)'. [E:\msys64\home\topkek\memory-data-source.ttVAen\prepared\Library.csproj]
+E:\msys64\home\topkek\memory-data-source.ttVAen\source\sdk\core\System.Memory.Data\src\BinaryData.cs(247,20): warning CS8600: Converting null literal or possible null value to non-nullable type. [E:\msys64\home\topkek\memory-data-source.ttVAen\prepared\Library.csproj]
+E:\msys64\home\topkek\memory-data-source.ttVAen\source\sdk\core\System.Memory.Data\src\BinaryData.cs(247,20): warning CS8603: Possible null reference return. [E:\msys64\home\topkek\memory-data-source.ttVAen\prepared\Library.csproj]
+    3 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:01:24.80
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\memory-data-source.ttVAen\check\Check.csproj (in 1.47 sec).
+  Check -> E:\msys64\home\topkek\memory-data-source.ttVAen\check\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:18.77
+PASS original BinaryData byte/string/borrow/copy contracts, Unicode, read-only seek/EOF/disposal/cancellation, seekable/nonseekable streams/ownership and source JSON round trip/errors
+PASS all20 exact published BinaryData API declarations and assembly identity

@@ -1,0 +1,4755 @@
+[
+  {
+    "package": "system.private.servicemodel.4.10.3.nupkg",
+    "path": "lib/netstandard2.0/System.Private.ServiceModel.dll",
+    "sha256": "db8de1773f2a08dd456e481702629a6a8a49ce73d9c023d27e893c4547edf5d6",
+    "assembly": "System.Private.ServiceModel",
+    "version": "4.10.3.0",
+    "method_definitions": 15762,
+    "types": [
+      {
+        "name": "System.ServiceModel.ReliableMessagingVersion",
+        "methods": [
+          {
+            "name": ".ctor",
+            "access": "Assembly",
+            "parameters": 2,
+            "flags": "Assembly, HideBySig, SpecialName, RTSpecialName"
+          },
+          {
+            "name": "get_Default",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, Static, HideBySig, SpecialName"
+          },
+          {
+            "name": "get_WSReliableMessaging11",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, Static, HideBySig, SpecialName"
+          },
+          {
+            "name": "get_WSReliableMessagingFebruary2005",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, Static, HideBySig, SpecialName"
+          },
+          {
+            "name": "get_DictionaryNamespace",
+            "access": "Assembly",
+            "parameters": 0,
+            "flags": "Assembly, HideBySig, SpecialName"
+          },
+          {
+            "name": "get_Namespace",
+            "access": "Assembly",
+            "parameters": 0,
+            "flags": "Assembly, HideBySig, SpecialName"
+          },
+          {
+            "name": "IsDefined",
+            "access": "Assembly",
+            "parameters": 1,
+            "flags": "Assembly, Static, HideBySig"
+          }
+        ]
+      },
+      {
+        "name": "System.ServiceModel.WSHttpBindingBase",
+        "methods": [
+          {
+            "name": ".ctor",
+            "access": "Family",
+            "parameters": 0,
+            "flags": "Family, HideBySig, SpecialName, RTSpecialName"
+          },
+          {
+            "name": ".ctor",
+            "access": "Family",
+            "parameters": 1,
+            "flags": "Family, HideBySig, SpecialName, RTSpecialName"
+          },
+          {
+            "name": "get_BypassProxyOnLocal",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "set_BypassProxyOnLocal",
+            "access": "Public",
+            "parameters": 1,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "get_TransactionFlow",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "set_TransactionFlow",
+            "access": "Public",
+            "parameters": 1,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "get_MaxBufferPoolSize",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "set_MaxBufferPoolSize",
+            "access": "Public",
+            "parameters": 1,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "get_MaxReceivedMessageSize",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "set_MaxReceivedMessageSize",
+            "access": "Public",
+            "parameters": 1,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "get_MessageEncoding",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "set_MessageEncoding",
+            "access": "Public",
+            "parameters": 1,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "get_ProxyAddress",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "set_ProxyAddress",
+            "access": "Public",
+            "parameters": 1,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "get_ReaderQuotas",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "set_ReaderQuotas",
+            "access": "Public",
+            "parameters": 1,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "get_ReliableSession",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "set_ReliableSession",
+            "access": "Public",
+            "parameters": 1,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "get_Scheme",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, Virtual, HideBySig, SpecialName"
+          },
+          {
+            "name": "get_EnvelopeVersion",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "get_TextEncoding",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "set_TextEncoding",
+            "access": "Public",
+            "parameters": 1,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "get_UseDefaultWebProxy",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "set_UseDefaultWebProxy",
+            "access": "Public",
+            "parameters": 1,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "get_HttpTransport",
+            "access": "Assembly",
+            "parameters": 0,
+            "flags": "Assembly, HideBySig, SpecialName"
+          },
+          {
+            "name": "set_HttpTransport",
+            "access": "Private",
+            "parameters": 1,
+            "flags": "Private, HideBySig, SpecialName"
+          },
+          {
+            "name": "get_HttpsTransport",
+            "access": "Assembly",
+            "parameters": 0,
+            "flags": "Assembly, HideBySig, SpecialName"
+          },
+          {
+            "name": "set_HttpsTransport",
+            "access": "Private",
+            "parameters": 1,
+            "flags": "Private, HideBySig, SpecialName"
+          },
+          {
+            "name": "Initialize",
+            "access": "Private",
+            "parameters": 0,
+            "flags": "Private, HideBySig"
+          },
+          {
+            "name": "CreateBindingElements",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, Virtual, HideBySig"
+          },
+          {
+            "name": "GetTransport",
+            "access": "Family",
+            "parameters": 0,
+            "flags": "Family, Virtual, HideBySig, VtableLayoutMask, Abstract"
+          },
+          {
+            "name": "CreateMessageSecurity",
+            "access": "Family",
+            "parameters": 0,
+            "flags": "Family, Virtual, HideBySig, VtableLayoutMask, Abstract"
+          }
+        ]
+      },
+      {
+        "name": "System.ServiceModel.Channels.MtomMessageEncodingBindingElement",
+        "methods": [
+          {
+            "name": ".ctor",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, HideBySig, SpecialName, RTSpecialName"
+          },
+          {
+            "name": ".ctor",
+            "access": "Public",
+            "parameters": 2,
+            "flags": "Public, HideBySig, SpecialName, RTSpecialName"
+          },
+          {
+            "name": ".ctor",
+            "access": "Private",
+            "parameters": 1,
+            "flags": "Private, HideBySig, SpecialName, RTSpecialName"
+          },
+          {
+            "name": "get_MaxReadPoolSize",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "set_MaxReadPoolSize",
+            "access": "Public",
+            "parameters": 1,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "get_MaxWritePoolSize",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "set_MaxWritePoolSize",
+            "access": "Public",
+            "parameters": 1,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "get_ReaderQuotas",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "get_MaxBufferSize",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "set_MaxBufferSize",
+            "access": "Public",
+            "parameters": 1,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "get_WriteEncoding",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "set_WriteEncoding",
+            "access": "Public",
+            "parameters": 1,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "get_MessageVersion",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, Virtual, HideBySig, SpecialName"
+          },
+          {
+            "name": "set_MessageVersion",
+            "access": "Public",
+            "parameters": 1,
+            "flags": "Public, Virtual, HideBySig, SpecialName"
+          },
+          {
+            "name": "BuildChannelFactory",
+            "access": "Public",
+            "parameters": 1,
+            "flags": "Public, Virtual, HideBySig"
+          },
+          {
+            "name": "CanBuildChannelFactory",
+            "access": "Public",
+            "parameters": 1,
+            "flags": "Public, Virtual, HideBySig"
+          },
+          {
+            "name": "Clone",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, Virtual, HideBySig"
+          },
+          {
+            "name": "CreateMessageEncoderFactory",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, Virtual, HideBySig"
+          },
+          {
+            "name": "GetProperty",
+            "access": "Public",
+            "parameters": 1,
+            "flags": "Public, Virtual, HideBySig"
+          },
+          {
+            "name": "CheckEncodingVersion",
+            "access": "Assembly",
+            "parameters": 1,
+            "flags": "Assembly, Virtual, HideBySig, CheckAccessOnOverride"
+          },
+          {
+            "name": "IsMatch",
+            "access": "Assembly",
+            "parameters": 1,
+            "flags": "Assembly, Virtual, HideBySig, CheckAccessOnOverride"
+          }
+        ]
+      }
+    ],
+    "forwards": []
+  },
+  {
+    "package": "system.servicemodel.http.4.10.3.nupkg",
+    "path": "lib/net6.0/System.ServiceModel.Http.dll",
+    "sha256": "4b42f2d27aee9fdc2063709b485d052bf46c387e6a6e13ce92adebd5a5fad2d4",
+    "assembly": "System.ServiceModel.Http",
+    "version": "4.10.3.0",
+    "method_definitions": 0,
+    "types": [],
+    "forwards": [
+      {
+        "type": "System.ServiceModel.BasicHttpBinding",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.BasicHttpMessageCredentialType",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.BasicHttpMessageSecurity",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.BasicHttpsBinding",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.BasicHttpSecurity",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.BasicHttpSecurityMode",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.BasicHttpsSecurity",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.BasicHttpsSecurityMode",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.HttpRequestMessageProperty",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.HttpResponseMessageProperty",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.HttpsTransportBindingElement",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.HttpTransportBindingElement",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IHttpCookieContainerManager",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.WebSocketTransportSettings",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.WebSocketTransportUsage",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.HttpBindingBase",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.HttpClientCredentialType",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.HttpProxyCredentialType",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.HttpTransportSecurity",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.MessageSecurityOverHttp",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.NetHttpBinding",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.NetHttpMessageEncoding",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.NetHttpsBinding",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.NonDualMessageSecurityOverHttp",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.WS2007HttpBinding",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.WSHttpBinding",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.WSHttpBindingBase",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.WSHttpSecurity",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.WSMessageEncoding",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      }
+    ]
+  },
+  {
+    "package": "system.servicemodel.http.4.10.3.nupkg",
+    "path": "ref/net6.0/System.ServiceModel.Http.dll",
+    "sha256": "df30e6c22cfae69016e4d09d51f7adc0ee96f7e80653ec4011a2c18d40909578",
+    "assembly": "System.ServiceModel.Http",
+    "version": "4.10.3.0",
+    "method_definitions": 225,
+    "types": [
+      {
+        "name": "System.ServiceModel.WSHttpBindingBase",
+        "methods": [
+          {
+            "name": ".ctor",
+            "access": "Family",
+            "parameters": 0,
+            "flags": "Family, HideBySig, SpecialName, RTSpecialName"
+          },
+          {
+            "name": ".ctor",
+            "access": "Family",
+            "parameters": 1,
+            "flags": "Family, HideBySig, SpecialName, RTSpecialName"
+          },
+          {
+            "name": "get_BypassProxyOnLocal",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "set_BypassProxyOnLocal",
+            "access": "Public",
+            "parameters": 1,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "get_TransactionFlow",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "set_TransactionFlow",
+            "access": "Public",
+            "parameters": 1,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "get_MaxBufferPoolSize",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "set_MaxBufferPoolSize",
+            "access": "Public",
+            "parameters": 1,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "get_MaxReceivedMessageSize",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "set_MaxReceivedMessageSize",
+            "access": "Public",
+            "parameters": 1,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "get_MessageEncoding",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "set_MessageEncoding",
+            "access": "Public",
+            "parameters": 1,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "get_ProxyAddress",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "set_ProxyAddress",
+            "access": "Public",
+            "parameters": 1,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "get_ReaderQuotas",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "set_ReaderQuotas",
+            "access": "Public",
+            "parameters": 1,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "get_ReliableSession",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "set_ReliableSession",
+            "access": "Public",
+            "parameters": 1,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "get_Scheme",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, Virtual, HideBySig, SpecialName"
+          },
+          {
+            "name": "get_EnvelopeVersion",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "set_EnvelopeVersion",
+            "access": "Public",
+            "parameters": 1,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "get_TextEncoding",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "set_TextEncoding",
+            "access": "Public",
+            "parameters": 1,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "get_UseDefaultWebProxy",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "set_UseDefaultWebProxy",
+            "access": "Public",
+            "parameters": 1,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "CreateBindingElements",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, Virtual, HideBySig"
+          },
+          {
+            "name": "GetTransport",
+            "access": "Family",
+            "parameters": 0,
+            "flags": "Family, Virtual, HideBySig, VtableLayoutMask, Abstract"
+          },
+          {
+            "name": "CreateMessageSecurity",
+            "access": "Family",
+            "parameters": 0,
+            "flags": "Family, Virtual, HideBySig, VtableLayoutMask, Abstract"
+          }
+        ]
+      }
+    ],
+    "forwards": []
+  },
+  {
+    "package": "system.servicemodel.primitives.4.10.3.nupkg",
+    "path": "lib/net6.0/System.ServiceModel.Primitives.dll",
+    "sha256": "9ba3a0e63c793cd63910882f6458e6e23fbb35d7a424f02fa8659eb8515b0b7e",
+    "assembly": "System.ServiceModel.Primitives",
+    "version": "4.10.3.0",
+    "method_definitions": 0,
+    "types": [],
+    "forwards": [
+      {
+        "type": "System.Collections.Generic.KeyedByTypeCollection`1",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.Collections.Generic.SynchronizedCollection`1",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.IdentityModel.Selectors.SecurityTokenAuthenticator",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.IdentityModel.Selectors.SecurityTokenManager",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.IdentityModel.Selectors.SecurityTokenProvider",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.IdentityModel.Selectors.SecurityTokenRequirement",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.IdentityModel.Selectors.SecurityTokenResolver",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.IdentityModel.Selectors.SecurityTokenSerializer",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.IdentityModel.Selectors.SecurityTokenSerializer+KeyIdentifierClauseEntry",
+        "target": "System.Private.ServiceModel",
+        "flags": 0
+      },
+      {
+        "type": "System.IdentityModel.Selectors.SecurityTokenSerializer+StrEntry",
+        "target": "System.Private.ServiceModel",
+        "flags": 0
+      },
+      {
+        "type": "System.IdentityModel.Selectors.SecurityTokenSerializer+SerializerEntries",
+        "target": "System.Private.ServiceModel",
+        "flags": 0
+      },
+      {
+        "type": "System.IdentityModel.Selectors.SecurityTokenSerializer+KeyIdentifierEntry",
+        "target": "System.Private.ServiceModel",
+        "flags": 0
+      },
+      {
+        "type": "System.IdentityModel.Selectors.SecurityTokenSerializer+TokenEntry",
+        "target": "System.Private.ServiceModel",
+        "flags": 0
+      },
+      {
+        "type": "System.IdentityModel.Selectors.SecurityTokenVersion",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.IdentityModel.Selectors.X509CertificateValidator",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.IdentityModel.Tokens.SecurityKey",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.IdentityModel.Tokens.SecurityKeyIdentifier",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.IdentityModel.Tokens.SecurityKeyIdentifierClause",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.IdentityModel.Tokens.SecurityToken",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.IdentityModel.Tokens.SymmetricSecurityKey",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ActionNotSupportedException",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.CacheSetting",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ChannelFactory",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ChannelFactory`1",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.AddressHeader",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.AddressHeader+ParameterHeader",
+        "target": "System.Private.ServiceModel",
+        "flags": 0
+      },
+      {
+        "type": "System.ServiceModel.Channels.AddressHeader+XmlObjectSerializerAddressHeader",
+        "target": "System.Private.ServiceModel",
+        "flags": 0
+      },
+      {
+        "type": "System.ServiceModel.Channels.AddressHeader+DictionaryAddressHeader",
+        "target": "System.Private.ServiceModel",
+        "flags": 0
+      },
+      {
+        "type": "System.ServiceModel.Channels.AddressHeaderCollection",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.AddressingVersion",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.BinaryMessageEncodingBindingElement",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.Binding",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.BindingContext",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.BindingElement",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.BindingElementCollection",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.BindingParameterCollection",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.BodyWriter",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.BodyWriter+BufferedBodyWriter",
+        "target": "System.Private.ServiceModel",
+        "flags": 0
+      },
+      {
+        "type": "System.ServiceModel.Channels.BufferManager",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.BufferManager+WrappingBufferManager",
+        "target": "System.Private.ServiceModel",
+        "flags": 0
+      },
+      {
+        "type": "System.ServiceModel.Channels.BufferManager+WrappingInternalBufferManager",
+        "target": "System.Private.ServiceModel",
+        "flags": 0
+      },
+      {
+        "type": "System.ServiceModel.Channels.ChannelBase",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.ChannelFactoryBase",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.ChannelFactoryBase`1",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.ChannelManagerBase",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.ChannelParameterCollection",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.CommunicationObject",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.CompressionFormat",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.CustomBinding",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.FaultConverter",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.FaultConverter+DefaultFaultConverter",
+        "target": "System.Private.ServiceModel",
+        "flags": 0
+      },
+      {
+        "type": "System.ServiceModel.Channels.IChannel",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IChannelFactory",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IChannelFactory`1",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IDuplexChannel",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IDuplexSession",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IDuplexSessionChannel",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IInputChannel",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IInputSession",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IInputSessionChannel",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IMessageProperty",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IOutputChannel",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IOutputSession",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IOutputSessionChannel",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IRequestChannel",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IRequestSessionChannel",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.ISession",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.ISessionChannel`1",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.Message",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.MessageBuffer",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.MessageEncoder",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.MessageEncoderFactory",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.MessageEncodingBindingElement",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.MessageFault",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.MessageHeader",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.MessageHeaderInfo",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.MessageHeaders",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.MessageHeaders+HeaderType",
+        "target": "System.Private.ServiceModel",
+        "flags": 0
+      },
+      {
+        "type": "System.ServiceModel.Channels.MessageHeaders+HeaderKind",
+        "target": "System.Private.ServiceModel",
+        "flags": 0
+      },
+      {
+        "type": "System.ServiceModel.Channels.MessageHeaders+HeaderProcessing",
+        "target": "System.Private.ServiceModel",
+        "flags": 0
+      },
+      {
+        "type": "System.ServiceModel.Channels.MessageHeaders+Header",
+        "target": "System.Private.ServiceModel",
+        "flags": 0
+      },
+      {
+        "type": "System.ServiceModel.Channels.MessageProperties",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.MessageProperties+Property",
+        "target": "System.Private.ServiceModel",
+        "flags": 0
+      },
+      {
+        "type": "System.ServiceModel.Channels.MessageState",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.MessageVersion",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.MtomMessageEncodingBindingElement",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.ReliableSessionBindingElement",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.RequestContext",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.TextMessageEncodingBindingElement",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.TransportBindingElement",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.UnderstoodHeaders",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ChannelTerminatedException",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ClientBase`1",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ClientBase`1+BeginOperationDelegate",
+        "target": "System.Private.ServiceModel",
+        "flags": 0
+      },
+      {
+        "type": "System.ServiceModel.ClientBase`1+EndOperationDelegate",
+        "target": "System.Private.ServiceModel",
+        "flags": 0
+      },
+      {
+        "type": "System.ServiceModel.ClientBase`1+InvokeAsyncCompletedEventArgs",
+        "target": "System.Private.ServiceModel",
+        "flags": 0
+      },
+      {
+        "type": "System.ServiceModel.ClientBase`1+AsyncOperationContext",
+        "target": "System.Private.ServiceModel",
+        "flags": 0
+      },
+      {
+        "type": "System.ServiceModel.ClientBase`1+ChannelBase`1",
+        "target": "System.Private.ServiceModel",
+        "flags": 0
+      },
+      {
+        "type": "System.ServiceModel.ClientCredentialsSecurityTokenManager",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.CommunicationException",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.CommunicationObjectAbortedException",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.CommunicationObjectFaultedException",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.CommunicationState",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.DataContractFormatAttribute",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.DeliveryRequirementsAttribute",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.ClientCredentials",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.ContractDescription",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.DataContractSerializerOperationBehavior",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.FaultDescription",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.FaultDescriptionCollection",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.IContractBehavior",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.IEndpointBehavior",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.IOperationBehavior",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.MessageBodyDescription",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.MessageDescription",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.MessageDescriptionCollection",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.MessageDirection",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.MessageHeaderDescription",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.MessageHeaderDescriptionCollection",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.MessagePartDescription",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.MessagePartDescriptionCollection",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.MessagePropertyDescription",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.MessagePropertyDescriptionCollection",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.OperationDescription",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.OperationDescriptionCollection",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.ServiceEndpoint",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.TypedMessageConverter",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.XmlSerializerOperationBehavior",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.XmlSerializerOperationBehavior+Reflector",
+        "target": "System.Private.ServiceModel",
+        "flags": 0
+      },
+      {
+        "type": "System.ServiceModel.Description.XmlSerializerOperationBehavior+Reflector+OperationReflector",
+        "target": "System.Private.ServiceModel",
+        "flags": 0
+      },
+      {
+        "type": "System.ServiceModel.Description.XmlSerializerOperationBehavior+Reflector+SerializerGenerationContext",
+        "target": "System.Private.ServiceModel",
+        "flags": 0
+      },
+      {
+        "type": "System.ServiceModel.Description.XmlSerializerOperationBehavior+Reflector+SerializerStub",
+        "target": "System.Private.ServiceModel",
+        "flags": 0
+      },
+      {
+        "type": "System.ServiceModel.Description.XmlSerializerOperationBehavior+Reflector+XmlSerializerFaultContractInfo",
+        "target": "System.Private.ServiceModel",
+        "flags": 0
+      },
+      {
+        "type": "System.ServiceModel.Description.XmlSerializerOperationBehavior+Reflector+MessageInfo",
+        "target": "System.Private.ServiceModel",
+        "flags": 0
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.ClientOperation",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.ClientRuntime",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.ClientRuntime+ProxyBehaviorCollection`1",
+        "target": "System.Private.ServiceModel",
+        "flags": 0
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.ClientRuntime+OperationCollection",
+        "target": "System.Private.ServiceModel",
+        "flags": 0
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.ClientRuntime+OperationCollectionWrapper",
+        "target": "System.Private.ServiceModel",
+        "flags": 0
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.DispatchOperation",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.DispatchRuntime",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.DispatchRuntime+UnhandledActionInvoker",
+        "target": "System.Private.ServiceModel",
+        "flags": 0
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.DispatchRuntime+DispatchBehaviorCollection`1",
+        "target": "System.Private.ServiceModel",
+        "flags": 0
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.DispatchRuntime+OperationCollection",
+        "target": "System.Private.ServiceModel",
+        "flags": 0
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.EndpointDispatcher",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.FaultContractInfo",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.IChannelInitializer",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.IClientMessageFormatter",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.IClientMessageInspector",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.IClientOperationSelector",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.IDispatchMessageInspector",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.IInteractiveChannelInitializer",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.IParameterInspector",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.EndpointAddress",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.EndpointAddressBuilder",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.EndpointIdentity",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.EndpointNotFoundException",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.EnvelopeVersion",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ExceptionDetail",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ExtensionCollection`1",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.FaultCode",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.FaultContractAttribute",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.FaultException",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.FaultException+FaultCodeData",
+        "target": "System.Private.ServiceModel",
+        "flags": 0
+      },
+      {
+        "type": "System.ServiceModel.FaultException+FaultReasonData",
+        "target": "System.Private.ServiceModel",
+        "flags": 0
+      },
+      {
+        "type": "System.ServiceModel.FaultException`1",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.FaultReason",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.FaultReasonText",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.IClientChannel",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ICommunicationObject",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.IContextChannel",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.IDefaultCommunicationTimeouts",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.IExtensibleObject`1",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.IExtension`1",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.IExtensionCollection`1",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.InstanceContext",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.InvalidMessageContractException",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.MessageBodyMemberAttribute",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.MessageContractAttribute",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.MessageContractMemberAttribute",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.MessageCredentialType",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.MessageHeader`1",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.MessageHeaderArrayAttribute",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.MessageHeaderAttribute",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.MessageHeaderException",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.MessageParameterAttribute",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.MessagePropertyAttribute",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.OperationContext",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.OperationContext+Holder",
+        "target": "System.Private.ServiceModel",
+        "flags": 0
+      },
+      {
+        "type": "System.ServiceModel.OperationContextScope",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.OperationContractAttribute",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.OperationFormatStyle",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.OperationFormatUse",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.OptionalReliableSession",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ProtocolException",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.QueuedDeliveryRequirementsMode",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.QuotaExceededException",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ReliableMessagingVersion",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ReliableSession",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.HttpDigestClientCredential",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.MessageSecurityException",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.SecurityAccessDeniedException",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.SecurityCredentialsManager",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.SecurityNegotiationException",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.UserNamePasswordClientCredential",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.WindowsClientCredential",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.X509CertificateInitiatorClientCredential",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.X509CertificateRecipientClientCredential",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.X509CertificateValidationMode",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.X509ServiceCertificateAuthentication",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.SecurityMode",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ServerTooBusyException",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ServiceActivationException",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ServiceContractAttribute",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ServiceKnownTypeAttribute",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.SessionMode",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.TransferMode",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.UnknownMessageReceivedEventArgs",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.XmlSerializerFormatAttribute",
+        "target": "System.Private.ServiceModel",
+        "flags": 2097152
+      }
+    ]
+  },
+  {
+    "package": "system.servicemodel.primitives.4.10.3.nupkg",
+    "path": "ref/net6.0/System.ServiceModel.dll",
+    "sha256": "49624a49e5e93bb9e0f67d53b5f800df1639a96b6c499b4702ca2400036e1017",
+    "assembly": "System.ServiceModel",
+    "version": "4.0.0.0",
+    "method_definitions": 0,
+    "types": [],
+    "forwards": [
+      {
+        "type": "System.Collections.Generic.KeyedByTypeCollection`1",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.Collections.Generic.SynchronizedCollection`1",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ActionNotSupportedException",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.BasicHttpBinding",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.BasicHttpMessageCredentialType",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.BasicHttpMessageSecurity",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.BasicHttpsBinding",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.BasicHttpSecurity",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.BasicHttpSecurityMode",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.BasicHttpsSecurity",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.BasicHttpsSecurityMode",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.CacheSetting",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.CallbackBehaviorAttribute",
+        "target": "System.ServiceModel.Duplex",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ChannelFactory",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ChannelFactory`1",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.AddressHeader",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.AddressHeaderCollection",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.AddressingVersion",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.BinaryMessageEncodingBindingElement",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.Binding",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.BindingContext",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.BindingElement",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.BindingElementCollection",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.BindingParameterCollection",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.BodyWriter",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.BufferManager",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.ChannelBase",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.ChannelFactoryBase",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.ChannelFactoryBase`1",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.ChannelManagerBase",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.ChannelParameterCollection",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.CommunicationObject",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.CompressionFormat",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.ConnectionOrientedTransportBindingElement",
+        "target": "System.ServiceModel.NetTcp",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.CustomBinding",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.FaultConverter",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.HttpRequestMessageProperty",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.HttpResponseMessageProperty",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.HttpsTransportBindingElement",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.HttpTransportBindingElement",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IChannel",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IChannelFactory",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IChannelFactory`1",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IDuplexChannel",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IDuplexSession",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IDuplexSessionChannel",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IHttpCookieContainerManager",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IInputChannel",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IInputSession",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IInputSessionChannel",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IMessageProperty",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IOutputChannel",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IOutputSession",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IOutputSessionChannel",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IRequestChannel",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IRequestSessionChannel",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.ISecurityCapabilities",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.ISession",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.ISessionChannel`1",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.LocalClientSecuritySettings",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.Message",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.MessageBuffer",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.MessageEncoder",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.MessageEncoderFactory",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.MessageEncodingBindingElement",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.MessageFault",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.MessageHeader",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.MessageHeaderInfo",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.MessageHeaders",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.MessageProperties",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.MessageState",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.MessageVersion",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.MtomMessageEncodingBindingElement",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.ReliableSessionBindingElement",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.RequestContext",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.SecurityBindingElement",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.SecurityHeaderLayout",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.SslStreamSecurityBindingElement",
+        "target": "System.ServiceModel.NetTcp",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.TcpConnectionPoolSettings",
+        "target": "System.ServiceModel.NetTcp",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.TcpTransportBindingElement",
+        "target": "System.ServiceModel.NetTcp",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.TextMessageEncodingBindingElement",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.TransportBindingElement",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.TransportSecurityBindingElement",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.UnderstoodHeaders",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.WebSocketTransportSettings",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.WebSocketTransportUsage",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.WindowsStreamSecurityBindingElement",
+        "target": "System.ServiceModel.NetTcp",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ChannelTerminatedException",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ClientBase`1",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ClientBase`1+BeginOperationDelegate",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 0
+      },
+      {
+        "type": "System.ServiceModel.ClientBase`1+ChannelBase`1",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 0
+      },
+      {
+        "type": "System.ServiceModel.ClientBase`1+EndOperationDelegate",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 0
+      },
+      {
+        "type": "System.ServiceModel.ClientBase`1+InvokeAsyncCompletedEventArgs",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 0
+      },
+      {
+        "type": "System.ServiceModel.ClientCredentialsSecurityTokenManager",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.CommunicationException",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.CommunicationObjectAbortedException",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.CommunicationObjectFaultedException",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.CommunicationState",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ConcurrencyMode",
+        "target": "System.ServiceModel.Duplex",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.DataContractFormatAttribute",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.DeliveryRequirementsAttribute",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.ClientCredentials",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.ContractDescription",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.DataContractSerializerOperationBehavior",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.FaultDescription",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.FaultDescriptionCollection",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.IContractBehavior",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.IEndpointBehavior",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.IOperationBehavior",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.MessageBodyDescription",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.MessageDescription",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.MessageDescriptionCollection",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.MessageDirection",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.MessageHeaderDescription",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.MessageHeaderDescriptionCollection",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.MessagePartDescription",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.MessagePartDescriptionCollection",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.MessagePropertyDescription",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.MessagePropertyDescriptionCollection",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.OperationDescription",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.OperationDescriptionCollection",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.ServiceEndpoint",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.TypedMessageConverter",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.XmlSerializerOperationBehavior",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.ClientOperation",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.ClientRuntime",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.DispatchOperation",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.DispatchRuntime",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.EndpointDispatcher",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.FaultContractInfo",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.IChannelInitializer",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.IClientMessageFormatter",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.IClientMessageInspector",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.IClientOperationSelector",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.IDispatchMessageInspector",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.IInteractiveChannelInitializer",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.IParameterInspector",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.DnsEndpointIdentity",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.DuplexChannelFactory`1",
+        "target": "System.ServiceModel.Duplex",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.DuplexClientBase`1",
+        "target": "System.ServiceModel.Duplex",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.EndpointAddress",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.EndpointAddressBuilder",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.EndpointIdentity",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.EndpointNotFoundException",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.EnvelopeVersion",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ExceptionDetail",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ExtensionCollection`1",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.FaultCode",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.FaultContractAttribute",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.FaultException",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.FaultException`1",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.FaultReason",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.FaultReasonText",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.HttpBindingBase",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.HttpClientCredentialType",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.HttpProxyCredentialType",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.HttpTransportSecurity",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.IClientChannel",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ICommunicationObject",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.IContextChannel",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.IDefaultCommunicationTimeouts",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.IExtensibleObject`1",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.IExtension`1",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.IExtensionCollection`1",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.InstanceContext",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.InvalidMessageContractException",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.MessageBodyMemberAttribute",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.MessageContractAttribute",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.MessageContractMemberAttribute",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.MessageCredentialType",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.MessageHeader`1",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.MessageHeaderArrayAttribute",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.MessageHeaderAttribute",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.MessageHeaderException",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.MessageParameterAttribute",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.MessagePropertyAttribute",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.MessageSecurityOverHttp",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.MessageSecurityOverTcp",
+        "target": "System.ServiceModel.NetTcp",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.MessageSecurityVersion",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.NetHttpBinding",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.NetHttpMessageEncoding",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.NetHttpsBinding",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.NetTcpBinding",
+        "target": "System.ServiceModel.NetTcp",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.NetTcpSecurity",
+        "target": "System.ServiceModel.NetTcp",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.NonDualMessageSecurityOverHttp",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.OperationContext",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.OperationContextScope",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.OperationContractAttribute",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.OperationFormatStyle",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.OperationFormatUse",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.OptionalReliableSession",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ProtocolException",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.QueuedDeliveryRequirementsMode",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.QuotaExceededException",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ReliableMessagingVersion",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ReliableSession",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.BasicSecurityProfileVersion",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.HttpDigestClientCredential",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.MessageSecurityException",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.SecureConversationVersion",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.SecurityAccessDeniedException",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.SecurityAlgorithmSuite",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.SecurityCredentialsManager",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.SecurityKeyEntropyMode",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.SecurityNegotiationException",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.SecurityPolicyVersion",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.SecurityVersion",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.Tokens.BinarySecretSecurityToken",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.Tokens.IssuedSecurityTokenParameters",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.Tokens.SecureConversationSecurityTokenParameters",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.Tokens.SecurityTokenParameters",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.Tokens.ServiceModelSecurityTokenRequirement",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.Tokens.SupportingTokenParameters",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.Tokens.UserNameSecurityTokenParameters",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.TrustVersion",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.UserNamePasswordClientCredential",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.WindowsClientCredential",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.X509CertificateInitiatorClientCredential",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.X509CertificateRecipientClientCredential",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.X509CertificateValidationMode",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.X509ServiceCertificateAuthentication",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.SecurityMode",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ServerTooBusyException",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ServiceActivationException",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ServiceContractAttribute",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ServiceKnownTypeAttribute",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.SessionMode",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.SpnEndpointIdentity",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.Atom10FeedFormatter",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.Atom10FeedFormatter`1",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.Atom10ItemFormatter",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.Atom10ItemFormatter`1",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.AtomPub10CategoriesDocumentFormatter",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.AtomPub10ServiceDocumentFormatter",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.AtomPub10ServiceDocumentFormatter`1",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.CategoriesDocument",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.CategoriesDocumentFormatter",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.InlineCategoriesDocument",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.ReferencedCategoriesDocument",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.ResourceCollectionInfo",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.Rss20FeedFormatter",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.Rss20FeedFormatter`1",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.Rss20ItemFormatter",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.Rss20ItemFormatter`1",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.ServiceDocument",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.ServiceDocumentFormatter",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.SyndicationCategory",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.SyndicationContent",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.SyndicationElementExtension",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.SyndicationElementExtensionCollection",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.SyndicationFeed",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.SyndicationFeedFormatter",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.SyndicationItem",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.SyndicationItemFormatter",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.SyndicationLink",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.SyndicationPerson",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.SyndicationVersions",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.TextSyndicationContent",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.TextSyndicationContentKind",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.UrlSyndicationContent",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.Workspace",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.XmlSyndicationContent",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.TcpClientCredentialType",
+        "target": "System.ServiceModel.NetTcp",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.TcpTransportSecurity",
+        "target": "System.ServiceModel.NetTcp",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.TransferMode",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.UnknownMessageReceivedEventArgs",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.UpnEndpointIdentity",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.WS2007HttpBinding",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.WSHttpBinding",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.WSHttpBindingBase",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.WSHttpSecurity",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.WSMessageEncoding",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.X509CertificateEndpointIdentity",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.XmlSerializerFormatAttribute",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      }
+    ]
+  },
+  {
+    "package": "system.servicemodel.primitives.4.10.3.nupkg",
+    "path": "lib/net6.0/System.ServiceModel.dll",
+    "sha256": "49624a49e5e93bb9e0f67d53b5f800df1639a96b6c499b4702ca2400036e1017",
+    "assembly": "System.ServiceModel",
+    "version": "4.0.0.0",
+    "method_definitions": 0,
+    "types": [],
+    "forwards": [
+      {
+        "type": "System.Collections.Generic.KeyedByTypeCollection`1",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.Collections.Generic.SynchronizedCollection`1",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ActionNotSupportedException",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.BasicHttpBinding",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.BasicHttpMessageCredentialType",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.BasicHttpMessageSecurity",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.BasicHttpsBinding",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.BasicHttpSecurity",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.BasicHttpSecurityMode",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.BasicHttpsSecurity",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.BasicHttpsSecurityMode",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.CacheSetting",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.CallbackBehaviorAttribute",
+        "target": "System.ServiceModel.Duplex",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ChannelFactory",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ChannelFactory`1",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.AddressHeader",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.AddressHeaderCollection",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.AddressingVersion",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.BinaryMessageEncodingBindingElement",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.Binding",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.BindingContext",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.BindingElement",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.BindingElementCollection",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.BindingParameterCollection",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.BodyWriter",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.BufferManager",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.ChannelBase",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.ChannelFactoryBase",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.ChannelFactoryBase`1",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.ChannelManagerBase",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.ChannelParameterCollection",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.CommunicationObject",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.CompressionFormat",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.ConnectionOrientedTransportBindingElement",
+        "target": "System.ServiceModel.NetTcp",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.CustomBinding",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.FaultConverter",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.HttpRequestMessageProperty",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.HttpResponseMessageProperty",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.HttpsTransportBindingElement",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.HttpTransportBindingElement",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IChannel",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IChannelFactory",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IChannelFactory`1",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IDuplexChannel",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IDuplexSession",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IDuplexSessionChannel",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IHttpCookieContainerManager",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IInputChannel",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IInputSession",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IInputSessionChannel",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IMessageProperty",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IOutputChannel",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IOutputSession",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IOutputSessionChannel",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IRequestChannel",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.IRequestSessionChannel",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.ISecurityCapabilities",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.ISession",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.ISessionChannel`1",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.LocalClientSecuritySettings",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.Message",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.MessageBuffer",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.MessageEncoder",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.MessageEncoderFactory",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.MessageEncodingBindingElement",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.MessageFault",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.MessageHeader",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.MessageHeaderInfo",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.MessageHeaders",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.MessageProperties",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.MessageState",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.MessageVersion",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.MtomMessageEncodingBindingElement",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.ReliableSessionBindingElement",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.RequestContext",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.SecurityBindingElement",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.SecurityHeaderLayout",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.SslStreamSecurityBindingElement",
+        "target": "System.ServiceModel.NetTcp",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.TcpConnectionPoolSettings",
+        "target": "System.ServiceModel.NetTcp",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.TcpTransportBindingElement",
+        "target": "System.ServiceModel.NetTcp",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.TextMessageEncodingBindingElement",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.TransportBindingElement",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.TransportSecurityBindingElement",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.UnderstoodHeaders",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.WebSocketTransportSettings",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.WebSocketTransportUsage",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Channels.WindowsStreamSecurityBindingElement",
+        "target": "System.ServiceModel.NetTcp",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ChannelTerminatedException",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ClientBase`1",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ClientBase`1+BeginOperationDelegate",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 0
+      },
+      {
+        "type": "System.ServiceModel.ClientBase`1+ChannelBase`1",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 0
+      },
+      {
+        "type": "System.ServiceModel.ClientBase`1+EndOperationDelegate",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 0
+      },
+      {
+        "type": "System.ServiceModel.ClientBase`1+InvokeAsyncCompletedEventArgs",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 0
+      },
+      {
+        "type": "System.ServiceModel.ClientCredentialsSecurityTokenManager",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.CommunicationException",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.CommunicationObjectAbortedException",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.CommunicationObjectFaultedException",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.CommunicationState",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ConcurrencyMode",
+        "target": "System.ServiceModel.Duplex",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.DataContractFormatAttribute",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.DeliveryRequirementsAttribute",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.ClientCredentials",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.ContractDescription",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.DataContractSerializerOperationBehavior",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.FaultDescription",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.FaultDescriptionCollection",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.IContractBehavior",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.IEndpointBehavior",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.IOperationBehavior",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.MessageBodyDescription",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.MessageDescription",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.MessageDescriptionCollection",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.MessageDirection",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.MessageHeaderDescription",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.MessageHeaderDescriptionCollection",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.MessagePartDescription",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.MessagePartDescriptionCollection",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.MessagePropertyDescription",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.MessagePropertyDescriptionCollection",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.OperationDescription",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.OperationDescriptionCollection",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.ServiceEndpoint",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.TypedMessageConverter",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Description.XmlSerializerOperationBehavior",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.ClientOperation",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.ClientRuntime",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.DispatchOperation",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.DispatchRuntime",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.EndpointDispatcher",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.FaultContractInfo",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.IChannelInitializer",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.IClientMessageFormatter",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.IClientMessageInspector",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.IClientOperationSelector",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.IDispatchMessageInspector",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.IInteractiveChannelInitializer",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Dispatcher.IParameterInspector",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.DnsEndpointIdentity",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.DuplexChannelFactory`1",
+        "target": "System.ServiceModel.Duplex",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.DuplexClientBase`1",
+        "target": "System.ServiceModel.Duplex",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.EndpointAddress",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.EndpointAddressBuilder",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.EndpointIdentity",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.EndpointNotFoundException",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.EnvelopeVersion",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ExceptionDetail",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ExtensionCollection`1",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.FaultCode",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.FaultContractAttribute",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.FaultException",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.FaultException`1",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.FaultReason",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.FaultReasonText",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.HttpBindingBase",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.HttpClientCredentialType",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.HttpProxyCredentialType",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.HttpTransportSecurity",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.IClientChannel",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ICommunicationObject",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.IContextChannel",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.IDefaultCommunicationTimeouts",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.IExtensibleObject`1",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.IExtension`1",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.IExtensionCollection`1",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.InstanceContext",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.InvalidMessageContractException",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.MessageBodyMemberAttribute",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.MessageContractAttribute",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.MessageContractMemberAttribute",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.MessageCredentialType",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.MessageHeader`1",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.MessageHeaderArrayAttribute",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.MessageHeaderAttribute",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.MessageHeaderException",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.MessageParameterAttribute",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.MessagePropertyAttribute",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.MessageSecurityOverHttp",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.MessageSecurityOverTcp",
+        "target": "System.ServiceModel.NetTcp",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.MessageSecurityVersion",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.NetHttpBinding",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.NetHttpMessageEncoding",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.NetHttpsBinding",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.NetTcpBinding",
+        "target": "System.ServiceModel.NetTcp",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.NetTcpSecurity",
+        "target": "System.ServiceModel.NetTcp",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.NonDualMessageSecurityOverHttp",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.OperationContext",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.OperationContextScope",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.OperationContractAttribute",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.OperationFormatStyle",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.OperationFormatUse",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.OptionalReliableSession",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ProtocolException",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.QueuedDeliveryRequirementsMode",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.QuotaExceededException",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ReliableMessagingVersion",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ReliableSession",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.BasicSecurityProfileVersion",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.HttpDigestClientCredential",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.MessageSecurityException",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.SecureConversationVersion",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.SecurityAccessDeniedException",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.SecurityAlgorithmSuite",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.SecurityCredentialsManager",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.SecurityKeyEntropyMode",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.SecurityNegotiationException",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.SecurityPolicyVersion",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.SecurityVersion",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.Tokens.BinarySecretSecurityToken",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.Tokens.IssuedSecurityTokenParameters",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.Tokens.SecureConversationSecurityTokenParameters",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.Tokens.SecurityTokenParameters",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.Tokens.ServiceModelSecurityTokenRequirement",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.Tokens.SupportingTokenParameters",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.Tokens.UserNameSecurityTokenParameters",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.TrustVersion",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.UserNamePasswordClientCredential",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.WindowsClientCredential",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.X509CertificateInitiatorClientCredential",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.X509CertificateRecipientClientCredential",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.X509CertificateValidationMode",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Security.X509ServiceCertificateAuthentication",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.SecurityMode",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ServerTooBusyException",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ServiceActivationException",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ServiceContractAttribute",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.ServiceKnownTypeAttribute",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.SessionMode",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.SpnEndpointIdentity",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.Atom10FeedFormatter",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.Atom10FeedFormatter`1",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.Atom10ItemFormatter",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.Atom10ItemFormatter`1",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.AtomPub10CategoriesDocumentFormatter",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.AtomPub10ServiceDocumentFormatter",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.AtomPub10ServiceDocumentFormatter`1",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.CategoriesDocument",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.CategoriesDocumentFormatter",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.InlineCategoriesDocument",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.ReferencedCategoriesDocument",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.ResourceCollectionInfo",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.Rss20FeedFormatter",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.Rss20FeedFormatter`1",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.Rss20ItemFormatter",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.Rss20ItemFormatter`1",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.ServiceDocument",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.ServiceDocumentFormatter",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.SyndicationCategory",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.SyndicationContent",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.SyndicationElementExtension",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.SyndicationElementExtensionCollection",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.SyndicationFeed",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.SyndicationFeedFormatter",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.SyndicationItem",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.SyndicationItemFormatter",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.SyndicationLink",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.SyndicationPerson",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.SyndicationVersions",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.TextSyndicationContent",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.TextSyndicationContentKind",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.UrlSyndicationContent",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.Workspace",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.Syndication.XmlSyndicationContent",
+        "target": "System.ServiceModel.Syndication",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.TcpClientCredentialType",
+        "target": "System.ServiceModel.NetTcp",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.TcpTransportSecurity",
+        "target": "System.ServiceModel.NetTcp",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.TransferMode",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.UnknownMessageReceivedEventArgs",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.UpnEndpointIdentity",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.WS2007HttpBinding",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.WSHttpBinding",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.WSHttpBindingBase",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.WSHttpSecurity",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.WSMessageEncoding",
+        "target": "System.ServiceModel.Http",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.X509CertificateEndpointIdentity",
+        "target": "System.ServiceModel.Security",
+        "flags": 2097152
+      },
+      {
+        "type": "System.ServiceModel.XmlSerializerFormatAttribute",
+        "target": "System.ServiceModel.Primitives",
+        "flags": 2097152
+      }
+    ]
+  },
+  {
+    "package": "system.servicemodel.primitives.4.10.3.nupkg",
+    "path": "ref/net6.0/System.ServiceModel.Primitives.dll",
+    "sha256": "bd6c846e0fdded05ef39b1f258c38546dce491d5142db8944842eedf8a727eda",
+    "assembly": "System.ServiceModel.Primitives",
+    "version": "4.10.3.0",
+    "method_definitions": 1467,
+    "types": [
+      {
+        "name": "System.ServiceModel.ReliableMessagingVersion",
+        "methods": [
+          {
+            "name": "get_Default",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, Static, HideBySig, SpecialName"
+          },
+          {
+            "name": "get_WSReliableMessaging11",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, Static, HideBySig, SpecialName"
+          },
+          {
+            "name": "get_WSReliableMessagingFebruary2005",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, Static, HideBySig, SpecialName"
+          },
+          {
+            "name": ".ctor",
+            "access": "Family",
+            "parameters": 0,
+            "flags": "Family, HideBySig, SpecialName, RTSpecialName"
+          }
+        ]
+      },
+      {
+        "name": "System.ServiceModel.Channels.MtomMessageEncodingBindingElement",
+        "methods": [
+          {
+            "name": ".ctor",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, HideBySig, SpecialName, RTSpecialName"
+          },
+          {
+            "name": ".ctor",
+            "access": "Public",
+            "parameters": 2,
+            "flags": "Public, HideBySig, SpecialName, RTSpecialName"
+          },
+          {
+            "name": "get_MaxReadPoolSize",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "set_MaxReadPoolSize",
+            "access": "Public",
+            "parameters": 1,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "get_MaxWritePoolSize",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "set_MaxWritePoolSize",
+            "access": "Public",
+            "parameters": 1,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "get_ReaderQuotas",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "set_ReaderQuotas",
+            "access": "Public",
+            "parameters": 1,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "get_MaxBufferSize",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "set_MaxBufferSize",
+            "access": "Public",
+            "parameters": 1,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "get_WriteEncoding",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "set_WriteEncoding",
+            "access": "Public",
+            "parameters": 1,
+            "flags": "Public, HideBySig, SpecialName"
+          },
+          {
+            "name": "get_MessageVersion",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, Virtual, HideBySig, SpecialName"
+          },
+          {
+            "name": "set_MessageVersion",
+            "access": "Public",
+            "parameters": 1,
+            "flags": "Public, Virtual, HideBySig, SpecialName"
+          },
+          {
+            "name": "BuildChannelFactory",
+            "access": "Public",
+            "parameters": 1,
+            "flags": "Public, Virtual, HideBySig"
+          },
+          {
+            "name": "CanBuildChannelFactory",
+            "access": "Public",
+            "parameters": 1,
+            "flags": "Public, Virtual, HideBySig"
+          },
+          {
+            "name": "Clone",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, Virtual, HideBySig"
+          },
+          {
+            "name": "CreateMessageEncoderFactory",
+            "access": "Public",
+            "parameters": 0,
+            "flags": "Public, Virtual, HideBySig"
+          },
+          {
+            "name": "GetProperty",
+            "access": "Public",
+            "parameters": 1,
+            "flags": "Public, Virtual, HideBySig"
+          }
+        ]
+      }
+    ],
+    "forwards": []
+  }
+]

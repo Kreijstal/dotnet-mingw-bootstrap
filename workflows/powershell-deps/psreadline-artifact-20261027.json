@@ -1,0 +1,22 @@
+{
+  "artifact": "mingw-w64-clang-x86_64-powershell-psreadline-2.3.6-1-any.pkg.tar.zst",
+  "sha256": "530f261242281a8ec3cc3ed7df03851dfa12ba13575c9615da8540d545e05c1b",
+  "nuget_sha256": "3a292daa26658742c58d4415e77165524b024441f0dad19a68bd1729c8fe7b48",
+  "pinned_inputs": 15,
+  "original_main_cs": 48,
+  "original_core_polyfill_cs": 1,
+  "production_csharp_changes": 0,
+  "source_commit": "d2e770f93b7a53d8660a6402eb29d1ae1c35e767",
+  "module_files": 9,
+  "source_dll_assets": 3,
+  "public_api_entries": 457,
+  "resource_strings": 245,
+  "core_type_forwarders": 5,
+  "source_dll_sha256": {
+    "Microsoft.PowerShell.PSReadLine2.dll": "c7954faf5448bbfd5b99a105dd409343edc6c9aaf085b8928bf8b061d507fc77",
+    "Microsoft.PowerShell.Pager.dll": "4caf1e2bf5f1d3a7fede46025be716ff97127c3f3cee7580720a36cd6cd2dcd2",
+    "net6plus/Microsoft.PowerShell.PSReadLine.Polyfiller.dll": "14c065df81b7c1cd9b7c9e38fe4b3304fcf334453adbd5f923f61f68a2d90581"
+  },
+  "loose_nuget_bytes_equal": true,
+  "bundled_pager_byte_exact": true
+}

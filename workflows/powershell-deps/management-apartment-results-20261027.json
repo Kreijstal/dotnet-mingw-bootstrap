@@ -1,0 +1,51 @@
+{
+  "previous_goal_turn_classification": "progress",
+  "current_goal_turn_classification": "progress",
+  "host": "win11",
+  "build_root": "/home/topkek/wmipkg2.ekw1jp",
+  "native_package": "mingw-w64-clang-x86_64-dotnet-management 8.0.0-2",
+  "package_command": "PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm",
+  "package_exit_code": 0,
+  "artifact_audit_command": "/usr/bin/python3 audit-management.py . artifact.json",
+  "artifact_audit_exit_code": 0,
+  "install_command": "pacman -U --noconfirm \"$PWD/mingw-w64-clang-x86_64-dotnet-management-8.0.0-2-any.pkg.tar.zst\"",
+  "install_exit_code": 0,
+  "installed_check_command": "bash check-installed.sh installed-check /clang64/share/doc/dotnet-management/localization.json",
+  "installed_check_exit_code": 0,
+  "managed_api_signatures": 819,
+  "native_exports": 65,
+  "neutral_resource_strings": 79,
+  "source_nuget_sha256": "03812e82e09b8d407082e9b3e53f5c0a19b9e05e3c9a5952b3dafd6bd8924895",
+  "source_archive_and_consumer_asset_byte_checks": true,
+  "apartment_cases": [
+    "STA/MTA local process query/GetOwner/class metadata",
+    "MTA-created scope consumed from STA",
+    "STA-created scope consumed from MTA",
+    "EnablePrivileges false and true; original thread token restored"
+  ],
+  "original_async_events_metadata_native_checks_passed": true,
+  "public_managed_api_unchanged": true,
+  "private_native_exports_added": 16,
+  "native_abi_version": 1,
+  "caller_credentials_borrowed_per_native_call": true,
+  "process_com_security_defaults_changed": false,
+  "machine_policy_changed": false,
+  "first_formal_check_failure": "New fixture selected ProcessId without an instance path before GetOwner; SELECT * correction and exact new-feed source mapping applied; clean rebuild passed",
+  "powershell_updated_bundle_verification_pending": false,
+  "full_dependency_goal_complete": false,
+  "remaining": [
+    "broader remote credentials/delegation/providers and callback/ownership compatibility",
+    "MMI3 and SqlClient broader parity",
+    "PowerShell7.6/.NET10 complete graph"
+  ],
+  "powershell_updated_bundle_evidence": "tests/powershell-full-sdk/native-package2-results-20261027.txt",
+  "sta_full_suite_command": "bash sta-harness/tests/mmi-cim-wmi/check-source-wmi-sta.sh sta-full-check2",
+  "sta_full_suite_exit_code": 0,
+  "sta_full_suite_cases": [
+    "metadata/methods/GetOwner",
+    "async query completion and compacting GC",
+    "owned child process event/cancellation",
+    "EnablePrivileges and native temporary token setup/reset",
+    "native ABI/error-info/module ownership"
+  ]
+}

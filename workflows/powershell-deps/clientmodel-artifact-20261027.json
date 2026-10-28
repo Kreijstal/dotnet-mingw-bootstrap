@@ -1,0 +1,10 @@
+{
+  "artifact": "mingw-w64-clang-x86_64-dotnet-clientmodel-1.0.0-1-any.pkg.tar.zst",
+  "sha256": "0e3b22b7edacdde51d314a135ac9456559d6238d51e1009f262fa03db695b65c",
+  "source_commit": "8ffa7d7f26bb2c5e3dadf74b2aa9c9ba9c9d9208",
+  "original_compile_items": 11,
+  "public_protected_api_declarations": 21,
+  "production_cs_changes": [],
+  "implementation_sha256": "e8686bc21ff33f939e0cddb08b524b613fd6425da2d969d7917fa7aa490da992",
+  "reference_sha256": "78b67d4d7151ecd542ca27ce624061d0feb43f11e41d6d25a6688061456aaea2"
+}

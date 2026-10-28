@@ -1,0 +1,123 @@
+{
+  "runtime_version": "8.0.31",
+  "runtime_source_commit": "1219a42122cf5190c7f512850557e38c422430dc",
+  "runtime_archive_sha256": "b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070",
+  "bootstrap_commit": "3cbf21078968e2290a54ab093392b4dfeb1c6f1f",
+  "bootstrap_archive_sha256": "75bea2026b90c7f4d5f88279c4ff25ca07b4a6eb0e435df90a41c6f485f773c6",
+  "native_patches": [
+    {
+      "name": "0001-eng-native-a-GNU-driver-MinGW-branch-for-Windows-hos.patch",
+      "original_patch_sha256": "2f435e27e7bea98c3e82dba5803a9d4967e4cac95f9aa57d6793fa7429fb3a05",
+      "ported_patch_sha256": "2f435e27e7bea98c3e82dba5803a9d4967e4cac95f9aa57d6793fa7429fb3a05",
+      "changes": "unchanged"
+    },
+    {
+      "name": "0002-corehost-build-with-MinGW-skip-MSVC-only-parts.patch",
+      "original_patch_sha256": "203d4775103f56edbd534cad5feaac6a01974c374747fb2328b55a232c45f2a5",
+      "ported_patch_sha256": "203d4775103f56edbd534cad5feaac6a01974c374747fb2328b55a232c45f2a5",
+      "changes": "unchanged"
+    },
+    {
+      "name": "0003-corehost-build-with-clang-and-libc-for-the-MinGW-tar.patch",
+      "original_patch_sha256": "d3ecb544af6df44b5b0b21aa0b7d310bbfceaac834df37048228fc2d4ab5df63",
+      "ported_patch_sha256": "d3ecb544af6df44b5b0b21aa0b7d310bbfceaac834df37048228fc2d4ab5df63",
+      "changes": "unchanged"
+    },
+    {
+      "name": "0004-mono-build-with-a-MinGW-toolchain-clang-lld-x86_64-w.patch",
+      "original_patch_sha256": "143d8397809d92cfb23d0a2ee90a827de60f03ebbd42842b50c405c9b845c2f1",
+      "ported_patch_sha256": "9e029b54a85e560f6a9c6936b51de3f620b3eb08f0851263239ae6da55d88c3b",
+      "changes": "Retain upstream DEBUGTYPE within MSVC branch"
+    },
+    {
+      "name": "0005-mono-on-MinGW-clear-the-POSIX-configure-results-so-t.patch",
+      "original_patch_sha256": "aa35200a11e363d44133b17c5dbec2fd162ee6ba07a87d2d41446a73d27ee756",
+      "ported_patch_sha256": "aa35200a11e363d44133b17c5dbec2fd162ee6ba07a87d2d41446a73d27ee756",
+      "changes": "unchanged"
+    },
+    {
+      "name": "0006-System.Globalization.Native-use-ICU-s-C-headers-with.patch",
+      "original_patch_sha256": "35baf8c7320eb9771003d7fa992a8cd56b388ef67a8d8df86900998da879e7db",
+      "ported_patch_sha256": "35baf8c7320eb9771003d7fa992a8cd56b388ef67a8d8df86900998da879e7db",
+      "changes": "unchanged"
+    },
+    {
+      "name": "0007-System.IO.Compression.Native-zlib-build-with-MinGW.patch",
+      "original_patch_sha256": "03d328cb646f6051dac66c2cca10e3d991099caca45a58a15fe56f69224c394f",
+      "ported_patch_sha256": "03d328cb646f6051dac66c2cca10e3d991099caca45a58a15fe56f69224c394f",
+      "changes": "unchanged"
+    },
+    {
+      "name": "0008-eng-native-MinGW-builds-that-also-assemble-MASM-sour.patch",
+      "original_patch_sha256": "0fa3972c48ca7fbccb984f504503de259d3d4006f3ecf02c1c6d78111d321d9c",
+      "ported_patch_sha256": "0fa3972c48ca7fbccb984f504503de259d3d4006f3ecf02c1c6d78111d321d9c",
+      "changes": "unchanged"
+    },
+    {
+      "name": "0009-coreclr-build-with-a-MinGW-toolchain-clang-lld-x86_6.patch",
+      "original_patch_sha256": "6c141a0cbf35ee0081ee52b285fe72cb1a7db5f19e12afb9365d942167f3e965",
+      "ported_patch_sha256": "6c141a0cbf35ee0081ee52b285fe72cb1a7db5f19e12afb9365d942167f3e965",
+      "changes": "unchanged"
+    },
+    {
+      "name": "0010-coreclr-inc-mingw-Windows-SDK-compatibility-headers-.patch",
+      "original_patch_sha256": "b7ccd6ad186f1b44bdacbf17cb38711b673375b208f9479d5829d45a3c73678f",
+      "ported_patch_sha256": "b7ccd6ad186f1b44bdacbf17cb38711b673375b208f9479d5829d45a3c73678f",
+      "changes": "unchanged"
+    },
+    {
+      "name": "0011-coreclr-an-ETW-header-without-mc.exe-genEtwProvider..patch",
+      "original_patch_sha256": "b1c72efef54d023c52b860aae89a8f72e6fee2f9aed7d16758696a0232746397",
+      "ported_patch_sha256": "b1c72efef54d023c52b860aae89a8f72e6fee2f9aed7d16758696a0232746397",
+      "changes": "unchanged"
+    },
+    {
+      "name": "0012-coreclr-EHa-semantics-for-the-Itanium-C-EH-of-clang-.patch",
+      "original_patch_sha256": "d475bdde7a30583b4d8b651a9a234bd465d6e1f8acca61fe0dc68d0103a84068",
+      "ported_patch_sha256": "d475bdde7a30583b4d8b651a9a234bd465d6e1f8acca61fe0dc68d0103a84068",
+      "changes": "unchanged"
+    },
+    {
+      "name": "0013-coreclr-work-around-a-clang-SEH-__finally-miscompile.patch",
+      "original_patch_sha256": "0e3bf9dbc3a90c299ee80c246a04384fd43d2409d7f9303897c4a28f4b93e041",
+      "ported_patch_sha256": "0e3bf9dbc3a90c299ee80c246a04384fd43d2409d7f9303897c4a28f4b93e041",
+      "changes": "unchanged"
+    },
+    {
+      "name": "0014-coreclr-amd64-MASM-helpers-for-UASM-and-the-Itanium-.patch",
+      "original_patch_sha256": "53ed7613ecf08a4d1634872fd4f1ab730e761c8617dfb1619acdcf11ba6ca2f3",
+      "ported_patch_sha256": "53ed7613ecf08a4d1634872fd4f1ab730e761c8617dfb1619acdcf11ba6ca2f3",
+      "changes": "unchanged"
+    },
+    {
+      "name": "0015-coreclr-C-sources-for-clang-with-the-GNU-driver.patch",
+      "original_patch_sha256": "2165c72a7989ffa70adf6f426ed2b393a9286bed3f8141e3a217b56d3710cc7c",
+      "ported_patch_sha256": "2165c72a7989ffa70adf6f426ed2b393a9286bed3f8141e3a217b56d3710cc7c",
+      "changes": "unchanged"
+    },
+    {
+      "name": "0016-native-minipal-EventPipe-and-ICU-shim-fixes-for-Core.patch",
+      "original_patch_sha256": "bfa5a78f585485c2669369c288e7bd0c8c7ad1010b0ee9d705fbd5b57c7018c1",
+      "ported_patch_sha256": "bfa5a78f585485c2669369c288e7bd0c8c7ad1010b0ee9d705fbd5b57c7018c1",
+      "changes": "unchanged"
+    },
+    {
+      "name": "0017-coreclr-jitinterface-crossgen2-builds-with-inc-mingw.patch",
+      "original_patch_sha256": "c3130f9a3ee372b4129ecc75f8a120903d96da573c5a45738d87fd97f491e3d0",
+      "ported_patch_sha256": "c3130f9a3ee372b4129ecc75f8a120903d96da573c5a45738d87fd97f491e3d0",
+      "changes": "unchanged"
+    }
+  ],
+  "full_serviced_runtime_completed": false,
+  "arcade_version_task": {
+    "source_commit": "444c2ef3c414558e2e409ee346f1faebb19687eb",
+    "source_path": "src/Microsoft.DotNet.Arcade.Sdk/src/CalculateAssemblyAndFileVersions.cs",
+    "source_sha256": "e0bc140b716fb1c43b4609e877a357b422cdd4b213021bd919df04e963c8a02f",
+    "license_sha256": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+    "reproducible_build_number": "20260820.0",
+    "source_date_origin": "Pinned runtime archive commit date in UTC",
+    "file_version": "8.0.3126.42000",
+    "product_version": "8.0.31",
+    "official_microsoft_build_number": false
+  }
+}

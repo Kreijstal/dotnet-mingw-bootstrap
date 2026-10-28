@@ -1,0 +1,230 @@
+{
+  "Microsoft.ApplicationInsights.dll": {
+    "sha256": "f6c5b15a4ffe6202fc4a40775545591918b60683b6db7f059ba0127c63c18a0f",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.applicationinsights.2.23.0.nupkg",
+        "asset": "lib/net8.0/Microsoft.ApplicationInsights.dll"
+      }
+    ]
+  },
+  "Microsoft.Management.Infrastructure.CimCmdlets.dll": {
+    "sha256": "7a46bb673133573c3ac343537ee833b4e1f8ebf8d5bd95bab55059a491f73160",
+    "project_source": "src/Microsoft.Management.Infrastructure.CimCmdlets/bin/Release/net8.0/Microsoft.Management.Infrastructure.CimCmdlets.dll"
+  },
+  "Microsoft.Management.Infrastructure.dll": {
+    "sha256": "e242ddea0145b6f2ed519ce787228eab26ad08348be678975a5359fc1fc5517a",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.management.infrastructure.3.0.0.nupkg",
+        "asset": "lib/net8.0/Microsoft.Management.Infrastructure.dll"
+      }
+    ]
+  },
+  "Microsoft.PowerShell.CoreCLR.Eventing.dll": {
+    "sha256": "0a15ced566e6b44c30b23d9438097f3bc90dbb0640c1f54e8a4fb25ada628bc4",
+    "project_source": "src/Microsoft.PowerShell.CoreCLR.Eventing/bin/Release/net8.0/Microsoft.PowerShell.CoreCLR.Eventing.dll"
+  },
+  "Newtonsoft.Json.dll": {
+    "sha256": "dbd632f1e37926c74e8b40d4672af029a85fcd878d4a7c95e6c401516f14a1e7",
+    "installed_source_packages": [
+      {
+        "package": "newtonsoft.json.13.0.4.nupkg",
+        "asset": "lib/net8.0/Newtonsoft.Json.dll"
+      }
+    ]
+  },
+  "System.CodeDom.dll": {
+    "sha256": "6487c814ff3223e622bcaccc7ac2c0c48b0c9b2b56bab74d246cb46d411d3ba6",
+    "installed_source_packages": [
+      {
+        "package": "system.codedom.8.0.0.nupkg",
+        "asset": "lib/net8.0/System.CodeDom.dll"
+      }
+    ]
+  },
+  "System.Configuration.ConfigurationManager.dll": {
+    "sha256": "a58da7ee9f4055a91f0fae21f26bc8fc11ec78bcfd4b1e6145f997559038f07e",
+    "installed_source_packages": [
+      {
+        "package": "system.configuration.configurationmanager.8.0.1.nupkg",
+        "asset": "lib/net8.0/System.Configuration.ConfigurationManager.dll"
+      }
+    ]
+  },
+  "System.Diagnostics.DiagnosticSource.dll": {
+    "sha256": "9b6827ee74420aaf7428dcf8053d9549feda0f48fa3aa4cb00b68f395f7a252a",
+    "installed_source_packages": [
+      {
+        "package": "system.diagnostics.diagnosticsource.8.0.1.nupkg",
+        "asset": "lib/net8.0/System.Diagnostics.DiagnosticSource.dll"
+      }
+    ]
+  },
+  "System.Formats.Asn1.dll": {
+    "sha256": "482383202bb846a7150a53976414e3e93bcd496315b0a040912e85175a806e5f",
+    "installed_source_packages": [
+      {
+        "package": "system.formats.asn1.8.0.2.nupkg",
+        "asset": "lib/net8.0/System.Formats.Asn1.dll"
+      }
+    ]
+  },
+  "System.Management.Automation.dll": {
+    "sha256": "64ccf125a9568ed37eda966e91ea48ceaadb30bd154c691197d9de0b241c504a",
+    "project_source": "src/System.Management.Automation/bin/Release/net8.0/System.Management.Automation.dll"
+  },
+  "System.Security.Cryptography.ProtectedData.dll": {
+    "sha256": "896271c7f4ebe0c9a65d8af51e6624828f9eda18f7bbfc847a5f10ed44b56a17",
+    "installed_source_packages": [
+      {
+        "package": "system.security.cryptography.protecteddata.8.0.0.nupkg",
+        "asset": "lib/net8.0/System.Security.Cryptography.ProtectedData.dll"
+      }
+    ]
+  },
+  "System.Security.Permissions.dll": {
+    "sha256": "5374d24f1ac7c1d737cf39b675a08ed56d6bcfb74fee14b9d296708d81fbb98a",
+    "installed_source_packages": [
+      {
+        "package": "system.security.permissions.8.0.0.nupkg",
+        "asset": "lib/net8.0/System.Security.Permissions.dll"
+      }
+    ]
+  },
+  "getfilesiginforedistwrapper.dll": {
+    "sha256": "d543c3abaab14ec7836fa7095a05ee9373a28c8f3f11a4b399aac7ad9ba21972",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.security.extensions.1.4.0.nupkg",
+        "asset": "lib/net8.0/getfilesiginforedistwrapper.dll"
+      }
+    ]
+  },
+  "runtimes/win-x64/native/PowerShell.Core.Instrumentation.dll": {
+    "sha256": "0401747f0de862d038dae6efacc457bfd9657ac2982f104a05aa6630ba31ce59",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.powershell.native.700.0.0.nupkg",
+        "asset": "runtimes/win-x64/native/PowerShell.Core.Instrumentation.dll"
+      }
+    ]
+  },
+  "runtimes/win-x64/native/msys-file-signature.dll": {
+    "sha256": "672545cd9f7f702795a1d4718bcb4467eb3a90934b959fe2d4a40e94e2b9f57e",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.security.extensions.1.4.0.nupkg",
+        "asset": "runtimes/win-x64/native/msys-file-signature.dll"
+      }
+    ]
+  },
+  "runtimes/win-x64/native/msys-wmi-native.dll": {
+    "sha256": "a989bf39406be3e1234b5ea4f4f207f10d8e893861a3ce847d2b4dd65310edbe",
+    "installed_source_packages": [
+      {
+        "package": "system.management.8.0.0.nupkg",
+        "asset": "runtimes/win-x64/native/msys-wmi-native.dll"
+      }
+    ]
+  },
+  "runtimes/win-x64/native/pwrshplugin.dll": {
+    "sha256": "2638347d422c39aa9b68868a57d92e537b5f01b81d2466a16dc9a38dc45c1168",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.powershell.native.700.0.0.nupkg",
+        "asset": "runtimes/win-x64/native/pwrshplugin.dll"
+      }
+    ]
+  },
+  "runtimes/win/lib/net8.0/Microsoft.Win32.Registry.AccessControl.dll": {
+    "sha256": "cc58963cda11bcdeafc93c808175fcfed98f48446371a69fd9bacd2a93d15ddc",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.win32.registry.accesscontrol.8.0.0.nupkg",
+        "asset": "runtimes/win/lib/net8.0/Microsoft.Win32.Registry.AccessControl.dll"
+      }
+    ]
+  },
+  "runtimes/win/lib/net8.0/Microsoft.Win32.SystemEvents.dll": {
+    "sha256": "ff1e2c4d2eec0e76aa51eddf4e0ce3ef405132afddd2d79d90164191f1d562a5",
+    "installed_source_packages": [
+      {
+        "package": "microsoft.win32.systemevents.8.0.0.nupkg",
+        "asset": "runtimes/win/lib/net8.0/Microsoft.Win32.SystemEvents.dll"
+      }
+    ]
+  },
+  "runtimes/win/lib/net8.0/System.Diagnostics.EventLog.Messages.dll": {
+    "sha256": "6ea28fb88f8d22e6b90c55cf168ab9068331ca2a5fca97e30cf1a65fd987893c",
+    "installed_source_packages": [
+      {
+        "package": "system.diagnostics.eventlog.8.0.2.nupkg",
+        "asset": "runtimes/win/lib/net8.0/System.Diagnostics.EventLog.Messages.dll"
+      }
+    ]
+  },
+  "runtimes/win/lib/net8.0/System.Diagnostics.EventLog.dll": {
+    "sha256": "a7fbe8208efe3706e76cae929cf32521d0aa35e5b607bae203daf5866410a4fa",
+    "installed_source_packages": [
+      {
+        "package": "system.diagnostics.eventlog.8.0.2.nupkg",
+        "asset": "runtimes/win/lib/net8.0/System.Diagnostics.EventLog.dll"
+      }
+    ]
+  },
+  "runtimes/win/lib/net8.0/System.DirectoryServices.dll": {
+    "sha256": "c8a3ad011673cfbf8219c7fca9af2a55d12d13db6a64c1bfcbcab0ac150d852a",
+    "installed_source_packages": [
+      {
+        "package": "system.directoryservices.8.0.0.nupkg",
+        "asset": "runtimes/win/lib/net8.0/System.DirectoryServices.dll"
+      }
+    ]
+  },
+  "runtimes/win/lib/net8.0/System.Drawing.Common.dll": {
+    "sha256": "3e8ed39e2772a9cf04a220a1c0ef89846fd2e376300f173d4f3facea2067faae",
+    "installed_source_packages": [
+      {
+        "package": "system.drawing.common.8.0.31.nupkg",
+        "asset": "runtimes/win/lib/net8.0/System.Drawing.Common.dll"
+      }
+    ]
+  },
+  "runtimes/win/lib/net8.0/System.Management.dll": {
+    "sha256": "7531483fb3aecfbc82bb66b97456e0e3fa2e0d0e38c914dd506bcf10f7c1adcc",
+    "installed_source_packages": [
+      {
+        "package": "system.management.8.0.0.nupkg",
+        "asset": "runtimes/win/lib/net8.0/System.Management.dll"
+      }
+    ]
+  },
+  "runtimes/win/lib/net8.0/System.Security.Cryptography.Pkcs.dll": {
+    "sha256": "2f3d9ff004d688a237c2c19f81e57bbce273b76538377c8221435a7d50fe8e6d",
+    "installed_source_packages": [
+      {
+        "package": "system.security.cryptography.pkcs.8.0.1.nupkg",
+        "asset": "runtimes/win/lib/net8.0/System.Security.Cryptography.Pkcs.dll"
+      }
+    ]
+  },
+  "runtimes/win/lib/net8.0/System.Text.Encoding.CodePages.dll": {
+    "sha256": "c9fe5309447b0ca12f88e37bd88dbccbcc11c31af13dc7e687208170375a685a",
+    "installed_source_packages": [
+      {
+        "package": "system.text.encoding.codepages.8.0.0.nupkg",
+        "asset": "runtimes/win/lib/net8.0/System.Text.Encoding.CodePages.dll"
+      }
+    ]
+  },
+  "runtimes/win/lib/net8.0/System.Windows.Extensions.dll": {
+    "sha256": "0062362613b192e2634df665857d90b850942aa1e6083a637b89670ceab9fe31",
+    "installed_source_packages": [
+      {
+        "package": "system.windows.extensions.8.0.0.nupkg",
+        "asset": "runtimes/win/lib/net8.0/System.Windows.Extensions.dll"
+      }
+    ]
+  }
+}

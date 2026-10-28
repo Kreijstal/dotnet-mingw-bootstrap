@@ -1,0 +1,74 @@
+From 2ef617c024e6e9c7d9b384fdce3a2d3a887abeca Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Fri, 9 Oct 2026 17:26:08 +0200
+Subject: [PATCH 08/16] eng/native: MinGW builds that also assemble MASM
+ sources
+
+- configureoptimization: the -O flags of the MinGW branch only for C/C++
+  (CoreCLR's MASM sources go to an MASM assembler, which takes no -O).
+- configurecompiler: no libcmt/libvcruntime/libcpmt with MinGW; the GNU
+  driver links the C/C++ runtimes itself (-static).
+- functions: .natvis files only with MSVC's linker.
+---
+ eng/native/configurecompiler.cmake     | 7 +++++++
+ eng/native/configureoptimization.cmake | 9 ++++++++-
+ eng/native/functions.cmake             | 2 +-
+ 3 files changed, 16 insertions(+), 2 deletions(-)
+
+diff --git a/eng/native/configurecompiler.cmake b/eng/native/configurecompiler.cmake
+index 2901468a2..fe0f3b0b7 100644
+--- a/eng/native/configurecompiler.cmake
++++ b/eng/native/configurecompiler.cmake
+@@ -419,9 +419,16 @@ if (CLR_CMAKE_HOST_WIN32)
+   add_definitions(-DHOST_WINDOWS)
+ 
+   # Define the CRT lib references that link into Desktop imports
++  if (MINGW)
++    # the GNU driver links the C/C++ runtimes itself (-static, see below)
++    set(STATIC_MT_CRT_LIB "")
++    set(STATIC_MT_VCRT_LIB "")
++    set(STATIC_MT_CPP_LIB "")
++  else()
+   set(STATIC_MT_CRT_LIB  "libcmt$<$<OR:$<CONFIG:Debug>,$<CONFIG:Checked>>:d>.lib")
+   set(STATIC_MT_VCRT_LIB  "libvcruntime$<$<OR:$<CONFIG:Debug>,$<CONFIG:Checked>>:d>.lib")
+   set(STATIC_MT_CPP_LIB  "libcpmt$<$<OR:$<CONFIG:Debug>,$<CONFIG:Checked>>:d>.lib")
++  endif()
+ endif()
+ 
+ # Unconditionally define _FILE_OFFSET_BITS as 64 on all platforms.
+diff --git a/eng/native/configureoptimization.cmake b/eng/native/configureoptimization.cmake
+index 4ecb6d7ee..cd72b0992 100644
+--- a/eng/native/configureoptimization.cmake
++++ b/eng/native/configureoptimization.cmake
+@@ -9,7 +9,14 @@ if(CLR_CMAKE_HOST_WIN32 AND MSVC)
+     endif()
+     add_compile_options($<$<AND:$<COMPILE_LANGUAGE:C,CXX>,$<CONFIG:Release>>:/Ox>)
+     add_compile_options($<$<AND:$<COMPILE_LANGUAGE:C,CXX>,$<CONFIG:RelWithDebInfo>>:/O2>)
+-elseif(CLR_CMAKE_HOST_UNIX OR MINGW)
++elseif(MINGW)
++    # the -O flags of the Unix branch, for C/C++ only: a MinGW build may also
++    # assemble MASM sources (CoreCLR), which take no -O option
++    add_compile_options($<$<AND:$<COMPILE_LANGUAGE:C,CXX>,$<CONFIG:Debug>>:-O0>)
++    add_compile_options($<$<AND:$<COMPILE_LANGUAGE:C,CXX>,$<CONFIG:Checked>>:-O2>)
++    add_compile_options($<$<AND:$<COMPILE_LANGUAGE:C,CXX>,$<CONFIG:Release>>:-O3>)
++    add_compile_options($<$<AND:$<COMPILE_LANGUAGE:C,CXX>,$<CONFIG:RelWithDebInfo>>:-O2>)
++elseif(CLR_CMAKE_HOST_UNIX)
+     add_compile_options($<$<CONFIG:Debug>:-O0>)
+     add_compile_options($<$<CONFIG:Checked>:-O2>)
+     if(CLR_CMAKE_TARGET_ANDROID)
+diff --git a/eng/native/functions.cmake b/eng/native/functions.cmake
+index d5ef9ed62..3d7778bd2 100644
+--- a/eng/native/functions.cmake
++++ b/eng/native/functions.cmake
+@@ -617,7 +617,7 @@ function(add_linker_flag Flag)
+ endfunction()
+ 
+ function(link_natvis_sources_for_target targetName linkKind)
+-    if (NOT CLR_CMAKE_HOST_WIN32)
++    if (NOT CLR_CMAKE_HOST_WIN32 OR NOT MSVC)
+         return()
+     endif()
+     foreach(source ${ARGN})
+-- 
+2.55.0
+

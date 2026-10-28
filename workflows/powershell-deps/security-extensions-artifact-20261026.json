@@ -1,0 +1,61 @@
+{
+  "recipe": "mingw-w64-dotnet-security-extensions",
+  "artifact": "mingw-w64-clang-x86_64-dotnet-security-extensions-1.4.0-1-any.pkg.tar.zst",
+  "sha256": "97390faae1247327b42ef73428f75c557e2bc96d127a2e47b9fb340ffee1d0f0",
+  "nuget_id": "Microsoft.Security.Extensions",
+  "nuget_version": "1.4.0",
+  "assembly_version": "10.0.0.0",
+  "public_key_token": "31bf3856ad364e35",
+  "published_api_declarations": 29,
+  "managed_sha256": "d543c3abaab14ec7836fa7095a05ee9373a28c8f3f11a4b399aac7ad9ba21972",
+  "native_sha256": "672545cd9f7f702795a1d4718bcb4467eb3a90934b959fe2d4a40e94e2b9f57e",
+  "native_backend": {
+    "machine": "AMD64",
+    "entry_point": 4832,
+    "exports": [
+      "msys_signature_abi",
+      "msys_signature_free",
+      "msys_signature_query"
+    ],
+    "imports": [
+      "WINTRUST.dll",
+      "CRYPT32.dll",
+      "ole32.dll",
+      "api-ms-win-crt-runtime-l1-1-0.dll",
+      "api-ms-win-crt-private-l1-1-0.dll",
+      "KERNEL32.dll",
+      "api-ms-win-crt-stdio-l1-1-0.dll"
+    ]
+  },
+  "implementation": "MSYS2 source replacement using Windows WinTrust; not the private Microsoft implementation",
+  "fixture_tool": {
+    "recipe": "mingw-w64-osslsigncode",
+    "artifact": "mingw-w64-clang-x86_64-osslsigncode-2.14-1-any.pkg.tar.zst",
+    "sha256": "350ccd20767429e7004346512c1d797340a786ce483bd2f02cee93af3dac728f",
+    "source_sha256": "0f033fd6069387d2e489fbd2187e62f624764eb8c2758ee94e3e793e5150b5c5",
+    "native": {
+      "machine": "AMD64",
+      "entry_point": 5024,
+      "exports": [
+        "OPENSSL_Applink"
+      ],
+      "imports": [
+        "libssl-3-x64.dll",
+        "libcrypto-3-x64.dll",
+        "zlib1.dll",
+        "KERNEL32.dll",
+        "api-ms-win-crt-stdio-l1-1-0.dll",
+        "api-ms-win-crt-runtime-l1-1-0.dll",
+        "api-ms-win-crt-environment-l1-1-0.dll",
+        "api-ms-win-crt-filesystem-l1-1-0.dll",
+        "api-ms-win-crt-string-l1-1-0.dll",
+        "api-ms-win-crt-locale-l1-1-0.dll",
+        "api-ms-win-crt-time-l1-1-0.dll",
+        "api-ms-win-crt-heap-l1-1-0.dll",
+        "api-ms-win-crt-private-l1-1-0.dll",
+        "api-ms-win-crt-convert-l1-1-0.dll",
+        "api-ms-win-crt-math-l1-1-0.dll"
+      ]
+    }
+  }
+}

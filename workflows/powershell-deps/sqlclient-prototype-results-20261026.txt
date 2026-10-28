@@ -1,0 +1,118 @@
+SqlClient 4.9.1 source-build prototype on win11, MSYS2 CLANG64
+Root: /home/topkek/powershell-compatibility.UIIT7O
+Full pinned source/provenance: sqlclient-source-audit-20261026.json
+No SNI implementation binary downloaded or used; native runtime remains unported.
+
+$ /usr/bin/python3 mingw-w64-dotnet-sqlclient/prepare.py sql-source/maintenance-packages-84b081710c66cc560b77d4de38cee493c3a38e9d sql-build
+Result: exit 0
+$ bash mingw-w64-dotnet-sqlclient/build.sh sql-build
+Result: exit 0
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-build\implementation\build.csproj (in 66 ms).
+  build -> E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-build\implementation\bin\Release\net8.0-windows\System.Data.SqlClient.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:11.53
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-build\contract\build.csproj (in 137 ms).
+  build -> E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-build\contract\bin\Release\net8.0\System.Data.SqlClient.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.63
+
+$ bash mingw-w64-dotnet-sqlclient/probe.sh sql-build sql-probe2
+Result: exit 2: managed data operations pass, Windows networking needs missing sni.dll
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-probe2\probe.csproj (in 82 ms).
+E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-probe2\Probe.cs(14,29): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-probe2\probe.csproj]
+E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-probe2\Probe.cs(19,25): warning CS0618: 'SqlConnectionStringBuilder' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-probe2\probe.csproj]
+E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-probe2\Probe.cs(20,21): warning CS0618: 'SqlConnectionStringBuilder' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-probe2\probe.csproj]
+E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-probe2\Probe.cs(21,34): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-probe2\probe.csproj]
+E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-probe2\Probe.cs(24,20): warning CS0618: 'SqlCommand' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-probe2\probe.csproj]
+E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-probe2\Probe.cs(26,24): warning CS0618: 'SqlDataRecord' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-probe2\probe.csproj]
+E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-probe2\Probe.cs(26,42): warning CS0618: 'SqlMetaData' is obsolete: 'Use the Microsoft.SqlServer.Server package instead.' [E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-probe2\probe.csproj]
+E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-probe2\Probe.cs(26,78): warning CS0618: 'SqlMetaData' is obsolete: 'Use the Microsoft.SqlServer.Server package instead.' [E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-probe2\probe.csproj]
+  probe -> E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-probe2\bin\Release\net8.0\probe.dll
+
+Build succeeded.
+
+E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-probe2\Probe.cs(14,29): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-probe2\probe.csproj]
+E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-probe2\Probe.cs(19,25): warning CS0618: 'SqlConnectionStringBuilder' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-probe2\probe.csproj]
+E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-probe2\Probe.cs(20,21): warning CS0618: 'SqlConnectionStringBuilder' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-probe2\probe.csproj]
+E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-probe2\Probe.cs(21,34): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-probe2\probe.csproj]
+E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-probe2\Probe.cs(24,20): warning CS0618: 'SqlCommand' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-probe2\probe.csproj]
+E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-probe2\Probe.cs(26,24): warning CS0618: 'SqlDataRecord' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-probe2\probe.csproj]
+E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-probe2\Probe.cs(26,42): warning CS0618: 'SqlMetaData' is obsolete: 'Use the Microsoft.SqlServer.Server package instead.' [E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-probe2\probe.csproj]
+E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-probe2\Probe.cs(26,78): warning CS0618: 'SqlMetaData' is obsolete: 'Use the Microsoft.SqlServer.Server package instead.' [E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-probe2\probe.csproj]
+    8 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.10
+PASS SqlClient source identities, exported types, connection strings, command/parameter clones and typed SQL records
+LIMITATION: unmodified Windows networking needs the unported SNI native implementation
+Unable to load DLL 'sni.dll' or one of its dependencies: The specified module could not be found. (0x8007007E)
+
+$ bash mingw-w64-dotnet-sqlclient/check-api.sh sql-build sql-probe2 sql-api-check2
+Result: exit 0
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-api-check2\check.csproj (in 59 ms).
+  check -> E:\msys64\home\topkek\powershell-compatibility.UIIT7O\sql-api-check2\bin\Release\net8.0\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.00
+PASS: System.Data.SqlClient implements all 1020 upstream public/protected type/member signatures
+
+No completed SqlClient package is counted. SNI port/protocol compatibility and package/install/audit remain open.

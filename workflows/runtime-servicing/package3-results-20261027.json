@@ -1,0 +1,40 @@
+{
+  "previous_goal_turn_classification": "progress",
+  "current_goal_turn_classification": "progress",
+  "runtime_package_release": "8.0.31-3",
+  "build_root": "/home/topkek/runtime8pkg3.RGUgSb",
+  "artifact": "mingw-w64-clang-x86_64-dotnet-runtime8-servicing-8.0.31-3-any.pkg.tar.zst",
+  "artifact_sha256": "e19144001583aab220047b20b68f88d7e63242d8d84d9da83f6e40be807dcb94",
+  "build_command": "makepkg --cleanbuild --force --noconfirm",
+  "build_exit_code": 0,
+  "artifact_audit_exit_code": 0,
+  "pe_version_audit_exit_code": 0,
+  "install_command": "pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-runtime8-servicing-8.0.31-3-any.pkg.tar.zst",
+  "install_exit_code": 0,
+  "installed_check_command": "bash check-installed.sh installed-check3",
+  "installed_check_exit_code": 0,
+  "extra_installed_runner": "bash extra-installed3.sh",
+  "extra_installed_results": {
+    "installed-json3": 0,
+    "mmi3-installed3": 0,
+    "wmi-installed3": 0,
+    "combined-installed3": 0
+  },
+  "installed_payload_byte_gates": 176,
+  "managed_framework_assemblies": 168,
+  "reference_and_stub_outputs": 183,
+  "actual_versioned_pe_outputs": 178,
+  "unversioned_upstream_apphost_template": true,
+  "original_stub_signing_keys": 20,
+  "framework_shims_zero_version_reference_and_runtime": 44,
+  "actual_installed_runtime": "8.0.31",
+  "original_system_data_sqlclient_forwarder_defect_resolved": true,
+  "full_dependency_goal_complete": false,
+  "remaining": [
+    "serviced targeting package artifact/ownership installation",
+    "serviced SDK host/runtime-pack integration",
+    "broader native/API/resource and remote/provider compatibility",
+    "complete shipping PowerShell including conditional GraphicalHost",
+    "PowerShell7.6/.NET10"
+  ]
+}

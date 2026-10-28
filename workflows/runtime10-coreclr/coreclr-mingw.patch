@@ -1,0 +1,3614 @@
+--- a/src/coreclr/CMakeLists.txt
++++ b/src/coreclr/CMakeLists.txt
+@@ -5,6 +5,42 @@
+ 
+ include(../../eng/native/configurepaths.cmake)
+ include(${CLR_ENG_NATIVE_DIR}/configurecompiler.cmake)
++
++if(CLR_CMAKE_HOST_WIN32 AND MINGW)
++  # The Windows-x64 helpers are MASM sources; with a GNU driver they are assembled
++  # by UASM (MSYS2 mingw-w64-clang-x86_64-uasm, -DCMAKE_ASM_MASM_COMPILER=uasm), a
++  # MASM-compatible assembler that writes COFF objects. __MINGW32__ selects the
++  # Itanium names of the C++ symbols the stubs reference.
++  enable_language(ASM_MASM)
++  set(CMAKE_ASM_MASM_FLAGS "${CMAKE_ASM_MASM_FLAGS} -win64 -nologo")
++  add_compile_definitions($<$<COMPILE_LANGUAGE:ASM_MASM>:__MINGW32__>)
++
++  # The Windows code paths of CoreCLR compiled by clang with the GNU driver
++  # (x86_64-w64-mingw32): the MSVC options of configurecompiler.cmake become
++  # their clang spellings, as on Unix.
++  # __declspec(uuid), __if_exists, __uuidof ... (C++ only: in C it turns the
++  # MSVC intrinsics such as __cpuidex into builtins that need MSVC's intrin.h)
++  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-fms-extensions>)
++  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>)   # /GR-
++  set(CLR_MINGW_C_CXX_OPTIONS -fwrapv -fno-omit-frame-pointer -ffp-contract=off -ferror-limit=4096
++      -Wno-unused-variable -Wno-unused-value -Wno-unused-function -Wno-tautological-compare
++      -Wno-unknown-pragmas -Wno-unknown-warning-option -Wno-unused-private-field
++      -Wno-constant-logical-operand -Wno-pragma-pack -Wno-incompatible-ms-struct
++      -Wno-reserved-identifier -Wno-unsafe-buffer-usage -Wno-single-bit-bitfield-constant-conversion
++      -Wno-cast-function-type-strict -Wno-unused-but-set-variable -Wno-microsoft
++      -Wno-ignored-attributes -Wno-invalid-noreturn -Wno-nonportable-include-path
++      -Wno-format -Wno-missing-braces -Wno-dll-attribute-on-redeclaration)
++  foreach(opt IN LISTS CLR_MINGW_C_CXX_OPTIONS)
++    add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:${opt}>)
++  endforeach()
++  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-invalid-offsetof>)
++  # The clr_std headers stand in for the C++ library only where there is none
++  # (Unix, -nostdinc); with libc++ present they would clash with it.
++  add_compile_definitions(USE_STL)
++  # verrsrc.h, winnt.h fixups and the MSVC intrinsics (inc/mingw/msvc_compat.h)
++  include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/inc/mingw)
++  add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-include$<SEMICOLON>${CMAKE_CURRENT_SOURCE_DIR}/inc/mingw/msvc_compat.h>)
++endif()
+ 
+ include_directories("${CLR_SRC_NATIVE_DIR}")
+ include_directories("${CLR_SRC_NATIVE_DIR}/inc")
+@@ -167,9 +203,9 @@
+ # Above projects do not build with these compile options
+ # All of the compiler options are specified in file compileoptions.cmake
+ # Do not add any new options here. They should be added in compileoptions.cmake
+-if(CLR_CMAKE_HOST_WIN32)
++if(CLR_CMAKE_HOST_WIN32 AND MSVC)
+   add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:/Zl>) # omit default library name in .OBJ
+-endif(CLR_CMAKE_HOST_WIN32)
++endif()
+ 
+ #--------------------------------
+ # Definition directives
+--- a/src/coreclr/clrfeatures.cmake
++++ b/src/coreclr/clrfeatures.cmake
+@@ -56,6 +56,11 @@
+   set(FEATURE_AUTO_TRACE 0)
+ endif(NOT DEFINED FEATURE_AUTO_TRACE)
+ 
++if(NOT DEFINED FEATURE_SINGLE_FILE_DIAGNOSTICS AND CLR_CMAKE_HOST_WIN32 AND MINGW)
++  # needs the DAC and mscordbi, which are not built with MinGW
++  set(FEATURE_SINGLE_FILE_DIAGNOSTICS 0)
++endif()
++
+ if(NOT DEFINED FEATURE_SINGLE_FILE_DIAGNOSTICS)
+   set(FEATURE_SINGLE_FILE_DIAGNOSTICS 1)
+ endif(NOT DEFINED FEATURE_SINGLE_FILE_DIAGNOSTICS)
+--- a/src/coreclr/debug/CMakeLists.txt
++++ b/src/coreclr/debug/CMakeLists.txt
+@@ -2,12 +2,16 @@
+ add_compile_definitions($<${FEATURE_CORECLR_CACHED_INTERFACE_DISPATCH}:FEATURE_CACHED_INTERFACE_DISPATCH>)
+ add_compile_definitions($<${FEATURE_CORECLR_VIRTUAL_STUB_DISPATCH}:FEATURE_VIRTUAL_STUB_DISPATCH>)
+ 
+-add_subdirectory(daccess)
++if(NOT MINGW)
++    add_subdirectory(daccess)
++endif()
+ add_subdirectory(ee)
+-add_subdirectory(di)
+-if(CLR_CMAKE_HOST_WIN32)
++if(NOT MINGW)
++    add_subdirectory(di)
++endif()
++if(CLR_CMAKE_HOST_WIN32 AND NOT MINGW)
+     add_subdirectory(createdump)
+-endif(CLR_CMAKE_HOST_WIN32)
++endif()
+ if(FEATURE_SINGLE_FILE_DIAGNOSTICS)
+     add_subdirectory(runtimeinfo)
+ endif(FEATURE_SINGLE_FILE_DIAGNOSTICS)
+--- a/src/coreclr/debug/ee/debugger.cpp
++++ b/src/coreclr/debug/ee/debugger.cpp
+@@ -996,6 +996,15 @@
+ #if defined(FEATURE_HIJACK) && !defined(TARGET_UNIX)
+ 
+ // Given the start address and the end address of a function, return a MemoryRange for the function.
++inline MemoryRange GetMemoryRangeForFunction(void *pfnStart, void *pfnEnd);
++#if defined(__GNUC__)
++// (clang does not convert a function to void* implicitly, MSVC does)
++template <typename TStart, typename TEnd>
++inline MemoryRange GetMemoryRangeForFunction(TStart *pfnStart, TEnd *pfnEnd)
++{
++    return GetMemoryRangeForFunction((void *)pfnStart, (void *)pfnEnd);
++}
++#endif
+ inline MemoryRange GetMemoryRangeForFunction(void *pfnStart, void *pfnEnd)
+ {
+     PCODE pfnStartAddress = (PCODE)GetEEFuncEntryPoint(pfnStart);
+--- a/src/coreclr/debug/ee/rcthread.cpp
++++ b/src/coreclr/debug/ee/rcthread.cpp
+@@ -475,7 +475,7 @@
+ 
+     // Fill out the struct.
+ #ifdef FEATURE_INTEROP_DEBUGGING
+-    pDebuggerRuntimeOffsets->m_genericHijackFuncAddr = Debugger::GenericHijackFunc;
++    pDebuggerRuntimeOffsets->m_genericHijackFuncAddr = (void*)Debugger::GenericHijackFunc;
+     // the following 6 flares only exist for interop debugging.
+     pDebuggerRuntimeOffsets->m_signalHijackStartedBPAddr = (void*) SignalHijackStartedFlare;
+     pDebuggerRuntimeOffsets->m_excepForRuntimeHandoffStartBPAddr = (void*) ExceptionForRuntimeHandoffStartFlare;
+--- a/src/coreclr/debug/ee/wks/CMakeLists.txt
++++ b/src/coreclr/debug/ee/wks/CMakeLists.txt
+@@ -16,7 +16,9 @@
+     add_library_clr(cordbee_wks OBJECT ${CORDBEE_SOURCES_WKS} ${ASM_FILE} ${ASM_OBJECTS})
+ 
+   else ()
+-    set(ASM_OPTIONS /c /Zi /W3 /errorReport:prompt)
++    if(MSVC)
++      set(ASM_OPTIONS /c /Zi /W3 /errorReport:prompt)
++    endif()
+ 
+     if (CLR_CMAKE_HOST_ARCH_I386)
+       list (APPEND ASM_OPTIONS /safeseh)
+--- a/src/coreclr/dlls/CMakeLists.txt
++++ b/src/coreclr/dlls/CMakeLists.txt
+@@ -2,7 +2,7 @@
+     add_subdirectory(clretwrc)
+ endif(CLR_CMAKE_TARGET_WIN32 AND FEATURE_EVENT_TRACE)
+ if (NOT (CLR_CMAKE_TARGET_WIN32 AND FEATURE_CROSSBITNESS))
+-    if (NOT CLR_CMAKE_TARGET_ARCH_WASM)
++    if (NOT CLR_CMAKE_TARGET_ARCH_WASM AND NOT MINGW)
+         add_subdirectory(mscordbi)
+         add_subdirectory(mscordac)
+     endif()
+--- a/src/coreclr/dlls/clretwrc/CMakeLists.txt
++++ b/src/coreclr/dlls/clretwrc/CMakeLists.txt
+@@ -1,6 +1,6 @@
+ include_directories(${CMAKE_CURRENT_BINARY_DIR})
+ 
+-if(CLR_CMAKE_HOST_WIN32)
++if(CLR_CMAKE_HOST_WIN32 AND MSVC)
+     # remove /guard:cf, /guard:ehcont, and /CETCOMPAT from resource-only libraries
+     set_property(DIRECTORY PROPERTY CLR_CONTROL_FLOW_GUARD OFF)
+ 
+@@ -10,7 +10,7 @@
+     endif (CLR_CMAKE_HOST_ARCH_AMD64)
+ 
+     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /NOENTRY")
+-endif(CLR_CMAKE_HOST_WIN32)
++endif()
+ 
+ add_definitions(-DFX_VER_INTERNALNAME_STR=clretwrc.dll)
+ 
+@@ -19,6 +19,10 @@
+ )
+ 
+ # add the install targets
++if(MINGW)
++    # a resource-only DLL: link it with the C++ driver (the RC rule would link an executable)
++    set_target_properties(clretwrc PROPERTIES LINKER_LANGUAGE CXX)
++endif()
+ install_clr(TARGETS clretwrc DESTINATIONS . sharedFramework COMPONENT runtime)
+ 
+ add_dependencies(clretwrc eventing_headers)
+--- a/src/coreclr/dlls/mscoree/coreclr/CMakeLists.txt
++++ b/src/coreclr/dlls/mscoree/coreclr/CMakeLists.txt
+@@ -17,6 +17,11 @@
+ 
+     list(APPEND CLR_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/coreclr.def)
+ 
++    if (MINGW)
++        target_link_options(coreclr_static INTERFACE
++            "LINKER:--delayload=api-ms-win-core-winrt-l1-1-0.dll"
++            "LINKER:--delayload=version.dll")
++    else()
+     # Incremental linking results in the linker inserting extra padding and routing function calls via thunks that can break the
+     # invariants (e.g. size of region between Jit_PatchedCodeLast-Jit_PatchCodeStart needs to fit in a page).
+     add_linker_flag("/INCREMENTAL:NO")
+@@ -26,6 +31,7 @@
+ 
+     # Delay load version.dll so that we can specify how to search when loading it as it is not part of Windows' known DLLs
+     add_linker_flag("/DELAYLOAD:version.dll")
++    endif()
+ 
+     # No library groups for Win32
+     set(START_LIBRARY_GROUP)
+@@ -70,6 +76,9 @@
+ 
+     set_property(TARGET coreclr APPEND_STRING PROPERTY LINK_FLAGS ${EXPORTS_LINKER_OPTION})
+     set_property(TARGET coreclr APPEND_STRING PROPERTY LINK_DEPENDS ${EXPORTS_FILE})
++    if(MINGW)
++      target_link_options(coreclr PRIVATE "LINKER:--delayload=api-ms-win-core-winrt-l1-1-0.dll" "LINKER:--delayload=version.dll")
++    endif()
+     set(LIB_CORDBEE cordbee_wks)
+     set(LIB_INTEROP interop)
+     set(LIB_CDAC_CONTRACT_DESCRIPTOR cdac_contract_descriptor)
+@@ -134,6 +143,10 @@
+         mscorrc
+     )
+ endif(CLR_CMAKE_TARGET_WIN32)
++if(MINGW)
++    list(TRANSFORM CORECLR_LIBRARIES REPLACE "[.]lib$" "")
++    list(APPEND CORECLR_LIBRARIES clrmingweha)
++endif()
+ 
+ if(CLR_CMAKE_TARGET_LINUX)
+     list(APPEND CORECLR_LIBRARIES
+@@ -218,7 +231,7 @@
+     )
+ endif()
+ 
+-if(CLR_CMAKE_TARGET_WIN32)
++if(CLR_CMAKE_TARGET_WIN32 AND NOT MINGW)
+     set(CLRDEBUGINFO_RESOURCE_PATH ${CMAKE_CURRENT_BINARY_DIR}/clr_debug_resource.bin)
+ 
+     if(CLR_CMAKE_TARGET_ARCH_AMD64)
+@@ -247,7 +260,7 @@
+ 
+     add_dependencies(coreclr clr_debug_resources)
+     add_dependencies(coreclr_static clr_debug_resources mscordaccore)
+-endif(CLR_CMAKE_TARGET_WIN32)
++endif()
+ 
+ # add the install targets
+ if(NOT CLR_CMAKE_HOST_ARCH_WASM)
+--- a/src/coreclr/dlls/mscoree/mscorwks_ntdef.src
++++ b/src/coreclr/dlls/mscoree/mscorwks_ntdef.src
+@@ -13,10 +13,10 @@
+         ; dbgshim.dll depends on g_CLREngineMetrics having an ordinal of 2.
+         ; This cannot change, or else CoreCLR debugging will not work.
+         ; See clr\src\DLLS\dbgshim\dbgshim.cpp.
+-        g_CLREngineMetrics                                  @2 data
++        g_CLREngineMetrics                                  @2 DATA
+ 
+         ; VS depends on CLRJitAttachState having a ordinal of 3. This cannot change.
+-        CLRJitAttachState                                   @3 data
++        CLRJitAttachState                                   @3 DATA
+ 
+         ; Unix hosting API
+         coreclr_create_delegate
+--- a/src/coreclr/dlls/mscorrc/CMakeLists.txt
++++ b/src/coreclr/dlls/mscorrc/CMakeLists.txt
+@@ -3,19 +3,24 @@
+ add_definitions(-DFX_VER_INTERNALNAME_STR=mscorrc.dll)
+ 
+ if(CLR_CMAKE_HOST_WIN32)
+-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /NOENTRY")
++    if(MSVC)
++      set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /NOENTRY")
++    endif()
+ 
+     # remove /guard:cf, /guard:ehcont, and /CETCOMPAT from resource-only libraries
+     set_property(DIRECTORY PROPERTY CLR_CONTROL_FLOW_GUARD OFF)
+ 
+     if (CLR_CMAKE_HOST_ARCH_AMD64)
+         set_property(DIRECTORY PROPERTY CLR_EH_CONTINUATION OFF)
+-        string(REPLACE "/CETCOMPAT" "" CMAKE_SHARED_LINKER_FLAGS ${CMAKE_SHARED_LINKER_FLAGS})
++        string(REPLACE "/CETCOMPAT" "" CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS}")
+     endif (CLR_CMAKE_HOST_ARCH_AMD64)
+ 
+     add_library_clr(mscorrc SHARED
+         include.rc
+     )
++    if(MINGW)
++      set_target_properties(mscorrc PROPERTIES LINKER_LANGUAGE CXX)
++    endif()
+     install_clr(TARGETS mscorrc DESTINATIONS . sharedFramework COMPONENT runtime)
+ 
+ else()
+--- a/src/coreclr/dlls/mscorrc/mscorrc.rc
++++ b/src/coreclr/dlls/mscorrc/mscorrc.rc
+@@ -39,6 +39,33 @@
+ #undef EMAKEHR
+ #define SMAKEHR(val)    val
+ #define EMAKEHR(val)    val
++
++// String IDs are 16 bits: rc.exe keeps the low word of the IDs that are
++// Windows HRESULTs (E_ACCESSDENIED, HRESULT_FROM_WIN32(...)), as LoadString does;
++// llvm-rc rejects them. Spell out the low word for it.
++#ifdef __clang__
++#undef _HRESULT_TYPEDEF_
++#define _HRESULT_TYPEDEF_(sc) ((sc) & 0xFFFF)
++#undef __HRESULT_FROM_WIN32
++#define __HRESULT_FROM_WIN32(x) ((x) & 0xFFFF)
++#undef HRESULT_FROM_WIN32
++#define HRESULT_FROM_WIN32(x) ((x) & 0xFFFF)
++// the HRESULT-valued IDS_ of resource.h
++#undef IDS_EE_FILE_NOT_FOUND
++#define IDS_EE_FILE_NOT_FOUND                   0x0002
++#undef IDS_EE_PATH_TOO_LONG
++#define IDS_EE_PATH_TOO_LONG                    0x006F
++#undef IDS_EE_PROC_NOT_FOUND
++#define IDS_EE_PROC_NOT_FOUND                   0x007F
++#undef IDS_EE_ALREADY_EXISTS
++#define IDS_EE_ALREADY_EXISTS                   0x00B7
++#undef IDS_EE_BAD_USER_PROFILE
++#define IDS_EE_BAD_USER_PROFILE                 0x04E5
++#undef IDS_INET_E_SECURITY_PROBLEM
++#define IDS_INET_E_SECURITY_PROBLEM             0x000E
++#undef IDS_CLASSLOAD_GENERAL
++#define IDS_CLASSLOAD_GENERAL                   0x1522
++#endif
+ 
+ STRINGTABLE DISCARDABLE
+ BEGIN
+--- a/src/coreclr/gc/vxsort/CMakeLists.txt
++++ b/src/coreclr/gc/vxsort/CMakeLists.txt
+@@ -1,7 +1,7 @@
+ set(CMAKE_INCLUDE_CURRENT_DIR ON)
+ include_directories("../env")
+ 
+-if(CLR_CMAKE_HOST_UNIX)
++if(CLR_CMAKE_HOST_UNIX OR MINGW)
+   set_source_files_properties(isa_detection.cpp PROPERTIES COMPILE_FLAGS -mavx2)
+   set_source_files_properties(do_vxsort_avx2.cpp PROPERTIES COMPILE_FLAGS -mavx2)
+   set_source_files_properties(do_vxsort_avx512.cpp PROPERTIES COMPILE_FLAGS -mavx2)
+@@ -11,7 +11,7 @@
+   set_source_files_properties(smallsort/bitonic_sort.AVX512.int64_t.generated.cpp PROPERTIES COMPILE_FLAGS -mavx2)
+   set_source_files_properties(smallsort/bitonic_sort.AVX512.int32_t.generated.cpp PROPERTIES COMPILE_FLAGS -mavx2)
+   set_source_files_properties(smallsort/avx2_load_mask_tables.cpp PROPERTIES COMPILE_FLAGS -mavx2)
+-endif(CLR_CMAKE_HOST_UNIX)
++endif()
+ 
+ set (VXSORT_SOURCES
+   isa_detection.cpp
+--- a/src/coreclr/gc/windows/gcenv.windows.cpp
++++ b/src/coreclr/gc/windows/gcenv.windows.cpp
+@@ -5,6 +5,7 @@
+ #include <cassert>
+ #include <cstddef>
+ #include <memory>
++#include <algorithm>
+ #include "windows.h"
+ #include "psapi.h"
+ #include "gcenv.structs.h"
+@@ -15,7 +16,9 @@
+ #include "volatile.h"
+ #include "gcconfig.h"
+ 
+-GCSystemInfo g_SystemInfo;
++// (only used in this file: internal linkage, since without MSVC's type-mangled
++// variable names it would clash with the VM's SYSTEM_INFO g_SystemInfo)
++static GCSystemInfo g_SystemInfo;
+ 
+ static bool g_SeLockMemoryPrivilegeAcquired = false;
+ 
+--- a/src/coreclr/inc/CMakeLists.txt
++++ b/src/coreclr/inc/CMakeLists.txt
+@@ -9,7 +9,7 @@
+   sospriv.idl
+ )
+ 
+-if(CLR_CMAKE_HOST_WIN32)
++if(CLR_CMAKE_HOST_WIN32 AND MSVC)
+     #Build for corguids is done in two steps:
+     #1. compile .idl to *_i.c : This is done using custom midl command
+     #2. compile *_i.c to .lib
+@@ -37,9 +37,9 @@
+     # Compile *_i.c as C files
+     add_compile_options(/TC)
+ 
+-else(CLR_CMAKE_HOST_WIN32)
++else()
+ 
+-    #The MIDL tool exists for Windows only, so for other systems, we have the prebuilt xxx_i.cpp files checked in
++    #The MIDL tool exists for Windows only, so for other systems (and MinGW), we have the prebuilt xxx_i.cpp files checked in
+ 
+     add_compile_options(-D_MIDL_USE_GUIDDEF_)
+     foreach(IDL_SOURCE IN LISTS CORGUIDS_IDL_SOURCES)
+@@ -48,7 +48,7 @@
+         list(APPEND CORGUIDS_SOURCES ${C_SOURCE})
+     endforeach(IDL_SOURCE)
+ 
+-endif(CLR_CMAKE_HOST_WIN32)
++endif()
+ 
+ # Compile *_i.cpp to lib
+ add_library_clr(corguids OBJECT ${CORGUIDS_SOURCES})
+--- a/src/coreclr/inc/clrtypes.h
++++ b/src/coreclr/inc/clrtypes.h
+@@ -322,7 +322,7 @@
+     return (value+alignment-1)&~(alignment-1);
+ }
+ 
+-#if defined(_MSC_VER)
++#if defined(_MSC_VER) || defined(__MINGW32__)
+ inline ULONG AlignUp(ULONG value, UINT alignment)
+ {
+     STATIC_CONTRACT_LEAF;
+@@ -354,7 +354,7 @@
+     return (value&~(alignment-1));
+ }
+ 
+-#if defined(_MSC_VER)
++#if defined(_MSC_VER) || defined(__MINGW32__)
+ inline ULONG AlignDown(ULONG value, UINT alignment)
+ {
+     STATIC_CONTRACT_LEAF;
+--- a/src/coreclr/inc/corinfo.h
++++ b/src/coreclr/inc/corinfo.h
+@@ -193,7 +193,7 @@
+ 
+ #include "jiteeversionguid.h"
+ 
+-#ifdef _MSC_VER
++#if defined(_MSC_VER) || defined(__MINGW32__)
+ typedef long JITINTERFACE_HRESULT;
+ #else
+ typedef int JITINTERFACE_HRESULT;
+--- a/src/coreclr/inc/daccess.h
++++ b/src/coreclr/inc/daccess.h
+@@ -2155,7 +2155,9 @@
+ #define S16PTR(type) type*
+ #define S16PTRMAX(type, maxChars) type*
+ 
+-#if defined(TARGET_UNIX)
++// (MinGW: without MSVC's /ALTERNATENAME the DAC table takes the vtables from dummy
++// objects, as on Unix; see debug/ee/dactable.cpp)
++#if defined(TARGET_UNIX) || defined(__MINGW32__)
+ 
+ #define VPTR_VTABLE_CLASS(name, base) \
+         friend struct _DacGlobals; \
+@@ -2195,7 +2197,7 @@
+ #define VPTR_ABSTRACT_VTABLE_CLASS(name, base) friend struct _DacGlobals;
+ #define VPTR_ABSTRACT_VTABLE_CLASS_AND_CTOR(name, base)
+ 
+-#endif // TARGET_UNIX
++#endif // TARGET_UNIX || __MINGW32__
+ 
+ // helper macro to make the vtables unique for DAC
+ #define VPTR_UNIQUE(unique) virtual int MakeVTableUniqueForDAC() { return unique; }
+--- a/src/coreclr/inc/eventtracebase.h
++++ b/src/coreclr/inc/eventtracebase.h
+@@ -214,7 +214,7 @@
+     (ETW_TRACING_INITIALIZED(Context.EtwProvider->RegistrationHandle) && ETW_CATEGORY_ENABLED(Context, Level, Keyword))
+ 
+ #define ETWOnStartup(StartEventName, EndEventName) \
+-    ETWTraceStartup trace##StartEventName##(Microsoft_Windows_DotNETRuntimePrivateHandle, &StartEventName, &StartupId, &EndEventName, &StartupId);
++    ETWTraceStartup trace##StartEventName(Microsoft_Windows_DotNETRuntimePrivateHandle, &StartEventName, &StartupId, &EndEventName, &StartupId);
+ #define ETWFireEvent(EventName) FireEtw##EventName(GetClrInstanceId())
+ 
+ #ifndef FEATURE_NATIVEAOT
+--- /dev/null
++++ b/src/coreclr/inc/mingw/msvc_compat.h
+@@ -0,0 +1,56 @@
++// Licensed to the .NET Foundation under one or more agreements.
++// The .NET Foundation licenses this file to you under the MIT license.
++
++// Force-included into every C/C++ file of CoreCLR when it is built by clang with
++// the GNU driver for Windows (MinGW, x86_64-w64-mingw32).  It stands in for the
++// MSVC-only intrinsics the Windows code paths use; the Unix build gets the same
++// definitions from pal.h.
++#pragma once
++
++// MSVC debugger annotations (no code is generated for them)
++#define __annotation(...) ((void)0)
++
++// mingw-w64's sal.h (SAL 2: _In_, _Out_writes_(n) ...) and the legacy SAL 1
++// names (__in, __success(expr) ...) the SDK also defines.
++#include <sal.h>
++#include "sal_legacy.h"
++
++// windows.h defines min/max as macros (unless NOMINMAX); mingw-w64 only does so
++// for C. The Windows code of CoreCLR relies on them in C++ too. (libc++ saves and
++// undefines them around its own min/max.)
++#ifndef NOMINMAX
++#ifndef max
++#define max(a, b) (((a) > (b)) ? (a) : (b))
++#endif
++#ifndef min
++#define min(a, b) (((a) < (b)) ? (a) : (b))
++#endif
++#endif
++
++// MSVC's C++ library headers bring in crtdbg.h (_ASSERTE, _RPT*), and the
++// standalone GC environment relies on that.
++#if defined(__cplusplus)
++#include <crtdbg.h>
++#endif
++
++// _rdsspq(): MSVC's intrinsic takes no argument; clang's takes the value to return
++// when CET is off and needs the shstk target feature. RDSSP is a NOP on processors
++// (and in processes) without CET shadow stacks, so the register keeps its 0.
++#if defined(__cplusplus) && defined(__x86_64__)
++#include <intrin.h>     // (cetintrin.h declares clang's _rdsspq; it must come before the macro)
++static __inline__ unsigned long long __clr_mingw_rdsspq(void)
++{
++    unsigned long long ssp = 0;
++    __asm__ __volatile__("rdsspq %0" : "+r"(ssp));
++    return ssp;
++}
++#define _rdsspq() __clr_mingw_rdsspq()
++#endif
++
++// winerror.h (Windows Runtime) HRESULTs missing from mingw-w64
++#ifndef RO_E_METADATA_NAME_NOT_FOUND
++#define RO_E_METADATA_NAME_NOT_FOUND ((HRESULT)0x8000000FL)
++#endif
++#ifndef RO_E_CLOSED
++#define RO_E_CLOSED ((HRESULT)0x80000013L)
++#endif
+--- /dev/null
++++ b/src/coreclr/inc/mingw/sal_legacy.h
+@@ -0,0 +1,1255 @@
++// Licensed to the .NET Foundation under one or more agreements.
++// The .NET Foundation licenses this file to you under the MIT license.
++
++// MinGW: the legacy (SAL 1) annotations of the Windows SDK sal.h/specstrings.h
++// (__in, __out_ecount(n), __success(expr), __checkReturn ...), which mingw-w64
++// does not have (it spells them SAL__xxx). They carry no code; outside /analyze
++// the SDK defines them empty too. The names are those defined by
++// src/coreclr/pal/inc/rt/{sal.h,specstrings.h,specstrings_strict.h} (the Unix copies).
++#pragma once
++
++#ifndef __allaccess_impl
++#define __allaccess_impl
++#endif
++#ifndef __allaccess_impl_notref
++#define __allaccess_impl_notref
++#endif
++#ifndef __allocator
++#define __allocator
++#endif
++#ifndef __allowed
++#define __allowed(p)
++#endif
++#ifndef __analysis_assert
++#define __analysis_assert(e)
++#endif
++#ifndef __analysis_assume_nullterminated
++#define __analysis_assume_nullterminated(x)
++#endif
++#ifndef __analysis_hint
++#define __analysis_hint(hint)
++#endif
++#ifndef __analysis_noreturn
++#define __analysis_noreturn
++#endif
++#ifndef __assume_bound
++#define __assume_bound(i)
++#endif
++#ifndef __assume_validated
++#define __assume_validated(p)
++#endif
++#ifndef __bcount
++#define __bcount(size)
++#endif
++#ifndef __bcount_opt
++#define __bcount_opt(size)
++#endif
++#ifndef __blocksOn
++#define __blocksOn(resource)
++#endif
++#ifndef __bound
++#define __bound
++#endif
++#ifndef __byte_readableTo
++#define __byte_readableTo(size)
++#endif
++#ifndef __byte_writableTo
++#define __byte_writableTo(size)
++#endif
++#ifndef __bytecap_c_impl
++#define __bytecap_c_impl(size)
++#endif
++#ifndef __bytecap_impl
++#define __bytecap_impl(size)
++#endif
++#ifndef __bytecap_x_impl
++#define __bytecap_x_impl(size)
++#endif
++#ifndef __bytecount_c_impl
++#define __bytecount_c_impl(size)
++#endif
++#ifndef __bytecount_impl
++#define __bytecount_impl(size)
++#endif
++#ifndef __bytecount_x_impl
++#define __bytecount_x_impl(size)
++#endif
++#ifndef __callback
++#define __callback
++#endif
++#ifndef __cap_c_impl
++#define __cap_c_impl(size)
++#endif
++#ifndef __cap_c_one_notref_impl
++#define __cap_c_one_notref_impl
++#endif
++#ifndef __cap_for_impl
++#define __cap_for_impl(param)
++#endif
++#ifndef __cap_impl
++#define __cap_impl(size)
++#endif
++#ifndef __cap_x_impl
++#define __cap_x_impl(size)
++#endif
++#ifndef __checkReturn
++#define __checkReturn
++#endif
++#ifndef __class_code_content
++#define __class_code_content(typ)
++#endif
++#ifndef __clr_reserved
++#define __clr_reserved
++#endif
++#ifndef __control_entrypoint
++#define __control_entrypoint(category)
++#endif
++#ifndef __count_c_impl
++#define __count_c_impl(size)
++#endif
++#ifndef __count_impl
++#define __count_impl(size)
++#endif
++#ifndef __count_x_impl
++#define __count_x_impl(size)
++#endif
++#ifndef __data_entrypoint
++#define __data_entrypoint(category)
++#endif
++#ifndef __deallocate
++#define __deallocate(kind)
++#endif
++#ifndef __deallocate_opt
++#define __deallocate_opt(kind)
++#endif
++#ifndef __deferTypecheck
++#define __deferTypecheck
++#endif
++#ifndef __deref
++#define __deref
++#endif
++#ifndef __deref_bcount
++#define __deref_bcount(size)
++#endif
++#ifndef __deref_bcount_opt
++#define __deref_bcount_opt(size)
++#endif
++#ifndef __deref_ecount
++#define __deref_ecount(size)
++#endif
++#ifndef __deref_ecount_opt
++#define __deref_ecount_opt(size)
++#endif
++#ifndef __deref_in
++#define __deref_in
++#endif
++#ifndef __deref_in_bcount
++#define __deref_in_bcount(size)
++#endif
++#ifndef __deref_in_bcount_opt
++#define __deref_in_bcount_opt(size)
++#endif
++#ifndef __deref_in_ecount
++#define __deref_in_ecount(size)
++#endif
++#ifndef __deref_in_ecount_iterator
++#define __deref_in_ecount_iterator(size, incr)
++#endif
++#ifndef __deref_in_ecount_opt
++#define __deref_in_ecount_opt(size)
++#endif
++#ifndef __deref_in_opt
++#define __deref_in_opt
++#endif
++#ifndef __deref_in_opt_out
++#define __deref_in_opt_out
++#endif
++#ifndef __deref_in_range
++#define __deref_in_range(lb,ub)
++#endif
++#ifndef __deref_in_xcount
++#define __deref_in_xcount(size)
++#endif
++#ifndef __deref_in_xcount_opt
++#define __deref_in_xcount_opt(size)
++#endif
++#ifndef __deref_inout
++#define __deref_inout
++#endif
++#ifndef __deref_inout_bcount
++#define __deref_inout_bcount(size)
++#endif
++#ifndef __deref_inout_bcount_full
++#define __deref_inout_bcount_full(size)
++#endif
++#ifndef __deref_inout_bcount_full_opt
++#define __deref_inout_bcount_full_opt(size)
++#endif
++#ifndef __deref_inout_bcount_nz
++#define __deref_inout_bcount_nz(size)
++#endif
++#ifndef __deref_inout_bcount_nz_opt
++#define __deref_inout_bcount_nz_opt(size)
++#endif
++#ifndef __deref_inout_bcount_opt
++#define __deref_inout_bcount_opt(size)
++#endif
++#ifndef __deref_inout_bcount_part
++#define __deref_inout_bcount_part(size,length)
++#endif
++#ifndef __deref_inout_bcount_part_opt
++#define __deref_inout_bcount_part_opt(size,length)
++#endif
++#ifndef __deref_inout_bcount_z
++#define __deref_inout_bcount_z(size)
++#endif
++#ifndef __deref_inout_bcount_z_opt
++#define __deref_inout_bcount_z_opt(size)
++#endif
++#ifndef __deref_inout_ecount
++#define __deref_inout_ecount(size)
++#endif
++#ifndef __deref_inout_ecount_full
++#define __deref_inout_ecount_full(size)
++#endif
++#ifndef __deref_inout_ecount_full_opt
++#define __deref_inout_ecount_full_opt(size)
++#endif
++#ifndef __deref_inout_ecount_iterator
++#define __deref_inout_ecount_iterator(size, incr)
++#endif
++#ifndef __deref_inout_ecount_nz
++#define __deref_inout_ecount_nz(size)
++#endif
++#ifndef __deref_inout_ecount_nz_opt
++#define __deref_inout_ecount_nz_opt(size)
++#endif
++#ifndef __deref_inout_ecount_opt
++#define __deref_inout_ecount_opt(size)
++#endif
++#ifndef __deref_inout_ecount_part
++#define __deref_inout_ecount_part(size,length)
++#endif
++#ifndef __deref_inout_ecount_part_opt
++#define __deref_inout_ecount_part_opt(size,length)
++#endif
++#ifndef __deref_inout_ecount_z
++#define __deref_inout_ecount_z(size)
++#endif
++#ifndef __deref_inout_ecount_z_opt
++#define __deref_inout_ecount_z_opt(size)
++#endif
++#ifndef __deref_inout_nz
++#define __deref_inout_nz
++#endif
++#ifndef __deref_inout_nz_opt
++#define __deref_inout_nz_opt
++#endif
++#ifndef __deref_inout_opt
++#define __deref_inout_opt
++#endif
++#ifndef __deref_inout_range
++#define __deref_inout_range(lb,ub)
++#endif
++#ifndef __deref_inout_xcount
++#define __deref_inout_xcount(size)
++#endif
++#ifndef __deref_inout_xcount_full
++#define __deref_inout_xcount_full(size)
++#endif
++#ifndef __deref_inout_xcount_full_opt
++#define __deref_inout_xcount_full_opt(size)
++#endif
++#ifndef __deref_inout_xcount_opt
++#define __deref_inout_xcount_opt(size)
++#endif
++#ifndef __deref_inout_xcount_part
++#define __deref_inout_xcount_part(size,length)
++#endif
++#ifndef __deref_inout_xcount_part_opt
++#define __deref_inout_xcount_part_opt(size,length)
++#endif
++#ifndef __deref_inout_z
++#define __deref_inout_z
++#endif
++#ifndef __deref_inout_z_opt
++#define __deref_inout_z_opt
++#endif
++#ifndef __deref_nonvolatile
++#define __deref_nonvolatile
++#endif
++#ifndef __deref_opt_bcount
++#define __deref_opt_bcount(size)
++#endif
++#ifndef __deref_opt_bcount_opt
++#define __deref_opt_bcount_opt(size)
++#endif
++#ifndef __deref_opt_ecount
++#define __deref_opt_ecount(size)
++#endif
++#ifndef __deref_opt_ecount_opt
++#define __deref_opt_ecount_opt(size)
++#endif
++#ifndef __deref_opt_in
++#define __deref_opt_in
++#endif
++#ifndef __deref_opt_in_bcount
++#define __deref_opt_in_bcount(size)
++#endif
++#ifndef __deref_opt_in_bcount_opt
++#define __deref_opt_in_bcount_opt(size)
++#endif
++#ifndef __deref_opt_in_ecount
++#define __deref_opt_in_ecount(size)
++#endif
++#ifndef __deref_opt_in_ecount_opt
++#define __deref_opt_in_ecount_opt(size)
++#endif
++#ifndef __deref_opt_in_opt
++#define __deref_opt_in_opt
++#endif
++#ifndef __deref_opt_in_xcount
++#define __deref_opt_in_xcount(size)
++#endif
++#ifndef __deref_opt_in_xcount_opt
++#define __deref_opt_in_xcount_opt(size)
++#endif
++#ifndef __deref_opt_inout
++#define __deref_opt_inout
++#endif
++#ifndef __deref_opt_inout_bcount
++#define __deref_opt_inout_bcount(size)
++#endif
++#ifndef __deref_opt_inout_bcount_full
++#define __deref_opt_inout_bcount_full(size)
++#endif
++#ifndef __deref_opt_inout_bcount_full_opt
++#define __deref_opt_inout_bcount_full_opt(size)
++#endif
++#ifndef __deref_opt_inout_bcount_nz
++#define __deref_opt_inout_bcount_nz(size)
++#endif
++#ifndef __deref_opt_inout_bcount_nz_opt
++#define __deref_opt_inout_bcount_nz_opt(size)
++#endif
++#ifndef __deref_opt_inout_bcount_opt
++#define __deref_opt_inout_bcount_opt(size)
++#endif
++#ifndef __deref_opt_inout_bcount_part
++#define __deref_opt_inout_bcount_part(size,length)
++#endif
++#ifndef __deref_opt_inout_bcount_part_opt
++#define __deref_opt_inout_bcount_part_opt(size,length)
++#endif
++#ifndef __deref_opt_inout_bcount_z
++#define __deref_opt_inout_bcount_z(size)
++#endif
++#ifndef __deref_opt_inout_bcount_z_opt
++#define __deref_opt_inout_bcount_z_opt(size)
++#endif
++#ifndef __deref_opt_inout_ecount
++#define __deref_opt_inout_ecount(size)
++#endif
++#ifndef __deref_opt_inout_ecount_full
++#define __deref_opt_inout_ecount_full(size)
++#endif
++#ifndef __deref_opt_inout_ecount_full_opt
++#define __deref_opt_inout_ecount_full_opt(size)
++#endif
++#ifndef __deref_opt_inout_ecount_nz
++#define __deref_opt_inout_ecount_nz(size)
++#endif
++#ifndef __deref_opt_inout_ecount_nz_opt
++#define __deref_opt_inout_ecount_nz_opt(size)
++#endif
++#ifndef __deref_opt_inout_ecount_opt
++#define __deref_opt_inout_ecount_opt(size)
++#endif
++#ifndef __deref_opt_inout_ecount_part
++#define __deref_opt_inout_ecount_part(size,length)
++#endif
++#ifndef __deref_opt_inout_ecount_part_opt
++#define __deref_opt_inout_ecount_part_opt(size,length)
++#endif
++#ifndef __deref_opt_inout_ecount_z
++#define __deref_opt_inout_ecount_z(size)
++#endif
++#ifndef __deref_opt_inout_ecount_z_opt
++#define __deref_opt_inout_ecount_z_opt(size)
++#endif
++#ifndef __deref_opt_inout_nz
++#define __deref_opt_inout_nz
++#endif
++#ifndef __deref_opt_inout_nz_opt
++#define __deref_opt_inout_nz_opt
++#endif
++#ifndef __deref_opt_inout_opt
++#define __deref_opt_inout_opt
++#endif
++#ifndef __deref_opt_inout_xcount
++#define __deref_opt_inout_xcount(size)
++#endif
++#ifndef __deref_opt_inout_xcount_full
++#define __deref_opt_inout_xcount_full(size)
++#endif
++#ifndef __deref_opt_inout_xcount_full_opt
++#define __deref_opt_inout_xcount_full_opt(size)
++#endif
++#ifndef __deref_opt_inout_xcount_opt
++#define __deref_opt_inout_xcount_opt(size)
++#endif
++#ifndef __deref_opt_inout_xcount_part
++#define __deref_opt_inout_xcount_part(size,length)
++#endif
++#ifndef __deref_opt_inout_xcount_part_opt
++#define __deref_opt_inout_xcount_part_opt(size,length)
++#endif
++#ifndef __deref_opt_inout_z
++#define __deref_opt_inout_z
++#endif
++#ifndef __deref_opt_inout_z_opt
++#define __deref_opt_inout_z_opt
++#endif
++#ifndef __deref_opt_out
++#define __deref_opt_out
++#endif
++#ifndef __deref_opt_out_bcount
++#define __deref_opt_out_bcount(size)
++#endif
++#ifndef __deref_opt_out_bcount_full
++#define __deref_opt_out_bcount_full(size)
++#endif
++#ifndef __deref_opt_out_bcount_full_opt
++#define __deref_opt_out_bcount_full_opt(size)
++#endif
++#ifndef __deref_opt_out_bcount_nz_opt
++#define __deref_opt_out_bcount_nz_opt(size)
++#endif
++#ifndef __deref_opt_out_bcount_opt
++#define __deref_opt_out_bcount_opt(size)
++#endif
++#ifndef __deref_opt_out_bcount_part
++#define __deref_opt_out_bcount_part(size,length)
++#endif
++#ifndef __deref_opt_out_bcount_part_opt
++#define __deref_opt_out_bcount_part_opt(size,length)
++#endif
++#ifndef __deref_opt_out_bcount_z_opt
++#define __deref_opt_out_bcount_z_opt(size)
++#endif
++#ifndef __deref_opt_out_ecount
++#define __deref_opt_out_ecount(size)
++#endif
++#ifndef __deref_opt_out_ecount_full
++#define __deref_opt_out_ecount_full(size)
++#endif
++#ifndef __deref_opt_out_ecount_full_opt
++#define __deref_opt_out_ecount_full_opt(size)
++#endif
++#ifndef __deref_opt_out_ecount_nz_opt
++#define __deref_opt_out_ecount_nz_opt(size)
++#endif
++#ifndef __deref_opt_out_ecount_opt
++#define __deref_opt_out_ecount_opt(size)
++#endif
++#ifndef __deref_opt_out_ecount_part
++#define __deref_opt_out_ecount_part(size,length)
++#endif
++#ifndef __deref_opt_out_ecount_part_opt
++#define __deref_opt_out_ecount_part_opt(size,length)
++#endif
++#ifndef __deref_opt_out_ecount_z_opt
++#define __deref_opt_out_ecount_z_opt(size)
++#endif
++#ifndef __deref_opt_out_nz_opt
++#define __deref_opt_out_nz_opt
++#endif
++#ifndef __deref_opt_out_opt
++#define __deref_opt_out_opt
++#endif
++#ifndef __deref_opt_out_xcount
++#define __deref_opt_out_xcount(size)
++#endif
++#ifndef __deref_opt_out_xcount_full
++#define __deref_opt_out_xcount_full(size)
++#endif
++#ifndef __deref_opt_out_xcount_full_opt
++#define __deref_opt_out_xcount_full_opt(size)
++#endif
++#ifndef __deref_opt_out_xcount_opt
++#define __deref_opt_out_xcount_opt(size)
++#endif
++#ifndef __deref_opt_out_xcount_part
++#define __deref_opt_out_xcount_part(size,length)
++#endif
++#ifndef __deref_opt_out_xcount_part_opt
++#define __deref_opt_out_xcount_part_opt(size,length)
++#endif
++#ifndef __deref_opt_out_z
++#define __deref_opt_out_z
++#endif
++#ifndef __deref_opt_out_z_opt
++#define __deref_opt_out_z_opt
++#endif
++#ifndef __deref_opt_xcount
++#define __deref_opt_xcount(size)
++#endif
++#ifndef __deref_opt_xcount_opt
++#define __deref_opt_xcount_opt(size)
++#endif
++#ifndef __deref_out
++#define __deref_out
++#endif
++#ifndef __deref_out_bcount
++#define __deref_out_bcount(size)
++#endif
++#ifndef __deref_out_bcount_full
++#define __deref_out_bcount_full(size)
++#endif
++#ifndef __deref_out_bcount_full_opt
++#define __deref_out_bcount_full_opt(size)
++#endif
++#ifndef __deref_out_bcount_nz
++#define __deref_out_bcount_nz(size)
++#endif
++#ifndef __deref_out_bcount_nz_opt
++#define __deref_out_bcount_nz_opt(size)
++#endif
++#ifndef __deref_out_bcount_opt
++#define __deref_out_bcount_opt(size)
++#endif
++#ifndef __deref_out_bcount_part
++#define __deref_out_bcount_part(size,length)
++#endif
++#ifndef __deref_out_bcount_part_opt
++#define __deref_out_bcount_part_opt(size,length)
++#endif
++#ifndef __deref_out_bcount_z
++#define __deref_out_bcount_z(size)
++#endif
++#ifndef __deref_out_bcount_z_opt
++#define __deref_out_bcount_z_opt(size)
++#endif
++#ifndef __deref_out_bound
++#define __deref_out_bound
++#endif
++#ifndef __deref_out_ecount
++#define __deref_out_ecount(size)
++#endif
++#ifndef __deref_out_ecount_full
++#define __deref_out_ecount_full(size)
++#endif
++#ifndef __deref_out_ecount_full_opt
++#define __deref_out_ecount_full_opt(size)
++#endif
++#ifndef __deref_out_ecount_iterator
++#define __deref_out_ecount_iterator(size, incr)
++#endif
++#ifndef __deref_out_ecount_nz
++#define __deref_out_ecount_nz(size)
++#endif
++#ifndef __deref_out_ecount_nz_opt
++#define __deref_out_ecount_nz_opt(size)
++#endif
++#ifndef __deref_out_ecount_opt
++#define __deref_out_ecount_opt(size)
++#endif
++#ifndef __deref_out_ecount_part
++#define __deref_out_ecount_part(size,length)
++#endif
++#ifndef __deref_out_ecount_part_opt
++#define __deref_out_ecount_part_opt(size,length)
++#endif
++#ifndef __deref_out_ecount_z
++#define __deref_out_ecount_z(size)
++#endif
++#ifndef __deref_out_ecount_z_opt
++#define __deref_out_ecount_z_opt(size)
++#endif
++#ifndef __deref_out_nz
++#define __deref_out_nz
++#endif
++#ifndef __deref_out_nz_opt
++#define __deref_out_nz_opt
++#endif
++#ifndef __deref_out_opt
++#define __deref_out_opt
++#endif
++#ifndef __deref_out_range
++#define __deref_out_range(lb,ub)
++#endif
++#ifndef __deref_out_xcount
++#define __deref_out_xcount(size)
++#endif
++#ifndef __deref_out_xcount_full
++#define __deref_out_xcount_full(size)
++#endif
++#ifndef __deref_out_xcount_full_opt
++#define __deref_out_xcount_full_opt(size)
++#endif
++#ifndef __deref_out_xcount_opt
++#define __deref_out_xcount_opt(size)
++#endif
++#ifndef __deref_out_xcount_part
++#define __deref_out_xcount_part(size,length)
++#endif
++#ifndef __deref_out_xcount_part_opt
++#define __deref_out_xcount_part_opt(size,length)
++#endif
++#ifndef __deref_out_z
++#define __deref_out_z
++#endif
++#ifndef __deref_out_z_opt
++#define __deref_out_z_opt
++#endif
++#ifndef __deref_realloc_bcount
++#define __deref_realloc_bcount(insize, outsize)
++#endif
++#ifndef __deref_volatile
++#define __deref_volatile
++#endif
++#ifndef __deref_xcount
++#define __deref_xcount(size)
++#endif
++#ifndef __deref_xcount_opt
++#define __deref_xcount_opt(size)
++#endif
++#ifndef __ecount
++#define __ecount(size)
++#endif
++#ifndef __ecount_opt
++#define __ecount_opt(size)
++#endif
++#ifndef __elem_readableTo
++#define __elem_readableTo(size)
++#endif
++#ifndef __elem_writableTo
++#define __elem_writableTo(size)
++#endif
++#ifndef __encoded_array
++#define __encoded_array
++#endif
++#ifndef __encoded_pointer
++#define __encoded_pointer
++#endif
++#ifndef __exceptthat
++#define __exceptthat
++#endif
++#ifndef __failure
++#define __failure(x)
++#endif
++#ifndef __failureDefault
++#define __failureDefault(kind)
++#endif
++#ifndef __field_bcount
++#define __field_bcount(size)
++#endif
++#ifndef __field_bcount_full
++#define __field_bcount_full(size)
++#endif
++#ifndef __field_bcount_full_opt
++#define __field_bcount_full_opt(size)
++#endif
++#ifndef __field_bcount_opt
++#define __field_bcount_opt(size)
++#endif
++#ifndef __field_bcount_part
++#define __field_bcount_part(size,init)
++#endif
++#ifndef __field_bcount_part_opt
++#define __field_bcount_part_opt(size,init)
++#endif
++#ifndef __field_data_source
++#define __field_data_source(src_sym)
++#endif
++#ifndef __field_ecount
++#define __field_ecount(size)
++#endif
++#ifndef __field_ecount_full
++#define __field_ecount_full(size)
++#endif
++#ifndef __field_ecount_full_opt
++#define __field_ecount_full_opt(size)
++#endif
++#ifndef __field_ecount_opt
++#define __field_ecount_opt(size)
++#endif
++#ifndef __field_ecount_part
++#define __field_ecount_part(size,init)
++#endif
++#ifndef __field_ecount_part_opt
++#define __field_ecount_part_opt(size,init)
++#endif
++#ifndef __field_encoded_array
++#define __field_encoded_array
++#endif
++#ifndef __field_encoded_pointer
++#define __field_encoded_pointer
++#endif
++#ifndef __field_nullterminated
++#define __field_nullterminated
++#endif
++#ifndef __field_range
++#define __field_range(lb,ub)
++#endif
++#ifndef __field_xcount
++#define __field_xcount(size)
++#endif
++#ifndef __field_xcount_full
++#define __field_xcount_full(size)
++#endif
++#ifndef __field_xcount_full_opt
++#define __field_xcount_full_opt(size)
++#endif
++#ifndef __field_xcount_opt
++#define __field_xcount_opt(size)
++#endif
++#ifndef __field_xcount_part
++#define __field_xcount_part(size,init)
++#endif
++#ifndef __field_xcount_part_opt
++#define __field_xcount_part_opt(size,init)
++#endif
++#ifndef __file_parser
++#define __file_parser(typ)
++#endif
++#ifndef __file_parser_class
++#define __file_parser_class(typ)
++#endif
++#ifndef __file_parser_library
++#define __file_parser_library(typ)
++#endif
++#ifndef __format_string
++#define __format_string
++#endif
++#ifndef __gdi_entry
++#define __gdi_entry
++#endif
++#ifndef __has_cpp_attribute
++#define __has_cpp_attribute(x)
++#endif
++#ifndef __in_awcount
++#define __in_awcount(expr,size)
++#endif
++#ifndef __in_bcount
++#define __in_bcount(size)
++#endif
++#ifndef __in_bcount_nz
++#define __in_bcount_nz(size)
++#endif
++#ifndef __in_bcount_nz_opt
++#define __in_bcount_nz_opt(size)
++#endif
++#ifndef __in_bcount_opt
++#define __in_bcount_opt(size)
++#endif
++#ifndef __in_bcount_z
++#define __in_bcount_z(size)
++#endif
++#ifndef __in_bcount_z_opt
++#define __in_bcount_z_opt(size)
++#endif
++#ifndef __in_bound
++#define __in_bound
++#endif
++#ifndef __in_data_source
++#define __in_data_source(src_sym)
++#endif
++#ifndef __in_ecount
++#define __in_ecount(size)
++#endif
++#ifndef __in_ecount_nz
++#define __in_ecount_nz(size)
++#endif
++#ifndef __in_ecount_nz_opt
++#define __in_ecount_nz_opt(size)
++#endif
++#ifndef __in_ecount_opt
++#define __in_ecount_opt(size)
++#endif
++#ifndef __in_ecount_or_z
++#define __in_ecount_or_z(c)
++#endif
++#ifndef __in_ecount_z
++#define __in_ecount_z(size)
++#endif
++#ifndef __in_ecount_z_opt
++#define __in_ecount_z_opt(size)
++#endif
++#ifndef __in_nz
++#define __in_nz
++#endif
++#ifndef __in_nz_opt
++#define __in_nz_opt
++#endif
++#ifndef __in_opt
++#define __in_opt
++#endif
++#ifndef __in_range
++#define __in_range(lb,ub)
++#endif
++#ifndef __in_xcount
++#define __in_xcount(size)
++#endif
++#ifndef __in_xcount_opt
++#define __in_xcount_opt(size)
++#endif
++#ifndef __in_z
++#define __in_z
++#endif
++#ifndef __in_z_opt
++#define __in_z_opt
++#endif
++#ifndef __inexpressible_readableTo
++#define __inexpressible_readableTo(size)
++#endif
++#ifndef __inexpressible_writableTo
++#define __inexpressible_writableTo(size)
++#endif
++#ifndef __inout
++#define __inout
++#endif
++#ifndef __inout_bcount
++#define __inout_bcount(size)
++#endif
++#ifndef __inout_bcount_full
++#define __inout_bcount_full(size)
++#endif
++#ifndef __inout_bcount_full_opt
++#define __inout_bcount_full_opt(size)
++#endif
++#ifndef __inout_bcount_nz
++#define __inout_bcount_nz(size)
++#endif
++#ifndef __inout_bcount_nz_opt
++#define __inout_bcount_nz_opt(size)
++#endif
++#ifndef __inout_bcount_opt
++#define __inout_bcount_opt(size)
++#endif
++#ifndef __inout_bcount_part
++#define __inout_bcount_part(size,length)
++#endif
++#ifndef __inout_bcount_part_opt
++#define __inout_bcount_part_opt(size,length)
++#endif
++#ifndef __inout_bcount_z
++#define __inout_bcount_z(size)
++#endif
++#ifndef __inout_bcount_z_opt
++#define __inout_bcount_z_opt(size)
++#endif
++#ifndef __inout_ecount
++#define __inout_ecount(size)
++#endif
++#ifndef __inout_ecount_full
++#define __inout_ecount_full(size)
++#endif
++#ifndef __inout_ecount_full_opt
++#define __inout_ecount_full_opt(size)
++#endif
++#ifndef __inout_ecount_nz
++#define __inout_ecount_nz(size)
++#endif
++#ifndef __inout_ecount_nz_opt
++#define __inout_ecount_nz_opt(size)
++#endif
++#ifndef __inout_ecount_opt
++#define __inout_ecount_opt(size)
++#endif
++#ifndef __inout_ecount_part
++#define __inout_ecount_part(size,length)
++#endif
++#ifndef __inout_ecount_part_opt
++#define __inout_ecount_part_opt(size,length)
++#endif
++#ifndef __inout_ecount_z
++#define __inout_ecount_z(size)
++#endif
++#ifndef __inout_ecount_z_opt
++#define __inout_ecount_z_opt(size)
++#endif
++#ifndef __inout_nz
++#define __inout_nz
++#endif
++#ifndef __inout_nz_opt
++#define __inout_nz_opt
++#endif
++#ifndef __inout_opt
++#define __inout_opt
++#endif
++#ifndef __inout_xcount
++#define __inout_xcount(size)
++#endif
++#ifndef __inout_xcount_full
++#define __inout_xcount_full(size)
++#endif
++#ifndef __inout_xcount_full_opt
++#define __inout_xcount_full_opt(size)
++#endif
++#ifndef __inout_xcount_opt
++#define __inout_xcount_opt(size)
++#endif
++#ifndef __inout_xcount_part
++#define __inout_xcount_part(size,length)
++#endif
++#ifndef __inout_xcount_part_opt
++#define __inout_xcount_part_opt(size,length)
++#endif
++#ifndef __inout_z
++#define __inout_z
++#endif
++#ifndef __inout_z_opt
++#define __inout_z_opt
++#endif
++#ifndef __kernel_entry
++#define __kernel_entry
++#endif
++#ifndef __maybenull
++#define __maybenull
++#endif
++#ifndef __maybenull_impl
++#define __maybenull_impl
++#endif
++#ifndef __maybenull_impl_notref
++#define __maybenull_impl_notref
++#endif
++#ifndef __maybereadonly
++#define __maybereadonly
++#endif
++#ifndef __maybevalid
++#define __maybevalid
++#endif
++#ifndef __maybevalid_impl
++#define __maybevalid_impl
++#endif
++#ifndef __maybezterm_impl
++#define __maybezterm_impl
++#endif
++#ifndef __maybzterm_impl
++#define __maybzterm_impl
++#endif
++#ifndef __mult_impl
++#define __mult_impl(mult,size)
++#endif
++#ifndef __nonvolatile
++#define __nonvolatile
++#endif
++#ifndef __nop_impl
++#define __nop_impl(x)
++#endif
++#ifndef __notnull
++#define __notnull
++#endif
++#ifndef __notnull_impl
++#define __notnull_impl
++#endif
++#ifndef __notnull_impl_notref
++#define __notnull_impl_notref
++#endif
++#ifndef __notreadonly
++#define __notreadonly
++#endif
++#ifndef __notvalid
++#define __notvalid
++#endif
++#ifndef __notvalid_impl
++#define __notvalid_impl
++#endif
++#ifndef __notzterm_impl
++#define __notzterm_impl
++#endif
++#ifndef __null
++#define __null
++#endif
++#ifndef __null_impl
++#define __null_impl
++#endif
++#ifndef __null_impl_notref
++#define __null_impl_notref
++#endif
++#ifndef __nullnullterminated
++#define __nullnullterminated
++#endif
++#ifndef __nullterminated
++#define __nullterminated
++#endif
++#ifndef __on_failure
++#define __on_failure(annotes)
++#endif
++#ifndef __out_awcount
++#define __out_awcount(expr,size)
++#endif
++#ifndef __out_bcount
++#define __out_bcount(size)
++#endif
++#ifndef __out_bcount_full
++#define __out_bcount_full(size)
++#endif
++#ifndef __out_bcount_full_opt
++#define __out_bcount_full_opt(size)
++#endif
++#ifndef __out_bcount_full_z
++#define __out_bcount_full_z(size)
++#endif
++#ifndef __out_bcount_full_z_opt
++#define __out_bcount_full_z_opt(size)
++#endif
++#ifndef __out_bcount_nz
++#define __out_bcount_nz(size)
++#endif
++#ifndef __out_bcount_nz_opt
++#define __out_bcount_nz_opt(size)
++#endif
++#ifndef __out_bcount_opt
++#define __out_bcount_opt(size)
++#endif
++#ifndef __out_bcount_part
++#define __out_bcount_part(size,length)
++#endif
++#ifndef __out_bcount_part_opt
++#define __out_bcount_part_opt(size,length)
++#endif
++#ifndef __out_bcount_part_z
++#define __out_bcount_part_z(size,length)
++#endif
++#ifndef __out_bcount_part_z_opt
++#define __out_bcount_part_z_opt(size,length)
++#endif
++#ifndef __out_bcount_z
++#define __out_bcount_z(size)
++#endif
++#ifndef __out_bcount_z_opt
++#define __out_bcount_z_opt(size)
++#endif
++#ifndef __out_bound
++#define __out_bound
++#endif
++#ifndef __out_data_source
++#define __out_data_source(src_sym)
++#endif
++#ifndef __out_ecount
++#define __out_ecount(size)
++#endif
++#ifndef __out_ecount_full
++#define __out_ecount_full(size)
++#endif
++#ifndef __out_ecount_full_opt
++#define __out_ecount_full_opt(size)
++#endif
++#ifndef __out_ecount_full_z
++#define __out_ecount_full_z(size)
++#endif
++#ifndef __out_ecount_full_z_opt
++#define __out_ecount_full_z_opt(size)
++#endif
++#ifndef __out_ecount_nz
++#define __out_ecount_nz(size)
++#endif
++#ifndef __out_ecount_nz_opt
++#define __out_ecount_nz_opt(size)
++#endif
++#ifndef __out_ecount_opt
++#define __out_ecount_opt(size)
++#endif
++#ifndef __out_ecount_part
++#define __out_ecount_part(size,length)
++#endif
++#ifndef __out_ecount_part_opt
++#define __out_ecount_part_opt(size,length)
++#endif
++#ifndef __out_ecount_part_z
++#define __out_ecount_part_z(size,length)
++#endif
++#ifndef __out_ecount_part_z_opt
++#define __out_ecount_part_z_opt(size,length)
++#endif
++#ifndef __out_ecount_z
++#define __out_ecount_z(size)
++#endif
++#ifndef __out_ecount_z_opt
++#define __out_ecount_z_opt(size)
++#endif
++#ifndef __out_has_adt_prop
++#define __out_has_adt_prop(adt,prop)
++#endif
++#ifndef __out_has_type_adt_props
++#define __out_has_type_adt_props(typ)
++#endif
++#ifndef __out_not_has_adt_prop
++#define __out_not_has_adt_prop(adt,prop)
++#endif
++#ifndef __out_nz
++#define __out_nz
++#endif
++#ifndef __out_nz_opt
++#define __out_nz_opt
++#endif
++#ifndef __out_opt
++#define __out_opt
++#endif
++#ifndef __out_range
++#define __out_range(lb,ub)
++#endif
++#ifndef __out_transfer_adt_prop
++#define __out_transfer_adt_prop(arg)
++#endif
++#ifndef __out_validated
++#define __out_validated(typ_sym)
++#endif
++#ifndef __out_xcount
++#define __out_xcount(size)
++#endif
++#ifndef __out_xcount_full
++#define __out_xcount_full(size)
++#endif
++#ifndef __out_xcount_full_opt
++#define __out_xcount_full_opt(size)
++#endif
++#ifndef __out_xcount_opt
++#define __out_xcount_opt(size)
++#endif
++#ifndef __out_xcount_part
++#define __out_xcount_part(size,length)
++#endif
++#ifndef __out_xcount_part_opt
++#define __out_xcount_part_opt(size,length)
++#endif
++#ifndef __out_z
++#define __out_z
++#endif
++#ifndef __out_z_opt
++#define __out_z_opt
++#endif
++#ifndef __override
++#define __override
++#endif
++#ifndef __possibly_notnullterminated
++#define __possibly_notnullterminated
++#endif
++#ifndef __post
++#define __post
++#endif
++#ifndef __post_bcount
++#define __post_bcount(size)
++#endif
++#ifndef __post_deref_except_maybenull
++#define __post_deref_except_maybenull
++#endif
++#ifndef __post_ecount
++#define __post_ecount(size)
++#endif
++#ifndef __post_except_maybenull
++#define __post_except_maybenull
++#endif
++#ifndef __post_invalid
++#define __post_invalid
++#endif
++#ifndef __post_nullnullterminated
++#define __post_nullnullterminated
++#endif
++#ifndef __postcond
++#define __postcond(expr)
++#endif
++#ifndef __pre
++#define __pre
++#endif
++#ifndef __pre_deref_except_maybenull
++#define __pre_deref_except_maybenull
++#endif
++#ifndef __pre_except_maybenull
++#define __pre_except_maybenull
++#endif
++#ifndef __precond
++#define __precond(expr)
++#endif
++#ifndef __range
++#define __range(lb,ub)
++#endif
++#ifndef __range_max
++#define __range_max(a,b)
++#endif
++#ifndef __range_min
++#define __range_min(a,b)
++#endif
++#ifndef __readableTo
++#define __readableTo(extent)
++#endif
++#ifndef __readaccess_impl
++#define __readaccess_impl
++#endif
++#ifndef __readaccess_impl_notref
++#define __readaccess_impl_notref
++#endif
++#ifndef __readonly
++#define __readonly
++#endif
++#ifndef __refparam
++#define __refparam
++#endif
++#ifndef __rpc_entry
++#define __rpc_entry
++#endif
++#ifndef __source_code_content
++#define __source_code_content(typ)
++#endif
++#ifndef __static_context
++#define __static_context(ctx, annotes)
++#endif
++#ifndef __struct_bcount
++#define __struct_bcount(size)
++#endif
++#ifndef __struct_xcount
++#define __struct_xcount(size)
++#endif
++#ifndef __success
++#define __success(expr)
++#endif
++#ifndef __this_out_data_source
++#define __this_out_data_source(src_sym)
++#endif
++#ifndef __this_out_validated
++#define __this_out_validated(typ_sym)
++#endif
++#ifndef __transfer
++#define __transfer(formal)
++#endif
++#ifndef __type_has_adt_prop
++#define __type_has_adt_prop(adt,prop)
++#endif
++#ifndef __typefix
++#define __typefix(ctype)
++#endif
++#ifndef __useHeader
++#define __useHeader
++#endif
++#ifndef __valid
++#define __valid
++#endif
++#ifndef __valid_impl
++#define __valid_impl
++#endif
++#ifndef __valueUndefined
++#define __valueUndefined
++#endif
++#ifndef __volatile
++#define __volatile
++#endif
++#ifndef __writableTo
++#define __writableTo(size)
++#endif
++#ifndef __writeaccess_impl
++#define __writeaccess_impl
++#endif
++#ifndef __writeaccess_impl_notref
++#define __writeaccess_impl_notref
++#endif
++#ifndef __xcount
++#define __xcount(size)
++#endif
++#ifndef __xcount_opt
++#define __xcount_opt(size)
++#endif
++#ifndef __zterm_impl
++#define __zterm_impl
++#endif
+--- /dev/null
++++ b/src/coreclr/inc/mingw/verrsrc.h
+@@ -0,0 +1,4 @@
++// MinGW: the Windows SDK's verrsrc.h (VS_VERSION_INFO, VS_FF_*, VOS_*, VFT_*) is
++// part of mingw-w64's winver.h.
++#pragma once
++#include <winver.h>
+--- /dev/null
++++ b/src/coreclr/inc/mingw/winnt.h
+@@ -0,0 +1,64 @@
++// MinGW: wraps mingw-w64's winnt.h for the Windows code of CoreCLR.
++//
++// - C_ASSERT: mingw-w64's is an extern declaration (MSVC's is a typedef), which
++//   is not allowed at class scope, where CoreCLR uses it; in C++ it becomes a
++//   static_assert, as in the PAL.
++// - KNONVOLATILE_CONTEXT_POINTERS (x64): mingw-w64 only has the two arrays
++//   FloatingContext[16]/IntegerContext[16]; the Windows SDK overlays them with the
++//   named members Xmm0..Xmm15 and Rax..R15, which CoreCLR uses. Rename mingw's
++//   definition and provide the SDK's (same layout).
++
++#if defined(__x86_64__)
++#define _KNONVOLATILE_CONTEXT_POINTERS _MINGW_KNONVOLATILE_CONTEXT_POINTERS
++#define KNONVOLATILE_CONTEXT_POINTERS MINGW_KNONVOLATILE_CONTEXT_POINTERS
++#define PKNONVOLATILE_CONTEXT_POINTERS PMINGW_KNONVOLATILE_CONTEXT_POINTERS
++#endif
++
++#include_next <winnt.h>
++
++// A ReplacesCorHdrNumericDefines constant missing from mingw-w64's winnt.h (code
++// that includes only corhdr.h, e.g. jitinterface, gets corhdr's own enum).
++#ifndef COMIMAGE_FLAGS_NATIVE_ENTRYPOINT
++#define COMIMAGE_FLAGS_NATIVE_ENTRYPOINT 0x00000010
++#endif
++#ifndef COMIMAGE_FLAGS_32BITPREFERRED
++#define COMIMAGE_FLAGS_32BITPREFERRED 0x00020000
++#endif
++#ifndef COR_VTABLE_FROM_UNMANAGED_RETAIN_APPDOMAIN
++#define COR_VTABLE_FROM_UNMANAGED_RETAIN_APPDOMAIN 0x08
++#endif
++
++#if defined(__x86_64__)
++#undef _KNONVOLATILE_CONTEXT_POINTERS
++#undef KNONVOLATILE_CONTEXT_POINTERS
++#undef PKNONVOLATILE_CONTEXT_POINTERS
++#if !defined(CLR_MINGW_KNONVOLATILE_CONTEXT_POINTERS)
++#define CLR_MINGW_KNONVOLATILE_CONTEXT_POINTERS
++typedef struct _KNONVOLATILE_CONTEXT_POINTERS {
++    union {
++        PM128A FloatingContext[16];
++        struct {
++            PM128A Xmm0, Xmm1, Xmm2, Xmm3, Xmm4, Xmm5, Xmm6, Xmm7,
++                   Xmm8, Xmm9, Xmm10, Xmm11, Xmm12, Xmm13, Xmm14, Xmm15;
++        };
++    };
++    union {
++        PDWORD64 IntegerContext[16];
++        struct {
++            PDWORD64 Rax, Rcx, Rdx, Rbx, Rsp, Rbp, Rsi, Rdi,
++                     R8, R9, R10, R11, R12, R13, R14, R15;
++        };
++    };
++} KNONVOLATILE_CONTEXT_POINTERS, *PKNONVOLATILE_CONTEXT_POINTERS;
++#ifdef __cplusplus
++static_assert(sizeof(KNONVOLATILE_CONTEXT_POINTERS) == sizeof(MINGW_KNONVOLATILE_CONTEXT_POINTERS), "layout");
++#endif
++// (the OS's RtlVirtualUnwind is declared with PMINGW_KNONVOLATILE_CONTEXT_POINTERS;
++// CoreCLR calls it through RtlVirtualUnwind_Unsafe, typed with this struct)
++#endif
++#endif
++
++#if defined(__cplusplus)
++#undef C_ASSERT
++#define C_ASSERT(e) static_assert(e, #e)
++#endif
+--- a/src/coreclr/inc/palclr.h
++++ b/src/coreclr/inc/palclr.h
+@@ -313,6 +313,18 @@
+ // when these macros are used from within the VM.
+ #define PAL_SEH_RESTORE_GUARD_PAGE
+ 
++// clang (LLVM 22, x86-64 SEH) miscompiles a __finally block -- the outlined funclet and
++// its inlined copy on the normal path -- that accesses a parent-frame local at a nonzero
++// offset (a member of a local struct): the frame-escape offset of llvm.localrecover is
++// dropped and only the member offset is added to the frame pointer, so the access hits
++// the saved registers instead. Functions containing such __finally blocks are compiled
++// without optimization (the bug needs it); see SEH_FINALLY_FUNCTION users.
++#if defined(__clang__) && defined(__MINGW32__)
++#define SEH_FINALLY_FUNCTION __attribute__((optnone, noinline))
++#else
++#define SEH_FINALLY_FUNCTION
++#endif
++
+ #define PAL_TRY_NAKED                                                           \
+     {                                                                           \
+         bool __exHandled; __exHandled = false;                                  \
+@@ -506,7 +518,7 @@
+ #define SwapGuid(x)
+ #endif  // !BIGENDIAN
+ 
+-#ifdef _MSC_VER
++#if defined(_MSC_VER) || defined(__MINGW32__)
+ // Get Unaligned values from a potentially unaligned object
+ #define GET_UNALIGNED_16(_pObject)  (*(UINT16 UNALIGNED *)(_pObject))
+ #define GET_UNALIGNED_32(_pObject)  (*(UINT32 UNALIGNED *)(_pObject))
+--- a/src/coreclr/jit/CMakeLists.txt
++++ b/src/coreclr/jit/CMakeLists.txt
+@@ -564,6 +564,10 @@
+        coreclrminipal
+     )
+ endif(CLR_CMAKE_HOST_UNIX)
++if(MINGW)
++    list(TRANSFORM JIT_LINK_LIBRARIES REPLACE "[.]lib$" "")
++    list(APPEND JIT_LINK_LIBRARIES clrmingweha)
++endif()
+ 
+ if (CLR_CMAKE_HOST_ANDROID)
+     list(APPEND JIT_LINK_LIBRARIES log)
+--- a/src/coreclr/jit/compiler.cpp
++++ b/src/coreclr/jit/compiler.cpp
+@@ -5872,6 +5872,7 @@
+ 
+ /*****************************************************************************/
+ 
++SEH_FINALLY_FUNCTION // (finallyErrorTrap is a __finally)
+ int Compiler::compCompile(CORINFO_MODULE_HANDLE classPtr,
+                           void**                methodCodePtr,
+                           uint32_t*             methodCodeSize,
+@@ -7611,6 +7612,7 @@
+ 
+ // Compile a single method
+ 
++SEH_FINALLY_FUNCTION // (finallyErrorTrap is a __finally)
+ int jitNativeCode(CORINFO_METHOD_HANDLE methodHnd,
+                   CORINFO_MODULE_HANDLE classPtr,
+                   COMP_HANDLE           compHnd,
+--- a/src/coreclr/jit/utils.h
++++ b/src/coreclr/jit/utils.h
+@@ -25,7 +25,7 @@
+ // Needed for unreached()
+ #include "error.h"
+ 
+-#if defined(_MSC_VER)
++#if defined(_MSC_VER) || defined(__MINGW32__)
+ 
+ // Define wrappers over the non-underscore versions of the BitScan* APIs. The PAL defines these already.
+ // We've #undef'ed the definitions in winnt.h for these names to avoid confusion.
+@@ -52,7 +52,7 @@
+ }
+ #endif // defined(HOST_64BIT)
+ 
+-#endif // _MSC_VER
++#endif // _MSC_VER || __MINGW32__
+ 
+ template <typename T, int size>
+ inline constexpr unsigned ArrLen(T (&)[size])
+--- a/src/coreclr/minipal/Windows/CMakeLists.txt
++++ b/src/coreclr/minipal/Windows/CMakeLists.txt
+@@ -8,3 +8,16 @@
+ )
+ 
+ target_link_libraries(coreclrminipal PRIVATE minipal)
++
++if(MINGW)
++    # /EHa semantics for the Itanium C++ EH of clang/libc++abi (see mingw_eha.cpp):
++    # every module built from CoreCLR's Windows code links it.
++    add_library(clrmingweha STATIC mingw_eha.cpp mingw_guids.cpp)
++    # typeid of the wrapper exception type
++    set_source_files_properties(mingw_eha.cpp PROPERTIES COMPILE_OPTIONS -frtti)
++    target_link_options(clrmingweha INTERFACE
++        -Wl,--wrap=__gxx_personality_seh0
++        -Wl,--wrap=_Unwind_Resume
++        -Wl,--wrap=__cxa_rethrow
++        -Wl,--wrap=__C_specific_handler)
++endif()
+--- /dev/null
++++ b/src/coreclr/minipal/Windows/mingw_eha.cpp
+@@ -0,0 +1,663 @@
++// Licensed to the .NET Foundation under one or more agreements.
++// The .NET Foundation licenses this file to you under the MIT license.
++
++//
++// /EHa semantics for CoreCLR built by clang for x86_64-w64-mingw32.
++//
++// CoreCLR's Windows code is written for MSVC's /EHa: C++ destructors run when
++// *any* SEH exception (an access violation, a managed exception raised as
++// EXCEPTION_COMPLUS, ...) unwinds a frame, and catch(...) (EX_CATCH) catches SEH
++// exceptions. With MinGW, C++ uses the Itanium EH model on top of SEH
++// (libc++abi's __gxx_personality_seh0 over libunwind's _GCC_specific_handler),
++// which deliberately ignores foreign (non-C++) exceptions: no destructor runs and
++// no catch(...) matches. This file adds the /EHa behavior:
++//
++//  * __gxx_personality_seh0 (wrapped with lld --wrap): for a foreign exception,
++//    phase 1 looks for a catch(...) clause covering the frame's PC in the LSDA;
++//    if there is one, the exception is wrapped into a C++ exception object of
++//    type EhaSehException and the stack is unwound to that catch(...) landing pad
++//    (RtlUnwindEx), as MSVC does. In phase 2 (an unwind passing through), the
++//    frame's cleanup landing pad (destructors) is entered with a collided unwind;
++//    when it calls _Unwind_Resume, the original unwind is restarted.
++//  * _Unwind_Resume (wrapped): restarts the unwind a cleanup landing pad
++//    interrupted, for unwinds this file knows about.
++//  * __C_specific_handler (wrapped): the __try/__except/__finally handler, as
++//    Windows' own, except that it records the unwinds it starts (an __except
++//    catching an exception), so that C++ frames in between get their
++//    destructors run and the unwind can be resumed after them.
++//  * __cxa_rethrow (wrapped): "throw;" inside catch(...) of an SEH exception
++//    raises the SEH exception again (MSVC semantics), instead of a C++ exception.
++//  * CLR_MinGW_RtlUnwind: used by CoreCLR's managed exception handling instead of
++//    RtlUnwind, so that its unwinds can be resumed too.
++//
++// An unwind can only be resumed after a landing pad if its target frame, target
++// IP and return value are known, which is why the unwinds are started through
++// these functions and described by an EhaUnwind record. The EXCEPTION_RECORD
++// handed to RtlUnwindEx is a copy inside that record (the original lives on the
++// stack of the exception dispatcher, which a landing pad overwrites), tagged so
++// that every handler, also those of another module (clrjit.dll), can find it.
++// Unwinds started elsewhere (e.g. by an __except in system code) unwind C++ frames
++// without running their destructors, as before; set CLR_MINGW_EHA_TRACE=1 to log them.
++//
++// Limitation: clang (without -fasync-exceptions, which it cannot combine with the
++// Itanium C++ ABI) only records call sites in the LSDA and in __try ranges, so a
++// hardware fault raised by a non-call instruction of a C++ function or a __try
++// block is attributed to no handler of that function.
++//
++
++#if defined(__MINGW32__) && defined(__x86_64__)
++
++#include <windows.h>
++#include <stdint.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <unwind.h>
++#include <typeinfo>
++#include <new>
++
++#define STATUS_GCC_THROW  0x20474343   // libunwind: C++ throw (phase 1, and phase 2 started by libunwind)
++#define STATUS_GCC_UNWIND 0x21474343   // libunwind: collided unwind to a landing pad
++
++#ifndef EXCEPTION_UNWINDING
++#define EXCEPTION_UNWINDING 0x2
++#endif
++#ifndef EXCEPTION_EXIT_UNWIND
++#define EXCEPTION_EXIT_UNWIND 0x4
++#endif
++#ifndef EXCEPTION_TARGET_UNWIND
++#define EXCEPTION_TARGET_UNWIND 0x20
++#endif
++#define EHA_IS_UNWINDING(flags) (((flags) & (EXCEPTION_UNWINDING | EXCEPTION_EXIT_UNWIND)) != 0)
++
++extern "C" {
++// the wrapped implementations (lld --wrap)
++EXCEPTION_DISPOSITION __real___gxx_personality_seh0(PEXCEPTION_RECORD, void*, PCONTEXT, PDISPATCHER_CONTEXT);
++void __real__Unwind_Resume(_Unwind_Exception*);
++void __real___cxa_rethrow();
++
++// libc++abi
++void* __cxa_allocate_exception(size_t) noexcept;
++void* __cxa_init_primary_exception(void* object, std::type_info* tinfo, void (*dest)(void*)) noexcept;
++void __cxa_increment_exception_refcount(void*) noexcept;
++void __cxa_decrement_exception_refcount(void*) noexcept;
++std::type_info* __cxa_current_exception_type() noexcept;
++void* __cxa_current_primary_exception() noexcept;
++void* __cxa_get_globals() noexcept;
++}
++
++namespace
++{
++
++const ULONG_PTR kEhaMagic = 0x6148452D57474E4DULL;          // "MNGW-EHa"
++const uint64_t kEhaClass  = 0x0041484543534548ULL;          // exception_class of EhaUnwind::ue ("HESCEHA")
++const uint64_t kCxxClass  = 0x434C4E47432B2B00ULL;          // libc++abi's "CLNGC++\0"
++const int kSlotPtr   = 13;                                   // EXCEPTION_RECORD::ExceptionInformation slots
++const int kSlotMagic = 14;                                   // used to tag our copies
++
++// An unwind started (or taken over) by this file.
++struct EhaUnwind
++{
++    ULONG_PTR magic;
++    PVOID targetFrame;
++    PVOID targetIp;
++    PVOID returnValue;          // RAX at the target
++    ULONG64 targetRdx;          // RDX at the target (the selector of a catch(...) landing pad)
++    bool setTargetRdx;
++    bool ownedByException;      // freed by the EhaSehException that refers to it
++    volatile bool done;
++    PVOID landingFrame;         // frame whose cleanup landing pad is being entered
++    _Unwind_Exception ue;       // handed to cleanup landing pads (and back to _Unwind_Resume)
++    EXCEPTION_RECORD orig;      // the exception, as it was when the unwind started
++    EXCEPTION_RECORD rec;       // the copy passed to RtlUnwindEx (which updates its flags)
++    EhaUnwind* next;            // this thread's list
++};
++
++// The C++ exception a catch(...) receives for an SEH exception.
++struct EhaSehException
++{
++    EhaUnwind* unwind;
++    EXCEPTION_RECORD record;
++};
++
++thread_local EhaUnwind* t_unwinds;
++
++bool TraceEnabled()
++{
++    static int s_trace = -1;
++    if (s_trace < 0)
++    {
++        char buf[8];
++        s_trace = (GetEnvironmentVariableA("CLR_MINGW_EHA_TRACE", buf, sizeof(buf)) > 0 && buf[0] != '0') ? 1 : 0;
++    }
++    return s_trace == 1;
++}
++
++#define EHA_TRACE(...) do { if (TraceEnabled()) { fprintf(stderr, "[mingw-eha] " __VA_ARGS__); fflush(stderr); } } while (0)
++
++[[noreturn]] void Fatal(const char* what)
++{
++    fprintf(stderr, "[mingw-eha] fatal: %s\n", what);
++    fflush(stderr);
++    RaiseFailFastException(nullptr, nullptr, 0);
++    abort();
++}
++
++void Tag(EhaUnwind* u)
++{
++    if (u->rec.NumberParameters <= kSlotPtr)
++    {
++        u->rec.ExceptionInformation[kSlotPtr] = (ULONG_PTR)u;
++        u->rec.ExceptionInformation[kSlotMagic] = kEhaMagic;
++    }
++}
++
++EhaUnwind* FromRecord(PEXCEPTION_RECORD rec)
++{
++    if (rec == nullptr || rec->NumberParameters > kSlotPtr || rec->ExceptionInformation[kSlotMagic] != kEhaMagic)
++        return nullptr;
++    EhaUnwind* u = (EhaUnwind*)rec->ExceptionInformation[kSlotPtr];
++    if (u == nullptr || u->magic != kEhaMagic || &u->rec != rec)
++        return nullptr;
++    return u;
++}
++
++// Frees the finished unwinds of this thread: those whose target was reached
++// (done), and those whose target frame is no longer on the stack.
++void Collect()
++{
++    ULONG_PTR sp = (ULONG_PTR)__builtin_frame_address(0);
++    EhaUnwind** link = &t_unwinds;
++    while (*link != nullptr)
++    {
++        EhaUnwind* u = *link;
++        if (u->done || (ULONG_PTR)u->targetFrame < sp)
++        {
++            *link = u->next;
++            u->magic = 0;
++            HeapFree(GetProcessHeap(), 0, u);
++        }
++        else
++        {
++            link = &u->next;
++        }
++    }
++}
++
++EhaUnwind* NewUnwind(PEXCEPTION_RECORD rec, bool ownedByException)
++{
++    if (!ownedByException)
++        Collect();
++    EhaUnwind* u = (EhaUnwind*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(EhaUnwind));
++    if (u == nullptr)
++        Fatal("out of memory");
++    u->magic = kEhaMagic;
++    u->orig = *rec;
++    u->rec = u->orig;
++    Tag(u);
++    u->ue.exception_class = kEhaClass;
++    u->ownedByException = ownedByException;
++    if (!ownedByException)
++    {
++        u->next = t_unwinds;
++        t_unwinds = u;
++    }
++    return u;
++}
++
++// C++ exceptions unwound by an __except or by CoreCLR: libunwind's landing pads
++// end in _Unwind_Resume, which must come back here (see WrapUnwindResume).
++void AttachCxx(EhaUnwind* u)
++{
++    if (u->orig.ExceptionCode == STATUS_GCC_THROW && u->orig.NumberParameters >= 1)
++    {
++        _Unwind_Exception* exc = (_Unwind_Exception*)u->orig.ExceptionInformation[0];
++        if (exc != nullptr)
++        {
++            exc->private_[0] = 0;              // not a forced unwind
++            exc->private_[5] = (uintptr_t)u;
++        }
++        // libunwind compares ExceptionInformation[1] with the frame to find "its" handler frame
++        u->rec.ExceptionInformation[1] = 0;
++        u->orig.ExceptionInformation[1] = 0;
++    }
++}
++
++[[noreturn]] void StartUnwind(EhaUnwind* u, PCONTEXT scratch, PUNWIND_HISTORY_TABLE history)
++{
++    u->landingFrame = nullptr;
++    u->rec = u->orig;
++    Tag(u);
++    if (u->orig.ExceptionCode == STATUS_GCC_THROW)
++        u->rec.ExceptionInformation[1] = 0;
++    RtlUnwindEx(u->targetFrame, u->targetIp, &u->rec, u->returnValue, scratch, history);
++    Fatal("RtlUnwindEx returned");
++}
++
++[[noreturn]] void ResumeUnwind(EhaUnwind* u)
++{
++    CONTEXT ctx;
++    UNWIND_HISTORY_TABLE history;
++    memset(&history, 0, sizeof(history));
++    StartUnwind(u, &ctx, &history);
++}
++
++//
++// LSDA (gcc_except_table) reading, enough for the tables clang emits
++//
++
++enum
++{
++    DW_EH_PE_absptr = 0x00, DW_EH_PE_uleb128 = 0x01, DW_EH_PE_udata2 = 0x02, DW_EH_PE_udata4 = 0x03,
++    DW_EH_PE_udata8 = 0x04, DW_EH_PE_sleb128 = 0x09, DW_EH_PE_sdata2 = 0x0A, DW_EH_PE_sdata4 = 0x0B,
++    DW_EH_PE_sdata8 = 0x0C, DW_EH_PE_pcrel = 0x10, DW_EH_PE_indirect = 0x80, DW_EH_PE_omit = 0xFF
++};
++
++uintptr_t ReadUleb(const uint8_t** p)
++{
++    uintptr_t result = 0;
++    unsigned shift = 0;
++    uint8_t b;
++    do
++    {
++        b = *(*p)++;
++        result |= (uintptr_t)(b & 0x7F) << shift;
++        shift += 7;
++    } while (b & 0x80);
++    return result;
++}
++
++intptr_t ReadSleb(const uint8_t** p)
++{
++    uintptr_t result = 0;
++    unsigned shift = 0;
++    uint8_t b;
++    do
++    {
++        b = *(*p)++;
++        result |= (uintptr_t)(b & 0x7F) << shift;
++        shift += 7;
++    } while (b & 0x80);
++    if ((b & 0x40) && shift < sizeof(result) * 8)
++        result |= ~(uintptr_t)0 << shift;
++    return (intptr_t)result;
++}
++
++// returns the raw (unrelocated) value; *applied the value with pcrel/indirect applied
++uintptr_t ReadEncoded(const uint8_t** p, uint8_t enc, uintptr_t* applied = nullptr)
++{
++    const uint8_t* start = *p;
++    uintptr_t v;
++    switch (enc & 0x0F)
++    {
++    case DW_EH_PE_absptr:  memcpy(&v, *p, 8); *p += 8; break;
++    case DW_EH_PE_uleb128: v = ReadUleb(p); break;
++    case DW_EH_PE_sleb128: v = (uintptr_t)ReadSleb(p); break;
++    case DW_EH_PE_udata2:  { uint16_t x; memcpy(&x, *p, 2); *p += 2; v = x; break; }
++    case DW_EH_PE_sdata2:  { int16_t x;  memcpy(&x, *p, 2); *p += 2; v = (uintptr_t)(intptr_t)x; break; }
++    case DW_EH_PE_udata4:  { uint32_t x; memcpy(&x, *p, 4); *p += 4; v = x; break; }
++    case DW_EH_PE_sdata4:  { int32_t x;  memcpy(&x, *p, 4); *p += 4; v = (uintptr_t)(intptr_t)x; break; }
++    case DW_EH_PE_udata8:
++    case DW_EH_PE_sdata8:  memcpy(&v, *p, 8); *p += 8; break;
++    default: Fatal("unsupported LSDA encoding");
++    }
++    if (applied != nullptr)
++    {
++        uintptr_t a = v;
++        if (a != 0)
++        {
++            if ((enc & 0x70) == DW_EH_PE_pcrel)
++                a += (uintptr_t)start;
++            if (enc & DW_EH_PE_indirect)
++                a = *(uintptr_t*)a;
++        }
++        *applied = a;
++    }
++    return v;
++}
++
++size_t EncodedSize(uint8_t enc)
++{
++    switch (enc & 0x0F)
++    {
++    case DW_EH_PE_absptr: case DW_EH_PE_udata8: case DW_EH_PE_sdata8: return 8;
++    case DW_EH_PE_udata4: case DW_EH_PE_sdata4: return 4;
++    case DW_EH_PE_udata2: case DW_EH_PE_sdata2: return 2;
++    default: Fatal("unsupported type table encoding");
++    }
++}
++
++struct CallSite
++{
++    uintptr_t landingPad;       // 0: none
++    const uint8_t* action;      // null: cleanup only
++    const uint8_t* classInfo;   // end of the type table
++    uint8_t ttypeEnc;
++};
++
++// The call-site entry of the LSDA that covers ip; false if there is none
++// (for a foreign exception that means: nothing to do in this frame).
++bool FindCallSite(PDISPATCHER_CONTEXT disp, uintptr_t ip, CallSite* cs)
++{
++    const uint8_t* p = (const uint8_t*)disp->HandlerData;
++    if (p == nullptr || disp->FunctionEntry == nullptr)
++        return false;
++    uintptr_t funcStart = (uintptr_t)disp->ImageBase + disp->FunctionEntry->BeginAddress;
++
++    uint8_t lpStartEnc = *p++;
++    uintptr_t lpStart = funcStart;
++    if (lpStartEnc != DW_EH_PE_omit)
++        ReadEncoded(&p, lpStartEnc, &lpStart);
++    uint8_t ttypeEnc = *p++;
++    const uint8_t* classInfo = nullptr;
++    if (ttypeEnc != DW_EH_PE_omit)
++    {
++        uintptr_t off = ReadUleb(&p);
++        classInfo = p + off;
++    }
++    uint8_t csEnc = *p++;
++    uintptr_t csLen = ReadUleb(&p);
++    const uint8_t* csEnd = p + csLen;
++    const uint8_t* actionTable = csEnd;
++    uintptr_t ipOffset = ip - funcStart;
++
++    while (p < csEnd)
++    {
++        uintptr_t start = ReadEncoded(&p, csEnc);
++        uintptr_t length = ReadEncoded(&p, csEnc);
++        uintptr_t lp = ReadEncoded(&p, csEnc);
++        uintptr_t action = ReadUleb(&p);
++        if (ipOffset < start)
++            break;                       // the table is sorted
++        if (ipOffset < start + length)
++        {
++            cs->landingPad = lp ? lpStart + lp : 0;
++            cs->action = action ? actionTable + action - 1 : nullptr;
++            cs->classInfo = classInfo;
++            cs->ttypeEnc = ttypeEnc;
++            return true;
++        }
++    }
++    return false;
++}
++
++// Walks the action chain of a call site: finds a catch(...) clause (its selector)
++// and whether the landing pad has cleanups.
++void ScanActions(const CallSite& cs, intptr_t* catchAllSelector, bool* hasCleanup)
++{
++    *catchAllSelector = 0;
++    *hasCleanup = false;
++    if (cs.landingPad == 0)
++        return;
++    if (cs.action == nullptr)
++    {
++        *hasCleanup = true;
++        return;
++    }
++    const uint8_t* a = cs.action;
++    for (;;)
++    {
++        intptr_t filter = ReadSleb(&a);
++        const uint8_t* nextBase = a;
++        intptr_t next = ReadSleb(&a);
++        if (filter > 0)
++        {
++            if (cs.classInfo == nullptr)
++                Fatal("catch clause without a type table");
++            const uint8_t* entry = cs.classInfo - (size_t)filter * EncodedSize(cs.ttypeEnc);
++            uintptr_t raw = ReadEncoded(&entry, cs.ttypeEnc);
++            if (raw == 0 && *catchAllSelector == 0)
++                *catchAllSelector = filter;  // catch (...)
++            // typed catch clauses never match an SEH exception (as with /EHa)
++        }
++        else if (filter == 0)
++        {
++            *hasCleanup = true;
++        }
++        // filter < 0: exception specification, not used by C++17 code
++        if (next == 0)
++            break;
++        a = nextBase + next;
++    }
++}
++
++// The PC to look up: the faulting instruction itself in the frame that raised a
++// hardware exception, else a return address, which belongs to the call before it.
++uintptr_t LookupIp(PEXCEPTION_RECORD rec, PDISPATCHER_CONTEXT disp)
++{
++    uintptr_t pc = (uintptr_t)disp->ControlPc;
++    if (pc == (uintptr_t)rec->ExceptionAddress)
++        return pc;
++    return pc - 1;
++}
++
++void SehExceptionDtor(void* p)
++{
++    EhaSehException* e = (EhaSehException*)p;
++    if (e->unwind != nullptr)
++    {
++        e->unwind->magic = 0;
++        HeapFree(GetProcessHeap(), 0, e->unwind);
++        e->unwind = nullptr;
++    }
++}
++
++struct EhGlobals
++{
++    void* caughtExceptions;
++    unsigned int uncaughtExceptions;
++};
++
++// A C++ exception object for an SEH exception about to be caught by catch(...);
++// returns the _Unwind_Exception to hand to the landing pad.
++_Unwind_Exception* MakeCxxException(EhaUnwind* u)
++{
++    void* obj = __cxa_allocate_exception(sizeof(EhaSehException));
++    EhaSehException* e = new (obj) EhaSehException;
++    e->unwind = u;
++    e->record = u->orig;
++    __cxa_init_primary_exception(obj, const_cast<std::type_info*>(&typeid(EhaSehException)), SehExceptionDtor);
++    __cxa_increment_exception_refcount(obj);                     // as __cxa_throw
++    ((EhGlobals*)__cxa_get_globals())->uncaughtExceptions += 1;  // as __cxa_throw; __cxa_begin_catch takes it back
++    _Unwind_Exception* ue = (_Unwind_Exception*)obj - 1;          // the header ends with the unwind header
++    if (ue->exception_class != kCxxClass)
++        Fatal("unexpected __cxa_exception layout");
++    return ue;
++}
++
++EXCEPTION_DISPOSITION ForeignPersonality(PEXCEPTION_RECORD rec, void* frame, PCONTEXT ctx, PDISPATCHER_CONTEXT disp)
++{
++    if (!EHA_IS_UNWINDING(rec->ExceptionFlags))
++    {
++        // phase 1: does a catch(...) of this frame take it?
++        CallSite cs;
++        if (!FindCallSite(disp, LookupIp(rec, disp), &cs))
++            return ExceptionContinueSearch;
++        intptr_t selector;
++        bool cleanup;
++        ScanActions(cs, &selector, &cleanup);
++        if (selector == 0)
++            return ExceptionContinueSearch;
++
++        EHA_TRACE("catch(...) at %p takes exception %08lx\n", (void*)cs.landingPad, rec->ExceptionCode);
++        EhaUnwind* u = NewUnwind(rec, true);
++        u->targetFrame = frame;
++        u->targetIp = (PVOID)cs.landingPad;
++        u->returnValue = MakeCxxException(u);
++        u->targetRdx = (ULONG64)selector;
++        u->setTargetRdx = true;
++        StartUnwind(u, disp->ContextRecord, disp->HistoryTable);
++    }
++
++    // phase 2
++    EhaUnwind* u = FromRecord(rec);
++    if (rec->ExceptionFlags & EXCEPTION_TARGET_UNWIND)
++    {
++        if (u != nullptr && u->landingFrame == frame)
++        {
++            // arriving at a cleanup landing pad of this frame (collided unwind below)
++            disp->ContextRecord->Rdx = 0;
++        }
++        else if (u != nullptr && u->targetFrame == frame && u->setTargetRdx)
++        {
++            // arriving at the catch(...) that took the exception in phase 1
++            disp->ContextRecord->Rdx = u->targetRdx;
++        }
++        return ExceptionContinueSearch;
++    }
++
++    // an unwind passing through this frame: run its destructors
++    CallSite cs;
++    if (!FindCallSite(disp, LookupIp(rec, disp), &cs))
++        return ExceptionContinueSearch;
++    intptr_t selector;
++    bool cleanup;
++    ScanActions(cs, &selector, &cleanup);
++    if (!cleanup)
++        return ExceptionContinueSearch;
++    if (u == nullptr)
++    {
++        EHA_TRACE("unwind (exception %08lx, flags %lx, target ip %p) not started by CoreCLR or an __except of it: "
++                  "skipping the cleanup at %p\n", rec->ExceptionCode, rec->ExceptionFlags, (void*)disp->TargetIp,
++                  (void*)cs.landingPad);
++        return ExceptionContinueSearch;
++    }
++    EHA_TRACE("cleanup at %p (exception %08lx)\n", (void*)cs.landingPad, rec->ExceptionCode);
++    u->landingFrame = frame;
++    CONTEXT scratch;
++    RtlUnwindEx(frame, (PVOID)cs.landingPad, &u->rec, &u->ue, &scratch, disp->HistoryTable);
++    Fatal("RtlUnwindEx (to a cleanup) returned");
++}
++
++// The scope table __C_specific_handler gets as handler data (x64)
++struct EhaScopeTable
++{
++    ULONG Count;
++    struct
++    {
++        ULONG BeginAddress;
++        ULONG EndAddress;
++        ULONG HandlerAddress;
++        ULONG JumpTarget;
++    } ScopeRecord[1];
++};
++
++typedef LONG (*EhaExceptionFilter)(EXCEPTION_POINTERS*, PVOID);
++typedef void (*EhaTerminationHandler)(BOOLEAN, PVOID);
++
++} // namespace
++
++extern "C" EXCEPTION_DISPOSITION
++__wrap___gxx_personality_seh0(PEXCEPTION_RECORD rec, void* frame, PCONTEXT ctx, PDISPATCHER_CONTEXT disp)
++{
++    DWORD code = rec->ExceptionCode;
++    if (code == STATUS_GCC_THROW || code == STATUS_GCC_UNWIND)
++        return __real___gxx_personality_seh0(rec, frame, ctx, disp);
++    return ForeignPersonality(rec, frame, ctx, disp);
++}
++
++extern "C" void __wrap__Unwind_Resume(_Unwind_Exception* ue)
++{
++    EhaUnwind* u = nullptr;
++    if (ue->exception_class == kEhaClass)
++        u = (EhaUnwind*)((char*)ue - offsetof(EhaUnwind, ue));
++    else if (ue->private_[0] == 0 && ue->private_[5] != 0)
++        u = (EhaUnwind*)ue->private_[5];
++    if (u != nullptr && u->magic == kEhaMagic)
++        ResumeUnwind(u);
++    __real__Unwind_Resume(ue);
++}
++
++extern "C" void __wrap___cxa_rethrow()
++{
++    std::type_info* t = __cxa_current_exception_type();
++    if (t != nullptr && *t == typeid(EhaSehException))
++    {
++        EhaSehException* e = (EhaSehException*)__cxa_current_primary_exception();
++        EXCEPTION_RECORD r = e->record;
++        __cxa_decrement_exception_refcount(e);
++        EHA_TRACE("rethrow of SEH exception %08lx\n", r.ExceptionCode);
++        // /EHa: "throw;" in a catch(...) that caught an SEH exception raises it again.
++        // The catch block's own cleanup (__cxa_end_catch) runs when it unwinds.
++        RaiseException(r.ExceptionCode, r.ExceptionFlags & EXCEPTION_NONCONTINUABLE,
++                       r.NumberParameters > EXCEPTION_MAXIMUM_PARAMETERS ? EXCEPTION_MAXIMUM_PARAMETERS : r.NumberParameters,
++                       r.ExceptionInformation);
++        Fatal("rethrown SEH exception continued");
++    }
++    __real___cxa_rethrow();
++}
++
++// Windows' __C_specific_handler, plus the bookkeeping that lets C++ cleanups
++// run during the unwinds it starts.
++extern "C" EXCEPTION_DISPOSITION
++__wrap___C_specific_handler(PEXCEPTION_RECORD rec, void* frame, PCONTEXT ctx, PDISPATCHER_CONTEXT disp)
++{
++    const EhaScopeTable* table = (const EhaScopeTable*)disp->HandlerData;
++    ULONG64 base = disp->ImageBase;
++    ULONG64 pc = disp->ControlPc - base;
++
++    if (EHA_IS_UNWINDING(rec->ExceptionFlags))
++    {
++        ULONG64 target = (ULONG64)disp->TargetIp - base;
++        for (ULONG i = disp->ScopeIndex; i < table->Count; i++)
++        {
++            if (pc < table->ScopeRecord[i].BeginAddress || pc >= table->ScopeRecord[i].EndAddress)
++                continue;
++            if (table->ScopeRecord[i].JumpTarget != 0)
++            {
++                // an __except: stop at the one this unwind goes to
++                if ((rec->ExceptionFlags & EXCEPTION_TARGET_UNWIND) && target == table->ScopeRecord[i].JumpTarget)
++                {
++                    EhaUnwind* u = FromRecord(rec);
++                    if (u != nullptr)
++                        u->done = true;
++                    break;
++                }
++                continue;
++            }
++            // a __finally or a cleanup funclet
++            EhaTerminationHandler handler = (EhaTerminationHandler)(base + table->ScopeRecord[i].HandlerAddress);
++            disp->ScopeIndex = i + 1;
++            handler(TRUE, frame);
++        }
++        return ExceptionContinueSearch;
++    }
++
++    for (ULONG i = disp->ScopeIndex; i < table->Count; i++)
++    {
++        if (pc < table->ScopeRecord[i].BeginAddress || pc >= table->ScopeRecord[i].EndAddress)
++            continue;
++        if (table->ScopeRecord[i].JumpTarget == 0)
++            continue;
++        if (table->ScopeRecord[i].HandlerAddress != EXCEPTION_EXECUTE_HANDLER)
++        {
++            EXCEPTION_POINTERS ptrs = { rec, ctx };
++            EhaExceptionFilter filter = (EhaExceptionFilter)(base + table->ScopeRecord[i].HandlerAddress);
++            LONG r = filter(&ptrs, frame);
++            if (r < 0)
++                return ExceptionContinueExecution;
++            if (r == 0)
++                continue;
++        }
++        EhaUnwind* u = NewUnwind(rec, false);
++        u->targetFrame = frame;
++        u->targetIp = (PVOID)(base + table->ScopeRecord[i].JumpTarget);
++        u->returnValue = (PVOID)(ULONG_PTR)rec->ExceptionCode;   // GetExceptionCode() in the __except block
++        AttachCxx(u);
++        StartUnwind(u, disp->ContextRecord, disp->HistoryTable);
++    }
++    return ExceptionContinueSearch;
++}
++
++// RtlUnwind for CoreCLR's managed exception handling (ClrUnwindEx).
++extern "C" void CLR_MinGW_RtlUnwind(PVOID targetFrame, PVOID targetIp, PEXCEPTION_RECORD rec, PVOID returnValue)
++{
++    EhaUnwind* u = NewUnwind(rec, false);
++    u->targetFrame = targetFrame;
++    u->targetIp = targetIp;
++    u->returnValue = returnValue;
++    AttachCxx(u);
++    ResumeUnwind(u);
++}
++
++#endif // __MINGW32__ && __x86_64__
+--- /dev/null
++++ b/src/coreclr/minipal/Windows/mingw_guids.cpp
+@@ -0,0 +1,10 @@
++// Licensed to the .NET Foundation under one or more agreements.
++// The .NET Foundation licenses this file to you under the MIT license.
++
++// MinGW: interface IDs the Windows SDK's uuid.lib has and mingw-w64's libuuid lacks.
++#if defined(__MINGW32__)
++#include <windows.h>
++
++// inspectable.h
++EXTERN_C const IID IID_IInspectable = { 0xAF86E2E0, 0xB12D, 0x4C6A, { 0x9C, 0x5A, 0xD7, 0xAA, 0x65, 0x10, 0x1E, 0x90 } };
++#endif
+--- a/src/coreclr/scripts/genEtwProvider.py
++++ b/src/coreclr/scripts/genEtwProvider.py
+@@ -43,11 +43,147 @@
+ ******************************************************************/
+ """
+ 
+-def genProviderInterface(manifest, intermediate):
++# Standard opcode and level values of the Windows event manifest schema (winmeta.xml)
++win_opcodes = {"win:Info": 0, "win:Start": 1, "win:Stop": 2, "win:DC_Start": 3, "win:DC_Stop": 4,
++               "win:Extension": 5, "win:Reply": 6, "win:Resume": 7, "win:Suspend": 8, "win:Send": 9,
++               "win:Receive": 240}
++win_levels = {"win:LogAlways": 0, "win:Critical": 1, "win:Error": 2, "win:Warning": 3,
++              "win:Informational": 4, "win:Verbose": 5}
++
++def genProviderInterfaceNoMC(manifest, provider_dirname):
++    """Writes ClrEtwAll.h without mc.exe (for toolchains without the Windows SDK, e.g.
++    MinGW): the provider GUIDs, registration handles and trace contexts, the event
++    descriptors and the keyword/task/opcode symbols mc would define, so that the
++    Windows code compiles unchanged. The providers are not registered with ETW, so
++    every ETW enabled-check is false and the FireEtXplat* writes are no-ops; EventPipe
++    (which uses the same descriptors) is unaffected."""
++    tree = DOM.parse(manifest)
++    out = [stdprolog_cpp, """
++#pragma once
++#include <evntprov.h>
++
++#ifndef ETW_INLINE
++#define ETW_INLINE DECLSPEC_NOINLINE __inline
++#endif
++
++#ifndef MCGEN_TRACE_CONTEXT_DEF
++#define MCGEN_TRACE_CONTEXT_DEF
++typedef struct _MCGEN_TRACE_CONTEXT
++{
++    TRACEHANDLE            RegistrationHandle;
++    TRACEHANDLE            Logger;
++    ULONGLONG              MatchAnyKeyword;
++    ULONGLONG              MatchAllKeyword;
++    ULONG                  Flags;
++    ULONG                  IsEnabled;
++    UCHAR                  Level;
++    UCHAR                  Reserve;
++    USHORT                 EnableBitsCount;
++    PULONG                 EnableBitMask;
++    const ULONGLONG*       EnableKeyWords;
++    const UCHAR*           EnableLevel;
++} MCGEN_TRACE_CONTEXT, *PMCGEN_TRACE_CONTEXT;
++#endif
++
++// mc's McGenEventEnabled (renamed like the rest, see genEtwProvider.py)
++FORCEINLINE BOOLEAN McGenEventXplatEnabled(PMCGEN_TRACE_CONTEXT EnableInfo, PCEVENT_DESCRIPTOR EventDescriptor)
++{
++    if (!EnableInfo || !EnableInfo->IsEnabled)
++        return FALSE;
++    if ((EventDescriptor->Level <= EnableInfo->Level) || (EnableInfo->Level == 0))
++    {
++        if ((EventDescriptor->Keyword == (ULONGLONG)0) ||
++            ((EventDescriptor->Keyword & EnableInfo->MatchAnyKeyword) &&
++             ((EventDescriptor->Keyword & EnableInfo->MatchAllKeyword) == EnableInfo->MatchAllKeyword)))
++            return TRUE;
++    }
++    return FALSE;
++}
++"""]
++    def num(v):
++        return int(v, 0)
++    defined = set()
++    def define(name, value):
++        # some keyword symbols are declared by several providers
++        if name not in defined:
++            defined.add(name)
++            out.append("#define %s 0x%x\n" % (name, value))
++    for providerNode in tree.getElementsByTagName('provider'):
++        pname = providerNode.getAttribute('name')
++        psym = providerNode.getAttribute('symbol')
++        guid = providerNode.getAttribute('guid').strip('{}')
++        g = guid.split('-')
++        handle = pname.replace('-', '_') + "Handle"
++        out.append("\n// Provider %s\n" % pname)
++        out.append("EXTERN_C __declspec(selectany) const GUID %s = {0x%s, 0x%s, 0x%s, {0x%s, 0x%s, %s}};\n" % (
++            psym, g[0], g[1], g[2], g[3][0:2], g[3][2:4], ", ".join("0x" + g[4][i:i+2] for i in range(0, 12, 2))))
++        out.append("EXTERN_C __declspec(selectany) REGHANDLE %s = (REGHANDLE)0;\n" % handle)
++        out.append("EXTERN_C __declspec(selectany) MCGEN_TRACE_CONTEXT %s_Context = {0};\n" % psym)
++        reg = pname.replace('-', '_')
++        out.append("#define EventRegister%s() ((ULONG)ERROR_SUCCESS)\n" % reg)
++        out.append("#define EventUnregister%s() ((ULONG)ERROR_SUCCESS)\n" % reg)
++
++        keywords = {}
++        for k in providerNode.getElementsByTagName('keyword'):
++            keywords[k.getAttribute('name')] = num(k.getAttribute('mask'))
++            if k.getAttribute('symbol'):
++                define(k.getAttribute('symbol'), num(k.getAttribute('mask')))
++        tasks = {}
++        opcodes = {}   # (task, name) -> value; (None, name) for provider-wide opcodes
++        for t in providerNode.getElementsByTagName('task'):
++            tasks[t.getAttribute('name')] = num(t.getAttribute('value'))
++            if t.getAttribute('eventGUID'):
++                tg = t.getAttribute('eventGUID').strip('{}').split('-')
++                out.append("EXTERN_C __declspec(selectany) const GUID %sId = {0x%s, 0x%s, 0x%s, {0x%s, 0x%s, %s}};\n" % (
++                    t.getAttribute('name'), tg[0], tg[1], tg[2], tg[3][0:2], tg[3][2:4], ", ".join("0x" + tg[4][i:i+2] for i in range(0, 12, 2))))
++            if t.getAttribute('symbol'):
++                define(t.getAttribute('symbol'), num(t.getAttribute('value')))
++            for o in t.getElementsByTagName('opcode'):
++                opcodes[(t.getAttribute('name'), o.getAttribute('name'))] = num(o.getAttribute('value'))
++                if o.getAttribute('symbol'):
++                    define(o.getAttribute('symbol'), num(o.getAttribute('value')))
++        for o in providerNode.getElementsByTagName('opcode'):
++            if o.parentNode.tagName != 'task':
++                opcodes[(None, o.getAttribute('name'))] = num(o.getAttribute('value'))
++        for e in providerNode.getElementsByTagName('event'):
++            sym = e.getAttribute('symbol')
++            task = e.getAttribute('task')
++            op = e.getAttribute('opcode')
++            if op in win_opcodes:
++                opv = win_opcodes[op]
++            elif (task, op) in opcodes:
++                opv = opcodes[(task, op)]
++            elif (None, op) in opcodes:
++                opv = opcodes[(None, op)]
++            elif op == "":
++                opv = 0
++            else:
++                raise Exception("unknown opcode %s for event %s" % (op, sym))
++            lvl = win_levels[e.getAttribute('level')] if e.getAttribute('level') else 0
++            kw = 0
++            for k in e.getAttribute('keywords').split():
++                kw |= keywords[k]
++            out.append("EXTERN_C __declspec(selectany) const EVENT_DESCRIPTOR %s = {0x%x, 0x%x, 0x0, 0x%x, 0x%x, 0x%x, 0x%xULL};\n" % (
++                sym, num(e.getAttribute('value')), num(e.getAttribute('version') or "0"), lvl, opv, tasks.get(task, 0), kw))
++            out.append("#define EventXplatEnabled%s() McGenEventXplatEnabled(&%s_Context, &%s)\n" % (sym, psym, sym))
++            out.append("#define FireEtXplat%s(...) ((ULONG)ERROR_SUCCESS)\n" % sym)
++    with open(path.join(provider_dirname, mcheader_filename), 'w') as f:
++        f.write(''.join(out))
++    # no message table / WEVT_TEMPLATE resources
++    with open(path.join(provider_dirname, "ClrEtwAll.rc"), 'w') as f:
++        f.write("// ClrEtwAll.rc: no ETW manifest resources (generated without mc.exe)\n")
++    for name in ("ClrEtwAll_MSG00001.bin", "ClrEtwAllTEMP.bin"):
++        open(path.join(provider_dirname, name), 'wb').close()
++
++def genProviderInterface(manifest, intermediate, nomc=False):
+     provider_dirname = os.path.join(intermediate, etw_dirname + "_temp")
+ 
+     if not os.path.exists(provider_dirname):
+         os.makedirs(provider_dirname)
++
++    if nomc:
++        genProviderInterfaceNoMC(manifest, provider_dirname)
++        return
+ 
+     cmd = ['mc.exe', '-h', provider_dirname, '-r', provider_dirname, '-b', '-co', '-um', '-p', 'FireEtXplat', manifest]
+     subprocess.check_call(cmd)
+@@ -164,7 +300,9 @@
+ 
+         header_file.write("#define NO_OF_ETW_PROVIDERS " + str(numOfProviders) + "\n")
+         header_file.write("#define MAX_BYTES_PER_ETW_PROVIDER " + str(nMaxEventBytesPerProvider) + "\n")
+-        header_file.write("EXTERN_C constexpr BYTE etwStackSupportedEvents[NO_OF_ETW_PROVIDERS][MAX_BYTES_PER_ETW_PROVIDER] = \n{\n")
++        # (one definition per translation unit: clang/lld need it to be selectany, MSVC merges them itself)
++        header_file.write("#if defined(__clang__) && !defined(_MSC_VER)\n#define ETW_STACK_SUPPORTED_EVENTS_SELECTANY __declspec(selectany)\n#else\n#define ETW_STACK_SUPPORTED_EVENTS_SELECTANY\n#endif\n")
++        header_file.write("EXTERN_C ETW_STACK_SUPPORTED_EVENTS_SELECTANY constexpr BYTE etwStackSupportedEvents[NO_OF_ETW_PROVIDERS][MAX_BYTES_PER_ETW_PROVIDER] = \n{\n")
+ 
+         for providerNode in tree.getElementsByTagName('provider'):
+             stackSupportedEvents = [0]*nMaxEventBytesPerProvider
+@@ -205,11 +343,11 @@
+             header_file.write(''.join(line) + "\n")
+         header_file.write("};\n")
+ 
+-def genFiles(manifest, intermediate, exclusion_filename):
++def genFiles(manifest, intermediate, exclusion_filename, nomc=False):
+     if not os.path.exists(intermediate):
+         os.makedirs(intermediate)
+ 
+-    genProviderInterface(manifest, intermediate)
++    genProviderInterface(manifest, intermediate, nomc)
+     genEtwMacroHeader(manifest, exclusion_filename, intermediate)
+     genXplatHeader(intermediate)
+ 
+@@ -225,6 +363,8 @@
+                                     help='full path to exclusion list')
+     required.add_argument('--intermediate', type=str, required=True,
+                                     help='full path to eventprovider  intermediate directory')
++    parser.add_argument('--nomc', action='store_true',
++                                    help='do not run mc.exe; write an ETW header that compiles but never enables the providers')
+     args, unknown = parser.parse_known_args(argv)
+     if unknown:
+         print('Unknown argument(s): ', ', '.join(unknown))
+@@ -235,7 +375,7 @@
+     intermediate       = args.intermediate
+ 
+     checkConsistency(manifest, exclusion_filename)
+-    genFiles(manifest, intermediate, exclusion_filename)
++    genFiles(manifest, intermediate, exclusion_filename, args.nomc)
+ 
+     # Update the final directory from temp
+     provider_temp_dirname = os.path.join(intermediate, etw_dirname + "_temp")
+--- a/src/coreclr/utilcode/stacktrace.cpp
++++ b/src/coreclr/utilcode/stacktrace.cpp
+@@ -427,7 +427,7 @@
+     //
+     for (int i = 0; i < ARRAY_SIZE(ailFuncList); i++)
+     {
+-        *(ailFuncList[i].ppvfn) = GetProcAddress(
++        *(ailFuncList[i].ppvfn) = (LPVOID)GetProcAddress(
+                 g_hinstImageHlp,
+                 ailFuncList[i].pszFnName);
+         LOCAL_ASSERT(*(ailFuncList[i].ppvfn));
+--- a/src/coreclr/utilcode/util.cpp
++++ b/src/coreclr/utilcode/util.cpp
+@@ -1060,7 +1060,13 @@
+             }
+             else if ((cpuRateControl.ControlFlags & MinMaxRateEnabled) == MinMaxRateEnabled)
+             {
++#ifdef __MINGW32__
++                // mingw-w64's JOBOBJECT_CPU_RATE_CONTROL_INFORMATION lacks the
++                // {MinRate, MaxRate} WORD pair of the union; MaxRate is the high word.
++                maxRate = HIWORD(cpuRateControl.CpuRate);
++#else
+                 maxRate = cpuRateControl.MaxRate;
++#endif
+             }
+ 
+             // The rate is the percentage times 100
+--- a/src/coreclr/vm/amd64/AsmMacros.inc
++++ b/src/coreclr/vm/amd64/AsmMacros.inc
+@@ -16,7 +16,7 @@
+ 
+ push_vol_reg macro Reg
+ 
+-        .errnz ___STACK_ADJUSTMENT_FORBIDDEN, push_vol_reg cannot be used after save_reg_postrsp
++        .errnz ___STACK_ADJUSTMENT_FORBIDDEN, <push_vol_reg cannot be used after save_reg_postrsp>
+ 
+         push    Reg
+         .allocstack 8
+@@ -25,7 +25,7 @@
+ 
+ push_eflags macro
+ 
+-        .errnz ___STACK_ADJUSTMENT_FORBIDDEN, push_eflags cannot be used after save_reg_postrsp
++        .errnz ___STACK_ADJUSTMENT_FORBIDDEN, <push_eflags cannot be used after save_reg_postrsp>
+ 
+         pushfq
+         .allocstack 8
+@@ -34,7 +34,7 @@
+ 
+ alloc_stack macro Size
+ 
+-        .errnz ___STACK_ADJUSTMENT_FORBIDDEN, alloc_stack cannot be used after save_reg_postrsp
++        .errnz ___STACK_ADJUSTMENT_FORBIDDEN, <alloc_stack cannot be used after save_reg_postrsp>
+ 
+         sub     rsp, Size
+         .allocstack Size
+@@ -43,7 +43,7 @@
+ 
+ save_reg_frame macro Reg, FrameReg, Offset
+ 
+-        .erre ___FRAME_REG_SET, save_reg_frame cannot be used before set_frame
++        .erre ___FRAME_REG_SET, <save_reg_frame cannot be used before set_frame>
+ 
+         mov     Offset[FrameReg], Reg
+         .savereg Reg, Offset
+@@ -52,7 +52,7 @@
+ 
+ save_reg_postrsp macro Reg, Offset
+ 
+-        .errnz ___FRAME_REG_SET, save_reg_postrsp cannot be used after set_frame
++        .errnz ___FRAME_REG_SET, <save_reg_postrsp cannot be used after set_frame>
+ 
+         mov     Offset[rsp], Reg
+         .savereg Reg, Offset
+@@ -63,7 +63,7 @@
+ 
+ save_xmm128_frame macro Reg, FrameReg, Offset
+ 
+-        .erre ___FRAME_REG_SET, save_xmm128_frame cannot be used before set_frame
++        .erre ___FRAME_REG_SET, <save_xmm128_frame cannot be used before set_frame>
+ 
+         movdqa  Offset[FrameReg], Reg
+         .savexmm128 Reg, Offset
+@@ -72,7 +72,7 @@
+ 
+ save_xmm128_postrsp macro Reg, Offset
+ 
+-        .errnz ___FRAME_REG_SET, save_reg_postrsp cannot be used after set_frame
++        .errnz ___FRAME_REG_SET, <save_reg_postrsp cannot be used after set_frame>
+ 
+         movdqa  Offset[rsp], Reg
+         .savexmm128 Reg, Offset
+@@ -83,7 +83,7 @@
+ 
+ set_frame macro Reg, Offset
+ 
+-        .errnz ___FRAME_REG_SET, set_frame cannot be used more than once
++        .errnz ___FRAME_REG_SET, <set_frame cannot be used more than once>
+ 
+ if Offset
+ 
+@@ -191,7 +191,9 @@
+ ; Inlined version of GetThread
+ ; Trashes rax and r11
+ ;
++ifndef __MINGW32__
+ t_CurrentThreadInfo  TEXTEQU <?t_CurrentThreadInfo@@3UThreadLocalInfo@@A>
++endif
+ 
+ INLINE_GETTHREAD macro Reg
+ 
+@@ -253,7 +255,8 @@
+ 
+ NOP_3_BYTE macro
+ 
+-        nop dword ptr [rax]
++        ; nop dword ptr [rax], spelled as bytes for assemblers without multi-byte nop
++        db 0Fh, 1Fh, 00h
+ 
+         endm
+ 
+@@ -373,7 +376,7 @@
+         __PWTB_TransitionBlock = __PWTB_StackAlloc
+         __PWTB_ArgumentRegisters = __PWTB_StackAlloc + 9 * 8
+ 
+-        .errnz stackAllocOnEntry ge 4*8, Max supported stackAllocOnEntry is 3*8
++        .errnz stackAllocOnEntry ge 4*8, <Max supported stackAllocOnEntry is 3*8>
+ 
+         if stackAllocOnEntry gt 0
+         .allocstack stackAllocOnEntry
+@@ -446,7 +449,9 @@
+ 
+         endm
+ 
++ifndef __MINGW32__
+ t_runtime_thread_locals  TEXTEQU <?t_runtime_thread_locals@@3URuntimeThreadLocals@@A>
++endif
+ 
+ ; Inlined version of GetThreadEEAllocContext. Trashes RegTrash, r11
+ INLINE_GET_ALLOC_CONTEXT_BASE macro Reg, RegTrash
+--- a/src/coreclr/vm/amd64/Context.asm
++++ b/src/coreclr/vm/amd64/Context.asm
+@@ -50,7 +50,8 @@
+ 
+         test    r11, r11
+         je      No_Ssp_Update
+-        rdsspq  rax
++        ; rdsspq rax (UASM-compatible encoding)
++        db 0F3h, 48h, 0Fh, 1Eh, 0C8h
+         sub     r11, rax
+         shr     r11, 3
+         ; the incsspq instruction uses only the lowest 8 bits of the argument, so we need to loop in case the increment is larger than 255
+@@ -58,7 +59,8 @@
+     Update_Loop:
+         cmp     r11, rax
+         cmovb   rax, r11
+-        incsspq rax
++        ; incsspq rax (preserve upstream loop for increments over255)
++        db 0F3h, 48h, 0Fh, 0AEh, 0E8h
+         sub     r11, rax
+         ja      Update_Loop
+     No_Ssp_Update:
+--- a/src/coreclr/vm/amd64/JitHelpers_Fast.asm
++++ b/src/coreclr/vm/amd64/JitHelpers_Fast.asm
+@@ -35,8 +35,16 @@
+ 
+ ifdef WRITE_BARRIER_CHECK
+ ; Those global variables are always defined, but should be 0 for Server GC
++ifdef __MINGW32__
++; (g_GCShadow: same name without C++ mangling)
++else
+ g_GCShadow                      TEXTEQU <?g_GCShadow@@3PEAEEA>
++endif
++ifdef __MINGW32__
++; (g_GCShadowEnd: same name without C++ mangling)
++else
+ g_GCShadowEnd                   TEXTEQU <?g_GCShadowEnd@@3PEAEEA>
++endif
+ EXTERN  g_GCShadow:QWORD
+ EXTERN  g_GCShadowEnd:QWORD
+ endif
+@@ -344,7 +352,9 @@
+         mov r10, 0CDCDCDCDCDCDCDCDh ; The real helper clobbers these registers, so clobber them too in the fake helper
+         mov r11, 0CDCDCDCDCDCDCDCDh
+ endif
+-        rexw jmp rax
++        ; rexw jmp rax (REX.W prefix as a byte for assemblers without "rexw")
++        db 48h
++        jmp rax
+ LEAF_END JIT_DispatchIndirectCall, _TEXT
+ 
+ 
+--- a/src/coreclr/vm/amd64/JitHelpers_Slow.asm
++++ b/src/coreclr/vm/amd64/JitHelpers_Slow.asm
+@@ -33,8 +33,10 @@
+ 
+ ifdef WRITE_BARRIER_CHECK
+ ; Those global variables are always defined, but should be 0 for Server GC
++ifndef __MINGW32__
+ g_GCShadow                      TEXTEQU <?g_GCShadow@@3PEAEEA>
+ g_GCShadowEnd                   TEXTEQU <?g_GCShadowEnd@@3PEAEEA>
++endif
+ EXTERN  g_GCShadow:QWORD
+ EXTERN  g_GCShadowEnd:QWORD
+ endif
+--- a/src/coreclr/vm/amd64/RedirectedHandledJITCase.asm
++++ b/src/coreclr/vm/amd64/RedirectedHandledJITCase.asm
+@@ -4,7 +4,11 @@
+ include AsmMacros.inc
+ include asmconstants.inc
+ 
++ifdef __MINGW32__
++Thread__GetAbortContext equ _ZN6Thread15GetAbortContextEv
++else
+ Thread__GetAbortContext equ ?GetAbortContext@Thread@@QEAAPEAU_CONTEXT@@XZ
++endif
+ 
+ extern GetCurrentSavedRedirectContext:proc
+ extern Thread__GetAbortContext:proc
+@@ -27,7 +31,13 @@
+ ; This function is used by both the personality routine and the debugger to retrieve the original CONTEXT.
+ GenerateRedirectedHandledJITCaseStub macro reason
+ 
+-extern ?RedirectedHandledJITCaseFor&reason&@Thread@@CAXXZ:proc
++ifdef __MINGW32__
++; Itanium name of Thread::RedirectedHandledJITCaseFor<reason>(): _ZN6Thread<length>...Ev
++RedirectTarget TEXTEQU @CatStr(<_ZN6Thread>, %(27 + @SizeStr(reason)), <RedirectedHandledJITCaseFor>, <reason>, <Ev>)
++else
++RedirectTarget TEXTEQU <?RedirectedHandledJITCaseFor&reason&@Thread@@CAXXZ>
++endif
++extern RedirectTarget:proc
+ 
+ NESTED_ENTRY RedirectedHandledJITCaseFor&reason&_Stub, _TEXT, FixRedirectContextHandler
+ 
+@@ -45,7 +55,7 @@
+         alloc_stack     28h                     ; CONTEXT*, callee scratch area
+         set_frame       rbp, 0
+ 
+-.errnz REDIRECTSTUB_ESTABLISHER_OFFSET_RBP, REDIRECTSTUB_ESTABLISHER_OFFSET_RBP has changed - update asm stubs
++.errnz REDIRECTSTUB_ESTABLISHER_OFFSET_RBP, <REDIRECTSTUB_ESTABLISHER_OFFSET_RBP has changed - update asm stubs>
+ 
+         END_PROLOGUE
+ 
+@@ -62,7 +72,7 @@
+         call            GetCurrentSavedRedirectContext
+ 
+         mov             [rbp+20h], rax
+-.errnz REDIRECTSTUB_RBP_OFFSET_CONTEXT - 20h, REDIRECTSTUB_RBP_OFFSET_CONTEXT has changed - update asm stubs
++.errnz REDIRECTSTUB_RBP_OFFSET_CONTEXT - 20h, <REDIRECTSTUB_RBP_OFFSET_CONTEXT has changed - update asm stubs>
+ 
+         ;
+         ; Fetch the interrupted rip and save it as our return address.
+@@ -74,7 +84,7 @@
+         ; Call target, which will do whatever we needed to do in the context
+         ; of the target thread, and will RtlRestoreContext when it is done.
+         ;
+-        call            ?RedirectedHandledJITCaseFor&reason&@Thread@@CAXXZ
++        call            RedirectTarget
+ 
+         int             3                       ; target shouldn't return.
+ 
+@@ -105,7 +115,12 @@
+ 
+ GenerateRedirectedStubWithFrame macro STUB, FILTER, TARGET
+ 
++ifdef __UASM__
++; UASM has no ALTENTRY; the label is inside the NESTED_ENTRY below and covered by its unwind info
++public STUB&_RspAligned
++else
+ altentry STUB&_RspAligned
++endif
+ 
+ NESTED_ENTRY STUB, _TEXT, FILTER
+ 
+@@ -120,12 +135,17 @@
+         push            rcx
+ 
+         xor             rax, rax
+-        rdsspq          rax
++        ; rdsspq rax (UASM-compatible encoding)
++        db 0F3h, 48h, 0Fh, 1Eh, 0C8h
+ 
+         test            rsp, 0fh
+         jnz             STUB&_FixRsp
+ 
++ifdef __UASM__
++STUB&_RspAligned::
++else
+ STUB&_RspAligned:
++endif
+ 
+         ; Any stack operations hereafter must be recorded in the unwind info, but
+         ; only nonvolatile register locations are needed.  Anything else is only
+@@ -136,7 +156,7 @@
+ 
+         alloc_stack     OFFSET_OF_FRAME + SIZEOF__FaultingExceptionFrame
+ 
+-.errnz THROWSTUB_ESTABLISHER_OFFSET_FaultingExceptionFrame - OFFSET_OF_FRAME, THROWSTUB_ESTABLISHER_OFFSET_FaultingExceptionFrame has changed - update asm stubs
++.errnz THROWSTUB_ESTABLISHER_OFFSET_FaultingExceptionFrame - OFFSET_OF_FRAME, <THROWSTUB_ESTABLISHER_OFFSET_FaultingExceptionFrame has changed - update asm stubs>
+ 
+         END_PROLOGUE
+ 
+@@ -212,7 +232,11 @@
+ 
+ ifdef FEATURE_SPECIAL_USER_MODE_APC
+ 
++ifdef __MINGW32__
++extern _ZN6Thread21ApcActivationCallbackEy:proc
++else
+ extern ?ApcActivationCallback@Thread@@CAX_K@Z:proc
++endif
+ 
+ ; extern "C" void NTAPI ApcActivationCallbackStub(ULONG_PTR Parameter);
+ NESTED_ENTRY ApcActivationCallbackStub, _TEXT, FixRedirectContextHandler
+@@ -220,16 +244,20 @@
+         push_nonvol_reg rbp
+         alloc_stack     30h ; padding for alignment, CONTEXT *, callee scratch area
+         set_frame       rbp, 0
+-    .errnz REDIRECTSTUB_ESTABLISHER_OFFSET_RBP, REDIRECTSTUB_ESTABLISHER_OFFSET_RBP has changed - update asm stubs
++    .errnz REDIRECTSTUB_ESTABLISHER_OFFSET_RBP, <REDIRECTSTUB_ESTABLISHER_OFFSET_RBP has changed - update asm stubs>
+         END_PROLOGUE
+ 
+         ; Save a copy of the redirect CONTEXT*.
+         ; This is needed for the debugger to unwind the stack.
+         mov             rax, [rcx + OFFSETOF__APC_CALLBACK_DATA__ContextRecord]
+         mov             [rbp + 20h], rax
+-    .errnz REDIRECTSTUB_RBP_OFFSET_CONTEXT - 20h, REDIRECTSTUB_RBP_OFFSET_CONTEXT has changed - update asm stubs
+-
++    .errnz REDIRECTSTUB_RBP_OFFSET_CONTEXT - 20h, <REDIRECTSTUB_RBP_OFFSET_CONTEXT has changed - update asm stubs>
++
++ifdef __MINGW32__
++        call            _ZN6Thread21ApcActivationCallbackEy
++else
+         call            ?ApcActivationCallback@Thread@@CAX_K@Z
++endif
+ 
+         add             rsp, 30h
+         pop             rbp
+--- a/src/coreclr/vm/appdomain.cpp
++++ b/src/coreclr/vm/appdomain.cpp
+@@ -1857,7 +1857,7 @@
+ 
+     if (m_pRefDispIDCache == NULL)
+     {
+-        AllocMemHolder<void> pCache = GetLowFrequencyHeap()->AllocMem(S_SIZE_T(sizeof (DispIDCache)));
++        AllocMemHolder<void> pCache(GetLowFrequencyHeap()->AllocMem(S_SIZE_T(sizeof (DispIDCache))));
+ 
+         DispIDCache *tmp = new (pCache) DispIDCache;
+         tmp->Init();
+--- a/src/coreclr/vm/assembly.cpp
++++ b/src/coreclr/vm/assembly.cpp
+@@ -1221,6 +1221,7 @@
+ }
+ 
+ /* static */
++SEH_FINALLY_FUNCTION   // (EX_TRY_NOCATCH has a __finally)
+ HRESULT RunMain(MethodDesc *pFD ,
+                 short numSkipArgs,
+                 INT32 *piRetVal,
+--- a/src/coreclr/vm/ceemain.cpp
++++ b/src/coreclr/vm/ceemain.cpp
+@@ -484,11 +484,17 @@
+     assert(((oldProtection & (PAGE_READWRITE|PAGE_WRITECOPY|PAGE_EXECUTE_READWRITE|
+                               PAGE_EXECUTE_WRITECOPY|PAGE_WRITECOMBINE)) == 0));
+ 
++#ifdef __MINGW32__
++    LARGE_INTEGER qpc;
++    QueryPerformanceCounter(&qpc);
++    GSCookie val = (GSCookie)((ULONGLONG)qpc.QuadPart ^ ((ULONGLONG)GetCurrentProcessId() << 32) ^ minipal_lowres_ticks() ^ (ULONGLONG)(SIZE_T)&qpc);
++#else
+     // Forces VC cookie to be initialized.
+     void * pf = &__security_check_cookie;
+     pf = NULL;
+ 
+     GSCookie val = (GSCookie)(__security_cookie ^ minipal_lowres_ticks());
++#endif
+ #else // !TARGET_UNIX
+     // REVIEW: Need something better for PAL...
+     GSCookie val = (GSCookie)minipal_lowres_ticks();
+--- a/src/coreclr/vm/codeman.cpp
++++ b/src/coreclr/vm/codeman.cpp
+@@ -110,9 +110,9 @@
+     HINSTANCE hNtdll = GetModuleHandle(W("ntdll.dll"));
+     if (hNtdll != NULL)
+     {
+-        void* growFunctionTable = GetProcAddress(hNtdll, "RtlGrowFunctionTable");
+-        void* deleteGrowableFunctionTable = GetProcAddress(hNtdll, "RtlDeleteGrowableFunctionTable");
+-        void* addGrowableFunctionTable = GetProcAddress(hNtdll, "RtlAddGrowableFunctionTable");
++        void* growFunctionTable = (void*)GetProcAddress(hNtdll, "RtlGrowFunctionTable");
++        void* deleteGrowableFunctionTable = (void*)GetProcAddress(hNtdll, "RtlDeleteGrowableFunctionTable");
++        void* addGrowableFunctionTable = (void*)GetProcAddress(hNtdll, "RtlAddGrowableFunctionTable");
+ 
+         // All or nothing AddGroableFunctionTable is last (marker)
+         if (growFunctionTable != NULL &&
+--- a/src/coreclr/vm/comcallablewrapper.h
++++ b/src/coreclr/vm/comcallablewrapper.h
+@@ -1116,7 +1116,7 @@
+         CLEANUP_SENTINEL        = 0x0000000080000000,       // Sentinel -> 1 bit
+         COM_REFCOUNT_MASK       = 0x000000007FFFFFFF,       // COM -> 31 bits
+         EXT_COM_REFCOUNT_MASK   = 0x00000000FFFFFFFF,       // For back-compat, preserve the higher-bit so that outside can observe it
+-        ALL_REFCOUNT_MASK       = 0xFFFFFFFF7FFFFFFF,
++        ALL_REFCOUNT_MASK       = (LONGLONG)0xFFFFFFFF7FFFFFFF,
+     };
+ 
+     #define GET_COM_REF(x)      ((ULONG)((x) & SimpleComCallWrapper::COM_REFCOUNT_MASK))
+--- a/src/coreclr/vm/dispatchinfo.h
++++ b/src/coreclr/vm/dispatchinfo.h
+@@ -28,7 +28,7 @@
+ class DispParamMarshaler;
+ class MarshalInfo;
+ class DispatchInfo;
+-enum BinderMethodID;
++enum BinderMethodID : int;
+ 
+ // An enumeration of the types of managed MemberInfo's. This must stay in synch with
+ // the ones defined in MemberInfo.cs.
+--- a/src/coreclr/vm/dwbucketmanager.hpp
++++ b/src/coreclr/vm/dwbucketmanager.hpp
+@@ -454,7 +454,7 @@
+     {
+         // Get just the module name; remove the path
+         const WCHAR* appName = u16_strrchr(appPath, DIRECTORY_SEPARATOR_CHAR_W);
+-        appName = appName ? appName + 1 : appPath;
++        appName = appName ? appName + 1 : appPath.GetUnicode();
+ 
+         CopyStringToBucket(targetParam, maxLength, appName);
+     }
+--- a/src/coreclr/vm/dwreport.h
++++ b/src/coreclr/vm/dwreport.h
+@@ -81,7 +81,11 @@
+ //----------------------------------------------------------------------------
+ // Passes data between DoFaultReport and DoFaultReportCallback
+ //----------------------------------------------------------------------------
++#ifdef __MINGW32__
++#include <errorrep.h>   // (a forward-declared enum without a fixed type is an MSVC extension)
++#else
+ typedef enum tagEFaultRepRetVal EFaultRepRetVal;
++#endif
+ struct FaultReportInfo
+ {
+     EXCEPTION_POINTERS  /*in*/  *m_pExceptionInfo;
+--- a/src/coreclr/vm/eventing/EtwProvider/CMakeLists.txt
++++ b/src/coreclr/vm/eventing/EtwProvider/CMakeLists.txt
+@@ -1,6 +1,12 @@
+ include(FindPython)
+ 
+ set(ETW_PROVIDER_SCRIPT ${CLR_DIR}/scripts/genEtwProvider.py)
++
++if(MINGW)
++  # no mc.exe: the ETW header is generated by the script; the providers are not
++  # registered (ETW events are off, EventPipe works)
++  set(ETW_PROVIDER_NOMC --nomc)
++endif()
+ 
+ set (ETW_PROVIDER_OUTPUTS
+   ${GENERATED_INCLUDE_DIR}/etw/ClrEtwAll.h
+@@ -15,7 +21,7 @@
+ 
+ add_custom_command(
+   OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/eventprovider.timestamp
+-  COMMAND ${Python_EXECUTABLE} ${ETW_PROVIDER_SCRIPT} --man ${EVENT_MANIFEST} --exc ${EVENT_EXCLUSIONS} --intermediate ${GENERATED_INCLUDE_DIR}
++  COMMAND ${Python_EXECUTABLE} ${ETW_PROVIDER_SCRIPT} --man ${EVENT_MANIFEST} --exc ${EVENT_EXCLUSIONS} --intermediate ${GENERATED_INCLUDE_DIR} ${ETW_PROVIDER_NOMC}
+   COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/eventprovider.timestamp
+   DEPENDS ${EVENT_MANIFEST} ${EVENT_EXCLUSIONS} ${ETW_PROVIDER_SCRIPT})
+ 
+--- a/src/coreclr/vm/eventtrace.cpp
++++ b/src/coreclr/vm/eventtrace.cpp
+@@ -43,6 +43,10 @@
+ #endif // FEATURE_NATIVEAOT
+ 
+ #include "eventtracepriv.h"
++#if defined(__MINGW32__) && defined(ETW_INLINE)
++#undef ETW_INLINE
++#define ETW_INLINE DECLSPEC_NOINLINE
++#endif
+ #include "debugdebugger.h"
+ 
+ #ifndef HOST_UNIX
+--- a/src/coreclr/vm/excep.cpp
++++ b/src/coreclr/vm/excep.cpp
+@@ -31,7 +31,9 @@
+ #include "eventreporter.h"
+ 
+ #ifdef FEATURE_COMINTEROP
++#ifndef __MINGW32__
+ #include<roerrorapi.h>
++#endif
+ #endif
+ #ifdef FEATURE_EH_FUNCLETS
+ #include "exceptionhandling.h"
+--- a/src/coreclr/vm/exceptionhandling.cpp
++++ b/src/coreclr/vm/exceptionhandling.cpp
+@@ -1675,6 +1675,10 @@
+ }
+ 
+ #ifndef TARGET_UNIX
++#ifdef __MINGW32__
++extern "C" void CLR_MinGW_RtlUnwind(PVOID, PVOID, PEXCEPTION_RECORD, PVOID);
++#define RtlUnwind CLR_MinGW_RtlUnwind
++#endif
+ void ClrUnwindEx(EXCEPTION_RECORD* pExceptionRecord, UINT_PTR ReturnValue, UINT_PTR TargetIP, UINT_PTR TargetFrameSp)
+ {
+     RtlUnwind((PVOID)TargetFrameSp, // TargetFrame
+--- a/src/coreclr/vm/interoputil.inl
++++ b/src/coreclr/vm/interoputil.inl
+@@ -5,6 +5,15 @@
+ #include "comcallablewrapper.h"
+ 
+ #if !defined(DACCESS_COMPILE)
++#if defined(__GNUC__)
++inline BOOL ComInterfaceSlotIs(IUnknown* pUnk, int slot, LPVOID pvFunction);
++// (clang does not convert a function to void* implicitly, MSVC does)
++template <typename TFunc>
++inline BOOL ComInterfaceSlotIs(IUnknown* pUnk, int slot, TFunc* pfnFunction)
++{
++    return ComInterfaceSlotIs(pUnk, slot, (LPVOID)pfnFunction);
++}
++#endif
+ inline BOOL ComInterfaceSlotIs(IUnknown* pUnk, int slot, LPVOID pvFunction)
+ {
+     CONTRACTL
+--- a/src/coreclr/vm/jithelpers.cpp
++++ b/src/coreclr/vm/jithelpers.cpp
+@@ -28,6 +28,10 @@
+ #ifndef TARGET_UNIX
+ // Included for referencing __report_gsfailure
+ #include "process.h"
++#ifdef __MINGW32__
++// (exported by the UCRT; MSVC declares it in its own headers)
++extern "C" void __cdecl __report_gsfailure(ULONG_PTR StackCookie);
++#endif
+ #endif // !TARGET_UNIX
+ 
+ #ifdef PROFILING_SUPPORTED
+--- a/src/coreclr/vm/loaderallocator.hpp
++++ b/src/coreclr/vm/loaderallocator.hpp
+@@ -46,7 +46,7 @@
+ public:
+     VPTR_VTABLE_CLASS(CodeRangeMapRangeList, RangeList)
+ 
+-#if defined(DACCESS_COMPILE) || !defined(TARGET_WINDOWS)
++#if defined(DACCESS_COMPILE) || !defined(TARGET_WINDOWS) || defined(__MINGW32__)
+     CodeRangeMapRangeList() :
+         _RangeListRWLock(COOPERATIVE_OR_PREEMPTIVE, LOCK_TYPE_DEFAULT),
+         _rangeListType(STUB_CODE_BLOCK_UNKNOWN),
+--- a/src/coreclr/vm/olevariant.cpp
++++ b/src/coreclr/vm/olevariant.cpp
+@@ -4138,7 +4138,10 @@
+             for (; pSrc < pSrcEnd; pSrc++, pDest++)
+             {
+                 if (*pSrc != NULL)
+-                    memcpyNoGCRefs(pDest, &(*pSrc)->GetWrappedObject(), sizeof(DECIMAL));
++                {
++                    DECIMAL wrapped = (*pSrc)->GetWrappedObject();
++                    memcpyNoGCRefs(pDest, &wrapped, sizeof(DECIMAL));
++                }
+                 else
+                     memset(pDest, 0, sizeof(DECIMAL));
+             }
+--- a/src/coreclr/vm/peimagelayout.cpp
++++ b/src/coreclr/vm/peimagelayout.cpp
+@@ -1061,6 +1061,7 @@
+         goto UNSUPPORTED;
+     }
+ 
++    {   // (a block: the gotos above may not jump past the initializations below)
+     SIZE_T preferredBase = ntHeader->OptionalHeader.ImageBase;
+     SIZE_T virtualSize = ntHeader->OptionalHeader.SizeOfImage;
+     SIZE_T reserveSize = RoundToPage(virtualSize, offset);
+@@ -1209,6 +1210,7 @@
+     }
+ 
+     return loadedHeader;
++    }
+ 
+ FAILED:
+     _ASSERTE(!"FAILED");
+--- a/src/coreclr/vm/syncblk.cpp
++++ b/src/coreclr/vm/syncblk.cpp
+@@ -505,6 +505,7 @@
+ // It is put on a cleanup list and at a later time (typically during
+ // finalization, this list is cleaned up.
+ //
++SEH_FINALLY_FUNCTION   // (EE_FINALLY uses __EEparam, param)
+ void SyncBlockCache::CleanupSyncBlocks()
+ {
+     STATIC_CONTRACT_THROWS;
+--- a/src/coreclr/vm/threads.cpp
++++ b/src/coreclr/vm/threads.cpp
+@@ -3037,6 +3037,7 @@
+ // Based on whether this thread has a message pump, do the appropriate
+ // style of Wait.
+ //--------------------------------------------------------------------
++SEH_FINALLY_FUNCTION   // (EE_FINALLY uses __EEparam, param)
+ DWORD Thread::DoAppropriateWait(int countHandles, HANDLE *handles, BOOL waitAll,
+                                 DWORD millis, WaitMode mode, PendingSync *syncState)
+ {
+@@ -3510,6 +3511,7 @@
+ //--------------------------------------------------------------------
+ // Only one style of wait for DoSignalAndWait since we don't support this on STA Threads
+ //--------------------------------------------------------------------
++SEH_FINALLY_FUNCTION   // (EE_FINALLY uses __EEparam, param)
+ DWORD Thread::DoSignalAndWait(HANDLE *handles, DWORD millis, BOOL alertable, PendingSync *syncState)
+ {
+     STATIC_CONTRACT_THROWS;
+@@ -5870,7 +5872,7 @@
+         if (nElem >= UniqueStackDepth) {
+             nElem = UniqueStackDepth;
+         }
+-        AllocMemHolder<size_t> stackTraceInMap = SystemDomain::GetGlobalLoaderAllocator()->GetLowFrequencyHeap()->AllocMem(S_SIZE_T(sizeof(size_t *)) * (S_SIZE_T(nElem) + S_SIZE_T(1)));
++        AllocMemHolder<size_t> stackTraceInMap(SystemDomain::GetGlobalLoaderAllocator()->GetLowFrequencyHeap()->AllocMem(S_SIZE_T(sizeof(size_t *)) * (S_SIZE_T(nElem) + S_SIZE_T(1))));
+         memcpy (stackTraceInMap, stackTrace, sizeof(size_t *) * (nElem + 1));
+         g_pUniqueStackMap->InsertValue(stackTraceHash, stackTraceInMap);
+         stackTraceInMap.SuppressRelease();
+@@ -7013,6 +7015,7 @@
+     return ret;
+ }
+ 
++SEH_FINALLY_FUNCTION   // (the PAL_FINALLY below uses catchFrame)
+ static void ManagedThreadBase_DispatchOuter(ManagedThreadCallState *pCallState)
+ {
+     STATIC_CONTRACT_GC_TRIGGERS;
+--- a/src/coreclr/vm/threadsuspend.cpp
++++ b/src/coreclr/vm/threadsuspend.cpp
+@@ -4253,14 +4253,16 @@
+         // Suspend the thread
+ 
+ #if defined(FEATURE_HIJACK) && !defined(TARGET_UNIX)
+-        DWORD dwSwitchCount = 0;
++        DWORD dwSwitchCount;    // (assigned, not initialized: a goto above jumps past this)
++        dwSwitchCount = 0;
+ #endif
+ 
+ RetrySuspension:
+         // We can not allocate memory after we suspend a thread.
+         // Otherwise, we may deadlock if the suspended thread holds allocator locks.
+         ThreadStore::AllocateOSContext();
+-        SuspendThreadResult str = thread->SuspendThread();
++        SuspendThreadResult str;
++        str = thread->SuspendThread();
+ 
+         if (str == STR_Failure || str == STR_UnstartedOrDead)
+         {
+@@ -5989,7 +5991,7 @@
+         {
+             typedef void* (*PFN_RtlGetReturnAddressHijackTarget)(void);
+ 
+-            void* rtlGetReturnAddressHijackTarget = GetProcAddress(hModNtdll, "RtlGetReturnAddressHijackTarget");
++            void* rtlGetReturnAddressHijackTarget = (void*)GetProcAddress(hModNtdll, "RtlGetReturnAddressHijackTarget");
+             if (rtlGetReturnAddressHijackTarget != NULL)
+             {
+                 g_returnAddressHijackTarget = ((PFN_RtlGetReturnAddressHijackTarget)rtlGetReturnAddressHijackTarget)();
+--- a/src/coreclr/vm/util.hpp
++++ b/src/coreclr/vm/util.hpp
+@@ -27,8 +27,9 @@
+ #endif
+ #endif
+ 
+-#ifndef TARGET_UNIX
++#if !defined(TARGET_UNIX) && !defined(__MINGW32__)
+ // Copied from malloc.h: don't want to bring in the whole header file.
++// (mingw-w64's malloc.h makes _alloca a macro for __builtin_alloca)
+ void * __cdecl _alloca(size_t);
+ #endif // !TARGET_UNIX
+ 
+--- a/src/coreclr/vm/wks/CMakeLists.txt
++++ b/src/coreclr/vm/wks/CMakeLists.txt
+@@ -6,6 +6,13 @@
+     endif()
+   endif()
+ endif (CLR_CMAKE_TARGET_WIN32)
++
++if(MINGW AND CLR_CMAKE_TARGET_ARCH_AMD64)
++    # UASM does not emit compiler dependency files for included assembly headers.
++    set_property(SOURCE ${VM_SOURCES_WKS_ARCH_ASM} APPEND PROPERTY OBJECT_DEPENDS
++        "${VM_DIR}/amd64/AsmMacros.inc"
++        "${CMAKE_CURRENT_BINARY_DIR}/AsmConstants.inc")
++endif()
+ 
+ add_library_clr(cee_wks_core OBJECT ${VM_SOURCES_WKS} ${VM_SOURCES_WKS_ARCH_ASM})
+ add_library_clr(cee_wks OBJECT ${VM_SOURCES_WKS_SPECIAL})
+--- a/src/native/eventpipe/ds-ipc-pal-namedpipe.c
++++ b/src/native/eventpipe/ds-ipc-pal-namedpipe.c
+@@ -202,6 +202,9 @@
+ 	EP_ASSERT (poll_handles_data != NULL);
+ 
+ 	int32_t result = 1;
++	// declared up front: the error gotos below may not jump past an initialization (C++)
++	DWORD index;
++	DWORD wait;
+ 	EP_ASSERT (poll_handles_data_len <= MAXIMUM_WAIT_OBJECTS);
+ 
+ 	HANDLE handles [MAXIMUM_WAIT_OBJECTS];
+@@ -258,7 +261,7 @@
+ 	}
+ 
+ 	// call wait for multiple obj
+-	DWORD wait = WAIT_FAILED;
++	wait = WAIT_FAILED;
+ 	DS_ENTER_BLOCKING_PAL_SECTION;
+ 	wait = WaitForMultipleObjects (
+ 		(DWORD)poll_handles_data_len,      // count
+@@ -282,7 +285,7 @@
+ 	}
+ 
+ 	// determine which of the streams signaled
+-	DWORD index = wait - WAIT_OBJECT_0;
++	index = wait - WAIT_OBJECT_0;
+ 	// error check the index
+ 	if (index < 0 || index > (poll_handles_data_len - 1)) {
+ 		// check if we abandoned something
+--- a/src/native/libs/Common/delayloadhook_windows.cpp
++++ b/src/native/libs/Common/delayloadhook_windows.cpp
+@@ -22,4 +22,8 @@
+ // This global hook is called prior to all the delay load LoadLibrary/GetProcAddress/etc. calls
+ // Hooking this callback allows us to ensure that delay load LoadLibrary calls
+ // specify the LOAD_LIBRARY_SEARCH_SYSTEM32 search path
++#if defined(__MINGW32__)
++PfnDliHook __pfnDliNotifyHook2 = secureDelayHook;
++#else
+ const PfnDliHook __pfnDliNotifyHook2 = secureDelayHook;
++#endif
+--- a/src/native/libs/System.Globalization.Native/pal_icushim_internal.h
++++ b/src/native/libs/System.Globalization.Native/pal_icushim_internal.h
+@@ -51,7 +51,38 @@
+ 
+ #elif defined(TARGET_WINDOWS)
+ 
++#if defined(__MINGW32__)
++// MinGW has no Windows SDK icu.h (the single-header C API of Windows' own
++// icu.dll). Use ICU's own C headers instead, with unversioned names like the
++// exports of icu.dll; the functions are still resolved at run time below.
++#define U_DISABLE_RENAMING 1
++#define U_SHOW_CPLUSPLUS_API 0
++// icu.h leaves out deprecated API too (see UIDNA_ALLOW_UNASSIGNED in pal_idna.c)
++#define U_HIDE_DEPRECATED_API 1
++#if !defined(__cplusplus) && !defined(U_FALLTHROUGH)
++#define U_FALLTHROUGH __attribute__((fallthrough))
++#endif
++#include <unicode/ucurr.h>
++#include <unicode/ucal.h>
++#include <unicode/uchar.h>
++#include <unicode/ucol.h>
++#include <unicode/udat.h>
++#include <unicode/udata.h>
++#include <unicode/udatpg.h>
++#include <unicode/uenum.h>
++#include <unicode/uidna.h>
++#include <unicode/uldnames.h>
++#include <unicode/ulocdata.h>
++#include <unicode/unorm2.h>
++#include <unicode/unum.h>
++#include <unicode/ures.h>
++#include <unicode/usearch.h>
++#include <unicode/utf16.h>
++#include <unicode/utypes.h>
++#include <unicode/ustring.h>
++#else
+ #include "icu.h"
++#endif
+ 
+ #define UDAT_STANDALONE_SHORTER_WEEKDAYS 1
+ 
+--- a/src/native/minipal/cpufeatures.c
++++ b/src/native/minipal/cpufeatures.c
+@@ -164,18 +164,29 @@
+ 
+ #if defined(HOST_WINDOWS)
+ #if defined(HOST_X86) || defined(HOST_AMD64)
++#if defined(__GNUC__)
++// clang/gcc (MinGW): _xgetbv needs the xsave target feature; it is only
++// called after CPUID reported OSXSAVE.
++__attribute__((target("xsave")))
++#endif
+ static uint32_t xmmYmmStateSupport()
+ {
+     // check OS has enabled both XMM and YMM state support
+     return ((_xgetbv(0) & 0x06) == 0x06) ? 1 : 0;
+ }
+ 
++#if defined(__GNUC__)
++__attribute__((target("xsave")))
++#endif
+ static uint32_t avx512StateSupport()
+ {
+     // check OS has enabled XMM, YMM and ZMM state support
+     return ((_xgetbv(0) & 0xE6) == 0x0E6) ? 1 : 0;
+ }
+ 
++#if defined(__GNUC__)
++__attribute__((target("xsave")))
++#endif
+ static uint32_t apxStateSupport()
+ {
+ #if defined(TARGET_X86)

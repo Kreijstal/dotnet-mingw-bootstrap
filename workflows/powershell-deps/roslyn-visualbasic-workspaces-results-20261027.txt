@@ -1,0 +1,293 @@
+Roslyn Visual Basic Workspaces 4.9.2 source package and installed checks, 2026-10-27
+Host: win11 / MSYS2 CLANG64; source SDK 8.0.131, actual runtime 8.0.0
+Remote root: /home/topkek/powershell-vbws.Ru0tju
+Recipe: mingw-w64-dotnet-roslyn-visualbasic-workspaces
+Package: mingw-w64-clang-x86_64-dotnet-codeanalysis-visualbasic-workspaces 4.9.2-1
+
+All 234 original VB inputs are retained without production source patches. The
+independent local artifact audit verifies the complete original project/shared
+Compile inventory and every production hash against the pinned source archive.
+Commit 9934fb9e3527e1c0c51314e57d4aab30f97e8f9e; archive SHA256
+ e01ea67aaec6408de51a0a4c18a7e15b2a527ca7a853c9a0a7742cb5680aeb30.
+Preserves original imports, nineteen friend identities and embedded VB runtime
+configuration/workaround. Assembly identity 4.9.0.0 / 31bf3856ad364e35.
+
+The published assembly has no public API declarations. This alone cannot prove
+implementation completeness. Metadata-only comparison additionally matches all
+48 MEF export types and exact attribute blobs: 33 services, eight factories, six
+cleanup providers and one editorconfig generator. The initial name-prefix-only
+inspector omitted EditorConfigGeneratorAttribute, and the clean check caught that
+validation omission. Final inspection follows ExportAttribute inheritance through
+the source-built Workspaces dependency. All 48 original exports match and activate;
+all 41 language services/factories resolve through the actual workspace host.
+
+All three neutral resource sets/54 strings match independent published metadata;
+13 original XLF cultures supply 42 resource sets/756 checked strings. Windows
+CRLF values derive from source. Published DLLs are read as metadata/resource bytes
+only, never executed, compiled against for production output or packaged.
+
+Actual VB/CSharp workspaces perform Unicode-document/project-reference operations,
+case-insensitive and cross-language reference search/rename, VB formatting and
+simplification, compilation and execution of VB/CSharp emitted IL. A real VB
+analyzer/code-fix action changes a document. DocumentEditor and SyntaxGenerator
+create a static VB field whose emitted initializer executes with value 73.
+Incremental edits, cancellation and absence of Framework implementations pass.
+
+Final clean package build/check and fresh installed-feed checks exit 0. All 14
+consumer compiler/satellite DLLs match exact installed/audited source NuGet bytes.
+Every installed restore has a new output directory and empty package cache.
+The local artifact audit passes source hashes, licenses, checksums, dependencies,
+export/resource baselines and exact fourteen-DLL NuGet payload.
+
+These are focused integration checks, not all upstream behavior/provider/IDE tests.
+Full Microsoft.CodeAnalysis.Analyzers and PowerShell source/application integration
+remain. Actual .NET 8.0.0 runtime still needs servicing; package labels/aliases do
+not establish later servicing fixes. Overall dependency goal is incomplete.
+
+Exact final commands (all exit 0):
+
+$ PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm
+==> Making package: mingw-w64-clang-x86_64-dotnet-codeanalysis-visualbasic-workspaces 4.9.2-1 (27 Oct 2026 00:10:10)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found roslyn-4.9.2.tar.gz
+  -> Found prepare.py
+  -> Found build.sh
+  -> Found Check.cs
+  -> Found check.sh
+  -> Found check-api.sh
+  -> Found InspectApi.cs
+  -> Found InspectMetadata.cs
+  -> Found InspectServices.cs
+  -> Found ExpectedApi.json
+  -> Found ExpectedMetadata.json
+  -> Found ExpectedServices.json
+  -> Found published-metadata-provenance.json
+  -> Found README.md
+==> Validating source files with sha256sums...
+    roslyn-4.9.2.tar.gz ... Passed
+    prepare.py ... Passed
+    build.sh ... Passed
+    Check.cs ... Passed
+    check.sh ... Passed
+    check-api.sh ... Passed
+    InspectApi.cs ... Passed
+    InspectMetadata.cs ... Passed
+    InspectServices.cs ... Passed
+    ExpectedApi.json ... Passed
+    ExpectedMetadata.json ... Passed
+    ExpectedServices.json ... Passed
+    published-metadata-provenance.json ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+  -> Extracting roslyn-4.9.2.tar.gz with bsdtar
+==> Starting prepare()...
+Prepared 234 original sources; 42 resource sets; 756 resource strings
+==> Removing existing $pkgdir/ directory...
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-vbws.Ru0tju\recipe\src\prepared\Microsoft.CodeAnalysis.VisualBasic.Workspaces\Library.vbproj (in 628 ms).
+  Library -> E:\msys64\home\topkek\powershell-vbws.Ru0tju\recipe\src\prepared\Microsoft.CodeAnalysis.VisualBasic.Workspaces\bin\Release\net8.0\Microsoft.CodeAnalysis.VisualBasic.Workspaces.dll
+  Successfully created package 'E:\msys64\home\topkek\powershell-vbws.Ru0tju\recipe\src\feed\Microsoft.CodeAnalysis.VisualBasic.Workspaces.4.9.2.nupkg'.
+==> Starting check()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-vbws.Ru0tju\recipe\src\check\Check.csproj (in 505 ms).
+  Check -> E:\msys64\home\topkek\powershell-vbws.Ru0tju\recipe\src\check\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.89
+PASS exact source identity, 234 source inputs, 19 friend declarations, embedded VB support and 42 resource sets/756 strings
+PASS every one of 48 MEF export parts activates and all 41 VB language services/factories resolve
+PASS MEF VB/CSharp workspaces, Unicode documents, case-insensitive/cross-language reference search and rename, VB formatting, project-reference emit and executed IL
+PASS VB simplification, real analyzer/code-fix actions, DocumentEditor/SyntaxGenerator with executed output, incremental edits, cancellation and no Framework implementations
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-vbws.Ru0tju\recipe\src\check-api\api\Tool.csproj (in 348 ms).
+  Tool -> E:\msys64\home\topkek\powershell-vbws.Ru0tju\recipe\src\check-api\api\bin\Release\net8.0\Tool.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.77
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-vbws.Ru0tju\recipe\src\check-api\metadata\Tool.csproj (in 137 ms).
+  Tool -> E:\msys64\home\topkek\powershell-vbws.Ru0tju\recipe\src\check-api\metadata\bin\Release\net8.0\Tool.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.98
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-vbws.Ru0tju\recipe\src\check-api\services\Tool.csproj (in 133 ms).
+  Tool -> E:\msys64\home\topkek\powershell-vbws.Ru0tju\recipe\src\check-api\services\bin\Release\net8.0\Tool.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.85
+PASS original VB Workspaces identity, no exported API additions, all three neutral resource sets/54 strings, full MEF export metadata and no normal VB runtime reference
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-codeanalysis-visualbasic-workspaces"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-clang-x86_64-dotnet-codeanalysis-visualbasic-workspaces 4.9.2-1 (27 Oct 2026 00:11:41)
+
+$ pacman -U --noconfirm recipe/mingw-w64-clang-x86_64-dotnet-codeanalysis-visualbasic-workspaces-4.9.2-1-any.pkg.tar.zst
+$ bash recipe/check.sh installed-check /clang64/share/doc/dotnet-codeanalysis-visualbasic-workspaces/localization.json /clang64/share/doc/dotnet-codeanalysis-visualbasic-workspaces/source-items.json
+$ bash recipe/check-api.sh installed-check installed-api
+$ pacman -Q mingw-w64-clang-x86_64-dotnet-codeanalysis-visualbasic-workspaces
+$ python3 installed NuGet/consumer payload comparison (14 DLLs)
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-dotnet-codeanalysis-visualbasic-workspaces-4.9.2-1
+
+Total Installed Size:  0.61 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+installing mingw-w64-clang-x86_64-dotnet-codeanalysis-visualbasic-workspaces...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-vbws.Ru0tju\installed-check\Check.csproj (in 518 ms).
+  Check -> E:\msys64\home\topkek\powershell-vbws.Ru0tju\installed-check\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.41
+PASS exact source identity, 234 source inputs, 19 friend declarations, embedded VB support and 42 resource sets/756 strings
+PASS every one of 48 MEF export parts activates and all 41 VB language services/factories resolve
+PASS MEF VB/CSharp workspaces, Unicode documents, case-insensitive/cross-language reference search and rename, VB formatting, project-reference emit and executed IL
+PASS VB simplification, real analyzer/code-fix actions, DocumentEditor/SyntaxGenerator with executed output, incremental edits, cancellation and no Framework implementations
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-vbws.Ru0tju\installed-api\api\Tool.csproj (in 332 ms).
+  Tool -> E:\msys64\home\topkek\powershell-vbws.Ru0tju\installed-api\api\bin\Release\net8.0\Tool.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.46
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-vbws.Ru0tju\installed-api\metadata\Tool.csproj (in 119 ms).
+  Tool -> E:\msys64\home\topkek\powershell-vbws.Ru0tju\installed-api\metadata\bin\Release\net8.0\Tool.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.81
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-vbws.Ru0tju\installed-api\services\Tool.csproj (in 110 ms).
+  Tool -> E:\msys64\home\topkek\powershell-vbws.Ru0tju\installed-api\services\bin\Release\net8.0\Tool.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.61
+PASS original VB Workspaces identity, no exported API additions, all three neutral resource sets/54 strings, full MEF export metadata and no normal VB runtime reference
+mingw-w64-clang-x86_64-dotnet-codeanalysis-visualbasic-workspaces 4.9.2-1
+PASS all fourteen installed Workspaces/satellite DLLs match the consumer bytes exactly
+
+$ python3 tests/powershell-deps/audit-roslyn-visualbasic-workspaces.py tests/powershell-deps/roslyn-visualbasic-workspaces-artifact-20261027.json
+Roslyn VB Workspaces: pinned inputs/licenses/dependencies, independent 234-file original-source inventory, 48 MEF export baseline, 42/756 resources and exact fourteen DLL payloads PASS

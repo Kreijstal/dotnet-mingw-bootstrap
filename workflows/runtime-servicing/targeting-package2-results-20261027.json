@@ -1,0 +1,33 @@
+{
+  "previous_goal_turn_classification": "progress",
+  "current_goal_turn_classification": "progress",
+  "build_root": "/home/topkek/targeting8pkg2.AAw8xI",
+  "native_package_release": "8.0.31-2",
+  "artifact": "mingw-w64-clang-x86_64-dotnet-targeting8-servicing-8.0.31-2-any.pkg.tar.zst",
+  "artifact_sha256": "39dac9a55cd3a701db6fcfc1608d536e52d70968a2c804722382d484823bb187",
+  "build_command": "makepkg --cleanbuild --force --noconfirm",
+  "build_exit_code": 0,
+  "artifact_audit_command": "/usr/bin/python3 audit-targeting-package.py mingw-w64-clang-x86_64-dotnet-targeting8-servicing-8.0.31-2-any.pkg.tar.zst src/targeting-pack src/targeting-licenses --output artifact-audit2.json",
+  "artifact_audit_exit_code": 0,
+  "install_command": "pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-targeting8-servicing-8.0.31-2-any.pkg.tar.zst",
+  "install_exit_code": 0,
+  "installed_check_command": "bash check-installed.sh installed-check3",
+  "installed_check_exit_code": 0,
+  "source_reference_dlls": 163,
+  "source_generator_and_resource_dlls": 99,
+  "total_source_dll_assets": 595,
+  "platform_manifest_entries": 371,
+  "platform_manifest_unique_names": 342,
+  "support_source_packages": 11,
+  "support_license_files": 23,
+  "default_source_compiler": "4.9.2",
+  "default_source_generator_selection": 6,
+  "full_dependency_goal_complete": false,
+  "remaining": [
+    "historical/netstandard generator hosts and browser invocation",
+    "serviced SDK host/runtime native package completion",
+    "broader native/API compatibility",
+    "complete PowerShell including conditional GraphicalHost",
+    "PowerShell7.6/.NET10"
+  ]
+}

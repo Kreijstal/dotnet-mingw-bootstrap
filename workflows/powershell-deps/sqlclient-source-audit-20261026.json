@@ -1,0 +1,21 @@
+{
+  "nuget_id": "System.Data.SqlClient",
+  "version": "4.9.1",
+  "source_repository": "https://github.com/dotnet/maintenance-packages",
+  "source_commit": "84b081710c66cc560b77d4de38cee493c3a38e9d",
+  "source_sha256": "f5b1bd0cf8b2c6e232ff866a4f3b069c30c48f37820c10c81691de211d4ba3c6",
+  "native_dependency": {
+    "id": "runtime.native.System.Data.SqlClient.sni",
+    "version": "4.4.0",
+    "source_metadata_commit": "8321c729934c0f8be754953439b88e6e1c120c24",
+    "runtime_packages": [
+      "runtime.win-x64.runtime.native.System.Data.SqlClient.sni",
+      "runtime.win-x86.runtime.native.System.Data.SqlClient.sni",
+      "runtime.win-arm64.runtime.native.System.Data.SqlClient.sni"
+    ]
+  },
+  "managed_windows_release_default": false,
+  "native_sni_port_complete": false,
+  "source_metadata_url": "https://api.nuget.org/v3-flatcontainer/system.data.sqlclient/4.9.1/system.data.sqlclient.nuspec",
+  "native_metadata_url": "https://api.nuget.org/v3-flatcontainer/runtime.native.system.data.sqlclient.sni/4.4.0/runtime.native.system.data.sqlclient.sni.nuspec"
+}

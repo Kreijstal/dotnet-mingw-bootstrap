@@ -1,0 +1,17 @@
+{
+  "recipe": "mingw-w64-dotnet-commonmark",
+  "artifact": "mingw-w64-clang-x86_64-dotnet-commonmark-0.15.1-1-any.pkg.tar.zst",
+  "sha256": "d0f6e5389f25b0d321a0d1acd8a7b4f7f6d6a13b46e4f570631d25567f474495",
+  "nuget_id": "CommonMark.NET",
+  "nuget_version": "0.15.1",
+  "assembly_identity": "CommonMark, Version=0.1.0.0, Culture=neutral, PublicKeyToken=001ef8810438905d",
+  "managed_sha256": "e4bebe583ade128271a16bf7dfd6bfc66642b185b45b460c43d1688b20f53d84",
+  "source_commit": "6f0ed9805065ee368c01fe931ca7d589e9341f11",
+  "source_sha256": "7fd82969785165a4ecaceaaad0d4121ee1506306977c95882c2c55dddcfec417",
+  "public_api_declarations": 200,
+  "source_files": 43,
+  "upstream_spec_cases": 622,
+  "spec_sha256": "75bb0f0ebaec1b93297ea2dd4ccbaa15b9bdf6b941f5e551bcf663ff1dc6c180",
+  "helper_sha256": "7c703dfb9c3aa7ef392c811df35e9f6ddf7944527ef94b52d0a6c6396934f872",
+  "signing": "public-only component derived from upstream CAPI key; no private key shipped"
+}

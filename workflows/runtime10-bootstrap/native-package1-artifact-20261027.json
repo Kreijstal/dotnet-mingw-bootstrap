@@ -1,0 +1,63 @@
+{
+  "archive": "/tmp/dotnet-host10-native-package1/evidence/mingw-w64-clang-x86_64-dotnet-host10-bootstrap-10.0.5-1-any.pkg.tar.zst",
+  "archive_sha256": "c4a4691c12563a2029e5138e24c53ea2746868d90f1bfb0baa98646dca5cd95e",
+  "package_metadata": {
+    "pkgname": [
+      "mingw-w64-clang-x86_64-dotnet-host10-bootstrap"
+    ],
+    "pkgbase": [
+      "mingw-w64-dotnet-host10-bootstrap"
+    ],
+    "xdata": [
+      "pkgtype=pkg"
+    ],
+    "pkgver": [
+      "10.0.5-1"
+    ],
+    "pkgdesc": [
+      "Source-built native .NET10 host bootstrap component; runtime and SDK not included (mingw-w64)"
+    ],
+    "url": [
+      "https://github.com/dotnet/runtime"
+    ],
+    "builddate": [
+      "1793133422"
+    ],
+    "packager": [
+      "Unknown Packager"
+    ],
+    "size": [
+      "18107402"
+    ],
+    "arch": [
+      "any"
+    ],
+    "license": [
+      "spdx:MIT"
+    ],
+    "depend": [
+      "mingw-w64-clang-x86_64-cc-libs"
+    ],
+    "makedepend": [
+      "mingw-w64-clang-x86_64-dotnet-sdk8-servicing=8.0.131-3",
+      "mingw-w64-clang-x86_64-cc",
+      "mingw-w64-clang-x86_64-cmake",
+      "mingw-w64-clang-x86_64-ninja",
+      "mingw-w64-clang-x86_64-llvm",
+      "mingw-w64-clang-x86_64-uasm",
+      "mingw-w64-clang-x86_64-python",
+      "python",
+      "patch"
+    ]
+  },
+  "distribution_files": 28,
+  "native_images": 7,
+  "support_assets": 10,
+  "isolated_hostfxr_layout": true,
+  "original_source_files": 60754,
+  "removed_binary_inputs": 35,
+  "all_payload_hashes_match": true,
+  "full_runtime10_built": false,
+  "full_sdk10_built": false,
+  "full_dependency_goal_complete": false
+}

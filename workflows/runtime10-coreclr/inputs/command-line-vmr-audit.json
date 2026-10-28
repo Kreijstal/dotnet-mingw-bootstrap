@@ -1,0 +1,312 @@
+{
+  "vmr_commit": "12f41dd0da1a94621e039e27aef264179c1104b5",
+  "command_line_source_commit": "c7b5e07cfed85e88c162dc1c916efaff03742e6e",
+  "command_line_vmr_subtree": "2b4dc72274cd194d0990ba805bfb210b66bb80d8",
+  "verified_original_inputs": {
+    "src/System.CommandLine/AliasSet.cs": {
+      "git_blob_sha1": "0fed8a5d75dcd9a371dddad74b54b04ea499dc49",
+      "sha256": "15b23d8b095e199aaffc566704d49bdc57004526ac3c0e54cbc7957e4a998c7c"
+    },
+    "src/System.CommandLine/Argument.cs": {
+      "git_blob_sha1": "1640e883df33b24336e419366b27f75a9c9044cc",
+      "sha256": "df8688be65e6f14a7d849deaec1a286d3c5f0e0d4b3e8cb5023b4fdf134821b8"
+    },
+    "src/System.CommandLine/ArgumentArity.cs": {
+      "git_blob_sha1": "2237ec3369e9332082631c0a274b5c4ff622472c",
+      "sha256": "4c76af6c085e181b7c9c9813eed58c4c6fd300ca0436ea4fb6caa04fb7482cf5"
+    },
+    "src/System.CommandLine/ArgumentValidation.cs": {
+      "git_blob_sha1": "80a94a7bb5e08e493ee4d8d5a8f7d09414560a2e",
+      "sha256": "dcad617079e31453e81c8e7f7d0492f4479d453886153db59c6000dff8560e44"
+    },
+    "src/System.CommandLine/Argument{T}.cs": {
+      "git_blob_sha1": "2a9dd55592aeed41de529ef7ced921c546371b57",
+      "sha256": "18a15c520eeaaafeabd0543b7b1da7c27c0c23c4a2bfa5c1e65bdb687ba746b2"
+    },
+    "src/System.CommandLine/Binding/ArgumentConversionResult.cs": {
+      "git_blob_sha1": "03bd2f85f0635f19dbd49086daf0d60ea57e9d33",
+      "sha256": "0f911472cba984a540e39eda224d0254bc50ff4b77ac1f7912c0448b335d3ca3"
+    },
+    "src/System.CommandLine/Binding/ArgumentConversionResultType.cs": {
+      "git_blob_sha1": "89157938506631fccabd689463df910b394a816e",
+      "sha256": "7975462c0bc4d85a8c6a2711da6a35a3b44853d1dc105394f07270fdead6f565"
+    },
+    "src/System.CommandLine/Binding/ArgumentConverter.DefaultValues.cs": {
+      "git_blob_sha1": "a44a8114d9e43dcf8529d07ba4d3a867f2335e75",
+      "sha256": "adefd30323103ee25d9edaa12d648e0a961de2f5a1351c3ab773881606f04367"
+    },
+    "src/System.CommandLine/Binding/ArgumentConverter.StringConverters.cs": {
+      "git_blob_sha1": "4a48afbb341efb5f34b00cd3d8dc362895b27a14",
+      "sha256": "953415676456a3c89b3610adb5aca5bc0103b6048f29bcfe36754f261da6aaae"
+    },
+    "src/System.CommandLine/Binding/ArgumentConverter.cs": {
+      "git_blob_sha1": "6f494bdd0814c5e0519dfe939a34e0a8e5797092",
+      "sha256": "9b2a7d21c11e38dc39330c20825a1a53c479597cad6e9b691cac87c5ef861f81"
+    },
+    "src/System.CommandLine/Binding/TryConvertArgument.cs": {
+      "git_blob_sha1": "44d777e9398eedcf7f40832ee883eb9b44d48af8",
+      "sha256": "51b3de53d92e7a51ea297441c57bcade5f6e8f6b6a7bfe119a66ef27e49f199d"
+    },
+    "src/System.CommandLine/Binding/TypeExtensions.cs": {
+      "git_blob_sha1": "b0b680a698b5cf296d62cc035a497ae718bce8db",
+      "sha256": "a77051c02a3c08a404b2b50b047fbdd7f80156e7757d94cdff1ec9fa0cc694bd"
+    },
+    "src/System.CommandLine/ChildSymbolList{T}.cs": {
+      "git_blob_sha1": "a68c402090fc19489a5fbfe8392607f0e00f3027",
+      "sha256": "4f748bbb2ca7a57d9ff80b75be1c6eefa21f4e47e0e085b02d721ada989d9b05"
+    },
+    "src/System.CommandLine/Command.cs": {
+      "git_blob_sha1": "be565651d26037fd4013711896cea0f4c701b958",
+      "sha256": "c19942552e9515d28eda22da3eada830bdaf85e60de4a5ffa0721bf7d1daa58f"
+    },
+    "src/System.CommandLine/CompletionSourceExtensions.cs": {
+      "git_blob_sha1": "8c775508b33d7d39d0a461ec4e897e30b6cf3048",
+      "sha256": "2a5a5a0d3b8c50806ad5c7544636508d901732779ee7dc0b7421145aeded424b"
+    },
+    "src/System.CommandLine/Completions/CompletionAction.cs": {
+      "git_blob_sha1": "44cee60f582d10d34a98639d911fe22235778f43",
+      "sha256": "fb1d186c13cfa7e4bc494d74d9cf30211b3ea7f13edd8d678e6f5fc6bbe27a6c"
+    },
+    "src/System.CommandLine/Completions/CompletionContext.cs": {
+      "git_blob_sha1": "ebde81a6e14a7429251211e6aecee30ae7a22cdd",
+      "sha256": "ebe44a103b2bc2a19c57185de2b08f3d07c44284c42257dcfe26a77e7396e3aa"
+    },
+    "src/System.CommandLine/Completions/CompletionItem.cs": {
+      "git_blob_sha1": "bbc3d987f2fa41b14dfb3dfa64476a66fcf01f01",
+      "sha256": "ef77192c31b1aee43f3d2da01e6596ad85f28aea10b4bb4a894379e2d1ee86fb"
+    },
+    "src/System.CommandLine/Completions/SuggestDirective.cs": {
+      "git_blob_sha1": "f52a011ebea87eacda73d99d765eb9a65a69f2bc",
+      "sha256": "878485d9fda37f1e3026b598ed128bf3177792a6b53916ca6b510d5d856c7e59"
+    },
+    "src/System.CommandLine/Completions/TextCompletionContext.cs": {
+      "git_blob_sha1": "a4c4c0e8653f18719dde78a9765424d527e4e15a",
+      "sha256": "2f710db2030e368e831affdefff18a77f3cef43f6f7e272d88ad7fe475f59a92"
+    },
+    "src/System.CommandLine/ConsoleHelpers.cs": {
+      "git_blob_sha1": "2684413c89a294a1b097da9c51f02208c201cf62",
+      "sha256": "9be57b4d5f6bc94857d7cc84abbeb9a98cfa8fd01f4ddbabb394a9fecf18b089"
+    },
+    "src/System.CommandLine/Directive.cs": {
+      "git_blob_sha1": "a779585bd132f15ef6a7b6fbfa75038173793cf5",
+      "sha256": "55481a4b821eda8c2a6eb1882abc8bf87947f9c7a1d7fd412029ee5c8975f54a"
+    },
+    "src/System.CommandLine/EnumerableExtensions.cs": {
+      "git_blob_sha1": "72018aaa386227e0ffb983e16cca1e4a63f72c06",
+      "sha256": "7a29b097e24ca68ff6206e716eba53b3b656882b7726e5f56806ead9e199a9c6"
+    },
+    "src/System.CommandLine/EnvironmentVariablesDirective.cs": {
+      "git_blob_sha1": "0d64619f76c5a0e4b9722f4fe0ecf9b742671828",
+      "sha256": "3c99b5a766a0963a8ea29687dd2c0aa8b191f887a13ecfbc5bcad684ddd8aba8"
+    },
+    "src/System.CommandLine/Help/HelpAction.cs": {
+      "git_blob_sha1": "5566380d7e1289467b581875ec66eaa9adf9aaf0",
+      "sha256": "71c875e64376b869d05521b7ce3045d4cb6e207d7bb81770bb3decd5de4a61c9"
+    },
+    "src/System.CommandLine/Help/HelpBuilder.Default.cs": {
+      "git_blob_sha1": "6dd03f433c064939b63d8cba225637db76c11b37",
+      "sha256": "40b12a89924bdc703060a633d312c8eee69920ad01e51b1fbb0a38944e0117da"
+    },
+    "src/System.CommandLine/Help/HelpBuilder.cs": {
+      "git_blob_sha1": "af6046d898f074def5fd3085c29532f5290d5e3b",
+      "sha256": "a04e5b5191ef087780d033b7f0da4120c2c6063275a4b4a07686d450fd9a97b0"
+    },
+    "src/System.CommandLine/Help/HelpBuilderExtensions.cs": {
+      "git_blob_sha1": "bc84661096b04ca9b3a12e196e975ce4bcad9db0",
+      "sha256": "3f6277af338fbaa98c2ca25dbaa937637985d940ef52e72f4fb9883c78121137"
+    },
+    "src/System.CommandLine/Help/HelpContext.cs": {
+      "git_blob_sha1": "6162933843c20cac5c24c59cc00aa3a36f75fa6e",
+      "sha256": "5d4fadece827acd710ef2108064380c631e665d530ee18a37b0096ca9f56223c"
+    },
+    "src/System.CommandLine/Help/HelpOption.cs": {
+      "git_blob_sha1": "f1d40583e915315f9b2c72303453bf0fb9629626",
+      "sha256": "e134eaa29245f15841fce65e44497dcca5d2726a045571f203f259885a6be201"
+    },
+    "src/System.CommandLine/Help/TwoColumnHelpRow.cs": {
+      "git_blob_sha1": "fab095833769df44377f9823493dc09d47629fe0",
+      "sha256": "4e9775be49a16a3baeccebf2ff726af361fd2130b23520c70d55b4e6f0480432"
+    },
+    "src/System.CommandLine/Invocation/AnonymousAsynchronousCommandLineAction.cs": {
+      "git_blob_sha1": "b16d86e956b218a1f8bde7e035bd43267ea51aee",
+      "sha256": "d1b670101df95879cf971d8b2fc427da07c314463deee68caab6519794ed1d26"
+    },
+    "src/System.CommandLine/Invocation/AnonymousSynchronousCommandLineAction.cs": {
+      "git_blob_sha1": "f54e5d945965ebbc5f2ea51a9f24821302eab28b",
+      "sha256": "fa82938e0837c5f267436eb8062379be548942a4b8444befb87db0fe960473dc"
+    },
+    "src/System.CommandLine/Invocation/AsynchronousCommandLineAction.cs": {
+      "git_blob_sha1": "627bf56092bc6c9f806528f9a02f71c52ca04134",
+      "sha256": "f1011cfcda6fccaf217cbd2b9818ccc7de76afa99288d07c58a14c9b82d04d60"
+    },
+    "src/System.CommandLine/Invocation/CommandLineAction.cs": {
+      "git_blob_sha1": "5e873f08cb80cbfc553ea839224ecb26344e7d50",
+      "sha256": "e612c6542ca6e459380df9d1af4fbfecaeb96b4325bedec5f54252acc3cd06a8"
+    },
+    "src/System.CommandLine/Invocation/InvocationPipeline.cs": {
+      "git_blob_sha1": "c41d2686d60bd1cad951ee2aabd4d673ce77daac",
+      "sha256": "1e06ebd7ba01168a3d07a8dacc5c37bf2764ef32d3fd4400de20315b4c95d916"
+    },
+    "src/System.CommandLine/Invocation/ParseErrorAction.cs": {
+      "git_blob_sha1": "3f35c2cc1eadff77eac898a21ddf4047972a3a1a",
+      "sha256": "967b3ffb4c7aa29011b586345dd1ede91ad7c0851cdc122a45ab30d8e4d7a455"
+    },
+    "src/System.CommandLine/Invocation/ProcessTerminationHandler.cs": {
+      "git_blob_sha1": "ead35b4eb0e5966365da94ea7be0240102908066",
+      "sha256": "e5396989a7a9e8742f92803d0a1ff7cfd24c50f082338d92f6305e0eed4ba6bf"
+    },
+    "src/System.CommandLine/Invocation/SynchronousCommandLineAction.cs": {
+      "git_blob_sha1": "72bceeef183753470104f11bc63d452e9c26bd7b",
+      "sha256": "d3c2376aa3c093819d5d70b454d9d12489ef8116cbee7ccb59af451955d13f29"
+    },
+    "src/System.CommandLine/InvocationConfiguration.cs": {
+      "git_blob_sha1": "9338503bee86c406b438b8a117e81fe7dadd9de6",
+      "sha256": "4a3047f0a5a520269c15ce042a7f200c74ad5f61bb5d6541534edd83905b91c3"
+    },
+    "src/System.CommandLine/LocalizationResources.cs": {
+      "git_blob_sha1": "18f3c33d7681b05933f262afa0cf81804a0b92d9",
+      "sha256": "cdda6fc97de47caf409939ad3e23efea45d22d90052151ed89382b3e9819214b"
+    },
+    "src/System.CommandLine/Option.cs": {
+      "git_blob_sha1": "bac26af4a2c52f6a6a5702537d04969aafa1acb1",
+      "sha256": "70db30f717b524028d153f8d8d4f7fae8f46540769676be60b721422da5f59e9"
+    },
+    "src/System.CommandLine/OptionValidation.cs": {
+      "git_blob_sha1": "02ed98f35e4740ffddfe594761f440c5959244b5",
+      "sha256": "309f8303a195c1d60bf94888653f0c0e4f1821bf7776e016a750d9bcbb13cf10"
+    },
+    "src/System.CommandLine/Option{T}.cs": {
+      "git_blob_sha1": "4cd08d98331329e23993e643264a00baab12ad60",
+      "sha256": "2e348758726a9c0aaef1f0044f6292164ba9186d387e8c579f62919e5353de86"
+    },
+    "src/System.CommandLine/ParseDiagramDirective.cs": {
+      "git_blob_sha1": "2dd51a97311dd16cf9f74b114afd4b35bd13a2c5",
+      "sha256": "e0d93b68609fc5fedfc64c5a940f660023cafd2f844fb064d33df3ce8f006176"
+    },
+    "src/System.CommandLine/ParseResult.cs": {
+      "git_blob_sha1": "666f8256effb26bff8f0dce2fe42f634aa77aeb7",
+      "sha256": "9321f22e0b2c9ef42c805bfb35197a9b555be686f69faecaf745f9e416dba30a"
+    },
+    "src/System.CommandLine/ParserConfiguration.cs": {
+      "git_blob_sha1": "c3a8b06145877507b0db9f7be44aa6114639eaec",
+      "sha256": "71d698086b220cb5b0197ea042b98b0fce0621cefead2da6b25a3023e5f17a73"
+    },
+    "src/System.CommandLine/Parsing/ArgumentResult.cs": {
+      "git_blob_sha1": "f076baa32f7c7768a48b6499a72d9172357c84ce",
+      "sha256": "3bb6728432563c88a0ddea4b0409dcd805d39838794ce43fa82588ae0842eb5e"
+    },
+    "src/System.CommandLine/Parsing/CommandLineParser.cs": {
+      "git_blob_sha1": "ee60fedddabe429d172756fe1b908309164bd805",
+      "sha256": "82f8dc0b71c4d51efaabbdced383e76ffbf3de7fef7f8c310e3454905f219b0c"
+    },
+    "src/System.CommandLine/Parsing/CommandResult.cs": {
+      "git_blob_sha1": "ae4bd2922f25c14fae002fae232a85e1d3e0a15c",
+      "sha256": "12f3de96b3c1562c0ed3468148bf6b509177f0a0131b105a1e95df9d23213cf9"
+    },
+    "src/System.CommandLine/Parsing/DirectiveResult.cs": {
+      "git_blob_sha1": "78ceeaf0d7bbec713b6505c2bf9cd81966270583",
+      "sha256": "0d063fc1f3d0fb7b16f7fa8338ee92901f1dccede89108c5fad9092fa9436d85"
+    },
+    "src/System.CommandLine/Parsing/OptionResult.cs": {
+      "git_blob_sha1": "c673a90458b198b08e48c04acd48fa06365fd304",
+      "sha256": "1887bd1d9362f4c83e836d48b7af3953d8052e57ccf5c7a34d6a8f55c3b62c85"
+    },
+    "src/System.CommandLine/Parsing/ParseDiagramAction.cs": {
+      "git_blob_sha1": "f3abe87b276561c516b86b853855230de5734fdf",
+      "sha256": "a2dec94405bab7d2f2c990a449fb1a528b6f45159da54b8dfa7e2458ce7704d3"
+    },
+    "src/System.CommandLine/Parsing/ParseError.cs": {
+      "git_blob_sha1": "a079b58c8b1d91baab7f8b3e7c5c8bf6df56928b",
+      "sha256": "1170f475bce5ca46e804dd214d7357045dfc09f85845016f88784cffd2103de2"
+    },
+    "src/System.CommandLine/Parsing/ParseOperation.cs": {
+      "git_blob_sha1": "0ae9c4bcf39987342bbf227b8603d771a9defe39",
+      "sha256": "d559f74bd1bdd48ebdc2a9c8200085a835181c195d5fd48975429ff8d481da73"
+    },
+    "src/System.CommandLine/Parsing/StringExtensions.cs": {
+      "git_blob_sha1": "a018f04fcd5973280f5616c2f3626ae8d5c97db7",
+      "sha256": "0d5c8bc28e53187d8c20deda306dc90bf1bbd6b0a586b6253eff0f931f7a8fa4"
+    },
+    "src/System.CommandLine/Parsing/SymbolResult.cs": {
+      "git_blob_sha1": "0016375754fdff5565cf396abf7ae6a3259f3cbc",
+      "sha256": "0109c002462b7b10ed49598d56d1b7ae80774b4bf99966cf5129fd7a0fb8fb4a"
+    },
+    "src/System.CommandLine/Parsing/SymbolResultExtensions.cs": {
+      "git_blob_sha1": "c81459e8c6d1e216623b1766ef5ba727ef72ab4f",
+      "sha256": "3934020ba74af9ca56546caf97e37f08c68a13dbf54c4da18090bc5387f8eb29"
+    },
+    "src/System.CommandLine/Parsing/SymbolResultTree.cs": {
+      "git_blob_sha1": "22731d82cfe674b09e02445480b61f2ada37c7d2",
+      "sha256": "639824f6bdfc67d3c2d54ac9a3e47bbcaffcf5bf8b1a25efc93daf83c1d0d8e1"
+    },
+    "src/System.CommandLine/Parsing/Token.cs": {
+      "git_blob_sha1": "4d11d518db4623d4964c458fae73b96e9d6fc2bd",
+      "sha256": "8ff1a70872cf0dc31b836a6aa834a0d570a14e5bdc4cc0af94adc94ba8fe469b"
+    },
+    "src/System.CommandLine/Parsing/TokenType.cs": {
+      "git_blob_sha1": "857bddb0ab280cb4a4bd464ada0a772dd3d93a72",
+      "sha256": "e61c5aae5ef7fc8862871169e3f3e86078710c60cd829edd814bd762c6c65558"
+    },
+    "src/System.CommandLine/Parsing/TryReplaceToken.cs": {
+      "git_blob_sha1": "2ddae16312d6be939a83369b1a605399acafe05c",
+      "sha256": "3490e4d3f9d40a19db1d19468b99beb9b6d05efdee540fc8b181c99c41218d80"
+    },
+    "src/System.CommandLine/Properties/Resources.Designer.cs": {
+      "git_blob_sha1": "8d95bb93a4cba0387ed0fd8b69c26c68b25bebad",
+      "sha256": "d6a7ddab05bb3f395b5ab8d134a1a2e4773e8109b5e7777c0912b49f5f51733a"
+    },
+    "src/System.CommandLine/Properties/Resources.resx": {
+      "git_blob_sha1": "2cd913ede2cf55f72843f05e2befdde9245578ce",
+      "sha256": "5120d52c7083c70f7e4512553c112f9b2d70639722ead3f4b174c49ea69cd346"
+    },
+    "src/System.CommandLine/RootCommand.cs": {
+      "git_blob_sha1": "2c73b04b0cd2ab45de6c69d65331648bb1388820",
+      "sha256": "5d330e38028a6f0f60702064e98c652d914a905f60d49eb3f78b3fbb2be7808d"
+    },
+    "src/System.CommandLine/Symbol.cs": {
+      "git_blob_sha1": "254940f9c41b302e8789fa7193485131905ab829",
+      "sha256": "5bfc848f4222334e54d456173d5be0cfa08e645fb2d38bd0a3d3d9d8070d4b06"
+    },
+    "src/System.CommandLine/SymbolNode.cs": {
+      "git_blob_sha1": "c415e3c8683245ce1e353499361d6b66069fc52f",
+      "sha256": "adde2a87f2e4e2200c2a03d970c3455b534a3d9d7ad0064d0c801820e8f552bd"
+    },
+    "src/System.CommandLine/System.CommandLine.Config.cs": {
+      "git_blob_sha1": "a46fb3bed62cd88277b8d31677dc37b59e4068f2",
+      "sha256": "728828210723c500e74413c88309eeb81d09a7b5d3c35e1d032e46453af17a94"
+    },
+    "src/System.CommandLine/System.CommandLine.csproj": {
+      "git_blob_sha1": "1d86feebc4a21d6371aa53814e0ac612d455ec93",
+      "sha256": "96abf273c93064c113ccba9cafc6bf7d5f76aa74e82ddfb28e1ba8743df9a0af"
+    },
+    "src/System.CommandLine/System.Diagnostics.CodeAnalysis/DynamicallyAccessedMemberTypes.cs": {
+      "git_blob_sha1": "a139bdc050014db9fd13e9b61b990b4e1fcf3d9c",
+      "sha256": "32fd77c82aa8eee0b046c3e3f8648824045eaf444c22eff5fa48865e3fd4b54d"
+    },
+    "src/System.CommandLine/System.Diagnostics.CodeAnalysis/DynamicallyAccessedMembersAttribute.cs": {
+      "git_blob_sha1": "a39283b0ab89ec972faadf5d642f8d980f77f383",
+      "sha256": "6b8aa5b321f77c830fc522095e0b6fadee02be56d94d50e8b44fd115eaabea3e"
+    },
+    "src/System.CommandLine/System.Diagnostics.CodeAnalysis/UnconditionalSuppressMessageAttribute.cs": {
+      "git_blob_sha1": "8c54ed2c9173b7820224695b0e18d7017e883eab",
+      "sha256": "86a914fb3f696637c85f17c5da0de35c6f71459355771a6d4b59356340b34d9d"
+    },
+    "src/System.CommandLine/System.Runtime.CompilerServices/IsExternalInit.cs": {
+      "git_blob_sha1": "aee0d3ca7ed4eb1f500096d7e5ca2bb666ad6d0d",
+      "sha256": "98a1e28e809b05e1afaba908ad73b8b292807c976e1e3a950f61d98b263534b7"
+    },
+    "src/System.CommandLine/System.Runtime.CompilerServices/Range.cs": {
+      "git_blob_sha1": "01342202b7662b10b8ee0d003d0498a582639251",
+      "sha256": "df9a80f67e026168041571e0678bbc661721528dfbde205b46d61987387e306e"
+    },
+    "src/System.CommandLine/VersionOption.cs": {
+      "git_blob_sha1": "dfcf51f86a051ca4f03c550dba5f4013dfdee207",
+      "sha256": "778b24af2a0572ef4e9d470f6f227a845f777ecc598d3a7e7d90579b94a28c3e"
+    },
+    "src/System.Diagnostics.CodeAnalysis.cs": {
+      "git_blob_sha1": "8a5b2420943ae858acc98de8d61ba7bcbc0c5f76",
+      "sha256": "908d0ba5e9e9e075c4767126cd8a8f858a56a24598140c90e22577c1ffeedf90"
+    }
+  },
+  "all_production_cs_and_resx_match_vmr": true
+}

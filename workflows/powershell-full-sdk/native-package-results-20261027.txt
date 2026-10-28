@@ -1,0 +1,158 @@
+PowerShell source native package — 2026-10-27
+
+{
+  "previous_goal_turn_classification": "progress",
+  "current_goal_turn_classification": "progress",
+  "host": "win11",
+  "build_root": "/home/topkek/pspkg2.bNlIeO",
+  "source_version": "7.4.20",
+  "package_version": "7.4.20-1",
+  "recipe": "mingw-w64-powershell/PKGBUILD",
+  "source_sdk_package": "8.0.131-3",
+  "source_targeting_package": "8.0.31-2",
+  "source_runtime_package": "8.0.31-3",
+  "clean_build_command": "makepkg --cleanbuild --force --noconfirm",
+  "clean_build_exit_code": 0,
+  "clean_build_workflow_archive_sha256": "b7075fb73fddd952d1e8535c5b3ee05446ca2310b24bebb964512ac63a718ae9",
+  "final_workflow_archive_sha256": "be8834a3a0148e723d7e30b79a5a3fbb5d16df7ed021ea4243a468478c90dd92",
+  "checker_only_repackage": {
+    "changed_files": [
+      "share/doc/powershell/source-package.json",
+      "share/doc/powershell/checks/check-package.sh"
+    ],
+    "all_application_and_native_launcher_binaries_unchanged": true
+  },
+  "repackage_command": "makepkg --repackage --force --noconfirm",
+  "repackage_exit_code": 0,
+  "corrected_staged_check_command": "bash src/build/distribution/share/doc/powershell/checks/check-package.sh \"$PWD/src/build/distribution\" \"$PWD/src/build/corrected-package-check\" \"$PWD/src/build/distribution/share/doc/powershell/checks\"",
+  "corrected_staged_check_exit_code": 0,
+  "independent_artifact_audit_command": "/usr/bin/python3 audit-native-package.py mingw-w64-clang-x86_64-powershell-7.4.20-1-any.pkg.tar.zst artifact-audit2.json",
+  "independent_artifact_audit_exit_code": 0,
+  "install_command": "pacman -U --noconfirm \"$PWD/mingw-w64-clang-x86_64-powershell-7.4.20-1-any.pkg.tar.zst\"",
+  "install_exit_code": 0,
+  "installed_check_command": "bash /clang64/share/doc/powershell/checks/check-package.sh /clang64 installed-check /clang64/share/doc/powershell/checks",
+  "installed_check_exit_code": 0,
+  "installed_native_entry": "/clang64/bin/pwsh.exe",
+  "installed_entry_exact_pacman_owner": "mingw-w64-clang-x86_64-powershell",
+  "original_project_dlls": 14,
+  "application_files": 596,
+  "distribution_files": 825,
+  "source_binary_assets": 372,
+  "source_nuget_archives": 93,
+  "pinned_build_packages": 100,
+  "bundled_license_owners": 78,
+  "license_files": 208,
+  "source_references": 163,
+  "gallery_modules": 6,
+  "original_catalog_source_references": 213,
+  "localaccounts_public_protected_api_entries": 459,
+  "original_graphicalhost_cs_inputs": 165,
+  "original_xaml_baml_pages": 16,
+  "original_graphics_resources": 12,
+  "desktop_visible_raster_pixels": 133905,
+  "final_artifact_sha256": "37de1fded0056057af1cfc9dcfc1453a722febde2d0be2f993371a27827f2f98",
+  "local_artifact": "/tmp/powershell-native-package2/evidence/mingw-w64-clang-x86_64-powershell-7.4.20-1-any.pkg.tar.zst",
+  "native_package_built_and_installed": true,
+  "full_shipping_compatibility_complete": false,
+  "full_dependency_goal_complete": false,
+  "known_wmi_sta_diagnostic_exit_code": 1,
+  "known_wmi_sta_error": "Access denied during source System.Management local enumeration; -MTA combined MMI/CIM/WMI passes",
+  "remaining": [
+    "STA source System.Management WMI enumeration compatibility",
+    "MMI3 authenticated remote/provider/ownership parity",
+    "SqlClient real database/native/LocalDB/shared-memory/FILESTREAM parity",
+    "complete Windows.Compatibility graph behavior",
+    "broader source WPF/native and WinForms8 compatibility",
+    "COM/R2R/NativeAOT/debugger/DAC and broader runtime compatibility",
+    "PowerShell7.6/.NET10 complete graph"
+  ],
+  "first_attempt": {
+    "root": "/home/topkek/pspkg1.wPfLNV",
+    "classification": "interrupted",
+    "reason": "Corrected new MMI fixture CLR-null/enumerator disposal, original runtime asset path and explicit MTA test requirement; no successful native artifact claimed"
+  },
+  "installed_sta_wmi_command": "timeout 60 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File \"$(cygpath -am /home/topkek/powershell-shipping3.DfekoG/tests/powershell-full-sdk/WmiStaProbe.ps1)\"",
+  "installed_sta_wmi_exit_code": 1,
+  "installed_sta_wmi_error": "Access denied during MoveNext"
+}
+
+The clean build used workflow2. Workflow3 changes only the validation script to scan package-owned subtrees in the shared installed prefix. A fresh stage comparison proves every application file and native launcher byte unchanged. Corrected staged validation, standard makepkg --repackage, independent artifact audit, ordinary pacman installation and installed checks all pass. This is not a fresh recompilation under workflow3.
+
+verify-source3.log
+==> Making package: mingw-w64-powershell 7.4.20-1 (27 Oct 2026 20:33:09)
+==> Retrieving sources...
+  -> Found powershell-7.4.20.tar.gz
+  -> Found powershell-source-workflow-3.tar.gz
+==> Validating source files with sha256sums...
+    powershell-7.4.20.tar.gz ... Passed
+    powershell-source-workflow-3.tar.gz ... Passed
+
+repackage.log
+==> Making package: mingw-w64-powershell 7.4.20-1 (27 Oct 2026 20:34:12)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Removing existing $pkgdir/ directory...
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> WARNING: Package contains reference to $srcdir
+clang64/share/doc/powershell/full-sdk-catalog-audit.json
+==> Creating package "mingw-w64-clang-x86_64-powershell"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-powershell 7.4.20-1 (27 Oct 2026 20:34:40)
+
+install.log
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-powershell-7.4.20-1
+
+Total Installed Size:  73.31 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+installing mingw-w64-clang-x86_64-powershell...
+
+installed-check.log
+PASS complete source distribution file hashes and every declared source/native-owner license
+PASS native launcher Unicode/quotes/empty/trailing-backslash arguments, source engine/runtime/root, process-only environment and exact child exit status
+CATALOG System.Data.SqlClient.SqlConnection -> System.Data.SqlClient
+CATALOG System.ServiceModel.BasicHttpBinding -> System.Private.ServiceModel
+CATALOG System.ServiceModel.NetTcpBinding -> System.Private.ServiceModel
+CATALOG System.IO.Packaging.Package -> System.IO.Packaging
+CATALOG System.Speech.Synthesis.SpeechSynthesizer -> System.Speech
+CATALOG System.Drawing.Bitmap -> System.Drawing.Common
+CATALOG System.Management.ManagementObjectSearcher -> System.Management
+PASS original full SDK catalog/console, module discovery, CIM/GetOwner/serialization, JSON/Add-Type/Authenticode, LocalAccounts and no Framework implementations
+PASS packaged MMI direct local query/disposal, original CIM cmdlets and source System.Management WMI OS/GetOwner/disposal
+PASS original native console starts actual source pwsh.exe child, Unicode CLIXML, original source engine, serviced runtime and live CIM
+PASS original GraphicalHost compiled BAML/Show-Command control,STA layout and source WPF raster: 133905 visible pixels; 1 visual children
+MODULE PowerShellGet 2.2.5 E:\msys64\clang64\lib\powershell\7\Modules\PowerShellGet
+MODULE ThreadJob 2.0.3 E:\msys64\clang64\lib\powershell\7\Modules\ThreadJob
+MODULE Microsoft.PowerShell.Archive 1.2.6 E:\msys64\clang64\lib\powershell\7\Modules\Microsoft.PowerShell.Archive
+MODULE PackageManagement 1.4.8.1 E:\msys64\clang64\lib\powershell\7\Modules\PackageManagement
+MODULE PSReadLine 2.3.6 E:\msys64\clang64\lib\powershell\7\Modules\PSReadLine
+MODULE Microsoft.PowerShell.PSResourceGet 1.1.1 E:\msys64\clang64\lib\powershell\7\Modules\Microsoft.PowerShell.PSResourceGet
+PASS six source gallery modules in original console, source NuGet provider, PSReadLine options, Unicode archive round trip and real ThreadJob/CIM/Unicode execution
+PASS packaged native launcher/full SDK/CIM/LocalAccounts/source gallery/native child/source desktop rendering and license closure
+
+The initial standalone STA diagnostic and two isolated experiments remain failing and are not shipped. See cim-wmi-runtime-results-20261027.txt. The full dependency goal remains incomplete.
+
+Installed STA WMI diagnostic (exit 1):
+[31;1mParentContainsErrorRecordException: [0mE:\msys64\home\topkek\powershell-shipping3.DfekoG\tests\powershell-full-sdk\WmiStaProbe.ps1:11[0m
+[31;1m[0m[36;1mLine |[0m
+[31;1m[0m[36;1m[36;1m  11 | [0m                    [36;1m~~~~~~~~~~~~~~~~[0m
+[31;1m[0m[36;1m[36;1m[0m[36;1m[0m[36;1m     | [31;1m                    ~~~~~~~~~~~~~~~~[0m
+[31;1m[0m[36;1m[36;1m[0m[36;1m[0m[36;1m[31;1m[31;1m[36;1m     | [31;1mException calling "MoveNext" with "0" argument(s): "Access denied "[0m

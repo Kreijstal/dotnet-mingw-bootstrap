@@ -1,0 +1,15 @@
+{
+  "runtime_source_commit": "081d220c0a773ffb7c6bea6b48727833576a65ef",
+  "patch_sha256": "6c616bbd160436ab4198956d8366fb1530b0fdac1377770031b479b3ce103984",
+  "files": {
+    "src/coreclr/hosts/corerun/CMakeLists.txt": {
+      "original_sha256": "1f2d0f5d4e9f9412837c8bf54cf0e44e2310c93751f61e64a15cb066889f7bfb",
+      "ported_sha256": "332e655b9a5136664822ccc9a7e9e1ba62b344849074bb0d74151aa8b0a067c9"
+    },
+    "src/coreclr/hosts/corerun/corerun.hpp": {
+      "original_sha256": "8c92bde5bff649711d757483d6e9d0f2858e00a88a96730fc8e29edbad29bc07",
+      "ported_sha256": "89f10d9fbf38a071a6b716acf6e207bb68f0ad6337f193c3bc2591a0fcca3c65"
+    }
+  },
+  "clean_apply_exit_code": 0
+}

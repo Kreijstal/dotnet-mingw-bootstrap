@@ -1,0 +1,158 @@
+DocumentationAnalyzers and supported compiler-host prototypes, 2026-10-26
+Host: win11, MSYS2 CLANG64
+Analyzer root: /home/topkek/powershell-documentation.6HrASX
+Compiler root: /home/topkek/powershell-compiler49.zJolbC
+
+Source analyzer commit 489c06575beee224030ffdc9e91ce43569f32a79, published version
+1.0.0-beta.59 -> meta dependency Unstable 1.0.0.59. Both assemblies preserve
+1.0.0.59/2bc5e20c3ad68793 using upstream DEVELOPMENT_KEY and only the public
+component of the source key. All analyzer and code-fix source files/resources
+are built, not an analyzer-only subset. No package artifact has been produced.
+
+The published assemblies expose zero public types. Empty public API gates do not
+prove analyzer completeness. Full metadata inventories, descriptor/resource checks,
+all real code-fix categories/Markdown conversion and package/installed gates remain.
+The direct dependency is explicitly not marked verified.
+
+The source SDK's default csc reports 4.8.0-7.25569.25 (e0917286); actual MSBuild
+rejects the 4.9-referencing analyzer with CS9057. A source-built csc4.9 prototype
+uses the unmodified upstream Program and all CscCommandLine Compile items, plus
+the complete RazorCompiler source project, against installed source-built compiler
+libraries 4.9.2. It reports 4.9.2 (9934fb9e). No SDK files are replaced.
+
+The native SDK task's custom DLL launch selected an unsuitable host; an explicit
+csc49.cmd invokes the source-built dotnet.exe and csc.dll. With XML docs enabled,
+the DOC103 entity fixture now fails with DOC103 and the corrected text builds.
+This is real MSBuild/analyzer execution, not just compilation. The custom compiler
+host still needs portable packaging and its own complete consumer gates.
+
+
+$ /clang64/lib/dotnet/dotnet.exe build prepared2/DocumentationAnalyzers/Library.csproj -c Release --configfile prepared2/NuGet.config -p:UseSharedCompilation=false -v:minimal
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-documentation.6HrASX\prepared2\DocumentationAnalyzers\Library.csproj (in 975 ms).
+  Library -> E:\msys64\home\topkek\powershell-documentation.6HrASX\prepared2\DocumentationAnalyzers\bin\Release\net8.0\DocumentationAnalyzers.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:10.69
+Result: exit 0
+
+$ /clang64/lib/dotnet/dotnet.exe build prepared2/DocumentationAnalyzers.CodeFixes/Library.csproj -c Release --configfile prepared2/NuGet.config -p:UseSharedCompilation=false -v:minimal
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-documentation.6HrASX\prepared2\DocumentationAnalyzers.CodeFixes\Library.csproj (in 1.11 sec).
+  1 of 2 projects are up-to-date for restore.
+  Library -> E:\msys64\home\topkek\powershell-documentation.6HrASX\prepared2\DocumentationAnalyzers\bin\Release\net8.0\DocumentationAnalyzers.dll
+  Library -> E:\msys64\home\topkek\powershell-documentation.6HrASX\prepared2\DocumentationAnalyzers.CodeFixes\bin\Release\net8.0\DocumentationAnalyzers.CodeFixes.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:13.23
+Result: exit 0
+
+Compiler source: /tmp/powershell-compiler49/prepare.py; Roslyn tree /home/topkek/powershell-workspaces.Y0NseS/roslyn-9934fb9e3527e1c0c51314e57d4aab30f97e8f9e
+$ /clang64/lib/dotnet/dotnet.exe build prepared/csc/Tool.csproj -c Release --configfile prepared/NuGet.config -p:UseSharedCompilation=false -v:minimal
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-compiler49.zJolbC\prepared\csc\Tool.csproj (in 286 ms).
+  Restored E:\msys64\home\topkek\powershell-compiler49.zJolbC\prepared\Microsoft.CodeAnalysis.ExternalAccess.RazorCompiler\Tool.csproj (in 286 ms).
+  Tool -> E:\msys64\home\topkek\powershell-compiler49.zJolbC\prepared\Microsoft.CodeAnalysis.ExternalAccess.RazorCompiler\bin\Release\net8.0\Microsoft.CodeAnalysis.ExternalAccess.RazorCompiler.dll
+  Tool -> E:\msys64\home\topkek\powershell-compiler49.zJolbC\prepared\csc\bin\Release\net8.0\csc.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.15
+Result: exit 0
+
+$ bash msbuild-probe.sh
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-documentation.6HrASX\msbuild-host-probe\Test.csproj (in 55 ms).
+CSC : error CS9057: The analyzer assembly 'E:\msys64\home\topkek\powershell-documentation.6HrASX\prepared2\DocumentationAnalyzers\bin\Release\net8.0\DocumentationAnalyzers.dll' references version '4.9.0.0' of the compiler, which is newer than the currently running version '4.8.0.0'. [E:\msys64\home\topkek\powershell-documentation.6HrASX\msbuild-host-probe\Test.csproj]
+
+Build FAILED.
+
+CSC : error CS9057: The analyzer assembly 'E:\msys64\home\topkek\powershell-documentation.6HrASX\prepared2\DocumentationAnalyzers\bin\Release\net8.0\DocumentationAnalyzers.dll' references version '4.9.0.0' of the compiler, which is newer than the currently running version '4.8.0.0'. [E:\msys64\home\topkek\powershell-documentation.6HrASX\msbuild-host-probe\Test.csproj]
+    0 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:01.23
+Result: exit 1 (expected unsupported compiler-version baseline)
+
+$ dotnet build msbuild-host-probe/Test.csproj -t:Rebuild -c Release --no-restore -p:UseSharedCompilation=false -p:CscToolPath=E:/msys64/home/topkek/powershell-compiler49.zJolbC/prepared/csc/bin/Release/net8.0 -p:CscToolExe=csc49.cmd -p:GenerateDocumentationFile=true -p:NoWarn=CS1591 -v:minimal
+Negative fixture, DOC103 severity error:
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+E:\msys64\home\topkek\powershell-documentation.6HrASX\msbuild-host-probe\Test.cs(1,17): error DOC103: Use Unicode characters (https://github.com/DotNetAnalyzers/DocumentationAnalyzers/blob/master/docs/DOC103.md) [E:\msys64\home\topkek\powershell-documentation.6HrASX\msbuild-host-probe\Test.csproj]
+
+Build FAILED.
+
+E:\msys64\home\topkek\powershell-documentation.6HrASX\msbuild-host-probe\Test.cs(1,17): error DOC103: Use Unicode characters (https://github.com/DotNetAnalyzers/DocumentationAnalyzers/blob/master/docs/DOC103.md) [E:\msys64\home\topkek\powershell-documentation.6HrASX\msbuild-host-probe\Test.csproj]
+    0 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:02.65
+Result: exit 1 (expected DOC103)
+Corrected fixture, same command:
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Test -> E:\msys64\home\topkek\powershell-documentation.6HrASX\msbuild-host-probe\bin\Release\net8.0\Test.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.75
+Result: exit 0
+
+$ bash msbuild-probe-strong-doc.sh
+PASS expected DOC103 error from actual MSBuild/csc4.9 analyzer execution
+PASS corrected documentation builds through the same source compiler/analyzer
+Result: exit 0

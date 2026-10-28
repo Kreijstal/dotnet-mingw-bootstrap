@@ -1,0 +1,96 @@
+repro.log
+=========
+/home/topkek/mmi-cim-wmi-probe-20261026/repro/mmi.tar.gz: OK
+Runtime: .NET 8.0.0
+MMI: Microsoft.Management.Infrastructure, Version=2.0.0.0, Culture=neutral, PublicKeyToken=null
+System.NotImplementedException: The method or operation is not implemented.
+   at Microsoft.Management.Infrastructure.Native.MI_Session.AssertValidInternalState() in E:\msys64\home\topkek\mmi-cim-wmi-probe-20261026\repro\baseline\mmi\Native\MI_Session.cs:line 430
+   at Microsoft.Management.Infrastructure.CimSession..ctor(MI_Session handle, String computerName) in E:\msys64\home\topkek\mmi-cim-wmi-probe-20261026\repro\baseline\mmi\CimSession.cs:line 51
+   at Microsoft.Management.Infrastructure.CimSession.Create(String computerName, CimSessionOptions sessionOptions) in E:\msys64\home\topkek\mmi-cim-wmi-probe-20261026\repro\baseline\mmi\CimSession.cs:line 159
+   at MmiProbe.Main(String[] args) in E:\msys64\home\topkek\mmi-cim-wmi-probe-20261026\repro\baseline\MmiProbe.cs:line 126
+Baseline reproduced the upstream unimplemented handle check.
+patching file Native/MI_Session.cs
+patching file Native/MI_Operation.cs
+patching file Native/MI_Instance.cs
+patching file Native/Structures/MI_OperationCallbacks.cs
+patching file Native/MI_Session.cs
+Runtime: .NET 8.0.0
+MMI: Microsoft.Management.Infrastructure, Version=2.0.0.0, Culture=neutral, PublicKeyToken=null
+CIM OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+CIM process: dotnet.exe; PID matches current source-built runtime
+CIM invalid class: correctly returned InvalidClass
+CIM OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+CIM process: dotnet.exe; PID matches current source-built runtime
+CIM invalid class: correctly returned InvalidClass
+Native dependency: C:\WINDOWS\SYSTEM32\mi.dll
+PASS: source-built MMI local DCOM/default queries, errors, disposal and reopen
+Runtime: .NET 8.0.0
+MMI: Microsoft.Management.Infrastructure, Version=2.0.0.0, Culture=neutral, PublicKeyToken=null
+CAPABILITY operation timeout: FAIL NotImplementedException: The method or operation is not implemented.
+CAPABILITY class metadata: PASS
+CAPABILITY instance serialization: FAIL Exception: Serializer returned no data
+CAPABILITY asynchronous query: FAIL Exception: No completion callback within 3 seconds
+MMI probe completed; logs: /home/topkek/mmi-cim-wmi-probe-20261026/repro/{baseline,repaired}
+
+mmi-repro-build.log
+===================
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\mmi-cim-wmi-probe-20261026\repro\repaired\MmiProbe.csproj (in 80 ms).
+  Restored E:\msys64\home\topkek\mmi-cim-wmi-probe-20261026\repro\repaired\mmi\Mmi.csproj (in 80 ms).
+  Mmi -> E:\msys64\home\topkek\mmi-cim-wmi-probe-20261026\repro\repaired\mmi\bin\Release\net8.0\Microsoft.Management.Infrastructure.dll
+  MmiProbe -> E:\msys64\home\topkek\mmi-cim-wmi-probe-20261026\repro\repaired\bin\Release\net8.0\MmiProbe.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.22
+
+wmi-repro-build.log
+===================
+Junction created for E:\msys64\home\topkek\mmi-cim-wmi-probe-20261026\wmi-repro\wmi-build-root\src\runtime-8.0.0-native <<===>> E:\msys64\home\topkek\dotnetboot\m612\src\runtime-8.0.0-native
+Junction created for E:\msys64\home\topkek\mmi-cim-wmi-probe-20261026\wmi-repro\wmi-build-root\build\refpack-8.0.0 <<===>> E:\msys64\home\topkek\dotnetboot\m612\build\refpack-8.0.0
+
+==> libraries 8.0.0: plan
+1 assemblies planned, 0 skipped; non-framework project references: System.CodeDom
+
+==> libraries 8.0.0: gens
+
+==> libraries 8.0.0: build
+
+==> lib System.Management (LinkAttributes, net8.0-windows)
+csc System.Management: rc=0, 0 errors
+
+==> libraries 8.0.0: report
+built: 1 implementation assemblies + System.Private.CoreLib (1 C# projects planned + Microsoft.VisualBasic.Core)
+skipped by the plan:
+
+wmi-repro-consumer-build.log
+============================
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  WmiProbe -> E:\msys64\home\topkek\mmi-cim-wmi-probe-20261026\wmi-repro\bin-wmi\net8.0\WmiProbe.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.28
+
+wmi-repro-run.log
+=================
+Runtime: .NET 8.0.0
+WMI: System.Management, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+WMI OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+WMI process: dotnet.exe; PID matches current source-built runtime
+WMI invalid class: correctly returned InvalidClass
+WMI OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+WMI process: dotnet.exe; PID matches current source-built runtime
+WMI invalid class: correctly returned InvalidClass
+Native dependency: C:\Windows\Microsoft.NET\Framework64\v4.0.30319\wminet_utils.dll
+LIMITATION: queries passed but require a Microsoft .NET Framework native binary
+

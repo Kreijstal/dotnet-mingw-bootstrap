@@ -1,0 +1,166 @@
+{
+  "previous_goal_turn_classification": "progress",
+  "current_goal_turn_classification": "progress",
+  "date_utc": "2026-10-27",
+  "host": "topkek@win11",
+  "build_root": "/c/codex-dotnet10/p1.wKLUFS",
+  "recipe": "mingw-w64-dotnet-host10-bootstrap",
+  "native_package": "mingw-w64-clang-x86_64-dotnet-host10-bootstrap 10.0.5-1",
+  "runtime_source_commit": "081d220c0a773ffb7c6bea6b48727833576a65ef",
+  "runtime_source_archive_sha256": "1692acae5e3adfd625452fbc9db4fd4e982c10e38189358ae245c74dd5514d7a",
+  "workflow_archive_sha256": "ed3ae779bffb536e8580b1791e1e2e9c0109dd936818155a2a1921eea34c4084",
+  "source_workflow_files": 11,
+  "original_source_inputs": 60754,
+  "prebuilt_source_inputs_removed": 35,
+  "clean_build_command": "makepkg --cleanbuild --force --noconfirm",
+  "clean_build_exit_code": 0,
+  "source_verification_command": "makepkg --verifysource",
+  "source_verification_exit_code": 0,
+  "artifact_audit_command": "python3 tests/runtime10-bootstrap/audit-native-package.py /tmp/dotnet-host10-native-package1/evidence/mingw-w64-clang-x86_64-dotnet-host10-bootstrap-10.0.5-1-any.pkg.tar.zst tests/runtime10-bootstrap/native-package1-artifact-20261027.json",
+  "artifact_audit_exit_code": 0,
+  "install_command": "pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-host10-bootstrap-10.0.5-1-any.pkg.tar.zst",
+  "install_exit_code": 0,
+  "installed_check_command": "bash check-installed-host.sh /c/codex-dotnet10/p1.wKLUFS/installed-check1",
+  "installed_check_exit_code": 0,
+  "installed_owned_files": 28,
+  "all_installed_hashes_match": true,
+  "installed_native_bytes_match_clean_build": true,
+  "native_images": 7,
+  "native_support_assets": 10,
+  "source_native_file_version": "10.0.526.11800",
+  "original_arcade_version_vectors": 3,
+  "build_native_probes": {
+    "native_product_version": "10.0.5",
+    "native_file_versions": {
+      "dotnet.exe": "10.0.526.11800",
+      "hostfxr.dll": "10.0.526.11800",
+      "hostpolicy.dll": "10.0.526.11800",
+      "nethost.dll": "10.0.526.11800",
+      "comhost.dll": "10.0.526.11800",
+      "ijwhost.dll": "10.0.526.11800"
+    },
+    "nethost_resolved_path": "C:/codex-dotnet10/p1.wKLUFS/src/native-check/native host \u03bb\\host\\fxr\\10.0.5\\hostfxr.dll",
+    "environment_info": {
+      "size": 56,
+      "hostfxr_version": "10.0.5",
+      "commit": "081d220c0a773ffb7c6bea6b48727833576a65ef",
+      "sdk_count": 0,
+      "framework_count": 0
+    },
+    "unicode_path_and_explicit_root": true,
+    "apphost_cet_compatibility": true,
+    "original_native_test_cases": {
+      "fx_ver": {
+        "command": [
+          "C:/codex-dotnet10/p1.wKLUFS/src/native-check/upstream-tests/test_fx_ver.exe"
+        ],
+        "exit_code": 0
+      },
+      "get_hostfxr_path_explicit_true": {
+        "command": [
+          "C:/codex-dotnet10/p1.wKLUFS/src/native-check/upstream-tests/nativehost.exe",
+          "get_hostfxr_path",
+          "true",
+          "nullptr",
+          "C:/codex-dotnet10/p1.wKLUFS/src/native-check/native host \u03bb"
+        ],
+        "exit_code": 0
+      },
+      "get_hostfxr_path_explicit_false": {
+        "command": [
+          "C:/codex-dotnet10/p1.wKLUFS/src/native-check/upstream-tests/nativehost.exe",
+          "get_hostfxr_path",
+          "false",
+          "nullptr",
+          "C:/codex-dotnet10/p1.wKLUFS/src/native-check/native host \u03bb"
+        ],
+        "exit_code": 0
+      }
+    },
+    "host_files_sha256": {
+      "apphost.exe": "1dd0d747936b3fd640ce870ea86d58d1cd6be5cde4a464c1b3b6a0938e953c68",
+      "comhost.dll": "609bfb4edda8fbb4c8e665c54e42b4db2f834ad2d9bca5ef7422df7cc9e9e55b",
+      "comhost.dll.a": "967578f38064e54f69a0cf0db61ce44af36052b66533ba64144daafd2307d0a2",
+      "coreclr_delegates.h": "0e286315d756ffa184908e67e775c7ed6ee2938667c2def8b6e4aacb454719ae",
+      "dotnet.exe": "b44ae375092263ce15255e096e00a76cc0e9f1c1029a4317250ded499c3fc535",
+      "hostfxr.dll": "7d6113e026756a41c2342c4a5da60b171d376f244f23daf02e63bc23e7b49413",
+      "hostfxr.dll.a": "ba43998647cfcae22181bf2d2ffb7f404719fac3152bcd673838156fc2af6923",
+      "hostfxr.h": "52aaae5014d9a3dc46f8a289ddf31e42a714364a75f1dd87bfd790359e0f2541",
+      "hostpolicy.dll": "014ee986777452d6a3973a667a397010f85e1c34edb0b7bdcd6eef707d59db2f",
+      "hostpolicy.dll.a": "d815ed8e4713fb4d2aa7cd6d61265f2a0ea444a2cda315c221cf23a73e61d22a",
+      "ijwhost.dll": "264bda1f82d5091204b3e46d993df60050ef456a91eb9810c0d3f21a9355098f",
+      "ijwhost.dll.a": "2565bf42a754fd7b9d7430446e6b5a236ce414c34f37210ef61cb0fc4a0e708e",
+      "libhostfxr.a": "4da966724497be27edfdea2c55e079758bf5e6a319645b44a82bc3773dd8e750",
+      "libnethost.a": "342bfc5ea9f03573cb3e607c13018ce937bf2e32f3dcc52fd4fe93f2e65b5409",
+      "nethost.dll": "606669c92b31fdd4d2d0dcc09584be5824def309be8709cccc5d757a0f5d7615",
+      "nethost.dll.a": "4a3009853a06abd4dfe9382bcb619ca8c4e1b0ecf4818706a19101e6732fd188",
+      "nethost.h": "1e8d4d3c2f2486b5025c94dcdb798ab331816fe7ecfb5623785a496a12f54cd0"
+    },
+    "full_runtime10_built": false,
+    "full_sdk10_built": false
+  },
+  "installed_native_probes": {
+    "native_product_version": "10.0.5",
+    "native_file_versions": {
+      "dotnet.exe": "10.0.526.11800",
+      "hostfxr.dll": "10.0.526.11800",
+      "hostpolicy.dll": "10.0.526.11800",
+      "nethost.dll": "10.0.526.11800",
+      "comhost.dll": "10.0.526.11800",
+      "ijwhost.dll": "10.0.526.11800"
+    },
+    "nethost_resolved_path": "C:/codex-dotnet10/p1.wKLUFS/installed-check1/native-check/native host \u03bb\\host\\fxr\\10.0.5\\hostfxr.dll",
+    "environment_info": {
+      "size": 56,
+      "hostfxr_version": "10.0.5",
+      "commit": "081d220c0a773ffb7c6bea6b48727833576a65ef",
+      "sdk_count": 0,
+      "framework_count": 0
+    },
+    "unicode_path_and_explicit_root": true,
+    "apphost_cet_compatibility": true,
+    "original_native_test_cases": {},
+    "host_files_sha256": {
+      "apphost.exe": "1dd0d747936b3fd640ce870ea86d58d1cd6be5cde4a464c1b3b6a0938e953c68",
+      "comhost.dll": "609bfb4edda8fbb4c8e665c54e42b4db2f834ad2d9bca5ef7422df7cc9e9e55b",
+      "comhost.dll.a": "967578f38064e54f69a0cf0db61ce44af36052b66533ba64144daafd2307d0a2",
+      "coreclr_delegates.h": "0e286315d756ffa184908e67e775c7ed6ee2938667c2def8b6e4aacb454719ae",
+      "dotnet.exe": "b44ae375092263ce15255e096e00a76cc0e9f1c1029a4317250ded499c3fc535",
+      "hostfxr.dll": "7d6113e026756a41c2342c4a5da60b171d376f244f23daf02e63bc23e7b49413",
+      "hostfxr.dll.a": "ba43998647cfcae22181bf2d2ffb7f404719fac3152bcd673838156fc2af6923",
+      "hostfxr.h": "52aaae5014d9a3dc46f8a289ddf31e42a714364a75f1dd87bfd790359e0f2541",
+      "hostpolicy.dll": "014ee986777452d6a3973a667a397010f85e1c34edb0b7bdcd6eef707d59db2f",
+      "hostpolicy.dll.a": "d815ed8e4713fb4d2aa7cd6d61265f2a0ea444a2cda315c221cf23a73e61d22a",
+      "ijwhost.dll": "264bda1f82d5091204b3e46d993df60050ef456a91eb9810c0d3f21a9355098f",
+      "ijwhost.dll.a": "2565bf42a754fd7b9d7430446e6b5a236ce414c34f37210ef61cb0fc4a0e708e",
+      "libhostfxr.a": "4da966724497be27edfdea2c55e079758bf5e6a319645b44a82bc3773dd8e750",
+      "libnethost.a": "342bfc5ea9f03573cb3e607c13018ce937bf2e32f3dcc52fd4fe93f2e65b5409",
+      "nethost.dll": "606669c92b31fdd4d2d0dcc09584be5824def309be8709cccc5d757a0f5d7615",
+      "nethost.dll.a": "4a3009853a06abd4dfe9382bcb619ca8c4e1b0ecf4818706a19101e6732fd188",
+      "nethost.h": "1e8d4d3c2f2486b5025c94dcdb798ab331816fe7ecfb5623785a496a12f54cd0"
+    },
+    "full_runtime10_built": false,
+    "full_sdk10_built": false
+  },
+  "artifact_sha256": "c4a4691c12563a2029e5138e24c53ea2746868d90f1bfb0baa98646dca5cd95e",
+  "isolated_install_prefix": "/clang64/lib/dotnet10-bootstrap",
+  "excluded_msvc_only_test_projects": [
+    "comsxs",
+    "ijw",
+    "typelibs"
+  ],
+  "coreclr10_built": false,
+  "full_runtime10_built": false,
+  "full_sdk10_built": false,
+  "powershell76_application_built": false,
+  "verified_dependency_count_increment": 0,
+  "full_dependency_goal_complete": false,
+  "remaining": [
+    "CoreCLR10 port and execution, including Windows SEH and native interop",
+    "Managed runtime and reference assemblies, generators, native library closure",
+    "SDK10.0.201 source toolchain",
+    "WindowsDesktop source port and behavior",
+    "PowerShell7.6 declared79-ID dependency closure and original application validation",
+    "Previously recorded MMI3 authenticated/provider/streaming, SQL/native and Windows compatibility gaps"
+  ]
+}

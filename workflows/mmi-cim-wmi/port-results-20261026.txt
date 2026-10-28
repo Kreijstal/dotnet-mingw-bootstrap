@@ -1,0 +1,303 @@
+MMI experimental port verification, 2026-10-26
+Host win11, CLANG64, source-built SDK8.0.131/runtime8.0.0.
+MMI source2.0.0-preview.1; PowerShell requirement3.0.0 remains unverified.
+All commands below completed successfully. The baseline failure in the source probe is expected.
+
+Clean source probe
+$ bash /home/topkek/mmi-port.iKfuzV/tests/mmi-cim-wmi/check-mmi.sh /home/topkek/mmi-port.iKfuzV/fresh-repro
+result: exit 0
+
+/home/topkek/mmi-port.iKfuzV/fresh-repro/mmi.tar.gz: OK
+Runtime: .NET 8.0.0
+MMI: Microsoft.Management.Infrastructure, Version=2.0.0.0, Culture=neutral, PublicKeyToken=null
+System.NotImplementedException: The method or operation is not implemented.
+   at Microsoft.Management.Infrastructure.Native.MI_Session.AssertValidInternalState() in E:\msys64\home\topkek\mmi-port.iKfuzV\fresh-repro\baseline\mmi\Native\MI_Session.cs:line 430
+   at Microsoft.Management.Infrastructure.CimSession..ctor(MI_Session handle, String computerName) in E:\msys64\home\topkek\mmi-port.iKfuzV\fresh-repro\baseline\mmi\CimSession.cs:line 51
+   at Microsoft.Management.Infrastructure.CimSession.Create(String computerName, CimSessionOptions sessionOptions) in E:\msys64\home\topkek\mmi-port.iKfuzV\fresh-repro\baseline\mmi\CimSession.cs:line 159
+   at MmiProbe.Main(String[] args) in E:\msys64\home\topkek\mmi-port.iKfuzV\fresh-repro\baseline\MmiProbe.cs:line 127
+Baseline reproduced the upstream unimplemented handle check.
+patching file Native/MI_Session.cs
+patching file Native/MI_Operation.cs
+patching file Native/MI_Instance.cs
+patching file Native/Structures/MI_OperationCallbacks.cs
+patching file Native/MI_Session.cs
+patching file CimException.cs
+patching file Native/MI_Deserializer.cs
+patching file Native/Structures/MI_Interval.cs
+patching file Serialization/CimDeserializer.cs
+patching file Serialization/CimSerializer.cs
+patching file CimClass.cs
+patching file CimInstance.cs
+patching file CimSession.cs
+patching file Internal/Operations/CimAsyncCallbacksReceiverBase.cs
+patching file Internal/Operations/CimAsyncCancellationDisposable.cs
+patching file Internal/Operations/CimAsyncClassObserverProxy.cs
+patching file Internal/Operations/CimAsyncIndicationObserverProxy.cs
+patching file Internal/Operations/CimAsyncInstanceObserverProxy.cs
+patching file Internal/Operations/CimAsyncMethodResultObserverProxy.cs
+patching file Internal/Operations/CimOperation.cs
+patching file Internal/Operations/CimSyncClassEnumerator.cs
+patching file Internal/Operations/CimSyncInstanceEnumerator.cs
+patching file Native/MI_Operation.cs
+patching file Native/MI_OperationCallbackBridge.cs
+patching file Native/MI_Session.cs
+patching file Native/Structures/MI_OperationCallbacks.cs
+patching file Options/Internal/CimOperationOptions.cs
+patching file Strings.resx
+Runtime: .NET 8.0.0
+MMI: Microsoft.Management.Infrastructure, Version=2.0.0.0, Culture=neutral, PublicKeyToken=null
+CIM OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+CIM process: dotnet.exe; PID matches current source-built runtime
+CIM invalid class: correctly returned InvalidClass
+CIM OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+CIM process: dotnet.exe; PID matches current source-built runtime
+CIM invalid class: correctly returned InvalidClass
+Native dependency: C:\WINDOWS\SYSTEM32\mi.dll
+PASS: source-built MMI local DCOM/default queries, errors, disposal and reopen
+Runtime: .NET 8.0.0
+MMI: Microsoft.Management.Infrastructure, Version=2.0.0.0, Culture=neutral, PublicKeyToken=null
+PASS: native operation/session timeouts, microseconds, infinity, negatives and timed query
+PASS: native MI_XML instance/class round-trips, offsets, Unicode, arrays, intervals, capacity, cached classes, errors and disposal
+PASS: native asynchronous instances/classes/methods/errors, observer exceptions, compacting GC, independent result lifetime, unsubscribe, CancellationToken, callback-root cleanup and session close
+Native dependency: C:\WINDOWS\SYSTEM32\mi.dll
+PASS: MMI timeout and serialization port checks
+Runtime: .NET 8.0.0
+MMI: Microsoft.Management.Infrastructure, Version=2.0.0.0, Culture=neutral, PublicKeyToken=null
+CAPABILITY operation timeout: PASS
+CAPABILITY class metadata: PASS
+CAPABILITY instance serialization: PASS
+CAPABILITY asynchronous query: PASS
+MMI probe completed; logs: /home/topkek/mmi-port.iKfuzV/fresh-repro/{baseline,repaired}
+
+
+Clean package build (recipe directory)
+$ PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm
+result: exit 0
+
+==> Making package: mingw-w64-dotnet-mmi 2.0.0.preview1-1 (26 Oct 2026 13:05:59)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Downloading mmi-cf32fc695b32c2eae848b693395c09222fe1d2ae.tar.gz...
+  % Total    % Received % Xferd  Average Speed  Time    Time    Time   Current
+                                 Dload  Upload  Total   Spent   Left   Speed
+
+  0      0   0      0   0      0      0      0                              0
+100 127.7k   0 127.7k   0      0 352.1k      0                              0
+100 127.7k   0 127.7k   0      0 350.9k      0                              0
+100 127.7k   0 127.7k   0      0 349.7k      0                              0
+  -> Found prepare.py
+  -> Found 0001-validate-native-handles.patch
+  -> Found 0002-accept-empty-operation-callbacks.patch
+  -> Found 0003-implement-timeouts-and-xml-serialization.patch
+  -> Found 0004-native-result-callbacks-and-operation-lifetime.patch
+  -> Found MmiProbe.cs
+  -> Found MmiPortChecks.cs
+  -> Found NativeDependencies.cs
+==> Validating source files with sha256sums...
+    mmi-cf32fc695b32c2eae848b693395c09222fe1d2ae.tar.gz ... Passed
+    prepare.py ... Passed
+    0001-validate-native-handles.patch ... Passed
+    0002-accept-empty-operation-callbacks.patch ... Passed
+    0003-implement-timeouts-and-xml-serialization.patch ... Passed
+    0004-native-result-callbacks-and-operation-lifetime.patch ... Passed
+    MmiProbe.cs ... Passed
+    MmiPortChecks.cs ... Passed
+    NativeDependencies.cs ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+  -> Extracting mmi-cf32fc695b32c2eae848b693395c09222fe1d2ae.tar.gz with bsdtar
+==> Starting prepare()...
+patching file Native/MI_Session.cs
+patching file Native/MI_Operation.cs
+patching file Native/MI_Instance.cs
+patching file Native/Structures/MI_OperationCallbacks.cs
+patching file Native/MI_Session.cs
+patching file CimException.cs
+patching file Native/MI_Deserializer.cs
+patching file Native/Structures/MI_Interval.cs
+patching file Serialization/CimDeserializer.cs
+patching file Serialization/CimSerializer.cs
+patching file CimClass.cs
+patching file CimInstance.cs
+patching file CimSession.cs
+patching file Internal/Operations/CimAsyncCallbacksReceiverBase.cs
+patching file Internal/Operations/CimAsyncCancellationDisposable.cs
+patching file Internal/Operations/CimAsyncClassObserverProxy.cs
+patching file Internal/Operations/CimAsyncIndicationObserverProxy.cs
+patching file Internal/Operations/CimAsyncInstanceObserverProxy.cs
+patching file Internal/Operations/CimAsyncMethodResultObserverProxy.cs
+patching file Internal/Operations/CimOperation.cs
+patching file Internal/Operations/CimSyncClassEnumerator.cs
+patching file Internal/Operations/CimSyncInstanceEnumerator.cs
+patching file Native/MI_Operation.cs
+patching file Native/MI_OperationCallbackBridge.cs
+patching file Native/MI_Session.cs
+patching file Native/Structures/MI_OperationCallbacks.cs
+patching file Options/Internal/CimOperationOptions.cs
+patching file Strings.resx
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\mmi-port.iKfuzV\mingw-w64-dotnet-mmi\src\mmi\Mmi.csproj (in 87 ms).
+  Mmi -> E:\msys64\home\topkek\mmi-port.iKfuzV\mingw-w64-dotnet-mmi\src\mmi\bin\Release\net8.0\Microsoft.Management.Infrastructure.dll
+  The package Microsoft.Management.Infrastructure.2.0.0-preview.1 is missing a readme. Go to https://aka.ms/nuget/authoring-best-practices/readme to learn why package readmes are important.
+  Successfully created package 'E:\msys64\home\topkek\mmi-port.iKfuzV\mingw-w64-dotnet-mmi\src\feed\Microsoft.Management.Infrastructure.2.0.0-preview.1.nupkg'.
+==> Starting check()...
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\mmi-port.iKfuzV\mingw-w64-dotnet-mmi\src\check\check.csproj (in 350 ms).
+  check -> E:\msys64\home\topkek\mmi-port.iKfuzV\mingw-w64-dotnet-mmi\src\check\bin\Release\net8.0\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:04.78
+Runtime: .NET 8.0.0
+MMI: Microsoft.Management.Infrastructure, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+CIM OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+CIM process: dotnet.exe; PID matches current source-built runtime
+CIM invalid class: correctly returned InvalidClass
+CIM OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+CIM process: dotnet.exe; PID matches current source-built runtime
+CIM invalid class: correctly returned InvalidClass
+Native dependency: C:\WINDOWS\SYSTEM32\mi.dll
+PASS: source-built MMI local DCOM/default queries, errors, disposal and reopen
+Runtime: .NET 8.0.0
+MMI: Microsoft.Management.Infrastructure, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+PASS: native operation/session timeouts, microseconds, infinity, negatives and timed query
+PASS: native MI_XML instance/class round-trips, offsets, Unicode, arrays, intervals, capacity, cached classes, errors and disposal
+PASS: native asynchronous instances/classes/methods/errors, observer exceptions, compacting GC, independent result lifetime, unsubscribe, CancellationToken, callback-root cleanup and session close
+Native dependency: C:\WINDOWS\SYSTEM32\mi.dll
+PASS: MMI timeout and serialization port checks
+Runtime: .NET 8.0.0
+MMI: Microsoft.Management.Infrastructure, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+CAPABILITY operation timeout: PASS
+CAPABILITY class metadata: PASS
+CAPABILITY instance serialization: PASS
+CAPABILITY asynchronous query: PASS
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-mmi"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-mmi 2.0.0.preview1-1 (26 Oct 2026 13:06:40)
+
+
+Final recipe/source verification and documentation repack
+$ makepkg --verifysource --force --noconfirm && makepkg --repackage --force --noconfirm
+result: exit 0
+
+==> Making package: mingw-w64-dotnet-mmi 2.0.0.preview1-1 (26 Oct 2026 13:09:38)
+==> Retrieving sources...
+  -> Found mmi-cf32fc695b32c2eae848b693395c09222fe1d2ae.tar.gz
+  -> Found prepare.py
+  -> Found 0001-validate-native-handles.patch
+  -> Found 0002-accept-empty-operation-callbacks.patch
+  -> Found 0003-implement-timeouts-and-xml-serialization.patch
+  -> Found 0004-native-result-callbacks-and-operation-lifetime.patch
+  -> Found MmiProbe.cs
+  -> Found MmiPortChecks.cs
+  -> Found NativeDependencies.cs
+  -> Found README.md
+==> Validating source files with sha256sums...
+    mmi-cf32fc695b32c2eae848b693395c09222fe1d2ae.tar.gz ... Passed
+    prepare.py ... Passed
+    0001-validate-native-handles.patch ... Passed
+    0002-accept-empty-operation-callbacks.patch ... Passed
+    0003-implement-timeouts-and-xml-serialization.patch ... Passed
+    0004-native-result-callbacks-and-operation-lifetime.patch ... Passed
+    MmiProbe.cs ... Passed
+    MmiPortChecks.cs ... Passed
+    NativeDependencies.cs ... Passed
+    README.md ... Passed
+==> Making package: mingw-w64-dotnet-mmi 2.0.0.preview1-1 (26 Oct 2026 13:09:54)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Removing existing $pkgdir/ directory...
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-mmi"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-mmi 2.0.0.preview1-1 (26 Oct 2026 13:10:02)
+
+
+Installed package consumer
+$ bash /home/topkek/mmi-port.iKfuzV/tests/mmi-cim-wmi/check-installed.sh /home/topkek/mmi-port.iKfuzV/installed-check
+result: exit 0
+
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\mmi-port.iKfuzV\installed-check\check.csproj (in 803 ms).
+  check -> E:\msys64\home\topkek\mmi-port.iKfuzV\installed-check\bin\Release\net8.0\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:12.82
+Runtime: .NET 8.0.0
+MMI: Microsoft.Management.Infrastructure, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+CIM OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+CIM process: dotnet.exe; PID matches current source-built runtime
+CIM invalid class: correctly returned InvalidClass
+CIM OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+CIM process: dotnet.exe; PID matches current source-built runtime
+CIM invalid class: correctly returned InvalidClass
+Native dependency: C:\WINDOWS\SYSTEM32\mi.dll
+PASS: source-built MMI local DCOM/default queries, errors, disposal and reopen
+Runtime: .NET 8.0.0
+MMI: Microsoft.Management.Infrastructure, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+PASS: native operation/session timeouts, microseconds, infinity, negatives and timed query
+PASS: native MI_XML instance/class round-trips, offsets, Unicode, arrays, intervals, capacity, cached classes, errors and disposal
+PASS: native asynchronous instances/classes/methods/errors, observer exceptions, compacting GC, independent result lifetime, unsubscribe, CancellationToken, callback-root cleanup and session close
+Native dependency: C:\WINDOWS\SYSTEM32\mi.dll
+PASS: MMI timeout and serialization port checks
+Runtime: .NET 8.0.0
+MMI: Microsoft.Management.Infrastructure, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+CAPABILITY operation timeout: PASS
+CAPABILITY class metadata: PASS
+CAPABILITY instance serialization: PASS
+CAPABILITY asynchronous query: PASS
+

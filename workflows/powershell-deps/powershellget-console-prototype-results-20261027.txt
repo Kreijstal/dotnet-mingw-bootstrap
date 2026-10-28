@@ -1,0 +1,123 @@
+Source PowerShellGet complete offline lifecycle prototype, 2026-10-27
+
+Remote console root: /home/topkek/powershell-console-entry.ppOWgP
+Original PowerShell src/powershell/Program.cs, source ConsoleHost/SMA/runtime closure
+from installed source module-test-host7.4.20-2 and installed source SDK apphost.
+No production PowerShellGet algorithm changes. Both module and script lifecycle
+checks passed (exit0) with a real original Start-Job subprocess.
+Package clean build/install/fresh installed checks remain pending. No direct ID
+count advancement is implied by these prototype checks.
+
+$ MSYSTEM=CLANG64 bash -lc "bash /home/topkek/powershell-console-entry.ppOWgP/build-console-entry-prototype.sh > /home/topkek/powershell-console-entry.ppOWgP/build.log 2>&1"
+RESULT console-build-and-Start-Job: exit0
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\msys64\home\topkek\powershell-console-entry.ppOWgP\Entry.csproj (in 110 ms).
+  Entry -> E:\msys64\home\topkek\powershell-console-entry.ppOWgP\bin\Release\net8.0\pwsh.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.05
+7.4.20
+E:\msys64\home\topkek\powershell-console-entry.ppOWgP\staged\System.Management.Automation.dll
+CimCmdlets
+Microsoft.PowerShell.Management
+Microsoft.PowerShell.Security
+Microsoft.PowerShell.Utility
+Pester
+Microsoft.PowerShell.Operation.Validation
+PackageManagement
+Pester
+PowerShellGet
+PSReadLine
+AppBackgroundTask
+AppvClient
+Appx
+AssignedAccess
+BitLocker
+BitsTransfer
+BranchCache
+ConfigDefenderPerformance
+DefenderPerformance
+DeliveryOptimization
+DirectAccessClientComponents
+Dism
+DnsClient
+EventTracingManagement
+Get-NetView
+International
+Kds
+LanguagePackManagement
+LAPS
+Microsoft.PowerShell.LocalAccounts
+Microsoft.Windows.Bcd.Cmdlets
+MMAgent
+NetAdapter
+NetConnection
+NetEventPacketCapture
+NetLbfo
+NetNat
+NetQos
+NetSecurity
+NetSwitchTeam
+NetTCPIP
+NetworkConnectivityStatus
+NetworkSwitchManager
+NetworkTransition
+OsConfiguration
+PcsvDevice
+PKI
+PnpDevice
+PrintManagement
+ProcessMitigations
+Provisioning
+ScheduledTasks
+SecureBoot
+SmbShare
+SmbWitness
+StartLayout
+Storage
+TLS
+TroubleshootingPack
+TrustedPlatformModule
+UEV
+VpnClient
+Wdac
+Whea
+WindowsDeveloperLicense
+WindowsErrorReporting
+WindowsSearch
+WindowsUpdate
+9704
+λ source child
+
+Exact lifecycle runner:
+set -euo pipefail
+root=/home/topkek/powershellget-package.X5gJBE/mingw-w64-powershell-powershellget
+owned=/home/topkek/powershell-console-entry.ppOWgP/offline2
+export PATH=/clang64/bin:/usr/bin:$PATH
+export DOTNET_ROOT=$(cygpath -am /clang64/lib/dotnet) DOTNET_CLI_TELEMETRY_OPTOUT=1 POWERSHELL_TELEMETRY_OPTOUT=1
+export DOTNET_ROOT_X64=$DOTNET_ROOT
+/usr/bin/python3 /home/topkek/powershell-console-entry.ppOWgP/make-fixtures.py "$owned"
+export PSModulePath="E:/msys64/home/topkek/powershellget-package.X5gJBE/mingw-w64-powershell-powershellget/src/check/empty-packages;$(cygpath -am "$owned/ProgramFiles/PowerShell/Modules");E:/msys64/home/topkek/powershell-console-entry.ppOWgP/staged/Modules"
+/home/topkek/powershell-console-entry.ppOWgP/staged/pwsh.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File E:/msys64/home/topkek/powershell-console-entry.ppOWgP/Offline.ps1 "$(cygpath -am "$root/src/check/empty-packages/powershellget/2.2.5/PowerShellGet.psd1")" "$(cygpath -am "$root/src/check/empty-packages/packagemanagement/1.4.8.1/PackageManagement.psd1")" "$(cygpath -am "$owned")"
+
+RESULT offline2: exit0
+PASS owned offline module feed created
+PASS source PowerShellGet repository persistence, find, dependency save/install, installed Unicode module execution, update and uninstall
+PASS source PowerShellGet script metadata create/update/parse, discovery, save, owned install/execution, update and uninstall
