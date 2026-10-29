@@ -20,7 +20,10 @@ here=$(cd "$(dirname "$0")" && pwd)
 steps=${*:-native managed layout test}
 RT=$M612/src/runtime-8.0.0-native
 AOT=$RT/src/coreclr/tools/aot
-CB=$M612/build/coreclr-8.0.0/cmake          # coreclr.sh's CMake tree
+# The native step runs in the toolchain of coreclr.sh's tree: NATIVE_MSYSTEM=CLANG64 (default) or UCRT64
+NATIVE_MSYSTEM=${NATIVE_MSYSTEM:-CLANG64}
+case "$NATIVE_MSYSTEM" in CLANG64) _ns= ;; UCRT64) _ns=-ucrt64 ;; *) die "NATIVE_MSYSTEM=$NATIVE_MSYSTEM" ;; esac
+CB=$M612/build/coreclr-8.0.0$_ns/cmake          # coreclr.sh's CMake tree
 B=$M612/build/crossgen2-8.0.0; mkdir -p "$B/obj"
 OUT=$M612/crossgen2-8.0.0
 ROOT=${ROOT:-$M612/dotnet-sdk-8.0.131-net8-coreclr}   # framework-coreclr.sh's root
@@ -29,12 +32,12 @@ R2RROOT=${R2RROOT:-$M612/dotnet-sdk-8.0.131-net8-coreclr-r2r}
 SDKVER=8.0.131
 BCSC=${BCSC:-$M612/roslyn-4.8.0/csc.exe}
 step_native() {
-  # (the managed steps use the UCRT64 tools of the chain; the native build is coreclr.sh's CLANG64 tree)
-  [ "$MSYSTEM" = CLANG64 ] || { env MSYSTEM=CLANG64 bash "$here/crossgen2.sh" native; return; }
+  # (the managed steps use the UCRT64 tools of the chain; the native build is coreclr.sh's tree)
+  [ -n "${CROSSGEN2_NATIVE:-}" ] || { env MSYSTEM="$NATIVE_MSYSTEM" CROSSGEN2_NATIVE=1 bash "$here/crossgen2.sh" native; return; }
   ninja -C "$CB" -j"${JOBS:-4}" clrjit_win_x64_x64 jitinterface_x64
 }
-if [ "$MSYSTEM" = CLANG64 ]; then   # (common.sh is for the UCRT64 seed environment)
-  [ "$steps" = native ] || die "under CLANG64 only the native step runs"
+if [ -n "${CROSSGEN2_NATIVE:-}" ]; then   # (common.sh is for the UCRT64 seed environment)
+  [ "$steps" = native ] || die "with CROSSGEN2_NATIVE only the native step runs"
   log "crossgen2: native"; step_native; exit
 fi
 . "$here/common.sh"
