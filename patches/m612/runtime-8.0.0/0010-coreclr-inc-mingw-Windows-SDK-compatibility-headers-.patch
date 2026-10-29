@@ -1,8 +1,8 @@
-From f2252cfdc5c612cd7986050afbeafdf64cd6e460 Mon Sep 17 00:00:00 2001
+From 6d0162deb625a468cd23bf6646467f250cf7bb67 Mon Sep 17 00:00:00 2001
 From: Kreijstal <elektrischrainbow@gmail.com>
 Date: Fri, 9 Oct 2026 17:26:08 +0200
-Subject: [PATCH 10/16] coreclr: inc/mingw, Windows SDK compatibility headers
- for MinGW
+Subject: [PATCH] coreclr: inc/mingw, Windows SDK compatibility headers for
+ MinGW
 
 - msvc_compat.h (force-included): __annotation, the windows.h min/max
   macros for C++, crtdbg.h (as MSVC's C++ headers include it), missing
@@ -14,10 +14,10 @@ Subject: [PATCH 10/16] coreclr: inc/mingw, Windows SDK compatibility headers
 - verrsrc.h: mingw-w64 has it in winver.h.
 ---
  src/coreclr/inc/mingw/msvc_compat.h |   61 ++
- src/coreclr/inc/mingw/sal_legacy.h  | 1255 +++++++++++++++++++++++++++
+ src/coreclr/inc/mingw/sal_legacy.h  | 1253 +++++++++++++++++++++++++++
  src/coreclr/inc/mingw/verrsrc.h     |    4 +
  src/coreclr/inc/mingw/winnt.h       |   52 ++
- 4 files changed, 1372 insertions(+)
+ 4 files changed, 1370 insertions(+)
  create mode 100644 src/coreclr/inc/mingw/msvc_compat.h
  create mode 100644 src/coreclr/inc/mingw/sal_legacy.h
  create mode 100644 src/coreclr/inc/mingw/verrsrc.h
@@ -92,10 +92,10 @@ index 000000000..71d716469
 +#endif
 diff --git a/src/coreclr/inc/mingw/sal_legacy.h b/src/coreclr/inc/mingw/sal_legacy.h
 new file mode 100644
-index 000000000..4426789d3
+index 000000000..3c2de48cc
 --- /dev/null
 +++ b/src/coreclr/inc/mingw/sal_legacy.h
-@@ -0,0 +1,1255 @@
+@@ -0,0 +1,1253 @@
 +// Licensed to the .NET Foundation under one or more agreements.
 +// The .NET Foundation licenses this file to you under the MIT license.
 +
@@ -103,7 +103,8 @@ index 000000000..4426789d3
 +// (__in, __out_ecount(n), __success(expr), __checkReturn ...), which mingw-w64
 +// does not have (it spells them SAL__xxx). They carry no code; outside /analyze
 +// the SDK defines them empty too. The names are those defined by
-+// src/coreclr/pal/inc/rt/{sal.h,specstrings.h,specstrings_strict.h} (the Unix copies).
++// src/coreclr/pal/inc/rt/{sal.h,specstrings.h,specstrings_strict.h} (the Unix copies),
++// except __null, which is the null pointer constant of GCC and clang (NULL).
 +#pragma once
 +
 +#ifndef __allaccess_impl
@@ -1057,9 +1058,6 @@ index 000000000..4426789d3
 +#ifndef __notzterm_impl
 +#define __notzterm_impl
 +#endif
-+#ifndef __null
-+#define __null
-+#endif
 +#ifndef __null_impl
 +#define __null_impl
 +#endif
@@ -1420,5 +1418,5 @@ index 000000000..89b8c3229
 +#define C_ASSERT(e) static_assert(e, #e)
 +#endif
 -- 
-2.55.0
+2.56.0
 
