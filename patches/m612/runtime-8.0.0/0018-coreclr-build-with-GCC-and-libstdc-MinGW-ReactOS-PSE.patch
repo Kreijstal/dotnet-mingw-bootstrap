@@ -10,6 +10,12 @@ instead of clang/lld/libc++.
   -fnon-call-exceptions. __try/__except/__finally come from ReactOS's PSEH
   (pseh2_64.h) with its gcc_plugin_seh (-fplugin), which CMake gets as
   CLR_MINGW_PSEH_INCLUDE and CLR_MINGW_GCC_SEH_PLUGIN.
+  -fno-strict-aliasing: the Windows code type-puns as MSVC allows (cor.h
+  reads a ULONG through uint32_t*; with strict aliasing GCC miscompiled
+  CorSigUncompressData, which broke ildasm's signature decoding).
+- ilasm, ildasm: link the metadata libraries as a group under MinGW
+  (GNU ld resolves archives in one pass) and repeat utilcodestaticnohost
+  after them in ilasm.
 - inc/mingw/msvc_compat.h: libstdc++ spells try __try, so the SEH try
   statement is __seh_try { } __except (f) { } __endtry (PSEH needs the
   __endtry; with clang __seh_try is __try and __endtry is empty).
@@ -27,26 +33,28 @@ instead of clang/lld/libc++.
 - comcache.cpp: define CLSID_InProcFreeMarshaler rather than pull in the
   libuuid.a member that also has the IIDs <mtx.h> defines there.
 ---
- src/coreclr/CMakeLists.txt          | 62 ++++++++++++++++++++---------
- src/coreclr/debug/ee/controller.cpp |  2 +-
- src/coreclr/gc/gc.cpp               |  2 +-
- src/coreclr/inc/mingw/msvc_compat.h | 54 ++++++++++++++++++++++---
- src/coreclr/inc/palclr.h            | 10 +++--
- src/coreclr/inc/palclr_win.h        |  7 ++--
- src/coreclr/inc/utilcode.h          | 21 ++++++++++
- src/coreclr/jit/jittelemetry.cpp    |  3 +-
- src/coreclr/utilcode/stacktrace.cpp |  3 +-
- src/coreclr/vm/assembly.cpp         |  2 +-
- src/coreclr/vm/comcache.cpp         |  8 ++++
- src/coreclr/vm/comtoclrcall.cpp     | 10 ++---
- src/coreclr/vm/threads.cpp          |  2 +-
- 13 files changed, 144 insertions(+), 42 deletions(-)
+ src/coreclr/CMakeLists.txt            | 64 +++++++++++++++++++--------
+ src/coreclr/debug/ee/controller.cpp   |  2 +-
+ src/coreclr/gc/gc.cpp                 |  2 +-
+ src/coreclr/ilasm/CMakeLists.txt      |  7 +++
+ src/coreclr/ildasm/exe/CMakeLists.txt |  6 +++
+ src/coreclr/inc/mingw/msvc_compat.h   | 54 +++++++++++++++++++---
+ src/coreclr/inc/palclr.h              | 10 +++--
+ src/coreclr/inc/palclr_win.h          |  7 +--
+ src/coreclr/inc/utilcode.h            | 21 +++++++++
+ src/coreclr/jit/jittelemetry.cpp      |  3 +-
+ src/coreclr/utilcode/stacktrace.cpp   |  3 +-
+ src/coreclr/vm/assembly.cpp           |  2 +-
+ src/coreclr/vm/comcache.cpp           |  8 ++++
+ src/coreclr/vm/comtoclrcall.cpp       | 10 ++---
+ src/coreclr/vm/threads.cpp            |  2 +-
+ 15 files changed, 159 insertions(+), 42 deletions(-)
 
 diff --git a/src/coreclr/CMakeLists.txt b/src/coreclr/CMakeLists.txt
-index 36edfabd3..cf36f375c 100644
+index 36edfabd3..6dd9d74bd 100644
 --- a/src/coreclr/CMakeLists.txt
 +++ b/src/coreclr/CMakeLists.txt
-@@ -20,25 +20,51 @@ if(CLR_CMAKE_HOST_WIN32 AND MINGW)
+@@ -20,25 +20,53 @@ if(CLR_CMAKE_HOST_WIN32 AND MINGW)
    set(CMAKE_ASM_MASM_FLAGS "${CMAKE_ASM_MASM_FLAGS} -win64 -nologo")
    add_compile_definitions($<$<COMPILE_LANGUAGE:ASM_MASM>:__MINGW32__>)
  
@@ -95,12 +103,14 @@ index 36edfabd3..cf36f375c 100644
 +    # ReactOS's PSEH (pseh2_64.h, CLR_MINGW_PSEH_INCLUDE) and its gcc_plugin_seh
 +    # (CLR_MINGW_GCC_SEH_PLUGIN), see inc/mingw/msvc_compat.h; MSVC's anonymous
 +    # struct members need -fms-extensions.
++    # The Windows code type-puns as MSVC allows, e.g. cor.h reads a ULONG
++    # (unsigned long) through uint32_t*: -fno-strict-aliasing.
 +    if(NOT CLR_MINGW_GCC_SEH_PLUGIN OR NOT CLR_MINGW_PSEH_INCLUDE)
 +      message(FATAL_ERROR "GCC needs CLR_MINGW_GCC_SEH_PLUGIN and CLR_MINGW_PSEH_INCLUDE (ReactOS gcc_plugin_seh, PSEH)")
 +    endif()
 +    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>)   # /GR-
 +    set(CLR_MINGW_C_CXX_OPTIONS -fms-extensions -fwrapv -fno-omit-frame-pointer -ffp-contract=off
-+        -fnon-call-exceptions -fmax-errors=200
++        -fnon-call-exceptions -fno-strict-aliasing -fmax-errors=200
 +        -Wno-unused-variable -Wno-unused-value -Wno-unused-function -Wno-unknown-pragmas
 +        -Wno-unused-but-set-variable -Wno-attributes -Wno-format -Wno-missing-braces
 +        -Wno-multichar -Wno-comment -Wno-parentheses -Wno-sign-compare -Wno-narrowing
@@ -142,6 +152,48 @@ index 5876d4119..98a481ecf 100644
  #define _MM_HINT_T0 1
  #endif
      _mm_prefetch((const char*)addr, _MM_HINT_T0);
+diff --git a/src/coreclr/ilasm/CMakeLists.txt b/src/coreclr/ilasm/CMakeLists.txt
+index 5102243fc..2e9b85697 100644
+--- a/src/coreclr/ilasm/CMakeLists.txt
++++ b/src/coreclr/ilasm/CMakeLists.txt
+@@ -65,6 +65,12 @@ if(CLR_CMAKE_HOST_LINUX OR CLR_CMAKE_HOST_FREEBSD OR CLR_CMAKE_HOST_NETBSD OR CL
+     set(END_LIBRARY_GROUP -Wl,--end-group)
+ endif(CLR_CMAKE_HOST_LINUX OR CLR_CMAKE_HOST_FREEBSD OR CLR_CMAKE_HOST_NETBSD OR CLR_CMAKE_HOST_SUNOS)
+ 
++if(MINGW)
++    # GNU ld resolves static libraries in one pass (lld does not care).
++    set(START_LIBRARY_GROUP -Wl,--start-group)
++    set(END_LIBRARY_GROUP -Wl,--end-group)
++endif(MINGW)
++
+ add_executable_clr(ilasm
+   ${ILASM_SOURCES}
+   ${ILASM_RESOURCES}
+@@ -123,6 +129,7 @@ else()
+   target_link_libraries(ilasm
+     PRIVATE
+     ${ILASM_LINK_LIBRARIES}
++    utilcodestaticnohost # again after the md libraries, for GNU ld
+     ole32
+     oleaut32
+     shell32
+diff --git a/src/coreclr/ildasm/exe/CMakeLists.txt b/src/coreclr/ildasm/exe/CMakeLists.txt
+index a8d629a92..2d60a244d 100644
+--- a/src/coreclr/ildasm/exe/CMakeLists.txt
++++ b/src/coreclr/ildasm/exe/CMakeLists.txt
+@@ -58,6 +58,12 @@ if(CLR_CMAKE_HOST_LINUX OR CLR_CMAKE_HOST_FREEBSD OR CLR_CMAKE_HOST_NETBSD OR CL
+     set(END_LIBRARY_GROUP -Wl,--end-group)
+ endif(CLR_CMAKE_HOST_LINUX OR CLR_CMAKE_HOST_FREEBSD OR CLR_CMAKE_HOST_NETBSD OR CLR_CMAKE_HOST_SUNOS)
+ 
++if(MINGW)
++    # GNU ld resolves static libraries in one pass (lld does not care).
++    set(START_LIBRARY_GROUP -Wl,--start-group)
++    set(END_LIBRARY_GROUP -Wl,--end-group)
++endif(MINGW)
++
+ add_executable_clr(ildasm
+     ${ILDASM_SOURCES}
+     ${ILDASM_RESOURCES}
 diff --git a/src/coreclr/inc/mingw/msvc_compat.h b/src/coreclr/inc/mingw/msvc_compat.h
 index e86eff886..9d7d6376e 100644
 --- a/src/coreclr/inc/mingw/msvc_compat.h
