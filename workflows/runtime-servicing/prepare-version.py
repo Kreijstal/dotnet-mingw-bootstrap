@@ -10,6 +10,8 @@ import tarfile
 import xml.etree.ElementTree as ET
 
 root = Path(sys.argv[1]).resolve()
+# the SDK of the environment that builds (CLANG64 or UCRT64)
+prefix = Path(os.environ.get('MINGW_PREFIX', '/clang64'))
 here = Path(__file__).resolve().parent
 source = root / 'm/src/runtime-8.0.31-native'
 task = here / 'inputs/CalculateAssemblyAndFileVersions.cs'
@@ -32,13 +34,13 @@ items = ET.SubElement(project, 'ItemGroup')
 ET.SubElement(items, 'Compile', Include=native(task))
 for name in ['Microsoft.Build.Framework', 'Microsoft.Build.Utilities.Core', 'NuGet.Versioning']:
     reference = ET.SubElement(items, 'Reference', Include=name)
-    ET.SubElement(reference, 'HintPath').text = native(Path('/clang64/lib/dotnet/sdk/8.0.131') / (name + '.dll'))
+    ET.SubElement(reference, 'HintPath').text = native(prefix / 'lib/dotnet/sdk/8.0.131' / (name + '.dll'))
     ET.SubElement(reference, 'Private').text = 'false'
 ET.indent(project)
 ET.ElementTree(project).write(out / 'Build.csproj', encoding='utf-8', xml_declaration=True)
 (out / 'NuGet.config').write_text('<configuration><packageSources><clear/></packageSources></configuration>\n')
-env = dict(os.environ, DOTNET_ROOT=native(Path('/clang64/lib/dotnet')), DOTNET_ROOT_X64=native(Path('/clang64/lib/dotnet')), DOTNET_CLI_TELEMETRY_OPTOUT='1', MSBuildEnableWorkloadResolver='false', DOTNET_CLI_HOME=native(out / 'cli-home'), NUGET_PACKAGES=native(out / 'cache'))
-dotnet = '/clang64/lib/dotnet/dotnet.exe'
+env = dict(os.environ, DOTNET_ROOT=native(prefix / 'lib/dotnet'), DOTNET_ROOT_X64=native(prefix / 'lib/dotnet'), DOTNET_CLI_TELEMETRY_OPTOUT='1', MSBuildEnableWorkloadResolver='false', DOTNET_CLI_HOME=native(out / 'cli-home'), NUGET_PACKAGES=native(out / 'cache'))
+dotnet = str(prefix / 'lib/dotnet/dotnet.exe')
 with (out / 'build.log').open('w') as log:
     subprocess.run([dotnet, 'build', native(out / 'Build.csproj'), '-c', 'Release', '--configfile', native(out / 'NuGet.config'), '-p:UseSharedCompilation=false', '-v:minimal'], env=env, check=True, stdout=log, stderr=subprocess.STDOUT)
 definition = ET.Element('Project')
