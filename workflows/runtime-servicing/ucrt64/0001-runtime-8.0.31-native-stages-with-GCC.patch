@@ -1,0 +1,671 @@
+runtime 8.0.31: native stages with UCRT64 GCC/libstdc++
+
+On top of ../patches/0001-0017: what patches/m612/runtime-8.0.0 0018
+(CoreCLR with GCC, ReactOS PSEH) and the GCC parts of 0003, 0010 and
+0011 change in the 8.0.0 tree, regenerated with 8.0.31 context (the
+diff of the 8.0.0 tree after 0001-0018 against the tree after the
+0001-0017 that ../patches ports).
+
+--- a/src/coreclr/CMakeLists.txt
++++ b/src/coreclr/CMakeLists.txt
+@@ -20,25 +20,53 @@
+   set(CMAKE_ASM_MASM_FLAGS "${CMAKE_ASM_MASM_FLAGS} -win64 -nologo")
+   add_compile_definitions($<$<COMPILE_LANGUAGE:ASM_MASM>:__MINGW32__>)
+ 
+-  # The Windows code paths of CoreCLR compiled by clang with the GNU driver
++  # The Windows code paths of CoreCLR compiled with the GNU driver
+   # (x86_64-w64-mingw32): the MSVC options of configurecompiler.cmake become
+-  # their clang spellings, as on Unix.
+-  # __declspec(uuid), __if_exists, __uuidof ... (C++ only: in C it turns the
+-  # MSVC intrinsics such as __cpuidex into builtins that need MSVC's intrin.h)
+-  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-fms-extensions>)
+-  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>)   # /GR-
+-  set(CLR_MINGW_C_CXX_OPTIONS -fwrapv -fno-omit-frame-pointer -ffp-contract=off -ferror-limit=4096
+-      -Wno-unused-variable -Wno-unused-value -Wno-unused-function -Wno-tautological-compare
+-      -Wno-unknown-pragmas -Wno-unknown-warning-option -Wno-unused-private-field
+-      -Wno-constant-logical-operand -Wno-pragma-pack -Wno-incompatible-ms-struct
+-      -Wno-reserved-identifier -Wno-unsafe-buffer-usage -Wno-single-bit-bitfield-constant-conversion
+-      -Wno-cast-function-type-strict -Wno-unused-but-set-variable -Wno-microsoft
+-      -Wno-ignored-attributes -Wno-invalid-noreturn -Wno-nonportable-include-path
+-      -Wno-format -Wno-missing-braces -Wno-dll-attribute-on-redeclaration)
+-  foreach(opt IN LISTS CLR_MINGW_C_CXX_OPTIONS)
+-    add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:${opt}>)
+-  endforeach()
+-  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-invalid-offsetof>)
++  # their clang or GCC spellings, as on Unix.
++  if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
++    # __declspec(uuid), __if_exists, __uuidof ... (C++ only: in C it turns the
++    # MSVC intrinsics such as __cpuidex into builtins that need MSVC's intrin.h)
++    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-fms-extensions>)
++    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>)   # /GR-
++    set(CLR_MINGW_C_CXX_OPTIONS -fwrapv -fno-omit-frame-pointer -ffp-contract=off -ferror-limit=4096
++        -Wno-unused-variable -Wno-unused-value -Wno-unused-function -Wno-tautological-compare
++        -Wno-unknown-pragmas -Wno-unknown-warning-option -Wno-unused-private-field
++        -Wno-constant-logical-operand -Wno-pragma-pack -Wno-incompatible-ms-struct
++        -Wno-reserved-identifier -Wno-unsafe-buffer-usage -Wno-single-bit-bitfield-constant-conversion
++        -Wno-cast-function-type-strict -Wno-unused-but-set-variable -Wno-microsoft
++        -Wno-ignored-attributes -Wno-invalid-noreturn -Wno-nonportable-include-path
++        -Wno-format -Wno-missing-braces -Wno-dll-attribute-on-redeclaration)
++    foreach(opt IN LISTS CLR_MINGW_C_CXX_OPTIONS)
++      add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:${opt}>)
++    endforeach()
++    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-invalid-offsetof>)
++  else()
++    # GCC: /EHa is -fnon-call-exceptions (faulting instructions, not only calls,
++    # get EH table entries, so the C++ handlers that minipal/Windows/mingw_eha.cpp
++    # runs for SEH exceptions cover them too); __try/__except/__finally come from
++    # ReactOS's PSEH (pseh2_64.h, CLR_MINGW_PSEH_INCLUDE) and its gcc_plugin_seh
++    # (CLR_MINGW_GCC_SEH_PLUGIN), see inc/mingw/msvc_compat.h; MSVC's anonymous
++    # struct members need -fms-extensions.
++    # The Windows code type-puns as MSVC allows, e.g. cor.h reads a ULONG
++    # (unsigned long) through uint32_t*: -fno-strict-aliasing.
++    if(NOT CLR_MINGW_GCC_SEH_PLUGIN OR NOT CLR_MINGW_PSEH_INCLUDE)
++      message(FATAL_ERROR "GCC needs CLR_MINGW_GCC_SEH_PLUGIN and CLR_MINGW_PSEH_INCLUDE (ReactOS gcc_plugin_seh, PSEH)")
++    endif()
++    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>)   # /GR-
++    set(CLR_MINGW_C_CXX_OPTIONS -fms-extensions -fwrapv -fno-omit-frame-pointer -ffp-contract=off
++        -fnon-call-exceptions -fno-strict-aliasing -fmax-errors=200
++        -Wno-unused-variable -Wno-unused-value -Wno-unused-function -Wno-unknown-pragmas
++        -Wno-unused-but-set-variable -Wno-attributes -Wno-format -Wno-missing-braces
++        -Wno-multichar -Wno-comment -Wno-parentheses -Wno-sign-compare -Wno-narrowing
++        -Wno-int-to-pointer-cast -Wno-cast-function-type -Wno-unused-local-typedefs)
++    foreach(opt IN LISTS CLR_MINGW_C_CXX_OPTIONS)
++      add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:${opt}>)
++    endforeach()
++    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-invalid-offsetof> $<$<COMPILE_LANGUAGE:CXX>:-Wno-class-memaccess>)
++    # (a cc1plus plugin: the C sources have no __try)
++    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-fplugin=${CLR_MINGW_GCC_SEH_PLUGIN}>)
++    include_directories(AFTER ${CLR_MINGW_PSEH_INCLUDE})
++  endif()
+   # The clr_std headers stand in for the C++ library only where there is none
+   # (Unix, -nostdinc); with libc++ present they would clash with it.
+   add_compile_definitions(USE_STL)
+--- a/src/coreclr/debug/ee/controller.cpp
++++ b/src/coreclr/debug/ee/controller.cpp
+@@ -4552,7 +4552,7 @@
+ 
+ // This helper is required because the AVInRuntimeImplOkayHolder can not
+ // be directly placed inside the scope of a PAL_TRY
+-void _CopyInstructionBlockHelper(BYTE* to, const BYTE* from)
++NOINLINE void _CopyInstructionBlockHelper(BYTE* to, const BYTE* from)
+ {
+     AVInRuntimeImplOkayHolder AVOkay;
+ 
+--- a/src/coreclr/gc/gc.cpp
++++ b/src/coreclr/gc/gc.cpp
+@@ -26909,7 +26909,7 @@
+ 
+ #if defined(TARGET_AMD64) || defined(TARGET_X86)
+ 
+-#ifndef _MM_HINT_T0
++#if !defined(_MM_HINT_T0) && !(defined(__GNUC__) && !defined(__clang__))
+ #define _MM_HINT_T0 1
+ #endif
+     _mm_prefetch((const char*)addr, _MM_HINT_T0);
+--- a/src/coreclr/ilasm/CMakeLists.txt
++++ b/src/coreclr/ilasm/CMakeLists.txt
+@@ -65,6 +65,12 @@
+     set(END_LIBRARY_GROUP -Wl,--end-group)
+ endif(CLR_CMAKE_HOST_LINUX OR CLR_CMAKE_HOST_FREEBSD OR CLR_CMAKE_HOST_NETBSD OR CLR_CMAKE_HOST_SUNOS)
+ 
++if(MINGW)
++    # GNU ld resolves static libraries in one pass (lld does not care).
++    set(START_LIBRARY_GROUP -Wl,--start-group)
++    set(END_LIBRARY_GROUP -Wl,--end-group)
++endif(MINGW)
++
+ add_executable_clr(ilasm
+   ${ILASM_SOURCES}
+   ${ILASM_RESOURCES}
+@@ -123,6 +129,7 @@
+   target_link_libraries(ilasm
+     PRIVATE
+     ${ILASM_LINK_LIBRARIES}
++    utilcodestaticnohost # again after the md libraries, for GNU ld
+     ole32
+     oleaut32
+     shell32
+--- a/src/coreclr/ildasm/exe/CMakeLists.txt
++++ b/src/coreclr/ildasm/exe/CMakeLists.txt
+@@ -58,6 +58,12 @@
+     set(END_LIBRARY_GROUP -Wl,--end-group)
+ endif(CLR_CMAKE_HOST_LINUX OR CLR_CMAKE_HOST_FREEBSD OR CLR_CMAKE_HOST_NETBSD OR CLR_CMAKE_HOST_SUNOS)
+ 
++if(MINGW)
++    # GNU ld resolves static libraries in one pass (lld does not care).
++    set(START_LIBRARY_GROUP -Wl,--start-group)
++    set(END_LIBRARY_GROUP -Wl,--end-group)
++endif(MINGW)
++
+ add_executable_clr(ildasm
+     ${ILDASM_SOURCES}
+     ${ILDASM_RESOURCES}
+--- a/src/coreclr/inc/mingw/msvc_compat.h
++++ b/src/coreclr/inc/mingw/msvc_compat.h
+@@ -1,12 +1,46 @@
+ // Licensed to the .NET Foundation under one or more agreements.
+ // The .NET Foundation licenses this file to you under the MIT license.
+ 
+-// Force-included into every C/C++ file of CoreCLR when it is built by clang with
+-// the GNU driver for Windows (MinGW, x86_64-w64-mingw32).  It stands in for the
+-// MSVC-only intrinsics the Windows code paths use; the Unix build gets the same
+-// definitions from pal.h.
++// Force-included into every C/C++ file of CoreCLR when it is built by clang or
++// GCC with the GNU driver for Windows (MinGW, x86_64-w64-mingw32).  It stands in
++// for the MSVC-only intrinsics the Windows code paths use; the Unix build gets
++// the same definitions from pal.h.
+ #pragma once
+ 
++// SEH try statements are written __seh_try { } __except (f) { } __endtry (or
++// __finally). With clang that is __try; with GCC it is ReactOS's PSEH (with
++// gcc_plugin_seh), whose try is spelt __seh_try because libstdc++ already uses
++// __try as its own spelling of try, and which needs __endtry after the handler.
++#if defined(__cplusplus) && defined(__GNUC__) && !defined(__clang__)
++// excpt.h first: it declares _exception_code() & co., which PSEH defines as macros
++#include <excpt.h>
++#pragma push_macro("__try")
++#include <pseh/pseh2_64.h>
++#pragma pop_macro("__try")
++#define __seh_try _SEH2_TRY
++// MSVC's intrinsic; mingw-w64's intrin.h only declares it (after which the macro)
++#include <intrin.h>
++#define _ReturnAddress() __builtin_return_address(0)
++// GetExceptionCode()/GetExceptionInformation() are excpt.h's _exception_code()/
++// _exception_info(); PSEH makes those function-like macros, which would also
++// rewrite CoreCLR members called GetExceptionCode(). Keep them names, and give
++// each filter local lambdas of those names that read PSEH's state.
++#undef _exception_code
++#undef _exception_info
++#undef _abnormal_termination
++#undef __except
++#define __except(...) _SEH2_EXCEPT(({                                                  \
++    auto _exception_code = [&]() -> unsigned long { return __seh2$$exception_code__; }; \
++    auto _exception_info = [&]() -> struct _EXCEPTION_POINTERS* {                       \
++        return (struct _EXCEPTION_POINTERS*)__seh2$$exception_ptr__; };                 \
++    (void)_exception_code; (void)_exception_info;                                       \
++    (__VA_ARGS__); }))
++#define __assume(x) ((void)0)
++#else
++#define __seh_try __try
++#define __endtry
++#endif
++
+ // MSVC debugger annotations (no code is generated for them)
+ #define __annotation(...) ((void)0)
+ 
+@@ -17,8 +51,16 @@
+ 
+ // windows.h defines min/max as macros (unless NOMINMAX); mingw-w64 only does so
+ // for C. The Windows code of CoreCLR relies on them in C++ too. (libc++ saves and
+-// undefines them around its own min/max.)
+-#ifndef NOMINMAX
++// undefines them around its own min/max.) libstdc++ undefines them (c++config.h)
++// and cannot have them as macros, so with GCC they are functions with the same
++// (a ? b : c) result type.
++#if defined(__cplusplus) && defined(__GNUC__) && !defined(__clang__)
++// (prvalue operands: decltype(a < b ? a : b) is a reference to the parameter)
++template <typename A, typename B>
++constexpr auto max(A a, B b) -> decltype(a > b ? static_cast<A>(a) : static_cast<B>(b)) { return a > b ? a : b; }
++template <typename A, typename B>
++constexpr auto min(A a, B b) -> decltype(a < b ? static_cast<A>(a) : static_cast<B>(b)) { return a < b ? a : b; }
++#elif !defined(NOMINMAX)
+ #ifndef max
+ #define max(a, b) (((a) > (b)) ? (a) : (b))
+ #endif
+--- a/src/coreclr/inc/mingw/sal_legacy.h
++++ b/src/coreclr/inc/mingw/sal_legacy.h
+@@ -5,7 +5,8 @@
+ // (__in, __out_ecount(n), __success(expr), __checkReturn ...), which mingw-w64
+ // does not have (it spells them SAL__xxx). They carry no code; outside /analyze
+ // the SDK defines them empty too. The names are those defined by
+-// src/coreclr/pal/inc/rt/{sal.h,specstrings.h,specstrings_strict.h} (the Unix copies).
++// src/coreclr/pal/inc/rt/{sal.h,specstrings.h,specstrings_strict.h} (the Unix copies),
++// except __null, which is the null pointer constant of GCC and clang (NULL).
+ #pragma once
+ 
+ #ifndef __allaccess_impl
+@@ -959,9 +960,6 @@
+ #ifndef __notzterm_impl
+ #define __notzterm_impl
+ #endif
+-#ifndef __null
+-#define __null
+-#endif
+ #ifndef __null_impl
+ #define __null_impl
+ #endif
+--- a/src/coreclr/inc/palclr.h
++++ b/src/coreclr/inc/palclr.h
+@@ -333,7 +333,7 @@
+         bool __exHandled; __exHandled = false;                                  \
+         DWORD __exCode; __exCode = 0;                                           \
+         SCAN_EHMARKER();                                                        \
+-        __try                                                                   \
++        __seh_try                                                                   \
+         {                                                                       \
+             SCAN_EHMARKER_TRY();
+ 
+@@ -361,6 +361,7 @@
+ 
+ #define PAL_ENDTRY_NAKED                                                        \
+         }                                                                       \
++        __endtry                                                                \
+         PAL_ENDTRY_NAKED_DBG                                                    \
+     }                                                                           \
+ 
+@@ -506,7 +507,7 @@
+ #define PAL_TRY_HANDLER_DBG_BEGIN                                               \
+     BOOL ___oldOkayToThrowValue = FALSE;                                        \
+     ClrDebugState *___pState = ::GetClrDebugState();                            \
+-    __try                                                                       \
++    __seh_try                                                                   \
+     {                                                                           \
+         ___oldOkayToThrowValue = ___pState->IsOkToThrow();                      \
+         ___pState->SetOkToThrow();
+@@ -517,7 +518,7 @@
+     ClrDebugState *___pState = NULL;                                            \
+     if (_reason != DLL_PROCESS_ATTACH)                                          \
+         ___pState = CheckClrDebugState();                                       \
+-    __try                                                                       \
++    __seh_try                                                                   \
+     {                                                                           \
+         if (___pState)                                                          \
+         {                                                                       \
+@@ -538,7 +539,8 @@
+             _ASSERTE(___pState == CheckClrDebugState());                        \
+             ___pState->SetOkToThrow( ___oldOkayToThrowValue );                \
+         }                                                                       \
+-    }
++    }                                                                           \
++    __endtry
+ 
+ #define PAL_ENDTRY_NAKED_DBG
+ 
+--- a/src/coreclr/inc/palclr_win.h
++++ b/src/coreclr/inc/palclr_win.h
+@@ -88,7 +88,7 @@
+ #define WIN_PAL_TRY_HANDLER_DBG_BEGIN                                           \
+     BOOL ___oldOkayToThrowValue = FALSE;                                        \
+     ClrDebugState *___pState = GetClrDebugState();                              \
+-    __try                                                                       \
++    __seh_try                                                                   \
+     {                                                                           \
+         ___oldOkayToThrowValue = ___pState->IsOkToThrow();                      \
+         ___pState->SetOkToThrow(TRUE);                                          \
+@@ -99,7 +99,7 @@
+     BOOL ___oldOkayToThrowValue = FALSE;                                        \
+     BOOL ___oldSOTolerantState = FALSE;                                         \
+     ClrDebugState *___pState = CheckClrDebugState();                            \
+-    __try                                                                       \
++    __seh_try                                                                   \
+     {                                                                           \
+         if (___pState)                                                          \
+         {                                                                       \
+@@ -123,7 +123,8 @@
+             ___pState->SetOkToThrow(___oldOkayToThrowValue);                    \
+             ___pState->SetSOTolerance(___oldSOTolerantState);                   \
+         }                                                                       \
+-    }
++    }                                                                           \
++    __endtry
+ 
+ #define WIN_PAL_ENDTRY_NAKED_DBG
+ 
+--- a/src/coreclr/inc/utilcode.h
++++ b/src/coreclr/inc/utilcode.h
+@@ -4010,6 +4010,27 @@
+     return InterlockedCompareExchangeT(destination, exchange, nullptr);
+ }
+ 
++#if defined(__GNUC__) && !defined(__clang__)
++// GCC's NULL is __null, which is not an int: the same for it.
++template <typename T>
++inline T* InterlockedExchangeT(T* volatile * target, decltype(__null) value)
++{
++    return InterlockedExchangeT(target, nullptr);
++}
++
++template <typename T>
++inline T* InterlockedCompareExchangeT(T* volatile * destination, decltype(__null) exchange, T* comparand)
++{
++    return InterlockedCompareExchangeT(destination, nullptr, comparand);
++}
++
++template <typename T>
++inline T* InterlockedCompareExchangeT(T* volatile * destination, T* exchange, decltype(__null) comparand)
++{
++    return InterlockedCompareExchangeT(destination, exchange, nullptr);
++}
++#endif
++
+ #undef InterlockedExchangePointer
+ #define InterlockedExchangePointer Use_InterlockedExchangeT
+ #undef InterlockedCompareExchangePointer
+--- a/src/coreclr/jit/jittelemetry.cpp
++++ b/src/coreclr/jit/jittelemetry.cpp
+@@ -352,7 +352,7 @@
+ {
+     if (info.compMethodHnd != nullptr)
+     {
+-        __try
++        __seh_try
+         {
+ 
+             // Expensive calls, call infrequently or in exceptional scenarios.
+@@ -366,6 +366,7 @@
+         __except (EXCEPTION_EXECUTE_HANDLER)
+         {
+         }
++        __endtry
+     }
+ 
+     // If the JIT interface methods init-ed these values to nullptr,
+--- a/src/coreclr/minipal/Windows/mingw_eha.cpp
++++ b/src/coreclr/minipal/Windows/mingw_eha.cpp
+@@ -2,17 +2,18 @@
+ // The .NET Foundation licenses this file to you under the MIT license.
+ 
+ //
+-// /EHa semantics for CoreCLR built by clang for x86_64-w64-mingw32.
++// /EHa semantics for CoreCLR built by clang or GCC for x86_64-w64-mingw32.
+ //
+ // CoreCLR's Windows code is written for MSVC's /EHa: C++ destructors run when
+ // *any* SEH exception (an access violation, a managed exception raised as
+ // EXCEPTION_COMPLUS, ...) unwinds a frame, and catch(...) (EX_CATCH) catches SEH
+ // exceptions. With MinGW, C++ uses the Itanium EH model on top of SEH
+-// (libc++abi's __gxx_personality_seh0 over libunwind's _GCC_specific_handler),
+-// which deliberately ignores foreign (non-C++) exceptions: no destructor runs and
+-// no catch(...) matches. This file adds the /EHa behavior:
++// (__gxx_personality_seh0 of libc++abi or libstdc++, over the
++// _GCC_specific_handler of libunwind or libgcc), which deliberately ignores
++// foreign (non-C++) exceptions: no destructor runs and no catch(...) matches.
++// This file adds the /EHa behavior:
+ //
+-//  * __gxx_personality_seh0 (wrapped with lld --wrap): for a foreign exception,
++//  * __gxx_personality_seh0 (wrapped with the linker's --wrap): for a foreign exception,
+ //    phase 1 looks for a catch(...) clause covering the frame's PC in the LSDA;
+ //    if there is one, the exception is wrapped into a C++ exception object of
+ //    type EhaSehException and the stack is unwound to that catch(...) landing pad
+@@ -42,7 +43,13 @@
+ // Limitation: clang (without -fasync-exceptions, which it cannot combine with the
+ // Itanium C++ ABI) only records call sites in the LSDA and in __try ranges, so a
+ // hardware fault raised by a non-call instruction of a C++ function or a __try
+-// block is attributed to no handler of that function.
++// block is attributed to no handler of that function. GCC needs
++// -fnon-call-exceptions: without it, it also drops the call sites of calls to
++// functions it finds cannot throw a C++ exception (e.g. one that only faults),
++// and records no trapping instructions. With GCC, __try/__except/__finally come
++// from a GCC plugin that emits the __C_specific_handler scope tables (ReactOS's
++// gcc_plugin_seh); it must register the handler with @unwind for an __except
++// too, as clang does, or the unwinds started here are never seen to end.
+ //
+ 
+ #if defined(__MINGW32__) && defined(__x86_64__)
+@@ -56,8 +63,9 @@
+ #include <typeinfo>
+ #include <new>
+ 
+-#define STATUS_GCC_THROW  0x20474343   // libunwind: C++ throw (phase 1, and phase 2 started by libunwind)
+-#define STATUS_GCC_UNWIND 0x21474343   // libunwind: collided unwind to a landing pad
++#define STATUS_GCC_THROW  0x20474343   // libunwind/libgcc: C++ throw (phase 1, and phase 2 started by them)
++#define STATUS_GCC_UNWIND 0x21474343   // libunwind/libgcc: collided unwind to a landing pad
++#define STATUS_GCC_FORCED 0x22474343   // libgcc: forced unwind (_Unwind_ForcedUnwind)
+ 
+ #ifndef EXCEPTION_UNWINDING
+ #define EXCEPTION_UNWINDING 0x2
+@@ -70,20 +78,27 @@
+ #endif
+ #define EHA_IS_UNWINDING(flags) (((flags) & (EXCEPTION_UNWINDING | EXCEPTION_EXIT_UNWIND)) != 0)
+ 
++#if defined(__GLIBCXX__)
++#include <exception>
++#endif
++
+ extern "C" {
+-// the wrapped implementations (lld --wrap)
++// the wrapped implementations (--wrap)
+ EXCEPTION_DISPOSITION __real___gxx_personality_seh0(PEXCEPTION_RECORD, void*, PCONTEXT, PDISPATCHER_CONTEXT);
+ void __real__Unwind_Resume(_Unwind_Exception*);
+ void __real___cxa_rethrow();
+ 
+-// libc++abi
++// libc++abi / libstdc++ (both return the exception header, unused here)
+ void* __cxa_allocate_exception(size_t) noexcept;
+ void* __cxa_init_primary_exception(void* object, std::type_info* tinfo, void (*dest)(void*)) noexcept;
++std::type_info* __cxa_current_exception_type() noexcept;
++void* __cxa_get_globals() noexcept;
++#if !defined(__GLIBCXX__)
++// libc++abi only
+ void __cxa_increment_exception_refcount(void*) noexcept;
+ void __cxa_decrement_exception_refcount(void*) noexcept;
+-std::type_info* __cxa_current_exception_type() noexcept;
+ void* __cxa_current_primary_exception() noexcept;
+-void* __cxa_get_globals() noexcept;
++#endif
+ }
+ 
+ namespace
+@@ -91,7 +106,11 @@
+ 
+ const ULONG_PTR kEhaMagic = 0x6148452D57474E4DULL;          // "MNGW-EHa"
+ const uint64_t kEhaClass  = 0x0041484543534548ULL;          // exception_class of EhaUnwind::ue ("HESCEHA")
++#if defined(__GLIBCXX__)
++const uint64_t kCxxClass  = 0x474E5543432B2B00ULL;          // libstdc++'s "GNUCC++\0"
++#else
+ const uint64_t kCxxClass  = 0x434C4E47432B2B00ULL;          // libc++abi's "CLNGC++\0"
++#endif
+ const int kSlotPtr   = 13;                                   // EXCEPTION_RECORD::ExceptionInformation slots
+ const int kSlotMagic = 14;                                   // used to tag our copies
+ 
+@@ -205,7 +224,7 @@
+     return u;
+ }
+ 
+-// C++ exceptions unwound by an __except or by CoreCLR: libunwind's landing pads
++// C++ exceptions unwound by an __except or by CoreCLR: the landing pads
+ // end in _Unwind_Resume, which must come back here (see WrapUnwindResume).
+ void AttachCxx(EhaUnwind* u)
+ {
+@@ -217,7 +236,7 @@
+             exc->private_[0] = 0;              // not a forced unwind
+             exc->private_[5] = (uintptr_t)u;
+         }
+-        // libunwind compares ExceptionInformation[1] with the frame to find "its" handler frame
++        // libunwind/libgcc compare ExceptionInformation[1] with the frame to find "its" handler frame
+         u->rec.ExceptionInformation[1] = 0;
+         u->orig.ExceptionInformation[1] = 0;
+     }
+@@ -243,7 +262,7 @@
+ }
+ 
+ //
+-// LSDA (gcc_except_table) reading, enough for the tables clang emits
++// LSDA (gcc_except_table) reading, enough for the tables clang and GCC emit
+ //
+ 
+ enum
+@@ -456,8 +475,14 @@
+     EhaSehException* e = new (obj) EhaSehException;
+     e->unwind = u;
+     e->record = u->orig;
+-    __cxa_init_primary_exception(obj, const_cast<std::type_info*>(&typeid(EhaSehException)), SehExceptionDtor);
++    void* header = __cxa_init_primary_exception(obj, const_cast<std::type_info*>(&typeid(EhaSehException)), SehExceptionDtor);
++#if defined(__GLIBCXX__)
++    // as __cxa_throw: header is a __cxa_refcounted_exception, whose first member is the count
++    __atomic_store_n((int*)header, 1, __ATOMIC_RELAXED);
++#else
++    (void)header;
+     __cxa_increment_exception_refcount(obj);                     // as __cxa_throw
++#endif
+     ((EhGlobals*)__cxa_get_globals())->uncaughtExceptions += 1;  // as __cxa_throw; __cxa_begin_catch takes it back
+     _Unwind_Exception* ue = (_Unwind_Exception*)obj - 1;          // the header ends with the unwind header
+     if (ue->exception_class != kCxxClass)
+@@ -551,7 +576,7 @@
+ __wrap___gxx_personality_seh0(PEXCEPTION_RECORD rec, void* frame, PCONTEXT ctx, PDISPATCHER_CONTEXT disp)
+ {
+     DWORD code = rec->ExceptionCode;
+-    if (code == STATUS_GCC_THROW || code == STATUS_GCC_UNWIND)
++    if (code == STATUS_GCC_THROW || code == STATUS_GCC_UNWIND || code == STATUS_GCC_FORCED)
+         return __real___gxx_personality_seh0(rec, frame, ctx, disp);
+     return ForeignPersonality(rec, frame, ctx, disp);
+ }
+@@ -573,9 +598,21 @@
+     std::type_info* t = __cxa_current_exception_type();
+     if (t != nullptr && *t == typeid(EhaSehException))
+     {
++#if defined(__GLIBCXX__)
++        EXCEPTION_RECORD r;
++        {
++            // std::exception_ptr holds just the exception object
++            std::exception_ptr p = std::current_exception();
++            static_assert(sizeof(p) == sizeof(void*), "std::exception_ptr layout");
++            EhaSehException* e;
++            memcpy(&e, &p, sizeof(e));
++            r = e->record;
++        }
++#else
+         EhaSehException* e = (EhaSehException*)__cxa_current_primary_exception();
+         EXCEPTION_RECORD r = e->record;
+         __cxa_decrement_exception_refcount(e);
++#endif
+         EHA_TRACE("rethrow of SEH exception %08lx\n", r.ExceptionCode);
+         // /EHa: "throw;" in a catch(...) that caught an SEH exception raises it again.
+         // The catch block's own cleanup (__cxa_end_catch) runs when it unwinds.
+--- a/src/coreclr/scripts/genEtwProvider.py
++++ b/src/coreclr/scripts/genEtwProvider.py
+@@ -300,8 +300,8 @@
+ 
+         header_file.write("#define NO_OF_ETW_PROVIDERS " + str(numOfProviders) + "\n")
+         header_file.write("#define MAX_BYTES_PER_ETW_PROVIDER " + str(nMaxEventBytesPerProvider) + "\n")
+-        # (one definition per translation unit: clang/lld need it to be selectany, MSVC merges them itself)
+-        header_file.write("#if defined(__clang__) && !defined(_MSC_VER)\n#define ETW_STACK_SUPPORTED_EVENTS_SELECTANY __declspec(selectany)\n#else\n#define ETW_STACK_SUPPORTED_EVENTS_SELECTANY\n#endif\n")
++        # (one definition per translation unit: MinGW (clang, GCC) needs it to be selectany, MSVC merges them itself)
++        header_file.write("#if defined(__GNUC__) && !defined(_MSC_VER)\n#define ETW_STACK_SUPPORTED_EVENTS_SELECTANY __declspec(selectany)\n#else\n#define ETW_STACK_SUPPORTED_EVENTS_SELECTANY\n#endif\n")
+         header_file.write("EXTERN_C ETW_STACK_SUPPORTED_EVENTS_SELECTANY constexpr BYTE etwStackSupportedEvents[NO_OF_ETW_PROVIDERS][MAX_BYTES_PER_ETW_PROVIDER] = \n{\n")
+ 
+         for providerNode in tree.getElementsByTagName('provider'):
+--- a/src/coreclr/utilcode/stacktrace.cpp
++++ b/src/coreclr/utilcode/stacktrace.cpp
+@@ -527,7 +527,7 @@
+         PLAT_IMAGEHLP_SYMBOL  sym;
+     };
+ 
+-    __try
++    __seh_try
+     {
+         sym.SizeOfStruct = sizeof(PLAT_IMAGEHLP_SYMBOL);
+         sym.Address = dwAddr;
+@@ -552,6 +552,7 @@
+         pszSymbol = "<EX: no symbol>";
+         psi->dwOffset = dwAddr - mi.BaseOfImage;
+     }
++    __endtry
+ 
+     strcpy_s(psi->achSymbol, ARRAY_SIZE(psi->achSymbol), pszSymbol);
+ }
+--- a/src/coreclr/vm/assembly.cpp
++++ b/src/coreclr/vm/assembly.cpp
+@@ -1271,7 +1271,7 @@
+     LPWSTR *wzArgs;
+ } param;
+ 
+-static void RunMainInternal(Param* pParam)
++NOINLINE static void RunMainInternal(Param* pParam)
+ {
+     MethodDescCallSite  threadStart(pParam->pFD);
+ 
+--- a/src/coreclr/vm/comcache.cpp
++++ b/src/coreclr/vm/comcache.cpp
+@@ -10,6 +10,14 @@
+ #include "runtimecallablewrapper.h"
+ #include <mtx.h>
+ 
++#if defined(__GNUC__) && !defined(__clang__)
++// mingw-w64's libuuid.a has this CLSID in one member with thousands of other
++// GUIDs, including the transaction IIDs that <mtx.h> defines (selectany) in the
++// files where eventtracebase.h left INITGUID on; GNU ld rejects such pairs. So
++// define it here (selectany too) rather than pull in that member.
++DEFINE_GUID(CLSID_InProcFreeMarshaler, 0x0000033a, 0, 0, 0xc0, 0, 0, 0, 0, 0, 0, 0x46);
++#endif
++
+ #ifdef FEATURE_COMINTEROP_APARTMENT_SUPPORT
+ #include "olecontexthelpers.h"
+ #endif // FEATURE_COMINTEROP_APARTMENT_SUPPORT
+--- a/src/coreclr/vm/comtoclrcall.cpp
++++ b/src/coreclr/vm/comtoclrcall.cpp
+@@ -160,7 +160,7 @@
+     Frame   *pCurFrame);
+ 
+ 
+-inline static void InvokeStub(ComCallMethodDesc *pCMD, PCODE pManagedTarget, OBJECTREF orThis, ComMethodFrame *pFrame, Thread *pThread,
++inline void InvokeStub(ComCallMethodDesc *pCMD, PCODE pManagedTarget, OBJECTREF orThis, ComMethodFrame *pFrame, Thread *pThread,
+                               UINT64* pRetValOut)
+ {
+     LIMITED_METHOD_CONTRACT;
+@@ -204,7 +204,7 @@
+     INT_PTR        pDangerousThis);
+ 
+ 
+-inline static void InvokeStub(ComCallMethodDesc *pCMD, PCODE pManagedTarget, OBJECTREF orThis, ComMethodFrame *pFrame, Thread *pThread,
++inline void InvokeStub(ComCallMethodDesc *pCMD, PCODE pManagedTarget, OBJECTREF orThis, ComMethodFrame *pFrame, Thread *pThread,
+                               UINT64* pRetValOut)
+ {
+     WRAPPER_NO_CONTRACT;
+@@ -612,7 +612,7 @@
+ #endif
+ 
+ 
+-static UINT64 __stdcall FieldCallWorker(Thread *pThread, ComMethodFrame* pFrame)
++UINT64 __stdcall FieldCallWorker(Thread *pThread, ComMethodFrame* pFrame)
+ {
+     CONTRACTL
+     {
+@@ -665,7 +665,7 @@
+     return hrRetVal;
+ }
+ 
+-static void FieldCallWorkerDebuggerWrapper(Thread *pThread, ComMethodFrame* pFrame)
++void FieldCallWorkerDebuggerWrapper(Thread *pThread, ComMethodFrame* pFrame)
+ {
+     // Use static contracts b/c we have SEH.
+     STATIC_CONTRACT_THROWS;
+@@ -693,7 +693,7 @@
+     PAL_ENDTRY
+ }
+ 
+-static void FieldCallWorkerBody(Thread *pThread, ComMethodFrame* pFrame)
++void FieldCallWorkerBody(Thread *pThread, ComMethodFrame* pFrame)
+ {
+     CONTRACTL
+     {
+--- a/src/coreclr/vm/threads.cpp
++++ b/src/coreclr/vm/threads.cpp
+@@ -7225,7 +7225,7 @@
+     (*pCallState->pTarget) (pCallState->args);
+ }
+ 
+-static void ManagedThreadBase_DispatchMiddle(ManagedThreadCallState *pCallState)
++NOINLINE static void ManagedThreadBase_DispatchMiddle(ManagedThreadCallState *pCallState)
+ {
+     STATIC_CONTRACT_GC_TRIGGERS;
+     STATIC_CONTRACT_THROWS;
+--- a/src/native/corehost/hostmisc/pal.h
++++ b/src/native/corehost/hostmisc/pal.h
+@@ -158,9 +158,17 @@
+ 
+     inline FILE* file_open(const string_t& path, const char_t* mode) { return ::_wfsopen(path.c_str(), mode, _SH_DENYNO); }
+ 
++#if defined(__USE_MINGW_ANSI_STDIO) && __USE_MINGW_ANSI_STDIO
++    // libstdc++ forces mingw-w64's C99 stdio, where %s in a wide format is a
++    // narrow string; the formats here are MSVC's (%s: wide), so use the CRT's.
++    inline void file_vprintf(FILE* f, const char_t* format, va_list vl) { ::__ms_vfwprintf(f, format, vl); ::fputwc(_X('\n'), f); }
++    inline void err_fputs(const char_t* message) { ::fputws(message, stderr); ::fputwc(_X('\n'), stderr); }
++    inline void out_vprintf(const char_t* format, va_list vl) { ::__ms_vfwprintf(stdout, format, vl); ::fputwc(_X('\n'), stdout); }
++#else
+     inline void file_vprintf(FILE* f, const char_t* format, va_list vl) { ::vfwprintf(f, format, vl); ::fputwc(_X('\n'), f); }
+     inline void err_fputs(const char_t* message) { ::fputws(message, stderr); ::fputwc(_X('\n'), stderr); }
+     inline void out_vprintf(const char_t* format, va_list vl) { ::vfwprintf(stdout, format, vl); ::fputwc(_X('\n'), stdout); }
++#endif
+ 
+     inline int str_vprintf(char_t* buffer, size_t count, const char_t* format, va_list vl) { return ::_vsnwprintf_s(buffer, count, _TRUNCATE, format, vl); }
+     inline int strlen_vprintf(const char_t* format, va_list vl) { return ::_vscwprintf(format, vl); }
