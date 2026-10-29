@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #if defined(__GNUC__) && !defined(__clang__)
-#include "pseh2_64.h"          // __try/__except of ReactOS's gcc_plugin_seh
+#include <pseh/pseh2_64.h>     // __try/__except of ReactOS's gcc_plugin_seh
 #else
 #define __endtry
 #endif

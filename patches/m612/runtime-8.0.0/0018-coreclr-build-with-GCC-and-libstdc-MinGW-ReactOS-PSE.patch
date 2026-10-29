@@ -1,0 +1,470 @@
+From dc1c88e367fc9054a61cc3123d83f5141f0a942d Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Thu, 29 Oct 2026 17:09:16 +0100
+Subject: [PATCH] coreclr: build with GCC and libstdc++ (MinGW, ReactOS PSEH)
+
+The MinGW build of patches 0009-0017 with UCRT64's GCC/binutils/libstdc++
+instead of clang/lld/libc++.
+
+- CMakeLists.txt: GCC's spellings of the MSVC options; /EHa is
+  -fnon-call-exceptions. __try/__except/__finally come from ReactOS's PSEH
+  (pseh2_64.h) with its gcc_plugin_seh (-fplugin), which CMake gets as
+  CLR_MINGW_PSEH_INCLUDE and CLR_MINGW_GCC_SEH_PLUGIN.
+- inc/mingw/msvc_compat.h: libstdc++ spells try __try, so the SEH try
+  statement is __seh_try { } __except (f) { } __endtry (PSEH needs the
+  __endtry; with clang __seh_try is __try and __endtry is empty).
+  GetExceptionCode()/GetExceptionInformation() stay names (members are
+  called that) and are lambdas local to each filter. min/max are functions
+  (libstdc++ undefines the macros); __assume, _ReturnAddress.
+- palclr.h, palclr_win.h, jittelemetry.cpp, stacktrace.cpp: __seh_try and
+  __endtry.
+- controller.cpp, assembly.cpp, threads.cpp: the helpers that keep C++ EH
+  out of a __try function are NOINLINE (gcc_plugin_seh rejects a function
+  that has both, which GCC's inliner would otherwise create).
+- utilcode.h: Interlocked*T overloads for GCC's NULL (__null, not an int).
+- comtoclrcall.cpp: no static on definitions declared extern before.
+- gc.cpp: GCC's _MM_HINT_T0 is an enumerator, not a macro.
+- comcache.cpp: define CLSID_InProcFreeMarshaler rather than pull in the
+  libuuid.a member that also has the IIDs <mtx.h> defines there.
+---
+ src/coreclr/CMakeLists.txt          | 62 ++++++++++++++++++++---------
+ src/coreclr/debug/ee/controller.cpp |  2 +-
+ src/coreclr/gc/gc.cpp               |  2 +-
+ src/coreclr/inc/mingw/msvc_compat.h | 54 ++++++++++++++++++++++---
+ src/coreclr/inc/palclr.h            | 10 +++--
+ src/coreclr/inc/palclr_win.h        |  7 ++--
+ src/coreclr/inc/utilcode.h          | 21 ++++++++++
+ src/coreclr/jit/jittelemetry.cpp    |  3 +-
+ src/coreclr/utilcode/stacktrace.cpp |  3 +-
+ src/coreclr/vm/assembly.cpp         |  2 +-
+ src/coreclr/vm/comcache.cpp         |  8 ++++
+ src/coreclr/vm/comtoclrcall.cpp     | 10 ++---
+ src/coreclr/vm/threads.cpp          |  2 +-
+ 13 files changed, 144 insertions(+), 42 deletions(-)
+
+diff --git a/src/coreclr/CMakeLists.txt b/src/coreclr/CMakeLists.txt
+index 36edfabd3..cf36f375c 100644
+--- a/src/coreclr/CMakeLists.txt
++++ b/src/coreclr/CMakeLists.txt
+@@ -20,25 +20,51 @@ if(CLR_CMAKE_HOST_WIN32 AND MINGW)
+   set(CMAKE_ASM_MASM_FLAGS "${CMAKE_ASM_MASM_FLAGS} -win64 -nologo")
+   add_compile_definitions($<$<COMPILE_LANGUAGE:ASM_MASM>:__MINGW32__>)
+ 
+-  # The Windows code paths of CoreCLR compiled by clang with the GNU driver
++  # The Windows code paths of CoreCLR compiled with the GNU driver
+   # (x86_64-w64-mingw32): the MSVC options of configurecompiler.cmake become
+-  # their clang spellings, as on Unix.
+-  # __declspec(uuid), __if_exists, __uuidof ... (C++ only: in C it turns the
+-  # MSVC intrinsics such as __cpuidex into builtins that need MSVC's intrin.h)
+-  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-fms-extensions>)
+-  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>)   # /GR-
+-  set(CLR_MINGW_C_CXX_OPTIONS -fwrapv -fno-omit-frame-pointer -ffp-contract=off -ferror-limit=4096
+-      -Wno-unused-variable -Wno-unused-value -Wno-unused-function -Wno-tautological-compare
+-      -Wno-unknown-pragmas -Wno-unknown-warning-option -Wno-unused-private-field
+-      -Wno-constant-logical-operand -Wno-pragma-pack -Wno-incompatible-ms-struct
+-      -Wno-reserved-identifier -Wno-unsafe-buffer-usage -Wno-single-bit-bitfield-constant-conversion
+-      -Wno-cast-function-type-strict -Wno-unused-but-set-variable -Wno-microsoft
+-      -Wno-ignored-attributes -Wno-invalid-noreturn -Wno-nonportable-include-path
+-      -Wno-format -Wno-missing-braces -Wno-dll-attribute-on-redeclaration)
+-  foreach(opt IN LISTS CLR_MINGW_C_CXX_OPTIONS)
+-    add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:${opt}>)
+-  endforeach()
+-  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-invalid-offsetof>)
++  # their clang or GCC spellings, as on Unix.
++  if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
++    # __declspec(uuid), __if_exists, __uuidof ... (C++ only: in C it turns the
++    # MSVC intrinsics such as __cpuidex into builtins that need MSVC's intrin.h)
++    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-fms-extensions>)
++    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>)   # /GR-
++    set(CLR_MINGW_C_CXX_OPTIONS -fwrapv -fno-omit-frame-pointer -ffp-contract=off -ferror-limit=4096
++        -Wno-unused-variable -Wno-unused-value -Wno-unused-function -Wno-tautological-compare
++        -Wno-unknown-pragmas -Wno-unknown-warning-option -Wno-unused-private-field
++        -Wno-constant-logical-operand -Wno-pragma-pack -Wno-incompatible-ms-struct
++        -Wno-reserved-identifier -Wno-unsafe-buffer-usage -Wno-single-bit-bitfield-constant-conversion
++        -Wno-cast-function-type-strict -Wno-unused-but-set-variable -Wno-microsoft
++        -Wno-ignored-attributes -Wno-invalid-noreturn -Wno-nonportable-include-path
++        -Wno-format -Wno-missing-braces -Wno-dll-attribute-on-redeclaration)
++    foreach(opt IN LISTS CLR_MINGW_C_CXX_OPTIONS)
++      add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:${opt}>)
++    endforeach()
++    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-invalid-offsetof>)
++  else()
++    # GCC: /EHa is -fnon-call-exceptions (faulting instructions, not only calls,
++    # get EH table entries, so the C++ handlers that minipal/Windows/mingw_eha.cpp
++    # runs for SEH exceptions cover them too); __try/__except/__finally come from
++    # ReactOS's PSEH (pseh2_64.h, CLR_MINGW_PSEH_INCLUDE) and its gcc_plugin_seh
++    # (CLR_MINGW_GCC_SEH_PLUGIN), see inc/mingw/msvc_compat.h; MSVC's anonymous
++    # struct members need -fms-extensions.
++    if(NOT CLR_MINGW_GCC_SEH_PLUGIN OR NOT CLR_MINGW_PSEH_INCLUDE)
++      message(FATAL_ERROR "GCC needs CLR_MINGW_GCC_SEH_PLUGIN and CLR_MINGW_PSEH_INCLUDE (ReactOS gcc_plugin_seh, PSEH)")
++    endif()
++    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>)   # /GR-
++    set(CLR_MINGW_C_CXX_OPTIONS -fms-extensions -fwrapv -fno-omit-frame-pointer -ffp-contract=off
++        -fnon-call-exceptions -fmax-errors=200
++        -Wno-unused-variable -Wno-unused-value -Wno-unused-function -Wno-unknown-pragmas
++        -Wno-unused-but-set-variable -Wno-attributes -Wno-format -Wno-missing-braces
++        -Wno-multichar -Wno-comment -Wno-parentheses -Wno-sign-compare -Wno-narrowing
++        -Wno-int-to-pointer-cast -Wno-cast-function-type -Wno-unused-local-typedefs)
++    foreach(opt IN LISTS CLR_MINGW_C_CXX_OPTIONS)
++      add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:${opt}>)
++    endforeach()
++    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-invalid-offsetof> $<$<COMPILE_LANGUAGE:CXX>:-Wno-class-memaccess>)
++    # (a cc1plus plugin: the C sources have no __try)
++    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-fplugin=${CLR_MINGW_GCC_SEH_PLUGIN}>)
++    include_directories(AFTER ${CLR_MINGW_PSEH_INCLUDE})
++  endif()
+   # The clr_std headers stand in for the C++ library only where there is none
+   # (Unix, -nostdinc); with libc++ present they would clash with it.
+   add_compile_definitions(USE_STL)
+diff --git a/src/coreclr/debug/ee/controller.cpp b/src/coreclr/debug/ee/controller.cpp
+index f23feb6d1..840936f3d 100644
+--- a/src/coreclr/debug/ee/controller.cpp
++++ b/src/coreclr/debug/ee/controller.cpp
+@@ -4547,7 +4547,7 @@ LONG FilterAccessViolation2(LPEXCEPTION_POINTERS ep, PVOID pv)
+ 
+ // This helper is required because the AVInRuntimeImplOkayHolder can not
+ // be directly placed inside the scope of a PAL_TRY
+-void _CopyInstructionBlockHelper(BYTE* to, const BYTE* from)
++NOINLINE void _CopyInstructionBlockHelper(BYTE* to, const BYTE* from)
+ {
+     AVInRuntimeImplOkayHolder AVOkay;
+ 
+diff --git a/src/coreclr/gc/gc.cpp b/src/coreclr/gc/gc.cpp
+index 5876d4119..98a481ecf 100644
+--- a/src/coreclr/gc/gc.cpp
++++ b/src/coreclr/gc/gc.cpp
+@@ -26681,7 +26681,7 @@ inline void Prefetch(void* addr)
+ 
+ #if defined(TARGET_AMD64) || defined(TARGET_X86)
+ 
+-#ifndef _MM_HINT_T0
++#if !defined(_MM_HINT_T0) && !(defined(__GNUC__) && !defined(__clang__))
+ #define _MM_HINT_T0 1
+ #endif
+     _mm_prefetch((const char*)addr, _MM_HINT_T0);
+diff --git a/src/coreclr/inc/mingw/msvc_compat.h b/src/coreclr/inc/mingw/msvc_compat.h
+index e86eff886..9d7d6376e 100644
+--- a/src/coreclr/inc/mingw/msvc_compat.h
++++ b/src/coreclr/inc/mingw/msvc_compat.h
+@@ -1,12 +1,46 @@
+ // Licensed to the .NET Foundation under one or more agreements.
+ // The .NET Foundation licenses this file to you under the MIT license.
+ 
+-// Force-included into every C/C++ file of CoreCLR when it is built by clang with
+-// the GNU driver for Windows (MinGW, x86_64-w64-mingw32).  It stands in for the
+-// MSVC-only intrinsics the Windows code paths use; the Unix build gets the same
+-// definitions from pal.h.
++// Force-included into every C/C++ file of CoreCLR when it is built by clang or
++// GCC with the GNU driver for Windows (MinGW, x86_64-w64-mingw32).  It stands in
++// for the MSVC-only intrinsics the Windows code paths use; the Unix build gets
++// the same definitions from pal.h.
+ #pragma once
+ 
++// SEH try statements are written __seh_try { } __except (f) { } __endtry (or
++// __finally). With clang that is __try; with GCC it is ReactOS's PSEH (with
++// gcc_plugin_seh), whose try is spelt __seh_try because libstdc++ already uses
++// __try as its own spelling of try, and which needs __endtry after the handler.
++#if defined(__cplusplus) && defined(__GNUC__) && !defined(__clang__)
++// excpt.h first: it declares _exception_code() & co., which PSEH defines as macros
++#include <excpt.h>
++#pragma push_macro("__try")
++#include <pseh/pseh2_64.h>
++#pragma pop_macro("__try")
++#define __seh_try _SEH2_TRY
++// MSVC's intrinsic; mingw-w64's intrin.h only declares it (after which the macro)
++#include <intrin.h>
++#define _ReturnAddress() __builtin_return_address(0)
++// GetExceptionCode()/GetExceptionInformation() are excpt.h's _exception_code()/
++// _exception_info(); PSEH makes those function-like macros, which would also
++// rewrite CoreCLR members called GetExceptionCode(). Keep them names, and give
++// each filter local lambdas of those names that read PSEH's state.
++#undef _exception_code
++#undef _exception_info
++#undef _abnormal_termination
++#undef __except
++#define __except(...) _SEH2_EXCEPT(({                                                  \
++    auto _exception_code = [&]() -> unsigned long { return __seh2$$exception_code__; }; \
++    auto _exception_info = [&]() -> struct _EXCEPTION_POINTERS* {                       \
++        return (struct _EXCEPTION_POINTERS*)__seh2$$exception_ptr__; };                 \
++    (void)_exception_code; (void)_exception_info;                                       \
++    (__VA_ARGS__); }))
++#define __assume(x) ((void)0)
++#else
++#define __seh_try __try
++#define __endtry
++#endif
++
+ // MSVC debugger annotations (no code is generated for them)
+ #define __annotation(...) ((void)0)
+ 
+@@ -17,8 +51,16 @@
+ 
+ // windows.h defines min/max as macros (unless NOMINMAX); mingw-w64 only does so
+ // for C. The Windows code of CoreCLR relies on them in C++ too. (libc++ saves and
+-// undefines them around its own min/max.)
+-#ifndef NOMINMAX
++// undefines them around its own min/max.) libstdc++ undefines them (c++config.h)
++// and cannot have them as macros, so with GCC they are functions with the same
++// (a ? b : c) result type.
++#if defined(__cplusplus) && defined(__GNUC__) && !defined(__clang__)
++// (prvalue operands: decltype(a < b ? a : b) is a reference to the parameter)
++template <typename A, typename B>
++constexpr auto max(A a, B b) -> decltype(a > b ? static_cast<A>(a) : static_cast<B>(b)) { return a > b ? a : b; }
++template <typename A, typename B>
++constexpr auto min(A a, B b) -> decltype(a < b ? static_cast<A>(a) : static_cast<B>(b)) { return a < b ? a : b; }
++#elif !defined(NOMINMAX)
+ #ifndef max
+ #define max(a, b) (((a) > (b)) ? (a) : (b))
+ #endif
+diff --git a/src/coreclr/inc/palclr.h b/src/coreclr/inc/palclr.h
+index 10fe95760..0ab7bb29b 100644
+--- a/src/coreclr/inc/palclr.h
++++ b/src/coreclr/inc/palclr.h
+@@ -333,7 +333,7 @@
+         bool __exHandled; __exHandled = false;                                  \
+         DWORD __exCode; __exCode = 0;                                           \
+         SCAN_EHMARKER();                                                        \
+-        __try                                                                   \
++        __seh_try                                                                   \
+         {                                                                       \
+             SCAN_EHMARKER_TRY();
+ 
+@@ -361,6 +361,7 @@
+ 
+ #define PAL_ENDTRY_NAKED                                                        \
+         }                                                                       \
++        __endtry                                                                \
+         PAL_ENDTRY_NAKED_DBG                                                    \
+     }                                                                           \
+ 
+@@ -506,7 +507,7 @@
+ #define PAL_TRY_HANDLER_DBG_BEGIN                                               \
+     BOOL ___oldOkayToThrowValue = FALSE;                                        \
+     ClrDebugState *___pState = ::GetClrDebugState();                            \
+-    __try                                                                       \
++    __seh_try                                                                   \
+     {                                                                           \
+         ___oldOkayToThrowValue = ___pState->IsOkToThrow();                      \
+         ___pState->SetOkToThrow();
+@@ -517,7 +518,7 @@
+     ClrDebugState *___pState = NULL;                                            \
+     if (_reason != DLL_PROCESS_ATTACH)                                          \
+         ___pState = CheckClrDebugState();                                       \
+-    __try                                                                       \
++    __seh_try                                                                   \
+     {                                                                           \
+         if (___pState)                                                          \
+         {                                                                       \
+@@ -538,7 +539,8 @@
+             _ASSERTE(___pState == CheckClrDebugState());                        \
+             ___pState->SetOkToThrow( ___oldOkayToThrowValue );                \
+         }                                                                       \
+-    }
++    }                                                                           \
++    __endtry
+ 
+ #define PAL_ENDTRY_NAKED_DBG
+ 
+diff --git a/src/coreclr/inc/palclr_win.h b/src/coreclr/inc/palclr_win.h
+index a9ee78e32..c315950e4 100644
+--- a/src/coreclr/inc/palclr_win.h
++++ b/src/coreclr/inc/palclr_win.h
+@@ -88,7 +88,7 @@
+ #define WIN_PAL_TRY_HANDLER_DBG_BEGIN                                           \
+     BOOL ___oldOkayToThrowValue = FALSE;                                        \
+     ClrDebugState *___pState = GetClrDebugState();                              \
+-    __try                                                                       \
++    __seh_try                                                                   \
+     {                                                                           \
+         ___oldOkayToThrowValue = ___pState->IsOkToThrow();                      \
+         ___pState->SetOkToThrow(TRUE);                                          \
+@@ -99,7 +99,7 @@
+     BOOL ___oldOkayToThrowValue = FALSE;                                        \
+     BOOL ___oldSOTolerantState = FALSE;                                         \
+     ClrDebugState *___pState = CheckClrDebugState();                            \
+-    __try                                                                       \
++    __seh_try                                                                   \
+     {                                                                           \
+         if (___pState)                                                          \
+         {                                                                       \
+@@ -123,7 +123,8 @@
+             ___pState->SetOkToThrow(___oldOkayToThrowValue);                    \
+             ___pState->SetSOTolerance(___oldSOTolerantState);                   \
+         }                                                                       \
+-    }
++    }                                                                           \
++    __endtry
+ 
+ #define WIN_PAL_ENDTRY_NAKED_DBG
+ 
+diff --git a/src/coreclr/inc/utilcode.h b/src/coreclr/inc/utilcode.h
+index bc84e7164..5e1d64df3 100644
+--- a/src/coreclr/inc/utilcode.h
++++ b/src/coreclr/inc/utilcode.h
+@@ -4010,6 +4010,27 @@ inline T* InterlockedCompareExchangeT(
+     return InterlockedCompareExchangeT(destination, exchange, nullptr);
+ }
+ 
++#if defined(__GNUC__) && !defined(__clang__)
++// GCC's NULL is __null, which is not an int: the same for it.
++template <typename T>
++inline T* InterlockedExchangeT(T* volatile * target, decltype(__null) value)
++{
++    return InterlockedExchangeT(target, nullptr);
++}
++
++template <typename T>
++inline T* InterlockedCompareExchangeT(T* volatile * destination, decltype(__null) exchange, T* comparand)
++{
++    return InterlockedCompareExchangeT(destination, nullptr, comparand);
++}
++
++template <typename T>
++inline T* InterlockedCompareExchangeT(T* volatile * destination, T* exchange, decltype(__null) comparand)
++{
++    return InterlockedCompareExchangeT(destination, exchange, nullptr);
++}
++#endif
++
+ #undef InterlockedExchangePointer
+ #define InterlockedExchangePointer Use_InterlockedExchangeT
+ #undef InterlockedCompareExchangePointer
+diff --git a/src/coreclr/jit/jittelemetry.cpp b/src/coreclr/jit/jittelemetry.cpp
+index f02874c78..6759abbf4 100644
+--- a/src/coreclr/jit/jittelemetry.cpp
++++ b/src/coreclr/jit/jittelemetry.cpp
+@@ -352,7 +352,7 @@ void Compiler::compGetTelemetryDefaults(const char** assemblyName,
+ {
+     if (info.compMethodHnd != nullptr)
+     {
+-        __try
++        __seh_try
+         {
+ 
+             // Expensive calls, call infrequently or in exceptional scenarios.
+@@ -366,6 +366,7 @@ void Compiler::compGetTelemetryDefaults(const char** assemblyName,
+         __except (EXCEPTION_EXECUTE_HANDLER)
+         {
+         }
++        __endtry
+     }
+ 
+     // If the JIT interface methods init-ed these values to nullptr,
+diff --git a/src/coreclr/utilcode/stacktrace.cpp b/src/coreclr/utilcode/stacktrace.cpp
+index d8b9d313c..8a22b4607 100644
+--- a/src/coreclr/utilcode/stacktrace.cpp
++++ b/src/coreclr/utilcode/stacktrace.cpp
+@@ -527,7 +527,7 @@ DWORD_PTR dwAddr
+         PLAT_IMAGEHLP_SYMBOL  sym;
+     };
+ 
+-    __try
++    __seh_try
+     {
+         sym.SizeOfStruct = sizeof(PLAT_IMAGEHLP_SYMBOL);
+         sym.Address = dwAddr;
+@@ -552,6 +552,7 @@ DWORD_PTR dwAddr
+         pszSymbol = "<EX: no symbol>";
+         psi->dwOffset = dwAddr - mi.BaseOfImage;
+     }
++    __endtry
+ 
+     strcpy_s(psi->achSymbol, ARRAY_SIZE(psi->achSymbol), pszSymbol);
+ }
+diff --git a/src/coreclr/vm/assembly.cpp b/src/coreclr/vm/assembly.cpp
+index 56428af44..7e16ad898 100644
+--- a/src/coreclr/vm/assembly.cpp
++++ b/src/coreclr/vm/assembly.cpp
+@@ -1271,7 +1271,7 @@ struct Param
+     LPWSTR *wzArgs;
+ } param;
+ 
+-static void RunMainInternal(Param* pParam)
++NOINLINE static void RunMainInternal(Param* pParam)
+ {
+     MethodDescCallSite  threadStart(pParam->pFD);
+ 
+diff --git a/src/coreclr/vm/comcache.cpp b/src/coreclr/vm/comcache.cpp
+index 573ead1a9..92b3d4b05 100644
+--- a/src/coreclr/vm/comcache.cpp
++++ b/src/coreclr/vm/comcache.cpp
+@@ -10,6 +10,14 @@
+ #include "runtimecallablewrapper.h"
+ #include <mtx.h>
+ 
++#if defined(__GNUC__) && !defined(__clang__)
++// mingw-w64's libuuid.a has this CLSID in one member with thousands of other
++// GUIDs, including the transaction IIDs that <mtx.h> defines (selectany) in the
++// files where eventtracebase.h left INITGUID on; GNU ld rejects such pairs. So
++// define it here (selectany too) rather than pull in that member.
++DEFINE_GUID(CLSID_InProcFreeMarshaler, 0x0000033a, 0, 0, 0xc0, 0, 0, 0, 0, 0, 0, 0x46);
++#endif
++
+ #ifdef FEATURE_COMINTEROP_APARTMENT_SUPPORT
+ #include "olecontexthelpers.h"
+ #endif // FEATURE_COMINTEROP_APARTMENT_SUPPORT
+diff --git a/src/coreclr/vm/comtoclrcall.cpp b/src/coreclr/vm/comtoclrcall.cpp
+index 215b6c61b..4a70c10d5 100644
+--- a/src/coreclr/vm/comtoclrcall.cpp
++++ b/src/coreclr/vm/comtoclrcall.cpp
+@@ -160,7 +160,7 @@ extern "C" ARG_SLOT __fastcall COMToCLRDispatchHelper(
+     Frame   *pCurFrame);
+ 
+ 
+-inline static void InvokeStub(ComCallMethodDesc *pCMD, PCODE pManagedTarget, OBJECTREF orThis, ComMethodFrame *pFrame, Thread *pThread,
++inline void InvokeStub(ComCallMethodDesc *pCMD, PCODE pManagedTarget, OBJECTREF orThis, ComMethodFrame *pFrame, Thread *pThread,
+                               UINT64* pRetValOut)
+ {
+     LIMITED_METHOD_CONTRACT;
+@@ -204,7 +204,7 @@ extern "C" ARG_SLOT COMToCLRDispatchHelper(
+     INT_PTR        pDangerousThis);
+ 
+ 
+-inline static void InvokeStub(ComCallMethodDesc *pCMD, PCODE pManagedTarget, OBJECTREF orThis, ComMethodFrame *pFrame, Thread *pThread,
++inline void InvokeStub(ComCallMethodDesc *pCMD, PCODE pManagedTarget, OBJECTREF orThis, ComMethodFrame *pFrame, Thread *pThread,
+                               UINT64* pRetValOut)
+ {
+     WRAPPER_NO_CONTRACT;
+@@ -612,7 +612,7 @@ ErrorExit:
+ #endif
+ 
+ 
+-static UINT64 __stdcall FieldCallWorker(Thread *pThread, ComMethodFrame* pFrame)
++UINT64 __stdcall FieldCallWorker(Thread *pThread, ComMethodFrame* pFrame)
+ {
+     CONTRACTL
+     {
+@@ -665,7 +665,7 @@ static UINT64 __stdcall FieldCallWorker(Thread *pThread, ComMethodFrame* pFrame)
+     return hrRetVal;
+ }
+ 
+-static void FieldCallWorkerDebuggerWrapper(Thread *pThread, ComMethodFrame* pFrame)
++void FieldCallWorkerDebuggerWrapper(Thread *pThread, ComMethodFrame* pFrame)
+ {
+     // Use static contracts b/c we have SEH.
+     STATIC_CONTRACT_THROWS;
+@@ -693,7 +693,7 @@ static void FieldCallWorkerDebuggerWrapper(Thread *pThread, ComMethodFrame* pFra
+     PAL_ENDTRY
+ }
+ 
+-static void FieldCallWorkerBody(Thread *pThread, ComMethodFrame* pFrame)
++void FieldCallWorkerBody(Thread *pThread, ComMethodFrame* pFrame)
+ {
+     CONTRACTL
+     {
+diff --git a/src/coreclr/vm/threads.cpp b/src/coreclr/vm/threads.cpp
+index b7423e867..f589b5b61 100644
+--- a/src/coreclr/vm/threads.cpp
++++ b/src/coreclr/vm/threads.cpp
+@@ -7225,7 +7225,7 @@ static void ManagedThreadBase_DispatchInner(ManagedThreadCallState *pCallState)
+     (*pCallState->pTarget) (pCallState->args);
+ }
+ 
+-static void ManagedThreadBase_DispatchMiddle(ManagedThreadCallState *pCallState)
++NOINLINE static void ManagedThreadBase_DispatchMiddle(ManagedThreadCallState *pCallState)
+ {
+     STATIC_CONTRACT_GC_TRIGGERS;
+     STATIC_CONTRACT_THROWS;
+-- 
+2.56.0
+

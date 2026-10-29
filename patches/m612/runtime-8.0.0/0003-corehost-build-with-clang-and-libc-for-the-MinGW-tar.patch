@@ -1,8 +1,7 @@
-From b392441b3448668acca4e60a605b9a3b5f8db3bc Mon Sep 17 00:00:00 2001
+From 78dbafcb03332e1d6dce766775d932fda19d27ce Mon Sep 17 00:00:00 2001
 From: Kreijstal <elektrischrainbow@gmail.com>
 Date: Thu, 8 Oct 2026 15:23:59 +0200
-Subject: [PATCH 3/3] corehost: build with clang and libc++ for the MinGW
- target
+Subject: [PATCH] corehost: build with clang and libc++ for the MinGW target
 
 Fixes for things only MSVC accepts:
 - pal.h: include <share.h> for _SH_DENYNO (MSVC's <windows.h> drags it in).
@@ -15,18 +14,21 @@ Fixes for things only MSVC accepts:
   std::wstring overload is an MSVC extension, libc++ has const wchar_t*.
 - clsidmap.cpp: StatusCode values do not fit HRESULT in a braced
   initializer (narrowing); cast.
+- pal.h: libstdc++ (GCC) forces mingw-w64 C99 stdio, where %s in a wide
+  format is a narrow string; print the host messages (MSVC formats, %s
+  wide) with the CRT vfwprintf, __ms_vfwprintf.
 ---
  src/native/corehost/comhost/clsidmap.cpp     | 4 ++--
  src/native/corehost/coreclr_delegates.h      | 2 +-
  src/native/corehost/hostfxr.h                | 2 +-
- src/native/corehost/hostmisc/pal.h           | 1 +
+ src/native/corehost/hostmisc/pal.h           | 9 +++++++++
  src/native/corehost/hostmisc/pal.windows.cpp | 6 +++---
  src/native/corehost/json_parser.cpp          | 2 +-
  src/native/corehost/nethost/nethost.h        | 2 +-
- 7 files changed, 10 insertions(+), 9 deletions(-)
+ 7 files changed, 18 insertions(+), 9 deletions(-)
 
 diff --git a/src/native/corehost/comhost/clsidmap.cpp b/src/native/corehost/comhost/clsidmap.cpp
-index 978cded..afa3710 100644
+index 978cdeddb..afa3710ed 100644
 --- a/src/native/corehost/comhost/clsidmap.cpp
 +++ b/src/native/corehost/comhost/clsidmap.cpp
 @@ -103,7 +103,7 @@ namespace
@@ -48,7 +50,7 @@ index 978cded..afa3710 100644
  
          return get_map_from_json(json);
 diff --git a/src/native/corehost/coreclr_delegates.h b/src/native/corehost/coreclr_delegates.h
-index 550badf..915de1c 100644
+index 550badf13..915de1c7f 100644
 --- a/src/native/corehost/coreclr_delegates.h
 +++ b/src/native/corehost/coreclr_delegates.h
 @@ -8,7 +8,7 @@
@@ -61,7 +63,7 @@ index 550badf..915de1c 100644
      #else
          typedef unsigned short char_t;
 diff --git a/src/native/corehost/hostfxr.h b/src/native/corehost/hostfxr.h
-index a19636b..96aadd6 100644
+index a19636b9e..96aadd69c 100644
 --- a/src/native/corehost/hostfxr.h
 +++ b/src/native/corehost/hostfxr.h
 @@ -9,7 +9,7 @@
@@ -74,7 +76,7 @@ index a19636b..96aadd6 100644
      #else
          typedef unsigned short char_t;
 diff --git a/src/native/corehost/hostmisc/pal.h b/src/native/corehost/hostmisc/pal.h
-index aa050d1..e56f3ae 100644
+index aa050d1ae..7232e65f8 100644
 --- a/src/native/corehost/hostmisc/pal.h
 +++ b/src/native/corehost/hostmisc/pal.h
 @@ -23,6 +23,7 @@
@@ -85,8 +87,26 @@ index aa050d1..e56f3ae 100644
  
  #define xerr std::wcerr
  #define xout std::wcout
+@@ -157,9 +158,17 @@ namespace pal
+ 
+     inline FILE* file_open(const string_t& path, const char_t* mode) { return ::_wfsopen(path.c_str(), mode, _SH_DENYNO); }
+ 
++#if defined(__USE_MINGW_ANSI_STDIO) && __USE_MINGW_ANSI_STDIO
++    // libstdc++ forces mingw-w64's C99 stdio, where %s in a wide format is a
++    // narrow string; the formats here are MSVC's (%s: wide), so use the CRT's.
++    inline void file_vprintf(FILE* f, const char_t* format, va_list vl) { ::__ms_vfwprintf(f, format, vl); ::fputwc(_X('\n'), f); }
++    inline void err_fputs(const char_t* message) { ::fputws(message, stderr); ::fputwc(_X('\n'), stderr); }
++    inline void out_vprintf(const char_t* format, va_list vl) { ::__ms_vfwprintf(stdout, format, vl); ::fputwc(_X('\n'), stdout); }
++#else
+     inline void file_vprintf(FILE* f, const char_t* format, va_list vl) { ::vfwprintf(f, format, vl); ::fputwc(_X('\n'), f); }
+     inline void err_fputs(const char_t* message) { ::fputws(message, stderr); ::fputwc(_X('\n'), stderr); }
+     inline void out_vprintf(const char_t* format, va_list vl) { ::vfwprintf(stdout, format, vl); ::fputwc(_X('\n'), stdout); }
++#endif
+ 
+     inline int str_vprintf(char_t* buffer, size_t count, const char_t* format, va_list vl) { return ::_vsnwprintf_s(buffer, count, _TRUNCATE, format, vl); }
+     inline int strlen_vprintf(const char_t* format, va_list vl) { return ::_vscwprintf(format, vl); }
 diff --git a/src/native/corehost/hostmisc/pal.windows.cpp b/src/native/corehost/hostmisc/pal.windows.cpp
-index b116104..72e36de 100644
+index b11610492..72e36de5b 100644
 --- a/src/native/corehost/hostmisc/pal.windows.cpp
 +++ b/src/native/corehost/hostmisc/pal.windows.cpp
 @@ -194,7 +194,7 @@ bool pal::load_library(const string_t* in_path, dll_t* dll)
@@ -117,7 +137,7 @@ index b116104..72e36de 100644
  
      return GetModuleFileNameWrapper(hmod, recv);
 diff --git a/src/native/corehost/json_parser.cpp b/src/native/corehost/json_parser.cpp
-index ca49687..618fbe4 100644
+index ca4968786..618fbe43c 100644
 --- a/src/native/corehost/json_parser.cpp
 +++ b/src/native/corehost/json_parser.cpp
 @@ -132,7 +132,7 @@ bool json_parser_t::parse_file(const pal::string_t& path)
@@ -130,7 +150,7 @@ index ca49687..618fbe4 100644
      {
          trace::error(_X("Cannot use file stream for [%s]: %s"), path.c_str(), pal::strerror(errno).c_str());
 diff --git a/src/native/corehost/nethost/nethost.h b/src/native/corehost/nethost/nethost.h
-index eaca175..77a1820 100644
+index eaca17535..77a182057 100644
 --- a/src/native/corehost/nethost/nethost.h
 +++ b/src/native/corehost/nethost/nethost.h
 @@ -20,7 +20,7 @@
@@ -143,5 +163,5 @@ index eaca175..77a1820 100644
      #else
          typedef unsigned short char_t;
 -- 
-2.55.0
+2.56.0
 

@@ -21,6 +21,13 @@ case "$MSYSTEM" in
   *) echo "env-m612.sh: unsupported MSYSTEM=$MSYSTEM" >&2; return 1 ;;
 esac
 export MINGW_PREFIX="$_mp"
+# Native toolchain of the native stages (corehost, coreclr, nativelibs):
+# CLANG64 clang/lld/libc++, UCRT64 GCC/binutils/libstdc++.  NATIVE_SUFFIX keeps
+# the UCRT64 build trees and install prefixes apart from the CLANG64 ones.
+case "$MSYSTEM" in
+  UCRT64)  NCC=gcc NCXX=g++ NRC=windres NSTRIP=strip NATIVE_SUFFIX=-ucrt64 NPKG=mingw-w64-ucrt-x86_64 ;;
+  CLANG64) NCC=clang NCXX=clang++ NRC=llvm-windres NSTRIP=llvm-strip NATIVE_SUFFIX= NPKG=mingw-w64-clang-x86_64 ;;
+esac
 export PATH="${BOOT_EXTRA_PATH:+$BOOT_EXTRA_PATH:}$_mp/bin:/usr/bin:/usr/bin/core_perl"
 export MONO_LIB="$_mp/lib/mono/4.5"
 export SEED_CSC="$MONO_LIB/csc.exe"

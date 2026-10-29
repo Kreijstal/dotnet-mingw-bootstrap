@@ -13,19 +13,28 @@
 # script passes the same options mono.proj uses for TargetsWindows.
 #
 # usage: mono-runtime.sh [step...]   steps: prep configure build install nativelibs test
-# Run with MSYSTEM=CLANG64, after corehost.sh (same patched tree, version headers).
+#   (test runs ziptest, the System.IO.Compression.Native round trips, as well)
+# Run with MSYSTEM=CLANG64, after corehost.sh (same patched tree, version headers);
+# with MSYSTEM=UCRT64 (GCC) only prep, nativelibs and ziptest.
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 . "$here/../env-m612.sh"
-[ "$MSYSTEM" = CLANG64 ] || die "mono-runtime.sh wants MSYSTEM=CLANG64 (got $MSYSTEM)"
 steps=${*:-prep configure build install nativelibs test}
+case "$MSYSTEM" in
+  CLANG64) ;;
+  UCRT64)
+    for s in $steps; do
+      case $s in prep|nativelibs|ziptest) ;; *) die "mono-runtime.sh $s wants MSYSTEM=CLANG64 (UCRT64: prep nativelibs ziptest)" ;; esac
+    done ;;
+  *) die "mono-runtime.sh wants MSYSTEM=CLANG64 or UCRT64 (got $MSYSTEM)" ;;
+esac
 RT_VER=${RT_VER:-8.0.0}
 PACK_VER=${PACK_VER:-8.0.31}           # framework version the SDK's apps ask for (see refpack.sh)
 RID=win-x64
 SRC=$M612/src/runtime-$RT_VER-native
 P=$here/../../patches/m612/runtime-$RT_VER
-B=$M612/build/mono-$RT_VER
-O=$M612/mono-$RT_VER                   # install prefix (bin/, lib/, include/)
+B=$M612/build/mono-$RT_VER$NATIVE_SUFFIX
+O=$M612/mono-$RT_VER$NATIVE_SUFFIX     # install prefix (bin/, lib/, include/)
 SDKROOT=${SDKROOT:-$M612/dotnet-sdk-8.0.131}
 JOBS=${JOBS:-4}
 CONFIG=${CONFIG:-Release}
@@ -74,13 +83,23 @@ step_install() {
 step_nativelibs() {
   log "configure + build src/native/libs (System.IO.Compression.Native)"
   cmake -G Ninja -S "$SRC/src/native/libs" -B "$B/libs" \
-    -DCMAKE_BUILD_TYPE=$CONFIG -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ \
-    -DCMAKE_RC_COMPILER=llvm-windres -DCMAKE_INSTALL_PREFIX="$O/libs" \
+    -DCMAKE_BUILD_TYPE=$CONFIG -DCMAKE_C_COMPILER=$NCC -DCMAKE_CXX_COMPILER=$NCXX \
+    -DCMAKE_RC_COMPILER=$NRC -DCMAKE_INSTALL_PREFIX="$O/libs" \
     -DCLR_CMAKE_TARGET_ARCH=x64 -DCLR_CMAKE_HOST_ARCH=x64 -DCLR_CMAKE_TARGET_OS=windows \
     -DCLR_CMAKE_KEEP_NATIVE_SYMBOLS=ON -DCMAKE_STATIC_LIB_LINK=1
   ninja -C "$B/libs" -j"$JOBS"
   cmake --install "$B/libs" --prefix "$O/libs"
   find "$O/libs" -type f -name '*.dll' -exec ls -l {} +
+}
+
+step_ziptest() {
+  local T=$M612/test/mono-$RT_VER$NATIVE_SUFFIX L=$SRC/src/native
+  mkdir -p "$T"
+  log "test 2: System.IO.Compression.Native.dll round trips (zlib-intel deflate/inflate, crc32, brotli)"
+  $NCC -O1 -I"$L/libs/System.IO.Compression.Native" -I"$L/external/brotli/include" "$here/tests/mono/ziptest.c" \
+    "$O/libs/System.IO.Compression.Native.dll.a" -o "$T/ziptest.exe"
+  cp "$O/libs/System.IO.Compression.Native.dll" "$T/"
+  "$T/ziptest.exe"
 }
 
 # The runtime without CoreLib: mono-sgen.exe and the host both get as far as
@@ -90,12 +109,7 @@ step_test() {
   rm -rf "${T:?}"; mkdir -p "$T"
   log "test 1: coreclr.dll imports (system DLLs only)"
   llvm-readobj --coff-imports "$O/lib/coreclr.dll" | grep 'Name:' | sort -u
-  log "test 2: System.IO.Compression.Native.dll round trips (zlib-intel deflate/inflate, crc32, brotli)"
-  local L=$SRC/src/native
-  clang -O1 -I"$L/libs/System.IO.Compression.Native" -I"$L/external/brotli/include" "$here/tests/mono/ziptest.c" \
-    "$O/libs/System.IO.Compression.Native.dll.a" -o "$T/ziptest.exe"
-  cp "$O/libs/System.IO.Compression.Native.dll" "$T/"
-  "$T/ziptest.exe"
+  step_ziptest
   log "test 2b: mono-sgen --version"
   "$O/bin/mono-sgen.exe" --version || true
   log "test 3: dotnet.exe (source-built host) -> hostfxr -> hostpolicy -> coreclr.dll (Mono), no CoreLib yet"

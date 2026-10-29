@@ -1,7 +1,8 @@
 #!/bin/bash
 # Build the .NET host (src/native/corehost of dotnet/runtime: dotnet.exe
 # muxer, hostfxr.dll, hostpolicy.dll, apphost.exe, nethost, comhost) with the
-# MSYS2 CLANG64 toolchain (clang/lld, x86_64-w64-mingw32 target), and install
+# MSYS2 CLANG64 toolchain (clang/lld, x86_64-w64-mingw32 target) or the UCRT64
+# one (GCC/binutils/libstdc++), and install
 # it into the source-built SDK of phase 6:
 #   $SDKROOT/dotnet.exe, host/fxr/<ver>/hostfxr.dll,
 #   packs/Microsoft.NETCore.App.Host.win-x64/<ver>/runtimes/win-x64/native/{apphost.exe,...}
@@ -9,11 +10,10 @@
 # generates the version headers; here the script writes them itself.
 #
 # usage: corehost.sh [step...]      steps: prep configure build install test
-# Run with MSYSTEM=CLANG64.
+# Run with MSYSTEM=CLANG64 or UCRT64.
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 . "$here/../env-m612.sh"
-[ "$MSYSTEM" = CLANG64 ] || die "corehost.sh wants MSYSTEM=CLANG64 (got $MSYSTEM)"
 steps=${*:-prep configure build install test}
 RT_VER=${RT_VER:-8.0.0}
 HOST_VER=${HOST_VER:-$RT_VER}          # version directory of host/fxr
@@ -21,8 +21,8 @@ PACK_VER=${PACK_VER:-8.0.31}           # apphost pack version known to the SDK (
 RID=win-x64
 SRC=$M612/src/runtime-$RT_VER-native   # full, patched tree (the refpack tree stays pristine)
 P=$here/../../patches/m612/runtime-$RT_VER
-B=$M612/build/corehost-$RT_VER
-O=$M612/corehost-$RT_VER               # cmake install prefix
+B=$M612/build/corehost-$RT_VER$NATIVE_SUFFIX
+O=$M612/corehost-$RT_VER$NATIVE_SUFFIX               # cmake install prefix
 SDKROOT=${SDKROOT:-$M612/dotnet-sdk-8.0.131}
 # common.sh (fetch/provenance helpers) also resolves the seed Mono paths, which
 # live in UCRT64 only; no managed code is compiled here.
@@ -108,7 +108,7 @@ step_configure() {
   gen_versions
   log "configure corehost ($MSYSTEM)"
   cmake -G Ninja -S "$SRC/src/native/corehost" -B "$B/cmake" \
-    -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ \
+    -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=$NCC -DCMAKE_CXX_COMPILER=$NCXX -DCMAKE_RC_COMPILER=$NRC \
     -DCMAKE_INSTALL_PREFIX="$O" \
     -DCLR_CMAKE_TARGET_ARCH=x64 -DCLR_CMAKE_HOST_ARCH=x64 \
     -DCLI_CMAKE_PKG_RID=$RID -DCLI_CMAKE_FALLBACK_OS=win \
@@ -127,7 +127,7 @@ step_install() {
   log "install corehost -> $O"
   rm -rf "${O:?}"
   cmake --install "$B/cmake" --prefix "$O"
-  llvm-strip --strip-all "$O"/corehost/*.exe "$O"/corehost/*.dll
+  $NSTRIP --strip-all "$O"/corehost/*.exe "$O"/corehost/*.dll
   local apk=$SDKROOT/packs/Microsoft.NETCore.App.Host.$RID/$PACK_VER/runtimes/$RID/native f
   rm -rf "${SDKROOT:?}/host/fxr" "${apk:?}"
   mkdir -p "$SDKROOT/host/fxr/$HOST_VER" "$apk"
