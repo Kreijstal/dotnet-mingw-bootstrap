@@ -10,6 +10,7 @@ root=$(cd "${1:?usage: build-native.sh PREPARED_ROOT BOOTSTRAP_TREE REACTOS_SRC 
 bs=$(cd "${2:?missing bootstrap tree}" && pwd)/bootstrap/m612
 here=$(cd "$(dirname "$0")" && pwd)
 src=$root/m/src/runtime-8.0.31-native
+export RUNTIME_FILE_VERSION=$(cat "$root/file-version.txt")
 export M612="$root/m" RT_VER=8.0.31 HOST_VER=8.0.31 PACK_VER=8.0.31 MSYSTEM=UCRT64 JOBS=${4:-2}
 export REACTOS_SRC=$(cd "${3:?missing ReactOS source}" && pwd) SDKROOT="$root/layout-ucrt64"
 [ -f "$src/.applied-patches" ] || { echo "not a prepared root: $root" >&2; exit 1; }

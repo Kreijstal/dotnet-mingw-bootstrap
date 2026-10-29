@@ -48,14 +48,17 @@ step_prep() {
 gen_versions() {
   local obj=$SRC/artifacts/obj res=$B/hostResourceFiles maj min pat f desc
   IFS=. read -r maj min pat <<< "$RT_VER"
+  # RUNTIME_FILE_VERSION: the file version Arcade calculates for a serviced build
+  local fv=${RUNTIME_FILE_VERSION:-$maj.$min.$pat.0} fmaj fmin fbuild frev
+  IFS=. read -r fmaj fmin fbuild frev <<< "$fv"
   mkdir -p "$obj"
   cat > "$obj/runtime_version.h" <<EOV
 #define RuntimeAssemblyMajorVersion $maj
 #define RuntimeAssemblyMinorVersion $min
-#define RuntimeFileMajorVersion $maj
-#define RuntimeFileMinorVersion $min
-#define RuntimeFileBuildVersion $pat
-#define RuntimeFileRevisionVersion 0
+#define RuntimeFileMajorVersion $fmaj
+#define RuntimeFileMinorVersion $fmin
+#define RuntimeFileBuildVersion $fbuild
+#define RuntimeFileRevisionVersion $frev
 #define RuntimeProductMajorVersion $maj
 #define RuntimeProductMinorVersion $min
 #define RuntimeProductPatchVersion $pat
@@ -80,13 +83,13 @@ EOV
 #define VER_PRODUCTNAME_STR         ".NET"
 #endif
 #undef VER_PRODUCTVERSION
-#define VER_PRODUCTVERSION          $maj,$min,$pat,0
+#define VER_PRODUCTVERSION          $fmaj,$fmin,$fbuild,$frev
 #undef VER_PRODUCTVERSION_STR
 #define VER_PRODUCTVERSION_STR      "$RT_VER"
 #undef VER_FILEVERSION
-#define VER_FILEVERSION             $maj,$min,$pat,0
+#define VER_FILEVERSION             $fmaj,$fmin,$fbuild,$frev
 #undef VER_FILEVERSION_STR
-#define VER_FILEVERSION_STR         "$maj.$min.$pat.0"
+#define VER_FILEVERSION_STR         "$fv"
 #ifndef VER_LEGALCOPYRIGHT_STR
 #define VER_LEGALCOPYRIGHT_STR      "\\xa9 .NET Foundation and Contributors."
 #endif
