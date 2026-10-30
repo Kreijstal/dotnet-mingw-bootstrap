@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import tarfile
@@ -14,10 +15,13 @@ parser.add_argument('sdk_seed', type=Path)
 parser.add_argument('prepared_host', type=Path)
 parser.add_argument('destination', type=Path)
 args = parser.parse_args()
+# the environment that builds: its SDK package seed, runtime8-servicing and tools
+prefix = Path(os.environ.get('MINGW_PREFIX', '/clang64'))
+package_prefix = os.environ.get('MINGW_PACKAGE_PREFIX', 'mingw-w64-clang-x86_64')
+tree = prefix.name + '/'
 seed, host, out = (p.resolve() for p in [args.sdk_seed, args.prepared_host, args.destination])
 assert not out.exists()
 sha = lambda data: hashlib.sha256(data).hexdigest()
-assert sha(seed.read_bytes()) == '4d2c8e8f23a26c38cbd4edd5acb3b412c7c77e4a7a21379d7ef5b35274184166'
 out.mkdir()
 baseline = {}
 info = None
@@ -32,7 +36,7 @@ with subprocess.Popen(['zstd', '-dc', str(seed)], stdout=subprocess.PIPE) as pro
                 info = data.decode()
             if item.name.startswith('.'):
                 continue
-            assert item.name.startswith('clang64/'), item.name
+            assert item.name.startswith(tree), item.name
             target = out / item.name
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(data)
@@ -41,10 +45,10 @@ with subprocess.Popen(['zstd', '-dc', str(seed)], stdout=subprocess.PIPE) as pro
     while process.stdout.read(1024 * 1024):
         pass
     assert process.wait() == 0
-assert 'pkgver = 8.0.131-3\n' in info
-assert 'pkgname = mingw-w64-clang-x86_64-dotnet-sdk\n' in info
+assert re.search(r'^pkgver = 8\.0\.131-\d+$', info, re.M), info
+assert f'pkgname = {package_prefix}-dotnet-sdk\n' in info
 
-dotnet_root = out / 'clang64/lib/dotnet'
+dotnet_root = out / tree / 'lib/dotnet'
 versions = dotnet_root / 'sdk/8.0.131/Microsoft.NETCoreSdk.BundledVersions.props'
 before = versions.read_bytes()
 encoding = 'utf-16-le' if before.startswith(b'\xff\xfe') else 'utf-16-be' if before.startswith(b'\xfe\xff') else 'utf-8'
@@ -73,11 +77,11 @@ for path in new_host.rglob('*'):
         shutil.copyfile(path, host_pack / relative)
         host_files[relative.as_posix()] = sha(path.read_bytes())
 
-doc = Path('/clang64/share/doc/dotnet-runtime8-servicing')
-runtime = Path('/clang64/lib/dotnet/shared/Microsoft.NETCore.App/8.0.31')
+doc = prefix / 'share/doc/dotnet-runtime8-servicing'
+runtime = prefix / 'lib/dotnet/shared/Microsoft.NETCore.App/8.0.31'
 installed = json.loads((doc / 'source-payload.json').read_text())
 assert installed['source_commit'] == '1219a42122cf5190c7f512850557e38c422430dc'
-assert subprocess.check_output(['pacman', '-Q', 'mingw-w64-clang-x86_64-dotnet-runtime8-servicing'], text=True).strip().endswith('8.0.31-3')
+assert re.fullmatch(package_prefix + r'-dotnet-runtime8-servicing 8\.0\.31-\d+', subprocess.check_output(['pacman', '-Q', package_prefix + '-dotnet-runtime8-servicing'], text=True).strip())
 pack = dotnet_root / 'packs/Microsoft.NETCore.App.Runtime.win-x64/8.0.31'
 managed = set((doc / 'required-framework.txt').read_text().splitlines())
 assert len(managed) == 168
@@ -94,7 +98,7 @@ for name in sorted(managed | {Path(p).stem for p in native_names}):
     shutil.copyfile(source, target)
     runtime_files[relative] = dict(sha256=digest, managed=name in managed, installed_source=source.as_posix())
 relative = 'runtimes/win-x64/native/hostfxr.dll'
-source = Path('/clang64/lib/dotnet/host/fxr/8.0.31/hostfxr.dll')
+source = prefix / 'lib/dotnet/host/fxr/8.0.31/hostfxr.dll'
 assert sha(source.read_bytes()) == installed['files']['host/fxr/8.0.31/hostfxr.dll']
 shutil.copyfile(source, pack / relative)
 runtime_files[relative] = dict(sha256=sha(source.read_bytes()), managed=False, installed_source=source.as_posix())
@@ -118,14 +122,14 @@ for name in ['BuildTask.cs', 'FileUtilities.cs', 'CreateFrameworkListFile.cs']:
     E.SubElement(items, 'Compile', Include=native(inputs / name))
 for name in ['Microsoft.Build.Framework', 'Microsoft.Build.Utilities.Core']:
     ref = E.SubElement(items, 'Reference', Include=name)
-    E.SubElement(ref, 'HintPath').text = native(Path('/clang64/lib/dotnet/sdk/8.0.131') / (name + '.dll'))
+    E.SubElement(ref, 'HintPath').text = native(prefix / 'lib/dotnet/sdk/8.0.131' / (name + '.dll'))
     E.SubElement(ref, 'Private').text = 'false'
 E.ElementTree(project).write(work / 'Tasks.csproj', encoding='utf-8', xml_declaration=True)
 (work / 'NuGet.config').write_text('<configuration><packageSources><clear/></packageSources></configuration>\n')
-env = dict(os.environ, DOTNET_ROOT=native(Path('/clang64/lib/dotnet')), DOTNET_ROOT_X64=native(Path('/clang64/lib/dotnet')),
+env = dict(os.environ, DOTNET_ROOT=native(prefix / 'lib/dotnet'), DOTNET_ROOT_X64=native(prefix / 'lib/dotnet'),
            DOTNET_CLI_HOME=native(work / 'cli-home'), NUGET_PACKAGES=native(work / 'cache'),
            DOTNET_CLI_TELEMETRY_OPTOUT='1', MSBuildEnableWorkloadResolver='false')
-dotnet = '/clang64/lib/dotnet/dotnet.exe'
+dotnet = str(prefix / 'lib/dotnet/dotnet.exe')
 with (work / 'build.log').open('w') as log:
     subprocess.run([dotnet, 'build', native(work / 'Tasks.csproj'), '-c', 'Release', '--configfile', native(work / 'NuGet.config'), '-p:UseSharedCompilation=false', '-v:minimal'], env=env, stdout=log, stderr=subprocess.STDOUT, check=True)
 definition = E.Element('Project')

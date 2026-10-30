@@ -4,8 +4,9 @@ set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 sdk=$(cd "${1:?usage: check-packs.sh SDK_ROOT NEW_OUTPUT}" && pwd)
 mkdir "${2:?missing output}"; out=$(cd "$2" && pwd)
-doc=/clang64/share/doc/dotnet-runtime8-servicing
-export PATH=/clang64/bin:/usr/bin:$PATH
+prefix=${MINGW_PREFIX:-/clang64}
+doc=$prefix/share/doc/dotnet-runtime8-servicing
+export PATH=$prefix/bin:/usr/bin:$PATH
 export DOTNET_ROOT=$(cygpath -am "$sdk") DOTNET_ROOT_X64=$(cygpath -am "$sdk")
 export DOTNET_CLI_HOME=$(cygpath -am "$out/cli-home") NUGET_PACKAGES=$(cygpath -am "$out/cache")
 export DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_NOLOGO=1 DOTNET_MULTILEVEL_LOOKUP=0 MSBuildEnableWorkloadResolver=false
@@ -52,7 +53,7 @@ cat > "$out/Check.csproj" <<'XML'
 </Project>
 XML
 cat > "$out/NuGet.config" <<XML
-<configuration><packageSources><clear/><add key="installed-source" value="$(cygpath -am /clang64/lib/dotnet/library-packs)"/></packageSources></configuration>
+<configuration><packageSources><clear/><add key="installed-source" value="$(cygpath -am "$prefix/lib/dotnet/library-packs")"/></packageSources></configuration>
 XML
 "$dotnet" build "$(cygpath -am "$out/Check.csproj")" -c Release --configfile "$(cygpath -am "$out/NuGet.config")" -p:UseSharedCompilation=false -v:minimal
 timeout 180 "$out/bin/Release/net8.0/Check.exe" "$(cygpath -am "$sdk/shared/Microsoft.NETCore.App/8.0.31")" "$(cygpath -am "$doc/required-framework.txt")"

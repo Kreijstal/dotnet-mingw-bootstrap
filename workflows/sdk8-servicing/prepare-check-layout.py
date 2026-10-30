@@ -2,13 +2,14 @@
 from pathlib import Path
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 import sys
 
 stage, out = (Path(p).resolve() for p in sys.argv[1:])
-source = stage / 'clang64/lib/dotnet'
-installed = Path('/clang64/lib/dotnet')
+installed = Path(os.environ.get('MINGW_PREFIX', '/clang64')) / 'lib/dotnet'
+source = stage / installed.parent.parent.name / 'lib/dotnet'
 assert not out.exists()
 shutil.copytree(source, out)
 sha = lambda p: hashlib.sha256(p.read_bytes()).hexdigest()
