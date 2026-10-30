@@ -17,8 +17,8 @@ then run `makepkg --cleanbuild --force --noconfirm` in that recipe directory.
 The installed check is:
 
 ```sh
-bash /clang64/share/doc/powershell/checks/check-package.sh \
-  /clang64 NEW_OUTPUT /clang64/share/doc/powershell/checks
+bash $MINGW_PREFIX/share/doc/powershell/checks/check-package.sh \
+  /clang64 NEW_OUTPUT $MINGW_PREFIX/share/doc/powershell/checks
 ```
 
 The direct MMI/local CIM/System.Management WMI fixture now passes with both

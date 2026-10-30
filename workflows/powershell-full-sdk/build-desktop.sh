@@ -3,10 +3,10 @@
 set -euo pipefail
 root=$(cd "${1:?usage: build-desktop.sh BUILD_ROOT}" && pwd)
 source=$root/PowerShell-7.4.20
-export DOTNET_ROOT=$(cygpath -am /clang64/lib/dotnet) DOTNET_ROOT_X64=$(cygpath -am /clang64/lib/dotnet)
+export DOTNET_ROOT=$(cygpath -am ${MINGW_PREFIX}/lib/dotnet) DOTNET_ROOT_X64=$(cygpath -am ${MINGW_PREFIX}/lib/dotnet)
 export DOTNET_CLI_HOME=$(cygpath -am "$root/cli-home") NUGET_PACKAGES=$(cygpath -am "$root/empty-packages")
 export DOTNET_CLI_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false DOTNET_NOLOGO=1
-dotnet=/clang64/lib/dotnet/dotnet.exe
+dotnet=${MINGW_PREFIX}/lib/dotnet/dotnet.exe
 config=$(cygpath -am "$root/NuGet.config")
 "$dotnet" build "$(cygpath -am "$source/src/Microsoft.Management.UI.Internal/Microsoft.PowerShell.GraphicalHost.csproj")" \
  -c Release --configfile "$config" -p:BuildProjectReferences=false -p:UseSharedCompilation=false -v:minimal > "$root/graphicalhost-build.log" 2>&1

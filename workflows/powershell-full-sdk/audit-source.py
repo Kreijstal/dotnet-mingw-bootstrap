@@ -2,7 +2,8 @@
 from pathlib import Path
 import hashlib,json,runpy,subprocess,sys,tarfile,xml.etree.ElementTree as E
 root=Path(sys.argv[1]).resolve();source=root/'PowerShell-7.4.20';here=Path(__file__).resolve().parent
-shared=here.parent.parent/'mingw-w64-powershell-module-test-host/audit-source.py'
+import os
+shared=Path(os.environ['POWERSHELL_PACKAGE_DIR'])/'module-host-audit-source.py' if 'POWERSHELL_PACKAGE_DIR' in os.environ else here.parent.parent/'mingw-w64-powershell-module-test-host/audit-source.py'
 runpy.run_path(str(shared),run_name='__main__')
 report=json.loads((root/'source-coverage.json').read_text());native=lambda p:subprocess.check_output(['cygpath','-am',str(p)],text=True).strip().replace('\\','/')
 prefix=native(source)+'/'

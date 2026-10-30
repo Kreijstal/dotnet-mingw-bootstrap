@@ -2,6 +2,7 @@
 from pathlib import Path
 import hashlib
 import json
+import os
 import shutil
 import sys
 
@@ -15,16 +16,17 @@ shutil.copytree(licenses,prefix/'share/licenses/powershell')
 shutil.copy2(launcher_license,prefix/'share/licenses/powershell/LICENSE.launcher')
 doc=prefix/'share/doc/powershell';doc.mkdir(parents=True)
 here=Path(__file__).resolve().parent
-package=here.parents[1]/'mingw-w64-powershell'
-for name in ['README.md','launcher.c','source-dependency-lock.json']:
+package=Path(os.environ.get('POWERSHELL_PACKAGE_DIR',here.parents[1]/'mingw-w64-powershell'))
+desktop=os.environ.get('POWERSHELL_DESKTOP','1')!='0'
+for name in ['README.md','launcher.c']:
     shutil.copy2(package/name,doc/name)
 checks=doc/'checks';checks.mkdir()
 for name in ['check-package.sh','check-launcher.py']:
     shutil.copy2(package/name,checks/name)
-for name in ['Smoke.ps1','CimWmiSmoke.ps1','WmiStaProbe.ps1','GallerySmoke.ps1','ChildSmoke.ps1','DesktopSmoke.ps1']:
+for name in ['Smoke.ps1','CimWmiSmoke.ps1','WmiStaProbe.ps1','GallerySmoke.ps1','ChildSmoke.ps1']+['DesktopSmoke.ps1']*desktop:
     shutil.copy2(here/name,checks/name)
 names=['source-build-inputs.json','localaccounts-source-overlay.json','localaccounts-source-overlay.diff',
-       'full-source-coverage.json','graphicalhost-source-audit.json','full-sdk-catalog-audit.json','native-console-source.json']
+       'full-source-coverage.json']+['graphicalhost-source-audit.json']*desktop+['full-sdk-catalog-audit.json','native-console-source.json']
 for name in names:shutil.copy2(root/name,doc/name)
 shutil.copy2(root/(app.name+'-payload-audit.json'),doc/'application-source-payload.json')
 shutil.copy2(root/(app.name+'-license-closure.json'),doc/'license-closure.json')

@@ -16,8 +16,8 @@ assert len(paths)>=200 and not any(p.endswith('Microsoft.Management.Infrastructu
 for name in ['System.Data.SqlClient','System.Management','System.ServiceModel.Http','System.ServiceModel.NetTcp','System.IO.Packaging','System.Drawing.Common','System.Speech']:
  assert any(Path(p).name==name+'.dll' for p in paths),name
 cache=root/'empty-packages';cache_prefix=native(cache)+'/'
-framework=Path('/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0');framework_prefix=native(framework)+'/'
-feed=Path('/clang64/lib/dotnet/library-packs');owners={};assets={}
+framework=Path(os.environ['MINGW_PREFIX']+'/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0');framework_prefix=native(framework)+'/'
+feed=Path(os.environ['MINGW_PREFIX']+'/lib/dotnet/library-packs');owners={};assets={}
 packages=sorted(cache.rglob('*.nupkg'))
 package_owners=subprocess.check_output(['pacman','-Qqo',*[str(feed/package.name) for package in packages]],text=True).splitlines()
 assert len(package_owners)==len(packages)
@@ -40,8 +40,8 @@ for path in paths:
   p=framework/path[len(framework_prefix):];digest=sha(p);origin=dict(source_targeting_native_owner=framework_owner_by_path[p])
  records[path]=dict(sha256=digest,**origin)
 target=source/'src/System.Management.Automation/CoreCLR/CorePsTypeCatalog.cs';regenerated=root/'independent-sdk-catalog.cs'
-env=dict(os.environ,DOTNET_ROOT=native(Path('/clang64/lib/dotnet')),DOTNET_ROOT_X64=native(Path('/clang64/lib/dotnet')),DOTNET_CLI_TELEMETRY_OPTOUT='1')
-subprocess.run(['/clang64/lib/dotnet/dotnet.exe',native(source/'src/TypeCatalogGen/bin/Release/net8.0/TypeCatalogGen.dll'),native(regenerated),native(root/'sdk-references.inc')],env=env,check=True)
+env=dict(os.environ,DOTNET_ROOT=native(Path(os.environ['MINGW_PREFIX']+'/lib/dotnet')),DOTNET_ROOT_X64=native(Path(os.environ['MINGW_PREFIX']+'/lib/dotnet')),DOTNET_CLI_TELEMETRY_OPTOUT='1')
+subprocess.run([os.environ['MINGW_PREFIX']+'/lib/dotnet/dotnet.exe',native(source/'src/TypeCatalogGen/bin/Release/net8.0/TypeCatalogGen.dll'),native(regenerated),native(root/'sdk-references.inc')],env=env,check=True)
 assert target.read_bytes()==regenerated.read_bytes()
 text=target.read_text()
 required=['System.Data.SqlClient.SqlConnection','System.Management.ManagementObject','System.ServiceModel.BasicHttpBinding','System.ServiceModel.NetTcpBinding','System.IO.Packaging.Package','System.Speech.Synthesis.SpeechSynthesizer']

@@ -3,10 +3,10 @@ set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 root=$(cd "${1:?usage: check-localaccounts-api.sh BUILD_ROOT NEW_OUTPUT}" && pwd)
 mkdir "${2:?missing output}"; out=$(cd "$2" && pwd)
-export DOTNET_ROOT=$(cygpath -am /clang64/lib/dotnet) DOTNET_ROOT_X64=$(cygpath -am /clang64/lib/dotnet)
+export DOTNET_ROOT=$(cygpath -am ${MINGW_PREFIX}/lib/dotnet) DOTNET_ROOT_X64=$(cygpath -am ${MINGW_PREFIX}/lib/dotnet)
 export DOTNET_CLI_HOME=$(cygpath -am "$out/cli-home") NUGET_PACKAGES=$(cygpath -am "$out/empty-packages")
 export DOTNET_CLI_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false DOTNET_NOLOGO=1
-dotnet=/clang64/lib/dotnet/dotnet.exe
+dotnet=${MINGW_PREFIX}/lib/dotnet/dotnet.exe
 "$dotnet" msbuild "$(cygpath -am "$root/PowerShell-7.4.20/src/Microsoft.PowerShell.LocalAccounts/Microsoft.PowerShell.LocalAccounts.csproj")" \
  -p:Configuration=Release -getProperty:DefineConstants -nologo > "$out/define-constants.txt"
 /usr/bin/python3 - "$root" "$out" <<'PY'

@@ -1,4 +1,5 @@
 """Match the core/CIM consumer DLLs to rebuilt project outputs or installed source packages."""
+import os
 from pathlib import Path
 import hashlib,json,sys,zipfile
 root=Path(sys.argv[1]).resolve();consumer=Path(sys.argv[2]).resolve();source=root/'PowerShell-7.4.20'
@@ -8,7 +9,7 @@ project_paths={
  'Microsoft.Management.Infrastructure.CimCmdlets.dll':source/'src/Microsoft.Management.Infrastructure.CimCmdlets/bin/Release/net8.0/Microsoft.Management.Infrastructure.CimCmdlets.dll'}
 files={p.relative_to(consumer/'bin/Release/net8.0').as_posix():p for p in (consumer/'bin/Release/net8.0').rglob('*.dll') if p.name!='Check.dll'}
 by_hash={}
-for path in Path('/clang64/lib/dotnet/library-packs').glob('*.nupkg'):
+for path in Path(os.environ['MINGW_PREFIX']+'/lib/dotnet/library-packs').glob('*.nupkg'):
  with zipfile.ZipFile(path) as z:
   for name in z.namelist():
    if name.endswith('.dll'):

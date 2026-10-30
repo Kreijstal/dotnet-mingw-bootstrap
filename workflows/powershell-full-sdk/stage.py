@@ -1,4 +1,5 @@
 """Stage the original console output, source module packages and reference pack."""
+import os
 from pathlib import Path, PurePosixPath
 import hashlib
 import json
@@ -24,7 +25,7 @@ shutil.copyfile(local, destination)
 record['separate_modules'][destination.relative_to(output).as_posix()] = dict(
     original_project_output=local.relative_to(source).as_posix(), sha256=sha(local))
 
-references = Path('/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0')
+references = Path(os.environ['MINGW_PREFIX']+'/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0')
 (output / 'ref').mkdir()
 for path in sorted(references.glob('*.dll')):
     shutil.copyfile(path, output / 'ref' / path.name)
@@ -37,7 +38,7 @@ modules = [('PowerShellGet', 'powershellget.2.2.5'),
            ('Microsoft.PowerShell.Archive', 'microsoft.powershell.archive.1.2.6'),
            ('PSReadLine', 'psreadline.2.3.6'), ('ThreadJob', 'threadjob.2.0.3')]
 for name, package in modules:
-    archive = Path('/clang64/lib/dotnet/library-packs') / (package + '.nupkg')
+    archive = Path(os.environ['MINGW_PREFIX']+'/lib/dotnet/library-packs') / (package + '.nupkg')
     module = output / 'Modules' / name
     module.mkdir()
     assets = {}

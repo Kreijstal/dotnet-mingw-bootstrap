@@ -1,4 +1,5 @@
 """Prepare a source-only PowerShell core build without narrowing its Windows sources."""
+import os
 from pathlib import Path
 import hashlib,json,subprocess,sys,xml.etree.ElementTree as E
 source=Path(sys.argv[1]).resolve();root=source.parent
@@ -12,10 +13,10 @@ generator=source/'src/System.Management.Automation/SourceGenerators/PSVersionInf
 original_generator=generator.read_bytes();tree=E.parse(generator);framework=tree.find('.//TargetFramework');assert framework.text=='netstandard2.0';framework.text='net8.0';E.indent(tree);tree.write(generator,encoding='utf-8',xml_declaration=True)
 original_global=(source/'global.json').read_text();(source/'global.json').write_text(json.dumps({'sdk':{'version':'8.0.131','rollForward':'disable','allowPrerelease':False}},indent=2)+'\n')
 native=lambda p:subprocess.check_output(['cygpath','-am',str(p)],text=True).strip()
-(root/'NuGet.config').write_text('<configuration><packageSources><clear/><add key="installed-source" value="'+native(Path('/clang64/lib/dotnet/library-packs'))+'"/></packageSources></configuration>\n')
+(root/'NuGet.config').write_text('<configuration><packageSources><clear/><add key="installed-source" value="'+native(Path(os.environ['MINGW_PREFIX']+'/lib/dotnet/library-packs'))+'"/></packageSources></configuration>\n')
 commit='013edf910bbe781f503c27370941ce54d02d3f33'
 p=E.Element('Project');props=E.SubElement(p,'PropertyGroup')
-values=dict(RuntimeIdentifiers='',RuntimeIdentifier='',UseAppHost='false',PublishReadyToRun='false',PublishReadyToRunEmitSymbols='false',NuGetAudit='false',EnableNETAnalyzers='true',EnforceCodeStyleInBuild='true',UseSharedCompilation='false',CscToolPath=native(Path('/clang64/lib/dotnet/compiler-packs/roslyn-4.9.2')),CscToolExe='csc49.cmd',ReleaseTag='7.4.20',PowerShellVersion='v7.4.20-0-g'+commit,PSCoreBuildVersion='7.4.20',PSCoreCommitSHA=commit,PSCoreFileVersion='7.4.20.500',PSCoreFormattedVersion='7.4.20 SHA: '+commit,ProductVersion='7.4.20 SHA: '+commit,Version='7.4.20',FileVersion='7.4.20.500',AssemblyVersion='7.4.6.500',InformationalVersion='7.4.20 SHA: '+commit)
+values=dict(RuntimeIdentifiers='',RuntimeIdentifier='',UseAppHost='false',PublishReadyToRun='false',PublishReadyToRunEmitSymbols='false',NuGetAudit='false',EnableNETAnalyzers='true',EnforceCodeStyleInBuild='true',UseSharedCompilation='false',CscToolPath=native(Path(os.environ['MINGW_PREFIX']+'/lib/dotnet/compiler-packs/roslyn-4.9.2')),CscToolExe='csc49.cmd',ReleaseTag='7.4.20',PowerShellVersion='v7.4.20-0-g'+commit,PSCoreBuildVersion='7.4.20',PSCoreCommitSHA=commit,PSCoreFileVersion='7.4.20.500',PSCoreFormattedVersion='7.4.20 SHA: '+commit,ProductVersion='7.4.20 SHA: '+commit,Version='7.4.20',FileVersion='7.4.20.500',AssemblyVersion='7.4.6.500',InformationalVersion='7.4.20 SHA: '+commit)
 for k,v in values.items():E.SubElement(props,k).text=v
 # The source generator executes in the source-built .NET8 compiler host. Its
 # production algorithm is unchanged; source Roslyn references target net8.0.

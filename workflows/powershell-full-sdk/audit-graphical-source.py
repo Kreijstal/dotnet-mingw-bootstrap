@@ -22,8 +22,8 @@ here=Path(__file__).resolve().parent
 (out/'Program.cs').write_bytes((here/'InspectGraphicalAssets.cs').read_bytes())
 (out/'Inspect.csproj').write_text('<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableDefaultItems>false</EnableDefaultItems><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Compile Include="Program.cs"/></ItemGroup></Project>')
 (out/'NuGet.config').write_text('<configuration><packageSources><clear/></packageSources></configuration>')
-env=dict(os.environ,DOTNET_ROOT=native(Path('/clang64/lib/dotnet')),DOTNET_ROOT_X64=native(Path('/clang64/lib/dotnet')),DOTNET_CLI_HOME=native(out/'cli-home'),NUGET_PACKAGES=native(out/'cache'),DOTNET_CLI_TELEMETRY_OPTOUT='1',DOTNET_NOLOGO='1',MSBuildEnableWorkloadResolver='false')
-dotnet='/clang64/lib/dotnet/dotnet.exe'
+env=dict(os.environ,DOTNET_ROOT=native(Path(os.environ['MINGW_PREFIX']+'/lib/dotnet')),DOTNET_ROOT_X64=native(Path(os.environ['MINGW_PREFIX']+'/lib/dotnet')),DOTNET_CLI_HOME=native(out/'cli-home'),NUGET_PACKAGES=native(out/'cache'),DOTNET_CLI_TELEMETRY_OPTOUT='1',DOTNET_NOLOGO='1',MSBuildEnableWorkloadResolver='false')
+dotnet=os.environ['MINGW_PREFIX']+'/lib/dotnet/dotnet.exe'
 subprocess.run([dotnet,'build',native(out/'Inspect.csproj'),'-c','Release','--configfile',native(out/'NuGet.config'),'-p:UseSharedCompilation=false','-v:minimal'],env=env,check=True)
 dll=source/folder/'bin/Release/net8.0/Microsoft.PowerShell.GraphicalHost.dll'
 assets=json.loads(subprocess.check_output([dotnet,native(out/'bin/Release/net8.0/Inspect.dll'),native(dll)],env=env,text=True))

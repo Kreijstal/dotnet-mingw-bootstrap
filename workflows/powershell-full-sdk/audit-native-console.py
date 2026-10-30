@@ -16,7 +16,7 @@ task = sdk / 'sdk/8.0.131/Sdks/Microsoft.NET.Sdk/tools/net8.0/Microsoft.NET.Buil
 sha = lambda p: hashlib.sha256(p.read_bytes()).hexdigest()
 provenance = json.loads((stage / 'source-sdk-servicing.json').read_text())
 assert sha(template) == provenance['replaced_host_files']['runtimes/win-x64/native/apphost.exe']
-assert sha(task) == provenance['unchanged_seed_files']['clang64/lib/dotnet/' + task.relative_to(sdk).as_posix()]
+assert sha(task) == provenance['unchanged_seed_files'][os.environ.get('MINGW_PREFIX', '/clang64').strip('/') + '/lib/dotnet/' + task.relative_to(sdk).as_posix()]
 intermediate = console / 'obj/Release/net8.0/pwsh.dll'
 assert intermediate.read_bytes() == (console / 'bin/Release/net8.0/pwsh.dll').read_bytes()
 native = lambda p: subprocess.check_output(['cygpath', '-am', str(p)], text=True).strip()

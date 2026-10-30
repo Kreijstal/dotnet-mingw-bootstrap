@@ -48,8 +48,8 @@ completed invocation, empty unhandled-error stream, and the caught CimException;
 unexpected failures remain fatal. Every consumer DLL is matched against the
 rebuilt project outputs or the installed source-built NuGet payloads.
 
-In CLANG64, install mingw-w64-clang-x86_64-dotnet-sdk-codestyle and
-mingw-w64-clang-x86_64-dotnet-sdk-netanalyzers with SDK8.0.131-2 and the source
+In CLANG64, install ${MINGW_PACKAGE_PREFIX}-dotnet-sdk-codestyle and
+${MINGW_PACKAGE_PREFIX}-dotnet-sdk-netanalyzers with SDK8.0.131-2 and the source
 analyzer/compiler dependencies, extract the pinned archive into a new BUILD_ROOT,
 then run:
 
@@ -62,7 +62,7 @@ python3 audit-source.py BUILD_ROOT
 python3 audit-payload.py BUILD_ROOT NEW_CIM_CONSUMER
 ```
 
-Consumer restores use a fresh cache and only /clang64/lib/dotnet/library-packs.
+Consumer restores use a fresh cache and only $MINGW_PREFIX/lib/dotnet/library-packs.
 Default SDK file globs are disabled in each consumer so cached source/resource
 attachments cannot become test compilation or satellite-resource inputs.
 Telemetry is opted out. No persistent WMI/provider or machine configuration

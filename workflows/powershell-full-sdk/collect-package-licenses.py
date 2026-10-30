@@ -1,4 +1,5 @@
 """Collect complete native-owner licenses for every bundled source dependency."""
+import os
 from pathlib import Path
 import hashlib
 import json
@@ -11,7 +12,7 @@ assert not out.exists()
 out.mkdir()
 sha = lambda p: hashlib.sha256(p.read_bytes()).hexdigest()
 payload = json.loads((root / (app.name + '-payload-audit.json')).read_text())
-feed = Path('/clang64/lib/dotnet/library-packs')
+feed = Path(os.environ['MINGW_PREFIX']+'/lib/dotnet/library-packs')
 archives = dict(payload['source_archive_owners'])
 for path in (root / 'empty-packages').rglob('*.nupkg'):
     installed = feed / path.name
@@ -27,14 +28,15 @@ for name, owner in zip(names, owners):
         assert archives[name]['native_owner'] == owner
     archives[name]['native_owner'] = owner
 runtime_owners = {record['native_owner'] for record in payload['source_archive_owners'].values()} | {
-    'mingw-w64-clang-x86_64-dotnet-runtime8-servicing',
-    'mingw-w64-clang-x86_64-dotnet-targeting8-servicing',
-    'mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap'}
+    os.environ.get('MINGW_PACKAGE_PREFIX','mingw-w64-clang-x86_64')+'-dotnet-runtime8-servicing',
+    os.environ.get('MINGW_PACKAGE_PREFIX','mingw-w64-clang-x86_64')+'-dotnet-targeting8-servicing'} | (
+    {os.environ.get('MINGW_PACKAGE_PREFIX','mingw-w64-clang-x86_64')+'-dotnet-windowsdesktop-bootstrap'}
+    if os.environ.get('POWERSHELL_DESKTOP','1')!='0' else set())
 build_owners = {record['native_owner'] for record in archives.values()} | runtime_owners | {
-    'mingw-w64-clang-x86_64-dotnet-sdk8-servicing',
-    'mingw-w64-clang-x86_64-dotnet-sdk-codestyle',
-    'mingw-w64-clang-x86_64-dotnet-sdk-netanalyzers',
-    'mingw-w64-clang-x86_64-dotnet-csharp-compiler'}
+    os.environ.get('MINGW_PACKAGE_PREFIX','mingw-w64-clang-x86_64')+'-dotnet-sdk8-servicing',
+    os.environ.get('MINGW_PACKAGE_PREFIX','mingw-w64-clang-x86_64')+'-dotnet-sdk-codestyle',
+    os.environ.get('MINGW_PACKAGE_PREFIX','mingw-w64-clang-x86_64')+'-dotnet-sdk-netanalyzers',
+    os.environ.get('MINGW_PACKAGE_PREFIX','mingw-w64-clang-x86_64')+'-dotnet-csharp-compiler'}
 records = {}
 versions = {}
 for line in subprocess.check_output(['pacman','-Q',*sorted(build_owners)],text=True).splitlines():
@@ -57,7 +59,7 @@ for owner in sorted(build_owners):
     entries = {}
     for path in licenses:
         assert path.is_file() and path.stat().st_size > 0, path
-        relative = path.relative_to('/clang64/share/licenses').as_posix()
+        relative = path.relative_to(os.environ['MINGW_PREFIX']+'/share/licenses').as_posix()
         target = out / relative
         target.parent.mkdir(parents=True, exist_ok=True)
         if target.exists():

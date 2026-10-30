@@ -1,4 +1,5 @@
 """Independently map every staged binary to source project or package bytes."""
+import os
 from pathlib import Path
 import hashlib
 import json
@@ -13,7 +14,7 @@ stage = json.loads((root / (output.name + '-stage.json')).read_text())
 expected = dict(stage['original_console_files'])
 expected.update({name: item['sha256'] for name, item in stage['separate_modules'].items()})
 expected.update({'ref/' + name: digest for name, digest in stage['references'].items()})
-feed = Path('/clang64/lib/dotnet/library-packs')
+feed = Path(os.environ['MINGW_PREFIX']+'/lib/dotnet/library-packs')
 for name, record in stage['gallery_modules'].items():
     archive = feed / record['source_archive']
     assert sha(archive.read_bytes()) == record['sha256'], archive
@@ -43,7 +44,7 @@ for package in sorted(feed.glob('*.nupkg')):
 records = {}
 used = set()
 production = set()
-reference = Path('/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0')
+reference = Path(os.environ['MINGW_PREFIX']+'/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0')
 for path in sorted(output.rglob('*')):
     if not path.is_file() or path.suffix.lower() not in {'.dll', '.exe'}:
         continue
